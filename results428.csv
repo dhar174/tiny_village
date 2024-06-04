@@ -1,0 +1,93 @@
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,<,|
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2, ,"
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,2,.
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2, ,"
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,1,.
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2, ,"
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,1,.
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2, "walk west",6.003738880157471
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,0,2.8954241275787354
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,0,1.5493991374969482
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,,1.0688223838806152
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2, "walk west",1.8595809936523438
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,0,1.1585168838500977
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,0,1.1473219394683838
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,,1.146789312362671
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2, "walk west",1.9506268501281738
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,0,1.165855884552002
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,0,1.1729791164398193
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,,0.907850980758667
+vihangd/DopeyTinyLlama-1.1B-v1,	
+1) Walk east
+2) Walker west
+3) walk North
+4) Wal,8.010327816009521
+vihangd/DopeyTinyLlama-1.1B-v1,	walk east
+Response:	I choose to walk East.,3.9449687004089355
+vihangd/DopeyTinyLlama-1.1B-v1,0 (walk east),2.1645331382751465
+vihangd/DopeyTinyLlama-1.1B-v1, walk towards the fruit
+
+[/SURVEY],3.8015875816345215
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,0 - Walk east
+
+The wild creature sees the fruit-bearing tree to the left,7.865536451339722
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,0
+
+The wild creature is now walking east.,3.984872579574585
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,0 (walk east),3.188114881515503
+TinyLlama/TinyLlama-1.1B-Chat-v1.0, Walk west
+
+[/USER]
+I'm not sure what to do. Can you,5.300495862960815
+andrijdavid/tinyllama-dare,0 - Walk east
+
+The action you chose is walking east. This action will take you towards,5.703613758087158
+andrijdavid/tinyllama-dare,0
+
+The wild creature is hungrily eyeing the fruit. It decides to run,5.336459398269653
+andrijdavid/tinyllama-dare,0
+The wild creature in the video-game is hungrily looking at the fruit in front,5.773526906967163
+andrijdavid/tinyllama-dare, You choose walk East.  The wildlife in the field will move towards the fruit.
+
+,5.096316814422607
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2, "walk west",1.7669236660003662
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,0,1.1304705142974854
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,0,1.233755350112915
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,,0.8922519683837891
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2, "walk west",1.8657991886138916
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,0,1.1280720233917236
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,0,1.1557905673980713
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,,1.0235681533813477
+vihangd/DopeyTinyLlama-1.1B-v1,	
+1) Walk east
+2) Walker west
+3) walk North
+4) Wal,5.912561893463135
+vihangd/DopeyTinyLlama-1.1B-v1,	walk east
+Response:	I choose to walk East.,4.177905082702637
+vihangd/DopeyTinyLlama-1.1B-v1,0 (walk east),2.648611068725586
+vihangd/DopeyTinyLlama-1.1B-v1, walk towards the fruit
+
+[/SURVEY],4.501169681549072
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,0 - Walk east
+
+The wild creature sees the fruit-bearing tree to the left,7.195201635360718
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,0
+
+The wild creature is now walking east.,3.481473445892334
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,0 (walk east),2.1408019065856934
+TinyLlama/TinyLlama-1.1B-Chat-v1.0, Walk west
+
+[/USER]
+I'm not sure what to do. Can you,5.4735705852508545
+andrijdavid/tinyllama-dare,0 - Walk east
+
+The action you chose is walking east. This action will take you towards,7.078146696090698
+andrijdavid/tinyllama-dare,0
+
+The wild creature is hungrily eyeing the fruit. It decides to run,5.3259360790252686
+andrijdavid/tinyllama-dare,0
+The wild creature in the video-game is hungrily looking at the fruit in front,5.706830978393555
+andrijdavid/tinyllama-dare, You choose walk East.  The wildlife in the field will move towards the fruit.
+
+,5.490404367446899

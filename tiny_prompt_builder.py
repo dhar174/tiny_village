@@ -1,0 +1,1593 @@
+from calendar import c
+from numpy import char
+from requests import get
+import tiny_characters as tc
+
+
+class NeedsPriorities:
+    def __init__(self):
+        self.needs = [
+            "health",
+            "hunger",
+            "wealth",
+            "mental_health",
+            "social_wellbeing",
+            "happiness",
+            "shelter",
+            "stability",
+            "luxury",
+            "hope",
+            "success",
+            "control",
+            "job_performance",
+            "beauty",
+            "community",
+            "material_goods",
+            "friendship_grid",
+        ]
+        # Value represents a character's current need level
+        self.needs_priorities = {
+            "health": 0,
+            "hunger": 0,
+            "wealth": 0,
+            "mental_health": 0,
+            "social_wellbeing": 0,
+            "happiness": 0,
+            "shelter": 0,
+            "stability": 0,
+            "luxury": 0,
+            "hope": 0,
+            "success": 0,
+            "control": 0,
+            "job_performance": 0,
+            "beauty": 0,
+            "community": 0,
+            "material_goods": 0,
+            "friendship_grid": 0,
+        }
+
+    def get_needs_priorities(self):
+        return self.needs_priorities
+
+    def get_needs_priorities_list(self):
+        return self.needs_priorities.keys()
+
+    def get_needs_priorities_values(self):
+        return self.needs_priorities.values()
+
+    def get_needs_priorities_sorted(self):
+        return sorted(self.needs_priorities.items(), key=lambda x: x[1])
+
+    def get_needs_priorities_sorted_list(self):
+        return [x[0] for x in sorted(self.needs_priorities.items(), key=lambda x: x[1])]
+
+    def get_needs_priorities_sorted_values(self):
+        return [x[1] for x in sorted(self.needs_priorities.items(), key=lambda x: x[1])]
+
+    def get_needs_priorities_sorted_reverse(self):
+        return sorted(self.needs_priorities.items(), key=lambda x: x[1], reverse=True)
+
+    def get_needs_priorities_sorted_list_reverse(self):
+        return [
+            x[0]
+            for x in sorted(
+                self.needs_priorities.items(), key=lambda x: x[1], reverse=True
+            )
+        ]
+
+    def get_needs_priorities_sorted_values_reverse(self):
+        return [
+            x[1]
+            for x in sorted(
+                self.needs_priorities.items(), key=lambda x: x[1], reverse=True
+            )
+        ]
+
+    def get_needs_priorities_sorted_by_value(self):
+        return sorted(self.needs_priorities.items(), key=lambda x: x[1])
+
+    def set_needs_priorities(self, needs_priorities):
+
+        self.needs_priorities = needs_priorities
+
+    def calculate_health_priority(self, character: tc.Character):
+        # Health priority is based on health status
+        # Health status is a value from 1-10
+        # Health priority is a value from 1-100
+        # Health priority is calculated by multiplying health status times 10 and subtracting from 100
+        health_status = character.get_health_status()
+        health_priority = (
+            100 - (health_status * 10)
+        ) + character.get_motives().get_health_motive()
+        return health_priority
+
+    def calculate_hunger_priority(self, character: tc.Character):
+        # Hunger priority is based on hunger level
+        # Hunger level is a value from 1-10
+        # Hunger priority is a value from 1-100
+        # Hunger priority is calculated by multiplying hunger level times 10
+        hunger_level = character.get_hunger_level()
+        hunger_priority = (
+            hunger_level * 10 + character.get_motives().get_hunger_motive()
+        )
+        return hunger_priority
+
+    def calculate_wealth_priority(self, character: tc.Character):
+        # Wealth priority is based on wealth
+        # Wealth is a value from 1-10
+        # Wealth priority is a value from 1-100
+        # Wealth priority is calculated by multiplying wealth times 10
+        wealth = character.get_wealth()
+        wealth_priority = character.get_motives().get_wealth_motive()
+        return wealth_priority
+
+    def calculate_mental_health_priority(self, character: tc.Character):
+        # Mental health priority is based on mental health
+        # Mental health is a value from 1-10
+        # Mental health priority is a value from 1-100
+        # Mental health priority is calculated by multiplying mental health times 10
+        mental_health = character.get_mental_health()
+        mental_health_priority = character.get_motives().get_mental_health_motive()
+        return mental_health_priority
+
+    def calculate_social_wellbeing_priority(self, character: tc.Character):
+        # Social wellbeing priority is based on social wellbeing
+        # Social wellbeing is a value from 1-10
+        # Social wellbeing priority is a value from 1-100
+        # Social wellbeing priority is calculated by multiplying social wellbeing times 10
+        social_wellbeing = character.get_social_wellbeing()
+        social_wellbeing_priority = (
+            character.get_motives().get_social_wellbeing_motive()
+        )
+        return social_wellbeing_priority
+
+    def calculate_happiness_priority(self, character: tc.Character):
+        # Happiness priority is based on happiness
+        # Happiness is a value from 1-10
+        # Happiness priority is a value from 1-100
+        # Happiness priority is calculated by multiplying happiness times 10
+        happiness = character.get_happiness()
+        happiness_priority = character.get_motives().get_happiness_motive()
+        return happiness_priority
+
+    def calculate_shelter_priority(self, character: tc.Character):
+        # Shelter priority is based on shelter
+        # Shelter is a value from 1-10
+        # Shelter priority is a value from 1-100
+        # Shelter priority is calculated by multiplying shelter times 10
+        shelter = character.get_shelter()
+        shelter_priority = character.get_motives().get_shelter_motive()
+        return shelter_priority
+
+    def calculate_stability_priority(self, character: tc.Character):
+        # Stability priority is based on stability
+        # Stability is a value from 1-10
+        # Stability priority is a value from 1-100
+        # Stability priority is calculated by multiplying stability times 10
+        stability = character.get_stability()
+        stability_priority = character.get_motives().get_stability_motive()
+        return stability_priority
+
+    def calculate_luxury_priority(self, character: tc.Character):
+        # Luxury priority is based on luxury
+        # Luxury is a value from 1-10
+        # Luxury priority is a value from 1-100
+        # Luxury priority is calculated by multiplying luxury times 10
+        luxury = character.get_luxury()
+        luxury_priority = character.get_motives().get_luxury_motive()
+        return luxury_priority
+
+    def calculate_hope_priority(self, character: tc.Character):
+        # Hope priority is based on hope
+        # Hope is a value from 1-10
+        # Hope priority is a value from 1-100
+        # Hope priority is calculated by multiplying hope times 10
+        hope = character.get_hope()
+        hope_priority = character.get_motives().get_hope_motive()
+        return hope_priority
+
+    def calculate_success_priority(self, character: tc.Character):
+        # Success priority is based on success
+        # Success is a value from 1-10
+        # Success priority is a value from 1-100
+        # Success priority is calculated by multiplying success times 10
+        success = character.get_success()
+        success_priority = character.get_motives().get_success_motive()
+        return success_priority
+
+    def calculate_control_priority(self, character: tc.Character):
+        # Control priority is based on control
+        # Control is a value from 1-10
+        # Control priority is a value from 1-100
+        # Control priority is calculated by multiplying control times 10
+        control = character.get_control()
+        control_priority = character.get_motives().get_control_motive()
+        return control_priority
+
+    def calculate_job_performance_priority(self, character: tc.Character):
+        # Job performance priority is based on job performance
+        # Job performance is a value from 1-10
+        # Job performance priority is a value from 1-100
+        # Job performance priority is calculated by multiplying job performance times 10
+        job_performance = character.get_job_performance()
+        job_performance_priority = character.get_motives().get_job_performance_motive()
+        return job_performance_priority
+
+    def calculate_beauty_priority(self, character: tc.Character):
+        # Beauty priority is based on beauty
+        # Beauty is a value from 1-10
+        # Beauty priority is a value from 1-100
+        # Beauty priority is calculated by multiplying beauty times 10
+        beauty = character.get_beauty()
+        beauty_priority = character.get_motives().get_beauty_motive() - beauty
+        return beauty_priority
+
+    def calculate_community_priority(self, character: tc.Character):
+        # Community priority is based on community
+        # Community is a value from 1-10
+        # Community priority is a value from 1-100
+        # Community priority is calculated by multiplying community times 10
+        community = character.get_community()
+        community_priority = character.get_motives().get_community_motive()
+        return community_priority
+
+    def calculate_material_goods_priority(self, character: tc.Character):
+        # Material goods priority is based on material goods
+        # Material goods is a value from 1-10
+        # Material goods priority is a value from 1-100
+        # Material goods priority is calculated by multiplying material goods times 10
+        material_goods = character.get_material_goods()
+        material_goods_priority = character.get_motives().get_material_goods_motive()
+        return material_goods_priority
+
+    def calculate_friendship_grid_priority(self, character: tc.Character):
+        # Friendship grid priority is based on friendship grid
+        # Friendship grid is a value from 1-10
+        # Friendship grid priority is a value from 1-100
+        # Friendship grid priority is calculated by multiplying friendship grid times 10
+        friendship_grid_priority = character.get_motives().get_friendship_grid_motive()
+        return friendship_grid_priority
+
+    def calculate_needs_priorities(self, character: tc.Character):
+        # Calculate needs priorities based on character's current situation
+        # Needs priorities are values from 1-100
+        # Needs priorities are calculated by multiplying need level times 10
+        # Needs priorities are calculated by adding motive value
+        # Needs priorities are calculated by adding need level times motive value
+        # Needs priorities are calculated by adding need level times motive value and subtracting from 100
+        needs_priorities = {
+            "health": self.calculate_health_priority(character),
+            "hunger": self.calculate_hunger_priority(character),
+            "wealth": self.calculate_wealth_priority(character),
+            "mental_health": self.calculate_mental_health_priority(character),
+            "social_wellbeing": self.calculate_social_wellbeing_priority(character),
+            "happiness": self.calculate_happiness_priority(character),
+            "shelter": self.calculate_shelter_priority(character),
+            "stability": self.calculate_stability_priority(character),
+            "luxury": self.calculate_luxury_priority(character),
+            "hope": self.calculate_hope_priority(character),
+            "success": self.calculate_success_priority(character),
+            "control": self.calculate_control_priority(character),
+            "job_performance": self.calculate_job_performance_priority(character),
+            "beauty": self.calculate_beauty_priority(character),
+            "community": self.calculate_community_priority(character),
+            "material_goods": self.calculate_material_goods_priority(character),
+            "friendship_grid": self.calculate_friendship_grid_priority(character),
+        }
+
+        return needs_priorities
+
+
+class ActionOptions:
+    def __init__(self):
+        self.actions = [
+            "buy_food",
+            "eat_food",
+            "improve_job_performance",
+            "increase_friendship",
+            "improve_mental_health",
+            "pursue_hobby",
+            "volunteer_time",
+            "set_goal",
+            "leisure_activity",
+            "organize_event",
+            "research_new_technology",
+            "buy_medicine",
+            "take_medicine",
+            "visit_doctor",
+            "collaborate_colleagues",
+            "gather_resource",
+            "trade_goods",
+            "repair_item",
+            "get_educated",
+            "social_visit",
+            "attend_event",
+            "go_to_work",
+            "clean_up",
+            "invest_wealth",
+            "buy_property",
+            "sell_property",
+            "move_to_new_location",
+            "commission_service",
+            "start_business",
+            "craft_item",
+            "work_current_job",
+        ]
+
+    def prioritize_actions(self, character: tc.Character):
+        # Prioritize actions based on character's current situation
+        # Actions that are more likely to be chosen are placed earlier in the list
+        # Actions that are less likely to be chosen are placed later in the list
+        # Actions that are not possible are removed from the list
+        # Actions that are possible are kept in the list
+        # Actions that are possible but not likely are moved to the end
+
+        # char_dict = character.to_dict()
+        # inv_dict = character.inventory.to_dict()
+
+        # Sample criteria for prioritizing actions
+        needs_goals = {
+            "buy_food": character.get_hunger_level() > 7
+            and character.get_wealth_money() > 1
+            and (
+                character.get_inventory().count_food_items_total() < 5
+                or character.get_inventory().count_food_calories_total
+                < character.get_hunger_level()
+            ),
+            "eat_food": character.get_hunger_level() > 5
+            and character.get_inventory().count_food_items_total() > 0,
+            "visit_doctor": character.get_health_status() < 3
+            or character.get_mental_health() < 4,
+            "take_medicine": character.get_health_status() < 5,
+            "improve_shelter": character.get_shelter() < 4,
+            "attend_event": character.get_social_wellbeing() < 5
+            or character.get_community() < 5,
+            "pursue_hobby": character.get_happiness() < 5 or character.get_beauty() < 5,
+            "self_care": character.get_mental_health() < 5,
+            "social_visit": character["friendship_grid"] < 5,
+            "volunteer_time": character.get_community() < 5,
+            "improve_job_performance": character.get_job_performance() < 5,
+            "get_educated": character.get_long_term_goal() == "career_advancement",
+            "set_goal": character.get_hope() < 5,
+            "start_business": character.get_long_term_goal() == "entrepreneurship",
+            "trade_goods": character.get_wealth_money() > 5
+            or character.get_material_goods() > 5,
+            "invest_wealth": character.get_wealth_money() > 8,
+            # ... additional mappings ...
+        }
+
+        prioritized_actions = []
+        prioritized_actions += [action for action, need in needs_goals.items() if need]
+        other_actions = [
+            action for action in self.actions if action not in prioritized_actions
+        ]
+        if len(prioritized_actions) < 5:
+            prioritized_actions += other_actions[: 5 - len(prioritized_actions)]
+        return prioritized_actions
+
+
+class DescriptorMatrices:
+    def __init__(self):
+
+        self.job_adjective = {
+            "default": [
+                "skilled",
+                "hardworking",
+                "friendly",
+                "friendly, outgoing",
+                "average",
+            ]
+        }
+
+        self.job_pronoun = {
+            "default": ["person"],
+            "Engineer": [
+                "person",
+                "engineer",
+                "programmer",
+                "developer",
+                "coder",
+                "software engineer",
+                "hardware engineer",
+                "computer scientist",
+                "computer engineer",
+                "computer programmer",
+                "computer scientist",
+                "computer technician",
+                "computer repair technician",
+                "computer repairman",
+                "computer repairwoman",
+                "computer repair person",
+                "computer repair specialist",
+                "computer repair expert",
+                "computer repair professional",
+                "computer repair master",
+                "computer repair guru",
+                "computer repair wizard",
+                "computer repair genius",
+                "computer repair prodigy",
+                "computer repair whiz",
+                "computer repair wiz",
+                "computer nerd",
+                "computer geek",
+            ],
+            "Farmer": [
+                "person",
+                "farmer",
+                "agriculturalist",
+                "agricultural scientist",
+                "agricultural engineer",
+                "agricultural technician",
+                "agricultural nerd",
+                "agricultural geek",
+            ],
+        }
+
+        self.job_place = {
+            "default": ["at your job"],
+            "Engineer": [""],
+            "Farmer": ["at your farm"],
+        }
+
+        self.job_enjoys_verb = {
+            "default": ["working with", "helping"],
+            "Engineer": [
+                "building",
+                "designing",
+                "creating",
+                "developing",
+                "programming",
+                "testing",
+                "debugging",
+                "fixing",
+                "improving",
+                "optimizing",
+                "learning",
+                "teaching",
+                "mentoring",
+                "leading",
+                "managing",
+                "collaborating",
+                "working",
+                "writing",
+                "reading",
+                "researching",
+                "analyzing",
+                "planning",
+                "documenting",
+                "communicating",
+                "presenting",
+                "speaking",
+                "talking",
+                "discussing",
+                "debating",
+                "arguing",
+                "solving",
+                "simplifying",
+                "automating",
+                "optimizing",
+            ],
+            "Farmer": [
+                "planting",
+                "growing",
+                "harvesting",
+                "watering",
+                "feeding",
+                "tending",
+                "caring",
+                "cultivating",
+                "nurturing",
+                "pruning",
+                "weeding",
+                "fertilizing",
+                "sowing",
+                "reaping",
+                "mowing",
+                "raking",
+                "plowing",
+                "tilling",
+                "hoeing",
+                "digging",
+                "shoveling",
+                "raking",
+            ],
+        }
+
+        self.job_verb_acts_on_noun = {
+            "default": ["your hands", "others"],
+            "Engineer": [
+                "things",
+                "machines",
+                "doo-dads",
+                "gizmos",
+                "widgets",
+                "programs",
+                "software",
+                "hardware",
+                "systems",
+                "components",
+                "parts",
+                "circuits",
+                "circuits",
+                "devices",
+                "solutions",
+            ],
+            "Farmer": [
+                "plants",
+                "crops",
+                "vegetables",
+                "fruits",
+                "grains",
+                "flowers",
+                "trees",
+                "shrubs",
+                "bushes",
+                "grass",
+                "weeds",
+                "soil",
+                "land",
+                "fields",
+                "gardens",
+                "orchards",
+                "vineyards",
+                "pastures",
+                "meadows",
+                "ranches",
+                "farms",
+                "livestock",
+                "animals",
+                "cattle",
+                "pigs",
+                "chickens",
+                "sheep",
+                "goats",
+                "horses",
+                "llamas",
+                "alpacas",
+                "ostriches",
+                "turkeys",
+                "geese",
+                "ducks",
+                "fish",
+                "aquatic life",
+                "wildlife",
+            ],
+        }
+
+        self.job_currently_working_on = {
+            "Engineer": [
+                "a new project",
+                "a new software project",
+                "a new hardware project",
+                "a new product",
+                "a new feature",
+                "a new design",
+                "a new system",
+                "a new solution",
+                "a new component",
+                "a new part",
+                "a new circuit",
+                "a new device",
+                "a new machine",
+                "a new tool",
+                "a new program",
+                "a new algorithm",
+                "a new technology",
+                "a new language",
+                "a new framework",
+                "a new library",
+                "a new interface",
+                "a new API",
+                "a new database",
+                "a new website",
+                "a new app",
+                "a new game",
+                "a new tool",
+                "a new service",
+                "a new business",
+                "a new company",
+                "a new startup",
+                "a new project",
+                "a new idea",
+                "a new concept",
+                "a new invention",
+                "a new discovery",
+                "a new theory",
+                "a new hypothesis",
+                "a new experiment",
+                "a new method",
+                "a new technique",
+                "a new approach",
+                "a new strategy",
+                "a new plan",
+                "a new goal",
+                "a new objective",
+                "a new target",
+                "a new milestone",
+                "a new task",
+                "a new assignment",
+                "a new mission",
+                "a new quest",
+                "a new adventure",
+                "a new journey",
+                "a new adventure",
+                "a new experience",
+                "a new opportunity",
+                "a new challenge",
+                "debugging a new bug",
+                "fixing a new defect",
+                "solving  a new error",
+            ],
+            "Farmer": [
+                "a new crop",
+                "a new harvest",
+                "a new field",
+                "a new garden",
+                "a new orchard",
+                "a new vineyard",
+                "a new pasture",
+                "a new meadow",
+                "a new ranch",
+                "a new farm",
+                "a new livestock",
+                "a new animal",
+                "a new cattle",
+                "a new pig",
+                "a new chicken",
+                "a new sheep",
+                "a new goat",
+                "a new horse",
+                "a new llama",
+                "a new alpaca",
+                "a new ostrich",
+                "a new turkey",
+                "a new goose",
+                "a new duck",
+                "a new fish",
+                "a new aquatic life",
+                "a new wildlife",
+                "a new plant",
+                "a new vegetable",
+                "a new fruit",
+                "a new grain",
+                "a new flower",
+                "a new tree",
+                "a new shrub",
+                "a new bush",
+                "a new grass",
+                "a new weed",
+                "a new soil",
+                "a new land",
+                "a new field",
+                "a new garden",
+                "a new orchard",
+                "a new vineyard",
+                "a new pasture",
+                "a new meadow",
+                "a new ranch",
+                "a new farm",
+                "a new livestock",
+                "a new animal",
+                "a new cattle",
+                "a new pig",
+                "a new chicken",
+                "a new sheep",
+                "a new goat",
+                "a new horse",
+                "a new llama",
+                "a new alpaca",
+                "a new ostrich",
+                "a new turkey",
+                "a new goose",
+                "a new duck",
+                "a new fish",
+                "a new aquatic life",
+                "a new wildlife",
+            ],
+        }
+
+        self.job_planning_to_attend = {
+            "Engineer": [
+                "tech conference",
+                "tech meetup",
+                "developers conference",
+                "maker faire",
+                "hackathon",
+                "startup conference",
+                "tech talk",
+                "tech event",
+                "tech meetup",
+                "tech gathering",
+                "tech party",
+                "tech event",
+                "tech festival",
+                "tech expo",
+                "tech convention",
+                "tech summit",
+                "tech fair",
+                "tech showcase",
+                "tech competition",
+            ],
+            "Farmer": [
+                "farmers market",
+                "farmers conference",
+                "farmers meetup",
+                "farmers convention",
+                "farmers fair",
+                "farmers showcase",
+                "farmers competition",
+                "farmers festival",
+                "farmers expo",
+                "farmers gathering",
+                "farmers party",
+                "farmers event",
+                "farmers summit",
+                "farmers fair",
+                "farmers showcase",
+                "farmers competition",
+            ],
+        }
+
+        self.job_hoping_to_there = {
+            "Engineer": [
+                "meet some of your colleagues",
+                "encounter some new innovations",
+            ],
+            "Farmer": ["sell some of your produce", "buy a new tool"],
+        }
+
+        self.job_hoping_to_learn = {
+            "Engineer": [
+                "new programming languages",
+                "new frameworks",
+                "new libraries",
+                "new technologies",
+                "new tools",
+                "new techniques",
+                "new methods",
+                "new approaches",
+                "new strategies",
+                "new plans",
+                "new goals",
+                "new objectives",
+                "new targets",
+                "new milestones",
+                "new tasks",
+                "new assignments",
+                "new missions",
+                "new quests",
+                "new adventures",
+                "new journeys",
+                "new experiences",
+                "new opportunities",
+                "new challenges",
+                "new ideas",
+                "new concepts",
+                "new inventions",
+                "new discoveries",
+                "new theories",
+                "new hypotheses",
+                "new experiments",
+                "new algorithms",
+                "new designs",
+                "new systems",
+                "new solutions",
+                "new components",
+                "new parts",
+                "new circuits",
+                "new devices",
+                "new machines",
+                "new programs",
+                "new software",
+                "new hardware",
+                "new products",
+                "new features",
+                "new designs",
+                "new systems",
+                "new solutions",
+                "new components",
+                "new parts",
+                "new circuits",
+                "new devices",
+                "new machines",
+                "new programs",
+                "new software",
+                "new hardware",
+                "new products",
+                "new features",
+            ],
+            "Farmer": [
+                "new farming techniques",
+                "new farming methods",
+                "new farming approaches",
+                "new farming strategies",
+                "new farming plans",
+                "new farming goals",
+                "new farming objectives",
+                "new farming targets",
+                "new farming milestones",
+                "new farming tasks",
+                "new farming assignments",
+                "new farming missions",
+                "new farming quests",
+                "new farming adventures",
+                "new farming journeys",
+                "new farming experiences",
+                "new farming opportunities",
+                "new farming challenges",
+                "new farming ideas",
+                "new farming concepts",
+                "new farming inventions",
+                "new farming discoveries",
+                "new farming theories",
+                "new farming hypotheses",
+                "new farming experiments",
+                "new farming algorithms",
+                "new farming designs",
+                "new farming systems",
+                "new farming solutions",
+                "new farming components",
+                "new farming parts",
+                "new farming circuits",
+                "new farming devices",
+                "new farming machines",
+                "new farming programs",
+                "new farming software",
+                "new farming hardware",
+                "new farming products",
+                "new farming features",
+            ],
+        }
+
+        self.job_hoping_to_meet = {
+            "Engineer": [
+                "new people",
+                "new friends",
+                "new colleagues",
+                "new mentors",
+                "new leaders",
+                "new managers",
+                "new collaborators",
+                "new partners",
+                "new investors",
+                "new customers",
+                "new clients",
+                "new users",
+                "new developers",
+                "new engineers",
+                "new designers",
+                "new programmers",
+                "new testers",
+                "new marketers",
+                "new salespeople",
+                "new businesspeople",
+                "new entrepreneurs",
+                "new founders",
+                "new CEOs",
+                "new CTOs",
+                "new CIOs",
+                "new CMOs",
+                "new COOs",
+                "new CFOs",
+                "new VPs",
+                "new directors",
+                "new managers",
+                "new supervisors",
+                "new employees",
+                "new interns",
+                "new contractors",
+                "new consultants",
+                "new freelancers",
+                "new remote workers",
+                "new coworkers",
+                "new teammates",
+                "new colleagues",
+                "new peers",
+                "new subordinates",
+                "new superiors",
+                "new bosses",
+                "new leaders",
+                "new managers",
+                "new mentors",
+                "new teachers",
+                "new students",
+                "new professors",
+                "new researchers",
+                "new scientists",
+                "new engineers",
+                "new designers",
+                "new programmers",
+                "new testers",
+                "new marketers",
+                "new salespeople",
+                "new businesspeople",
+                "new entrepreneurs",
+                "new founders",
+                "new CEOs",
+                "new CTOs",
+                "new CIOs",
+                "new CMOs",
+                "new COOs",
+                "new CFOs",
+                "new VPs",
+                "new directors",
+                "new managers",
+                "new supervisors",
+                "new employees",
+                "new interns",
+                "new contractors",
+                "new consultants",
+                "new freelancers",
+                "new remote workers",
+                "new coworkers",
+                "new teammates",
+                "new colleagues",
+                "new peers",
+                "new subordinates",
+                "new superiors",
+                "new bosses",
+                "new leaders",
+                "new managers",
+                "new mentors",
+                "new teachers",
+                "new students",
+                "new professors",
+                "new researchers",
+                "new scientists",
+            ],
+            "Farmer": [
+                "new people",
+                "new friends",
+                "new colleagues",
+                "new mentors",
+                "new leaders",
+                "new managers",
+                "new collaborators",
+                "new partners",
+                "new investors",
+                "new customers",
+                "new clients",
+                "new users",
+                "new developers",
+                "new engineers",
+                "new designers",
+                "new programmers",
+                "new testers",
+                "new marketers",
+                "new salespeople",
+                "new businesspeople",
+                "new entrepreneurs",
+                "new founders",
+                "new CEOs",
+                "new CTOs",
+                "new CIOs",
+                "new CMOs",
+                "new COOs",
+                "new CFOs",
+                "new VPs",
+                "new directors",
+                "new managers",
+                "new supervisors",
+                "new employees",
+                "new interns",
+                "new contractors",
+                "new consultants",
+                "new freelancers",
+                "new remote workers",
+                "new coworkers",
+                "new teammates",
+                "new colleagues",
+                "new peers",
+                "new subordinates",
+                "new superiors",
+                "new bosses",
+                "new leaders",
+                "new managers",
+                "new mentors",
+                "new teachers",
+                "new students",
+                "new professors",
+                "new researchers",
+                "new scientists",
+                "new engineers",
+                "new designers",
+                "new programmers",
+                "new testers",
+                "new marketers",
+                "new salespeople",
+                "new businesspeople",
+                "new entrepreneurs",
+                "new founders",
+                "new CEOs",
+                "new CTOs",
+                "new CIOs",
+                "new CMOs",
+                "new COOs",
+                "new CFOs",
+                "new VPs",
+                "new directors",
+                "new managers",
+                "new supervisors",
+                "new employees",
+                "new interns",
+                "new contractors",
+                "new consultants",
+                "new freelancers",
+                "new remote workers",
+                "new coworkers",
+                "new teammates",
+                "new colleagues",
+                "new peers",
+                "new subordinates",
+                "new superiors",
+                "new bosses",
+                "new leaders",
+                "new managers",
+                "new mentors",
+                "new teachers",
+                "new students",
+                "new professors",
+                "new researchers",
+                "new scientists",
+            ],
+        }
+
+        self.job_hoping_to_find = {
+            "Engineer": [
+                "new opportunities",
+                "new challenges",
+                "new ideas",
+                "new concepts",
+                "new inventions",
+                "new discoveries",
+                "new theories",
+                "new hypotheses",
+                "new experiments",
+                "new algorithms",
+                "new designs",
+                "new systems",
+                "new solutions",
+                "new components",
+                "new parts",
+                "new circuits",
+                "new devices",
+                "new machines",
+                "new programs",
+                "new software",
+                "new hardware",
+                "new products",
+                "new features",
+                "new designs",
+                "new systems",
+                "new solutions",
+                "new components",
+                "new parts",
+                "new circuits",
+                "new devices",
+                "new machines",
+                "new programs",
+                "new software",
+                "new hardware",
+                "new products",
+                "new features",
+            ],
+            "Farmer": [
+                "new opportunities",
+                "new challenges",
+                "new ideas",
+                "new concepts",
+                "new inventions",
+                "new discoveries",
+                "new theories",
+                "new hypotheses",
+                "new experiments",
+                "new algorithms",
+                "new designs",
+                "new systems",
+                "new solutions",
+                "new components",
+                "new parts",
+                "new circuits",
+                "new devices",
+                "new machines",
+                "new programs",
+                "new software",
+                "new hardware",
+                "new products",
+                "new features",
+                "new designs",
+                "new systems",
+                "new solutions",
+                "new components",
+                "new parts",
+                "new circuits",
+                "new devices",
+                "new machines",
+                "new programs",
+                "new software",
+                "new hardware",
+                "new products",
+                "new features",
+            ],
+        }
+
+        self.feeling_health = {
+            "healthy": [
+                "in excellent health",
+                "healthy",
+                "doing well",
+                "feeling good",
+                "feeling great",
+                "feeling amazing",
+                "feeling fantastic",
+                "feeling excellent",
+                "feeling energetic",
+                "strong",
+                "fit",
+                "feeling invincible",
+            ],
+            "sick": [
+                "feeling sick",
+                "feeling ill",
+                "feeling unwell",
+                "feeling bad",
+                "feeling terrible",
+                "feeling horrible",
+                "feeling awful",
+                "feeling absolutely dreadful",
+                "miserable",
+            ],
+            "injured": ["injured", "hurt", "wounded", "damaged", "broken", "bruised"],
+        }
+
+        self.feeling_hunger = {
+            "full": [
+                "you are full",
+                "you are satisfied",
+                "you are not hungry",
+                "you are barely peckish",
+                "you are not hungry at all",
+                "you are not hungry in the slightest",
+                "you are not hungry whatsoever",
+                "you are not hungry in the least",
+            ],
+            "moderate": [
+                "your hunger is moderate",
+                "you are only slightly hungry",
+                "you are moderately hungry",
+                "you are a bit hungry",
+                "you could use a bite to eat",
+                "you could do with a snack",
+                "you could do with a meal",
+                "you could do with a bite",
+            ],
+            "hungry": [
+                "you are hungry",
+                "you are starving",
+                "you are famished",
+                "you are ravenous",
+                "you are starving",
+            ],
+            "starving": [
+                "you are starving",
+                "you are famished",
+                "you are ravenous",
+                "you are starving",
+            ],
+        }
+
+        self.event_recent = {
+            "craft fair": ["After your success at the craft fair"],
+            "community center": ["After you helped at the community center"],
+            "hospital": ["After you were recently in the hospital"],
+            "nursing home": ["Since you helped out at the nursing home"],
+            "outbreak": ["With the recent outbreak"],
+            "rains": ["The recent rains"],
+            "learning": ["Recently, you learned"],
+        }
+
+        self.financial_situation = {
+            "rich",
+            [
+                "you are financially well-off",
+                "you are rich",
+                "you are wealthy",
+                "you are well-off",
+                "you are well-to-do",
+                "you are well-heeled",
+                "you are well-fixed",
+                "you are well-situated",
+                "you are well-provided",
+                "you are well-provided for",
+                "you are well-endowed",
+                "you are well-furnished",
+                "you are well-supplied",
+                "you are well-stocked",
+                "you are well-equipped",
+                "you are well-prepared",
+                "you are well-organized",
+                "you are well-ordered",
+                "you are well-regulated",
+                "you are well-arranged",
+                "you are well-balanced",
+                "you are well-adjusted",
+                "you are well-kept",
+                "you are well-maintained",
+                "you are well-preserved",
+                "you are well-protected",
+                "you are well-secured",
+                "you are well-kept",
+                "you are well-maintained",
+                "you are well-preserved",
+                "you are well-protected",
+                "you are well-secured",
+                "you are well-kept",
+                "you are well-maintained",
+                "you are well-preserved",
+                "you are well-protected",
+                "you are well-secured",
+                "you are well-kept",
+                "you are well-maintained",
+                "you are well-preserved",
+                "you are well-protected",
+                "you are well-secured",
+                "you are well-kept",
+                "you are well-maintained",
+                "you are well-preserved",
+                "you are well-protected",
+                "you are well-secured",
+                "you are well-kept",
+                "you are well-maintained",
+                "you are well-preserved",
+                "you are well-protected",
+                "you are well-secured",
+            ],
+            "stable",
+            [
+                "your financial situation is stable",
+                "you are financially stable",
+                "you are financially secure",
+                "you are financially comfortable",
+            ],
+            "poor",
+            [
+                "you are financially poor",
+                "you are financially struggling",
+                "you are financially unstable",
+                "you are financially insecure",
+                "you are financially uncomfortable",
+                "you are financially squeezed",
+                "your finances are tight",
+                "you are financially strapped",
+                "you are financially stressed",
+                "you are financially burdened",
+                "you are struggling to make ends meet",
+                "you are struggling to get by",
+                "you are struggling to get through financially",
+                "you are struggling to pay the bills",
+                "you are struggling to pay the rent",
+                "you are broke",
+                "you are in debt",
+                "you are in the red",
+                "you are in the hole",
+                "you are in the negative",
+            ],
+            "bankrupt",
+            [
+                "you are bankrupt",
+                "you are insolvent",
+                "you are in debt",
+                "you are in the red",
+                "you are in the hole",
+                "you are in the negative",
+            ],
+        }
+
+        self.motivation = {
+            "default": [
+                "You're motivated to ",
+                "Today, you aim to ",
+                "Today offers the chance to",
+                "You remind yourself of your goal to",
+                "You're closer to your goal of",
+            ]
+        }
+
+        self.weather_description = {
+            "default",
+            [
+                "it's an average day outside",
+                "it's a typical day outside",
+                "it's a normal day outside",
+                "it's a regular day outside",
+                "it's a standard day outside",
+                "it's a typical day outside",
+                "it's a usual day outside",
+                "it's a common day outside",
+                "it's a standard day out there today",
+            ],
+            "sunny",
+            [
+                "it's a sunny day outside",
+                "it's a bright day outsid",
+                "it's a clear day out",
+            ],
+            "cloudy",
+            [
+                "it's a cloudy day outside",
+                "it's a cloudy day out",
+                "it's a bit overcast outside",
+            ],
+            "rainy",
+            [
+                "it's a rainy day outside",
+                "it's a bit drizzly outside",
+                "it's a bit rainy outside",
+                "it's a bit wet outside",
+                "it's a bit damp outside",
+                "it's a bit moist outside",
+            ],
+            "snowy",
+            [
+                "it's a snowy day outside",
+                "it's a bit snowy outside",
+                "it's a bit icy outside",
+                "it's a bit frosty outside",
+                "it's a bit slushy outside",
+                "it's a bit cold outside",
+                "it's a bit chilly outside",
+                "it's a bit freezing outside",
+                "it's a bit frigid outside",
+                "it's a bit wintry outside",
+                "it's a bit wintery outside",
+                "it's a bit frosty outside",
+                "it's a bit icy outside",
+                "it's a bit snowy outside",
+                "it's a bit slushy outside",
+                "it's a bit cold outside",
+                "it's a bit chilly outside",
+                "it's a bit freezing outside",
+                "it's a bit frigid outside",
+                "it's a bit wintry outside",
+                "it's a bit wintery outside",
+            ],
+            "windy",
+            [
+                "it's a windy day outside",
+                "it's a bit windy outside",
+                "it's a bit breezy outside",
+                "it's a bit gusty outside",
+                "it's a bit blustery outside",
+                "it's a bit windy out there today",
+            ],
+            "stormy",
+            [
+                "it's a stormy day outside",
+                "it's a bit stormy outside",
+                "it's a bit stormy out there today",
+            ],
+            "foggy",
+            [
+                "it's a foggy day outside",
+                "it's a bit foggy outside",
+                "it's a bit misty outside",
+                "it's a bit hazy outside",
+                "it's a bit smoky outside",
+                "it's a bit smoggy outside",
+                "it's a bit foggy out there today",
+            ],
+        }
+
+        self.routine_question_framing = {
+            "default": [
+                "Considering the weather and your current situation, what do you choose to do next?\n",
+                "What do you choose to do next?\n",
+                "What do you do next?\n",
+                "What will your focus be?\n",
+                "What will you do?\n",
+                "What will you focus on?\n",
+                "What will you work on?\n",
+                "What will you do next?\n",
+                "What will you do?\n",
+                "What is your next move?\n",
+                "What is your next step?\n",
+                "What is your next action?\n",
+                "What is your next priority?\n",
+            ]
+        }
+
+        self.action_descriptors = {
+            "buy_food"[
+                "Go to the market",
+                "Go to the grocery store",
+                "Go to the supermarket",
+                "Go to the bodega",
+                "Go to the corner store",
+                "Go to the convenience store",
+                "Go to the deli",
+                "Go to the farmers market",
+                "Go to the farm",
+                "Go to the farm stand",
+                "Go to the market",
+            ]
+        }
+
+        # self.health_status = ["healthy", "sick", "injured", "disabled", "dying"]
+        # self.hunger_level = ["full", "moderate", "hungry", "starving"]
+        # self.wealth_money = ["rich", "moderate", "poor", "bankrupt"]
+        # self.mental_health = ["stable", "unstable", "depressed", "anxious", "suicidal"]
+        # self.social_wellbeing = ["connected", "lonely", "isolated", "disconnected"]
+        # self.happiness = ["happy", "content", "sad", "depressed", "suicidal"]
+        # self.shelter = ["stable", "unstable", "homeless"]
+        # self.stability = ["stable", "unstable"]
+        # self.luxury = ["luxurious", "comfortable", "uncomfortable", "unlivable"]
+        # self.hope = ["hopeful", "hopeless"]
+        # self.success = ["successful", "unsuccessful"]
+        # self.control = ["in control", "out of control"]
+        # self.job_performance = ["good", "bad"]
+        # self.beauty = ["beautiful", "ugly"]
+        # self.community = ["connected", "disconnected"]
+        # self.material_goods = ["plentiful", "scarce"]
+        # self.friendship_grid = ["connected", "disconnected"]
+
+    def get_job_adjective(self, job):
+        return self.job_adjective.get(job, self.job_adjective["default"]).random()
+
+    def get_job_pronoun(self, job):
+        return self.job_pronoun.get(job, self.job_pronoun["default"]).random()
+
+    def get_job_enjoys_verb(self, job):
+        return self.job_enjoys_verb.get(job, self.job_enjoys_verb["default"]).random()
+
+    def get_job_verb_acts_on_noun(self, job):
+        return self.job_verb_acts_on_noun.get(
+            job, self.job_verb_acts_on_noun["default"]
+        ).random()
+
+    def get_job_currently_working_on(self, job):
+        return self.job_currently_working_on.get(
+            job, self.job_currently_working_on["default"]
+        ).random()
+
+    def get_job_place(self, job):
+        return self.job_place.get(job, self.job_place["default"]).random()
+
+    def get_job_planning_to_attend(self, job):
+        return self.job_planning_to_attend.get(
+            job, self.job_planning_to_attend["default"]
+        ).random()
+
+    def get_job_hoping_to_there(self, job):
+        return self.job_hoping_to_there.get(
+            job, self.job_hoping_to_there["default"]
+        ).random()
+
+    def get_job_hoping_to_learn(self, job):
+        return self.job_hoping_to_learn.get(
+            job, self.job_hoping_to_learn["default"]
+        ).random()
+
+    def get_job_hoping_to_meet(self, job):
+        return self.job_hoping_to_meet.get(
+            job, self.job_hoping_to_meet["default"]
+        ).random()
+
+    def get_job_hoping_to_find(self, job):
+        return self.job_hoping_to_find.get(
+            job, self.job_hoping_to_find["default"]
+        ).random()
+
+    def get_feeling_health(self, health_status):
+        return self.feeling_health.get(
+            health_status, self.feeling_health["default"]
+        ).random()
+
+    def get_feeling_hunger(self, hunger_level):
+        return self.feeling_hunger.get(
+            hunger_level, self.feeling_hunger["default"]
+        ).random()
+
+    def get_event_recent(self, recent_event):
+        return self.event_recent.get(
+            recent_event, self.event_recent["default"]
+        ).random()
+
+    def get_financial_situation(self, wealth_money):
+        return self.financial_situation.get(
+            wealth_money, self.financial_situation["default"]
+        ).random()
+
+    def get_motivation(self):
+        return self.motivation.get(self.motivation["default"]).random()
+
+    def get_motivation(self, motivation):
+        return self.motivation.get(motivation, self.motivation["default"]).random()
+
+    def get_motivation_zero(self, motivation, job):
+        return (
+            self.motivation.get(motivation, self.motivation["default"]).random()
+            + self.job_enjoys_verb.get(job, self.job_enjoys_verb["default"]).random()
+            + self.job_verb_acts_on_noun.get(
+                job, self.job_verb_acts_on_noun["default"]
+            ).random()
+        )
+
+    def get_weather_description(self, weather_description):
+        return self.weather_description.get(
+            weather_description, self.weather_description["default"]
+        ).random()
+
+    def get_routine_question_framing(self, routine_question_framing):
+        return self.routine_question_framing.get(
+            routine_question_framing, self.routine_question_framing["default"]
+        ).random()
+
+    def get_action_descriptors(self, action):
+        return self.action_descriptors.get(
+            action, self.action_descriptors["default"]
+        ).random()
+
+
+# Create a character
+
+emily = tc.Character(
+    "Emily",
+    "software engineer",
+    "healthy",
+    "full",
+    "rich",
+    "buy a house",
+    "won the lottery",
+)
+descriptors = DescriptorMatrices()
+
+
+class PromptBuilder:
+    def __init__(self, character: tc.Character):
+        self.character = character
+        self.action_options = ActionOptions()
+        self.needs_priorities_func = NeedsPriorities()
+
+    def calculate_needs_priorities(self):
+        self.needs_priorities = self.needs_priorities_func.calculate_needs_priorities(
+            self.character
+        )
+
+    def prioritize_actions(self):
+        self.prioritized_actions = self.action_options.prioritize_actions(
+            self.character
+        )
+
+    def calculate_action_utility(self):
+        self.action_utilities = self.needs_priorities
+        for action in self.prioritized_actions:
+            for need in self.needs_priorities:
+                self.action_utilities[action] += (
+                    self.needs_priorities[need] * self.action_utilities[action]
+                )
+            self.action_utilities[action] = 100 - self.action_utilities[action]
+
+    def generate_daily_routine_prompt(self, time, weather):
+        prompt = f"<|system|>"
+        prompt = (
+            f"You are {self.character.name}, a {self.character.job} in a small town. You are a {descriptors.get_job_adjective(self.character.job)} {descriptors.get_job_pronoun(self.character.job)} who enjoys {descriptors.get_job_enjoys_verb(self.character.job)} {descriptors.get_job_verb_acts_on_noun(self.character.job)}. You are currently working on {descriptors.get_job_currently_working_on(self.character.job)} {descriptors.get_job_place(self.character.job)}, and you are excited to see how it turns out. You are also planning to attend a {descriptors.get_job_planning_to_attend(self.character.job)} in the next few weeks, and you are hoping to {descriptors.get_job_hoping_to_there(self.character.job)} there.",
+        )
+        prompt += f"<|user|>"
+        prompt += f"{self.character.name}, it's {time}, and {descriptors.get_weather_description(weather)}. You're feeling {descriptors.get_feeling_health(self.character.health_status)}, and {descriptors.get_feeling_hunger(self.character.hunger_level)}. "
+        prompt += f"{descriptors.get_event_recent(self.character.recent_event)}, and {descriptors.get_financial_situation(self.character.wealth_money)}. {descriptors.get_motivation} {self.long_term_goal}. {descriptors.get_routine_question_framing}"
+        prompt += "Options:\n"
+        prompt += "1. Go to the market to Buy_Food.\n"
+        prompt += "2. Work at your job to Improve_{self.job_performance}.\n"
+        prompt += "3. Visit a friend to Increase_Friendship.\n"
+        prompt += "4. Engage in a Leisure_Activity to improve Mental_Health.\n"
+        prompt += "5. Work on a personal project to Pursue_Hobby.\n"
+        prompt += "</s>"
+        prompt += (f"<|assistant|>",)
+        prompt += f"{self.character.name}, I choose "
+        return prompt
+
+    def generate_crisis_response_prompt(self, crisis):
+        prompt = f"<|system|>"
+        prompt += f"<|user|>"
+        prompt += f"<|assistant|>"
+        return prompt

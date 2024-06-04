@@ -1,0 +1,281 @@
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2, "walk west",3.1113576889038086
+
+ 
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,0,1.888796329498291
+
+ 
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,0,2.005774974822998
+
+ 
+Model: alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2
+Empty Results: 1
+
+ 
+Model: alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2
+Actionable Results: 1
+
+ 
+stabilityai/stablelm-2-1_6b, 0  ,10.314664840698242
+
+ 
+stabilityai/stablelm-2-1_6b,0
+Action  ---------
+Action
+----------------
+0  walk  east
+1  run ,10.883384466171265
+
+ 
+stabilityai/stablelm-2-1_6b, 0
+Explanation: 
+You can eat the fruit. 
+Action  :  -1
+,10.425147533416748
+
+ 
+stabilityai/stablelm-2-1_6b,0
+Action  ---------
+Action
+-----------------
+Action
+
+Action:
+Action:
+
+Action:
+
+
+Action
+
+
+,10.804204225540161
+
+ 
+Model: stabilityai/stablelm-2-1_6b
+Empty Results: 0
+
+ 
+Model: stabilityai/stablelm-2-1_6b
+Actionable Results: 0
+
+ 
+stabilityai/stablelm-2-zephyr-1_6b, | Choose an action |
+---|---
+1 | Walk west | 
+Reason: Since the fruit is,12.076420068740845
+
+ 
+stabilityai/stablelm-2-zephyr-1_6b,  Walk west 
+
+Justification: Since the fruit is to the West, the best course of action,11.446520805358887
+
+ 
+stabilityai/stablelm-2-zephyr-1_6b,  walk  west 
+
+### Explanation:
+Since the fruit is to the West, I choose to walk,10.570014953613281
+
+ 
+stabilityai/stablelm-2-zephyr-1_6b, [ ] Growl 
+Explanation: Since you are already hungry, it would be more beneficial for you,11.78264307975769
+
+ 
+Model: stabilityai/stablelm-2-zephyr-1_6b
+Empty Results: 0
+
+ 
+Model: stabilityai/stablelm-2-zephyr-1_6b
+Actionable Results: 0
+
+ 
+vihangd/DopeyTinyLlama-1.1B-v1,	
+1) Walk east
+2) Walker west
+3) walk North
+4) Wal,8.330316066741943
+
+ 
+vihangd/DopeyTinyLlama-1.1B-v1,	walk east
+Response:	I choose to walk East.,5.735799312591553
+
+ 
+vihangd/DopeyTinyLlama-1.1B-v1,0 (walk east),2.950871706008911
+
+ 
+vihangd/DopeyTinyLlama-1.1B-v1, walk towards the fruit
+
+[/SURVEY],6.032024145126343
+
+ 
+Model: vihangd/DopeyTinyLlama-1.1B-v1
+Empty Results: 0
+
+ 
+Model: vihangd/DopeyTinyLlama-1.1B-v1
+Actionable Results: 2
+
+ 
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,0 - Walk east
+
+The wild creature sees the fruit-bearing tree to the left,9.032039403915405
+
+ 
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,0
+
+The wild creature is now walking east.,4.980990171432495
+
+ 
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,0 (walk east),3.3981924057006836
+
+ 
+TinyLlama/TinyLlama-1.1B-Chat-v1.0, Walk west
+
+[/USER]
+I'm not sure what to do. Can you,8.147541284561157
+
+ 
+Model: TinyLlama/TinyLlama-1.1B-Chat-v1.0
+Empty Results: 0
+
+ 
+Model: TinyLlama/TinyLlama-1.1B-Chat-v1.0
+Actionable Results: 1
+
+ 
+andrijdavid/tinyllama-dare,0 - Walk east
+
+The action you chose is walking east. This action will take you towards,8.85996699333191
+
+ 
+andrijdavid/tinyllama-dare,0
+
+The wild creature is hungrily eyeing the fruit. It decides to run,7.683812379837036
+
+ 
+andrijdavid/tinyllama-dare,0
+The wild creature in the video-game is hungrily looking at the fruit in front,8.015189409255981
+
+ 
+andrijdavid/tinyllama-dare, You choose walk East.  The wildlife in the field will move towards the fruit.
+
+,7.5882532596588135
+
+ 
+Model: andrijdavid/tinyllama-dare
+Empty Results: 0
+
+ 
+Model: andrijdavid/tinyllama-dare
+Actionable Results: 0
+
+ 
+mmnga/TinyMixtral-x8-Clonebase-7b,0
+
+|<assist|
+The wild beast is hungrily eating the,16.264686107635498
+
+ 
+mmnga/TinyMixtral-x8-Clonebase-7b,0
+
+The wild animals are the ones that are not afraid of the forest.
+They are,14.398554563522339
+
+ 
+mmnga/TinyMixtral-x8-Clonebase-7b,0
+,3.8208348751068115
+
+ 
+mmnga/TinyMixtral-x8-Clonebase-7b,0  You walk to the east.  The animal is hungrily eating the fruit.,15.649922609329224
+
+ 
+Model: mmnga/TinyMixtral-x8-Clonebase-7b
+Empty Results: 0
+
+ 
+Model: mmnga/TinyMixtral-x8-Clonebase-7b
+Actionable Results: 0
+
+ 
+s3nh/TinyLLama-4x1.1B-MoE,0 Sidenote  Actions � walk, run  .  (Action)
+
+1,18.428775787353516
+
+ 
+s3nh/TinyLLama-4x1.1B-MoE, (1) walk East 	Rationale: Walking is the most efficient way to get to,15.064046621322632
+
+ 
+s3nh/TinyLLama-4x1.1B-MoE, Run west
+1: walk 01
+2021  #123 ,15.755301475524902
+
+ 
+Model: s3nh/TinyLLama-4x1.1B-MoE
+Empty Results: 1
+
+ 
+Model: s3nh/TinyLLama-4x1.1B-MoE
+Actionable Results: 0
+
+ 
+tiiuae/falcon-rw-1b,______________________________________________________
+______________________________________________________________ _______________________________
+| | |
+1. __________________,14.639567613601685
+
+ 
+tiiuae/falcon-rw-1b,______________________________________________________
+<s><s
+The wild animals are in the forest. They are looking,10.59695291519165
+
+ 
+tiiuae/falcon-rw-1b,
+Response: Bite
+Answer: Option 1
+Option 2: Walk East
+Choice: 2
+,9.256241083145142
+
+ 
+tiiuae/falcon-rw-1b, [S] [ST] The wild animals are running away from you. They are trying to get,8.873644828796387
+
+ 
+Model: tiiuae/falcon-rw-1b
+Empty Results: 0
+
+ 
+Model: tiiuae/falcon-rw-1b
+Actionable Results: 0
+
+ 
+ericzzz/falcon-rw-1b-chat, walk east
+
+Why? Because you want to explore the area and find food.,8.429920434951782
+
+ 
+ericzzz/falcon-rw-1b-chat, walk east
+
+Why: I want to explore the open fields and see what is around,9.166008234024048
+
+ 
+ericzzz/falcon-rw-1b-chat,
+1. Walk east
+2. Run north
+3. Growl
+4. Bite
+,9.348259449005127
+
+ 
+ericzzz/falcon-rw-1b-chat,  walk east
+
+Why:
+The open fields to the east are filled with potential food,9.48057246208191
+
+ 
+Model: ericzzz/falcon-rw-1b-chat
+Empty Results: 0
+
+ 
+Model: ericzzz/falcon-rw-1b-chat
+Actionable Results: 3
+
+ 

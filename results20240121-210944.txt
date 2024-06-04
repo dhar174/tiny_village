@@ -1,0 +1,27 @@
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2, 2, Spending_time_in_workshop{'to craft new item'}
+
+Ex,6.634585857391357
+
+ 
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,2, Spending_time_in_workshop{'to craft new item'}
+A:,6.502167463302612
+
+ 
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,2, Spending time at a Local Cafe. I'm feeling hunty and want to,6.528640508651733
+
+ 
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,2, Spent_time_in_workshop {'to craft item'} ���,7.016920328140259
+
+ 
+Model: alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2
+Empty Results: 0
+
+ 
+Model: alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2
+Actionable Results: 4
+
+ 
+Model: alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2
+Best Time: 6.502167463302612
+
+ 

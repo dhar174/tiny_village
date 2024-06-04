@@ -1,0 +1,41 @@
+{
+    "model_name": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+    "responses": [
+        " 6 Head_to_the_local_park for Le_is_le_re_",
+        "3, I'll go to market.",
+        "2, research_new_technology. I'm excited about the new vaccines that",
+        "3, but I'm not sure which one to do first. Can you help me make a",
+        "6, as I aim for community engagement and awarness-raising. I'll",
+        "6, as I feel like I need a little break from my current project and want to explore new",
+        "2, to visit the doctor. I'm feeling a bit tired, so I need to rest",
+        "1 EAT_FOOD to satisfy my hungers. I'll head to my fields",
+        "2, organize a science fair. I've always been interested in science, so I think",
+        "2, I'll head to a local market to buy some fresh produce. I need to stock",
+        "2, go to market and buy food. I'm hungrily craving some fresh produce",
+        "3, I'll go to market."
+    ],
+    "consistency_scores": 0.1489830034708388,
+    "variability_scores": 1.5735915849388864,
+    "actionability_scores": 15,
+    "best_time_taken": 3.713688611984253,
+    "unique_keywords": 7,
+    "most_common_keyword_frequency": 5,
+    "keyword_frequency": {
+        "6": 3,
+        "3": 3,
+        "2": 5,
+        "1": 1,
+        "eat_food": 1,
+        "buy food": 1,
+        "food": 1
+    },
+    "keywords": {
+        "6": 3,
+        "3": 3,
+        "2": 5,
+        "1": 1,
+        "eat_food": 1,
+        "buy food": 1,
+        "food": 1
+    }
+}

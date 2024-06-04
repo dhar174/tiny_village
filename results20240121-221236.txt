@@ -1,0 +1,254 @@
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2, 2, Spending_time_in_workshop{'to craft new item'}
+
+Ex,5.533282518386841
+
+ 
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,2, Spending_time_in_workshop{'to craft new item'}
+A:,5.941787958145142
+
+ 
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,2, Spending time at a Local Cafe. I'm feeling hunty and want to,6.04370379447937
+
+ 
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,2, Spent_time_in_workshop {'to craft item'} ���,5.748285293579102
+
+ 
+Model: alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2
+Empty Results: 0
+
+ 
+Model: alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2
+Actionable Results: 4
+
+ 
+Model: alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2
+Best Time: 5.533282518386841
+
+ 
+stabilityai/stablelm-2-1_6b,  to go to a park to relax and clear my mind. I need to get out of the shop,8.061155319213867
+
+ 
+stabilityai/stablelm-2-1_6b,6, to go to a park to relax and clear my mind. I need to get some fresh,7.492455720901489
+
+ 
+stabilityai/stablelm-2-1_6b,5, to expand my shop with new designs. I'm excited about the new craft designs I've,7.2757604122161865
+
+ 
+stabilityai/stablelm-2-1_6b,6, to go to a park to relax and clear my mind. I need to get some fresh,8.110647678375244
+
+ 
+Model: stabilityai/stablelm-2-1_6b
+Empty Results: 0
+
+ 
+Model: stabilityai/stablelm-2-1_6b
+Actionable Results: 3
+
+ 
+Model: stabilityai/stablelm-2-1_6b
+Best Time: 7.2757604122161865
+
+ 
+stabilityai/stablelm-2-zephyr-1_6b, 2.Start planning     and     Set     Goal{'expanding shop'}. I want to create a,9.783017635345459
+
+ 
+stabilityai/stablelm-2-zephyr-1_6b,2: Spend Time in My Workshop to Create a New Craft.
+
+Explanation: Since the options provided are,7.456549882888794
+
+ 
+stabilityai/stablelm-2-zephyr-1_6b,2: Spend Time in My Workshop to Create a New Craft. I'm feeling inspired by the cloudy,8.187368869781494
+
+ 
+stabilityai/stablelm-2-zephyr-1_6b,2 - Spend Time in My Workshop to Create a New Craft. 
+
+Step 3: Reflect on,7.61681604385376
+
+ 
+Model: stabilityai/stablelm-2-zephyr-1_6b
+Empty Results: 0
+
+ 
+Model: stabilityai/stablelm-2-zephyr-1_6b
+Actionable Results: 4
+
+ 
+Model: stabilityai/stablelm-2-zephyr-1_6b
+Best Time: 7.456549882888794
+
+ 
+tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf, 5. Start planning and Set_Goal{'expand shop'} with a new design, as it will give me the motivation I need to push through my goal of expanding my artisan business. This plan will help me refine my crafting techniques, gather more customers, and eventually increase my wealth.
+
+Option 5: Start planning and Set_Goal{'expand shop'} with a new design.,7.987269401550293
+
+ 
+tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf,2, Social_Visit{'friend'}!,4.868817567825317
+
+ 
+tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf,5 to go ahead with my plan.
+
+Options:
+1. Go to the market to Buy_Foood
+2. Spend time in your worksop to Craft_Item{'new craft'}
+3. Visit a cafe to social visit
+4. Volunteer Time for community planning
+5. Start planning and set goal to expand shop with new design
+6. Head to park for leisure activity and clear mind,7.686419248580933
+
+ 
+tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf,4, I want to plan and set my goal. As I'm sitting at the coffee shop, waiting for my friend who is visiting me, I hear a knock on my door. I open it to find a new friend, Sarah, a freelance illustrator. She looks nervous but excited about their workshopping experience.
+Sarah: Hi Emily! I've been meaning to come and try crafts for a long time. Do you have any ideas?
+Emily: Not really, but I can give you some suggestions. You can start with a beginner project like painting or drawing. It will be fun and relaxing at the same time. 
+Sarah: Thanks Emily! That's great to hear. I love trying new things. We could,10.098556280136108
+
+ 
+Model: tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf
+Empty Results: 0
+
+ 
+Model: tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf
+Actionable Results: 4
+
+ 
+Model: tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf
+Best Time: 4.868817567825317
+
+ 
+vihangd/DopeyTinyLlama-1.1B-v1, 6) Head_to_the_local_park for Le_is_breathtaking,5.537466049194336
+
+ 
+vihangd/DopeyTinyLlama-1.1B-v1,3, Social Visits with friends and volunteering at town Hall. I'm excited for the,5.695709943771362
+
+ 
+vihangd/DopeyTinyLlama-1.1B-v1,2, Social Visits with my friend. I'm feeling down today, so I need to,5.8327765464782715
+
+ 
+vihangd/DopeyTinyLlama-1.1B-v1,3, I'll visit the cafection and socialize with the locals.,5.710813760757446
+
+ 
+Model: vihangd/DopeyTinyLlama-1.1B-v1
+Empty Results: 0
+
+ 
+Model: vihangd/DopeyTinyLlama-1.1B-v1
+Actionable Results: 4
+
+ 
+Model: vihangd/DopeyTinyLlama-1.1B-v1
+Best Time: 5.537466049194336
+
+ 
+TinyLlama/TinyLlama-1.1B-Chat-v1.0, 6) Head_to_the_local_park for Le_is_le_re_,6.1153717041015625
+
+ 
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,3, I'll go to market.,3.6206250190734863
+
+ 
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,2, go to market and buy food. I'm hungrily craving some fresh produce,6.636815547943115
+
+ 
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,3, I'll go to market.,4.850218772888184
+
+ 
+Model: TinyLlama/TinyLlama-1.1B-Chat-v1.0
+Empty Results: 0
+
+ 
+Model: TinyLlama/TinyLlama-1.1B-Chat-v1.0
+Actionable Results: 4
+
+ 
+Model: TinyLlama/TinyLlama-1.1B-Chat-v1.0
+Best Time: 3.6206250190734863
+
+ 
+andrijdavid/tinyllama-dare, 1) Going to market. I need to buy some fresh produce to make new dishes.,6.854834318161011
+
+ 
+andrijdavid/tinyllama-dare,2, Spending_Money{'$150'}, Cleaning_Workshop,5.670018672943115
+
+ 
+andrijdavid/tinyllama-dare,2, go to market. I need to buy food for my shop and I'm hungr,6.211889982223511
+
+ 
+andrijdavid/tinyllama-dare,2, I'll go to market. I need to buy some food for the shop and I,5.833219766616821
+
+ 
+Model: andrijdavid/tinyllama-dare
+Empty Results: 0
+
+ 
+Model: andrijdavid/tinyllama-dare
+Actionable Results: 4
+
+ 
+Model: andrijdavid/tinyllama-dare
+Best Time: 5.670018672943115
+
+ 
+tiiuae/falcon-rw-1b, 
+|craft|
+Crafting is a skill that allows you to make things. It is the,8.64335560798645
+
+ 
+tiiuae/falcon-rw-1b,_________ because I want to expand my shop and make more money. I also want more people to,7.021017074584961
+
+ 
+tiiuae/falcon-rw-1b,__________. I am feeling __________________, so I will ________________________. My current wealth ,7.617995738983154
+
+ 
+tiiuae/falcon-rw-1b,_________
+[INST_S]
+You're Emily. A local artist who has been working,7.851536512374878
+
+ 
+Model: tiiuae/falcon-rw-1b
+Empty Results: 0
+
+ 
+Model: tiiuae/falcon-rw-1b
+Actionable Results: 1
+
+ 
+Model: tiiuae/falcon-rw-1b
+Best Time: 7.021017074584961
+
+ 
+ericzzz/falcon-rw-1b-chat, 
+
+|option|,4.5004003047943115
+
+ 
+ericzzz/falcon-rw-1b-chat,
+Option 4. "Organize an event to Teach Others and Build Community Ties"
+
+,7.49738335609436
+
+ 
+ericzzz/falcon-rw-1b-chat, to go to my workshop and craft a 'new' craft item. I'm excited about the new,7.719986438751221
+
+ 
+ericzzz/falcon-rw-1b-chat, to go to a cafe for lunch. I'm feeling hungry and need to recharge my energy.,7.414137601852417
+
+ 
+Model: ericzzz/falcon-rw-1b-chat
+Empty Results: 0
+
+ 
+Model: ericzzz/falcon-rw-1b-chat
+Actionable Results: 2
+
+ 
+Model: ericzzz/falcon-rw-1b-chat
+Best Time: 4.5004003047943115
+
+ 
+Model with most empty results: alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2
+
+ 
+Model with most actionable results: alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2
+
+ 
+Best Time: 3.6206250190734863 by model TinyLlama/TinyLlama-1.1B-Chat-v1.0 for responses such as [' 6 Head_to_the_local_park for Le_is_breathtaking', "3, Social Visits with friends and volunteering at town Hall. I'm excited for the", "2, Social Visits with my friend. I'm feeling down today, so I need to", "3, I'll visit the cafection and socialize with the locals."]
+
+ 

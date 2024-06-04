@@ -1,0 +1,15 @@
+Model: alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2
+
+ 
+Best Time: 5.870059251785278
+
+ 
+Empty Results: 0
+
+ 
+Actionable Results: 4
+
+ 
+Stored Results: [{'model_name': '', 'responses': [], 'best_time_taken': ''}, {'model_name': 'alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2', 'responses': [" 2, Spending_time_in_workshop{'to craft new item'}\n\nEx", "2, Spending_time_in_workshop{'to craft new item'}\nA:", "2, Spending time at a Local Cafe. I'm feeling hunty and want to", "2, Spent_time_in_workshop {'to craft item'} ���"], 'best_time_taken': 5.870059251785278}]
+
+ 

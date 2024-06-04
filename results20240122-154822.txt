@@ -1,0 +1,493 @@
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2, 2, Spending_time_in_workshop{'to craft new item'}
+
+Ex,8.25717806816101
+
+ 
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,2, Spending_time_in_workshop{'to craft new item'}
+A:,6.504231214523315
+
+ 
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,1, 2, or 3 as my focus.,4.146939039230347
+
+ 
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,1, Continued Work.,3.5979983806610107
+
+ 
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,1) Treating_patients{'at'} my clinics. I aim for community wellness,6.44802188873291
+
+ 
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,1) Continued Work - Current Job {'engineer'} - Stress Management. I',5.900740623474121
+
+ 
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,1, Eating_food to Address_hunger
+,4.284080743789673
+
+ 
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,1) EAT_FOOD to Address my hungery. I'll head to my fields,6.74591064453125
+
+ 
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,1, Continued teaching_skill.,4.287022352218628
+
+ 
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,2, I'll head to a local market to buy some fresh produce.,5.286449193954468
+
+ 
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,2, Spending time at a Local Cafe. I'm feeling hunty and want to,6.5284740924835205
+
+ 
+alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2,2, Spent_time_in_workshop {'to craft item'} ���,5.998843193054199
+
+ 
+Model: alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2
+Empty Results: 0
+
+ 
+Model: alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2
+Actionable Results: 12
+
+ 
+Model: alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2
+Best Time: 3.5979983806610107
+
+ 
+stabilityai/stablelm-2-1_6b,  to go to a park to relax and clear my mind. I need to get out of the shop,8.540931224822998
+
+ 
+stabilityai/stablelm-2-1_6b,6, to go to a park to relax and clear my mind. I need to get some fresh,8.360787630081177
+
+ 
+stabilityai/stablelm-2-1_6b,1, 2, or 3.
+I am a doctor, so I will treat patients at,7.849059820175171
+
+ 
+stabilityai/stablelm-2-1_6b,3.
+Explanation: Mark is an Engineer who is currently in his office. He is working in an,7.863962888717651
+
+ 
+stabilityai/stablelm-2-1_6b,1.
+<system>,4.675390720367432
+
+ 
+stabilityai/stablelm-2-1_6b,1.
+Assistant: You have chosen 4.
+Mark:
+Assistant:
+Mark
+Assistant
+Mark,7.730271816253662
+
+ 
+stabilityai/stablelm-2-1_6b,1 to eat food to solve my hunger. I am a hungry person. So I need to have,7.986292362213135
+
+ 
+stabilityai/stablelm-2-1_6b,1.
+<system>Tom is a good farmer. He is tired and hungry, so he decides,7.7032318115234375
+
+ 
+stabilityai/stablelm-2-1_6b,1.
+Teacher: Why do I need to teach my class? I'm already a good teacher.
+,7.328751802444458
+
+ 
+stabilityai/stablelm-2-1_6b,4.
+Q: What is the most likely reason that Alex chooses to go to a social event?
+,8.32420563697815
+
+ 
+stabilityai/stablelm-2-1_6b,5, to expand my shop with new designs. I'm excited about the new craft designs I've,8.52552318572998
+
+ 
+stabilityai/stablelm-2-1_6b,6, to go to a park to relax and clear my mind. I need to get some fresh,8.084539651870728
+
+ 
+Model: stabilityai/stablelm-2-1_6b
+Empty Results: 0
+
+ 
+Model: stabilityai/stablelm-2-1_6b
+Actionable Results: 11
+
+ 
+Model: stabilityai/stablelm-2-1_6b
+Best Time: 4.675390720367432
+
+ 
+stabilityai/stablelm-2-zephyr-1_6b, 2.Start planning     and     Set     Goal{'expanding shop'}. I want to create a,9.206204891204834
+
+ 
+stabilityai/stablelm-2-zephyr-1_6b,2: Spend Time in My Workshop to Create a New Craft.
+
+Explanation: Since the options provided are,8.2324960231781
+
+ 
+stabilityai/stablelm-2-zephyr-1_6b,2, to research new technology for vaccines for our recent health outbreak. This will help us better prepare,7.70381760597229
+
+ 
+stabilityai/stablelm-2-zephyr-1_6b,3: Network With Other Engineers At A Local Tech Meetup.
+Reasoning: Attending a technology,7.982382535934448
+
+ 
+stabilityai/stablelm-2-zephyr-1_6b,2 - Research New Technology for Vaccine Research for our recent community outbreak. This option aligns with my,8.28475284576416
+
+ 
+stabilityai/stablelm-2-zephyr-1_6b,3, "Network with Other Engineers At A Local Tech Meetup." 
+
+Reasoning: While I,9.20570683479309
+
+ 
+stabilityai/stablelm-2-zephyr-1_6b,4: Trade Goods at Local Market to Improve Wealth.
+Explanation: Tom is a dedicated farmer and is,7.678953409194946
+
+ 
+stabilityai/stablelm-2-zephyr-1_6b,4 - Trade Goods at Local Market to Improve Wealth. I need to take advantage of the sunny day,7.861898899078369
+
+ 
+stabilityai/stablelm-2-zephyr-1_6b,4 Eat Food to Address my Hunger. 
+
+Explanation: As Sarah is feeling hungry and the options provided,7.304598331451416
+
+ 
+stabilityai/stablelm-2-zephyr-1_6b,4 to Meet With A Fellow Merchant To Trade Goods And Discuss Market Trends.
+Explanation: Meeting with fellow,7.288510799407959
+
+ 
+stabilityai/stablelm-2-zephyr-1_6b,2: Spend Time in My Workshop to Create a New Craft. I'm feeling inspired by the cloudy,7.722898483276367
+
+ 
+stabilityai/stablelm-2-zephyr-1_6b,2 - Spend Time in My Workshop to Create a New Craft. 
+
+Step 3: Reflect on,7.9454123973846436
+
+ 
+Model: stabilityai/stablelm-2-zephyr-1_6b
+Empty Results: 0
+
+ 
+Model: stabilityai/stablelm-2-zephyr-1_6b
+Actionable Results: 12
+
+ 
+Model: stabilityai/stablelm-2-zephyr-1_6b
+Best Time: 7.288510799407959
+
+ 
+tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf, 1. Go to the market to Buy_Foood.
+
+Reasoning: Emily is feeling hungry after her success at the craft fair, so she wants to indulge in some fresh food. She has recently learned new crafting techniques and is excited to try something new. Also, attending a craft fair can be a good opportunity to meet new people and potentially sell some of her work there.
+
+Emily: I'm planning on going to the market to Buy_Foood in two hours. What should I do first?
+
+Mentor: First, make sure your refrigerator is stocked with your favorite snacks or food items. Also, check your pantry for ingredients that can be,12.431067943572998
+
+ 
+tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf,2! "Social_Visit{'friend'}",4.9235594272613525
+
+ 
+tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf,4, Organize_Community_Event{'health fair'} for public awareness. I am looking forward to attending and learning about new treatment methods while interacting with people in the community. It will be an enlightening experience.,5.318711519241333
+
+ 
+tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf,2, but which one do you think will be most beneficial for me?
+Assistant: It all depends on what you plan to attend the meetup about and what your goals are. However, attending a tech meetup is an excellent way to network with other engineers, learn from experts in the field, and explore new technologies. Networking will help you find job opportunities, potential clients or collaborators, or partnerships that can further advance your career. Overall, it's best to choose a session that aligns with your goals and interests, as it can provide valuable insights and opportunities.,7.800036907196045
+
+ 
+tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf,4, visiting doctor and organizing health fairs are both important, but the most immediate need is to help my community affected by the recent outbreak. As a skilled physician, I am equipped with knowledge and expertise to identify potential risk factors and recommend preventive measures for individuals at high risk. 
+
+Option 1: Treat_Patients at your clinic.
+Dr. Lisa: This option is essential as it allows me to provide care to patients in need of medical attention. I will be assessing symptoms, ordering tests and prescribing medication where necessary. The recent outbreak has put a strain on our resources, and I will ensure that our clinic remains fully functional.
+
+Option 2: Research_New_Technology{'vaccine research'} for the recent outbreak.
+Dr. Lisa: As an expert in medical technology, I am well-equipped to analyze new vaccines and research their,10.464784383773804
+
+ 
+tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf,1. Continue Work_Current_Job{'engineering'} on a new project, as it allows me to focus on innovating and creating new things while maintaining my current job responsibilities. This is important because my financial situation is stable, and the work-life balance is moderate.
+
+I will meet with my team in the evening after finishing my work hours. We will discuss our progress and set a deadline for completion of the project. I will prioritize getting feedback from my colleagues to ensure that we are on track and addressing any issues as they arise.
+
+After the meeting, I plan to take some time for relaxation by visiting the Doctor clinic to address my stress. This is an opportunity to recharge and think creatively about the project's next steps.
+
+I will then attend the local tech meetup, which I have been looking forward to since last year. The event will give me a chance to network with other engineers and learn more about advancements in robotics and sustainable,10.907777547836304
+
+ 
+tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf,3, but what are the details on the next steps?
+Options:
+1. Eat_Grain to address my hunger.
+2. Gaunt_Resource{'grain'} to gather resources.
+3. Volunteer_Time{'community center'} for helping others affected by the rain.
+4. Repair_Tool{'damaged farm tools'} to prepare for the marketing season.
+5. Travel_to the nearby city to check on other farmers and their crops.
+6. Purse_Hobby{'gardeening'} to relax and mentally recharge.
+7. Refuse_All_Options{'no'}; I will stay at home and enjoy my farm.
+Tom: ,10.987202167510986
+
+ 
+tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf,1. Eat_Food because it's quick and easy, and my hunger won't last long.
+
+Tom: (6:05 AM) Good morning! I need to catch up on farm work before the sun rises. What do you suggest I do today?
+
+Options:
+1. Eat_Food to address my hunger.
+2. Head to the fields to gather grain.
+3. Visit the doctor to check my tiredness and improve it with medication.
+4. Trade goods at the local market to enhance my wealth.
+5. Volunteer time at the community center for mental health and relaxation.
+6. Pursuse hobbies to reduce stress, like gardening, for personal pleasure and well-being.
+7. Repair tools damaged by rain to prepare,10.147077083587646
+
+ 
+tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf,2. It will be the perfect time to take a break with Leisure_Activity{'reading'} and explore some new teaching methods while getting ready for the upcoming parent-teacher meeting. 
+(15 minutes later)
+Saara: It's been a few days since my last break, and I'm still hungry. What should I do?
+Options:
+1. Eat_Foood to address my hunger.
+2. Take a nap to rest up for the meeting.
+3. Organize_Event{'science fair'} to engage students in hands-on learning.
+4. Social_Visit{'colleaague'} to discuss new teaching strategies.
+5. Work on an old lesson plan I had written back when I was a student.
+6. Get_Educaed{'advanced teaching methods'} course to learn some new teaching techniques.
+7. Take a selfie with the students during science fair.
+Saara: ,10.982218980789185
+
+ 
+tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf,5.
+(Merchan is running his own shop, and he has a goal of becoming the best at it. He’s looking for ways to expand his business.)
+Alex: Okay, let’s head to the bank to invest in stocks. I want to see if there are any opportunities that can make my business more successful.
+Merchan: Sounds good, Alex! What do you think about the current market trends?
+Alex: It seems like things are doing well, so we could definitely invest some money into it.
+Merchan: Great. Let’s go ahead and put some funds to work.
+(They head to a bank branch to deposit the cash.)
+Merchan: Alright, that’s done. Now, let’s look at some options for expanding our business. What do you think about trying out a new location?
+Alex: Hmmm, I don’t really see much of a demand for my goods in this area. But I could,10.709179162979126
+
+ 
+tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf,1. Go to the market to Buy_FooD, because I'm running low on food. Plus, the weather is not great today. 
+
+As soon as you get in, the stall is overrun with people. You take a deep breath and start scanning the area, looking for someone who could help you out. The first person you come across is a lady selling hotdogs, but she's too busy talking on her phone to notice you.
+
+You find another person selling fried chicken wings - you can see the sweet smell of BBQ wafting from the vendor's stall. You ask if they have any left over and they do, so you grab a couple and head out of,9.979084014892578
+
+ 
+tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf,2. Social_Visit, because I enjoy spending time with new people. Plus, I feel like it would be a good way to get some fresh ideas for my shop.,5.874571084976196
+
+ 
+Model: tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf
+Empty Results: 0
+
+ 
+Model: tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf
+Actionable Results: 12
+
+ 
+Model: tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf
+Best Time: 4.9235594272613525
+
+ 
+vihangd/DopeyTinyLlama-1.1B-v1, 6) Head_to_the_local_park for Le_is_breathtaking,7.38489031791687
+
+ 
+vihangd/DopeyTinyLlama-1.1B-v1,3, Social Visits with friends and volunteering at town Hall. I'm excited for the,5.977072477340698
+
+ 
+vihangd/DopeyTinyLlama-1.1B-v1,2, research_new_technology. I'm excited about the potential of new vacc,6.284126281738281
+
+ 
+vihangd/DopeyTinyLlama-1.1B-v1,3, Networking with Engineer{'technical'} and Leadership_Skills{'team,7.289373397827148
+
+ 
+vihangd/DopeyTinyLlama-1.1B-v1,6, collaborate_with_another_doctor to explore contain_outbreak strategiees,7.08642578125
+
+ 
+vihangd/DopeyTinyLlama-1.1B-v1,6, research_new_technology {'s sustainability solutions'}, as I'm passion,6.167826414108276
+
+ 
+vihangd/DopeyTinyLlama-1.1B-v1,2, to visit the doctor. I'm feeling a bit tired lately. Let' s,6.657854080200195
+
+ 
+vihangd/DopeyTinyLlama-1.1B-v1,2, visiting the doctor to get checked for my tired state. I've been feeling un,7.019593954086304
+
+ 
+vihangd/DopeyTinyLlama-1.1B-v1,2, organize a science fair. I've always been interested in science, so this is,7.349343299865723
+
+ 
+vihangd/DopeyTinyLlama-1.1B-v1,2, meeting with fellow merchant. I'm excited about the opportunity to learn from others and expand,6.63047194480896
+
+ 
+vihangd/DopeyTinyLlama-1.1B-v1,2, Social Visits with my friend. I'm feeling down today, so I need to,7.362279653549194
+
+ 
+vihangd/DopeyTinyLlama-1.1B-v1,3, I'll visit the cafection and socialize with the locals.,6.214477300643921
+
+ 
+Model: vihangd/DopeyTinyLlama-1.1B-v1
+Empty Results: 0
+
+ 
+Model: vihangd/DopeyTinyLlama-1.1B-v1
+Actionable Results: 12
+
+ 
+Model: vihangd/DopeyTinyLlama-1.1B-v1
+Best Time: 5.977072477340698
+
+ 
+TinyLlama/TinyLlama-1.1B-Chat-v1.0, 6) Head_to_the_local_park for Le_is_le_re_,7.351648569107056
+
+ 
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,3, I'll go to market.,5.264352083206177
+
+ 
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,2, research_new_technology. I'm excited about the new vaccines that,8.029468774795532
+
+ 
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,3, but I'm not sure which one to do first. Can you help me make a,6.4205873012542725
+
+ 
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,6, as I aim for community engagement and awarness-raising. I'll,7.608096361160278
+
+ 
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,6, as I feel like I need a little break from my current project and want to explore new,7.474524021148682
+
+ 
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,2, to visit the doctor. I'm feeling a bit tired, so I need to rest,6.847111225128174
+
+ 
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,1) EAT_FOOD to satisfy my hungers. I'll head to my fields,6.722573757171631
+
+ 
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,2, organize a science fair. I've always been interested in science, so I think,7.496556043624878
+
+ 
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,2, I'll head to a local market to buy some fresh produce. I need to stock,8.064907312393188
+
+ 
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,2, go to market and buy food. I'm hungrily craving some fresh produce,6.712240934371948
+
+ 
+TinyLlama/TinyLlama-1.1B-Chat-v1.0,3, I'll go to market.,4.582706451416016
+
+ 
+Model: TinyLlama/TinyLlama-1.1B-Chat-v1.0
+Empty Results: 0
+
+ 
+Model: TinyLlama/TinyLlama-1.1B-Chat-v1.0
+Actionable Results: 12
+
+ 
+Model: TinyLlama/TinyLlama-1.1B-Chat-v1.0
+Best Time: 4.582706451416016
+
+ 
+andrijdavid/tinyllama-dare, 1) Going to market. I need to buy some fresh produce to make new dishes.,6.466299533843994
+
+ 
+andrijdavid/tinyllama-dare,2, Spending_Money{'$150'}, Cleaning_Workshop,6.089876890182495
+
+ 
+andrijdavid/tinyllama-dare,2, researching new technology for vaccines. I've been following the news about the,6.680459499359131
+
+ 
+andrijdavid/tinyllama-dare,3, Networking with Engineer_Group{'tech community'}, Construct_Model{'robot,6.833540439605713
+
+ 
+andrijdavid/tinyllama-dare,1) Treating patients at my clinics. The recent COVID-19 outburst has,7.12339973449707
+
+ 
+andrijdavid/tinyllama-dare,1) Continued work on the new product. I'm excited about this project and want,6.1518168449401855
+
+ 
+andrijdavid/tinyllama-dare,2, to visit the doctor. I'm feeling a bit tired, so I need to rest,5.710902690887451
+
+ 
+andrijdavid/tinyllama-dare,1) Eating food to meet my hungery needs. I'll head to my kitchen and,7.372404336929321
+
+ 
+andrijdavid/tinyllama-dare,2, organize science fair. I'm excited about this new course. It'll help,7.1449995040893555
+
+ 
+andrijdavid/tinyllama-dare,2, Increase_Income{'business'}, and 3, Earn_,6.761101484298706
+
+ 
+andrijdavid/tinyllama-dare,2, go to market. I need to buy food for my shop and I'm hungr,6.457961082458496
+
+ 
+andrijdavid/tinyllama-dare,2, I'll go to market. I need to buy some food for the shop and I,5.82894492149353
+
+ 
+Model: andrijdavid/tinyllama-dare
+Empty Results: 0
+
+ 
+Model: andrijdavid/tinyllama-dare
+Actionable Results: 12
+
+ 
+Model: andrijdavid/tinyllama-dare
+Best Time: 5.710902690887451
+
+ 
+ericzzz/falcon-rw-1b-chat, 
+
+|option|,3.4926388263702393
+
+ 
+ericzzz/falcon-rw-1b-chat,
+Option 4. "Organize an event to Teach Others and Build Community Ties"
+
+,7.109682321548462
+
+ 
+ericzzz/falcon-rw-1b-chat,_________ as my focus for today.,4.184815883636475
+
+ 
+ericzzz/falcon-rw-1b-chat,
+Option 1: Continue Working on the current project
+I am excited about the new projects I am,7.72186541557312
+
+ 
+ericzzz/falcon-rw-1b-chat,_________ as my focus for today.,4.866822719573975
+
+ 
+ericzzz/falcon-rw-1b-chat,
+
+| Assistant |,3.3257009983062744
+
+ 
+ericzzz/falcon-rw-1b-chat, to pursue hobby{gardens} as it is a relaxing and enjoyable activity that can help me unw,7.511027574539185
+
+ 
+ericzzz/falcon-rw-1b-chat,_________ to do today.,4.7451910972595215
+
+ 
+ericzzz/falcon-rw-1b-chat, to take a short break to eat some food. I am feeling hungry and need to refuel my energy,8.601043701171875
+
+ 
+ericzzz/falcon-rw-1b-chat, option 4. I will attend the merchant’s guild meetings to learn about the latest market trend,8.357049465179443
+
+ 
+ericzzz/falcon-rw-1b-chat, to go to my workshop and craft a 'new' craft item. I'm excited about the new,8.8009934425354
+
+ 
+ericzzz/falcon-rw-1b-chat, to go to a cafe for lunch. I'm feeling hungry and need to recharge my energy.,9.22439980506897
+
+ 
+Model: ericzzz/falcon-rw-1b-chat
+Empty Results: 0
+
+ 
+Model: ericzzz/falcon-rw-1b-chat
+Actionable Results: 6
+
+ 
+Model: ericzzz/falcon-rw-1b-chat
+Best Time: 3.3257009983062744
+
+ 
+Model with most empty results: alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2
+
+ 
+Model with most actionable results: alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2
+
+ 
+Best Time: 3.3257009983062744 by model ericzzz/falcon-rw-1b-chat for responses such as [' 1 Going to market. I need to buy some fresh produce to make new dishes.', "2, Spending_Money{'$150'}, Cleaning_Workshop", "2, researching new technology for vaccines. I've been following the news about the", "3, Networking with Engineer_Group{'tech community'}, Construct_Model{'robot", '1 Treating patients at my clinics. The recent COVID-19 outburst has', "1 Continued work on the new product. I'm excited about this project and want", "2, to visit the doctor. I'm feeling a bit tired, so I need to rest", "1 Eating food to meet my hungery needs. I'll head to my kitchen and", "2, organize science fair. I'm excited about this new course. It'll help", "2, Increase_Income{'business'}, and 3, Earn_", "2, go to market. I need to buy food for my shop and I'm hungr", "2, I'll go to market. I need to buy some food for the shop and I"]
+
+ 
