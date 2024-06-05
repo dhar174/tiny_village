@@ -19,6 +19,7 @@ from actions import (
     JobSkill,
     ActionSkill,
     ActionSystem,
+    State,
 )
 
 from tiny_jobs import JobRoles, JobRules, Job
@@ -612,6 +613,259 @@ class CharacterSkills:
         return self.skills
 
 
+preconditions_dict = {
+    "Talk": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "satisfy_value": 10,
+            "operator": "gt",
+        },
+        {
+            "name": "extraversion",
+            "attribute": "personality_traits.extraversion",
+            "satisfy_value": 50,
+            "operator": "gt",
+        },
+    ],
+    "Trade": [
+        {
+            "name": "wealth_money",
+            "attribute": "wealth_money",
+            "satisfy_value": 5,
+            "operator": "gt",
+        },
+        {
+            "name": "conscientiousness",
+            "attribute": "personality_traits.conscientiousness",
+            "satisfy_value": 30,
+            "operator": "gt",
+        },
+    ],
+    "Help": [
+        {
+            "name": "social_wellbeing",
+            "attribute": "social_wellbeing",
+            "satisfy_value": 20,
+            "operator": "gt",
+        },
+        {
+            "name": "agreeableness",
+            "attribute": "personality_traits.agreeableness",
+            "satisfy_value": 40,
+            "operator": "gt",
+        },
+    ],
+    "Attack": [
+        {
+            "name": "anger",
+            "attribute": "current_mood",
+            "satisfy_value": -10,
+            "operator": "lt",
+        },
+        {
+            "name": "strength",
+            "attribute": "skills.strength",
+            "satisfy_value": 20,
+            "operator": "gt",
+        },
+    ],
+    "Befriend": [
+        {
+            "name": "openness",
+            "attribute": "personality_traits.openness",
+            "satisfy_value": 50,
+            "operator": "gt",
+        },
+        {
+            "name": "social_wellbeing",
+            "attribute": "social_wellbeing",
+            "satisfy_value": 30,
+            "operator": "gt",
+        },
+    ],
+    "Teach": [
+        {
+            "name": "knowledge",
+            "attribute": "skills.knowledge",
+            "satisfy_value": 50,
+            "operator": "gt",
+        },
+        {
+            "name": "patience",
+            "attribute": "personality_traits.agreeableness",
+            "satisfy_value": 30,
+            "operator": "gt",
+        },
+    ],
+    "Learn": [
+        {
+            "name": "curiosity",
+            "attribute": "personality_traits.openness",
+            "satisfy_value": 50,
+            "operator": "gt",
+        },
+        {
+            "name": "focus",
+            "attribute": "mental_health",
+            "satisfy_value": 40,
+            "operator": "gt",
+        },
+    ],
+    "Heal": [
+        {
+            "name": "medical_knowledge",
+            "attribute": "skills.medical_knowledge",
+            "satisfy_value": 40,
+            "operator": "gt",
+        },
+        {
+            "name": "compassion",
+            "attribute": "personality_traits.agreeableness",
+            "satisfy_value": 40,
+            "operator": "gt",
+        },
+    ],
+    "Gather": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "satisfy_value": 20,
+            "operator": "gt",
+        },
+        {
+            "name": "curiosity",
+            "attribute": "personality_traits.openness",
+            "satisfy_value": 30,
+            "operator": "gt",
+        },
+    ],
+    "Build": [
+        {
+            "name": "construction_skill",
+            "attribute": "skills.construction",
+            "satisfy_value": 30,
+            "operator": "gt",
+        },
+        {
+            "name": "conscientiousness",
+            "attribute": "personality_traits.conscientiousness",
+            "satisfy_value": 40,
+            "operator": "gt",
+        },
+    ],
+    "Give Item": [
+        {
+            "name": "item_in_inventory",
+            "attribute": "inventory.item_count",
+            "satisfy_value": 1,
+            "operator": "gt",
+        },
+        {
+            "name": "generosity",
+            "attribute": "personality_traits.agreeableness",
+            "satisfy_value": 30,
+            "operator": "gt",
+        },
+    ],
+    "Receive Item": [
+        {
+            "name": "need",
+            "attribute": "hunger_level",
+            "satisfy_value": 5,
+            "operator": "gt",
+        },
+        {
+            "name": "social_wellbeing",
+            "attribute": "social_wellbeing",
+            "satisfy_value": 10,
+            "operator": "gt",
+        },
+    ],
+}
+
+effect_dict = {
+    "Talk": [
+        {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 5},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -2},
+        {"targets": ["target"], "attribute": "social_wellbeing", "change_value": 5},
+        {
+            "targets": ["initiator"],
+            "method": "play_animation",
+            "method_args": ["talking"],
+        },
+    ],
+    "Trade": [
+        {"targets": ["initiator"], "attribute": "wealth_money", "change_value": -5},
+        {
+            "targets": ["initiator"],
+            "attribute": "inventory.item_count",
+            "change_value": -1,
+        },
+        {"targets": ["target"], "attribute": "wealth_money", "change_value": 5},
+        {"targets": ["target"], "attribute": "inventory.item_count", "change_value": 1},
+    ],
+    "Help": [
+        {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 10},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -5},
+        {"targets": ["target"], "attribute": "health_status", "change_value": 10},
+    ],
+    "Attack": [
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -5},
+        {"targets": ["target"], "attribute": "health_status", "change_value": -10},
+    ],
+    "Befriend": [
+        {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 8},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -3},
+        {"targets": ["target"], "attribute": "social_wellbeing", "change_value": 8},
+    ],
+    "Teach": [
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -4},
+        {"targets": ["target"], "attribute": "skills.knowledge", "change_value": 5},
+    ],
+    "Learn": [
+        {"targets": ["initiator"], "attribute": "skills.knowledge", "change_value": 7},
+        {"targets": ["initiator"], "attribute": "mental_health", "change_value": 3},
+        {"targets": ["target"], "attribute": "skills.teaching", "change_value": 1},
+    ],
+    "Heal": [
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -6},
+        {"targets": ["target"], "attribute": "health_status", "change_value": 15},
+    ],
+    "Gather": [
+        {"targets": ["initiator"], "attribute": "wealth_money", "change_value": 5},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -4},
+    ],
+    "Build": [
+        {"targets": ["initiator"], "attribute": "material_goods", "change_value": 10},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -8},
+    ],
+    "Give Item": [
+        {
+            "targets": ["initiator"],
+            "attribute": "inventory.item_count",
+            "change_value": -1,
+        },
+        {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 5},
+        {"targets": ["target"], "attribute": "inventory.item_count", "change_value": 1},
+        {"targets": ["target"], "attribute": "social_wellbeing", "change_value": 5},
+    ],
+    "Receive Item": [
+        {
+            "targets": ["initiator"],
+            "attribute": "inventory.item_count",
+            "change_value": 1,
+        },
+        {"targets": ["initiator"], "attribute": "hunger_level", "change_value": -5},
+        {
+            "targets": ["target"],
+            "attribute": "inventory.item_count",
+            "change_value": -1,
+        },
+    ],
+}
+
+
 class Character:
     """
     Character Attributes
@@ -644,10 +898,86 @@ class Character:
         motives: PersonalMotives = None,
         personality_traits: PersonalityTraits = None,
         career_goals: List[str] = [],
+        possible_interactions: List[Action] = [],
     ):
 
         self.name = self.set_name(name)
         self.age = self.set_age(age)
+        self.character_actions = [
+            Action(
+                "Talk",
+                action_system.instantiate_condition(preconditions_dict["Talk"]),
+                effects=effect_dict["Talk"],
+                cost=1,
+            ),
+            Action(
+                "Trade",
+                action_system.instantiate_condition(preconditions_dict["Trade"]),
+                effects=effect_dict["Trade"],
+                cost=2,
+            ),
+            Action(
+                "Help",
+                action_system.instantiate_condition(preconditions_dict["Help"]),
+                effects=effect_dict["Help"],
+                cost=1,
+            ),
+            Action(
+                "Attack",
+                action_system.instantiate_condition(preconditions_dict["Attack"]),
+                effects=effect_dict["Attack"],
+                cost=3,
+            ),
+            Action(
+                "Befriend",
+                action_system.instantiate_condition(preconditions_dict["Befriend"]),
+                effects=effect_dict["Befriend"],
+                cost=1,
+            ),
+            Action(
+                "Teach",
+                action_system.instantiate_condition(preconditions_dict["Teach"]),
+                effects=effect_dict["Teach"],
+                cost=2,
+            ),
+            Action(
+                "Learn",
+                action_system.instantiate_condition(preconditions_dict["Learn"]),
+                effects=effect_dict["Learn"],
+                cost=1,
+            ),
+            Action(
+                "Heal",
+                action_system.instantiate_condition(preconditions_dict["Heal"]),
+                effects=effect_dict["Heal"],
+                cost=2,
+            ),
+            Action(
+                "Gather",
+                action_system.instantiate_condition(preconditions_dict["Gather"]),
+                effects=effect_dict["Gather"],
+                cost=1,
+            ),
+            Action(
+                "Build",
+                action_system.instantiate_condition(preconditions_dict["Build"]),
+                effects=effect_dict["Build"],
+                cost=2,
+            ),
+            Action(
+                "Give Item",
+                action_system.instantiate_condition(preconditions_dict["Give Item"]),
+                effects=effect_dict["Give Item"],
+                cost=1,
+            ),
+            Action(
+                "Receive Item",
+                action_system.instantiate_condition(preconditions_dict["Receive Item"]),
+                effects=effect_dict["Receive Item"],
+                cost=1,
+            ),
+        ]
+        self.possible_interactions = possible_interactions + self.character_actions
 
         self.pronouns = self.set_pronouns(pronouns)
         self.friendship_grid = friendship_grid if friendship_grid else [{}]
@@ -735,6 +1065,12 @@ class Character:
             and self.personality_traits == other.personality_traits
         )
 
+    def get_possible_interactions(self):
+        return self.possible_interactions
+
+    def play_animation(self, animation):
+        print(f"{self.name} is playing animation: {animation}")
+
     def describe(self):
         print(
             f"{self.name} is a {self.age}-year-old {self.gender_identity} with the following personality traits:"
@@ -778,6 +1114,7 @@ class Character:
         return self.name
 
     def set_name(self, name):
+        # Warning: Name MUST be unique! Check for duplicates before setting.
         self.name = name
         return self.name
 
@@ -1525,6 +1862,9 @@ class Character:
             "motives": self.motives,
         }
 
+    def get_state(self):
+        return State(self.to_dict())
+
 
 def default_long_term_goal_generator(character: Character):
     # goal:requirements
@@ -1902,3 +2242,4 @@ class CreateCharacter:
 
 if __name__ == "__main__":
     gametime_manager = GameTimeManager()
+    action_system = ActionSystem()

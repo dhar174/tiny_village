@@ -1,8 +1,12 @@
 import re
+import spacy
 
 
-def main(docs, num_subordinate_clauses):
+def main(docs, nlp: spacy.lang.en.English):
     # Initialize structure to hold semantic roles
+    # if docs is a list of strings, convert it to a spacy object using the nlp object
+    if isinstance(docs, list):
+        docs = nlp(docs)
     semantic_rolesb = {
         "who": [],
         "did": [],
@@ -12,7 +16,7 @@ def main(docs, num_subordinate_clauses):
         "why": [],
         "how": [],
     }
-
+    noun_phrases = [chunk for chunk in docs.noun_chunks]
     # Mapping of dependency tags to semantic roles
     dep_to_role = {
         "nsubj": "who",
@@ -167,11 +171,11 @@ def main(docs, num_subordinate_clauses):
     # print(f"Facts: {facts}")
     print(semantic_rolesb)
     # Check if the number of subordinate clauses is equal to the number of actions minus 1
-    assert (
-        num_subordinate_clauses == len(semantic_rolesb["did"]) - 1
-        if num_subordinate_clauses > 0
-        else True
-    )
+    # assert (
+    #     num_subordinate_clauses == len(semantic_rolesb["did"]) - 1
+    #     if num_subordinate_clauses > 0
+    #     else True
+    # )
 
     # check if the ROOT verb has an auxiliary verb
     subj_compound = []
@@ -1489,15 +1493,8 @@ if __name__ == "__main__":
         "As a farmer, what crop would be make the most money?",
         "What farm vegetable is selling the most these days?",
     ]
-    templates = {}
     for query in queries:
-        docs = nlp(query)
-        num_subordinate_clauses = len([tok for tok in docs if tok.dep_ == "advcl"])
-        templates[query] = main(docs, num_subordinate_clauses)
-
-    for query, template in templates.items():
         print(f"Query: {query}")
-        for idx, t in enumerate(template):
-            print(f"Template {idx + 1}: {t}")
-            print("\n")
+        templates = generate_templates(query)
+        print(f"Templates: {templates}")
         print("\n")

@@ -1,11 +1,12 @@
 import heapq
 from math import inf
 import networkx as nx
-from numpy import add
+from numpy import add, char
 from pkg_resources import add_activation_listener
 from tiny_characters import Character
+from tiny_jobs import Job
 from tiny_locations import Location
-from tiny_event_handler import EventHandler
+from tiny_event_handler import Event
 from actions import Action
 from tiny_items import ItemObject
 import tiny_memories
@@ -111,14 +112,22 @@ from networkx.algorithms import community
 
 class GraphManager:
     def __init__(self):
-        self.characters = []
-        self.locations = []
-        self.objects = []
-        self.events = []
-        self.activities = []
-        self.jobs = []
-        self.G = None
-        self.graph = self.initialize_graph()
+        self.characters = {}
+        self.locations = {}
+        self.objects = {}
+        self.events = {}
+        self.activities = {}
+        self.jobs = {}
+        self.type_to_dict_map = {
+            "character": self.characters,
+            "location": self.locations,
+            "object": self.objects,
+            "event": self.events,
+            "activity": self.activities,
+            "job": self.jobs,
+        }
+
+        self.G = self.initialize_graph()
 
     def initialize_graph(self):
         self.G = (
@@ -127,7 +136,8 @@ class GraphManager:
         return self.G
 
     # Node Addition Methods
-    def add_character_node(self, char):
+    def add_character_node(self, char: Character):
+        self.characters[char.name] = char
         self.G.add_node(
             char.name,
             type="character",
@@ -140,7 +150,8 @@ class GraphManager:
             coordinate_location=char.coordinate_location,
         )
 
-    def add_location_node(self, loc):
+    def add_location_node(self, loc: Location):
+        self.locations[loc.name] = loc
         self.G.add_node(
             loc.name,
             type="location",
@@ -151,10 +162,12 @@ class GraphManager:
             coordinate_location=loc.coordinate_location,
         )
 
-    def add_event_node(self, event):
+    def add_event_node(self, event: Event):
+        self.events[event.name] = event
         self.G.add_node(
             event.name,
             type="event",
+            event_type=event.type,
             date=event.date,
             importance=event.importance,
             impact=event.impact,
@@ -163,6 +176,7 @@ class GraphManager:
         )
 
     def add_object_node(self, obj):
+        self.objects[obj.name] = obj
         self.G.add_node(
             obj.name,
             type="object",
@@ -174,7 +188,8 @@ class GraphManager:
             coordinate_location=obj.coordinate_location,
         )
 
-    def add_activity_node(self, act):
+    def add_activity_node(self, act: Action):
+        self.activities[act.name] = act
         self.G.add_node(
             act.name,
             type="activity",
@@ -186,7 +201,8 @@ class GraphManager:
             coordinate_location=act.coordinate_location,
         )
 
-    def add_job_node(self, job):
+    def add_job_node(self, job: Job):
+        self.jobs[job.name] = job
         self.G.add_node(
             job.name,
             type="job",
@@ -195,10 +211,32 @@ class GraphManager:
             salary=job.salary,
         )
 
+    def add_dict_of_nodes(self, nodes_dict):
+        for node_type, nodes in nodes_dict.items():
+            if node_type == "characters":
+                for char in nodes:
+                    self.add_character_node(char)
+            elif node_type == "locations":
+                for loc in nodes:
+                    self.add_location_node(loc)
+            elif node_type == "events":
+                for event in nodes:
+                    self.add_event_node(event)
+            elif node_type == "objects":
+                for obj in nodes:
+                    self.add_object_node(obj)
+            elif node_type == "activities":
+                for act in nodes:
+                    self.add_activity_node(act)
+            elif node_type == "jobs":
+                for job in nodes:
+                    self.add_job_node(job)
+
     # Edge Addition Methods with Detailed Attributes
     # Character-Character
     def add_character_character_edge(
         self,
+        edge_type,
         char1,
         char2,
         relationship_type,
@@ -210,17 +248,19 @@ class GraphManager:
         self.G.add_edge(
             char1,
             char2,
-            type="social",
+            type=edge_type,
             relationship_type=relationship_type,
             strength=strength,
             history=history,
             emotional_impact=emotional_impact,
             interaction_frequency=interaction_frequency,
+            key=edge_type,
         )
 
     # Character-Location
     def add_character_location_edge(
         self,
+        edge_type,
         char,
         loc,
         frequency_of_visits,
@@ -231,16 +271,18 @@ class GraphManager:
         self.G.add_edge(
             char,
             loc,
-            type="visits",
+            type=edge_type,
             frequency_of_visits=frequency_of_visits,
             last_visit=last_visit.strftime("%Y-%m-%d"),
             favorite_activities=favorite_activities,
             ownership_status=ownership_status,
+            key=edge_type,
         )
 
     # Character-Item
     def add_character_object_edge(
         self,
+        edge_type,
         char,
         obj,
         ownership_status,
@@ -251,16 +293,18 @@ class GraphManager:
         self.G.add_edge(
             char,
             obj,
-            type="ownership",
+            type=edge_type,
             ownership_status=ownership_status,
             usage_frequency=usage_frequency,
             sentimental_value=sentimental_value,
             last_used_time=last_used_time.strftime("%Y-%m-%d"),
+            key=edge_type,
         )
 
     # Character-Event
     def add_character_event_edge(
         self,
+        edge_type,
         char,
         event,
         participation_status,
@@ -271,16 +315,18 @@ class GraphManager:
         self.G.add_edge(
             char,
             event,
-            type="participation",
+            type=edge_type,
             participation_status=participation_status,
             role=role,
             impact_on_character=impact_on_character,
             emotional_outcome=emotional_outcome,
+            key=edge_type,
         )
 
     # Character-Activity
     def add_character_activity_edge(
         self,
+        edge_type,
         char,
         act,
         engagement_level,
@@ -291,156 +337,200 @@ class GraphManager:
         self.G.add_edge(
             char,
             act,
-            type="engagement",
+            type=edge_type,
             engagement_level=engagement_level,
             skill_improvement=skill_improvement,
             activity_frequency=activity_frequency,
             motivation=motivation,
+            key=edge_type,
         )
 
         # Location-Location Edges
 
     def add_location_location_edge(
-        self, loc1, loc2, proximity, connectivity, rivalry, trade_relations
+        self, edge_type, loc1, loc2, proximity, connectivity, rivalry, trade_relations
     ):
         self.G.add_edge(
             loc1,
             loc2,
-            type="connectivity",
+            type=edge_type,
             proximity=proximity,
             connectivity=connectivity,
             rivalry=rivalry,
             trade_relations=trade_relations,
+            key=edge_type,
         )
 
     # Location-Item Edges
-    def add_location_item_edge(self, loc, obj, item_presence, item_relevance):
+    def add_location_item_edge(
+        self, edge_type, loc, obj, item_presence, item_relevance
+    ):
         self.G.add_edge(
             loc,
             obj,
-            type="contains",
+            type=edge_type,
             item_presence=item_presence,
             item_relevance=item_relevance,
+            key=edge_type,
         )
 
     # Location-Event Edges
     def add_location_event_edge(
-        self, loc, event, event_occurrence, location_role, capacity, preparation_level
+        self,
+        edge_type,
+        loc,
+        event,
+        event_occurrence,
+        location_role,
+        capacity,
+        preparation_level,
     ):
         self.G.add_edge(
             loc,
             event,
-            type="hosting_event",
+            type=edge_type,
             event_occurrence=event_occurrence,
             location_role=location_role,
             capacity=capacity,
             preparation_level=preparation_level,
+            key=edge_type,
         )
 
     # Location-Activity Edges
     def add_location_activity_edge(
-        self, loc, act, activity_suitability, activity_popularity, exclusivity
+        self,
+        edge_type,
+        loc,
+        act,
+        activity_suitability,
+        activity_popularity,
+        exclusivity,
     ):
         self.G.add_edge(
             loc,
             act,
-            type="activity_location",
+            type=edge_type,
             activity_suitability=activity_suitability,
             activity_popularity=activity_popularity,
             exclusivity=exclusivity,
+            key=edge_type,
         )
 
     # Item-Item Edges
-    def add_item_item_edge(self, obj1, obj2, compatibility, conflict, combinability):
+    def add_item_item_edge(
+        self, edge_type, obj1, obj2, compatibility, conflict, combinability
+    ):
         self.G.add_edge(
             obj1,
             obj2,
-            type="item_interaction",
+            type=edge_type,
             compatibility=compatibility,
             conflict=conflict,
             combinability=combinability,
+            key=edge_type,
         )
 
     # Item-Activity Edges
-    def add_item_activity_edge(self, obj, act, necessity, enhancement, obstruction):
+    def add_item_activity_edge(
+        self, edge_type, obj, act, necessity, enhancement, obstruction
+    ):
         self.G.add_edge(
             obj,
             act,
-            type="item_usage",
+            type=edge_type,
             necessity=necessity,
             enhancement=enhancement,
             obstruction=obstruction,
+            key=edge_type,
         )
 
     # Event-Activity Edges
     def add_event_activity_edge(
-        self, event, act, activities_involved, activity_impact, activity_requirements
+        self,
+        edge_type,
+        event,
+        act,
+        activities_involved,
+        activity_impact,
+        activity_requirements,
     ):
         self.G.add_edge(
             event,
             act,
-            type="event_activity",
+            type=edge_type,
             activities_involved=activities_involved,
             activity_impact=activity_impact,
             activity_requirements=activity_requirements,
+            key=edge_type,
         )
 
     # Event-Item Edges
     def add_event_item_edge(
-        self, event, obj, required_for_event, item_usage, item_impact
+        self, edge_type, event, obj, required_for_event, item_usage, item_impact
     ):
         self.G.add_edge(
             event,
             obj,
-            type="event_item",
+            type=edge_type,
             required_for_event=required_for_event,
             item_usage=item_usage,
             item_impact=item_impact,
+            key=edge_type,
         )
 
     # Activity-Activity Edges
-    def add_activity_activity_edge(self, act1, act2, synergy, conflict, dependency):
+    def add_activity_activity_edge(
+        self, edge_type, act1, act2, synergy, conflict, dependency
+    ):
         self.G.add_edge(
             act1,
             act2,
-            type="activity_relation",
+            type=edge_type,
             synergy=synergy,
             conflict=conflict,
             dependency=dependency,
+            key=edge_type,
         )
 
     # Additional Job-Related Edges
     # Character-Job Edges
-    def add_character_job_edge(self, char, job, role, job_status, job_performance):
+    def add_character_job_edge(
+        self, edge_type, char, job, role, job_status, job_performance
+    ):
         self.G.add_edge(
             char,
             job,
-            type="employment",
+            type=edge_type,
             role=role,
             job_status=job_status,
             job_performance=job_performance,
+            key=edge_type,
         )
 
     # Job-Location Edges
-    def add_job_location_edge(self, job, loc, essential_for_job, location_dependence):
+    def add_job_location_edge(
+        self, edge_type, job, loc, essential_for_job, location_dependence
+    ):
         self.G.add_edge(
             job,
             loc,
-            type="job_location",
+            type=edge_type,
             essential_for_job=essential_for_job,
             location_dependence=location_dependence,
+            key=edge_type,
         )
 
     # Job-Activity Edges
     def add_job_activity_edge(
-        self, job, act, activity_necessity, performance_enhancement
+        self, edge_type, job, act, activity_necessity, performance_enhancement
     ):
         self.G.add_edge(
             job,
             act,
-            type="job_activity",
+            type=edge_type,
             activity_necessity=activity_necessity,
             performance_enhancement=performance_enhancement,
+            key=edge_type,
         )
 
     # Adding temporal, emotional, economic, historical, and security attributes dynamically
@@ -462,161 +552,225 @@ class GraphManager:
         # Enhanced Character-Character Edges
 
     def add_enhanced_character_character_edge(
-        self, char1, char2, shared_experiences, mutual_relations
+        self, edge_type, char1, char2, shared_experiences, mutual_relations
     ):
         self.G.add_edge(
             char1,
             char2,
-            type="enhanced_social",
+            type=edge_type,
             shared_experiences=shared_experiences,
             mutual_relations=mutual_relations,
         )
 
     # Enhanced Character-Location Edges
     def add_enhanced_character_location_edge(
-        self, char, loc, emotional_attachment, significant_events
+        self, edge_type, char, loc, emotional_attachment, significant_events
     ):
         self.G.add_edge(
             char,
             loc,
-            type="enhanced_visit",
+            type=edge_type,
             emotional_attachment=emotional_attachment,
             significant_events=significant_events,
         )
 
     # Enhanced Character-Item Edges
     def add_enhanced_character_item_edge(
-        self, char, obj, items_exchanged, items_lost_found
+        self, edge_type, char, obj, items_exchanged, items_lost_found
     ):
         self.G.add_edge(
             char,
             obj,
-            type="enhanced_ownership",
+            type=edge_type,
             items_exchanged=items_exchanged,
             items_lost_found=items_lost_found,
         )
 
     # Enhanced Character-Event Edges
-    def add_enhanced_character_event_edge(self, char, event, anticipations, memories):
+    def add_enhanced_character_event_edge(
+        self, edge_type, char, event, anticipations, memories
+    ):
         self.G.add_edge(
             char,
             event,
-            type="enhanced_participation",
+            type=edge_type,
             anticipations=anticipations,
             memories=memories,
         )
 
     # Enhanced Character-Activity Edges
-    def add_enhanced_character_activity_edge(self, char, act, aversions, aspirations):
+    def add_enhanced_character_activity_edge(
+        self, edge_type, char, act, aversions, aspirations
+    ):
         self.G.add_edge(
             char,
             act,
-            type="enhanced_engagement",
+            type=edge_type,
             aversions=aversions,
             aspirations=aspirations,
         )
 
     # Enhanced Location-Location Edges
     def add_enhanced_location_location_edge(
-        self, loc1, loc2, historical_links, environmental_factors
+        self, edge_type, loc1, loc2, historical_links, environmental_factors
     ):
         self.G.add_edge(
             loc1,
             loc2,
-            type="enhanced_connectivity",
+            type=edge_type,
             historical_links=historical_links,
             environmental_factors=environmental_factors,
         )
 
     # Enhanced Location-Item Edges
-    def add_enhanced_location_item_edge(self, loc, obj, items_history, symbolic_items):
+    def add_enhanced_location_item_edge(
+        self, edge_type, loc, obj, items_history, symbolic_items
+    ):
         self.G.add_edge(
             loc,
             obj,
-            type="enhanced_contains",
+            type=edge_type,
             items_history=items_history,
             symbolic_items=symbolic_items,
         )
 
     # Enhanced Location-Event Edges
     def add_enhanced_location_event_edge(
-        self, loc, event, recurring_events, historic_impact
+        self, edge_type, loc, event, recurring_events, historic_impact
     ):
         self.G.add_edge(
             loc,
             event,
-            type="enhanced_hosting_event",
+            type=edge_type,
             recurring_events=recurring_events,
             historic_impact=historic_impact,
         )
 
     # Enhanced Location-Activity Edges
     def add_enhanced_location_activity_edge(
-        self, loc, act, prohibitions, historical_activities
+        self, edge_type, loc, act, prohibitions, historical_activities
     ):
         self.G.add_edge(
             loc,
             act,
-            type="enhanced_activity_location",
+            type=edge_type,
             prohibitions=prohibitions,
             historical_activities=historical_activities,
         )
 
     # Enhanced Item-Item Edges
-    def add_enhanced_item_item_edge(self, obj1, obj2, part_of_set, usage_combinations):
+    def add_enhanced_item_item_edge(
+        self, edge_type, obj1, obj2, part_of_set, usage_combinations
+    ):
         self.G.add_edge(
             obj1,
             obj2,
-            type="enhanced_item_interaction",
+            type=edge_type,
             part_of_set=part_of_set,
             usage_combinations=usage_combinations,
         )
 
     # Enhanced Item-Activity Edges
     def add_enhanced_item_activity_edge(
-        self, obj, act, damage_risks, repair_opportunities
+        self, edge_type, obj, act, damage_risks, repair_opportunities
     ):
         self.G.add_edge(
             obj,
             act,
-            type="enhanced_item_usage",
+            type=edge_type,
             damage_risks=damage_risks,
             repair_opportunities=repair_opportunities,
         )
 
     # Enhanced Event-Activity Edges
     def add_enhanced_event_activity_edge(
-        self, event, act, preventions_triggers, traditional_activities
+        self, edge_type, event, act, preventions_triggers, traditional_activities
     ):
         self.G.add_edge(
             event,
             act,
-            type="enhanced_event_activity",
+            type=edge_type,
             preventions_triggers=preventions_triggers,
             traditional_activities=traditional_activities,
         )
 
     # Enhanced Event-Item Edges
     def add_enhanced_event_item_edge(
-        self, event, obj, event_triggers, traditional_uses
+        self, edge_type, event, obj, event_triggers, traditional_uses
     ):
         self.G.add_edge(
             event,
             obj,
-            type="enhanced_event_item",
+            type=edge_type,
             event_triggers=event_triggers,
             traditional_uses=traditional_uses,
         )
 
     # Enhanced Activity-Activity Edges
-    def add_enhanced_activity_activity_edge(self, act1, act2, exclusivity, sequences):
+    def add_enhanced_activity_activity_edge(
+        self, edge_type, act1, act2, exclusivity, sequences
+    ):
         self.G.add_edge(
             act1,
             act2,
-            type="enhanced_activity_relation",
+            type=edge_type,
             exclusivity=exclusivity,
             sequences=sequences,
         )
+
+    def add_dict_of_edges(self, edges_dict):
+        for edge_type, edges in edges_dict.items():
+            if edge_type == "character_character":
+                for edge in edges:
+                    self.add_character_character_edge(*edge)
+            elif edge_type == "character_location":
+                for edge in edges:
+                    self.add_character_location_edge(*edge)
+            elif edge_type == "character_object":
+                for edge in edges:
+                    self.add_character_object_edge(*edge)
+            elif edge_type == "character_event":
+                for edge in edges:
+                    self.add_character_event_edge(*edge)
+            elif edge_type == "character_activity":
+                for edge in edges:
+                    self.add_character_activity_edge(*edge)
+            elif edge_type == "location_location":
+                for edge in edges:
+                    self.add_location_location_edge(*edge)
+            elif edge_type == "location_item":
+                for edge in edges:
+                    self.add_location_item_edge(*edge)
+            elif edge_type == "location_event":
+                for edge in edges:
+                    self.add_location_event_edge(*edge)
+            elif edge_type == "location_activity":
+                for edge in edges:
+                    self.add_location_activity_edge(*edge)
+            elif edge_type == "item_item":
+                for edge in edges:
+                    self.add_item_item_edge(*edge)
+            elif edge_type == "item_activity":
+                for edge in edges:
+                    self.add_item_activity_edge(*edge)
+            elif edge_type == "event_activity":
+                for edge in edges:
+                    self.add_event_activity_edge(*edge)
+            elif edge_type == "event_item":
+                for edge in edges:
+                    self.add_event_item_edge(*edge)
+            elif edge_type == "activity_activity":
+                for edge in edges:
+                    self.add_activity_activity_edge(*edge)
+            elif edge_type == "character_job":
+                for edge in edges:
+                    self.add_character_job_edge(*edge)
+            elif edge_type == "job_location":
+                for edge in edges:
+                    self.add_job_location_edge(*edge)
+            elif edge_type == "job_activity":
+                for edge in edges:
+                    self.add_job_activity_edge(*edge)
 
     def find_shortest_path(self, source, target):
         """
@@ -1645,8 +1799,8 @@ class GraphManager:
         Returns:
             dict: The state of the character.
         """
-        if character_name in self.graph.nodes:
-            return self.graph.nodes[character_name]
+        if character_name in self.G.nodes:
+            return self.G.nodes[character_name]
         else:
             raise ValueError(f"No character named {character_name} in the graph.")
 
@@ -1660,15 +1814,99 @@ class GraphManager:
         Returns:
             list: A list of possible actions and their utilities.
         """
-        if character_name not in self.graph.nodes:
+        if character_name not in self.G.nodes:
             raise ValueError(f"No character named {character_name} in the graph.")
 
         possible_actions = []
-        for neighbor in self.graph.neighbors(character_name):
-            action = self.graph.edges[character_name, neighbor].get("action")
-            utility = self.graph.edges[character_name, neighbor].get("utility")
-            if action and utility:
-                possible_actions.append({"name": action, "utility": utility})
+        character_state = self.get_character_state(character_name)
+
+        for neighbor in self.G.neighbors(character_name):
+            neighbor_data = self.G.nodes[neighbor]
+            neighbor_type = neighbor_data.get("type")
+
+            if neighbor_type == "Character":
+                character_actions = [
+                    action
+                    for action in self.characters[
+                        neighbor.get("name")
+                    ].get_possible_interactions()
+                ]
+                for action in character_actions:
+                    if all(
+                        precondition(character_state)
+                        for precondition in action.preconditions
+                    ):
+                        possible_actions.append(
+                            {
+                                "name": action.name,
+                                "utility": self.calculate_utility(
+                                    action, character_state
+                                ),
+                            }
+                        )
+
+            elif neighbor_type == "Location":
+                location_actions = [
+                    action
+                    for action in self.locations[
+                        neighbor.get("name")
+                    ].get_possible_interactions()
+                ]
+                for action in location_actions:
+                    if all(
+                        precondition(character_state)
+                        for precondition in action.preconditions
+                    ):
+                        possible_actions.append(
+                            {
+                                "name": action.name,
+                                "utility": self.calculate_utility(
+                                    action, character_state
+                                ),
+                            }
+                        )
+
+            elif neighbor_type == "Item":
+                item_actions = [
+                    action
+                    for action in self.items[
+                        neighbor.get("name")
+                    ].get_possible_interactions()
+                ]
+                for action in item_actions:
+                    if all(
+                        precondition(character_state)
+                        for precondition in action.preconditions
+                    ):
+                        possible_actions.append(
+                            {
+                                "name": action.name,
+                                "utility": self.calculate_utility(
+                                    action, character_state
+                                ),
+                            }
+                        )
+
+            elif neighbor_type == "Event":
+                event_actions = [
+                    action
+                    for action in self.events[
+                        neighbor.get("name")
+                    ].get_possible_interactions()
+                ]
+                for action in event_actions:
+                    if all(
+                        precondition(character_state)
+                        for precondition in action.preconditions
+                    ):
+                        possible_actions.append(
+                            {
+                                "name": action.name,
+                                "utility": self.calculate_utility(
+                                    action, character_state
+                                ),
+                            }
+                        )
 
         return possible_actions
 
@@ -1769,6 +2007,20 @@ class GraphManager:
 
         return career_benefit, past_experience_benefit
 
+    def get_node(self, node_id):
+        """
+        Retrieve a node from the graph based on its identifier.
+
+        Parameters:
+            node_id (str): The identifier of the node to retrieve.
+
+        Returns:
+            dict: The node data if found, or an empty dictionary if the node does not exist.
+        """
+        return self.G.nodes.get(
+            node_id, {}
+        )  # Return the node data or an empty dictionary
+
 
 """ 
 Graph-Based Decision Making:
@@ -1785,7 +2037,7 @@ Integrate simple learning mechanisms where characters can adjust their preferenc
 class TinyVillageGraph:
     def __init__(self):
         self.graph_manager = GraphManager()
-        self.graph = self.graph_manager.create_tiny_village_graph()
+        self.G = self.graph_manager.create_tiny_village_graph()
 
     def update_strategy(self, event):
         if event["event"] == "new_day":
@@ -1807,9 +2059,7 @@ class TinyVillageGraph:
         actions = self.graph_manager.get_possible_actions(character)
 
         # Use the graph to analyze current relationships and preferences
-        current_state = self.graph_manager.graph_analysis(
-            self.graph, character, "daily"
-        )
+        current_state = self.graph_manager.graph_analysis(self.G, character, "daily")
 
         # Plan the career steps using GOAP
         plan = self.goap_planner(character, goal, current_state, actions)
@@ -1820,25 +2070,23 @@ class TinyVillageGraph:
         return plan, utility_scores
 
     def update_graph(self, action, character, target=None):
-        self.graph_manager.update_graph(self.graph, action, character, target)
-        return self.graph
+        self.graph_manager.update_graph(self.G, action, character, target)
+        return self.G
 
     def get_strongest_relationships(self, character):
-        return self.graph_manager.get_strongest_relationships(self.graph, character)
+        return self.graph_manager.get_strongest_relationships(self.G, character)
 
     def get_favorite_locations(self, character):
-        return self.graph_manager.get_favorite_locations(self.graph, character)
+        return self.graph_manager.get_favorite_locations(self.G, character)
 
     def analyze_event_impact(self, event_node):
-        return self.graph_manager.analyze_event_impact(self.graph, event_node)
+        return self.graph_manager.analyze_event_impact(self.G, event_node)
 
     def explore_career_opportunities(self, character):
-        return self.graph_manager.explore_career_opportunities(self.graph, character)
+        return self.graph_manager.explore_career_opportunities(self.G, character)
 
     def analyze_daily_preferences(self, character):
-        return self.graph_manager.analyze_daily_preferences(self.graph, character)
+        return self.graph_manager.analyze_daily_preferences(self.G, character)
 
     def analyze_career_impact(self, character, job_offer):
-        return self.graph_manager.analyze_career_impact(
-            self.graph, character, job_offer
-        )
+        return self.graph_manager.analyze_career_impact(self.G, character, job_offer)

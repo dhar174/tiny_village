@@ -41,7 +41,7 @@ import tiny_brain_io as tbi
 import tiny_time_manager as ttm
 import os
 import sys
-
+import tiny_sr_mapping as tsm
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
@@ -5393,10 +5393,13 @@ if __name__ == "__main__":
         print(f"\n Query: {query} \n")
         for mem in memories_ip[query]:
             print(f"IP No Norm: {mem.facts} \n")
+
         for mem in memories_ip_norm[query]:
             print(f"IP Norm: {mem.facts} \n")
         for mem in memories_l2[query]:
             print(f"L2: {mem.facts} \n")
+        for fact in tsm.main(query, nlp):
+            print(f"From SR Mapper: {fact} \n")
 
     exit()
 

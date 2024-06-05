@@ -29,12 +29,14 @@ class StrategyManager:
         self.goap_planner = GOAPPlanner()
         self.graph_manager = GraphManager()
 
-    def update_strategy(self, event):
+    def update_strategy(self, events):
         """
         Updates the strategy based on the given event.
         If the event is "new_day", it gets the character state and possible actions for "Emma" and plans the actions.
         """
-        if event["event"] == "new_day":
+        for event in events:
+            if event.type == "new_day":
+                return self.plan_daily_activities("Emma")
             character_state = self.graph_manager.get_character_state("Emma")
             actions = self.graph_manager.get_possible_actions("Emma")
             plan = self.goap_planner.plan_actions(character_state, actions)
@@ -70,21 +72,6 @@ class StrategyManager:
             {"name": "Work on Project", "energy_cost": 10, "satisfaction": 8},
             {"name": "Socialize at Park", "energy_cost": 8, "satisfaction": 9},
         ]
-
-    def plan_daily_activities(self, character, graph):
-        goal = {"satisfaction": "max", "energy_usage": "min"}
-        current_state = {
-            "energy_level": 100
-        }  # Assuming a base energy level for simplicity
-        actions = self.get_daily_actions(character)
-
-        # GOAP to determine a plan
-        plan = self.goap_planner(character, goal, current_state, actions)
-
-        # Utility evaluation of the plan
-        final_plan = evaluate_utility(plan, character)
-
-        return final_plan
 
     def get_career_actions(self, character, job_details):
         # Example actions based on job details

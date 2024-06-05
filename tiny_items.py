@@ -35,6 +35,7 @@ class ItemObject:
         return self.name
 
     def set_name(self, name):
+        # Warning: Name MUST be unique! Check for duplicates before setting.
         self.name = name
         return self.name
 

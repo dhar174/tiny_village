@@ -9,12 +9,38 @@ For instance, if a new technology is discovered in the game, related actions (li
 
 """
 
-import tiny_graph_manager
+from calendar import c
+from mimetypes import init
+import operator
+import stat
+from venv import create
+
+# from tiny_characters import Character
+
+from tiny_graph_manager import GraphManager as graph_manager
 
 
 class State:
+    """State class to represent the current state of the character/object/etc. It stores attributes and their values."""
+
     def __init__(self, state_dict):
         self.state_dict = state_dict
+        self.ops = {
+            "gt": operator.gt,
+            "lt": operator.lt,
+            "eq": operator.eq,
+            "ge": operator.ge,
+            "le": operator.le,
+            "ne": operator.ne,
+        }
+        self.symb_map = {
+            ">": "gt",
+            "<": "lt",
+            "==": "eq",
+            ">=": "ge",
+            "<=": "le",
+            "!=": "ne",
+        }
 
     def __getitem__(self, key):
         return self.state_dict.get(key, 0)
@@ -22,33 +48,49 @@ class State:
     def get(self, key, default):
         return self.state_dict.get(key, default)
 
+    def __setitem__(self, key, value):
+        self.state_dict[key] = value
+
     def __str__(self):
         return ", ".join([f"{key}: {val}" for key, val in self.state_dict.items()])
 
     def compare_to_condition(self, condition):
-        if condition.operator == ">=":
-            return self[condition.attribute] >= condition.satisfy_value
-        elif condition.operator == "<=":
-            return self[condition.attribute] <= condition.satisfy_value
-        elif condition.operator == "==":
-            return self[condition.attribute] == condition.satisfy_value
-        elif condition.operator == ">":
-            return self[condition.attribute] > condition.satisfy_value
-        elif condition.operator == "<":
-            return self[condition.attribute] < condition.satisfy_value
-        else:
-            raise ValueError(f"Invalid operator: {condition.operator}")
+        if condition.operator not in self.ops:
+            return self.ops[self.symb_map[condition.operator]](
+                self[condition.attribute], condition.satisfy_value
+            )
+        return self.ops[condition.operator](
+            self[condition.attribute], condition.satisfy_value
+        )
 
 
 class Condition:
-    def __init__(self, name, attribute, satisfy_value, operator=">="):
+    def __init__(self, name, attribute, satisfy_value, op=">="):
+        self.ops = {
+            "gt": operator.gt,
+            "lt": operator.lt,
+            "eq": operator.eq,
+            "ge": operator.ge,
+            "le": operator.le,
+            "ne": operator.ne,
+        }
+        self.symb_map = {
+            ">": "gt",
+            "<": "lt",
+            "==": "eq",
+            ">=": "ge",
+            "<=": "le",
+            "!=": "ne",
+        }
         # Check validitiy of operator
-        if operator not in [">=", "<=", "==", ">", "<"]:
-            raise ValueError(f"Invalid operator: {operator}")
+        if op not in self.ops:
+            op = self.symb_map[op]
+        if op not in self.ops:
+            raise ValueError(f"Invalid operator: {op}")
         self.name = name
         self.satisfy_value = satisfy_value
         self.attribute = attribute
-        self.operator = operator
+        self.operator = op
 
     def __str__(self):
         return f"{self.name}: {self.attribute} {self.operator} {self.satisfy_value}"
@@ -58,27 +100,123 @@ class Condition:
 
 
 class Action:
-    def __init__(self, name, preconditions, effects, cost):
+    def __init__(self, name, preconditions, effects, cost, target=None, initiator=None):
+        # Warning: Name MUST be unique! Check for duplicates before setting.
+
         self.name = name
         self.preconditions = (
             preconditions  # Dict of conditions needed to perform the action
         )
-        self.effects = effects  # Dict of state changes the action causes
+        self.effects = effects  # List of Dicts of state changes the action causes, like [{"targets": ["initiator","target"], "attribute": "social_wellbeing", "change_value": 8}]
         self.cost = cost  # Cost to perform the action, for planning optimality
         self.target = None  # Target of the action, if applicable
+        self.initiator = None  # Initiator of the action, if applicable
 
-    def conditions_met(self, state):
-        return all(
-            state.get(cond, False) == val for cond, val in self.preconditions.items()
-        )
+    def conditions_met(self, state: State):
+        print(f"Type of energy: {type(self.preconditions['energy'])}")
+        print(f"Type of state: {type(state)}")
+        print(f"State: {state}")
+        print(f"Preconditions: {self.preconditions}")
+        return all(precondition(state) for precondition in self.preconditions.values())
 
-    def apply_effects(self, state):
-        for effect, change in self.effects.items():
-            state[effect] = state.get(effect, 0) + change
-        return state
+    def apply_effects(self, state: State):
+        for effect in self.effects:
+            state[effect["attribute"]] = (
+                state.get(effect["attribute"], 0) + effect["change_value"]
+            )
 
-    def execute(self):
-        raise NotImplementedError("Subclasses must implement this method")
+    def force_apply_effects(self, obj):
+        if hasattr(obj, self.attribute):
+            setattr(
+                obj, self.attribute, getattr(obj, self.attribute) + self.change_value
+            )
+        elif "." in self.attribute:  # Handle nested attributes
+            attrs = self.attribute.split(".")
+            value = getattr(obj, attrs[0])
+            for attr in attrs[1:-1]:
+                value = getattr(value, attr)
+            setattr(value, attrs[-1], getattr(value, attrs[-1]) + self.change_value)
+
+    def invoke_method(self, obj, method, method_args=[]):
+        if hasattr(obj, self.method):
+            method = getattr(obj, method)
+            method(*method_args)
+
+    def execute(self, target=None, initiator=None, extra_targets=[]):
+        if initiator is not None:
+            self.initiator = initiator
+        else:
+            raise ValueError("Initiator must be provided to execute action.")
+        if target is not None:
+            self.target = target
+        if self.conditions_met(self.initiator.get_state()):
+            for d in self.effects:
+                targets = d["targets"]
+                for tgt in targets:
+                    if tgt == "initiator":
+                        self.apply_effects(self.initiator.get_state())
+                        if d["method"]:
+                            self.invoke_method(
+                                self.initiator, d["method"], d["method_args"]
+                            )
+                    elif tgt == "target":
+                        self.apply_effects(self.target.get_state())
+                        if d["method"]:
+                            self.invoke_method(
+                                self.target, d["method"], d["method_args"]
+                            )
+                    # Next determine if tgt is has a class function get_state
+                    elif hasattr(tgt, "get_state"):
+                        self.apply_effects(tgt.get_state())
+                        if d["method"]:
+                            self.invoke_method(tgt, d["method"], d["method_args"])
+                    else:
+                        if isinstance(tgt, str):
+                            if graph_manager.get_node(tgt):
+                                node = graph_manager.get_node(tgt)
+                                if (
+                                    tgt
+                                    in graph_manager.type_to_dict_map[node.type].keys()
+                                ):
+                                    self.apply_effects(
+                                        graph_manager.type_to_dict_map[node.type][
+                                            tgt
+                                        ].get_state()
+                                    )
+                                if d["method"]:
+                                    self.invoke_method(
+                                        graph_manager.type_to_dict_map[node.type][tgt],
+                                        d["method"],
+                                        d["method_args"],
+                                    )
+                        else:
+                            try:
+                                classes_list = [
+                                    "Character",
+                                    "Location",
+                                    "Item",
+                                    "Event",
+                                ]
+                                if tgt.__class__.__name__ in classes_list:
+                                    self.apply_effects(tgt.get_state())
+                                    if d["method"]:
+                                        self.invoke_method(
+                                            tgt, d["method"], d["method_args"]
+                                        )
+                            except:
+                                try:
+                                    self.force_apply_effects(tgt)
+                                    if d["method"]:
+                                        self.invoke_method(
+                                            tgt, d["method"], d["method_args"]
+                                        )
+                                except AttributeError:
+                                    raise ValueError(
+                                        "Target must have a get_state method or attribute to apply effects."
+                                    )
+
+            return True
+        return False
 
 
 class TalkAction(Action):
@@ -102,7 +240,18 @@ class ActionTemplate:
         self.related_skills = related_skills
 
     def instantiate(self, parameters):
-        return Action(self.name, self.preconditions, self.effects, self.cost)
+        if "initiator" not in parameters or "target" not in parameters:
+            raise ValueError(
+                "Initiator and target must be provided to instantiate action."
+            )
+        return Action(
+            self.name,
+            self.preconditions,
+            self.effects,
+            self.cost,
+            parameters["target"],
+            parameters["initiator"],
+        )
 
     def add_skill(self, skill):
         self.related_skills.append(skill)
@@ -189,29 +338,112 @@ class ActionSystem:
         # Define action templates
         study_template = ActionTemplate(
             "Study",
-            {"energy": 10},
+            self.create_precondition("knowledge", "lt", 10),
             {"knowledge": 5, "energy": -10},
             1,
         )
         work_template = ActionTemplate(
             "Work",
-            {"energy": 20},
+            self.create_precondition("energy", "gt", 20),
             {"money": 50, "energy": -20},
             2,
+        )
+        socialize_template = ActionTemplate(
+            "Socialize",
+            self.instantiate_conditions(
+                [
+                    {
+                        "name": "Socialize Energy",
+                        "attribute": "social",
+                        "satisfy_value": 20,
+                        "operator": ">=",
+                    },
+                    {
+                        "name": "Socialize Happiness",
+                        "attribute": "happiness",
+                        "satisfy_value": 10,
+                        "operator": ">=",
+                    },
+                ]
+            ),
+            {"happiness": 10, "energy": -10},
+            1,
         )
 
         # Add templates to the action generator
         self.action_generator.add_template(study_template)
         self.action_generator.add_template(work_template)
+        self.action_generator.add_template(socialize_template)
 
-    def generate_actions(self, character):
+    def generate_actions(self, initiator, target=None):
+        if initiator is not isinstance(initiator, str):
+            # Get name attribute of the initiator
+            try:
+                initiator = initiator.name
+            except AttributeError:
+                try:
+                    initiator = initiator["name"]
+                except KeyError:
+                    try:
+                        # use python system methods to get the name attribute of the class instance
+                        initiator = initiator.__name__
+                    except AttributeError:
+                        raise ValueError("Initiator must have a name attribute")
+
         # Generate actions based on character attributes
-        actions = self.action_generator.generate_actions({"energy": character.energy})
-        return actions
+        if initiator is not None:
+            return self.action_generator.generate_actions(
+                {"initiator": initiator, "target": None}
+            )
+        # Generate generic actions
+        return self.action_generator.generate_actions(
+            {"initiator": None, "target": None}
+        )
 
-    def execute_action(self, action, character):
-        if action.conditions_met(character.state):
-            character.state = action.apply_effects(character.state)
-            character.energy -= action.cost
+    def execute_action(self, action, state: State):
+        if action.conditions_met(state):
+            state = action.apply_effects(state)
+            state["energy"] -= action.cost
             return True
         return False
+
+    def create_precondition(self, attribute, op, value):
+        ops = {
+            "gt": operator.gt,
+            "lt": operator.lt,
+            "eq": operator.eq,
+            "ge": operator.ge,
+            "le": operator.le,
+            "ne": operator.ne,
+        }
+        if op not in ops:
+            raise ValueError(f"Invalid operator: {op}")
+
+        def precondition(state):
+            return ops[op](state.get(attribute, 0), value)
+
+        print(f"Precondition: {precondition}")
+
+        return {f"{attribute}": precondition}
+
+    def instantiate_condition(self, condition_dict):
+        return Condition(
+            condition_dict["name"],
+            condition_dict["attribute"],
+            condition_dict["satisfy_value"],
+            condition_dict["operator"],
+        )
+
+    def instantiate_conditions(self, conditions_list):
+        # check if is not a list
+        if not isinstance(conditions_list, list):
+            if isinstance(conditions_list, Condition):
+                return [conditions_list]
+        # check the type of the entries in conditions_list
+        if type(conditions_list[0]) == dict:
+            return {
+                cond["attribute"]: self.instantiate_condition(cond)
+                for cond in conditions_list
+            }
+        elif type(conditions_list[0]) == Condition:
+            return {cond.attribute: cond for cond in conditions_list}

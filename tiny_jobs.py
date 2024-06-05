@@ -51,6 +51,8 @@ class JobRoles:
         return self.job_name
 
     def set_job_name(self, job_name):
+        # Warning: Name MUST be unique! Check for duplicates before setting.
+
         self.job_name = job_name
         return self.job_name
 
@@ -323,6 +325,8 @@ class Job(JobRoles):
             job_experience,
             job_motives,
         )
+        # Warning: Name MUST be unique! Check for duplicates before setting.
+
         self.job_name = job_name
         self.job_description = job_description
         self.job_salary = job_salary
@@ -352,6 +356,8 @@ class Job(JobRoles):
         return self.job_name
 
     def set_job_name(self, job_name):
+        # Warning: Name MUST be unique! Check for duplicates before setting.
+
         self.job_name = job_name
         return self.job_name
 
