@@ -387,6 +387,18 @@ class Job(JobRoles):
 
     def set_job_education(self, job_education):
         self.job_education = job_education
+        return self.job_education
+
+    def to_dict(self):
+        return {
+            "name": self.job_name,
+            "description": self.job_description,
+            "salary": self.job_salary,
+            "skills": self.job_skills,
+            "education": self.job_education,
+            "experience": self.job_experience,
+            "motives": self.job_motives,
+        }
 
 
 class JobManager:

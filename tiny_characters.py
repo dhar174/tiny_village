@@ -2,12 +2,14 @@
 
 
 from calendar import c
+from math import e
 import random
 import re
 from typing import List
 import uuid
 from numpy import rint
 
+from pyparsing import Char
 from torch import eq, rand
 
 import tiny_buildings as tb
@@ -21,7 +23,9 @@ from actions import (
     ActionSystem,
     State,
 )
-
+from tiny_event_handler import Event
+import tiny_utility_functions as tuf
+from tiny_goap_system import GOAPPlanner
 from tiny_jobs import JobRoles, JobRules, Job
 
 
@@ -32,6 +36,8 @@ from tiny_items import ItemInventory, FoodItem, ItemObject
 from tiny_graph_manager import GraphManager
 from tiny_memories import Memory, MemoryManager
 from tiny_time_manager import GameTimeManager
+
+from tiny_locations import Location, LocationManager
 
 # def gaussian(input_value, mean, std):
 #     return (1 / (std * (2 * 3.14159) ** 0.5)) * (2.71828 ** ((-1 / 2) * (((input_value - mean) / std) ** 2)))
@@ -81,61 +87,48 @@ class RandomNameGenerator:
                 )
 
 
-class Motive:
-    def __init__(self, name, description, score):
-        self.name = name
-        self.description = description
-        self.score = score
-
-    def __repr__(self):
-        return f"Motive({self.name}, {self.description}, {self.score})"
-
-    def __str__(self):
-        return f"Motive named {self.name} with description {self.description} and score {self.score}."
-
-    def __eq__(self, other):
-        return (
-            self.name == other.name
-            and self.description == other.description
-            and self.score == other.score
-        )
-
-    def __hash__(self):
-        return hash((self.name, self.description, self.score))
-
-    def get_name(self):
-        return self.name
-
-    def set_name(self, name):
-        self.name = name
-        return self.name
-
-    def get_description(self):
-        return self.description
-
-    def set_description(self, description):
-        self.description = description
-        return self.description
-
-    def get_score(self):
-        return self.score
-
-    def set_score(self, score):
-        self.score = score
-        return self.score
-
-    def to_dict(self):
-        return {"name": self.name, "description": self.description, "score": self.score}
-
-
 class Goal:
-    def __init__(self, description, character, score, name, completion_condition):
+
+    def __init__(
+        self,
+        description,
+        character,
+        score,  # Represents the importance of the goal
+        name,
+        completion_condition,  # Function to check if the goal is completed
+        evaluate_utility,  # function that evaluates the current importance of the goal based on the character's state and the environment.
+        difficulty,  # function that calculates the difficulty of the goal based on the character's state and the environment.
+        completion_reward,  # function that calculates the reward for completing the goal based on the character's state and the environment.
+        failure_penalty,  # function that calculates the penalty for failing to complete the goal based on the character's state and the environment.
+        completion_message,  # function that generates a message when the goal is completed based on the character's state and the environment.
+        failure_message,  # function that generates a message when the goal is failed based on the character's state and the environment.
+        criteria,  # list of criteria that need to be met for the goal to be completed
+    ):
         # Example name, description, and completion: "get a job": character.get_job().get_job_name() != "unemployed",
         self.name = name
         self.completion_condition = completion_condition
         self.description = description
         self.score = score
         self.character = character
+        self.evaluate_utility = evaluate_utility
+        self.difficulty = difficulty
+        self.completion_reward = completion_reward
+        self.failure_penalty = failure_penalty
+        self.completion_message = completion_message
+        self.failure_message = failure_message
+        self.criteria = criteria
+        self.required_items = self.extract_required_items()
+
+    def extract_required_items(self):
+        required_items = []
+        for criterion in self.criteria:
+            if "node_attributes" in criterion:
+                if (
+                    "item_type" in criterion["node_attributes"]
+                    or criterion["node_attributes"]["type"] == "item"
+                ):
+                    required_items.append(criterion["node_attributes"])
+        return required_items
 
     def __repr__(self):
         return f"Goal({self.name}, {self.description}, {self.score})"
@@ -178,7 +171,62 @@ class Goal:
         return {"name": self.name, "description": self.description, "score": self.score}
 
     def check_completion(self):
-        return self.completion_condition
+        return self.completion_condition(self.character)
+
+    def evaluate_utility(self):
+        return self.evaluate_utility(
+            self.character, self.environment, self.difficulty, self.criteria
+        )
+
+    def calculate_difficulty(self):
+        return self.difficulty(self.character, self.environment)
+
+
+class Motive:
+    def __init__(self, name, description, score):
+        self.name = name
+        self.description = description
+        self.score = score  # Represents the strength of the motive
+
+    def __repr__(self):
+        return f"Motive({self.name}, {self.description}, {self.score})"
+
+    def __str__(self):
+        return f"Motive named {self.name} with description {self.description} and score {self.score}."
+
+    def __eq__(self, other):
+        return (
+            self.name == other.name
+            and self.description == other.description
+            and self.score == other.score
+        )
+
+    def __hash__(self):
+        return hash((self.name, self.description, self.score))
+
+    def get_name(self):
+        return self.name
+
+    def set_name(self, name):
+        self.name = name
+        return self.name
+
+    def get_description(self):
+        return self.description
+
+    def set_description(self, description):
+        self.description = description
+        return self.description
+
+    def get_score(self):
+        return self.score
+
+    def set_score(self, score):
+        self.score = score
+        return self.score
+
+    def to_dict(self):
+        return {"name": self.name, "description": self.description, "score": self.score}
 
 
 class PersonalMotives:
@@ -388,6 +436,210 @@ class PersonalMotives:
             "community": self.community_motive,
             "material goods": self.material_goods_motive,
         }
+
+
+example_criteria1 = {
+    "node_attributes": {"type": "character"},
+    "edge_attributes": {"relationship": "friend", "strength": 0.8},
+    "max_distance": 20,
+}
+example_criteria2 = {
+    "node_attributes": {"type": "character"},
+    "relationship": "enemy",
+    "max_distance": 20,
+}
+example_criteria3 = {
+    "node_attributes": {"type": "character"},
+    "relationship": "family",
+    "max_distance": 100,
+}
+example_criteria4 = {
+    "node_attributes": {"type": "location"},
+    "safety_threshold": 0.8,
+    "max_distance": 50,
+}
+example_criteria5 = {
+    "node_attributes": {"type": "item", "item_type": "food"},
+    "max_distance": 20,
+}
+example_criteria6 = {
+    "node_attributes": {"type": "item", "item_type": "weapon", "usability": 0.8},
+    "max_distance": 20,
+}
+example_criteria7 = {
+    "node_attributes": {"type": "item", "trade_value": 100},
+    "max_distance": 20,
+}
+example_criteria8 = {
+    "node_attributes": {"type": "item", "scarcity": 0.2},
+    "max_distance": 20,
+}
+example_criteria9 = {
+    "node_attributes": {"type": "item", "item_type": "luxury", "value": 0.8},
+    "max_distance": 20,
+}
+example_criteria10 = {
+    "event_participation": Event(
+        name="Festival",
+        date="2022-07-04",
+        event_type="annual",
+        importance=0.8,
+        impact=0.8,
+        required_items=["food", "decorations"],
+        coordinate_location=(100, 100),
+    ),
+}
+
+example_criteria11 = {
+    "offer_item_trade": ItemInventory(
+        items=[
+            FoodItem(
+                name="Apple",
+                description="A juicy red apple.",
+                value=1,
+                perishable=True,
+                nutrition_value=2,
+            )
+        ]
+    ),
+    "max_distance": 20,
+}
+
+# example_criteria12 = {
+#     "trade_opportunity": Character(
+#         name="Joe",
+#         description="A traveling merchant.",
+#         inventory=ItemInventory(
+#             items=[
+#                 FoodItem(
+#                     name="Apple",
+#                     description="A juicy red apple.",
+#                     value=1,
+#                     perishable=True,
+#                     nutrition_value=2,
+#                 )
+#             ]
+#         ),
+#     ),
+
+#     "max_distance": 20,
+# }
+
+# example_criteria13 = {
+#     "desired_resource": Character(
+#         name="Joe",
+#         description="A traveling merchant.",
+#         inventory=ItemInventory(
+#             items=[
+#                 FoodItem(
+#                     name="Apple",
+#                     description="A juicy red apple.",
+#                     value=1,
+#                     perishable=True,
+#                     nutrition_value=2,
+#                 )
+#             ]
+#         ),
+#     ),
+# }
+
+# example_criteria14 = {
+#     "want_item_trade": FoodItem(
+#         name="Apple",
+#         description="A juicy red apple.",
+#         value=1,
+#         perishable=True,
+#         nutrition_value=2,
+#     ),
+# }
+
+
+def motive_to_goals(
+    motive, character, graph_manager: GraphManager, goap_planner: GOAPPlanner
+):
+    goals = []
+    if motive.name == "hunger":
+        goals.append(
+            Goal(
+                name="Find Food",
+                description="Search for food to satisfy hunger.",
+                score=motive.score,
+                character=character,
+                completion_condition=lambda char: char.hunger <= 0,
+                evaluate_utility=tuf.evaluate_goal_importance,
+                difficulty=graph_manager.calculate_difficulty,
+                completion_reward=graph_manager.calculate_reward,
+                failure_penalty=graph_manager.calculate_penalty,
+                completion_message=graph_manager.generate_completion_message,
+                failure_message=graph_manager.generate_failure_message,
+            )
+        )
+        goals.append(
+            Goal(
+                name="Hunt",
+                description="Go hunting to gather food.",
+                score=motive.score,
+                character=character,
+                completion_condition=lambda char: char.has_food,
+                evaluate_utility=lambda char: char.hunger * 1.5,
+            )
+        )
+        goals.append(
+            Goal(
+                name="Cook",
+                description="Cook a meal to eat.",
+                score=motive.score,
+                character=character,
+                completion_condition=lambda char: char.has_food,
+                evaluate_utility=lambda char: char.hunger * 1.2,
+            )
+        )
+    elif motive.name == "wealth":
+        goals.append(
+            Goal(
+                name="Earn Money",
+                description="Get a job to earn money.",
+                score=motive.score,
+                character=character,
+                completion_condition=lambda char: char.money > 1000,
+                evaluate_utility=lambda char: char.money / 100,
+            )
+        )
+        goals.append(
+            Goal(
+                name="Invest",
+                description="Invest money in stocks.",
+                score=motive.score,
+                character=character,
+                completion_condition=lambda char: char.investment_portfolio,
+                evaluate_utility=lambda char: char.money / 200,
+            )
+        )
+    # Add similar elif blocks for other motives
+    return goals
+
+
+class GoalGenerator:
+    def __init__(
+        self, personal_motives, graph_manager: GraphManager, goap_planner: GOAPPlanner
+    ):
+        self.personal_motives = personal_motives
+        self.graph_manager = graph_manager
+        self.goap_planner = goap_planner
+
+    def generate_goals(self, character):
+        if isinstance(character, str):
+            character = self.graph_manager.get_node(character)
+        if not isinstance(character, Character):
+            raise ValueError("Invalid character data type or character not found.")
+        goals = []
+        for motive in self.personal_motives:
+            goals.extend(motive_to_goals(motive, character))
+        for goal in goals:
+            for item in goal.required_items:
+                character.update_required_items(item)
+
+        return goals
 
 
 class PersonalityTraits:
@@ -1011,6 +1263,7 @@ class Character:
         self.stability = self.set_stability(self.calculate_stability())
         self.personality_traits = self.set_personality_traits(personality_traits)
         self.motives = self.set_motives(motives)
+        self.goals = self.evaluate_goals()
         self.stamina = 0
         self.current_satisfaction = 0
         self.current_mood = 0
@@ -1021,6 +1274,37 @@ class Character:
         self.memory_manager = MemoryManager(
             gametime_manager
         )  # Initialize MemoryManager with GameTimeManager instance
+        self.location = Location(0, 0)
+        self.coordinate_location = self.location.get_coordinates()
+        self.needed_items = (
+            []
+        )  # Items needed to complete goals. This is a list of tuples, each tuple is (dict of item requirements, quantity needed)
+
+    def get_location(self):
+        return self.location
+
+    def set_location(self, *location):
+        if len(location) == 1:
+            if isinstance(location[0], Location):
+                self.location = location[0]
+            elif isinstance(location[0], tuple):
+                self.location = Location(location[0][0], location[0][1])
+        elif len(location) == 2:
+            self.location = Location(location[0], location[1])
+
+        return self.location
+
+    def get_coordinate_location(self):
+        return self.location.get_coordinates()
+
+    def set_coordinate_location(self, *coordinates):
+        if len(coordinates) == 1:
+            if isinstance(coordinates[0], tuple):
+                self.location.set_coordinates(coordinates[0])
+        elif len(coordinates) == 2:
+            self.location.set_coordinates(coordinates)
+
+        return self.location.coordinates_location
 
     def create_memory(self, description, timestamp, importance):
         memory = Memory(
@@ -1351,6 +1635,22 @@ class Character:
             self.inventory.set_misc_items(misc_items)
         return self.inventory
 
+    def set_goals(self, goals):
+        self.goals = goals
+        return self.goals
+
+    # def calculate_goals(self):
+
+    def evaluate_goals(self):
+        goal_queue = []
+        # if len(self.goals) > 1:
+
+        for goal in self.goals:
+            utility = goal.get_utility(self)
+            goal_queue.append((utility, goal))
+        goal_queue.sort(reverse=True, key=lambda x: x[0])
+        return goal_queue
+
     def calculate_material_goods(self):
         material_goods = round(
             tweener(self.inventory.count_total_items(), 1000, 0, 100, 2)
@@ -1577,6 +1877,10 @@ class Character:
     def get_character_data(self):
         response = self.to_dict()
         return response.json()
+
+    def update_required_items(self, item_node_attrs, item_count=1):
+        for item in item_node_attrs:
+            self.needed_items.append((item, item_count))
 
     def calculate_motives(self):
         social_wellbeing_motive = abs(

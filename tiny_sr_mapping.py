@@ -1,12 +1,34 @@
 import re
 import spacy
+import os
+import json
+
+os.environ["HF_HOME"] = "/mnt/d/transformers_cache"
 
 
-def main(docs, nlp: spacy.lang.en.English):
+def find_root_verb(self, token):
+    """Recursively find the root verb related to the current token."""
+    if token.dep_ == "ROOT":
+        return token
+    elif token.head.pos_ in [
+        "VERB",
+        "VB",
+        "VBD",
+        "VBG",
+        "VBN",
+        "VBP",
+        "VBZ",
+        "ROOT",
+    ]:
+        return self.find_root_verb(token.head)
+    return None
+
+
+def main(docs, nlp: spacy.language.Language):
     # Initialize structure to hold semantic roles
     # if docs is a list of strings, convert it to a spacy object using the nlp object
-    if isinstance(docs, list):
-        docs = nlp(docs)
+    docs = nlp(docs)
+
     semantic_rolesb = {
         "who": [],
         "did": [],
@@ -39,8 +61,7 @@ def main(docs, nlp: spacy.lang.en.English):
     }
 
     # Iterate over tokens to assign roles
-    actions = []
-    facts = []
+
     root_verb = None
 
     for token in docs:
@@ -126,50 +147,15 @@ def main(docs, nlp: spacy.lang.en.English):
                     if child.dep_ == "prep":
                         semantic_rolesb["where"].append(child)
 
-        # Find main actions and subjects
-        if token.dep_ == "ROOT" or (
-            token.pos_ == "VERB" and "subj" in {child.dep_ for child in token.children}
-        ):
-            actiona = " ".join(
-                [child.text for child in token.subtree if child.dep_ != "punct"]
-            )
-            actions.append(actiona)
-
-        # Extract facts about specific subjects, considering nested and complex sentences
-        if (
-            token.pos_ == "NOUN" or token.pos_ == "PROPN" or token.pos_ == "PRON"
-        ) and token.head.pos_ in [
-            "VERB",
-            "VB",
-            "VBD",
-            "VBG",
-            "VBN",
-            "VBP",
-            "VBZ",
-        ]:
-            rv = self.find_root_verb(token.head)
-
-            if rv:
-                subject_actions = " ".join(
-                    [rv.text]
-                    + [
-                        child.text
-                        for child in rv.children
-                        if (child.dep_ != "nsubj" or child.dep_ != "nsubjpass")
-                        and child.pos_ != "PUNCT"
-                    ]
-                )
-                facts.append((token.text, subject_actions))
-            facts.extend([(token.text, fact) for fact in self.extract_facts(token)])
         # if role == "why":
         #     if token.dep_ == "advcl":
         #         for child in token.children:
         #             if child.dep_ == "prep":
         #                 semantic_rolesb["why"].append(child.text)
 
-    # print(f"Actions: {actions}")
-    # print(f"Facts: {facts}")
-    print(semantic_rolesb)
+    # #print(f"Actions: {actions}")
+    # #print(f"Facts: {facts}")
+    # print(semantic_rolesb)
     # Check if the number of subordinate clauses is equal to the number of actions minus 1
     # assert (
     #     num_subordinate_clauses == len(semantic_rolesb["did"]) - 1
@@ -186,7 +172,7 @@ def main(docs, nlp: spacy.lang.en.English):
     templates = []
     for action in semantic_rolesb["did"]:
         # if action.dep_ == "advcl":
-        #     print(f"Action: {action.text}")
+        #     #print(f"Action: {action.text}")
         #     exit(0)
         # Find the subject of the action in the original docs object
         for token in docs:
@@ -288,7 +274,7 @@ def main(docs, nlp: spacy.lang.en.English):
                                 for tk in token.head.head.children
                                 if tk.dep_ == "nsubj" or tk.dep_ == "nsubjpass"
                             ]
-                        print(f"cw_subject: {cw_subject}")
+                        # print(f"cw_subject: {cw_subject}")
                         compound.extend(cw_subject)
                         subj.extend(cw_subject)
 
@@ -324,7 +310,7 @@ def main(docs, nlp: spacy.lang.en.English):
                                 for tk in root_verb.head.children
                                 if tk.dep_ == "nsubj" or tk.dep_ == "nsubjpass"
                             ]
-                        print(f"cw_subject: {cw_subject}")
+                        # print(f"cw_subject: {cw_subject}")
                         compound.extend(cw_subject)
                         if len(subj) == 0:
                             subj.extend(cw_subject)
@@ -356,7 +342,7 @@ def main(docs, nlp: spacy.lang.en.English):
                                     ]
                                     and token.i < tkk.i
                                 ):
-                                    # print(f"FART1: {tkk}")
+                                    # #print(f"FART1: {tkk}")
                                     # exit(0)
                                     if tkk not in compound:
                                         if (
@@ -434,6 +420,10 @@ def main(docs, nlp: spacy.lang.en.English):
                 else:
                     if len(subj) == 0:
                         print(f"\n Why is subj empty? {subj} {token.text} \n")
+                        print(f"\nsemantic_rolesb: {semantic_rolesb}")
+                        print(
+                            f"\nroot_verb.children: {[tk.text for tk in root_verb.children]}"
+                        )
                         subj = [
                             tk
                             for tk in root_verb.children
@@ -454,7 +444,7 @@ def main(docs, nlp: spacy.lang.en.English):
                             ]
                             and token.i < tkk.i
                         ):
-                            # print(f"FART2: {tkk}")
+                            # #print(f"FART2: {tkk}")
                             # exit(0)
                             if tkk not in compound:
                                 if (
@@ -498,7 +488,7 @@ def main(docs, nlp: spacy.lang.en.English):
                                     ]:
                                         if tkki not in obj_compound:
                                             obj_compound.append(tkki)
-                                print(f"obj_compound npadvmod: {obj_compound}")
+                                # print(f"obj_compound npadvmod: {obj_compound}")
 
                         elif tkk.tag_ == "WP" or tkk.tag_ == "WDT":
                             if tkk not in subj_compound:
@@ -522,10 +512,10 @@ def main(docs, nlp: spacy.lang.en.English):
                                             and tkk.dep_ != "npadvmod"
                                         ):
                                             subj_compound.append(tkki)
-                    print(f"subj_compound: {subj_compound}")
+                    # print(f"subj_compound: {subj_compound}")
 
                 subj_text = subj[0].text if subj else ""
-                print(f"Compound: {compound}")
+                # print(f"Compound: {compound}")
                 # if compound and len(compound) > 0:
                 #     obj_compound.extend(compound)
 
@@ -571,7 +561,7 @@ def main(docs, nlp: spacy.lang.en.English):
                                 subj_compound.remove(sub)
 
                         subj_compound = sorted(subj_compound, key=lambda x: x.i)
-                        print(f"subj_compound: {subj_compound}")
+                        # print(f"subj_compound: {subj_compound}")
                         # create a string that joins each word in token.sent with a space but only if the word is in subj_compound in order of each word's index
                         subj_text = " ".join(
                             [
@@ -580,7 +570,7 @@ def main(docs, nlp: spacy.lang.en.English):
                                 if token in subj_compound
                             ]
                         )
-                        print(f"Subject: {subj_text}")
+                        # print(f"Subject: {subj_text}")
                         if tk.dep_ == "prep":
                             for tkk in tk.children:
                                 if tkk.dep_ == "pobj":
@@ -607,7 +597,7 @@ def main(docs, nlp: spacy.lang.en.English):
                                 if token in subj_compound
                             ]
                         )
-                        print(f"Subject: {subj_text}")
+                        # print(f"Subject: {subj_text}")
                         if tk.dep_ == "prep":
                             for tkk in tk.children:
                                 if tkk.dep_ == "pobj":
@@ -617,10 +607,10 @@ def main(docs, nlp: spacy.lang.en.English):
                                         if tkkk not in subj_compound:
                                             subj_compound.append(tkkk)
                 subj_compound = sorted(subj_compound, key=lambda x: x.i)
-                print(f"subj_compound: {subj_compound}")
+                # print(f"subj_compound: {subj_compound}")
                 for tk in subj_compound:
                     if tk.text not in subj_text.split():
-                        print(f"Fixing missing subj compound token at token: {tk.text}")
+                        # print(f"Fixing missing subj compound token at token: {tk.text}")
                         temp = subj_compound
                         temp.append(subj[0])
                         temp = sorted(temp, key=lambda x: x.i)
@@ -628,7 +618,7 @@ def main(docs, nlp: spacy.lang.en.English):
                             [token.text for token in token.sent if token in temp]
                         )
                 if subj[0].text not in subj_text.split():
-                    print("Adding subject to subj_compound and subj_text")
+                    # print("Adding subject to subj_compound and subj_text")
                     if subj[0] not in subj_compound:
                         subj_compound.append(subj[0])
                     subj_text = " ".join(
@@ -637,9 +627,9 @@ def main(docs, nlp: spacy.lang.en.English):
 
                 if subj_text == "" or subj_text == " ":
                     subj_text = subj[0].text
-                    print(f"Subject: {subj_text}")
-                print(f"Subject: {subj_text}")
-                print(f"Tokens children: {[tk.text for tk in token.children]}")
+                    # print(f"Subject: {subj_text}")
+                # print(f"Subject: {subj_text}")
+                # print(f"Tokens children: {[tk.text for tk in token.children]}")
 
                 dobj = [
                     tk
@@ -673,7 +663,7 @@ def main(docs, nlp: spacy.lang.en.English):
                         if tk.dep_ == "attr"
                         and (subj[0].head == tk.head or token == tk.head)
                     ]
-                    print(f"Last resort dobj: {dobj}")
+                    # print(f"Last resort dobj: {dobj}")
                 else:
                     dobj = sorted(dobj, key=lambda x: x.i)
                     obj_compound.extend(ob for ob in dobj)
@@ -770,7 +760,7 @@ def main(docs, nlp: spacy.lang.en.English):
         dobj = sorted(dobj, key=lambda x: x.i)
         obj_compound = sorted(obj_compound, key=lambda x: x.i)
         if len(dobj) < 1:
-            print(f"DOBJ still seems to be empty. Token: {token}")
+            # print(f"DOBJ still seems to be empty. Token: {token}")
             if docs[token.i - 1].text == "to":  # or token.tag_ == "VBG":
                 if token.head.pos_ == "VERB":
                     dobj = [token.head]
@@ -784,17 +774,17 @@ def main(docs, nlp: spacy.lang.en.English):
         if len(dobj) < 1:
 
             if token.dep_ == "conj":
-                print(f"DOBJ still seems to be empty. Token: {token}")
+                # print(f"DOBJ still seems to be empty. Token: {token}")
                 for tk in token.children:
-                    print(f"Token: {tk.text}, Dependency: {tk.dep_}")
+                    # print(f"Token: {tk.text}, Dependency: {tk.dep_}")
                     if tk.dep_ in ["dobj", "pobj"]:
                         dobj = [tk]
                 if len(dobj) == 0:
                     dobj = [token]
             elif len(dobj) == 0:
-                print(
-                    f"dobj seems to still be empty so we will make it the token: {token}"
-                )
+                # print(
+                #     f"dobj seems to still be empty so we will make it the token: {token}"
+                # )
                 dobj = [token]
             # elif len(dobj) == 0:
             #     dobj = [token.head]
@@ -807,7 +797,7 @@ def main(docs, nlp: spacy.lang.en.English):
                 dobj.remove(tk)
                 dobj.append(nlp("something")[0])
         dobj = sorted(dobj, key=lambda x: x.i)
-        print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
+        # print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
         if len(dobj) > 1:
             # Since dobj is more than 1, we must determine which object in dobj is correctly associated with the action by checking the dependency relation in a more complex way than simply checking the dep tag
             # We can do this by checking the dependency relation of each token in dobj to the action token and selecting the token with the closest dependency relation to the action token
@@ -848,24 +838,24 @@ def main(docs, nlp: spacy.lang.en.English):
             ]
 
             for tk in dobj:
-                print(
-                    f"Token: {tk.text}, Dependency to Action: {[tkk.dep_ for tkk in action_tokens if tkk.head == tk]}"
-                )
-                print(
-                    f"Token: {tk.text}, Dependency to ROOT Verb: {[tkk.dep_ for tkk in verb_tokens if tkk.head == tk and tkk.dep_ == 'ROOT']}"
-                )
-                print(
-                    f"Token: {tk.text}, Dependency to Subject: {[tkk.dep_ for tkk in subject_tokens if tkk.head == tk]}"
-                )
-                print(
-                    f"Token: {tk.text}, Dependency to Auxiliaries: {', '.join([aux.dep_ for aux in auxiliaries_tokens if tk.head == aux]) or 'N/A'}"
-                )
-                print(
-                    f"Token: {tk.text}, Dependency to Verb's Children: {', '.join([child.dep_ for child in verbs_children_tokens if tk.head == child]) or 'N/A'}"
-                )
-                print(
-                    f"Token: {tk.text}, Dependency to Verb's Head: {', '.join([ancestor.dep_ for ancestor in verbs_head_tokens if tk.head == ancestor]) or 'N/A'}"
-                )
+                # #print(
+                #     f"Token: {tk.text}, Dependency to Action: {[tkk.dep_ for tkk in action_tokens if tkk.head == tk]}"
+                # )
+                # #print(
+                #     f"Token: {tk.text}, Dependency to ROOT Verb: {[tkk.dep_ for tkk in verb_tokens if tkk.head == tk and tkk.dep_ == 'ROOT']}"
+                # )
+                # #print(
+                #     f"Token: {tk.text}, Dependency to Subject: {[tkk.dep_ for tkk in subject_tokens if tkk.head == tk]}"
+                # )
+                # #print(
+                #     f"Token: {tk.text}, Dependency to Auxiliaries: {', '.join([aux.dep_ for aux in auxiliaries_tokens if tk.head == aux]) or 'N/A'}"
+                # )
+                # #print(
+                #     f"Token: {tk.text}, Dependency to Verb's Children: {', '.join([child.dep_ for child in verbs_children_tokens if tk.head == child]) or 'N/A'}"
+                # )
+                # #print(
+                #     f"Token: {tk.text}, Dependency to Verb's Head: {', '.join([ancestor.dep_ for ancestor in verbs_head_tokens if tk.head == ancestor]) or 'N/A'}"
+                # )
                 if tk not in obj_compound:
                     obj_compound.append(tk)
                 for tko in tk.children:
@@ -896,7 +886,7 @@ def main(docs, nlp: spacy.lang.en.English):
                                         obj_compound.append(tkkk)
 
         for tk in dobj[0].children:
-            print(f"dobjs children: Token: {tk.text}, Dependency: {tk.dep_}")
+            # print(f"dobjs children: Token: {tk.text}, Dependency: {tk.dep_}")
             if (
                 tk.dep_ == "compound"
                 or tk.dep_ == "poss"
@@ -906,7 +896,7 @@ def main(docs, nlp: spacy.lang.en.English):
             ):
                 if tk not in obj_compound:
                     obj_compound.append(tk)
-                    # print(f"added to obj_compound: {tk.text}")
+                    # #print(f"added to obj_compound: {tk.text}")
                 if tk.dep_ == "attr":
                     for tkk in tk.children:
                         if tkk not in obj_compound:
@@ -939,7 +929,7 @@ def main(docs, nlp: spacy.lang.en.English):
                                     if tkkkk not in obj_compound:
                                         obj_compound.append(tkkk)
         obj_compound = sorted(obj_compound, key=lambda x: x.i)
-        print(f"obj_compound: {obj_compound}")
+        # print(f"obj_compound: {obj_compound}")
         if len(obj_compound) > 0 and "prep" not in {tk.dep_ for tk in action.children}:
             if dobj[0] not in obj_compound:
                 obj_compound.append(dobj[0])
@@ -956,7 +946,7 @@ def main(docs, nlp: spacy.lang.en.English):
             ]
 
         elif len(obj_compound) == 0:
-            print(f"For some reason, obj_compound is empty. Token: {token}")
+            # print(f"For some reason, obj_compound is empty. Token: {token}")
             obj_compound = dobj
         elif len(obj_compound) > 0 and "prep" in {tk.dep_ for tk in action.children}:
             for tk in action.children:
@@ -1045,9 +1035,9 @@ def main(docs, nlp: spacy.lang.en.English):
             if token.text == dobj[0].text:
                 if dobj[0] in obj_compound:
                     dobj_text = ""
-                else:
-                    print(f"obj_compound: {obj_compound}")
-                    print(f"Token: {token.text}, dobj: {dobj[0].text}")
+                # else:
+                #     #print(f"obj_compound: {obj_compound}")
+                #     #print(f"Token: {token.text}, dobj: {dobj[0].text}")
         if (
             token.dep_ == "conj"
             and token.head.dep_ == "xcomp"
@@ -1084,20 +1074,20 @@ def main(docs, nlp: spacy.lang.en.English):
             action_compound.append(root_verb)
             if root_verb in obj_compound:
                 obj_compound.remove(root_verb)
-                print(f"obj_compound: {obj_compound}")
+                # print(f"obj_compound: {obj_compound}")
         for action_tok in action_compound:
             if action_tok in obj_compound:
                 for obj in obj_compound:
                     if action_tok.i == obj.i:
                         obj_compound.remove(obj)
-                        print(f"obj_compound: {obj_compound}")
+                        # print(f"obj_compound: {obj_compound}")
         obj_compound = sorted(obj_compound, key=lambda x: x.i)
-        for tk in obj_compound:
-            print(f"obj_compound: {tk.text}, index: {tk.i}")
+        # for tk in obj_compound:
+        # print(f"obj_compound: {tk.text}, index: {tk.i}")
         # create a string that joins each word in token.sent with a space but only if the word is in subj_compound in order of each word's index
         dobj_text = " ".join([token.text for token in obj_compound])
-        print(f"obj_compound: {obj_compound}")
-        print(f"dobj_text: {dobj_text}")
+        # print(f"obj_compound: {obj_compound}")
+        # print(f"dobj_text: {dobj_text}")
         # Ensure no token is repeated in action_compound that was in subj_compound or obj_compound (unless the token exists twice in the sentence or had a different index)
         # if "mark" in {tk.dep_ for tk in action.children}:
         #         # Make the action compund consist of only mark token, its associated verb and the verb's children
@@ -1156,26 +1146,26 @@ def main(docs, nlp: spacy.lang.en.English):
                 if tk in subj_compound:
                     subj_compound.remove(tk)
                 subj_text = subj[0].text if subj else ""
-                print(f"subj_compound: {subj_compound}")
-                print(f"obj_compound: {obj_compound}")
-                print(f"action_compound: {action_compound}")
-                print(f"Subject: {subj_text}")
+                # print(f"subj_compound: {subj_compound}")
+                # print(f"obj_compound: {obj_compound}")
+                # print(f"action_compound: {action_compound}")
+                # print(f"Subject: {subj_text}")
                 subj_compound = sorted(subj_compound, key=lambda x: x.i)
                 subj_text = " ".join(
                     [token.text for token in token.sent if token in subj_compound]
                 )
-                print(f"Subject: {subj_text}")
+                # print(f"Subject: {subj_text}")
         action_compound = sorted(action_compound, key=lambda x: x.i)
         action_text = " ".join(
             [token.text for token in token.sent if token in action_compound]
         )
-        print(f"Action Compound: {action_compound}")
+        # print(f"Action Compound: {action_compound}")
         template = ""
         if subj[0].i < dobj[0].i:
             template = f"{subj_text} {action_text} {dobj_text}"
         elif subj[0].i > dobj[0].i:
             template = f"{dobj_text} {subj_text} {action_text}"
-        print(f"\n \n Template: {template}\n \n")
+        # print(f"\n \n Template: {template}\n \n")
         templates.append(template)
         for tk in docs:
             if (
@@ -1211,10 +1201,10 @@ def main(docs, nlp: spacy.lang.en.English):
                 dobj_text = " ".join(
                     [token.text for token in token.sent if token in obj_compound]
                 )
-                print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
-                print(f"Action Compound: {action_compound}")
+                # print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
+                # print(f"Action Compound: {action_compound}")
                 template = f"{subj_text} {action_text} {dobj_text}"
-                print(f"\n \n Template (C1): {template}\n \n")
+                # print(f"\n \n Template (C1): {template}\n \n")
                 templates.append(template)
             elif (
                 tk.dep_ == "conj"
@@ -1250,14 +1240,14 @@ def main(docs, nlp: spacy.lang.en.English):
                 dobj_text = " ".join(
                     [token.text for token in token.sent if token in obj_compound]
                 )
-                print(f"dobj: {dobj}")
+                # print(f"dobj: {dobj}")
 
-                print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
-                print(f"Action Compound: {action_compound}")
-                print(f"Object Compound: {obj_compound}")
-                print(f"dobj_text: {dobj_text}")
+                # print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
+                # print(f"Action Compound: {action_compound}")
+                # print(f"Object Compound: {obj_compound}")
+                # print(f"dobj_text: {dobj_text}")
                 template = f"{subj_text} {action_text} {dobj_text}"
-                print(f"\n \n Template (C2): {template}\n \n")
+                # print(f"\n \n Template (C2): {template}\n \n")
                 templates.append(template)
             elif (
                 tk.dep_ == "conj"
@@ -1289,10 +1279,10 @@ def main(docs, nlp: spacy.lang.en.English):
                 dobj_text = " ".join(
                     [token.text for token in token.sent if token in obj_compound]
                 )
-                # print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
-                # print(f"Action Compound: {action_compound}")
+                # #print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
+                # #print(f"Action Compound: {action_compound}")
                 template = f"{subj_text} {action_text} {dobj_text}"
-                print(f"\n \n Template (C3): {template}\n \n")
+                # print(f"\n \n Template (C3): {template}\n \n")
                 templates.append(template)
             elif (
                 tk.dep_ == "conj"
@@ -1327,10 +1317,10 @@ def main(docs, nlp: spacy.lang.en.English):
                 dobj_text = " ".join(
                     [token.text for token in token.sent if token in obj_compound]
                 )
-                # print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
-                # print(f"Action Compound: {action_compound}")
+                # #print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
+                # #print(f"Action Compound: {action_compound}")
                 template = f"{subj_text} {action_text} {dobj_text}"
-                print(f"\n \n Template (C4): {template}\n \n")
+                # print(f"\n \n Template (C4): {template}\n \n")
                 templates.append(template)
             elif (
                 tk.dep_ == "conj"
@@ -1364,11 +1354,11 @@ def main(docs, nlp: spacy.lang.en.English):
                 dobj_text = " ".join(
                     [token.text for token in token.sent if token in obj_compound]
                 )
-                # print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
-                # print(f"Action Compound: {action_compound}")
-                # print(f"Object Compound: {obj_compound}")
+                # #print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
+                # #print(f"Action Compound: {action_compound}")
+                # #print(f"Object Compound: {obj_compound}")
                 template = f"{subj_text} {action_text} {dobj_text}"
-                print(f"\n \n Template (C5): {template}\n \n")
+                # print(f"\n \n Template (C5): {template}\n \n")
                 templates.append(template)
             elif (
                 tk.dep_ == "conj"
@@ -1406,10 +1396,10 @@ def main(docs, nlp: spacy.lang.en.English):
                 dobj_text = " ".join(
                     [token.text for token in token.sent if token in obj_compound]
                 )
-                # print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
-                # print(f"Action Compound: {action_compound}")
+                # #print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
+                # #print(f"Action Compound: {action_compound}")
                 template = f"{subj_text} {action_text} {dobj_text}"
-                print(f"\n \n Template (C6): {template}\n \n")
+                # print(f"\n \n Template (C6): {template}\n \n")
                 templates.append(template)
 
             elif (
@@ -1424,7 +1414,7 @@ def main(docs, nlp: spacy.lang.en.English):
                     if right_token.dep_ == "conj":
 
                         if right_token.pos_ == "VERB":
-                            print(f"Token: {tk.text}, Right: {tk.rights}")
+                            # print(f"Token: {tk.text}, Right: {tk.rights}")
                             other_verb = True
                             break
                 if not other_verb:
@@ -1459,10 +1449,10 @@ def main(docs, nlp: spacy.lang.en.English):
                     dobj_text = " ".join(
                         [token.text for token in token.sent if token in obj_compound]
                     )
-                    # print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
-                    # print(f"Action Compound: {action_compound}")
+                    # #print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
+                    # #print(f"Action Compound: {action_compound}")
                     template = f"{subj_text} {action_text} {dobj_text}"
-                    print(f"\n \n Template (C7): {template}\n \n")
+                    # print(f"\n \n Template (C7): {template}\n \n")
                     templates.append(template)
 
         assert len(subj) > 0 and len(action_compound) > 0
@@ -1470,31 +1460,15 @@ def main(docs, nlp: spacy.lang.en.English):
 
 
 if __name__ == "__main__":
+    nlp = spacy.load("en_core_web_trf")
 
     # Example usage
-    queries = [
-        "Where was the World Cup held in 2018?",
-        "When will the 2022 Winter Olympics be held?",
-        "I think someone is planning a surprise party",
-        "I need to think of a popular tourist attraction",
-        "I am planning a trip to Europe",
-        "Who is learning to play the guitar?",
-        "I think someone is studying for a Chemistry test",
-        "What product should I sell in my electronics store?",
-        "What should I eat at the French restaurant?",
-        "What book should I read?",
-        "Where should I go for a night out to have drinks and meet someone?",
-        "What bar should I avoid?",
-        "What fashion accessory should I wear to the party?",
-        "What is the future of transportation?",
-        "What is the current state of the ebola outbreak?",
-        "I am a farmer, what crop should I grow to make the most profit?",
-        "Is the new iPhone worth buying?",
-        "As a farmer, what crop would be make the most money?",
-        "What farm vegetable is selling the most these days?",
-    ]
+
+    # open test_memories.json
+    with open("test_memories.json") as f:
+        queries = json.load(f)
     for query in queries:
         print(f"Query: {query}")
-        templates = generate_templates(query)
+        templates = main(query["memory"], nlp)
         print(f"Templates: {templates}")
         print("\n")

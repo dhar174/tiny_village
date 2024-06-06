@@ -84,6 +84,14 @@ for name, obj in inspect.getmembers(sys.modules[__name__]):
         num_classes += 1
 
 
+debug = True
+
+
+def debug_print(text):
+    if debug:
+        print(f"{text}")
+
+
 urgent_words = [
     "now",
     "immediately",
@@ -3281,6 +3289,10 @@ class MemoryManager:
                     else:
                         if len(subj) == 0:
                             print(f"\n Why is subj empty? {subj} {token.text} \n")
+                            print(f"\nsemantic_rolesb: {semantic_rolesb}")
+                            print(
+                                f"\nroot_verb.children: {[tk.text for tk in root_verb.children]}"
+                            )
                             subj = [
                                 tk
                                 for tk in root_verb.children
@@ -4340,6 +4352,13 @@ class MemoryManager:
 
             assert len(subj) > 0 and len(action_compound) > 0
 
+        fa = tsm.main(docs, nlp)
+
+        # assert fa is equivalent to templates
+        assert fa == templates
+        print(f"\nTemplates: {templates}")
+        print(f"FA: {fa}\n")
+
         # 5. Named Entity Recognition
         named_entities = {}
 
@@ -5388,18 +5407,40 @@ if __name__ == "__main__":
     )
     # Manage and search memories for L2 similarity
     manage_index_and_search("l2", False, "l2.bin", memories_l2)
-
+    print(f"\n\n\n")
     for query in queries:
         print(f"\n Query: {query} \n")
+        established_facts = []
+        memory = None
+        i = 0
         for mem in memories_ip[query]:
-            print(f"IP No Norm: {mem.facts} \n")
+            print(f"IP No Norm: Facts: {mem.facts}, Description: {mem.description} \n")
+            i += 1
+            if i == 1:
+                established_facts += mem.facts
+                memory = mem
+        i = 0
 
         for mem in memories_ip_norm[query]:
-            print(f"IP Norm: {mem.facts} \n")
+            print(f"IP Norm: {mem.facts}, Description: {mem.description} \n")
+        #     i+=1
+        #     if i == 1:
+        #         established_facts.append(mem.facts)
+        # i = 0
+
         for mem in memories_l2[query]:
-            print(f"L2: {mem.facts} \n")
-        for fact in tsm.main(query, nlp):
+            print(f"L2: {mem.facts}, Description: {mem.description} \n")
+        #     i += 1
+        #     if i == 1:
+        #         established_facts.append(mem.facts)
+        # i = 0
+
+        for fact in tsm.main(memory.description, nlp):
             print(f"From SR Mapper: {fact} \n")
+            if fact not in established_facts:
+                print(
+                    f"\nFact not in established facts: {fact}, \n{established_facts}\n"
+                )
 
     exit()
 

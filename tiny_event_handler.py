@@ -3,6 +3,7 @@
 This module will be responsible for detecting and handling game events, triggering strategic updates. """
 from datetime import datetime
 from tiny_graph_manager import GraphManager as graph_manager
+import tiny_time_manager as time_manager
 
 
 class Event:

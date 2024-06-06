@@ -13,6 +13,7 @@ from calendar import c
 from mimetypes import init
 import operator
 import stat
+from typing import Any
 from venv import create
 
 # from tiny_characters import Character
@@ -95,8 +96,11 @@ class Condition:
     def __str__(self):
         return f"{self.name}: {self.attribute} {self.operator} {self.satisfy_value}"
 
-    def check_condition(self, state):
+    def check_condition(self, state: State):
         return state.compare_to_condition(self)
+
+    def __call__(self, state: State):
+        return self.check_condition(state)
 
 
 class Action:
@@ -111,6 +115,14 @@ class Action:
         self.cost = cost  # Cost to perform the action, for planning optimality
         self.target = None  # Target of the action, if applicable
         self.initiator = None  # Initiator of the action, if applicable
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "preconditions": self.preconditions,
+            "effects": self.effects,
+            "cost": self.cost,
+        }
 
     def conditions_met(self, state: State):
         print(f"Type of energy: {type(self.preconditions['energy'])}")

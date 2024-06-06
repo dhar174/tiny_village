@@ -1,14 +1,20 @@
+from calendar import c
+import dis
 import heapq
-from math import inf
+from importlib import resources
+from math import dist, inf
+from os import name
+from re import T
+import resource
 import networkx as nx
 from numpy import add, char
 from pkg_resources import add_activation_listener
-from tiny_characters import Character
+from tiny_characters import Character, Goal
 from tiny_jobs import Job
 from tiny_locations import Location
 from tiny_event_handler import Event
 from actions import Action
-from tiny_items import ItemObject
+from tiny_items import ItemInventory, ItemObject
 import tiny_memories
 
 """ Graph Construction
@@ -110,6 +116,37 @@ import networkx as nx
 from networkx.algorithms import community
 
 
+character_attributes = [
+    "name",
+    "age",
+    "pronouns",
+    "job",
+    "health_status",
+    "hunger_level",
+    "wealth_money",
+    "mental_health",
+    "social_wellbeing",
+    "happiness",
+    "shelter",
+    "stability",
+    "luxury",
+    "hope",
+    "success",
+    "control",
+    "job_performance",
+    "beauty",
+    "community",
+    "material_goods",
+    "friendship_grid",
+    "recent_event",
+    "long_term_goal",
+    "inventory",
+    "home",
+    "personality_traits",
+    "motives",
+]
+
+
 class GraphManager:
     def __init__(self):
         self.characters = {}
@@ -126,6 +163,12 @@ class GraphManager:
             "activity": self.activities,
             "job": self.jobs,
         }
+        self.character_attributes = None
+        self.location_attributes = None
+        self.event_attributes = None
+        self.object_attributes = None
+        self.activity_attributes = None
+        self.job_attributes = None
 
         self.G = self.initialize_graph()
 
@@ -137,7 +180,10 @@ class GraphManager:
 
     # Node Addition Methods
     def add_character_node(self, char: Character):
+        if len(self.characters) == 0:
+            self.character_attributes = char.to_dict().keys()
         self.characters[char.name] = char
+
         self.G.add_node(
             char.name,
             type="character",
@@ -148,9 +194,15 @@ class GraphManager:
             relationships={},  # Stores additional details about relationships
             emotional_state={},
             coordinate_location=char.coordinate_location,
+            resources=char.inventory,
+            needed_resources=char.needed_items,  # This is a list of tuples, each tuple is (dict of item requirements, quantity needed).
+            # The dict of item requirements is composed of various keys like item_type, value, usability, sentimental_value, trade_value, scarcity, coordinate_location, name, etc. from either the node or the root class instance.
+            name=char.name,
         )
 
     def add_location_node(self, loc: Location):
+        if len(self.locations) == 0:
+            self.location_attributes = loc.to_dict().keys()
         self.locations[loc.name] = loc
         self.G.add_node(
             loc.name,
@@ -160,9 +212,12 @@ class GraphManager:
             accessibility=loc.accessibility,
             safety_measures=loc.safety_measures,
             coordinate_location=loc.coordinate_location,
+            name=loc.name,
         )
 
     def add_event_node(self, event: Event):
+        if len(self.events) == 0:
+            self.event_attributes = event.to_dict().keys()
         self.events[event.name] = event
         self.G.add_node(
             event.name,
@@ -173,22 +228,29 @@ class GraphManager:
             impact=event.impact,
             required_items=event.required_items,
             coordinate_location=event.coordinate_location,
+            name=event.name,
         )
 
-    def add_object_node(self, obj):
+    def add_object_node(self, obj: ItemObject):
+        if len(self.objects) == 0:
+            self.object_attributes = obj.to_dict().keys()
         self.objects[obj.name] = obj
         self.G.add_node(
             obj.name,
             type="object",
+            item_type=obj.item_type,
             value=obj.value,
             usability=obj.usability,
             sentimental_value=obj.sentimental_value,
             trade_value=obj.trade_value,
             scarcity=obj.scarcity,
             coordinate_location=obj.coordinate_location,
+            name=obj.name,
         )
 
     def add_activity_node(self, act: Action):
+        if len(self.activities) == 0:
+            self.activity_attributes = act.to_dict().keys()
         self.activities[act.name] = act
         self.G.add_node(
             act.name,
@@ -199,9 +261,12 @@ class GraphManager:
             conflict_activities=act.conflict_activities,
             dependency_activities=act.dependency_activities,
             coordinate_location=act.coordinate_location,
+            name=act.name,
         )
 
     def add_job_node(self, job: Job):
+        if len(self.jobs) == 0:
+            self.job_attributes = job.to_dict().keys()
         self.jobs[job.name] = job
         self.G.add_node(
             job.name,
@@ -209,6 +274,7 @@ class GraphManager:
             required_skills=job.required_skills,
             location=job.location,
             salary=job.salary,
+            job_title=job.job_title,
         )
 
     def add_dict_of_nodes(self, nodes_dict):
@@ -255,6 +321,7 @@ class GraphManager:
             emotional_impact=emotional_impact,
             interaction_frequency=interaction_frequency,
             key=edge_type,
+            distance=dist(char1.coordinate_location, char2.coordinate_location),
         )
 
     # Character-Location
@@ -277,6 +344,7 @@ class GraphManager:
             favorite_activities=favorite_activities,
             ownership_status=ownership_status,
             key=edge_type,
+            distance=loc.distance_to_point_from_nearest_edge(char.coordinate_location),
         )
 
     # Character-Item
@@ -299,6 +367,7 @@ class GraphManager:
             sentimental_value=sentimental_value,
             last_used_time=last_used_time.strftime("%Y-%m-%d"),
             key=edge_type,
+            distance=dist(char.coordinate_location, obj.coordinate_location),
         )
 
     # Character-Event
@@ -321,6 +390,12 @@ class GraphManager:
             impact_on_character=impact_on_character,
             emotional_outcome=emotional_outcome,
             key=edge_type,
+            distance=dist(
+                char.coordinate_location,
+                event.location.distance_to_point_from_center(
+                    *event.coordinate_location
+                ),
+            ),
         )
 
     # Character-Activity
@@ -343,6 +418,10 @@ class GraphManager:
             activity_frequency=activity_frequency,
             motivation=motivation,
             key=edge_type,
+            distance=dist(
+                char.coordinate_location,
+                act.location.distance_to_point_from_center(*act.coordinate_location),
+            ),
         )
 
         # Location-Location Edges
@@ -359,6 +438,7 @@ class GraphManager:
             rivalry=rivalry,
             trade_relations=trade_relations,
             key=edge_type,
+            is_overlapping=loc1.overlaps(loc2),
         )
 
     # Location-Item Edges
@@ -372,6 +452,7 @@ class GraphManager:
             item_presence=item_presence,
             item_relevance=item_relevance,
             key=edge_type,
+            item_at_location=loc.contains_point(*obj.coordinate_location),
         )
 
     # Location-Event Edges
@@ -394,6 +475,7 @@ class GraphManager:
             capacity=capacity,
             preparation_level=preparation_level,
             key=edge_type,
+            event_at_location=loc.contains_point(*event.coordinate_location),
         )
 
     # Location-Activity Edges
@@ -414,6 +496,7 @@ class GraphManager:
             activity_popularity=activity_popularity,
             exclusivity=exclusivity,
             key=edge_type,
+            activity_at_location=loc.contains_point(*act.coordinate_location),
         )
 
     # Item-Item Edges
@@ -428,6 +511,7 @@ class GraphManager:
             conflict=conflict,
             combinability=combinability,
             key=edge_type,
+            distance=dist(obj1.coordinate_location, obj2.coordinate_location),
         )
 
     # Item-Activity Edges
@@ -505,6 +589,8 @@ class GraphManager:
             job_status=job_status,
             job_performance=job_performance,
             key=edge_type,
+            qualifies_for_job=char.qualifies_for_job(job),
+            distance=dist(char.coordinate_location, job.location.coordinate_location),
         )
 
     # Job-Location Edges
@@ -1449,7 +1535,7 @@ class GraphManager:
         security = self.G.nodes[loc].get("security", 1)
         return security / (1 + threats)
 
-    def evaluate_trade_opportunities(self, char):
+    def evaluate_trade_opportunities_by_char_surplus(self, char):
         """
         Evaluates trade opportunities for a character based on the surplus and demand across the graph.
 
@@ -1464,17 +1550,155 @@ class GraphManager:
             print("Trade opportunities for char1:", trade_opportunities)
         """
         surplus = {
-            res: qty for res, qty in self.G.nodes[char]["resources"].items() if qty > 10
+            res: qty
+            for res, qty in self.G.nodes[char]["resources"].report_inventory()
+            if qty > 10
         }
+        # Remove any resources from surplus if they are in char's needed resources
+        for res, _ in surplus:
+            for req_dict in self.G.nodes[char].get("needed_resources", {}).items():
+                for attr, value in res.to_dict().items():
+                    if (
+                        isinstance(value, int) or isinstance(value, float)
+                    ) and value > 0:
+                        if req_dict[0].get(attr, 0) >= value:
+                            surplus.pop(res)
+                            break
+                    elif isinstance(value, str) and value in req_dict[0].get(attr, []):
+                        surplus.pop(res)
+                        break
+
         opportunities = {}
-        for res in surplus:
-            interested = [
-                node
-                for node in self.G.nodes
-                if self.G.nodes[node].get("needed_resources", {}).get(res, 0) > 0
-            ]
-            if interested:
-                opportunities[res] = interested
+        for res, qty in surplus.items():
+            for node in self.G.nodes:
+                for attr, value in res.to_dict().items():
+                    if (
+                        isinstance(value, int) or isinstance(value, float)
+                    ) and value > 0:
+                        for req_dict in (
+                            self.G.nodes[node].get("needed_resources", {}).items()
+                        ):
+                            if req_dict[0].get(attr, 0) >= value:
+                                if node not in opportunities:
+                                    opportunities[node] = {}
+                                opportunities[node][res] = qty
+                                break
+                    elif isinstance(value, str) and value in req_dict[0].get(attr, []):
+                        if node not in opportunities:
+                            opportunities[node] = {}
+                        opportunities[node][res] = qty
+                        break
+
+        return opportunities
+
+    def evaluate_trade_opportunities_for_item(self, item):
+        """
+        Evaluates trade opportunities for a specific item based on the demand and availability across the graph.
+
+        Parameters:
+            item (str): Item node identifier.
+
+        Returns:
+            dict: A dictionary of potential trades, where keys are characters and values are potential trade quantities.
+
+        Usage example:
+            trade_opportunities = graph_manager.evaluate_trade_opportunities_for_item('item1')
+            print("Trade opportunities for item1:", trade_opportunities)
+        """
+        opportunities = {}
+        qty = item.quantity
+        for node in self.G.nodes:
+            for attr, value in item.to_dict().items():
+                if (isinstance(value, int) or isinstance(value, float)) and value > 0:
+                    for req_dict in (
+                        self.G.nodes[node].get("needed_resources", {}).items()
+                    ):
+                        if req_dict[0].get(attr, 0) >= value:
+                            if node not in opportunities:
+                                opportunities[node] = {}
+                            opportunities[node][item] = qty
+                            break
+                elif isinstance(value, str) and value in req_dict[0].get(attr, []):
+                    if node not in opportunities:
+                        opportunities[node] = {}
+                    opportunities[node][item] = qty
+                    break
+
+        return opportunities
+
+    def evaluate_trade_opportunities_for_wanted_item(self, item):
+        """
+        Evaluates trade opportunities for a specific item based on the demand and availability across the graph. Opposite of evaluate_trade_opportunities_for_item.
+
+        Parameters:
+            item (str): Item node identifier.
+
+        Returns:
+            dict: A dictionary of potential trades, where keys are characters and values are potential trade quantities.
+
+        Usage example:
+            trade_opportunities = graph_manager.evaluate_trade_opportunities_for_wanted_item('item1')
+            print("Trade opportunities for item1:", trade_opportunities)
+        """
+        opportunities = {}
+        qty = item.quantity
+        for node in self.G.nodes:
+            for attr, value in item.to_dict().items():
+                if (isinstance(value, int) or isinstance(value, float)) and value > 0:
+                    for surplus_res, surplus_qty in (
+                        self.G.nodes[node]["resources"].report_inventory().items()
+                    ):
+                        if surplus_res == item:
+                            if node not in opportunities:
+                                opportunities[node] = {}
+                            opportunities[node][item] = min(qty, surplus_qty)
+                            break
+                elif isinstance(value, str) and value in item.to_dict().get(attr, []):
+                    if node not in opportunities:
+                        opportunities[node] = {}
+                    opportunities[node][item] = qty
+                    break
+
+        return opportunities
+
+    def evaluate_trade_opportunities_for_desired_items(self, char):
+        """
+        Opposite of evaluate_trade_opportunities_by_char_surplus, this function evaluates trade opportunities for a character based on their desired resources and the surplus of other characters. This can be used to identify potential trade partners.
+
+        Parameters:
+            char (str): Character node identifier.
+
+        Returns:
+            dict: A dictionary of potential trades, where keys are resource types and values are lists of potential trade partners.
+
+        Usage example:
+            trade_opportunities = graph_manager.evaluate_trade_opportunities_for_desired_items('char1')
+            print("Trade opportunities for char1:", trade_opportunities)
+        """
+
+        opportunities = {}
+        for res, qty in self.G.nodes[char].get("needed_resources", {}).items():
+            for node in self.G.nodes:
+                for attr, value in res.to_dict().items():
+                    if (
+                        isinstance(value, int) or isinstance(value, float)
+                    ) and value > 0:
+                        for surplus_res, surplus_qty in (
+                            self.G.nodes[node]["resources"].report_inventory().items()
+                        ):
+                            if surplus_res == res:
+                                if node not in opportunities:
+                                    opportunities[node] = {}
+                                opportunities[node][res] = min(qty, surplus_qty)
+                                break
+                    elif isinstance(value, str) and value in res.to_dict().get(
+                        attr, []
+                    ):
+                        if node not in opportunities:
+                            opportunities[node] = {}
+                        opportunities[node][res] = qty
+                        break
+
         return opportunities
 
     def find_most_accessible_resources(self, char, resource_type):
@@ -1800,9 +2024,29 @@ class GraphManager:
             dict: The state of the character.
         """
         if character_name in self.G.nodes:
-            return self.G.nodes[character_name]
+            return self.characters[self.G.nodes[character_name].get("name")].to_dict()
         else:
             raise ValueError(f"No character named {character_name} in the graph.")
+
+    def calculate_utility(self, action, character_state):
+        """
+        Calculates the utility of an action for a character based on the current state.
+
+        Args:
+            action (Action): The action to evaluate.
+            character_state (dict): The current state of the character.
+
+        Returns:
+            float: The utility value of the action.
+        """
+        utility = 0
+        for effect in action.effects:
+            if effect.attribute in character_state:
+                # Calculate the change in the attribute value
+                delta = effect.value - character_state[effect.attribute]
+                # Apply a weight based on the importance of the attribute
+                utility += delta * effect.weight
+        return utility
 
     def get_possible_actions(self, character_name):
         """
@@ -1832,6 +2076,7 @@ class GraphManager:
                     ].get_possible_interactions()
                 ]
                 for action in character_actions:
+                    # does the approaching character meet the preconditions for the action
                     if all(
                         precondition(character_state)
                         for precondition in action.preconditions
@@ -2007,6 +2252,21 @@ class GraphManager:
 
         return career_benefit, past_experience_benefit
 
+    def get_character(self, character_str):
+        """
+        Retrieve a character object from the graph based on the character's name.
+
+        Parameters:
+            character_str (str): The name of the character to retrieve.
+
+        Returns:
+            Character: The character object if found, or None if the character does not exist.
+        """
+        for node, data in self.G.nodes(data=True):
+            if node == character_str or data.get("name") == character_str:
+                return self.characters[character_str]
+        return None
+
     def get_node(self, node_id):
         """
         Retrieve a node from the graph based on its identifier.
@@ -2020,6 +2280,323 @@ class GraphManager:
         return self.G.nodes.get(
             node_id, {}
         )  # Return the node data or an empty dictionary
+
+    def get_filtered_nodes(self, **kwargs):
+        filtered_nodes = set(self.graph.nodes)
+
+        # Filter based on node attributes
+        node_attributes = kwargs.get("node_attributes", {})
+        for attr, value in node_attributes.items():
+            filtered_nodes.intersection_update(
+                {
+                    n
+                    for n, attrs in self.graph.nodes(data=True)
+                    if attrs.get(attr) == value
+                }
+            )
+
+        # Filter based on edge attributes
+        edge_attributes = kwargs.get("edge_attributes", {})
+        for attr, value in edge_attributes.items():
+            filtered_nodes.intersection_update(
+                {
+                    n
+                    for n in filtered_nodes
+                    if any(
+                        self.graph.get_edge_data(n, neighbor).get(attr) == value
+                        for neighbor in self.graph.neighbors(n)
+                    )
+                }
+            )
+
+        # Filter based on distance
+        source_node = kwargs.get("source_node")
+        max_distance = kwargs.get("max_distance")
+        if source_node is not None and max_distance is not None:
+            lengths = nx.single_source_shortest_path_length(
+                self.graph, source=source_node, cutoff=max_distance
+            )
+            filtered_nodes.intersection_update(lengths.keys())
+
+        # Further filter by node type
+        node_type = kwargs.get("node_type")
+        if node_type is not None:
+            filtered_nodes.intersection_update(
+                {
+                    n
+                    for n in filtered_nodes
+                    if self.graph.nodes[n].get("type") == node_type
+                }
+            )
+
+        # Filter by character relationships
+        relationship = kwargs.get("relationship")
+        if relationship is not None:
+            filtered_nodes.intersection_update(
+                {
+                    n
+                    for n in filtered_nodes
+                    if self.check_friendship_status(relationship, n) == "friends"
+                }
+            )
+
+        # Filter by location safety
+        safety_threshold = kwargs.get("safety_threshold")
+        if safety_threshold is not None:
+            filtered_nodes.intersection_update(
+                {
+                    n
+                    for n in filtered_nodes
+                    if self.check_safety_of_locations(n) > safety_threshold
+                }
+            )
+
+        # Filter by item ownership
+        item = kwargs.get("item_ownership")
+        if item is not None:
+            filtered_nodes.intersection_update(
+                {n for n in filtered_nodes if item in self.item_ownership_history(n)}
+            )
+
+        # Filter by event participation
+        event = kwargs.get("event_participation")
+        if event is not None:
+            filtered_nodes.intersection_update(
+                {n for n in filtered_nodes if self.G.has_edge(n, event)}
+            )
+            # check participation_status in edge attributes
+            filtered_nodes.intersection_update(
+                {
+                    n
+                    for n in filtered_nodes
+                    if self.G[n][event].get("participation_status") == True
+                }
+            )
+
+        # Filter by trade opportunities
+        trade_resource = kwargs.get("want_item_trade")
+        if trade_resource is not None:
+            if isinstance(trade_resource, str):
+                trade_resource = self.items[trade_resource]
+            filtered_nodes.intersection_update(
+                {
+                    n
+                    for n in filtered_nodes
+                    if trade_resource
+                    in self.evaluate_trade_opportunities_for_wanted_item(trade_resource)
+                }
+            )
+
+        trade_resource = kwargs.get("offer_item_trade")
+        if trade_resource is not None:
+            if isinstance(trade_resource, ItemInventory):
+                for item in trade_resource.all_items():
+                    filtered_nodes.intersection_update(
+                        {
+                            n
+                            for n in filtered_nodes
+                            if item in self.evaluate_trade_opportunities_for_item(item)
+                        }
+                    )
+            if isinstance(trade_resource, str):
+                trade_resource = self.items[trade_resource]
+            if isinstance(trade_resource, ItemObject):
+                filtered_nodes.intersection_update(
+                    {
+                        n
+                        for n in filtered_nodes
+                        if trade_resource
+                        in self.evaluate_trade_opportunities_for_item(trade_resource)
+                    }
+                )
+
+        # Filter by trade opportunities based on character surplus. Argument must be a character name or instance of Character class
+        trade_opportunity = kwargs.get("trade_opportunity")
+        if trade_opportunity is not None:
+            if isinstance(trade_opportunity, str):
+                trade_opportunity = self.characters[trade_opportunity]
+            filtered_nodes.intersection_update(
+                {
+                    n
+                    for n in filtered_nodes
+                    if n
+                    in self.evaluate_trade_opportunities_by_char_surplus(
+                        trade_opportunity
+                    ).keys()
+                }
+            )
+
+        # Filter by desired resources of a character. Argument must be a character name or instance of Character class
+        desired_resource = kwargs.get("desired_resource")
+        if desired_resource is not None:
+            if isinstance(desired_resource, str):
+                desired_resource = self.characters[desired_resource]
+            filtered_nodes.intersection_update(
+                {
+                    n
+                    for n in filtered_nodes
+                    if n
+                    in self.evaluate_trade_opportunities_for_desired_items(
+                        desired_resource
+                    ).keys()
+                }
+            )
+
+        # Filter by career opportunities
+        career_opportunity = kwargs.get("career_opportunity")
+        if career_opportunity is not None:
+            filtered_nodes.intersection_update(
+                {
+                    n
+                    for n in filtered_nodes
+                    if career_opportunity in self.explore_career_opportunities(n)
+                }
+            )
+
+        # Filter by social influence
+        social_influence = kwargs.get("social_influence")
+        if social_influence is not None:
+            filtered_nodes.intersection_update(
+                {
+                    n
+                    for n in filtered_nodes
+                    if self.calculate_social_influence(n) > social_influence
+                }
+            )
+
+        # Filter by memory influence
+        memory_topic = kwargs.get("memory_topic")
+        memory_influence = kwargs.get("memory_influence")
+        if memory_topic is not None and memory_influence is not None:
+            filtered_nodes.intersection_update(
+                {
+                    n
+                    for n in filtered_nodes
+                    if self.query_memories(n, memory_topic) > memory_influence
+                }
+            )
+
+        # Filter by attributes of the Character class. First check if there is a kwarg that is also in the character_attributes list
+        if any(attr in kwargs for attr in self.character_attributes):
+            character_attribute = next(
+                attr for attr in character_attributes if attr in kwargs
+            )
+            filtered_nodes.intersection_update(
+                {
+                    n
+                    for n in filtered_nodes
+                    if self.characters[self.G.nodes[n].get("name")]
+                    .to_dict()
+                    .get(character_attribute)
+                }
+            )
+
+        # Filter by attributes of the Location class
+        if any(attr in kwargs for attr in self.location_attributes):
+            location_attribute = next(
+                attr for attr in self.location_attributes if attr in kwargs
+            )
+            filtered_nodes.intersection_update(
+                {
+                    n
+                    for n in filtered_nodes
+                    if self.locations[self.G.nodes[n].get("name")]
+                    .to_dict()
+                    .get(location_attribute)
+                }
+            )
+
+        # Filter by attributes of the Event class
+        if any(attr in kwargs for attr in self.event_attributes):
+            event_attribute = next(
+                attr for attr in self.event_attributes if attr in kwargs
+            )
+            filtered_nodes.intersection_update(
+                {
+                    n
+                    for n in filtered_nodes
+                    if self.events[self.G.nodes[n].get("name")]
+                    .to_dict()
+                    .get(event_attribute)
+                }
+            )
+
+        # Filter by attributes of the Item class
+        if any(attr in kwargs for attr in self.item_attributes):
+            item_attribute = next(
+                attr for attr in self.item_attributes if attr in kwargs
+            )
+            filtered_nodes.intersection_update(
+                {
+                    n
+                    for n in filtered_nodes
+                    if self.items[self.G.nodes[n].get("name")]
+                    .to_dict()
+                    .get(item_attribute)
+                }
+            )
+
+        # Filter by attributes of the Activity class
+        if any(attr in kwargs for attr in self.activity_attributes):
+            activity_attribute = next(
+                attr for attr in self.activity_attributes if attr in kwargs
+            )
+            filtered_nodes.intersection_update(
+                {
+                    n
+                    for n in filtered_nodes
+                    if self.activities[self.G.nodes[n].get("name")]
+                    .to_dict()
+                    .get(activity_attribute)
+                }
+            )
+
+        return {n: self.graph.nodes[n] for n in filtered_nodes}
+
+    def calculate_potential_utility_of_goal(self, character, goal: Goal):
+        """
+        Calculate the range possible utility of pursuing a Goal for a character based on their current state and preferences, given the current state of the graph.
+        Uses the graph to analyze relationships, locations, and other factors that may influence the utility of the goal.
+        Also considers the character's past experiences and preferences to determine the potential satisfaction level.
+        Using a combination of graph analysis and character-specific attributes, the utility of the goal is evaluated.
+        The get_filtered_nodes method can be used to retrieve relevant nodes based on specific criteria.
+           Args:
+               character (str): The character for whom the utility is being evaluated.
+               goal (Goal): The goal to evaluate.
+           Returns:
+               float: The estimated utility value of pursuing the goal.
+        """
+        utility = 0
+        # Analyze the goal and its requirements
+        goal_requirements = goal.criteria
+        # Filter nodes based on goal requirements
+        filtered_nodes = self.get_filtered_nodes(**goal_requirements)
+        # Analyze the filtered nodes to determine potential utility
+        for node_id, node_data in filtered_nodes.items():
+            # Evaluate the utility of each node based on its attributes and relationships
+            node_utility = self.evaluate_node_utility(character, node_data)
+            utility += node_utility
+        return utility
+
+    def calculate_goal_difficulty(self, goal: Goal):
+        """
+        Calculate the difficulty of a goal based on its complexity and requirements.
+        Args:
+            goal (Goal): The goal to evaluate.
+        Returns:
+            float: The difficulty score of the goal.
+        """
+        difficulty = 0
+        # Analyze the goal requirements and complexity
+        goal_requirements = goal.criteria
+        # Analyze graph to identify nodes that match the goal criteria
+        filtered_nodes = self.get_filtered_nodes(**goal_requirements)
+        # Calculate the difficulty using a weighted sum of various factors, such as the minimum number of required nodes, the cost of interactions, etc.
+
+        return difficulty
+
+    ###TODO: Calculate the difficulty of a goal using the graph and goal criteria, using get_possible_actions on the filtered_nodes. Also figure out how to initialize the criteria.
+    ### Also finish the calculate_utility function above get_possible_actions.
 
 
 """ 

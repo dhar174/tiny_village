@@ -1,15 +1,21 @@
+from enum import unique
 import uuid
 from typing import List
 
+from tiny_locations import Location
+
 
 class ItemObject:
-    def __init__(self, name, description, value, weight, quantity):
+    def __init__(self, name, description, value, weight, quantity, item_type="misc"):
         self.name = name
         self.description = description
         self.value = value
         self.weight = weight
         self.quantity = quantity
         self.id = uuid.uuid4()
+        self.item_type = item_type
+        self.location = Location(0, 0)
+        self.coordinate_location = (0, 0)
 
     def __repr__(self):
         return f"Item({self.name}, {self.description}, {self.value}, {self.weight}, {self.quantity})"
@@ -67,6 +73,42 @@ class ItemObject:
         self.quantity = quantity
         return self.quantity
 
+    def get_id(self):
+        return self.id
+
+    def set_id(self, id):
+        self.id = id
+        return self.id
+
+        self.location = Location(0, 0)
+        self.coordinate_location = self.location.get_coordinates()
+
+    def get_location(self):
+        return self.location
+
+    def set_location(self, *location):
+        if len(location) == 1:
+            if isinstance(location[0], Location):
+                self.location = location[0]
+            elif isinstance(location[0], tuple):
+                self.location = Location(location[0][0], location[0][1])
+        elif len(location) == 2:
+            self.location = Location(location[0], location[1])
+
+        return self.location
+
+    def get_coordinate_location(self):
+        return self.location.get_coordinates()
+
+    def set_coordinate_location(self, *coordinates):
+        if len(coordinates) == 1:
+            if isinstance(coordinates[0], tuple):
+                self.location.set_coordinates(coordinates[0])
+        elif len(coordinates) == 2:
+            self.location.set_coordinates(coordinates)
+
+        return self.location.coordinates_location
+
     def to_dict(self):
         return {
             "name": self.name,
@@ -74,6 +116,8 @@ class ItemObject:
             "value": self.value,
             "weight": self.weight,
             "quantity": self.quantity,
+            "id": self.id,
+            "coordinate_location": self.coordinate_location,
         }
 
 
@@ -81,6 +125,7 @@ class FoodItem(ItemObject):
     def __init__(self, name, description, value, weight, quantity, calories):
         super().__init__(name, description, value, weight, quantity)
         self.calories = calories
+        self.item_type = "food"
 
     def __repr__(self):
         return f"FoodItem({self.name}, {self.description}, {self.value}, {self.weight}, {self.quantity}, {self.calories})"
@@ -124,6 +169,8 @@ class FoodItem(ItemObject):
             "value": self.value,
             "weight": self.weight,
             "quantity": self.quantity,
+            "id": self.id,
+            "coordinate_location": self.coordinate_location,
             "calories": self.calories,
         }
 
@@ -144,6 +191,21 @@ class ItemInventory:
         self.weapons_items = self.set_weapons_items(weapons_items)
         self.medicine_items = self.set_medicine_items(medicine_items)
         self.misc_items = self.set_misc_items(misc_items)
+        # make one list of all items
+        self.all_items = (
+            self.food_items
+            + self.clothing_items
+            + self.tools_items
+            + self.weapons_items
+            + self.medicine_items
+            + self.misc_items
+        )
+
+    def report_inventory(self):
+        report = {}
+        for item in self.all_items:
+            report[item] = item.get_quantity()
+        return report
 
     def __repr__(self):
         return f"ItemInventory({self.food_items}, {self.clothing_items}, {self.tools_items}, {self.weapons_items}, {self.medicine_items}, {self.misc_items})"
@@ -314,6 +376,50 @@ class ItemInventory:
                 total += item.get_quantity()
         if self.misc_items:
             for item in self.misc_items:
+                total += item.get_quantity()
+        return total
+
+    def count_total_items_by_type(self, item_type):
+        total = 0
+        if item_type == "food":
+            for item in self.food_items:
+                total += item.get_quantity()
+        elif item_type == "clothing":
+            for item in self.clothing_items:
+                total += item.get_quantity()
+        elif item_type == "tools":
+            for item in self.tools_items:
+                total += item.get_quantity()
+        elif item_type == "weapons":
+            for item in self.weapons_items:
+                total += item.get_quantity()
+        elif item_type == "medicine":
+            for item in self.medicine_items:
+                total += item.get_quantity()
+        elif item_type == "misc":
+            for item in self.misc_items:
+                total += item.get_quantity()
+        return total
+
+    def count_total_items_by_name(self, name):
+        total = 0
+        for item in self.food_items:
+            if item.get_name() == name:
+                total += item.get_quantity()
+        for item in self.clothing_items:
+            if item.get_name() == name:
+                total += item.get_quantity()
+        for item in self.tools_items:
+            if item.get_name() == name:
+                total += item.get_quantity()
+        for item in self.weapons_items:
+            if item.get_name() == name:
+                total += item.get_quantity()
+        for item in self.medicine_items:
+            if item.get_name() == name:
+                total += item.get_quantity()
+        for item in self.misc_items:
+            if item.get_name() == name:
                 total += item.get_quantity()
         return total
 

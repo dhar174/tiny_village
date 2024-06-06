@@ -29,7 +29,7 @@ class StrategyManager:
         self.goap_planner = GOAPPlanner()
         self.graph_manager = GraphManager()
 
-    def update_strategy(self, events):
+    def update_strategy(self, events, subject="Emma"):
         """
         Updates the strategy based on the given event.
         If the event is "new_day", it gets the character state and possible actions for "Emma" and plans the actions.

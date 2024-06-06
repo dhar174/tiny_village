@@ -27,14 +27,21 @@ Where it happens: goap_system.py and graph_manager.py
 What happens: The GOAP planner uses the graph to analyze relationships and preferences, and formulates a plan consisting of a sequence of actions that maximize the character’s utility for the day.
 """
 
+from tiny_characters import Goal
+from actions import Action, State
+from tiny_graph_manager import GraphManager
+
 
 class GOAPPlanner:
+    def __init__(self, graph_manager: GraphManager):
+        self.graph_manager = graph_manager
+
     def plan_actions(self, state, actions):
         # Placeholder for GOAP algorithm logic
         # Sorts actions based on utility and state requirements
         return sorted(actions, key=lambda x: -x.utility)
 
-    def goap_planner(character, goal, state, actions):
+    def goap_planner(character, goal: Goal, char_state: State, actions: list):
         """
         Generates a plan of actions to achieve a goal from the current state.
 
@@ -48,14 +55,14 @@ class GOAPPlanner:
             plan (list): A list of actions that form a plan to achieve the goal.
         """
         # Initialize the open list with the initial state
-        open_list = [(state, [])]
+        open_list = [(char_state, [])]
         visited_states = set()
 
         while open_list:
             current_state, current_plan = open_list.pop(0)
 
             # Check if the current state satisfies the goal
-            if all(goal[k] <= current_state.get(k, 0) for k in goal):
+            if all(goal.check_completion(current_state)):
                 return current_plan
 
             for action in actions:
@@ -71,3 +78,19 @@ class GOAPPlanner:
                         open_list.append((new_state, current_plan + [action["name"]]))
 
         return None  # If no plan is found
+
+    def calculate_difficulty(self, action):
+        # Placeholder for calculating action difficulty
+        return action["energy_cost"] * action["satisfaction"]
+
+    def calculate_utility(self, action, character):
+        # Placeholder for calculating action utility
+        return action["satisfaction"] - action["energy_cost"]
+
+    def evaluate_utility(self, plan, character):
+        # Placeholder for evaluating the utility of a plan
+        return max(plan, key=lambda x: self.calculate_utility(x, character))
+
+    def evaluate_feasibility_of_goal(self, goal, state):
+        # Placeholder for evaluating the feasibility of a goal
+        return all(goal[k] <= state.get(k, 0) for k in goal)
