@@ -19,10 +19,11 @@ from venv import create
 # from tiny_characters import Character
 
 from tiny_graph_manager import GraphManager as graph_manager
+from tiny_util_funcs import isnumeric
 
 
 class State:
-    """State class to represent the current state of the character/object/etc. It stores attributes and their values."""
+    """State class to represent the current state of the character/object/etc. It stores attributes and their values. All game objects have a state, and actions can change these states."""
 
     def __init__(self, state_dict):
         self.state_dict = state_dict
@@ -88,6 +89,12 @@ class Condition:
             op = self.symb_map[op]
         if op not in self.ops:
             raise ValueError(f"Invalid operator: {op}")
+            # Check type of satisfy_value and ensure correct operator is used
+        if isinstance(satisfy_value, str) and op not in ["eq", "ne"]:
+            raise ValueError(f"Invalid operator: {op} for string type satisfy_value")
+        elif isinstance(satisfy_value, bool) and op not in ["eq", "ne"]:
+            raise ValueError(f"Invalid operator: {op} for boolean type satisfy_value")
+
         self.name = name
         self.satisfy_value = satisfy_value
         self.attribute = attribute
@@ -104,7 +111,16 @@ class Condition:
 
 
 class Action:
-    def __init__(self, name, preconditions, effects, cost, target=None, initiator=None):
+    def __init__(
+        self,
+        name,
+        preconditions,
+        effects,
+        cost,
+        target=None,
+        initiator=None,
+        change_value=None,
+    ):
         # Warning: Name MUST be unique! Check for duplicates before setting.
 
         self.name = name
@@ -115,6 +131,7 @@ class Action:
         self.cost = cost  # Cost to perform the action, for planning optimality
         self.target = None  # Target of the action, if applicable
         self.initiator = None  # Initiator of the action, if applicable
+        self.change_value = change_value
 
     def to_dict(self):
         return {
@@ -131,13 +148,24 @@ class Action:
         print(f"Preconditions: {self.preconditions}")
         return all(precondition(state) for precondition in self.preconditions.values())
 
-    def apply_effects(self, state: State):
+    def apply_effects(self, state: State, change_value=None):
         for effect in self.effects:
-            state[effect["attribute"]] = (
-                state.get(effect["attribute"], 0) + effect["change_value"]
-            )
+            if effect["change_value"] and isnumeric(effect["change_value"]):
+                state[effect["attribute"]] = (
+                    state.get(effect["attribute"], 0) + effect["change_value"]
+                )
+            elif change_value:
+                state[effect["attribute"]] = (
+                    state.get(effect["attribute"], 0) + change_value
+                )
+            else:
+                raise ValueError(
+                    "Effect must have a change_value attribute or a change_value parameter must be provided."
+                )
 
-    def force_apply_effects(self, obj):
+    def force_apply_effects(self, obj, change_value=None):
+        if change_value:
+            self.change_value = change_value
         if hasattr(obj, self.attribute):
             setattr(
                 obj, self.attribute, getattr(obj, self.attribute) + self.change_value
@@ -154,7 +182,7 @@ class Action:
             method = getattr(obj, method)
             method(*method_args)
 
-    def execute(self, target=None, initiator=None, extra_targets=[]):
+    def execute(self, target=None, initiator=None, extra_targets=[], change_value=None):
         if initiator is not None:
             self.initiator = initiator
         else:
@@ -166,20 +194,20 @@ class Action:
                 targets = d["targets"]
                 for tgt in targets:
                     if tgt == "initiator":
-                        self.apply_effects(self.initiator.get_state())
+                        self.apply_effects(self.initiator.get_state(), change_value)
                         if d["method"]:
                             self.invoke_method(
                                 self.initiator, d["method"], d["method_args"]
                             )
                     elif tgt == "target":
-                        self.apply_effects(self.target.get_state())
+                        self.apply_effects(self.target.get_state(), change_value)
                         if d["method"]:
                             self.invoke_method(
                                 self.target, d["method"], d["method_args"]
                             )
                     # Next determine if tgt is has a class function get_state
                     elif hasattr(tgt, "get_state"):
-                        self.apply_effects(tgt.get_state())
+                        self.apply_effects(tgt.get_state(), change_value)
                         if d["method"]:
                             self.invoke_method(tgt, d["method"], d["method_args"])
                     else:
@@ -193,7 +221,8 @@ class Action:
                                     self.apply_effects(
                                         graph_manager.type_to_dict_map[node.type][
                                             tgt
-                                        ].get_state()
+                                        ].get_state(),
+                                        change_value,
                                     )
                                 if d["method"]:
                                     self.invoke_method(
@@ -210,14 +239,14 @@ class Action:
                                     "Event",
                                 ]
                                 if tgt.__class__.__name__ in classes_list:
-                                    self.apply_effects(tgt.get_state())
+                                    self.apply_effects(tgt.get_state(), change_value)
                                     if d["method"]:
                                         self.invoke_method(
                                             tgt, d["method"], d["method_args"]
                                         )
                             except:
                                 try:
-                                    self.force_apply_effects(tgt)
+                                    self.force_apply_effects(tgt, change_value)
                                     if d["method"]:
                                         self.invoke_method(
                                             tgt, d["method"], d["method_args"]
@@ -229,6 +258,15 @@ class Action:
 
             return True
         return False
+
+    def __str__(self):
+        return f"{self.name}: {self.preconditions} -> {self.effects}"
+
+    def add_effect(self, effect):
+        self.effects.append(effect)
+
+    def add_precondition(self, precondition):
+        self.preconditions.append(precondition)
 
 
 class TalkAction(Action):

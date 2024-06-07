@@ -102,7 +102,7 @@ class Goal:
         failure_penalty,  # function that calculates the penalty for failing to complete the goal based on the character's state and the environment.
         completion_message,  # function that generates a message when the goal is completed based on the character's state and the environment.
         failure_message,  # function that generates a message when the goal is failed based on the character's state and the environment.
-        criteria,  # list of criteria that need to be met for the goal to be completed
+        criteria,  # list of criteria (as dicts) that need to be met for the goal to be completed
     ):
         # Example name, description, and completion: "get a job": character.get_job().get_job_name() != "unemployed",
         self.name = name
@@ -438,74 +438,92 @@ class PersonalMotives:
         }
 
 
-example_criteria1 = {
-    "node_attributes": {"type": "character"},
-    "edge_attributes": {"relationship": "friend", "strength": 0.8},
-    "max_distance": 20,
-}
-example_criteria2 = {
-    "node_attributes": {"type": "character"},
-    "relationship": "enemy",
-    "max_distance": 20,
-}
-example_criteria3 = {
-    "node_attributes": {"type": "character"},
-    "relationship": "family",
-    "max_distance": 100,
-}
-example_criteria4 = {
-    "node_attributes": {"type": "location"},
-    "safety_threshold": 0.8,
-    "max_distance": 50,
-}
-example_criteria5 = {
-    "node_attributes": {"type": "item", "item_type": "food"},
-    "max_distance": 20,
-}
-example_criteria6 = {
-    "node_attributes": {"type": "item", "item_type": "weapon", "usability": 0.8},
-    "max_distance": 20,
-}
-example_criteria7 = {
-    "node_attributes": {"type": "item", "trade_value": 100},
-    "max_distance": 20,
-}
-example_criteria8 = {
-    "node_attributes": {"type": "item", "scarcity": 0.2},
-    "max_distance": 20,
-}
-example_criteria9 = {
-    "node_attributes": {"type": "item", "item_type": "luxury", "value": 0.8},
-    "max_distance": 20,
-}
-example_criteria10 = {
-    "event_participation": Event(
-        name="Festival",
-        date="2022-07-04",
-        event_type="annual",
-        importance=0.8,
-        impact=0.8,
-        required_items=["food", "decorations"],
-        coordinate_location=(100, 100),
-    ),
-}
+example_criteria1 = [
+    {
+        "node_attributes": {"type": "character"},
+        "edge_attributes": {"relationship": "friend", "strength": 0.8},
+        "max_distance": 20,
+    }
+]
+example_criteria2 = [
+    {
+        "node_attributes": {"type": "character"},
+        "relationship": "enemy",
+        "max_distance": 20,
+    }
+]
+example_criteria3 = [
+    {
+        "node_attributes": {"type": "character"},
+        "relationship": "family",
+        "max_distance": 100,
+    },
+    {
+        "node_attributes": {"type": "location"},
+        "safety_threshold": 0.8,
+        "max_distance": 50,
+    },
+]
+example_criteria5 = [
+    {
+        "node_attributes": {"type": "item", "item_type": "food"},
+        "max_distance": 20,
+    }
+]
+example_criteria6 = [
+    {
+        "node_attributes": {"type": "item", "item_type": "weapon", "usability": 0.8},
+        "max_distance": 20,
+    }
+]
+example_criteria7 = [
+    {
+        "node_attributes": {"type": "item", "trade_value": 100},
+        "max_distance": 20,
+    },
+    {
+        "node_attributes": {"type": "item", "scarcity": 0.2},
+        "max_distance": 20,
+    },
+]
+example_criteria9 = [
+    {
+        "node_attributes": {"type": "item", "item_type": "luxury", "value": 0.8},
+        "max_distance": 20,
+    }
+]
+example_criteria10 = [
+    {
+        "event_participation": Event(
+            name="Festival",
+            date="2022-07-04",
+            event_type="annual",
+            importance=0.8,
+            impact=0.8,
+            required_items=["food", "decorations"],
+            coordinate_location=(100, 100),
+        ),
+    }
+]
 
-example_criteria11 = {
-    "offer_item_trade": ItemInventory(
-        items=[
-            FoodItem(
-                name="Apple",
-                description="A juicy red apple.",
-                value=1,
-                perishable=True,
-                nutrition_value=2,
-            )
-        ]
-    ),
-    "max_distance": 20,
-}
+example_criteria11 = [
+    {
+        "offer_item_trade": ItemInventory(
+            items=[
+                FoodItem(
+                    name="Apple",
+                    description="A juicy red apple.",
+                    value=1,
+                    perishable=True,
+                    nutrition_value=2,
+                )
+            ]
+        ),
+        "max_distance": 20,
+    }
+]
 
-# example_criteria12 = {
+# example_criteria12 = [{
 #     "trade_opportunity": Character(
 #         name="Joe",
 #         description="A traveling merchant.",
@@ -525,7 +543,7 @@ example_criteria11 = {
 #     "max_distance": 20,
 # }
 
-# example_criteria13 = {
+# example_criteria13 = [{
 #     "desired_resource": Character(
 #         name="Joe",
 #         description="A traveling merchant.",
@@ -543,7 +561,7 @@ example_criteria11 = {
 #     ),
 # }
 
-# example_criteria14 = {
+# example_criteria14 = [{
 #     "want_item_trade": FoodItem(
 #         name="Apple",
 #         description="A juicy red apple.",
@@ -713,6 +731,15 @@ class PersonalityTraits:
                 self.neuroticism,
             )
         )
+
+    def to_dict(self):
+        return {
+            "openness": self.openness,
+            "conscientiousness": self.conscientiousness,
+            "extraversion": self.extraversion,
+            "agreeableness": self.agreeableness,
+            "neuroticism": self.neuroticism,
+        }
 
     def get_openness(self):
         return self.openness

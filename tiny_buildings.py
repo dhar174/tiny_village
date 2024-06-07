@@ -1,8 +1,40 @@
 import uuid
+from actions import Action, ActionSystem
+from tiny_locations import Location, LocationManager
+
+effect_dict = {
+    "Enter Building": [
+        {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 5},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -2},
+        {"targets": ["target"], "attribute": "social_wellbeing", "change_value": 5},
+        {
+            "targets": ["initiator"],
+            "method": "play_animation",
+            "method_args": ["talking"],
+        },
+    ],
+}
+
+preconditions_dict = {
+    "Enter Building": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "satisfy_value": 10,
+            "operator": "gt",
+        },
+        {
+            "name": "extraversion",
+            "attribute": "personality_traits.extraversion",
+            "satisfy_value": 50,
+            "operator": "gt",
+        },
+    ]
+}
 
 
-class Building:
-    def __init__(self, name, height, width, length, stories=1, address="123 Main St"):
+class Building(Location):
+    def __init__(self, name,x, y, height, width, length, stories=1, address="123 Main St",action_system: ActionSystem = ActionSystem(), door = 
         self.name = name
         self.height = height
         self.width = width
@@ -10,9 +42,34 @@ class Building:
         self.address = address
         self.volume = self.volume()
         self.stories = stories
+        self.door
 
         self.area = self.area()
         self.id = uuid.uuid4()
+        self.coordinates_location = (x, y)
+        self.possible_interactions = [
+            Action(
+                "Enter Building",
+                action_system.instantiate_conditions(
+                    preconditions_dict["Enter Building"]
+                ),
+                effect_dict["Enter Building"],
+            )
+        ]
+
+    def get_possible_interactions(self, requester):
+        self.possible_interactions["Enter Building"].append(
+            {
+                "targets": ["initiator"],
+                "method": "walk_to",
+                "method_args": [
+                    self.point_of_edge_nearest_to_point(
+                        *requester.location.coordinates_location
+                    )
+                ],
+            }
+        )
+        return self.possible_interactions
 
     def volume(self):
         return self.length * self.width * self.height

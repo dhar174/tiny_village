@@ -1,13 +1,79 @@
-from requests import get
+from actions import Action, State, ActionSystem
+
+
+effect_dict = {
+    "Enter Location Boundary": [
+        {
+            "targets": ["initiator"],
+            "method": "play_animation",
+            "method_args": ["walking"],
+        },
+        {
+            "targets": ["initiator"],
+            "method": "walk_to",
+            "method_args": ["walking"],
+        },
+    ],
+}
+
+preconditions_dict = {
+    "Enter Location Boundary": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "satisfy_value": 10,
+            "operator": "gt",
+        },
+        {
+            "name": "extraversion",
+            "attribute": "personality_traits.extraversion",
+            "satisfy_value": 50,
+            "operator": "gt",
+        },
+    ]
+}
 
 
 class Location:
-    def __init__(self, x, y, width, height):
+    def __init__(self, name, x, y, width, height, action_system: ActionSystem):
+        self.name = name
         self.x = x
         self.y = y
         self.width = width
         self.height = height
         self.coordinates_location = (x, y)
+        self.effect_dict = {
+            "Enter Location Boundary": [
+                {
+                    "targets": ["initiator"],
+                    "method": "play_animation",
+                    "method_args": ["walking"],
+                },
+            ],
+        }
+        self.possible_interactions = [
+            Action(
+                "Enter Location Boundary",
+                action_system.instantiate_conditions(
+                    preconditions_dict["Enter Location Boundary"]
+                ),
+                effect_dict["Enter Location Boundary"],
+            )
+        ]
+
+    def get_possible_interactions(self, requester):
+        self.effect_dict["Enter Location Boundary"].append(
+            {
+                "targets": ["initiator"],
+                "method": "walk_to",
+                "method_args": [
+                    self.point_of_edge_nearest_to_point(
+                        *requester.location.coordinates_location
+                    )
+                ],
+            }
+        )
+        return self.possible_interactions
 
     def coordinates_location(self):
         return self.coordinates_location
@@ -118,6 +184,11 @@ class Location:
         nearest_x = max(self.x, min(point_x, self.x + self.width))
         nearest_y = max(self.y, min(point_y, self.y + self.height))
         return ((point_x - nearest_x) ** 2 + (point_y - nearest_y) ** 2) ** 0.5
+
+    def point_of_edge_nearest_to_point(self, point_x, point_y):
+        nearest_x = max(self.x, min(point_x, self.x + self.width))
+        nearest_y = max(self.y, min(point_y, self.y + self.height))
+        return nearest_x, nearest_y
 
     def distance_to_location_from_center(self, other: "Location"):
         return self.distance_to_point_from_center(*other.center())

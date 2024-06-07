@@ -1,13 +1,16 @@
+from ast import Not
 from calendar import c
 import dis
 import heapq
 from importlib import resources
+from itertools import product
 from math import dist, inf
 from os import name
 from re import T
 import resource
 import networkx as nx
-from numpy import add, char
+from networkx import subgraph
+from numpy import add, char, diff
 from pkg_resources import add_activation_listener
 from tiny_characters import Character, Goal
 from tiny_jobs import Job
@@ -16,6 +19,7 @@ from tiny_event_handler import Event
 from actions import Action
 from tiny_items import ItemInventory, ItemObject
 import tiny_memories
+from tiny_utility_functions import is_goal_achieved
 
 """ Graph Construction
 Defining Nodes:
@@ -322,7 +326,75 @@ class GraphManager:
             interaction_frequency=interaction_frequency,
             key=edge_type,
             distance=dist(char1.coordinate_location, char2.coordinate_location),
+            interaction_cost=self.calculate_char_char_edge_cost(
+                char1,
+                char2,
+                relationship_type,
+                strength,
+                history,
+                emotional_impact,
+                interaction_frequency,
+            ),
         )
+
+    def calc_char_char_edge_cost(self, node, other_node, attribute_dict):
+        # Find edge in question
+        return self.calculate_char_char_edge_cost(
+            node,
+            other_node,
+            attribute_dict["relationship_type"],
+            attribute_dict["strength"],
+            attribute_dict["history"],
+            attribute_dict["emotional_impact"],
+            attribute_dict["interaction_frequency"],
+        )
+
+    def calculate_char_char_edge_cost(
+        self,
+        char1,
+        char2,
+        relationship_type,
+        strength,
+        history,
+        emotional_impact,
+        interaction_frequency,
+    ):
+        cost = 0
+        char2_traits = char2.personality_traits.to_dict()
+        char2_motive = char2.motives.to_dict()
+        for char1_trait, char1val in char1.personality_traits.to_dict().items():
+            cost += abs(char1val - char2_traits[char1_trait])
+        for char1_motive, char1val in char1.motives.to_dict().items():
+            if (
+                relationship_type == "friend"
+                or relationship_type == "family"
+                or relationship_type == "colleague"
+            ):
+                # The closer the motives are to each other, the lower the cost
+                cost += abs(char1val - char2_motive[char1_motive]) / strength
+                # The more frequent the interaction, the lower the cost
+                cost += (1 / (interaction_frequency + 1)) * strength
+                # The longer the history, the lower the cost
+                cost += (1 / (len(history) + 1)) * strength
+                # The higher the emotional impact, the lower the cost
+                cost += 1 / (emotional_impact + 1)
+            if (
+                relationship_type == "antagonist"
+                or relationship_type == "rival"
+                or relationship_type == "enemy"
+            ):
+                # The closer the motives are to each other, the higher the cost
+                cost += (
+                    abs(char1val + char2_motive[char1_motive])
+                    - abs(char1val - char2_motive[char1_motive])
+                ) * strength
+                # The longer the history, the higher the cost
+                cost += (1 / (len(history) + 1)) * strength
+                # The higher the emotional impact, the higher the cost
+                cost += 1 / (emotional_impact + 1)
+            #
+
+        return cost
 
     # Character-Location
     def add_character_location_edge(
@@ -2590,10 +2662,152 @@ class GraphManager:
         # Analyze the goal requirements and complexity
         goal_requirements = goal.criteria
         # Analyze graph to identify nodes that match the goal criteria
-        filtered_nodes = self.get_filtered_nodes(**goal_requirements)
-        # Calculate the difficulty using a weighted sum of various factors, such as the minimum number of required nodes, the cost of interactions, etc.
+        nodes_per_requirement = {}
+        for requirement in goal_requirements:
+            nodes_per_requirement[requirement] = self.get_filtered_nodes(**requirement)
+
+        # Check if any requirement has no matching nodes
+
+        for requirement, nodes in nodes_per_requirement.items():
+            if not nodes:
+                return float("inf")
+
+        # Check for nodes that fulfill multiple requirements
+
+        for nodes in nodes_per_requirement.values():
+            for node in nodes:
+                if sum(node in nodes for nodes in nodes_per_requirement.values()) > 1:
+                    # Node fulfills multiple requirements
+                    # Add your code here to handle this case
+                    # For example, you can store the node in a list or perform some other operation
+                    pass
+
+        action_viability_cost = {}
+
+        for node in nodes_per_requirement.values():
+            action_viability_cost[node] = self.calculate_action_viability_cost(
+                node, goal
+            )
+
+        # Now calculate paths that would fulfill each requirement in goal_requirements, using only one node per requirement
+        # Generate all combinations of nodes fulfilling the requirements
+        all_combinations = list(
+            product(*[list(d.values()) for d in nodes_per_requirement.values()])
+        )
+        valid_paths = []
+
+        all_pairs_paths = dict(
+            nx.all_pairs_dijkstra_path(
+                nx.subgraph(self.G, [n for n in nodes_per_requirement.values()]),
+                weight=self.calc_char_char_edge_cost,
+            )
+        )  # Assuming a function to calculate edge cost between characters
+
+        # Helper function to find the combined path for a node combination
+        def find_combined_path(combo):
+            combined_path = []
+            for i in range(len(combo) - 1):
+                source = combo[i]
+                target = combo[i + 1]
+                if source in all_pairs_paths and target in all_pairs_paths[source]:
+                    combined_path.extend(all_pairs_paths[source][target])
+                else:
+                    return None  # No valid path between these two nodes
+            return combined_path
+
+        for combo in all_combinations:
+            path = find_combined_path(combo)
+            if path:
+                valid_paths.append(path)
+
+        # Find the shortest path among all valid paths based on the weighted sum of edge costs
+        shortest_path = min(
+            valid_paths,
+            key=lambda path: sum(
+                self.calc_edge_cost(path[i], path[i + 1]) for i in range(len(path) - 1)
+            ),
+        )
+
+        difficulty = sum(
+            self.calc_edge_cost(shortest_path[i], shortest_path[i + 1])
+            for i in range(len(shortest_path) - 1)
+        )
 
         return difficulty
+
+    def is_goal_achieved(self, character, goal: Goal):
+        raise NotImplementedError
+
+    def calculate_action_viability_cost(self, node, goal: Goal):
+        """
+        Calculate the cost of an action based on the viability of the node.
+        Args:
+            node (Node): The node to evaluate.
+        Returns:
+            float: The cost of the action based on the viability of the node.
+        """
+        try:
+            possible_interactions = self.node_type_resolver(
+                node
+            ).get_possible_interactions()
+        except:
+            possible_interactions = self.node_type_resolver(node).possible_interactions
+
+        for interaction in possible_interactions:
+            if self.will_action_fulfill_goal(interaction, goal):
+                return 0
+
+    def will_action_fulfill_goal(self, action, goal: Goal):
+        """
+        Determine if an action fulfills any the specified requirements by checking the preconditions and effects of the action.
+        Args:
+            action (Action): The action to evaluate.
+            requirements (dict): The requirements to fulfill.
+        Returns:
+            Dict[str, bool]: A dictionary indicating which requirements are fulfilled by the action.
+        """
+        fulfilled_requirements = {req: False for req in requirements}
+        for requirement in requirements:
+            if all(
+                precondition(action)
+                for precondition in requirements[requirement]["preconditions"]
+            ):
+                fulfilled_requirements[requirement] = True
+        ##TODO: Figure out how to check if the effects of all actions the action list fulfill the goal completion_condition together after being applied to the character State
+
+    def will_path_achieve_goal(self, path, goal: Goal):
+        """
+        Determine if a given path through the graph will achieve the specified goal by checking the preconditions and effects of the Action objects in the possible_interactions attribute of each node.
+        Args:
+            path (list): The path through the graph.
+            goal (Goal): The goal to achieve.
+        Returns:
+            bool: True if the path fulfills the goal, False otherwise.
+        """
+        pass
+
+    def node_type_resolver(self, node):
+        """
+        Returns the root class instance of a node based on its attributes.
+        Args:
+            node (Node): The node to resolve.
+        Returns:
+            str: The resolved type of the node.
+        """
+        if "type" in node:
+            if node["type"] == "character":
+                return self.characters[node["name"]]
+            elif node["type"] == "location":
+                return self.locations[node["name"]]
+            elif node["type"] == "event":
+                return self.events[node["name"]]
+            elif node["type"] == "item" or node["type"] == "object":
+                return self.objects[node["name"]]
+            elif node["type"] == "activity":
+                return self.activities[node["name"]]
+            elif node["type"] == "job":
+                return self.jobs[node["name"]]
+        return None
 
     ###TODO: Calculate the difficulty of a goal using the graph and goal criteria, using get_possible_actions on the filtered_nodes. Also figure out how to initialize the criteria.
     ### Also finish the calculate_utility function above get_possible_actions.

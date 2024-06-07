@@ -2,11 +2,22 @@ from enum import unique
 import uuid
 from typing import List
 
+from actions import Action, ActionSystem
 from tiny_locations import Location
 
 
 class ItemObject:
-    def __init__(self, name, description, value, weight, quantity, item_type="misc"):
+    def __init__(
+        self,
+        name,
+        description,
+        value,
+        weight,
+        quantity,
+        item_type="misc",
+        possible_interactions=[],
+        action_system: ActionSystem = None,
+    ):
         self.name = name
         self.description = description
         self.value = value
@@ -16,6 +27,7 @@ class ItemObject:
         self.item_type = item_type
         self.location = Location(0, 0)
         self.coordinate_location = (0, 0)
+        self.possible_interactions: List[Action] = []
 
     def __repr__(self):
         return f"Item({self.name}, {self.description}, {self.value}, {self.weight}, {self.quantity})"
@@ -121,11 +133,68 @@ class ItemObject:
         }
 
 
+effect_dict = {
+    "Eat": [
+        {"targets": ["initiator"], "attribute": "hunger"},
+        {
+            "targets": ["initiator"],
+            "method": "play_animation",
+            "method_args": ["eating"],
+        },
+    ]
+}
+
+preconditions_dict = {
+    "Eat": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "satisfy_value": 10,
+            "operator": "gt",
+        },
+        {
+            "name": "extraversion",
+            "attribute": "personality_traits.extraversion",
+            "satisfy_value": 50,
+            "operator": "gt",
+        },
+    ]
+}
+
+
 class FoodItem(ItemObject):
-    def __init__(self, name, description, value, weight, quantity, calories):
-        super().__init__(name, description, value, weight, quantity)
+    def __init__(
+        self,
+        name,
+        description,
+        value,
+        weight,
+        quantity,
+        calories=0,
+        action_system: ActionSystem = ActionSystem(),
+    ):
+        effect = effect_dict["Eat"]
+        effect[0]["change_value"] = calories
+        possible_interactions = [
+            Action(
+                "Eat Food",
+                action_system.instantiate_condition(preconditions_dict["Eat"]),
+                effects=effect_dict["Eat"],
+                cost=1,
+            ),
+        ]
+        super().__init__(
+            name,
+            description,
+            value,
+            weight,
+            quantity,
+            item_type="food",
+            possible_interactions=possible_interactions,
+        )
         self.calories = calories
         self.item_type = "food"
+        self.possible_interactions = possible_interactions
 
     def __repr__(self):
         return f"FoodItem({self.name}, {self.description}, {self.value}, {self.weight}, {self.quantity}, {self.calories})"
@@ -155,6 +224,9 @@ class FoodItem(ItemObject):
             )
         )
 
+    def get_possible_interactions(self):
+        return self.possible_interactions
+
     def get_calories(self):
         return self.calories
 
@@ -172,6 +244,78 @@ class FoodItem(ItemObject):
             "id": self.id,
             "coordinate_location": self.coordinate_location,
             "calories": self.calories,
+        }
+
+
+class Door(ItemObject):
+    def __init__(
+        self,
+        name,
+        description,
+        value,
+        weight,
+        quantity,
+        action_system: ActionSystem = ActionSystem(),
+    ):
+        effect = effect_dict["Open"]
+        possible_interactions = [
+            Action(
+                "Open Door",
+                action_system.instantiate_condition(preconditions_dict["Open"]),
+                effects=effect_dict["Open"],
+                cost=1,
+            ),
+        ]
+        super().__init__(
+            name,
+            description,
+            value,
+            weight,
+            quantity,
+            item_type="door",
+            possible_interactions=possible_interactions,
+        )
+        self.item_type = "door"
+        self.possible_interactions = possible_interactions
+
+    def __repr__(self):
+        return f"Door({self.name}, {self.description}, {self.value}, {self.weight}, {self.quantity})"
+
+    def __str__(self):
+        return f"Door named {self.name} with description {self.description} and value {self.value}."
+
+    def __eq__(self, other):
+        return (
+            self.name == other.name
+            and self.description == other.description
+            and self.value == other.value
+            and self.weight == other.weight
+            and self.quantity == other.quantity
+        )
+
+    def __hash__(self):
+        return hash(
+            (
+                self.name,
+                self.description,
+                self.value,
+                self.weight,
+                self.quantity,
+            )
+        )
+
+    def get_possible_interactions(self):
+        return self.possible_interactions
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "description": self.description,
+            "value": self.value,
+            "weight": self.weight,
+            "quantity": self.quantity,
+            "id": self.id,
+            "coordinate_location": self.coordinate_location,
         }
 
 

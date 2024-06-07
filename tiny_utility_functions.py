@@ -8,7 +8,11 @@ from actions import Action, State
 
 
 # function that evaluates the current importance of the goal based on the character's state and the environment.
-def evaluate_goal_importance(goal, character_state: State, environment: dict):
+
+
+def evaluate_goal_importance(
+    goal, character_state: State, environment: dict, difficulty: float, criteria: dict
+):
     """
     Evaluates the importance of a goal based on the character's current state and the environment.
 
@@ -31,6 +35,23 @@ def evaluate_goal_importance(goal, character_state: State, environment: dict):
             importance += value * goal.attributes[attribute]
 
     return importance
+
+
+def is_goal_achieved(goal, character_state: State):
+    """
+    Checks if the goal has been achieved based on the character's current state.
+
+    Args:
+        goal (Goal): The goal to check.
+        character_state (State): The character's current state.
+
+    Returns:
+        achieved (bool): True if the goal is achieved, False otherwise.
+    """
+    for attribute, value in goal.attributes.items():
+        if character_state.get(attribute, 0) < value:
+            return False
+    return True
 
 
 # class UtilityEvaluator:

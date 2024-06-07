@@ -38,6 +38,14 @@ class ClampedIntScore:
         return self.max
 
 
+def is_numeric(value):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
+
+
 def tweener(input_value, max_input, start, end, steps):
     if input_value >= max_input:
         return end
