@@ -10,6 +10,7 @@ For instance, if a new technology is discovered in the game, related actions (li
 """
 
 from calendar import c
+import json
 from mimetypes import init
 import operator
 import stat
@@ -25,8 +26,8 @@ from tiny_util_funcs import isnumeric
 class State:
     """State class to represent the current state of the character/object/etc. It stores attributes and their values. All game objects have a state, and actions can change these states."""
 
-    def __init__(self, state_dict):
-        self.state_dict = state_dict
+    def __init__(self, dict_or_obj):
+        self.dict_or_obj = dict_or_obj
         self.ops = {
             "gt": operator.gt,
             "lt": operator.lt,
@@ -44,19 +45,48 @@ class State:
             "!=": "ne",
         }
 
-    def __getitem__(self, key):
-        return self.state_dict.get(key, 0)
+    def __getitem__(
+        self, key
+    ):  # if wanting to call a function, use key as a string with arguments in parentheses like: self['foo(["arg1", "arg2"])']
+        if "(" in key and key.endswith(")"):
+            key, arg_str = key[:-1].split("(", 1)
+            args = json.loads(arg_str)
+        else:
+            args = []
 
-    def get(self, key, default):
-        return self.state_dict.get(key, default)
+        keys = key.split(".")
+        val = self
+        for k in keys:
+            if isinstance(val, dict):
+                val = val.get(k, 0)
+            else:
+                val = getattr(val, k, 0)
+
+        if callable(val):
+            return val(*args)
+        else:
+            return val
+
+    def get(self, key, default=None):
+        keys = key.split(".")
+        val = self.dict_or_obj
+        for k in keys:
+            if isinstance(val, dict):
+                val = val.get(k)
+            else:
+                val = getattr(val, k, None)
+            if val is None:
+                return default
+        return val
 
     def __setitem__(self, key, value):
-        self.state_dict[key] = value
+        self.dict_or_obj[key] = value
 
     def __str__(self):
-        return ", ".join([f"{key}: {val}" for key, val in self.state_dict.items()])
+        return ", ".join([f"{key}: {val}" for key, val in self.dict_or_obj.items()])
 
     def compare_to_condition(self, condition):
+
         if condition.operator not in self.ops:
             return self.ops[self.symb_map[condition.operator]](
                 self[condition.attribute], condition.satisfy_value
@@ -67,7 +97,7 @@ class State:
 
 
 class Condition:
-    def __init__(self, name, attribute, satisfy_value, op=">="):
+    def __init__(self, name, attribute, target, satisfy_value, op=">=", weight=1):
         self.ops = {
             "gt": operator.gt,
             "lt": operator.lt,
@@ -99,14 +129,20 @@ class Condition:
         self.satisfy_value = satisfy_value
         self.attribute = attribute
         self.operator = op
+        self.target = target
+        self.weight = weight
 
     def __str__(self):
         return f"{self.name}: {self.attribute} {self.operator} {self.satisfy_value}"
 
-    def check_condition(self, state: State):
+    def check_condition(self, state: State = None):
+        if state is None:
+            state = self.target.get_state()
         return state.compare_to_condition(self)
 
-    def __call__(self, state: State):
+    def __call__(self, state: State = None):
+        if state is None:
+            state = self.target.get_state()
         return self.check_condition(state)
 
 
@@ -119,7 +155,8 @@ class Action:
         cost,
         target=None,
         initiator=None,
-        change_value=None,
+        # change_value=None,
+        default_target_is_initiator=False,
     ):
         # Warning: Name MUST be unique! Check for duplicates before setting.
 
@@ -128,10 +165,16 @@ class Action:
             preconditions  # Dict of conditions needed to perform the action
         )
         self.effects = effects  # List of Dicts of state changes the action causes, like [{"targets": ["initiator","target"], "attribute": "social_wellbeing", "change_value": 8}]
-        self.cost = cost  # Cost to perform the action, for planning optimality
-        self.target = None  # Target of the action, if applicable
-        self.initiator = None  # Initiator of the action, if applicable
-        self.change_value = change_value
+        self.cost = float(cost)  # Cost to perform the action, for planning optimality
+        self.target = target  # Target of the action, if applicable
+        self.initiator = initiator  # Initiator of the action, if applicable
+        # self.change_value = change_value
+        self.default_target_is_initiator = default_target_is_initiator
+        self.target = None
+        if default_target_is_initiator and target is None and initiator is not None:
+            self.target = initiator
+        elif target is not None:
+            self.target = target
 
     def to_dict(self):
         return {
@@ -141,27 +184,68 @@ class Action:
             "cost": self.cost,
         }
 
-    def conditions_met(self, state: State):
-        print(f"Type of energy: {type(self.preconditions['energy'])}")
-        print(f"Type of state: {type(state)}")
-        print(f"State: {state}")
-        print(f"Preconditions: {self.preconditions}")
-        return all(precondition(state) for precondition in self.preconditions.values())
+    def preconditions_met(self):
 
-    def apply_effects(self, state: State, change_value=None):
-        for effect in self.effects:
-            if effect["change_value"] and isnumeric(effect["change_value"]):
-                state[effect["attribute"]] = (
-                    state.get(effect["attribute"], 0) + effect["change_value"]
-                )
-            elif change_value:
-                state[effect["attribute"]] = (
-                    state.get(effect["attribute"], 0) + change_value
-                )
-            else:
-                raise ValueError(
-                    "Effect must have a change_value attribute or a change_value parameter must be provided."
-                )
+        return all(
+            precondition.check_condition()
+            for precondition in self.preconditions.values()
+        )
+
+    def apply_single_effect(self, effect, state: State, change_value=None):
+        if change_value is None:
+            change_value = effect["change_value"]
+        if (
+            isinstance(effect["change_value"], str)
+            and "(" in effect["change_value"]
+            and effect["change_value"].endswith(")")
+        ):
+            state[effect["attribute"]] = state[effect["change_value"]]
+        elif effect["change_value"] and isnumeric(effect["change_value"]):
+            state[effect["attribute"]] = (
+                state.get(effect["attribute"], 0) + effect["change_value"]
+            )
+        elif callable(change_value):
+            state[effect["attribute"]] = change_value(state.get(effect["attribute"], 0))
+        elif change_value:
+            state[effect["attribute"]] = (
+                state.get(effect["attribute"], 0) + change_value
+            )
+        else:
+            raise ValueError(
+                "Effect must have a change_value attribute or a change_value parameter must be provided."
+            )
+        return state
+
+    def apply_effects(self, state: State):
+        try:
+
+            for effect in self.effects:
+                change_value = effect["change_value"]
+                if (
+                    isinstance(effect["change_value"], str)
+                    and "(" in effect["change_value"]
+                    and effect["change_value"].endswith(")")
+                ):
+                    state[effect["attribute"]] = state[effect["change_value"]]
+                elif effect["change_value"] and isnumeric(effect["change_value"]):
+                    state[effect["attribute"]] = (
+                        state.get(effect["attribute"], 0) + effect["change_value"]
+                    )
+                elif callable(change_value):
+                    state[effect["attribute"]] = change_value(
+                        state.get(effect["attribute"], 0)
+                    )
+                elif change_value:
+                    state[effect["attribute"]] = (
+                        state.get(effect["attribute"], 0) + change_value
+                    )
+                else:
+                    raise ValueError(
+                        "Effect must have a change_value attribute or a change_value parameter must be provided."
+                    )
+                return state
+        except:
+            return self.force_apply_effects(state, change_value)
 
     def force_apply_effects(self, obj, change_value=None):
         if change_value:
@@ -183,15 +267,21 @@ class Action:
             method(*method_args)
 
     def execute(self, target=None, initiator=None, extra_targets=[], change_value=None):
-        if initiator is not None:
+        if initiator is not None and self.initiator is None:
             self.initiator = initiator
         else:
             raise ValueError("Initiator must be provided to execute action.")
-        if target is not None:
+        if target is not None and self.target is None:
             self.target = target
-        if self.conditions_met(self.initiator.get_state()):
+        elif self.target is None:
+            self.target = self.initiator if self.default_target_is_initiator else None
+        else:
+            raise ValueError("Target must be provided to execute action.")
+        if self.preconditions_met():
             for d in self.effects:
                 targets = d["targets"]
+                if extra_targets:
+                    targets += extra_targets
                 for tgt in targets:
                     if tgt == "initiator":
                         self.apply_effects(self.initiator.get_state(), change_value)
@@ -451,7 +541,7 @@ class ActionSystem:
         )
 
     def execute_action(self, action, state: State):
-        if action.conditions_met(state):
+        if action.preconditions_met(state):
             state = action.apply_effects(state)
             state["energy"] -= action.cost
             return True
@@ -480,6 +570,7 @@ class ActionSystem:
         return Condition(
             condition_dict["name"],
             condition_dict["attribute"],
+            condition_dict["target"],
             condition_dict["satisfy_value"],
             condition_dict["operator"],
         )

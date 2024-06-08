@@ -1,25 +1,34 @@
 from ast import Not
 from calendar import c
+import copy
 import dis
 import heapq
 from importlib import resources
 from itertools import product
 from math import dist, inf
+import math
+import operator
 from os import name
 from re import T
+import re
 import resource
+from warnings import filters
 import networkx as nx
 from networkx import subgraph
-from numpy import add, char, diff
+from numpy import add, char, diff, isin
 from pkg_resources import add_activation_listener
+from regex import F
+from sympy import li
+from torch import cond
 from tiny_characters import Character, Goal
 from tiny_jobs import Job
 from tiny_locations import Location
 from tiny_event_handler import Event
-from actions import Action
+from actions import Action, State
 from tiny_items import ItemInventory, ItemObject
 import tiny_memories
 from tiny_utility_functions import is_goal_achieved
+import numpy as np
 
 """ Graph Construction
 Defining Nodes:
@@ -173,6 +182,22 @@ class GraphManager:
         self.object_attributes = None
         self.activity_attributes = None
         self.job_attributes = None
+        self.ops = {
+            "gt": operator.gt,
+            "lt": operator.lt,
+            "eq": operator.eq,
+            "ge": operator.ge,
+            "le": operator.le,
+            "ne": operator.ne,
+        }
+        self.symb_map = {
+            ">": "gt",
+            "<": "lt",
+            "==": "eq",
+            ">=": "ge",
+            "<=": "le",
+            "!=": "ne",
+        }
 
         self.G = self.initialize_graph()
 
@@ -181,6 +206,29 @@ class GraphManager:
             nx.MultiDiGraph()
         )  # Using MultiDiGraph for directional and multiple edges
         return self.G
+
+    def node_type_resolver(self, node):
+        """
+        Returns the root class instance of a node based on its attributes.
+        Args:
+            node (Node): The node to resolve.
+        Returns:
+            str: The resolved type of the node.
+        """
+        if "type" in node:
+            if node["type"] == "character":
+                return self.characters[node["name"]]
+            elif node["type"] == "location":
+                return self.locations[node["name"]]
+            elif node["type"] == "event":
+                return self.events[node["name"]]
+            elif node["type"] == "item" or node["type"] == "object":
+                return self.objects[node["name"]]
+            elif node["type"] == "activity":
+                return self.activities[node["name"]]
+            elif node["type"] == "job":
+                return self.jobs[node["name"]]
+        return None
 
     # Node Addition Methods
     def add_character_node(self, char: Character):
@@ -306,7 +354,6 @@ class GraphManager:
     # Character-Character
     def add_character_character_edge(
         self,
-        edge_type,
         char1,
         char2,
         relationship_type,
@@ -314,6 +361,7 @@ class GraphManager:
         history,
         emotional_impact,
         interaction_frequency,
+        edge_type="character_character",
     ):
         self.G.add_edge(
             char1,
@@ -335,7 +383,26 @@ class GraphManager:
                 emotional_impact,
                 interaction_frequency,
             ),
+            dist_cost=self.calc_distance_cost(
+                dist(char1.coordinate_location, char2.coordinate_location), char1, char2
+            ),
         )
+
+    def calc_distance_cost(self, distance, char1, char2):
+        return distance / (
+            self.node_type_resolver(char1) + self.node_type_resolver(char2)
+        )
+
+    def calculate_locations_between_nodes(self, node1, node2):
+        locs = [n for n in self.G.nodes if self.G.nodes[n]["type"] == "location"]
+        locs_between = []
+        # for loc in locs:
+        #     if loc not in self.locations:
+        #         self.add_location_node(loc)
+        #     if loc != node1 and loc != node2:
+        #         if self.G.has_edge(node1, loc) and self.G.has_edge(loc, node2):
+        #             locs_between.append(loc)
+        return locs_between
 
     def calc_char_char_edge_cost(self, node, other_node, attribute_dict):
         # Find edge in question
@@ -348,6 +415,141 @@ class GraphManager:
             attribute_dict["emotional_impact"],
             attribute_dict["interaction_frequency"],
         )
+
+    def calculate_edge_cost(self, node, other_node, attribute_dict=None):
+        if attribute_dict is None:
+            attribute_dict = self.G[node][other_node]
+        if attribute_dict["edge_type"] == "character_character":
+            return self.calc_char_char_edge_cost(
+                node,
+                other_node,
+                attribute_dict["relationship_type"],
+                attribute_dict["strength"],
+                attribute_dict["history"],
+                attribute_dict["emotional_impact"],
+                attribute_dict["interaction_frequency"],
+            )
+        if attribute_dict["edge_type"] == "character_location":
+            return self.calc_char_loc_edge_cost(
+                node,
+                other_node,
+                attribute_dict["frequency_of_visits"],
+                attribute_dict["last_visit"],
+                attribute_dict["favorite_activities"],
+                attribute_dict["ownership_status"],
+                attribute_dict["distance"],
+            )
+        if attribute_dict["edge_type"] == "character_object":
+            return self.calc_char_obj_edge_cost(
+                node,
+                other_node,
+                attribute_dict["ownership_status"],
+                attribute_dict["usage_frequency"],
+                attribute_dict["sentimental_value"],
+                attribute_dict["last_used_time"],
+                attribute_dict["distance"],
+            )
+        if attribute_dict["edge_type"] == "character_event":
+            return self.calc_char_event_edge_cost(
+                node,
+                other_node,
+                attribute_dict["participation_status"],
+                attribute_dict["role"],
+                attribute_dict["impact_on_character"],
+                attribute_dict["emotional_outcome"],
+                attribute_dict["distance"],
+            )
+        if attribute_dict["edge_type"] == "character_activity":
+            return self.calc_char_act_edge_cost(
+                node,
+                other_node,
+                attribute_dict["engagement_level"],
+                attribute_dict["skill_improvement"],
+                attribute_dict["activity_frequency"],
+                attribute_dict["motivation"],
+                attribute_dict["distance"],
+            )
+        if attribute_dict["edge_type"] == "location_location":
+            return self.calc_loc_loc_edge_cost(
+                node,
+                other_node,
+                attribute_dict["proximity"],
+                attribute_dict["connectivity"],
+                attribute_dict["rivalry"],
+                attribute_dict["trade_relations"],
+                attribute_dict["distance"],
+            )
+        if attribute_dict["edge_type"] == "location_item":
+            return self.calc_loc_item_edge_cost(
+                node,
+                other_node,
+                attribute_dict["item_presence"],
+                attribute_dict["item_relevance"],
+                attribute_dict["distance"],
+            )
+        if attribute_dict["edge_type"] == "location_event":
+            return self.calc_loc_event_edge_cost(
+                node,
+                other_node,
+                attribute_dict["event_occurrence"],
+                attribute_dict["location_role"],
+                attribute_dict["capacity"],
+                attribute_dict["preparation_level"],
+                attribute_dict["distance"],
+            )
+        if attribute_dict["edge_type"] == "location_activity":
+            return self.calc_loc_act_edge_cost(
+                node,
+                other_node,
+                attribute_dict["suitability"],
+                attribute_dict["popularity"],
+                attribute_dict["exclusivity"],
+                attribute_dict["distance"],
+            )
+        if attribute_dict["edge_type"] == "item_item":
+            return self.calc_item_item_edge_cost(
+                node,
+                other_node,
+                attribute_dict["compatibility"],
+                attribute_dict["combinability"],
+                attribute_dict["conflict"],
+                attribute_dict["distance"],
+            )
+        if attribute_dict["edge_type"] == "item_activity":
+            return self.calc_item_act_edge_cost(
+                node,
+                other_node,
+                attribute_dict["necessity"],
+                attribute_dict["enhancement"],
+                attribute_dict["obstruction"],
+                attribute_dict["distance"],
+            )
+        if attribute_dict["edge_type"] == "event_activity":
+            return self.calc_event_act_edge_cost(
+                node,
+                other_node,
+                attribute_dict["synergy"],
+                attribute_dict["conflict"],
+                attribute_dict["dependency"],
+                attribute_dict["distance"],
+            )
+        if attribute_dict["edge_type"] == "event_item":
+            return self.calc_event_item_edge_cost(
+                node,
+                other_node,
+                attribute_dict["necessity"],
+                attribute_dict["relevance"],
+                attribute_dict["distance"],
+            )
+        if attribute_dict["edge_type"] == "job_activity":
+            return self.calc_job_act_edge_cost(
+                node,
+                other_node,
+                attribute_dict["skill_match"],
+                attribute_dict["risk_level"],
+                attribute_dict["reward_level"],
+                attribute_dict["distance"],
+            )
 
     def calculate_char_char_edge_cost(
         self,
@@ -396,16 +598,268 @@ class GraphManager:
 
         return cost
 
-    # Character-Location
-    def add_character_location_edge(
+    def calculate_char_loc_edge_cost(
         self,
-        edge_type,
         char,
         loc,
         frequency_of_visits,
         last_visit,
         favorite_activities,
         ownership_status,
+        distance,
+    ):
+        cost = 0
+        # More frequent visits reduce cost, with diminishing returns
+        cost += 1 / (frequency_of_visits + 1) ** 0.5
+        # Recent visits reduce cost, with more weight on regular visits
+        cost += 1 / (last_visit + 1)
+        # Ownership status reduces cost, more for full ownership
+        if ownership_status == "full":
+            cost -= 10
+        elif ownership_status == "partial":
+            cost -= 5
+        # Closer distance reduces cost
+        cost += distance / 10
+        # Favorite activities alignments reduce cost, weighted by importance
+        for activity in favorite_activities:
+            if activity in loc.activities_available:
+                cost -= favorite_activities[activity]
+
+        return max(cost, 0)
+
+    def calculate_char_obj_edge_cost(
+        self,
+        char,
+        obj,
+        ownership_status,
+        usage_frequency,
+        sentimental_value,
+        last_used_time,
+        distance,
+    ):
+        cost = 0
+        # Ownership reduces cost significantly
+        if ownership_status:
+            cost -= 5
+        # More frequent usage reduces cost, with critical use consideration
+        cost += 1 / (usage_frequency + 1) ** 0.5
+        # Higher sentimental value (positive or negative) impacts cost
+        cost += sentimental_value / 10 if sentimental_value >= 0 else sentimental_value
+        # Recent usage reduces cost
+        cost += 1 / (last_used_time + 1)
+        # Closer distance reduces cost
+        cost += distance / 10
+
+        return max(cost, 0)
+
+    def calculate_char_event_edge_cost(
+        self,
+        char,
+        event,
+        participation_status,
+        role,
+        impact_on_character,
+        emotional_outcome,
+        distance,
+    ):
+        cost = 0
+        # Participation reduces cost
+        if participation_status:
+            cost -= 5
+        # Important role reduces cost, weighted by activity level
+        cost += 1 / (role + 1) ** 0.5
+        # Positive impact reduces cost, consider short-term vs long-term
+        cost += 1 / (impact_on_character["short_term"] + 1)
+        cost += 1 / (impact_on_character["long_term"] + 1) / 2
+        # Positive emotional outcome reduces cost
+        cost += 1 / (emotional_outcome + 1)
+        # Closer distance reduces cost
+        cost += distance / 10
+
+        return max(cost, 0)
+
+    def calculate_char_act_edge_cost(
+        self,
+        char,
+        act,
+        engagement_level,
+        skill_improvement,
+        activity_frequency,
+        motivation,
+        distance,
+    ):
+        cost = 0
+        # Higher engagement reduces cost, considering both motivations
+        cost += 1 / (engagement_level + motivation + 1)
+        # Skill improvement reduces cost, with diminishing returns
+        cost += 1 / (skill_improvement + 1) ** 0.5
+        # More frequent activity reduces cost, with diminishing returns
+        cost += 1 / (activity_frequency + 1) ** 0.5
+        # Closer distance reduces cost
+        cost += distance / 10
+
+        return max(cost, 0)
+
+    def calculate_loc_loc_edge_cost(
+        self, loc1, loc2, proximity, connectivity, rivalry, trade_relations, distance
+    ):
+        cost = 0
+        # Closer proximity reduces cost
+        cost += 1 / (proximity + 1)
+        # Better connectivity reduces cost
+        cost += 1 / (connectivity + 1)
+        # Rivalry increases cost
+        cost += rivalry * 10
+        # Trade relations reduce cost
+        cost -= trade_relations["volume"] / 10
+        cost -= trade_relations["value"] / 10
+        # Closer distance reduces cost
+        cost += distance / 10
+
+        return max(cost, 0)
+
+    def calculate_loc_item_edge_cost(
+        self, loc, item, item_presence, item_relevance, distance
+    ):
+        cost = 0
+        # Presence of item reduces cost, considering abundance
+        cost -= item_presence / 10
+        # Higher relevance reduces cost, considering primary function
+        cost += 1 / (item_relevance["primary"] + 1)
+        cost += 1 / (item_relevance["secondary"] + 1) / 2
+        # Closer distance reduces cost
+        cost += distance / 10
+
+        return max(cost, 0)
+
+    def calculate_loc_event_edge_cost(
+        self,
+        loc,
+        event,
+        event_occurrence,
+        location_role,
+        capacity,
+        preparation_level,
+        distance,
+    ):
+        cost = 0
+        # Frequent event occurrence reduces cost, with predictability
+        cost += 1 / (event_occurrence["frequency"] + 1)
+        cost += 1 / (event_occurrence["predictability"] + 1) / 2
+        # Significant role of location reduces cost
+        cost += 1 / (location_role + 1)
+        # Higher capacity reduces cost
+        cost += 1 / (capacity + 1)
+        # Better preparation level reduces cost
+        cost += 1 / (preparation_level + 1)
+        # Closer distance reduces cost
+        cost += distance / 10
+
+        return max(cost, 0)
+
+    def calculate_loc_act_edge_cost(
+        self, loc, act, suitability, popularity, exclusivity, distance
+    ):
+        cost = 0
+        # Higher suitability reduces cost
+        cost += 1 / (suitability + 1)
+        # Higher popularity reduces cost
+        cost += 1 / (popularity + 1)
+        # Higher exclusivity increases cost
+        cost += exclusivity * 10
+        # Closer distance reduces cost
+        cost += distance / 10
+
+        return max(cost, 0)
+
+    def calculate_item_item_edge_cost(
+        self, item1, item2, compatibility, combinability, conflict, distance
+    ):
+        cost = 0
+        # Higher compatibility reduces cost, considering multiple aspects
+        cost += 1 / (compatibility["functional"] + 1)
+        cost += 1 / (compatibility["aesthetic"] + 1)
+        # Higher combinability reduces cost, with ease and value
+        cost += 1 / (combinability["ease"] + 1)
+        cost += 1 / (combinability["value"] + 1) / 2
+        # Higher conflict increases cost
+        cost += conflict * 10
+        # Closer distance reduces cost
+        cost += distance / 10
+
+        return max(cost, 0)
+
+    def calculate_item_act_edge_cost(
+        self, item, act, necessity, enhancement, obstruction, distance
+    ):
+        cost = 0
+        # Higher necessity reduces cost
+        cost += 1 / (necessity + 1)
+        # Higher enhancement reduces cost
+        cost += 1 / (enhancement + 1)
+        # Higher obstruction increases cost
+        cost += obstruction * 10
+        # Closer distance reduces cost
+        cost += distance / 10
+
+        return max(cost, 0)
+
+    def calculate_event_act_edge_cost(
+        self, event, act, synergy, conflict, dependency, distance
+    ):
+        cost = 0
+        # Higher synergy reduces cost, considering immediate and long-term
+        cost += 1 / (synergy["immediate"] + 1)
+        cost += 1 / (synergy["long_term"] + 1) / 2
+        # Higher conflict increases cost, considering direct and indirect
+        cost += conflict["direct"] * 10
+        cost += conflict["indirect"] * 5
+        # Higher dependency reduces cost
+        cost += 1 / (dependency + 1)
+        # Closer distance reduces cost
+        cost += distance / 10
+
+        return max(cost, 0)
+
+    def calculate_event_item_edge_cost(
+        self, event, item, necessity, relevance, distance
+    ):
+        cost = 0
+        # Higher necessity reduces cost
+        cost += 1 / (necessity + 1)
+        # Higher relevance reduces cost
+        cost += 1 / (relevance + 1)
+        # Closer distance reduces cost
+        cost += distance / 10
+
+        return max(cost, 0)
+
+    def calculate_job_act_edge_cost(
+        self, job, act, skill_match, risk_level, reward_level, distance
+    ):
+        cost = 0
+        # Higher skill match reduces cost, considering required and beneficial
+        cost += 1 / (skill_match["required"] + 1)
+        cost += 1 / (skill_match["beneficial"] + 1) / 2
+        # Higher risk increases cost significantly
+        cost += risk_level * 15
+        # Higher reward reduces cost significantly
+        cost += 1 / (reward_level + 1) * 2
+        # Closer distance reduces cost
+        cost += distance / 10
+
+        return max(cost, 0)
+
+    # Character-Location
+    def add_character_location_edge(
+        self,
+        char,
+        loc,
+        frequency_of_visits,
+        last_visit,
+        favorite_activities,
+        ownership_status,
+        edge_type="character_location",
     ):
         self.G.add_edge(
             char,
@@ -422,13 +876,13 @@ class GraphManager:
     # Character-Item
     def add_character_object_edge(
         self,
-        edge_type,
         char,
         obj,
         ownership_status,
         usage_frequency,
         sentimental_value,
         last_used_time,
+        edge_type="character_object",
     ):
         self.G.add_edge(
             char,
@@ -445,13 +899,13 @@ class GraphManager:
     # Character-Event
     def add_character_event_edge(
         self,
-        edge_type,
         char,
         event,
         participation_status,
         role,
         impact_on_character,
         emotional_outcome,
+        edge_type="character_event",
     ):
         self.G.add_edge(
             char,
@@ -473,13 +927,13 @@ class GraphManager:
     # Character-Activity
     def add_character_activity_edge(
         self,
-        edge_type,
         char,
         act,
         engagement_level,
         skill_improvement,
         activity_frequency,
         motivation,
+        edge_type="character_activity",
     ):
         self.G.add_edge(
             char,
@@ -499,7 +953,14 @@ class GraphManager:
         # Location-Location Edges
 
     def add_location_location_edge(
-        self, edge_type, loc1, loc2, proximity, connectivity, rivalry, trade_relations
+        self,
+        loc1,
+        loc2,
+        proximity,
+        connectivity,
+        rivalry,
+        trade_relations,
+        edge_type="location_location",
     ):
         self.G.add_edge(
             loc1,
@@ -515,7 +976,7 @@ class GraphManager:
 
     # Location-Item Edges
     def add_location_item_edge(
-        self, edge_type, loc, obj, item_presence, item_relevance
+        self, loc, obj, item_presence, item_relevance, edge_type="location_item"
     ):
         self.G.add_edge(
             loc,
@@ -530,13 +991,13 @@ class GraphManager:
     # Location-Event Edges
     def add_location_event_edge(
         self,
-        edge_type,
         loc,
         event,
         event_occurrence,
         location_role,
         capacity,
         preparation_level,
+        edge_type="location_event",
     ):
         self.G.add_edge(
             loc,
@@ -553,12 +1014,12 @@ class GraphManager:
     # Location-Activity Edges
     def add_location_activity_edge(
         self,
-        edge_type,
         loc,
         act,
         activity_suitability,
         activity_popularity,
         exclusivity,
+        edge_type="location_activity",
     ):
         self.G.add_edge(
             loc,
@@ -573,7 +1034,7 @@ class GraphManager:
 
     # Item-Item Edges
     def add_item_item_edge(
-        self, edge_type, obj1, obj2, compatibility, conflict, combinability
+        self, obj1, obj2, compatibility, conflict, combinability, edge_type="item_item"
     ):
         self.G.add_edge(
             obj1,
@@ -588,7 +1049,7 @@ class GraphManager:
 
     # Item-Activity Edges
     def add_item_activity_edge(
-        self, edge_type, obj, act, necessity, enhancement, obstruction
+        self, obj, act, necessity, enhancement, obstruction, edge_type="item_activity"
     ):
         self.G.add_edge(
             obj,
@@ -603,12 +1064,12 @@ class GraphManager:
     # Event-Activity Edges
     def add_event_activity_edge(
         self,
-        edge_type,
         event,
         act,
         activities_involved,
         activity_impact,
         activity_requirements,
+        edge_type="event_activity",
     ):
         self.G.add_edge(
             event,
@@ -622,7 +1083,13 @@ class GraphManager:
 
     # Event-Item Edges
     def add_event_item_edge(
-        self, edge_type, event, obj, required_for_event, item_usage, item_impact
+        self,
+        event,
+        obj,
+        required_for_event,
+        item_usage,
+        item_impact,
+        edge_type="event_item",
     ):
         self.G.add_edge(
             event,
@@ -636,7 +1103,7 @@ class GraphManager:
 
     # Activity-Activity Edges
     def add_activity_activity_edge(
-        self, edge_type, act1, act2, synergy, conflict, dependency
+        self, act1, act2, synergy, conflict, dependency, edge_type="activity_activity"
     ):
         self.G.add_edge(
             act1,
@@ -651,7 +1118,7 @@ class GraphManager:
     # Additional Job-Related Edges
     # Character-Job Edges
     def add_character_job_edge(
-        self, edge_type, char, job, role, job_status, job_performance
+        self, char, job, role, job_status, job_performance, edge_type="character_job"
     ):
         self.G.add_edge(
             char,
@@ -667,7 +1134,7 @@ class GraphManager:
 
     # Job-Location Edges
     def add_job_location_edge(
-        self, edge_type, job, loc, essential_for_job, location_dependence
+        self, job, loc, essential_for_job, location_dependence, edge_type="job_location"
     ):
         self.G.add_edge(
             job,
@@ -680,7 +1147,12 @@ class GraphManager:
 
     # Job-Activity Edges
     def add_job_activity_edge(
-        self, edge_type, job, act, activity_necessity, performance_enhancement
+        self,
+        job,
+        act,
+        activity_necessity,
+        performance_enhancement,
+        edge_type="job_activity",
     ):
         self.G.add_edge(
             job,
@@ -2356,6 +2828,40 @@ class GraphManager:
     def get_filtered_nodes(self, **kwargs):
         filtered_nodes = set(self.graph.nodes)
 
+        action_effects = kwargs.get("action_effects")
+        if action_effects:
+            oper = action_effects.get("operator", "ge")
+            if oper not in self.ops:
+                oper = self.symb_map[oper]
+
+            for attr, value in action_effects["effects"].items():
+
+                filtered_nodes.intersection_update(
+                    {
+                        n
+                        for n in filtered_nodes
+                        if any(
+                            attr
+                            in [
+                                action.effects["attribute"]
+                                for action in self.node_type_resolver(
+                                    n
+                                ).get_possible_interactions()
+                                if (
+                                    attr in action.effects["attribute"]
+                                    and action_effects["target"]
+                                    in action.effects["targets"]
+                                    and self.ops[oper](
+                                        action.effects["change_value"], value
+                                    )
+                                )
+                            ]
+                        )
+                    }
+                )
+            if action_effects.get("early_quit"):
+                return filtered_nodes if filtered_nodes else None
+
         # Filter based on node attributes
         node_attributes = kwargs.get("node_attributes", {})
         for attr, value in node_attributes.items():
@@ -2623,7 +3129,9 @@ class GraphManager:
                 }
             )
 
-        return {n: self.graph.nodes[n] for n in filtered_nodes}
+        return {
+            n: self.graph.nodes[n] for n in filtered_nodes
+        }  # return dict will look like: {"node1": {"type": "item", "item_type": "food"}, "node2": {"type": "item", "item_type": "food"}}
 
     def calculate_potential_utility_of_goal(self, character, goal: Goal):
         """
@@ -2650,7 +3158,7 @@ class GraphManager:
             utility += node_utility
         return utility
 
-    def calculate_goal_difficulty(self, goal: Goal):
+    def calculate_goal_difficulty(self, goal: Goal, character: Character):
         """
         Calculate the difficulty of a goal based on its complexity and requirements.
         Args:
@@ -2660,11 +3168,19 @@ class GraphManager:
         """
         difficulty = 0
         # Analyze the goal requirements and complexity
-        goal_requirements = goal.criteria
+        goal_requirements = goal.criteria  # goal_requirements will look like: {
+        #     "node_attributes": {"type": "item", "item_type": "food"},
+        #     "max_distance": 20,
+        # }
         # Analyze graph to identify nodes that match the goal criteria
         nodes_per_requirement = {}
         for requirement in goal_requirements:
             nodes_per_requirement[requirement] = self.get_filtered_nodes(**requirement)
+
+        # nodes_per_requirement will look like this:
+        # {
+        #    "node_attributes": {"type": "item", "item_type": "food"}: {
+        #        "item1": {"type": "item", "item_type": "food"},
 
         # Check if any requirement has no matching nodes
 
@@ -2673,20 +3189,25 @@ class GraphManager:
                 return float("inf")
 
         # Check for nodes that fulfill multiple requirements
-
+        fulfill_multiple = {}
         for nodes in nodes_per_requirement.values():
             for node in nodes:
                 if sum(node in nodes for nodes in nodes_per_requirement.values()) > 1:
                     # Node fulfills multiple requirements
                     # Add your code here to handle this case
                     # For example, you can store the node in a list or perform some other operation
-                    pass
+                    fulfill_multiple[node] = {
+                        "num_reqs": sum(
+                            node in nodes for nodes in nodes_per_requirement.values()
+                        )
+                    }
+                    # fulfill_multiple[node]["action_viability_cost"] = self.calculate_action_viability_cost(
 
         action_viability_cost = {}
 
         for node in nodes_per_requirement.values():
             action_viability_cost[node] = self.calculate_action_viability_cost(
-                node, goal
+                node, goal, character
             )
 
         # Now calculate paths that would fulfill each requirement in goal_requirements, using only one node per requirement
@@ -2699,7 +3220,7 @@ class GraphManager:
         all_pairs_paths = dict(
             nx.all_pairs_dijkstra_path(
                 nx.subgraph(self.G, [n for n in nodes_per_requirement.values()]),
-                weight=self.calc_char_char_edge_cost,
+                weight=self.calculate_edge_cost,
             )
         )  # Assuming a function to calculate edge cost between characters
 
@@ -2720,60 +3241,519 @@ class GraphManager:
             if path:
                 valid_paths.append(path)
 
-        # Find the shortest path among all valid paths based on the weighted sum of edge costs
-        shortest_path = min(
-            valid_paths,
-            key=lambda path: sum(
-                self.calc_edge_cost(path[i], path[i + 1]) for i in range(len(path) - 1)
-            ),
-        )
+        # Incorporate action costs into path cost calculation
+        def calc_path_cost(self, path):
+            return sum(
+                self.calculate_edge_cost(path[i], path[i + 1])
+                + action_viability_cost[path[i]]["action_cost"]
+                for i in range(len(path) - 1)
+            )
 
-        difficulty = sum(
-            self.calc_edge_cost(shortest_path[i], shortest_path[i + 1])
-            for i in range(len(shortest_path) - 1)
-        )
+        # Filter out non-viable paths
+        viable_paths = [
+            path
+            for path in valid_paths
+            if all(action_viability_cost[node]["viable"] for node in path)
+        ]
+
+        # Use goal costs to prioritize paths
+        def calc_goal_cost(self, path):
+            return sum(action_viability_cost[node]["goal_cost"] for node in path)
+
+        # Find the shortest path among all viable paths based on the weighted sum of edge and action costs
+        shortest_path = min(viable_paths, key=calc_path_cost)
+
+        # Calculate difficulty based on the sum of edge and action costs
+        difficulty = calc_path_cost(shortest_path)
+
+        # Prioritize paths with lower goal costs
+        lowest_goal_cost_path = min(viable_paths, key=calc_goal_cost)
+        # If the shortest path is not the same as the path with the lowest goal cost, increase the difficulty
+        # Calculate the goal cost of the shortest path
+        shortest_path_goal_cost = calc_goal_cost(shortest_path)
+
+        # Calculate the path cost of the path with the lowest goal cost
+        lowest_goal_cost_path_cost = calc_path_cost(lowest_goal_cost_path)
+
+        # If the shortest path is not the same as the path with the lowest goal cost, increase the difficulty
+        if shortest_path != lowest_goal_cost_path:
+            difficulty += shortest_path_goal_cost + lowest_goal_cost_path_cost / 2
 
         return difficulty
 
     def is_goal_achieved(self, character, goal: Goal):
         raise NotImplementedError
 
-    def calculate_action_viability_cost(self, node, goal: Goal):
+    def calculate_preconditions_difficulty(self, preconditions, initiator: Character):
+
+        action_cost = {}
+
+        for precondition in preconditions:
+            if not precondition().check_condition():
+                filters = {}
+                # use get_filtered_nodes to get the nodes that satisfy the preconditions
+                if "inventory.check_has_item_by_type" in precondition["attribute"]:
+                    args = (
+                        re.search(r"\[.*\]", precondition["attribute"])
+                        .group()
+                        .strip("[]")
+                    )
+                    args = [arg.strip("'") for arg in args.split(",")]
+                    if args[0] not in [item["item_type"] for item in filters]:
+                        filters.append(({"item_type": args[0]}))
+                elif "inventory.check_has_item_by_name" in precondition["attribute"]:
+                    args = (
+                        re.search(r"\[.*\]", precondition["attribute"])
+                        .group()
+                        .strip("[]")
+                    )
+                    args = [arg.strip("'") for arg in args.split(",")]
+                    if args[0] not in [item["name"] for item in filters]:
+                        filters.append(({"name": args[0]}))
+                elif "inventory.check_has_item_by_value" in precondition["attribute"]:
+                    args = (
+                        re.search(r"\[.*\]", precondition["attribute"])
+                        .group()
+                        .strip("[]")
+                    )
+                    args = [arg.strip("'") for arg in args.split(",")]
+                    if args[0] not in [item["value"] for item in filters]:
+                        filters.append(({"value": args[0]}))
+                elif (
+                    "inventory.check_has_item_by_quantity" in precondition["attribute"]
+                ):
+                    args = (
+                        re.search(r"\[.*\]", precondition["attribute"])
+                        .group()
+                        .strip("[]")
+                    )
+                    args = [arg.strip("'") for arg in args.split(",")]
+                    if args[0] not in [item["quantity"] for item in filters]:
+                        filters.append(({"quantity": args[0]}))
+                elif precondition["attribute"] in character_attributes:
+                    # Find nodes with possible_interactions that have Actions.effects with the same attribute and a change_value that satisfies the precondition
+                    filters = {
+                        "action_effects": {
+                            "effects": {
+                                precondition["attribute"]: precondition["satisfy_value"]
+                            },
+                            "operator": precondition.operator,
+                            "early_quit": True,
+                            "target": (
+                                "initiator"
+                                if precondition.target == initiator
+                                else "target"
+                            ),
+                        }
+                    }
+                nodes = None
+                if "action_effects" in filters.keys():
+                    nodes = self.get_filtered_nodes(filters)
+                elif "action_effects" not in filters.keys() or not nodes:
+                    nodes = self.get_filtered_nodes({"node_attributes": filters})
+                if not nodes:
+                    return float("inf")
+
+                for node in nodes:
+                    action_cost[node] = min(
+                        [
+                            obj.cost
+                            for obj in self.node_type_resolver(
+                                node
+                            ).get_possible_interactions()
+                        ]
+                    )
+                    # Add edge cost between the initiator and the node
+                    action_cost[node] += self.G.edges[initiator][node][
+                        "interaction_cost"
+                    ]
+                    action_cost[node] += self.calc_distance_cost(
+                        dist(
+                            self.G.nodes[initiator]["coordinate_location"],
+                            self.G.nodes[node]["coordinate_location"],
+                        ),
+                        self.G.nodes[initiator],
+                        node,
+                    )
+        return sum(action_cost.values())
+
+    def calculate_action_effect_cost(
+        self, action: Action, character: Character, goal: Goal
+    ):
+        """
+        Calculate the cost of an action based on the effects it will have on the character.
+        Args:
+            action (Action): The action to evaluate.
+        Returns:
+            float: The cost of the action based on its effects.
+        """
+        goal_cost = 0
+        conditions = goal.completion_conditions
+        weights = {}
+        for effect in action.effects:
+            # In a creative way, we calculate the weight of the effect based on the character's current state and the goal conditions. We do this by checking if the effect will help or hinder the character in achieving the goal.
+            weights[effect["attribute"]] = 1
+            for condition in conditions:
+                if (
+                    effect["attribute"] in character.get_state()
+                    and effect["targets"] == "initiator"
+                ):
+                    if (
+                        condition.attribute == effect["attribute"]
+                        and condition.target == character
+                    ):
+                        if (
+                            condition.operator == "ge" or condition.operator == "gt"
+                        ) and effect["change_value"] > 0:
+                            delta = (
+                                character.get_state()[effect["attribute"]]
+                                + effect["change_value"]
+                            ) - condition.satisfy_value
+
+                            # Consider the magnitude of effect["change_value"]
+                            delta = abs(effect["change_value"]) * delta
+
+                            # Use a different scaling factor
+                            scaling_factor = condition.weight / sum(
+                                condition.weight for condition in conditions
+                            )
+
+                            # Use a non-linear function for the difference
+                            delta = 1 / (1 + math.exp(-delta))
+
+                            weights[effect["attribute"]] += delta * scaling_factor
+                        elif (
+                            condition.operator == "le" or condition.operator == "lt"
+                        ) and effect["change_value"] < 0:
+                            delta = condition.satisfy_value - (
+                                character.get_state()[effect["attribute"]]
+                                + effect["change_value"]
+                            )
+                            # Consider the magnitude of effect["change_value"]
+                            delta = abs(effect["change_value"]) * delta
+
+                            # Use a different scaling factor
+                            scaling_factor = condition.weight / sum(
+                                condition.weight for condition in conditions
+                            )
+
+                            # Use a non-linear function for the difference
+                            delta = 1 / (1 + math.exp(-delta))
+
+                            weights[effect["attribute"]] += delta * scaling_factor
+                elif (
+                    effect["attribute"] in condition.target.get_state()
+                    and effect["targets"] == "target"
+                ):
+                    if (
+                        condition.operator == "ge" or condition.operator == "gt"
+                    ) and effect["change_value"] > 0:
+                        delta = (
+                            condition.target.get_state()[effect["attribute"]]
+                            + effect["change_value"]
+                        ) - condition.satisfy_value
+                        # Consider the magnitude of effect["change_value"]
+                        delta = abs(effect["change_value"]) * delta
+
+                        # Use a different scaling factor
+                        scaling_factor = condition.weight / sum(
+                            condition.weight for condition in conditions
+                        )
+
+                        # Use a non-linear function for the difference
+                        delta = 1 / (1 + math.exp(-delta))
+
+                        weights[effect["attribute"]] += delta * scaling_factor
+
+                    elif (
+                        condition.operator == "le" or condition.operator == "lt"
+                    ) and effect["change_value"] < 0:
+                        delta = condition.satisfy_value - (
+                            condition.target.get_state()[effect["attribute"]]
+                            + effect["change_value"]
+                        )
+                        # Consider the magnitude of effect["change_value"]
+                        delta = abs(effect["change_value"]) * delta
+
+                        # Use a different scaling factor
+                        scaling_factor = condition.weight / sum(
+                            condition.weight for condition in conditions
+                        )
+
+                        # Use a non-linear function for the difference
+                        delta = 1 / (1 + math.exp(-delta))
+
+                        weights[effect["attribute"]] += delta * scaling_factor
+
+        # After calculating all the weights
+        weights_array = np.array(list(weights.values()))
+        softmax_weights = np.exp(weights_array) / np.sum(np.exp(weights_array))
+
+        for i, attribute in enumerate(weights):
+            weights[attribute] = softmax_weights[i]
+
+        for effect in action.effects:
+            # In a creative way, we calculate the weight of the effect based on the character's current state and the goal conditions. We do this by checking if the effect will help or hinder the character in achieving the goal.
+            for condition in conditions:
+                if (
+                    effect["attribute"] in character.get_state()
+                    and effect["targets"] == "initiator"
+                ):
+                    if (
+                        condition.attribute == effect["attribute"]
+                        and condition.target == character
+                    ):
+                        if (
+                            condition.operator == "ge" or condition.operator == "gt"
+                        ) and effect["change_value"] < 0:
+                            delta = (
+                                condition.satisfy_value
+                                - character.get_state()[effect["attribute"]]
+                                + abs(effect["change_value"])
+                            )
+                            # Consider the magnitude of effect["change_value"]
+                            delta = abs(effect["change_value"]) * delta
+
+                            # Use a different scaling factor
+                            try:
+                                scaling_factor = 1 / weights[effect["attribute"]]
+                            except ZeroDivisionError:
+                                scaling_factor = float("inf")  # or some large number
+
+                            # The rest of the code remains the same
+
+                            # Use a non-linear function for the difference
+                            delta = 1 / (1 + math.exp(-delta))
+
+                            goal_cost += delta * scaling_factor
+
+                        elif (
+                            condition.operator == "le" or condition.operator == "lt"
+                        ) and effect["change_value"] > 0:
+                            delta = (
+                                character.get_state()[effect["attribute"]]
+                                + effect["change_value"]
+                                - condition.satisfy_value
+                            )
+                            # Consider the magnitude of effect["change_value"]
+                            delta = abs(effect["change_value"]) * delta
+
+                            # Use a different scaling factor
+                            try:
+                                scaling_factor = 1 / weights[effect["attribute"]]
+                            except ZeroDivisionError:
+                                scaling_factor = float("inf")  # or some large number
+                            # The rest of the code remains the same
+                            # Use a non-linear function for the difference
+                            delta = 1 / (1 + math.exp(-delta))
+
+                            goal_cost += delta * scaling_factor
+                elif (
+                    effect["attribute"] in condition.target.get_state()
+                    and effect["targets"] == "target"
+                ):
+                    if (
+                        condition.operator == "ge" or condition.operator == "gt"
+                    ) and effect["change_value"] < 0:
+                        delta = (
+                            condition.satisfy_value
+                            - condition.target.get_state()[effect["attribute"]]
+                            + abs(effect["change_value"])
+                        )
+                        # Consider the magnitude of effect["change_value"]
+                        delta = abs(effect["change_value"]) * delta
+
+                        # Use a different scaling factor
+                        try:
+                            scaling_factor = 1 / weights[effect["attribute"]]
+                        except ZeroDivisionError:
+                            scaling_factor = float("inf")  # or some large number
+
+                        # The rest of the code remains the same
+
+                        # Use a non-linear function for the difference
+                        delta = 1 / (1 + math.exp(-delta))
+
+                        goal_cost += delta * scaling_factor
+                    elif (
+                        condition.operator == "le" or condition.operator == "lt"
+                    ) and effect["change_value"] > 0:
+                        delta = (
+                            condition.target.get_state()[effect["attribute"]]
+                            + effect["change_value"]
+                            - condition.satisfy_value
+                        )
+                        # Consider the magnitude of effect["change_value"]
+                        delta = abs(effect["change_value"]) * delta
+
+                        # Use a different scaling factor
+                        try:
+                            scaling_factor = 1 / weights[effect["attribute"]]
+                        except ZeroDivisionError:
+                            scaling_factor = float("inf")  # or some large number
+
+                        # The rest of the code remains the same
+
+                        # Use a non-linear function for the difference
+                        delta = 1 / (1 + math.exp(-delta))
+
+                        goal_cost += delta * scaling_factor
+
+        # At the end of the function
+        goal_cost = 1 / (1 + math.exp(-goal_cost))
+
+        return goal_cost
+
+    def calculate_action_difficulty(self, action: Action, character: Character):
+        """
+        Calculate the difficulty of an action based on its complexity and requirements.
+        Args:
+            action (Action): The action to evaluate.
+        Returns:
+            float: The difficulty score of the action.
+        """
+
+        difficulty = action.cost
+        difficulty += self.calculate_preconditions_difficulty(
+            action.preconditions, character
+        )
+
+        return difficulty
+
+    def calculate_action_viability_cost(self, node, goal: Goal, character: Character):
         """
         Calculate the cost of an action based on the viability of the node.
         Args:
             node (Node): The node to evaluate.
         Returns:
-            float: The cost of the action based on the viability of the node.
+            dict(cost: float, viable: bool, goal_cost: float): The cost of the action, whether it is viable, and the cost of the action on the goal.
         """
+
+        if isinstance(node, str):
+            node = self.G.nodes[node]
+
+        if not isinstance(node, list):
+            node = [node]
+
+        viable = False
+        action_cost = {}  # Cost of action (Action.cost) for each action in the node
+        goal_cost = (
+            {}
+        )  # goal_cost represents the cost the action levies on progress toward the goal, ie the effect "costs" progress toward the goal,
+        possible_interactions = []
         try:
             possible_interactions = self.node_type_resolver(
                 node
             ).get_possible_interactions()
         except:
             possible_interactions = self.node_type_resolver(node).possible_interactions
-
+        actions_that_fulfill_condition = {}  # {condition: [actions]}
+        conditions_fulfilled_by_action = {}  # {action: [conditions]}
         for interaction in possible_interactions:
-            if self.will_action_fulfill_goal(interaction, goal):
-                return 0
+            if interaction.preconditions_met():
+                fulfilled_conditions = self.will_action_fulfill_goal(
+                    interaction,
+                    goal,
+                    (
+                        self.node_type_resolver(node).get_state()
+                        if interaction.target == None
+                        else self.node_type_resolver(interaction.target).get_state()
+                    ),
+                    character,
+                )
+                for condition, fulfilled in fulfilled_conditions.items():
+                    if fulfilled:
+                        if condition in conditions_fulfilled_by_action:
+                            conditions_fulfilled_by_action[condition].append(
+                                interaction
+                            )
+                        else:
+                            conditions_fulfilled_by_action[condition] = [interaction]
+                        if interaction in actions_that_fulfill_condition:
+                            actions_that_fulfill_condition[interaction].append(
+                                condition
+                            )
+                        else:
+                            actions_that_fulfill_condition[interaction] = [condition]
+                action_cost[interaction] = interaction.cost
+                goal_cost[interaction] += self.calculate_action_effect_cost(
+                    interaction, character, goal
+                )
+                viable = True
+            else:
+                action_cost[interaction] += self.calculate_action_difficulty(
+                    interaction, character
+                )
+                goal_cost[interaction] += self.calculate_action_effect_cost(
+                    interaction, character, goal
+                )
+                viable = False
 
-    def will_action_fulfill_goal(self, action, goal: Goal):
+        return {
+            "cost": action_cost,
+            "viable": viable,
+            "goal_cost": goal_cost,
+        }
+
+    def will_action_fulfill_goal(
+        self, action: Action, goal: Goal, current_state: State, character: Character
+    ):
         """
-        Determine if an action fulfills any the specified requirements by checking the preconditions and effects of the action.
+        Determine if an action fulfills the specified goal by checking the completion conditions.
+        Remember, Goals can have multiple completion conditions, so we will return a dictionary of booleans indicating whether each completion condition is met.
         Args:
             action (Action): The action to evaluate.
-            requirements (dict): The requirements to fulfill.
+            goal (Goal): The goal to achieve.
+            current_state (State): The current state of the target of the action.
         Returns:
-            Dict[str, bool]: A dictionary indicating which requirements are fulfilled by the action.
+            dict: A dictionary of booleans indicating whether each completion condition is met.
         """
-        fulfilled_requirements = {req: False for req in requirements}
-        for requirement in requirements:
-            if all(
-                precondition(action)
-                for precondition in requirements[requirement]["preconditions"]
+
+        goal_copy = copy.deepcopy(goal)
+        completion_conditions = (
+            goal_copy.completion_conditions
+        )  # Example: {False: Condition(name="has_food", attribute="inventory.check_has_item_by_type(['food'])", satisfy_value=True, op="==")}
+        action_effects = action.effects  # Example [
+        #     {"targets": ["initiator"], "attribute": "inventory", "change_value": "add_item('food')"},
+        #     {
+        #         "targets": ["initiator"],
+        #         "method": "play_animation",
+        #         "method_args": ["taking_item"],
+        #     },
+        # ]
+        goal_target = goal_copy.target
+        # make a copy of the State so the original is not modified
+        current_state_ = copy.deepcopy(current_state)
+        for effect in action_effects:
+            if (
+                "target" in effect["targets"]
+                and goal_target.name == current_state_.name
             ):
-                fulfilled_requirements[requirement] = True
-        ##TODO: Figure out how to check if the effects of all actions the action list fulfill the goal completion_condition together after being applied to the character State
+                current_state_ = action.apply_single_effect(effect, current_state_)
+                for condition in completion_conditions[False]:
+                    check = condition.check_condition(current_state_)
+                    # if check is true, change k (the key) to True in the completion_conditions dictionary
+                    if check == True:
+                        # remove the condition from the completion_conditions dictionary
+                        completion_conditions[False] = None
+                        completion_conditions[True] = condition
+
+            elif (
+                "initiator" in effect["targets"] and goal_target.name == character.name
+            ):
+                current_state_ = action.apply_single_effect(effect, current_state_)
+                for condition in completion_conditions[False]:
+                    check = condition.check_condition(current_state_)
+                    # if check is true, change k (the key) to True in the completion_conditions dictionary
+                    if check == True:
+                        # remove the condition from the completion_conditions dictionary
+                        completion_conditions[False] = None
+                        completion_conditions[True] = condition
+
+        # return the reversed completion_conditions dictionary
+        return {v: k for k, v in completion_conditions.items()}
+
+    ##TODO: Figure out how to check if the effects of all actions the action list fulfill the goal completion_conditions together after being applied to the character State
 
     def will_path_achieve_goal(self, path, goal: Goal):
         """
@@ -2785,29 +3765,6 @@ class GraphManager:
             bool: True if the path fulfills the goal, False otherwise.
         """
         pass
-
-    def node_type_resolver(self, node):
-        """
-        Returns the root class instance of a node based on its attributes.
-        Args:
-            node (Node): The node to resolve.
-        Returns:
-            str: The resolved type of the node.
-        """
-        if "type" in node:
-            if node["type"] == "character":
-                return self.characters[node["name"]]
-            elif node["type"] == "location":
-                return self.locations[node["name"]]
-            elif node["type"] == "event":
-                return self.events[node["name"]]
-            elif node["type"] == "item" or node["type"] == "object":
-                return self.objects[node["name"]]
-            elif node["type"] == "activity":
-                return self.activities[node["name"]]
-            elif node["type"] == "job":
-                return self.jobs[node["name"]]
-        return None
 
     ###TODO: Calculate the difficulty of a goal using the graph and goal criteria, using get_possible_actions on the filtered_nodes. Also figure out how to initialize the criteria.
     ### Also finish the calculate_utility function above get_possible_actions.

@@ -1,6 +1,7 @@
 # This file contains the Character class, which is used to represent a character in the game.
 
 
+from ast import arg
 from calendar import c
 from math import e
 import random
@@ -17,6 +18,7 @@ from actions import (
     Action,
     ActionGenerator,
     ActionTemplate,
+    Condition,
     Skill,
     JobSkill,
     ActionSkill,
@@ -87,15 +89,42 @@ class RandomNameGenerator:
                 )
 
 
+# example_desired_results1 = [
+#     {
+#         "target": {"type": "character", "name": "Joe"},
+#         "end_state": {"relationship": "friend", "strength": 0.8},
+
+
 class Goal:
+    """
+    Represents a goal for a character in the game.
+
+    Attributes:
+        name (str): The name of the goal.
+        description (str): A description of the goal.
+        score (int): The importance of the goal.
+        character (Character): The character who has this goal.
+        target (Character, Item, Location, etc): Represents the target of the goal (could be same as character, does not have to be)
+        completion_conditions (dict): A dictionary of functions to check if the goal is completed, with the key being a bool representing whether the condition has been met. Example: {False: Condition(name="has_food", attribute="inventory.check_has_item_by_type(['food'])", satisfy_value=True, op="==")}
+        evaluate_utility (function): A function that evaluates the current importance of the goal based on the character's state and the environment.
+        difficulty (function): A function that calculates the difficulty of the goal based on the character's state and the environment.
+        completion_reward (function): A function that calculates the reward for completing the goal based on the character's state and the environment.
+        failure_penalty (function): A function that calculates the penalty for failing to complete the goal based on the character's state and the environment.
+        completion_message (function): A function that generates a message when the goal is completed based on the character's state and the environment.
+        failure_message (function): A function that generates a message when the goal is failed based on the character's state and the environment.
+        criteria (list): A list of criteria (as dicts) that need to be met for the goal to be completed.
+        required_items (list): A list of items required to complete the goal.
+
+    """
 
     def __init__(
         self,
         description,
         character,
+        target,  # Represents the target of the goal (could be same as character, does not have to be)
         score,  # Represents the importance of the goal
         name,
-        completion_condition,  # Function to check if the goal is completed
+        completion_conditions,  # Dict of list of functions to check if the goal is completed, with the key being a bool representing whether the condition has been met. Example: {False: Condition(name="has_food", attribute="inventory.check_has_item_by_type(['food'])", satisfy_value=True, op="==")}
         evaluate_utility,  # function that evaluates the current importance of the goal based on the character's state and the environment.
         difficulty,  # function that calculates the difficulty of the goal based on the character's state and the environment.
         completion_reward,  # function that calculates the reward for completing the goal based on the character's state and the environment.
@@ -103,10 +132,10 @@ class Goal:
         completion_message,  # function that generates a message when the goal is completed based on the character's state and the environment.
         failure_message,  # function that generates a message when the goal is failed based on the character's state and the environment.
         criteria,  # list of criteria (as dicts) that need to be met for the goal to be completed
+        # desired_results,  # list of desired results (as dicts of dicts representing State attributes) when the goal is completed
     ):
-        # Example name, description, and completion: "get a job": character.get_job().get_job_name() != "unemployed",
         self.name = name
-        self.completion_condition = completion_condition
+        self.completion_conditions = completion_conditions
         self.description = description
         self.score = score
         self.character = character
@@ -117,10 +146,19 @@ class Goal:
         self.completion_message = completion_message
         self.failure_message = failure_message
         self.criteria = criteria
-        self.required_items = self.extract_required_items()
+        self.required_items = (
+            self.extract_required_items()
+        )  # list of tuples, each tuple is (dict of item requirements, quantity needed).
+        # The dict of item requirements is composed of various keys like item_type, value, usability, sentimental_value, trade_value, scarcity, coordinate_location, name,
+        self.target = target
+        # self.desired_results = desired_results
 
     def extract_required_items(self):
-        required_items = []
+        ##TODO: We will need multiple paths to adding items to the required items list, including with the agents decisions and with the completion conditions. Some of this will require the agent to remember which items fulfill goals
+        required_items = (
+            []
+        )  # list of tuples, each tuple is (dict of item requirements, quantity needed).
+        # The dict of item requirements is composed of various keys like item_type, value, usability, sentimental_value, trade_value, scarcity, coordinate_location, name,
         for criterion in self.criteria:
             if "node_attributes" in criterion:
                 if (
@@ -128,6 +166,55 @@ class Goal:
                     or criterion["node_attributes"]["type"] == "item"
                 ):
                     required_items.append(criterion["node_attributes"])
+        for condition in self.completion_conditions:
+            if "inventory.check_has_item_by_type" in condition["attribute"]:
+                args = re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
+                args = [arg.strip("'") for arg in args.split(",")]
+                if args[0] not in [item["item_type"] for item in required_items]:
+                    required_items.append(
+                        ({"item_type": args[0]}, condition["satisfy_value"])
+                    )
+            elif "inventory.check_has_item_by_name" in condition["attribute"]:
+                args = re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
+                args = [arg.strip("'") for arg in args.split(",")]
+                if args[0] not in [item["name"] for item in required_items]:
+                    required_items.append(
+                        ({"name": args[0]}, condition["satisfy_value"])
+                    )
+            elif "inventory.check_has_item_by_value" in condition["attribute"]:
+                args = re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
+                args = [arg.strip("'") for arg in args.split(",")]
+                if args[0] not in [item["value"] for item in required_items]:
+                    required_items.append(
+                        ({"value": args[0]}, condition["satisfy_value"])
+                    )
+            elif "inventory.check_has_item_by_usability" in condition["attribute"]:
+                args = re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
+                args = [arg.strip("'") for arg in args.split(",")]
+                if args[0] not in [item["usability"] for item in required_items]:
+                    required_items.append(
+                        ({"usability": args[0]}, condition["satisfy_value"])
+                    )
+            elif (
+                "inventory.check_has_item_by_sentimental_value"
+                in condition["attribute"]
+            ):
+                args = re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
+                args = [arg.strip("'") for arg in args.split(",")]
+                if args[0] not in [
+                    item["sentimental_value"] for item in required_items
+                ]:
+                    required_items.append(
+                        ({"sentimental_value": args[0]}, condition["satisfy_value"])
+                    )
+            elif "inventory.check_has_item_by_trade_value" in condition["attribute"]:
+                args = re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
+                args = [arg.strip("'") for arg in args.split(",")]
+                if args[0] not in [item["trade_value"] for item in required_items]:
+                    required_items.append(
+                        ({"trade_value": args[0]}, condition["satisfy_value"])
+                    )
+
         return required_items
 
     def __repr__(self):
@@ -171,7 +258,7 @@ class Goal:
         return {"name": self.name, "description": self.description, "score": self.score}
 
     def check_completion(self):
-        return self.completion_condition(self.character)
+        return all([condition for condition in self.completion_conditions])
 
     def evaluate_utility(self):
         return self.evaluate_utility(
@@ -583,13 +670,26 @@ def motive_to_goals(
                 description="Search for food to satisfy hunger.",
                 score=motive.score,
                 character=character,
-                completion_condition=lambda char: char.hunger <= 0,
+                target=character,
+                completion_conditions={
+                    False: [
+                        Condition(  # Remember the key is False because the condition is not met yet
+                            name="has_food",
+                            attribute="inventory.check_has_item_by_type(['food'])",
+                            target=character,
+                            satisfy_value=True,
+                            op="==",
+                            weight=1,  # This is the weight representing the importance of this condition toward the goal. This will be used in a division operation to calculate the overall importance of the goal.
+                        )
+                    ]
+                },
                 evaluate_utility=tuf.evaluate_goal_importance,
                 difficulty=graph_manager.calculate_difficulty,
                 completion_reward=graph_manager.calculate_reward,
                 failure_penalty=graph_manager.calculate_penalty,
                 completion_message=graph_manager.generate_completion_message,
                 failure_message=graph_manager.generate_failure_message,
+                criteria=example_criteria5,
             )
         )
         goals.append(
@@ -598,7 +698,7 @@ def motive_to_goals(
                 description="Go hunting to gather food.",
                 score=motive.score,
                 character=character,
-                completion_condition=lambda char: char.has_food,
+                completion_conditions=lambda char: char.has_food,
                 evaluate_utility=lambda char: char.hunger * 1.5,
             )
         )
@@ -608,7 +708,7 @@ def motive_to_goals(
                 description="Cook a meal to eat.",
                 score=motive.score,
                 character=character,
-                completion_condition=lambda char: char.has_food,
+                completion_conditions=lambda char: char.has_food,
                 evaluate_utility=lambda char: char.hunger * 1.2,
             )
         )
@@ -619,7 +719,7 @@ def motive_to_goals(
                 description="Get a job to earn money.",
                 score=motive.score,
                 character=character,
-                completion_condition=lambda char: char.money > 1000,
+                completion_conditions=lambda char: char.money > 1000,
                 evaluate_utility=lambda char: char.money / 100,
             )
         )
@@ -629,7 +729,7 @@ def motive_to_goals(
                 description="Invest money in stocks.",
                 score=motive.score,
                 character=character,
-                completion_condition=lambda char: char.investment_portfolio,
+                completion_conditions=lambda char: char.investment_portfolio,
                 evaluate_utility=lambda char: char.money / 200,
             )
         )
@@ -1074,6 +1174,15 @@ effect_dict = {
             "method_args": ["talking"],
         },
     ],
+    "Eat": [
+        {"targets": ["initiator"], "attribute": "hunger_level", "change_value": -5},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": 5},
+        {
+            "targets": ["initiator"],
+            "method": "play_animation",
+            "method_args": ["eating"],
+        },
+    ],
     "Trade": [
         {"targets": ["initiator"], "attribute": "wealth_money", "change_value": -5},
         {
@@ -1178,6 +1287,7 @@ class Character:
         personality_traits: PersonalityTraits = None,
         career_goals: List[str] = [],
         possible_interactions: List[Action] = [],
+        move_speed: int = 1,
     ):
 
         self.name = self.set_name(name)
@@ -1306,6 +1416,7 @@ class Character:
         self.needed_items = (
             []
         )  # Items needed to complete goals. This is a list of tuples, each tuple is (dict of item requirements, quantity needed)
+        self.state = self.get_state()
 
     def get_location(self):
         return self.location
@@ -2194,7 +2305,7 @@ class Character:
         }
 
     def get_state(self):
-        return State(self.to_dict())
+        return State(self)
 
 
 def default_long_term_goal_generator(character: Character):

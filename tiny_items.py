@@ -1,4 +1,5 @@
 from enum import unique
+import operator
 import uuid
 from typing import List
 
@@ -345,6 +346,23 @@ class ItemInventory:
             + self.misc_items
         )
 
+        self.ops = {
+            "gt": operator.gt,
+            "lt": operator.lt,
+            "eq": operator.eq,
+            "ge": operator.ge,
+            "le": operator.le,
+            "ne": operator.ne,
+        }
+        self.symb_map = {
+            ">": "gt",
+            "<": "lt",
+            "==": "eq",
+            ">=": "ge",
+            "<=": "le",
+            "!=": "ne",
+        }
+
     def report_inventory(self):
         report = {}
         for item in self.all_items:
@@ -379,11 +397,64 @@ class ItemInventory:
             )
         )
 
+    def add_item(self, item: ItemObject):
+        item_lists = {
+            "food": self.food_items,
+            "clothing": self.clothing_items,
+            "tools": self.tools_items,
+            "weapons": self.weapons_items,
+            "medicine": self.medicine_items,
+            "misc": self.misc_items,
+        }
+
+        for existing_item in item_lists[item.item_type]:
+            if existing_item.get_name() == item.get_name():
+                existing_item.quantity += item.quantity
+                break
+        else:
+            item_lists[item.item_type].append(item)
+
+        for existing_item in self.all_items:
+            if existing_item.get_name() == item.get_name():
+                existing_item.quantity += item.quantity
+                break
+        else:
+            self.all_items.append(item)
+
+        return item
+
+    def remove_item(self, item: ItemObject):
+        item_lists = {
+            "food": self.food_items,
+            "clothing": self.clothing_items,
+            "tools": self.tools_items,
+            "weapons": self.weapons_items,
+            "medicine": self.medicine_items,
+            "misc": self.misc_items,
+        }
+
+        for existing_item in item_lists[item.item_type]:
+            if existing_item.get_name() == item.get_name():
+                existing_item.quantity -= item.quantity
+                if existing_item.quantity <= 0:
+                    item_lists[item.item_type].remove(existing_item)
+                break
+
+        for existing_item in self.all_items:
+            if existing_item.get_name() == item.get_name():
+                existing_item.quantity -= item.quantity
+                if existing_item.quantity <= 0:
+                    self.all_items.remove(existing_item)
+                break
+
+        return item
+
     def get_food_items(self):
         return self.food_items
 
     def set_food_items(self, food_items: List[FoodItem]):
         self.food_items = food_items
+        self.all_items += food_items
         return self.food_items
 
     def count_food_items_total(self):
@@ -408,8 +479,15 @@ class ItemInventory:
     def get_clothing_items(self):
         return self.clothing_items
 
+    def count_clothing_items_total(self):
+        total = 0
+        for item in self.clothing_items:
+            total += item.get_quantity()
+        return total
+
     def set_clothing_items(self, clothing_items: List[ItemObject]):
         self.clothing_items = clothing_items
+        self.all_items += clothing_items
         return self.clothing_items
 
     def get_tools_items(self):
@@ -417,13 +495,27 @@ class ItemInventory:
 
     def set_tools_items(self, tools_items: List[ItemObject]):
         self.tools_items = tools_items
+        self.all_items += tools_items
         return self.tools_items
+
+    def count_tools_items_total(self):
+        total = 0
+        for item in self.tools_items:
+            total += item.get_quantity()
+        return total
 
     def get_weapons_items(self):
         return self.weapons_items
 
+    def count_weapons_items_total(self):
+        total = 0
+        for item in self.weapons_items:
+            total += item.get_quantity()
+        return total
+
     def set_weapons_items(self, weapons_items: List[ItemObject]):
         self.weapons_items = weapons_items
+        self.all_items += weapons_items
         return self.weapons_items
 
     def get_medicine_items(self):
@@ -431,14 +523,28 @@ class ItemInventory:
 
     def set_medicine_items(self, medicine_items: List[ItemObject]):
         self.medicine_items = medicine_items
+        self.all_items += medicine_items
         return self.medicine_items
+
+    def count_medicine_items_total(self):
+        total = 0
+        for item in self.medicine_items:
+            total += item.get_quantity()
+        return total
 
     def get_misc_items(self):
         return self.misc_items
 
     def set_misc_items(self, misc_items: List[ItemObject]):
         self.misc_items = misc_items
+        self.all_items += misc_items
         return self.misc_items
+
+    def count_misc_items_total(self):
+        total = 0
+        for item in self.misc_items:
+            total += item.get_quantity()
+        return total
 
     def get_total_value(self):
         total = 0
@@ -566,6 +672,46 @@ class ItemInventory:
             if item.get_name() == name:
                 total += item.get_quantity()
         return total
+
+    def check_has_item(self, item, amount=1, oper="ge"):
+        return bool(True if self.ops[oper](item.get_quantity(), amount) else False)
+
+    def check_has_item_by_name(self, name, amount=1, oper="ge"):
+        for item in self.all_items:
+            if item.get_name() == name:
+                return True if self.ops[oper](item.get_quantity(), amount) else False
+        return False
+
+    def check_has_item_by_type(self, item_type, amount=1, oper="ge"):
+        if oper not in self.ops:
+            oper = self.symb_map[oper]
+
+        if item_type == "food":
+            return bool(
+                True if self.ops[oper](sum(self.count_food_items_total()), amount) else False
+            )
+        elif item_type == "clothing":
+            return bool(
+                True if self.ops[oper](sum(self.count_clothing_items_total()), amount) else False
+            )
+        elif item_type == "tools":
+            return bool(
+                True if self.ops[oper](sum(self.count_tools_items_total()), amount) else False
+            )
+        elif item_type == "weapons":
+            return bool(
+                True if self.ops[oper](sum(self.count_weapons_items_total()), amount) else False
+            )
+        elif item_type == "medicine":
+            return bool(
+                True if self.ops[oper](sum(self.count_medicine_items_total()), amount) else False
+            )
+        elif item_type == "misc":
+            return bool(
+                True if self.ops[oper](sum(self.count_misc_items_total()), amount) else False
+            )
+        else:
+            return False
 
     def to_dict(self):
         return {
