@@ -207,6 +207,35 @@ class GraphManager:
         )  # Using MultiDiGraph for directional and multiple edges
         return self.G
 
+    def get_location(self, name):
+        return self.locations.get(name, (0, 0))
+
+    def update_location(self, name, location):
+        self.characters[name]["coordinate_location"] = location
+
+    def add_obstacle(self, obstacle_location):
+        self.obstacles.append(obstacle_location)
+
+    def get_obstacles(self):
+        return self.obstacles
+
+    def directional(self, current):
+        x, y = current
+        # 8-directional movement (up, down, left, right, and diagonals)
+        return [
+            (x + 1, y),
+            (x - 1, y),
+            (x, y + 1),
+            (x, y - 1),
+            (x + 1, y + 1),
+            (x - 1, y - 1),
+            (x + 1, y - 1),
+            (x - 1, y + 1),
+        ]
+
+    def cost(self, current, next):
+        return 1  # Uniform cost for simplicity
+
     def node_type_resolver(self, node):
         """
         Returns the root class instance of a node based on its attributes.

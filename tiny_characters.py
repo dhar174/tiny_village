@@ -3,6 +3,7 @@
 
 from ast import arg
 from calendar import c
+import heapq
 from math import e
 import random
 import re
@@ -41,8 +42,160 @@ from tiny_time_manager import GameTimeManager
 
 from tiny_locations import Location, LocationManager
 
+
 # def gaussian(input_value, mean, std):
 #     return (1 / (std * (2 * 3.14159) ** 0.5)) * (2.71828 ** ((-1 / 2) * (((input_value - mean) / std) ** 2)))
+def heuristic(a, b):
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+
+def a_star_search(graph, start, goal):
+    frontier = []
+    heapq.heappush(frontier, (0, start))
+    came_from = {start: None}
+    cost_so_far = {start: 0}
+
+    while frontier:
+        _, current = heapq.heappop(frontier)
+
+        if current == goal:
+            break
+
+        for next in graph.directional(current):
+            new_cost = cost_so_far[current] + graph.cost(current, next)
+            if next not in cost_so_far or new_cost < cost_so_far[next]:
+                cost_so_far[next] = new_cost
+                priority = new_cost + heuristic(goal, next)
+                heapq.heappush(frontier, (priority, next))
+                came_from[next] = current
+
+    path = []
+    current = goal
+    while current and current in came_from:
+        path.append(current)
+        current = came_from[current]
+    path.reverse()
+    return path
+
+
+class SteeringBehaviors:
+    @staticmethod
+    def seek(
+        character,
+        target,
+        slow_down_radius=50,
+        max_speed=10,
+        max_acceleration=5,
+        damping=0.9,
+    ):
+        desired_velocity = (
+            target[0] - character.location[0],
+            target[1] - character.location[1],
+        )
+        distance = (desired_velocity[0] ** 2 + desired_velocity[1] ** 2) ** 0.5
+
+        # Normalize the desired velocity
+        if distance > 0:
+            desired_velocity = (
+                desired_velocity[0] / distance,
+                desired_velocity[1] / distance,
+            )
+
+        # Adjust speed based on distance for arrival behavior
+        if distance < slow_down_radius:
+            desired_velocity = (
+                desired_velocity[0] * max_speed * (distance / slow_down_radius),
+                desired_velocity[1] * max_speed * (distance / slow_down_radius),
+            )
+        else:
+            desired_velocity = (
+                desired_velocity[0] * max_speed,
+                desired_velocity[1] * max_speed,
+            )
+
+        # Calculate the steering force
+        steering = (
+            desired_velocity[0] - character.velocity[0],
+            desired_velocity[1] - character.velocity[1],
+        )
+
+        # Cap the steering force to max acceleration
+        steering_magnitude = (steering[0] ** 2 + steering[1] ** 2) ** 0.5
+        if steering_magnitude > max_acceleration:
+            steering = (
+                steering[0] / steering_magnitude * max_acceleration,
+                steering[1] / steering_magnitude * max_acceleration,
+            )
+
+        # Apply damping for smooth movement
+        character.velocity = (
+            character.velocity[0] * damping + steering[0],
+            character.velocity[1] * damping + steering[1],
+        )
+
+        # Cap the velocity to max speed
+        velocity_magnitude = (
+            character.velocity[0] ** 2 + character.velocity[1] ** 2
+        ) ** 0.5
+        if velocity_magnitude > max_speed:
+            character.velocity = (
+                character.velocity[0] / velocity_magnitude * max_speed,
+                character.velocity[1] / velocity_magnitude * max_speed,
+            )
+
+        # Return the steering force for potential field combination
+        return character.velocity
+
+    @staticmethod
+    def avoid(character, obstacles, avoidance_radius):
+        avoid_force = (0, 0)
+        for obs in obstacles:
+            diff = (character.location[0] - obs[0], character.location[1] - obs[1])
+            distance = (diff[0] ** 2 + diff[1] ** 2) ** 0.5
+            if distance < avoidance_radius:
+                force = (diff[0] / distance, diff[1] / distance)
+                # Inverse square law for stronger avoidance force when closer
+                avoid_force = (
+                    avoid_force[0] + force[0] / (distance**2),
+                    avoid_force[1] + force[1] / (distance**2),
+                )
+        return avoid_force
+
+    @staticmethod
+    def potential_field_force(character, potential_field):
+        attractive_force = (0, 0)
+        repulsive_force = (0, 0)
+
+        # Attractive force towards the goal
+        if "goal" in potential_field:
+            goal = potential_field["goal"]
+            diff = (goal[0] - character.location[0], goal[1] - character.location[1])
+            distance = (diff[0] ** 2 + diff[1] ** 2) ** 0.5
+            if distance > 0:
+                attractive_force = (
+                    diff[0] / distance,
+                    diff[1] / distance,
+                )
+
+        # Repulsive forces from obstacles
+        if "obstacles" in potential_field:
+            for obs in potential_field["obstacles"]:
+                diff = (character.location[0] - obs[0], character.location[1] - obs[1])
+                distance = (diff[0] ** 2 + diff[1] ** 2) ** 0.5
+                if distance > 0:
+                    force = (diff[0] / distance**2, diff[1] / distance**2)
+                    repulsive_force = (
+                        repulsive_force[0] + force[0],
+                        repulsive_force[1] + force[1],
+                    )
+
+        # Combine forces
+        combined_force = (
+            attractive_force[0] - repulsive_force[0],
+            attractive_force[1] - repulsive_force[1],
+        )
+
+        return combined_force
 
 
 class RandomNameGenerator:
@@ -1288,10 +1441,16 @@ class Character:
         career_goals: List[str] = [],
         possible_interactions: List[Action] = [],
         move_speed: int = 1,
+        graph_manager: GraphManager = None,
     ):
 
         self.name = self.set_name(name)
         self.age = self.set_age(age)
+        self.destination = None
+        self.path = []
+        self.speed = 1.0  # Units per tick
+        self.graph_manager = graph_manager
+
         self.character_actions = [
             Action(
                 "Talk",
@@ -1443,6 +1602,42 @@ class Character:
             self.location.set_coordinates(coordinates)
 
         return self.location.coordinates_location
+
+    def set_destination(self, destination):
+        self.destination = destination
+        self.path = a_star_search(self.graph_manager, self.location, destination)
+
+    def move_towards_next_waypoint(self, potential_field):
+        if not self.path:
+            return
+
+        next_waypoint = self.path[0]
+        seek_force = SteeringBehaviors.seek(self, next_waypoint)
+        avoid_force = SteeringBehaviors.avoid(
+            self, self.graph_manager.get_obstacles(), avoidance_radius=2.0
+        )
+        potential_field_force = SteeringBehaviors.potential_field_force(
+            self, potential_field
+        )
+
+        # Combine forces
+        combined_force = (
+            seek_force[0] + avoid_force[0] + potential_field_force[0],
+            seek_force[1] + avoid_force[1] + potential_field_force[1],
+        )
+
+        # Apply combined force to location
+        self.set_coordinate_location(
+            self.location[0] + combined_force[0],
+            self.location[1] + combined_force[1],
+        )
+
+        self.graph_manager.update_location(self.name, self.get_coordinate_location())
+
+        if self.get_coordinate_location() == next_waypoint:
+            self.path.pop(0)
+            if not self.path:
+                self.destination = None
 
     def create_memory(self, description, timestamp, importance):
         memory = Memory(
@@ -2302,6 +2497,7 @@ class Character:
             "home": self.home,
             "personality_traits": self.personality_traits,
             "motives": self.motives,
+            
         }
 
     def get_state(self):

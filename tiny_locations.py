@@ -75,9 +75,6 @@ class Location:
         )
         return self.possible_interactions
 
-    def coordinates_location(self):
-        return self.coordinates_location
-
     def get_coordinates(self):
         return self.coordinates_location
 
