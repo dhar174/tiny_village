@@ -1,10 +1,12 @@
 from ast import Not
 from calendar import c
+from concurrent.futures import ProcessPoolExecutor, as_completed
 import copy
 import dis
+from functools import lru_cache
 import heapq
 from importlib import resources
-from itertools import product
+from itertools import chain, combinations, product
 from math import dist, inf
 import math
 import operator
@@ -162,6 +164,7 @@ character_attributes = [
 
 class GraphManager:
     def __init__(self):
+        self.dp_cache = {}
         self.characters = {}
         self.locations = {}
         self.objects = {}
@@ -459,7 +462,7 @@ class GraphManager:
                 attribute_dict["interaction_frequency"],
             )
         if attribute_dict["edge_type"] == "character_location":
-            return self.calc_char_loc_edge_cost(
+            return self.calculate_char_loc_edge_cost(
                 node,
                 other_node,
                 attribute_dict["frequency_of_visits"],
@@ -469,7 +472,7 @@ class GraphManager:
                 attribute_dict["distance"],
             )
         if attribute_dict["edge_type"] == "character_object":
-            return self.calc_char_obj_edge_cost(
+            return self.calculate_char_obj_edge_cost(
                 node,
                 other_node,
                 attribute_dict["ownership_status"],
@@ -479,7 +482,7 @@ class GraphManager:
                 attribute_dict["distance"],
             )
         if attribute_dict["edge_type"] == "character_event":
-            return self.calc_char_event_edge_cost(
+            return self.calculate_char_event_edge_cost(
                 node,
                 other_node,
                 attribute_dict["participation_status"],
@@ -489,7 +492,7 @@ class GraphManager:
                 attribute_dict["distance"],
             )
         if attribute_dict["edge_type"] == "character_activity":
-            return self.calc_char_act_edge_cost(
+            return self.calculate_char_act_edge_cost(
                 node,
                 other_node,
                 attribute_dict["engagement_level"],
@@ -499,7 +502,7 @@ class GraphManager:
                 attribute_dict["distance"],
             )
         if attribute_dict["edge_type"] == "location_location":
-            return self.calc_loc_loc_edge_cost(
+            return self.calculate_loc_loc_edge_cost(
                 node,
                 other_node,
                 attribute_dict["proximity"],
@@ -509,7 +512,7 @@ class GraphManager:
                 attribute_dict["distance"],
             )
         if attribute_dict["edge_type"] == "location_item":
-            return self.calc_loc_item_edge_cost(
+            return self.calculate_loc_item_edge_cost(
                 node,
                 other_node,
                 attribute_dict["item_presence"],
@@ -517,7 +520,7 @@ class GraphManager:
                 attribute_dict["distance"],
             )
         if attribute_dict["edge_type"] == "location_event":
-            return self.calc_loc_event_edge_cost(
+            return self.calculate_loc_event_edge_cost(
                 node,
                 other_node,
                 attribute_dict["event_occurrence"],
@@ -527,7 +530,7 @@ class GraphManager:
                 attribute_dict["distance"],
             )
         if attribute_dict["edge_type"] == "location_activity":
-            return self.calc_loc_act_edge_cost(
+            return self.calculate_loc_act_edge_cost(
                 node,
                 other_node,
                 attribute_dict["suitability"],
@@ -536,7 +539,7 @@ class GraphManager:
                 attribute_dict["distance"],
             )
         if attribute_dict["edge_type"] == "item_item":
-            return self.calc_item_item_edge_cost(
+            return self.calculate_item_item_edge_cost(
                 node,
                 other_node,
                 attribute_dict["compatibility"],
@@ -545,7 +548,7 @@ class GraphManager:
                 attribute_dict["distance"],
             )
         if attribute_dict["edge_type"] == "item_activity":
-            return self.calc_item_act_edge_cost(
+            return self.calculate_item_act_edge_cost(
                 node,
                 other_node,
                 attribute_dict["necessity"],
@@ -554,7 +557,7 @@ class GraphManager:
                 attribute_dict["distance"],
             )
         if attribute_dict["edge_type"] == "event_activity":
-            return self.calc_event_act_edge_cost(
+            return self.calculate_event_act_edge_cost(
                 node,
                 other_node,
                 attribute_dict["synergy"],
@@ -563,7 +566,7 @@ class GraphManager:
                 attribute_dict["distance"],
             )
         if attribute_dict["edge_type"] == "event_item":
-            return self.calc_event_item_edge_cost(
+            return self.calculate_event_item_edge_cost(
                 node,
                 other_node,
                 attribute_dict["necessity"],
@@ -571,7 +574,7 @@ class GraphManager:
                 attribute_dict["distance"],
             )
         if attribute_dict["edge_type"] == "job_activity":
-            return self.calc_job_act_edge_cost(
+            return self.calculate_job_act_edge_cost(
                 node,
                 other_node,
                 attribute_dict["skill_match"],
@@ -3162,7 +3165,7 @@ class GraphManager:
             n: self.graph.nodes[n] for n in filtered_nodes
         }  # return dict will look like: {"node1": {"type": "item", "item_type": "food"}, "node2": {"type": "item", "item_type": "food"}}
 
-    def calculate_potential_utility_of_goal(self, character, goal: Goal):
+    def calculate_potential_utility_of_plan(self, character, plan):
         """
         Calculate the range possible utility of pursuing a Goal for a character based on their current state and preferences, given the current state of the graph.
         Uses the graph to analyze relationships, locations, and other factors that may influence the utility of the goal.
@@ -3177,7 +3180,7 @@ class GraphManager:
         """
         utility = 0
         # Analyze the goal and its requirements
-        goal_requirements = goal.criteria
+        # goal_requirements = goal.criteria
         # Filter nodes based on goal requirements
         filtered_nodes = self.get_filtered_nodes(**goal_requirements)
         # Analyze the filtered nodes to determine potential utility
@@ -3186,6 +3189,69 @@ class GraphManager:
             node_utility = self.evaluate_node_utility(character, node_data)
             utility += node_utility
         return utility
+
+    def evaluate_combination(self, combo, action_viability_cost, goal_requirements):
+        """
+        Evaluate a combination of actions to determine if they fulfill all goal requirements.
+
+        Args:
+            combo (tuple of tuples): The combination of actions to evaluate.
+            action_viability_cost (dict): The viability and cost data for actions.
+            goal_requirements (dict): The goal requirements to fulfill.
+
+        Returns:
+            tuple: (total_cost, combo) if valid, else None.
+        """
+        fulfilled_conditions = set()
+        redundant_fullfilled_conditions = []
+        total_cost = 0
+        necessary_actions = []
+
+        for i, (node, action) in enumerate(combo):
+            for condition in action_viability_cost[node][
+                "actions_that_fulfill_condition"
+            ]:
+                if (
+                    action
+                    in action_viability_cost[node]["actions_that_fulfill_condition"][
+                        condition
+                    ]
+                ):
+                    if condition in fulfilled_conditions:
+                        redundant_fullfilled_conditions.append(condition)
+            fulfilled_conditions.update(
+                action_viability_cost[node]["conditions_fulfilled_by_action"][action]
+            )
+            total_cost += sum(action_viability_cost[node]["goal_cost"][action])
+            if all(cond in fulfilled_conditions for cond in goal_requirements):
+                necessary_actions = combo[: i + 1]
+                break
+
+        if all(cond in fulfilled_conditions for cond in goal_requirements):
+            if len(necessary_actions) == 0:
+                necessary_actions = combo
+            # Calculate the number of actions that can fulfill each condition
+            num_actions_per_condition = {
+                condition: len(actions)
+                for condition, actions in action_viability_cost[node][
+                    "actions_that_fulfill_condition"
+                ].items()
+            }
+
+            # Calculate the total cost
+            total_cost = 0
+            for condition in redundant_fullfilled_conditions:
+                # Get the number of actions that can fulfill this condition
+                num_actions = num_actions_per_condition.get(condition, 1)
+
+                # Add a penalty proportional to the number of redundant conditions and inversely proportional to both the number of goal requirements and the number of actions that can fulfill the condition
+                total_cost += (
+                    math.log(len(redundant_fullfilled_conditions) + 1)
+                    * 10
+                    / (len(goal_requirements) * num_actions)
+                )
+            return total_cost, tuple(necessary_actions)
+        return None
 
     def calculate_goal_difficulty(self, goal: Goal, character: Character):
         """
@@ -3210,7 +3276,6 @@ class GraphManager:
         # {
         #    "node_attributes": {"type": "item", "item_type": "food"}: {
         #        "item1": {"type": "item", "item_type": "food"},
-
         # Check if any requirement has no matching nodes
 
         for requirement, nodes in nodes_per_requirement.items():
@@ -3219,8 +3284,21 @@ class GraphManager:
 
         # Check for nodes that fulfill multiple requirements
         fulfill_multiple = {}
+        action_viability_cost = {}
+        ## self.calculate_action_viability_cost returns as below
+        # {
+        #     "action_cost": action_cost, # A dict of costs for each action
+        #     "viable": viable, # A dict of booleans indicating viability of each action
+        #     "goal_cost": goal_cost, # A dict of goal costs for each action based on goal requirements
+        # "conditions_fulfilled_by_action": conditions_fulfilled_by_action, # A dict of goal conditions fulfilled by each action
+        #   "actions_that_fulfill_condition": actions_that_fulfill_condition, # A dict of actions that fulfill each condition
+        # }
+
         for nodes in nodes_per_requirement.values():
             for node in nodes:
+                action_viability_cost[node] = self.calculate_action_viability_cost(
+                    node, goal, character
+                )
                 if sum(node in nodes for nodes in nodes_per_requirement.values()) > 1:
                     # Node fulfills multiple requirements
                     # Add your code here to handle this case
@@ -3232,40 +3310,85 @@ class GraphManager:
                     }
                     # fulfill_multiple[node]["action_viability_cost"] = self.calculate_action_viability_cost(
 
-        action_viability_cost = {}
+        # Generate combinations of actions from each node
+        # Prioritize actions based on conditions fulfilled and costs
+        all_actions = sorted(
+            list(
+                chain(
+                    *[
+                        [
+                            (
+                                len(conditions),
+                                action_viability_cost[node]["action_cost"][action],
+                                action,
+                            )
+                            for action, conditions in action_viability_cost[node][
+                                "conditions_fulfilled_by_action"
+                            ].items()
+                            if action_viability_cost[node]["viable"][action]
+                            and len(conditions) > 0
+                        ]
+                        for node in action_viability_cost
+                    ]
+                )
+            ),
+            key=lambda x: (x[0], -x[1]),
+            reverse=True,
+        )
 
-        for node in nodes_per_requirement.values():
-            action_viability_cost[node] = self.calculate_action_viability_cost(
-                node, goal, character
+        # Generate prioritized combinations of actions
+        action_combinations = []
+        for r in range(1, len(all_actions) + 1):
+            action_combinations.extend(
+                combinations([(node, action) for node, _, _, action in all_actions], r)
             )
 
-        # Now calculate paths that would fulfill each requirement in goal_requirements, using only one node per requirement
-        # Generate all combinations of nodes fulfilling the requirements
-        all_combinations = list(
-            product(*[list(d.values()) for d in nodes_per_requirement.values()])
-        )
-        valid_paths = []
+        valid_combinations = []
+        with ProcessPoolExecutor() as executor:
+            future_to_combo = {
+                executor.submit(
+                    self.evaluate_combination,
+                    combo,
+                    action_viability_cost,
+                    goal_requirements,
+                ): combo
+                for combo in action_combinations
+            }
+            for future in as_completed(future_to_combo):
+                combo = future_to_combo[future]
+                try:
+                    result = future.result()
+                    if result:
+                        valid_combinations.append(result)
+                except Exception as e:
+                    print(f"Error evaluating combination {combo}: {e}")
 
+        valid_combinations.sort(key=lambda x: x[0])  # Sort by total cost
+
+        valid_paths = []
+        # Now calculate paths that would fulfill each requirement in goal_requirements, using only one node per condition
+        # Generate all combinations of nodes fulfilling the requirements
         all_pairs_paths = dict(
             nx.all_pairs_dijkstra_path(
-                nx.subgraph(self.G, [n for n in nodes_per_requirement.values()]),
+                nx.subgraph(
+                    self.G,
+                    [n for nodes in nodes_per_requirement.values() for n in nodes],
+                ),
                 weight=self.calculate_edge_cost,
             )
-        )  # Assuming a function to calculate edge cost between characters
+        )
 
-        # Helper function to find the combined path for a node combination
         def find_combined_path(combo):
             combined_path = []
             for i in range(len(combo) - 1):
-                source = combo[i]
-                target = combo[i + 1]
+                source, target = combo[i], combo[i + 1]
                 if source in all_pairs_paths and target in all_pairs_paths[source]:
                     combined_path.extend(all_pairs_paths[source][target])
                 else:
-                    return None  # No valid path between these two nodes
+                    return None
             return combined_path
 
-        for combo in all_combinations:
+        for combo in valid_combinations:
             path = find_combined_path(combo)
             if path:
                 valid_paths.append(path)
@@ -3307,8 +3430,17 @@ class GraphManager:
         # If the shortest path is not the same as the path with the lowest goal cost, increase the difficulty
         if shortest_path != lowest_goal_cost_path:
             difficulty += shortest_path_goal_cost + lowest_goal_cost_path_cost / 2
-
-        return difficulty
+        return {
+            "difficulty": difficulty,
+            "calc_path_cost": calc_path_cost,
+            "calc_goal_cost": calc_goal_cost,
+            "action_viability_cost": action_viability_cost,
+            "viable_paths": viable_paths,
+            "shortest_path": shortest_path,
+            "lowest_goal_cost_path": lowest_goal_cost_path,
+            "shortest_path_goal_cost": shortest_path_goal_cost,
+            "lowest_goal_cost_path_cost": lowest_goal_cost_path_cost,
+        }
 
     def is_goal_achieved(self, character, goal: Goal):
         raise NotImplementedError
@@ -3649,6 +3781,7 @@ class GraphManager:
 
         return difficulty
 
+    @lru_cache(maxsize=1000)
     def calculate_action_viability_cost(self, node, goal: Goal, character: Character):
         """
         Calculate the cost of an action based on the viability of the node.
@@ -3657,14 +3790,16 @@ class GraphManager:
         Returns:
             dict(cost: float, viable: bool, goal_cost: float): The cost of the action, whether it is viable, and the cost of the action on the goal.
         """
-
+        cache_key = (node, goal, character)
+        if cache_key in self.dp_cache:
+            return self.dp_cache[cache_key]
         if isinstance(node, str):
             node = self.G.nodes[node]
 
         if not isinstance(node, list):
             node = [node]
 
-        viable = False
+        viable = {}
         action_cost = {}  # Cost of action (Action.cost) for each action in the node
         goal_cost = (
             {}
@@ -3692,23 +3827,19 @@ class GraphManager:
                 )
                 for condition, fulfilled in fulfilled_conditions.items():
                     if fulfilled:
-                        if condition in conditions_fulfilled_by_action:
-                            conditions_fulfilled_by_action[condition].append(
-                                interaction
-                            )
-                        else:
-                            conditions_fulfilled_by_action[condition] = [interaction]
-                        if interaction in actions_that_fulfill_condition:
-                            actions_that_fulfill_condition[interaction].append(
-                                condition
-                            )
-                        else:
-                            actions_that_fulfill_condition[interaction] = [condition]
+                        if fulfilled:
+                            conditions_fulfilled_by_action.setdefault(
+                                interaction, []
+                            ).append(condition)
+                            actions_that_fulfill_condition.setdefault(
+                                condition, []
+                            ).append(interaction)
+
                 action_cost[interaction] = interaction.cost
                 goal_cost[interaction] += self.calculate_action_effect_cost(
                     interaction, character, goal
                 )
-                viable = True
+                viable[interaction] = True
             else:
                 action_cost[interaction] += self.calculate_action_difficulty(
                     interaction, character
@@ -3716,13 +3847,18 @@ class GraphManager:
                 goal_cost[interaction] += self.calculate_action_effect_cost(
                     interaction, character, goal
                 )
-                viable = False
+                viable[interaction] = False
 
-        return {
-            "cost": action_cost,
+        result = {
+            "action_cost": action_cost,
             "viable": viable,
             "goal_cost": goal_cost,
+            "conditions_fulfilled_by_action": conditions_fulfilled_by_action,
+            "actions_that_fulfill_condition": actions_that_fulfill_condition,
         }
+
+        self.dp_cache[cache_key] = result
+        return result
 
     def will_action_fulfill_goal(
         self, action: Action, goal: Goal, current_state: State, character: Character
