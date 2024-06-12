@@ -246,206 +246,193 @@ class RandomNameGenerator:
     #         "target": {"type": "character", "name": "Joe"},
     #         "end_state": {"relationship": "friend", "strength": 0.8},
 
-    class Goal:
-        """
-        Represents a goal for a character in the game.
 
-        Attributes:
-            name (str): The name of the goal.
-            description (str): A description of the goal.
-            score (int): The importance of the goal.
-            character (Character): The character who has this goal.
-            target (Character, Item, Location, etc): Represents the target of the goal (could be same as character, does not have to be)
-            completion_conditions (dict): A dictionary of functions to check if the goal is completed, with the key being a bool representing whether the condition has been met. Example: {False: Condition(name="has_food", attribute="inventory.check_has_item_by_type(['food'])", satisfy_value=True, op="==")}
-            evaluate_utility (function): A function that evaluates the current importance of the goal based on the character's state and the environment.
-            difficulty (function): A function that calculates the difficulty of the goal based on the character's state and the environment.
-            completion_reward (function): A function that calculates the reward for completing the goal based on the character's state and the environment.
-            failure_penalty (function): A function that calculates the penalty for failing to complete the goal based on the character's state and the environment.
-            completion_message (function): A function that generates a message when the goal is completed based on the character's state and the environment.
-            failure_message (function): A function that generates a message when the goal is failed based on the character's state and the environment.
-            criteria (list): A list of criteria (as dicts) that need to be met for the goal to be completed.
-            required_items (list): A list of items required to complete the goal.
+class Goal:
+    """
+    Represents a goal for a character in the game.
 
-        """
+    Attributes:
+        name (str): The name of the goal.
+        description (str): A description of the goal.
+        score (int): The importance of the goal.
+        character (Character): The character who has this goal.
+        target (Character, Item, Location, etc): Represents the target of the goal (could be same as character, does not have to be)
+        completion_conditions (dict): A dictionary of functions to check if the goal is completed, with the key being a bool representing whether the condition has been met. Example: {False: Condition(name="has_food", attribute="inventory.check_has_item_by_type(['food'])", satisfy_value=True, op="==")}
+        evaluate_utility (function): A function that evaluates the current importance of the goal based on the character's state and the environment.
+        difficulty (function): A function that calculates the difficulty of the goal based on the character's state and the environment.
+        completion_reward (function): A function that calculates the reward for completing the goal based on the character's state and the environment.
+        failure_penalty (function): A function that calculates the penalty for failing to complete the goal based on the character's state and the environment.
+        completion_message (function): A function that generates a message when the goal is completed based on the character's state and the environment.
+        failure_message (function): A function that generates a message when the goal is failed based on the character's state and the environment.
+        criteria (list): A list of criteria (as dicts) that need to be met for the goal to be completed.
+        required_items (list): A list of items required to complete the goal.
 
-        def __init__(
-            self,
-            description,
-            character,
-            target,  # Represents the target of the goal (could be same as character, does not have to be)
-            score,  # Represents the importance of the goal
-            name,
-            completion_conditions,  # Dict of list of functions to check if the goal is completed, with the key being a bool representing whether the condition has been met. Example: {False: Condition(name="has_food", attribute="inventory.check_has_item_by_type(['food'])", satisfy_value=True, op="==")}
-            evaluate_utility_function,  # function that evaluates the current importance of the goal based on the character's state and the environment.
-            difficulty,  # function that calculates the difficulty of the goal based on the character's state and the environment.
-            completion_reward,  # function that calculates the reward for completing the goal based on the character's state and the environment.
-            failure_penalty,  # function that calculates the penalty for failing to complete the goal based on the character's state and the environment.
-            completion_message,  # function that generates a message when the goal is completed based on the character's state and the environment.
-            failure_message,  # function that generates a message when the goal is failed based on the character's state and the environment.
-            criteria,  # list of criteria (as dicts) that need to be met for the goal to be completed
-            graph_manager,
-            # desired_results,  # list of desired results (as dicts of dicts representing State attributes) when the goal is completed
-        ):
-            self.name = name
-            self.completion_conditions = completion_conditions
-            self.description = description
-            self.score = score
-            self.character = character
-            self.evaluate_utility_function = evaluate_utility_function
-            self.difficulty = difficulty
-            self.completion_reward = completion_reward
-            self.failure_penalty = failure_penalty
-            self.completion_message = completion_message
-            self.failure_message = failure_message
-            self.criteria = criteria
-            self.required_items = (
-                self.extract_required_items()
-            )  # list of tuples, each tuple is (dict of item requirements, quantity needed).
-            # The dict of item requirements is composed of various keys like item_type, value, usability, sentimental_value, trade_value, scarcity, coordinate_location, name,
-            self.target = target
-            self.environment = graph_manager
-            # self.desired_results = desired_results
+    """
 
-        def extract_required_items(self):
-            ##TODO: We will need multiple paths to adding items to the required items list, including with the agents decisions and with the completion conditions. Some of this will require the agent to remember which items fulfill goals
-            required_items = (
-                []
-            )  # list of tuples, each tuple is (dict of item requirements, quantity needed).
-            # The dict of item requirements is composed of various keys like item_type, value, usability, sentimental_value, trade_value, scarcity, coordinate_location, name,
-            for criterion in self.criteria:
-                if "node_attributes" in criterion:
-                    if (
-                        "item_type" in criterion["node_attributes"]
-                        or criterion["node_attributes"]["type"] == "item"
-                    ):
-                        required_items.append(criterion["node_attributes"])
-            for condition in self.completion_conditions:
-                if "inventory.check_has_item_by_type" in condition["attribute"]:
-                    args = (
-                        re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
-                    )
-                    args = [arg.strip("'") for arg in args.split(",")]
-                    if args[0] not in [item["item_type"] for item in required_items]:
-                        required_items.append(
-                            ({"item_type": args[0]}, condition["satisfy_value"])
-                        )
-                elif "inventory.check_has_item_by_name" in condition["attribute"]:
-                    args = (
-                        re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
-                    )
-                    args = [arg.strip("'") for arg in args.split(",")]
-                    if args[0] not in [item["name"] for item in required_items]:
-                        required_items.append(
-                            ({"name": args[0]}, condition["satisfy_value"])
-                        )
-                elif "inventory.check_has_item_by_value" in condition["attribute"]:
-                    args = (
-                        re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
-                    )
-                    args = [arg.strip("'") for arg in args.split(",")]
-                    if args[0] not in [item["value"] for item in required_items]:
-                        required_items.append(
-                            ({"value": args[0]}, condition["satisfy_value"])
-                        )
-                elif "inventory.check_has_item_by_usability" in condition["attribute"]:
-                    args = (
-                        re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
-                    )
-                    args = [arg.strip("'") for arg in args.split(",")]
-                    if args[0] not in [item["usability"] for item in required_items]:
-                        required_items.append(
-                            ({"usability": args[0]}, condition["satisfy_value"])
-                        )
-                elif (
-                    "inventory.check_has_item_by_sentimental_value"
-                    in condition["attribute"]
+    def __init__(
+        self,
+        description,
+        character,
+        target,  # Represents the target of the goal (could be same as character, does not have to be)
+        score,  # Represents the importance of the goal
+        name,
+        completion_conditions,  # Dict of list of functions to check if the goal is completed, with the key being a bool representing whether the condition has been met. Example: {False: Condition(name="has_food", attribute="inventory.check_has_item_by_type(['food'])", satisfy_value=True, op="==")}
+        evaluate_utility_function,  # function that evaluates the current importance of the goal based on the character's state and the environment.
+        difficulty,  # function that calculates the difficulty of the goal based on the character's state and the environment.
+        completion_reward,  # function that calculates the reward for completing the goal based on the character's state and the environment.
+        failure_penalty,  # function that calculates the penalty for failing to complete the goal based on the character's state and the environment.
+        completion_message,  # function that generates a message when the goal is completed based on the character's state and the environment.
+        failure_message,  # function that generates a message when the goal is failed based on the character's state and the environment.
+        criteria,  # list of criteria (as dicts) that need to be met for the goal to be completed
+        graph_manager,
+        # desired_results,  # list of desired results (as dicts of dicts representing State attributes) when the goal is completed
+    ):
+        self.name = name
+        self.completion_conditions = completion_conditions
+        self.description = description
+        self.score = score
+        self.character = character
+        self.evaluate_utility_function = evaluate_utility_function
+        self.difficulty = difficulty
+        self.completion_reward = completion_reward
+        self.failure_penalty = failure_penalty
+        self.completion_message = completion_message
+        self.failure_message = failure_message
+        self.criteria = criteria
+        self.required_items = (
+            self.extract_required_items()
+        )  # list of tuples, each tuple is (dict of item requirements, quantity needed).
+        # The dict of item requirements is composed of various keys like item_type, value, usability, sentimental_value, trade_value, scarcity, coordinate_location, name,
+        self.target = target
+        self.environment = graph_manager
+        # self.desired_results = desired_results
+
+    def extract_required_items(self):
+        ##TODO: We will need multiple paths to adding items to the required items list, including with the agents decisions and with the completion conditions. Some of this will require the agent to remember which items fulfill goals
+        required_items = (
+            []
+        )  # list of tuples, each tuple is (dict of item requirements, quantity needed).
+        # The dict of item requirements is composed of various keys like item_type, value, usability, sentimental_value, trade_value, scarcity, coordinate_location, name,
+        for criterion in self.criteria:
+            if "node_attributes" in criterion:
+                if (
+                    "item_type" in criterion["node_attributes"]
+                    or criterion["node_attributes"]["type"] == "item"
                 ):
-                    args = (
-                        re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
+                    required_items.append(criterion["node_attributes"])
+        for condition in self.completion_conditions:
+            if "inventory.check_has_item_by_type" in condition["attribute"]:
+                args = re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
+                args = [arg.strip("'") for arg in args.split(",")]
+                if args[0] not in [item["item_type"] for item in required_items]:
+                    required_items.append(
+                        ({"item_type": args[0]}, condition["satisfy_value"])
                     )
-                    args = [arg.strip("'") for arg in args.split(",")]
-                    if args[0] not in [
-                        item["sentimental_value"] for item in required_items
-                    ]:
-                        required_items.append(
-                            ({"sentimental_value": args[0]}, condition["satisfy_value"])
-                        )
-                elif (
-                    "inventory.check_has_item_by_trade_value" in condition["attribute"]
-                ):
-                    args = (
-                        re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
+            elif "inventory.check_has_item_by_name" in condition["attribute"]:
+                args = re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
+                args = [arg.strip("'") for arg in args.split(",")]
+                if args[0] not in [item["name"] for item in required_items]:
+                    required_items.append(
+                        ({"name": args[0]}, condition["satisfy_value"])
                     )
-                    args = [arg.strip("'") for arg in args.split(",")]
-                    if args[0] not in [item["trade_value"] for item in required_items]:
-                        required_items.append(
-                            ({"trade_value": args[0]}, condition["satisfy_value"])
-                        )
+            elif "inventory.check_has_item_by_value" in condition["attribute"]:
+                args = re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
+                args = [arg.strip("'") for arg in args.split(",")]
+                if args[0] not in [item["value"] for item in required_items]:
+                    required_items.append(
+                        ({"value": args[0]}, condition["satisfy_value"])
+                    )
+            elif "inventory.check_has_item_by_usability" in condition["attribute"]:
+                args = re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
+                args = [arg.strip("'") for arg in args.split(",")]
+                if args[0] not in [item["usability"] for item in required_items]:
+                    required_items.append(
+                        ({"usability": args[0]}, condition["satisfy_value"])
+                    )
+            elif (
+                "inventory.check_has_item_by_sentimental_value"
+                in condition["attribute"]
+            ):
+                args = re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
+                args = [arg.strip("'") for arg in args.split(",")]
+                if args[0] not in [
+                    item["sentimental_value"] for item in required_items
+                ]:
+                    required_items.append(
+                        ({"sentimental_value": args[0]}, condition["satisfy_value"])
+                    )
+            elif "inventory.check_has_item_by_trade_value" in condition["attribute"]:
+                args = re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
+                args = [arg.strip("'") for arg in args.split(",")]
+                if args[0] not in [item["trade_value"] for item in required_items]:
+                    required_items.append(
+                        ({"trade_value": args[0]}, condition["satisfy_value"])
+                    )
 
-            return required_items
+        return required_items
 
-        def __repr__(self):
-            return f"Goal({self.name}, {self.description}, {self.score})"
+    def __repr__(self):
+        return f"Goal({self.name}, {self.description}, {self.score})"
 
-        def __str__(self):
-            return f"Goal named {self.name} with description {self.description} and score {self.score}."
+    def __str__(self):
+        return f"Goal named {self.name} with description {self.description} and score {self.score}."
 
-        def __eq__(self, other):
-            return (
-                self.name == other.name
-                and self.description == other.description
-                and self.score == other.score
-            )
+    def __eq__(self, other):
+        return (
+            self.name == other.name
+            and self.description == other.description
+            and self.score == other.score
+        )
 
-        def __hash__(self):
-            return hash((self.name, self.description, self.score))
+    def __hash__(self):
+        return hash((self.name, self.description, self.score))
 
-        def get_name(self):
-            return self.name
+    def get_name(self):
+        return self.name
 
-        def set_name(self, name):
-            self.name = name
-            return self.name
+    def set_name(self, name):
+        self.name = name
+        return self.name
 
-        def get_description(self):
-            return self.description
+    def get_description(self):
+        return self.description
 
-        def set_description(self, description):
-            self.description = description
-            return self.description
+    def set_description(self, description):
+        self.description = description
+        return self.description
 
-        def get_score(self):
-            return self.score
+    def get_score(self):
+        return self.score
 
-        def set_score(self, score):
-            self.score = score
-            return self.score
+    def set_score(self, score):
+        self.score = score
+        return self.score
 
-        def to_dict(self):
-            return {
-                "name": self.name,
-                "description": self.description,
-                "score": self.score,
-            }
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "description": self.description,
+            "score": self.score,
+        }
 
-        def check_completion(self):
-            return all(
-                [
-                    condition.check_condition()
-                    for condition in self.completion_conditions.values()
-                ]
-            )
+    def check_completion(self):
+        return all(
+            [
+                condition.check_condition()
+                for condition in self.completion_conditions.values()
+            ]
+        )
 
-        def evaluate_utility(self):
-            return self.evaluate_utility_function(
-                self.character,
-                self.character.environment,
-                self.difficulty,
-                self.criteria,
-            )
+    def evaluate_utility(self):
+        return self.evaluate_utility_function(
+            self.character,
+            self.character.environment,
+            self.difficulty,
+            self.criteria,
+        )
 
-        def calculate_difficulty(self):
-            return self.difficulty(self.character, self.environment)
+    def calculate_difficulty(self):
+        return self.difficulty(self.character, self.environment)
 
 
 class Motive:

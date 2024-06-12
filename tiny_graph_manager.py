@@ -9,6 +9,7 @@ from importlib import resources
 from itertools import chain, combinations, product
 from math import dist, inf
 import math
+from mimetypes import init
 import operator
 from os import name
 from re import T
@@ -3179,15 +3180,16 @@ class GraphManager:
                float: The estimated utility value of pursuing the goal.
         """
         utility = 0
-        # Analyze the goal and its requirements
-        # goal_requirements = goal.criteria
-        # Filter nodes based on goal requirements
-        filtered_nodes = self.get_filtered_nodes(**goal_requirements)
-        # Analyze the filtered nodes to determine potential utility
-        for node_id, node_data in filtered_nodes.items():
-            # Evaluate the utility of each node based on its attributes and relationships
-            node_utility = self.evaluate_node_utility(character, node_data)
-            utility += node_utility
+
+        # # Analyze the goal and its requirements
+        # # goal_requirements = goal.criteria
+        # # Filter nodes based on goal requirements
+        # filtered_nodes = self.get_filtered_nodes(**goal_requirements)
+        # # Analyze the filtered nodes to determine potential utility
+        # for node_id, node_data in filtered_nodes.items():
+        #     # Evaluate the utility of each node based on its attributes and relationships
+        #     node_utility = self.evaluate_node_utility(character, node_data)
+        #     utility += node_utility
         return utility
 
     def evaluate_combination(self, combo, action_viability_cost, goal_requirements):
@@ -3206,8 +3208,17 @@ class GraphManager:
         redundant_fullfilled_conditions = []
         total_cost = 0
         necessary_actions = []
+        num_actions_per_condition = {}
 
         for i, (node, action) in enumerate(combo):
+            num_actions_per_condition.update(
+                {
+                    condition: len(actions)
+                    for condition, actions in action_viability_cost[node][
+                        "actions_that_fulfill_condition"
+                    ].items()
+                }
+            )
             for condition in action_viability_cost[node][
                 "actions_that_fulfill_condition"
             ]:
@@ -3231,15 +3242,8 @@ class GraphManager:
             if len(necessary_actions) == 0:
                 necessary_actions = combo
             # Calculate the number of actions that can fulfill each condition
-            num_actions_per_condition = {
-                condition: len(actions)
-                for condition, actions in action_viability_cost[node][
-                    "actions_that_fulfill_condition"
-                ].items()
-            }
 
             # Calculate the total cost
-            total_cost = 0
             for condition in redundant_fullfilled_conditions:
                 # Get the number of actions that can fulfill this condition
                 num_actions = num_actions_per_condition.get(condition, 1)
@@ -3309,50 +3313,194 @@ class GraphManager:
                         )
                     }
                     # fulfill_multiple[node]["action_viability_cost"] = self.calculate_action_viability_cost(
-
-        # Generate combinations of actions from each node
-        # Prioritize actions based on conditions fulfilled and costs
-        all_actions = sorted(
-            list(
-                chain(
-                    *[
-                        [
-                            (
-                                len(conditions),
-                                action_viability_cost[node]["action_cost"][action],
-                                action,
-                            )
-                            for action, conditions in action_viability_cost[node][
-                                "conditions_fulfilled_by_action"
-                            ].items()
-                            if action_viability_cost[node]["viable"][action]
-                            and len(conditions) > 0
-                        ]
-                        for node in action_viability_cost
-                    ]
-                )
-            ),
-            key=lambda x: (x[0], -x[1]),
-            reverse=True,
+        goal_conditions = set(
+            cond
+            for cond, _ in action_viability_cost[node][
+                "actions_that_fulfill_condition"
+            ].items()
         )
+        remaining_conditions = goal_conditions.copy()
+        # Determine the number of viable actions and nodes and compare that to the total number of actions and nodes
+        # Estimate counts
+        total_nodes = len(action_viability_cost)
+        total_actions_per_node = (
+            sum(
+                len(node["actions_that_fulfill_condition"])
+                for node in action_viability_cost.values()
+            )
+            / total_nodes
+        )
+        viable_nodes = sum(
+            1
+            for node in action_viability_cost
+            if any(action_viability_cost[node]["viable"].values())
+        )
+        viable_actions_per_node = (
+            sum(sum(node["viable"].values()) for node in action_viability_cost.values())
+            / viable_nodes
+            if viable_nodes > 0
+            else 0
+        )
+        initial_solution = []
+        initial_cost = 0
+        # Calculate the threshold
+        if viable_nodes / total_nodes >= total_actions_per_node / (
+            viable_actions_per_node**2
+        ):
+            # Greedy initial solution
+            for condition, actions in (
+                action_viability_cost[node]["actions_that_fulfill_condition"].items()
+                for node in action_viability_cost
+                if any(action_viability_cost[node]["viable"].values())
+            ):
+                viable_actions = (
+                    x for x in actions if action_viability_cost[x[1]]["viable"][x[0]]
+                )
+                best_action, node = None, None
+                min_cost = float("inf")
+                for action in viable_actions:
+                    action_cost = action_viability_cost[action[1]]
+                    total_cost = (
+                        action_cost["action_cost"][action[0]]
+                        + action_cost["goal_cost"][action[0]]
+                    )
+                    if total_cost < min_cost:
+                        min_cost = total_cost
+                        best_action, node = action, action[1]
+                if best_action is not None:
+                    initial_solution.append((node, best_action))
+                    initial_cost += min_cost
+                else:
+                    # No viable actions for this condition, meaning the goal is impossible
+                    return float("inf")
+        else:
 
-        # Generate prioritized combinations of actions
-        action_combinations = []
-        for r in range(1, len(all_actions) + 1):
-            action_combinations.extend(
-                combinations([(node, action) for node, _, _, action in all_actions], r)
+            selected_nodes = []
+            selected_actions = []
+            total_cost = 0
+            action_cache = {}
+
+            while remaining_conditions:
+                best_node_action = None
+                best_new_conditions = set()
+                best_cost = float("inf")
+
+                for node in action_viability_cost:
+                    for action in action_viability_cost[node][
+                        "conditions_fulfilled_by_action"
+                    ]:
+                        if (node, action) in action_cache:
+                            new_conditions, new_cost = action_cache[(node, action)]
+                        else:
+                            new_conditions = {
+                                condition
+                                for condition in action_viability_cost[node][
+                                    "conditions_fulfilled_by_action"
+                                ][action]
+                                if condition in remaining_conditions
+                            }
+                            new_cost = action_viability_cost[node]["goal_cost"][action]
+                            action_cache[(node, action)] = (new_conditions, new_cost)
+
+                        if len(new_conditions) > len(best_new_conditions) or (
+                            len(new_conditions) == len(best_new_conditions)
+                            and new_cost < best_cost
+                        ):
+                            best_node_action = (node, action)
+                            best_new_conditions = new_conditions
+                            best_cost = new_cost
+                            # Early termination if all conditions are met
+                            if not remaining_conditions.difference(new_conditions):
+                                break
+                    else:
+                        continue
+                    break
+                if best_node_action:
+                    selected_nodes.append(best_node_action[0])
+                    selected_actions.append(best_node_action[1])
+                    remaining_conditions.difference_update(best_new_conditions)
+                    total_cost += best_cost
+                    if not best_new_conditions:
+                        # No new conditions were fulfilled in this iteration, break to avoid infinite loop
+                        break
+                        # Early termination if all conditions are fulfilled
+                    if not remaining_conditions:
+                        break
+
+            initial_solution = initial_solution + list(
+                zip(selected_nodes, selected_actions)
+            )
+            initial_cost = total_cost
+
+        # A* Search logic with priority queue
+        def heuristic(remaining_conditions):
+            return sum(
+                min(
+                    action_viability_cost[node]["goal_cost"][action]
+                    for action, node in condition_actions[condition]
+                )
+                for condition in remaining_conditions
             )
 
-        valid_combinations = []
+        best_cost = initial_cost
+        best_solution = initial_solution
+
+        priority_queue = [
+            (
+                initial_cost + heuristic(set(goal_conditions)),
+                initial_cost,
+                initial_solution,
+                set(goal_conditions),
+            )
+        ]
+
+        while priority_queue:
+            _, current_cost, current_solution, remaining_conditions = heappop(
+                priority_queue
+            )
+
+            if not remaining_conditions:
+                if current_cost < best_cost:
+                    best_cost = current_cost
+                    best_solution = current_solution
+                continue
+
+            for condition in remaining_conditions:
+                for action, node in condition_actions[condition]:
+                    if any(node == n for n, _ in current_solution):
+                        continue
+                    new_solution = current_solution + [(node, action)]
+                    new_cost = (
+                        current_cost + action_viability_cost[node]["goal_cost"][action]
+                    )
+                    new_remaining_conditions = remaining_conditions - {condition}
+
+                if new_cost >= best_cost:
+                    continue
+
+                heuristic_cost = new_cost + heuristic(new_remaining_conditions)
+                if heuristic_cost >= best_cost:
+                    continue
+                heappush(
+                    priority_queue,
+                    (
+                        heuristic_cost,
+                        new_cost,
+                        new_solution,
+                        new_remaining_conditions,
+                    ),
+                )
+
+        valid_combinations = [best_solution]
         with ProcessPoolExecutor() as executor:
             future_to_combo = {
                 executor.submit(
                     self.evaluate_combination,
                     combo,
                     action_viability_cost,
-                    goal_requirements,
+                    goal_conditions,
                 ): combo
-                for combo in action_combinations
+                for combo in combinations(best_solution, len(best_solution))
             }
             for future in as_completed(future_to_combo):
                 combo = future_to_combo[future]
@@ -3827,19 +3975,31 @@ class GraphManager:
                 )
                 for condition, fulfilled in fulfilled_conditions.items():
                     if fulfilled:
-                        if fulfilled:
-                            conditions_fulfilled_by_action.setdefault(
-                                interaction, []
-                            ).append(condition)
-                            actions_that_fulfill_condition.setdefault(
-                                condition, []
-                            ).append(interaction)
+                        conditions_fulfilled_by_action.setdefault(
+                            tuple([interaction, node]), []
+                        ).append(condition)
+                        actions_that_fulfill_condition.setdefault(condition, []).append(
+                            tuple([interaction, node])
+                        )
 
                 action_cost[interaction] = interaction.cost
                 goal_cost[interaction] += self.calculate_action_effect_cost(
                     interaction, character, goal
                 )
-                viable[interaction] = True
+                if any(fulfilled_conditions.values()):
+                    viable[interaction] = True
+                else:
+                    viable[interaction] = False
+                if all(fulfilled_conditions.values()):
+                    result = {
+                        "action_cost": action_cost,
+                        "viable": viable,
+                        "goal_cost": goal_cost,
+                        "conditions_fulfilled_by_action": conditions_fulfilled_by_action,
+                        "actions_that_fulfill_condition": actions_that_fulfill_condition,
+                    }
+                    self.dp_cache[cache_key] = result
+                    return result
             else:
                 action_cost[interaction] += self.calculate_action_difficulty(
                     interaction, character
