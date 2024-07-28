@@ -3,7 +3,7 @@
 Where it happens: Part of goap_system.py or a dedicated utility module
 What happens: Actions are evaluated based on their expected outcomes, like improving mood or health, with adjustments based on current needs and previous experiences. """
 
-from tiny_characters import Goal
+# from tiny_characters import Goal
 from actions import Action, State
 
 

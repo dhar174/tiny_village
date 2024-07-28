@@ -20,12 +20,14 @@ preconditions_dict = {
         {
             "name": "energy",
             "attribute": "energy",
+            "target": "initiator",
             "satisfy_value": 10,
             "operator": "gt",
         },
         {
             "name": "extraversion",
             "attribute": "personality_traits.extraversion",
+            "target": "initiator",
             "satisfy_value": 50,
             "operator": "gt",
         },
@@ -34,7 +36,19 @@ preconditions_dict = {
 
 
 class Building(Location):
-    def __init__(self, name,x, y, height, width, length, stories=1, address="123 Main St",action_system: ActionSystem = ActionSystem(), door = 
+    def __init__(
+        self,
+        name,
+        x,
+        y,
+        height,
+        width,
+        length,
+        stories=1,
+        address="123 Main St",
+        action_system: ActionSystem = ActionSystem(),
+        door=None,
+    ):
         self.name = name
         self.height = height
         self.width = width
@@ -42,7 +56,7 @@ class Building(Location):
         self.address = address
         self.volume = self.volume()
         self.stories = stories
-        self.door
+        self.door = door
 
         self.area = self.area()
         self.id = uuid.uuid4()
@@ -75,7 +89,7 @@ class Building(Location):
         return self.length * self.width * self.height
 
     def area(self):
-        return (self.length * self.width) * self.stories
+        return int((self.length * self.width) * self.stories)
 
     def calculate_area_per_floor(self):
         return self.area() / self.stories
@@ -88,6 +102,8 @@ class House(Building):
     def __init__(
         self,
         name,
+        x,
+        y,
         height,
         width,
         length,
@@ -97,8 +113,20 @@ class House(Building):
         bathrooms=1,
         initial_beauty_value=10,
         price_value=0,
+        door=None,
     ):
-        super().__init__(name, height, width, length, stories, address)
+        super().__init__(
+            name,
+            x,
+            y,
+            width,
+            height,
+            length,
+            stories,
+            address,
+            action_system=ActionSystem(),
+            door=door,
+        )
         self.name = name
         self.height = height
         self.width = width

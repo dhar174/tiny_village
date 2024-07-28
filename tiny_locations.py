@@ -1,3 +1,4 @@
+from math import cos
 from actions import Action, State, ActionSystem
 
 
@@ -21,12 +22,14 @@ preconditions_dict = {
         {
             "name": "energy",
             "attribute": "energy",
+            "target": "initiator",
             "satisfy_value": 10,
             "operator": "gt",
         },
         {
             "name": "extraversion",
             "attribute": "personality_traits.extraversion",
+            "target": "initiator",
             "satisfy_value": 50,
             "operator": "gt",
         },
@@ -58,6 +61,7 @@ class Location:
                     preconditions_dict["Enter Location Boundary"]
                 ),
                 effect_dict["Enter Location Boundary"],
+                cost=0,
             )
         ]
 

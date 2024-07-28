@@ -280,6 +280,21 @@ class JobRules:
                 ["none"],
                 ["wealth", "happiness", "job performance"],
             ),
+            JobRoles(
+                "software engineer",
+                "writes code",
+                10,
+                [
+                    "customer service",
+                    "mathematics",
+                    "communication",
+                    "time management",
+                    "organization",
+                ],
+                ["high school diploma"],
+                ["none"],
+                ["wealth", "happiness", "job performance"],
+            ),
         ]
 
     def __repr__(self):

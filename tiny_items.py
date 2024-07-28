@@ -26,7 +26,7 @@ class ItemObject:
         self.quantity = quantity
         self.id = uuid.uuid4()
         self.item_type = item_type
-        self.location = Location(0, 0)
+        self.location = Location(name, 0, 0, 0, 0, ActionSystem())
         self.coordinate_location = (0, 0)
         self.possible_interactions: List[Action] = []
 
@@ -151,15 +151,26 @@ preconditions_dict = {
             "name": "energy",
             "attribute": "energy",
             "satisfy_value": 10,
+            "target": "initiator",
             "operator": "gt",
         },
         {
             "name": "extraversion",
             "attribute": "personality_traits.extraversion",
             "satisfy_value": 50,
+            "target": "initiator",
             "operator": "gt",
         },
-    ]
+    ],
+    "Open": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "satisfy_value": 10,
+            "target": "initiator",
+            "operator": "gt",
+        }
+    ],
 }
 
 
@@ -169,6 +180,7 @@ class FoodItem(ItemObject):
         name,
         description,
         value,
+        perishable,
         weight,
         quantity,
         calories=0,
@@ -179,7 +191,7 @@ class FoodItem(ItemObject):
         possible_interactions = [
             Action(
                 "Eat Food",
-                action_system.instantiate_condition(preconditions_dict["Eat"]),
+                action_system.instantiate_conditions(preconditions_dict["Eat"]),
                 effects=effect_dict["Eat"],
                 cost=1,
             ),
@@ -262,7 +274,7 @@ class Door(ItemObject):
         possible_interactions = [
             Action(
                 "Open Door",
-                action_system.instantiate_condition(preconditions_dict["Open"]),
+                action_system.instantiate_conditions(preconditions_dict["Open"]),
                 effects=effect_dict["Open"],
                 cost=1,
             ),
@@ -330,21 +342,42 @@ class ItemInventory:
         medicine_items: List[ItemObject] = [],
         misc_items: List[ItemObject] = [],
     ):
-        self.food_items = self.set_food_items(food_items)
-        self.clothing_items = self.set_clothing_items(clothing_items)
-        self.tools_items = self.set_tools_items(tools_items)
-        self.weapons_items = self.set_weapons_items(weapons_items)
-        self.medicine_items = self.set_medicine_items(medicine_items)
-        self.misc_items = self.set_misc_items(misc_items)
+        self.all_items = []
+        self.food_items = []
+        self.clothing_items = []
+        self.tools_items = []
+        self.weapons_items = []
+        self.medicine_items = []
+        self.misc_items = []
+        if food_items is not None:
+            self.food_items = self.set_food_items(food_items)
+        if clothing_items is not None:
+            self.clothing_items = self.set_clothing_items(clothing_items)
+        if tools_items is not None:
+            self.tools_items = self.set_tools_items(tools_items)
+        if weapons_items is not None:
+            self.weapons_items = self.set_weapons_items(weapons_items)
+        if medicine_items is not None:
+            self.medicine_items = self.set_medicine_items(medicine_items)
+        if misc_items is not None:
+            self.misc_items = self.set_misc_items(misc_items)
         # make one list of all items
-        self.all_items = (
+        if self.all_items == [] and (
             self.food_items
-            + self.clothing_items
-            + self.tools_items
-            + self.weapons_items
-            + self.medicine_items
-            + self.misc_items
-        )
+            or self.clothing_items
+            or self.tools_items
+            or self.weapons_items
+            or self.medicine_items
+            or self.misc_items
+        ):
+            self.all_items = (
+                self.food_items
+                + self.clothing_items
+                + self.tools_items
+                + self.weapons_items
+                + self.medicine_items
+                + self.misc_items
+            )
 
         self.ops = {
             "gt": operator.gt,
@@ -688,27 +721,39 @@ class ItemInventory:
 
         if item_type == "food":
             return bool(
-                True if self.ops[oper](sum(self.count_food_items_total()), amount) else False
+                True
+                if self.ops[oper](sum(self.count_food_items_total()), amount)
+                else False
             )
         elif item_type == "clothing":
             return bool(
-                True if self.ops[oper](sum(self.count_clothing_items_total()), amount) else False
+                True
+                if self.ops[oper](sum(self.count_clothing_items_total()), amount)
+                else False
             )
         elif item_type == "tools":
             return bool(
-                True if self.ops[oper](sum(self.count_tools_items_total()), amount) else False
+                True
+                if self.ops[oper](sum(self.count_tools_items_total()), amount)
+                else False
             )
         elif item_type == "weapons":
             return bool(
-                True if self.ops[oper](sum(self.count_weapons_items_total()), amount) else False
+                True
+                if self.ops[oper](sum(self.count_weapons_items_total()), amount)
+                else False
             )
         elif item_type == "medicine":
             return bool(
-                True if self.ops[oper](sum(self.count_medicine_items_total()), amount) else False
+                True
+                if self.ops[oper](sum(self.count_medicine_items_total()), amount)
+                else False
             )
         elif item_type == "misc":
             return bool(
-                True if self.ops[oper](sum(self.count_misc_items_total()), amount) else False
+                True
+                if self.ops[oper](sum(self.count_misc_items_total()), amount)
+                else False
             )
         else:
             return False

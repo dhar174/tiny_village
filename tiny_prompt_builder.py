@@ -1187,8 +1187,7 @@ class DescriptorMatrices:
         }
 
         self.financial_situation = {
-            "rich",
-            [
+            "rich": [
                 "you are financially well-off",
                 "you are rich",
                 "you are wealthy",
@@ -1242,15 +1241,13 @@ class DescriptorMatrices:
                 "you are well-protected",
                 "you are well-secured",
             ],
-            "stable",
-            [
+            "stable": [
                 "your financial situation is stable",
                 "you are financially stable",
                 "you are financially secure",
                 "you are financially comfortable",
             ],
-            "poor",
-            [
+            "poor": [
                 "you are financially poor",
                 "you are financially struggling",
                 "you are financially unstable",
@@ -1272,14 +1269,14 @@ class DescriptorMatrices:
                 "you are in the hole",
                 "you are in the negative",
             ],
-            "bankrupt",
-            [
+            "bankrupt": [
                 "you are bankrupt",
                 "you are insolvent",
                 "you are in debt",
                 "you are in the red",
                 "you are in the hole",
                 "you are in the negative",
+                "you are destitute",
             ],
         }
 
@@ -1294,8 +1291,7 @@ class DescriptorMatrices:
         }
 
         self.weather_description = {
-            "default",
-            [
+            "default": [
                 "it's an average day outside",
                 "it's a typical day outside",
                 "it's a normal day outside",
@@ -1306,20 +1302,17 @@ class DescriptorMatrices:
                 "it's a common day outside",
                 "it's a standard day out there today",
             ],
-            "sunny",
-            [
+            "sunny": [
                 "it's a sunny day outside",
                 "it's a bright day outsid",
                 "it's a clear day out",
             ],
-            "cloudy",
-            [
+            "cloudy": [
                 "it's a cloudy day outside",
                 "it's a cloudy day out",
                 "it's a bit overcast outside",
             ],
-            "rainy",
-            [
+            "rainy": [
                 "it's a rainy day outside",
                 "it's a bit drizzly outside",
                 "it's a bit rainy outside",
@@ -1327,8 +1320,7 @@ class DescriptorMatrices:
                 "it's a bit damp outside",
                 "it's a bit moist outside",
             ],
-            "snowy",
-            [
+            "snowy": [
                 "it's a snowy day outside",
                 "it's a bit snowy outside",
                 "it's a bit icy outside",
@@ -1351,8 +1343,7 @@ class DescriptorMatrices:
                 "it's a bit wintry outside",
                 "it's a bit wintery outside",
             ],
-            "windy",
-            [
+            "windy": [
                 "it's a windy day outside",
                 "it's a bit windy outside",
                 "it's a bit breezy outside",
@@ -1360,14 +1351,12 @@ class DescriptorMatrices:
                 "it's a bit blustery outside",
                 "it's a bit windy out there today",
             ],
-            "stormy",
-            [
+            "stormy": [
                 "it's a stormy day outside",
                 "it's a bit stormy outside",
                 "it's a bit stormy out there today",
             ],
-            "foggy",
-            [
+            "foggy": [
                 "it's a foggy day outside",
                 "it's a bit foggy outside",
                 "it's a bit misty outside",
@@ -1397,7 +1386,7 @@ class DescriptorMatrices:
         }
 
         self.action_descriptors = {
-            "buy_food"[
+            "buy_food": [
                 "Go to the market",
                 "Go to the grocery store",
                 "Go to the supermarket",
@@ -1527,18 +1516,13 @@ class DescriptorMatrices:
             action, self.action_descriptors["default"]
         ).random()
 
+    def get_job_adjective(self, job):
+        return descriptors.get_job_adjective(job)
+
 
 # Create a character
 
-emily = tc.Character(
-    "Emily",
-    "software engineer",
-    "healthy",
-    "full",
-    "rich",
-    "buy a house",
-    "won the lottery",
-)
+
 descriptors = DescriptorMatrices()
 
 
@@ -1557,6 +1541,12 @@ class PromptBuilder:
         self.prioritized_actions = self.action_options.prioritize_actions(
             self.character
         )
+
+    def generate_completion_message(self, character, action):
+        return f"{character.name} has {DescriptorMatrices.get_action_descriptors(action)} {action}."
+
+    def generate_failure_message(self, character, action):
+        return f"{character.name} has failed to {DescriptorMatrices.get_action_descriptors(action)} {action}."
 
     def calculate_action_utility(self):
         self.action_utilities = self.needs_priorities

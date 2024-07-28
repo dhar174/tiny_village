@@ -23,10 +23,10 @@ from pkg_resources import add_activation_listener
 from regex import F
 from sympy import li
 from torch import cond
-from tiny_characters import Character, Goal
+from tiny_types import Character, Goal
+from tiny_types import Location, Event
+
 from tiny_jobs import Job
-from tiny_locations import Location
-from tiny_event_handler import Event
 from actions import Action, State
 from tiny_items import ItemInventory, ItemObject
 import tiny_memories
@@ -265,6 +265,8 @@ class GraphManager:
 
     # Node Addition Methods
     def add_character_node(self, char: Character):
+        from tiny_characters import Character
+
         if len(self.characters) == 0:
             self.character_attributes = char.to_dict().keys()
         self.characters[char.name] = char
@@ -286,6 +288,8 @@ class GraphManager:
         )
 
     def add_location_node(self, loc: Location):
+        from tiny_locations import Location
+
         if len(self.locations) == 0:
             self.location_attributes = loc.to_dict().keys()
         self.locations[loc.name] = loc
@@ -301,6 +305,7 @@ class GraphManager:
         )
 
     def add_event_node(self, event: Event):
+        from tiny_event_handler import Event
         if len(self.events) == 0:
             self.event_attributes = event.to_dict().keys()
         self.events[event.name] = event
@@ -583,6 +588,32 @@ class GraphManager:
                 attribute_dict["reward_level"],
                 attribute_dict["distance"],
             )
+        
+    def calculate_reward(self, node, other_node, attribute_dict=None):
+        if attribute_dict is None:
+            attribute_dict = self.G[node][other_node]
+        if attribute_dict["edge_type"] == "job_activity":
+            if self.G.get_edge_data(node, other_node)["reward_level"]:
+                return self.G.get_edge_data(node, other_node)["reward_level"]
+            else:
+                if self.get_node(other_node)["type"] == "activity":
+                    return self.get_node(other_node).apply_effects()
+        elif attribute_dict["edge_type"] == "event_activity":
+            if self.G.get_edge_data(node, other_node)["reward_level"]:
+                return self.G.get_edge_data(node, other_node)["reward_level"]
+            else:
+                if self.get_node(other_node)["type"] == "activity":
+                    return self.get_node(other_node).apply_effects()
+        elif isinstance(self.get_node(node), Action):
+            return self.get_node(node).apply_effects()
+        elif isinstance(self.get_node(other_node), Action):
+            return self.get_node(other_node).apply_effects()
+        else:
+            return 0
+        
+    def calculate_penalty(self, node, other_node, attribute_dict=None):
+        return self.calculate_edge_cost(node, other_node, attribute_dict)
+        
 
     def calculate_char_char_edge_cost(
         self,
@@ -3257,6 +3288,19 @@ class GraphManager:
             return total_cost, tuple(necessary_actions)
         return None
 
+    def initialize_cache(self, action_viability_cost):
+        action_cache = {}
+        for node in action_viability_cost:
+            for action in action_viability_cost[node]["conditions_fulfilled_by_action"]:
+                new_conditions = set(
+                    action_viability_cost[node]["conditions_fulfilled_by_action"][
+                        action
+                    ]
+                )
+                new_cost = action_viability_cost[node]["goal_cost"][action]
+                action_cache[(node, action)] = (new_conditions, new_cost)
+        return action_cache
+
     def calculate_goal_difficulty(self, goal: Goal, character: Character):
         """
         Calculate the difficulty of a goal based on its complexity and requirements.
@@ -3265,6 +3309,8 @@ class GraphManager:
         Returns:
             float: The difficulty score of the goal.
         """
+        from tiny_characters import Character
+
         difficulty = 0
         # Analyze the goal requirements and complexity
         goal_requirements = goal.criteria  # goal_requirements will look like: {
@@ -3594,6 +3640,15 @@ class GraphManager:
         raise NotImplementedError
 
     def calculate_preconditions_difficulty(self, preconditions, initiator: Character):
+        """
+        Calculate the difficulty of a set of preconditions based on the actions required to satisfy them.
+        Args:
+            preconditions (list): The preconditions to evaluate.
+            initiator (Character): The character initiating the actions.
+        Returns:
+            float: The difficulty score of the preconditions.
+        """
+        from tiny_characters import Character
 
         action_cost = {}
 
@@ -3696,6 +3751,8 @@ class GraphManager:
         Returns:
             float: The cost of the action based on its effects.
         """
+        from tiny_characters import Character
+
         goal_cost = 0
         conditions = goal.completion_conditions
         weights = {}
@@ -3921,6 +3978,7 @@ class GraphManager:
         Returns:
             float: The difficulty score of the action.
         """
+        from tiny_characters import Character
 
         difficulty = action.cost
         difficulty += self.calculate_preconditions_difficulty(
@@ -3938,6 +3996,8 @@ class GraphManager:
         Returns:
             dict(cost: float, viable: bool, goal_cost: float): The cost of the action, whether it is viable, and the cost of the action on the goal.
         """
+        from tiny_characters import Character
+
         cache_key = (node, goal, character)
         if cache_key in self.dp_cache:
             return self.dp_cache[cache_key]
@@ -4033,6 +4093,7 @@ class GraphManager:
         Returns:
             dict: A dictionary of booleans indicating whether each completion condition is met.
         """
+        from tiny_characters import Character
 
         goal_copy = copy.deepcopy(goal)
         completion_conditions = (

@@ -7,6 +7,5 @@
 	"settings": {
 		"scm.workingSets.enabled": true,
 		"scm.workingSets.default": "empty",
-		"notebook.codeActionsOnSave": {}
 	}
 }

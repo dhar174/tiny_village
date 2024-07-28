@@ -19,8 +19,9 @@ from venv import create
 
 # from tiny_characters import Character
 
-from tiny_graph_manager import GraphManager as graph_manager
-from tiny_util_funcs import isnumeric
+from tiny_types import GraphManager as graph_manager
+from tiny_types import Character, Location, Item, Event
+from tiny_util_funcs import is_numeric
 
 
 class State:
@@ -152,7 +153,7 @@ class Action:
         name,
         preconditions,
         effects,
-        cost,
+        cost=0,
         target=None,
         initiator=None,
         # change_value=None,
@@ -200,7 +201,7 @@ class Action:
             and effect["change_value"].endswith(")")
         ):
             state[effect["attribute"]] = state[effect["change_value"]]
-        elif effect["change_value"] and isnumeric(effect["change_value"]):
+        elif effect["change_value"] and is_numeric(effect["change_value"]):
             state[effect["attribute"]] = (
                 state.get(effect["attribute"], 0) + effect["change_value"]
             )
@@ -227,7 +228,7 @@ class Action:
                     and effect["change_value"].endswith(")")
                 ):
                     state[effect["attribute"]] = state[effect["change_value"]]
-                elif effect["change_value"] and isnumeric(effect["change_value"]):
+                elif effect["change_value"] and is_numeric(effect["change_value"]):
                     state[effect["attribute"]] = (
                         state.get(effect["attribute"], 0) + effect["change_value"]
                     )
@@ -267,6 +268,8 @@ class Action:
             method(*method_args)
 
     def execute(self, target=None, initiator=None, extra_targets=[], change_value=None):
+        from tiny_graph_manager import GraphManager as graph_manager
+
         if initiator is not None and self.initiator is None:
             self.initiator = initiator
         else:
@@ -321,6 +324,10 @@ class Action:
                                         d["method_args"],
                                     )
                         else:
+                            from tiny_characters import Character
+                            from tiny_locations import Location
+                            from tiny_items import Item
+
                             try:
                                 classes_list = [
                                     "Character",

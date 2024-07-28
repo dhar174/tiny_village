@@ -27,7 +27,7 @@ Where it happens: goap_system.py and graph_manager.py
 What happens: The GOAP planner uses the graph to analyze relationships and preferences, and formulates a plan consisting of a sequence of actions that maximize the character’s utility for the day.
 """
 
-from tiny_characters import Goal
+from tiny_types import Goal
 from actions import Action, State
 from tiny_graph_manager import GraphManager
 
@@ -78,6 +78,11 @@ class Plan:
         return True
 
     def replan(self):
+        """
+        Replans the sequence of actions based on the current game state.
+        """
+        from tiny_characters import Goal
+
         print("Replanning based on new game state...")
         # # Example logic for dynamic replanning
         # if self.character.get_state().get("hunger") > 80:
@@ -245,6 +250,8 @@ class GOAPPlanner:
         Returns:
             plan (list): A list of actions that form a plan to achieve the goal.
         """
+        from tiny_characters import Goal
+
         # Initialize the open list with the initial state
         open_list = [(char_state, [])]
         visited_states = set()

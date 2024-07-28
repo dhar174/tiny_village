@@ -5,6 +5,7 @@ import dis
 import html
 import json
 import pickle
+import random
 
 # from locale import normalize
 import math
@@ -1575,11 +1576,16 @@ class FlatMemoryAccess:
             # print(f"Error retrieving embedding for query {query}")
             return {}
         if self.faiss_index is None:
+            raise ValueError("FAISS index is not initialized")
             self.initialize_faiss_index(query_embedding.shape[1], "ip")
 
         # self.faiss_index.nprobe = num_clusters
         query_vec = query_embedding.cpu().detach().numpy()
         distances, indices = self.faiss_index.search(x=query_vec, k=top_k)
+
+        assert len(indices) == len(
+            distances
+        ), "Indices and distances are not the same length"
 
         if similarity_metric == "cosine":
             # Convert L2 distances to cosine similarity scores
@@ -1601,7 +1607,12 @@ class FlatMemoryAccess:
         similar_memories = {
             self.specific_memories[self.index_id_to_node_id[idx]]: float(similarity)
             for idx, similarity in zip(indices[0], similarities[0])
-            if idx != -1 and similarity > threshold
+            if (
+                idx != -1
+                and similarity > threshold
+                and self.index_id_to_node_id[idx] in self.specific_memories
+                and len(indices[0]) == len(similarities[0])
+            )
         }
         assert isinstance(
             similar_memories, dict
@@ -4991,7 +5002,7 @@ class MemoryManager:
 
 
 # Function to manage the index and search
-def manage_index_and_search(index_type, normalization, filename, memory_dict):
+def manage_index_and_search(index_type, normalization, filename, memory_dict, queries):
     # Check if the index file exists and initialize accordingly
     matching_type = {
         "ip": "IndexFlatIP",
@@ -5025,8 +5036,8 @@ def manage_index_and_search(index_type, normalization, filename, memory_dict):
 
     # Perform the search for each query and store results
     for query in queries:
-        memory_dict[query] = manager.search_memories(query)
 
+        memory_dict[query] = manager.search_memories(query)
     # Save the index after processing
     manager.flat_access.save_index_to_file(filename)
 
@@ -5120,12 +5131,16 @@ if __name__ == "__main__":
         print("No test memories file found")
         raise FileNotFoundError
 
+    random_index = random.randint(0, len(memories) - 1)
+
     if (
-        manager.flat_access.get_specific_memory_by_description(memories[0]["memory"])
+        manager.flat_access.get_specific_memory_by_description(
+            memories[random_index]["memory"]
+        )
         is None
     ):
         print(
-            f"\n Test specific memory: {memories[0]['memory']} not found in flat access memories, so adding test file memories"
+            f"\n Test specific memory: {memories[random_index]['memory']} not found in flat access memories, so adding test file memories"
         )
 
         # Process each memory entry
@@ -5154,7 +5169,7 @@ if __name__ == "__main__":
                     )
     else:
         print(
-            f"\n Test specific memory: {memories[0]['memory']} found in flat access memories, so not adding test file memories"
+            f"\n Test specific memory: {memories[random_index]['memory']} found in flat access memories, so not adding test file memories"
         )
 
     # print(f"\n \n \n Keywords for each memory: {[(mem.description, mem.keywords) for mem in manager.hierarchy.general_memories]} \n \n \n")
@@ -5382,8 +5397,14 @@ if __name__ == "__main__":
         "What is the current state of the ebola outbreak?",
         "I am a farmer, what crop should I grow to make the most profit?",
         "Is the new iPhone worth buying?",
-        "As a farmer, what crop would be make the most money?",
+        "Should I purchase a new iPhone?",
+        "As a farmer, what crop would make the most money?",
+        "What can I grow on my farm to get the most bang from my buck?",
         "What farm vegetable is selling the most these days?",
+        "What farm vegetable is selling the best these days?",
+        "What did Billy buy at the store?",
+        "Who bought cheese at the shop?",
+        "Who is both learning to sing and play the guitar?",
     ]
 
     # Initialize dictionaries to store results
@@ -5392,7 +5413,7 @@ if __name__ == "__main__":
     memories_l2 = {}
 
     # Manage and search memories for IP without normalization
-    manage_index_and_search("ip", False, "ip_no_norm.bin", memories_ip)
+    manage_index_and_search("ip", False, "ip_no_norm.bin", memories_ip, queries)
 
     print(f"\n About to save \n \n")
     manager.save_all_flat_access_memories_to_file("flat_access_memories.pkl")
@@ -5401,20 +5422,23 @@ if __name__ == "__main__":
     )
 
     # Manage and search memories for IP with normalization
-    manage_index_and_search("ip", True, "ip_norm.bin", memories_ip_norm)
+    manage_index_and_search("ip", True, "ip_norm.bin", memories_ip_norm, queries)
     manager.flat_access.save_all_specific_memories_embeddings_to_file(
         "test_specific_memories"
     )
     # Manage and search memories for L2 similarity
-    manage_index_and_search("l2", False, "l2.bin", memories_l2)
+    manage_index_and_search("l2", False, "l2.bin", memories_l2, queries)
     print(f"\n\n\n")
     for query in queries:
         print(f"\n Query: {query} \n")
+        print(f"\n IP No Norm: {memories_ip[query]} \n")
         established_facts = []
         memory = None
         i = 0
         for mem in memories_ip[query]:
-            print(f"IP No Norm: Facts: {mem.facts}, Description: {mem.description} \n")
+            print(
+                f"IP No Norm: Facts: {mem.facts}, Description: {mem.description} Weight: {memories_ip[query][mem]} \n"
+            )
             i += 1
             if i == 1:
                 established_facts += mem.facts
@@ -5422,14 +5446,18 @@ if __name__ == "__main__":
         i = 0
 
         for mem in memories_ip_norm[query]:
-            print(f"IP Norm: {mem.facts}, Description: {mem.description} \n")
+            print(
+                f"IP Norm: {mem.facts}, Description: {mem.description} Weight: {memories_ip_norm[query][mem]} \n"
+            )
         #     i+=1
         #     if i == 1:
         #         established_facts.append(mem.facts)
         # i = 0
 
         for mem in memories_l2[query]:
-            print(f"L2: {mem.facts}, Description: {mem.description} \n")
+            print(
+                f"L2: {mem.facts}, Description: {mem.description} Weight: {memories_l2[query][mem]} \n"
+            )
         #     i += 1
         #     if i == 1:
         #         established_facts.append(mem.facts)

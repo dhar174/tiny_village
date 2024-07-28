@@ -2,6 +2,7 @@ import re
 import spacy
 import os
 import json
+import datetime
 
 os.environ["HF_HOME"] = "/mnt/d/transformers_cache"
 
@@ -1467,8 +1468,23 @@ if __name__ == "__main__":
     # open test_memories.json
     with open("test_memories.json") as f:
         queries = json.load(f)
+
     for query in queries:
+
         print(f"Query: {query}")
         templates = main(query["memory"], nlp)
         print(f"Templates: {templates}")
         print("\n")
+        # Save query and templates to a file named after the datetime
+        # Calculate the current time rounded to the nearest 3-hour interval
+        now = datetime.datetime.now()
+        rounded_hour = (now.hour // 3) * 3
+        rounded_time = now.replace(hour=rounded_hour, minute=0, second=0, microsecond=0)
+
+        # Generate the filename using the rounded time
+        filename = f"{rounded_time}_results.txt"
+
+        with open(filename, "a") as ff:
+            ff.write(f"\n Query: {query}\n")
+            ff.write(f"Templates: {templates}\n")
+            ff.write(f"\n\n")

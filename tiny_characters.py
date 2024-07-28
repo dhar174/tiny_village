@@ -1,6 +1,5 @@
 # This file contains the Character class, which is used to represent a character in the game.
 
-
 from ast import arg
 from calendar import c
 import heapq
@@ -10,20 +9,22 @@ import re
 from typing import List
 import uuid
 from numpy import rint
-
+from tiny_types import PromptBuilder
 from pyparsing import Char
+from sympy import im
 from torch import eq, rand
+import logging
 
-import tiny_buildings as tb
+logging.basicConfig(level=logging.DEBUG)
+from tiny_types import House, CreateBuilding, Action, State, ActionSystem
+
 from actions import (
-    Action,
     ActionGenerator,
     ActionTemplate,
     Condition,
     Skill,
     JobSkill,
     ActionSkill,
-    ActionSystem,
     State,
 )
 from tiny_event_handler import Event
@@ -431,7 +432,7 @@ class Goal:
             self.criteria,
         )
 
-    def calculate_difficulty(self):
+    def calculate_goal_difficulty(self):
         return self.difficulty(self.character, self.environment)
 
 
@@ -524,6 +525,25 @@ class PersonalMotives:
         self.material_goods_motive = self.set_material_goods_motive(
             material_goods_motive
         )
+        self._attributes = [
+            "hunger_motive",
+            "wealth_motive",
+            "mental_health_motive",
+            "social_wellbeing_motive",
+            "happiness_motive",
+            "health_motive",
+            "shelter_motive",
+            "stability_motive",
+            "luxury_motive",
+            "hope_motive",
+            "success_motive",
+            "control_motive",
+            "job_performance_motive",
+            "beauty_motive",
+            "community_motive",
+            "material_goods_motive",
+        ]
+        self._index = 0
 
     def __repr__(self):
         return f"PersonalMotives({self.hunger_motive}, {self.wealth_motive}, {self.mental_health_motive}, {self.social_wellbeing_motive}, {self.happiness_motive})"
@@ -550,6 +570,18 @@ class PersonalMotives:
                 self.happiness_motive,
             )
         )
+
+    def __iter__(self):
+        self._index = 0  # Reset index on new iteration
+        return self
+
+    def __next__(self):
+        if self._index < len(self._attributes):
+            attr_name = self._attributes[self._index]
+            self._index += 1
+            return getattr(self, attr_name)
+        else:
+            raise StopIteration
 
     def get_hunger_motive(self):
         return self.hunger_motive
@@ -762,13 +794,15 @@ example_criteria10 = [
 example_criteria11 = [
     {
         "offer_item_trade": ItemInventory(
-            items=[
+            food_items=[
                 FoodItem(
                     name="Apple",
                     description="A juicy red apple.",
                     value=1,
                     perishable=True,
-                    nutrition_value=2,
+                    weight=0.5,
+                    quantity=1,
+                    calories=2,
                 )
             ]
         ),
@@ -826,8 +860,15 @@ example_criteria11 = [
 
 
 def motive_to_goals(
-    motive, character, graph_manager: GraphManager, goap_planner: GOAPPlanner
+    motive,
+    character,
+    graph_manager: GraphManager,
+    goap_planner: GOAPPlanner,
+    prompt_builder: PromptBuilder,
 ):
+    from tiny_graph_manager import GraphManager
+    from tiny_prompt_builder import PromptBuilder
+
     goals = []
     if motive.name == "hunger":
         goals.append(
@@ -849,13 +890,14 @@ def motive_to_goals(
                         )
                     ]
                 },
-                evaluate_utility=tuf.evaluate_goal_importance,
-                difficulty=graph_manager.calculate_difficulty,
+                evaluate_utility_function=tuf.evaluate_goal_importance,
+                difficulty=graph_manager.calculate_goal_difficulty,
                 completion_reward=graph_manager.calculate_reward,
                 failure_penalty=graph_manager.calculate_penalty,
-                completion_message=graph_manager.generate_completion_message,
-                failure_message=graph_manager.generate_failure_message,
+                completion_message=prompt_builder.generate_completion_message,
+                failure_message=prompt_builder.generate_failure_message,
                 criteria=example_criteria5,
+                graph_manager=graph_manager,
             )
         )
         goals.append(
@@ -905,11 +947,18 @@ def motive_to_goals(
 
 class GoalGenerator:
     def __init__(
-        self, personal_motives, graph_manager: GraphManager, goap_planner: GOAPPlanner
+        self,
+        personal_motives,
+        graph_manager: GraphManager,
+        goap_planner: GOAPPlanner,
+        prompt_builder: PromptBuilder,
     ):
+        from tiny_graph_manager import GraphManager
+
         self.personal_motives = personal_motives
         self.graph_manager = graph_manager
         self.goap_planner = goap_planner
+        self.prompt_builder = prompt_builder
 
     def generate_goals(self, character):
         if isinstance(character, str):
@@ -918,7 +967,15 @@ class GoalGenerator:
             raise ValueError("Invalid character data type or character not found.")
         goals = []
         for motive in self.personal_motives:
-            goals.extend(motive_to_goals(motive, character))
+            goals.extend(
+                motive_to_goals(
+                    motive,
+                    character,
+                    self.graph_manager,
+                    self.goap_planner,
+                    self.prompt_builder,
+                )
+            )
         for goal in goals:
             for item in goal.required_items:
                 character.update_required_items(item)
@@ -1163,12 +1220,14 @@ preconditions_dict = {
         {
             "name": "energy",
             "attribute": "energy",
+            "target": "initiator",
             "satisfy_value": 10,
             "operator": "gt",
         },
         {
             "name": "extraversion",
             "attribute": "personality_traits.extraversion",
+            "target": "initiator",
             "satisfy_value": 50,
             "operator": "gt",
         },
@@ -1177,12 +1236,14 @@ preconditions_dict = {
         {
             "name": "wealth_money",
             "attribute": "wealth_money",
+            "target": "initiator",
             "satisfy_value": 5,
             "operator": "gt",
         },
         {
             "name": "conscientiousness",
             "attribute": "personality_traits.conscientiousness",
+            "target": "target",
             "satisfy_value": 30,
             "operator": "gt",
         },
@@ -1191,12 +1252,14 @@ preconditions_dict = {
         {
             "name": "social_wellbeing",
             "attribute": "social_wellbeing",
+            "target": "initiator",
             "satisfy_value": 20,
             "operator": "gt",
         },
         {
             "name": "agreeableness",
             "attribute": "personality_traits.agreeableness",
+            "target": "initiator",
             "satisfy_value": 40,
             "operator": "gt",
         },
@@ -1205,12 +1268,14 @@ preconditions_dict = {
         {
             "name": "anger",
             "attribute": "current_mood",
+            "target": "initiator",
             "satisfy_value": -10,
             "operator": "lt",
         },
         {
             "name": "strength",
             "attribute": "skills.strength",
+            "target": "initiator",
             "satisfy_value": 20,
             "operator": "gt",
         },
@@ -1219,12 +1284,14 @@ preconditions_dict = {
         {
             "name": "openness",
             "attribute": "personality_traits.openness",
+            "target": "initiator",
             "satisfy_value": 50,
             "operator": "gt",
         },
         {
             "name": "social_wellbeing",
             "attribute": "social_wellbeing",
+            "target": "initiator",
             "satisfy_value": 30,
             "operator": "gt",
         },
@@ -1233,12 +1300,14 @@ preconditions_dict = {
         {
             "name": "knowledge",
             "attribute": "skills.knowledge",
+            "target": "initiator",
             "satisfy_value": 50,
             "operator": "gt",
         },
         {
             "name": "patience",
             "attribute": "personality_traits.agreeableness",
+            "target": "initiator",
             "satisfy_value": 30,
             "operator": "gt",
         },
@@ -1247,12 +1316,14 @@ preconditions_dict = {
         {
             "name": "curiosity",
             "attribute": "personality_traits.openness",
+            "target": "initiator",
             "satisfy_value": 50,
             "operator": "gt",
         },
         {
             "name": "focus",
             "attribute": "mental_health",
+            "target": "initiator",
             "satisfy_value": 40,
             "operator": "gt",
         },
@@ -1261,12 +1332,14 @@ preconditions_dict = {
         {
             "name": "medical_knowledge",
             "attribute": "skills.medical_knowledge",
+            "target": "initiator",
             "satisfy_value": 40,
             "operator": "gt",
         },
         {
             "name": "compassion",
             "attribute": "personality_traits.agreeableness",
+            "target": "initiator",
             "satisfy_value": 40,
             "operator": "gt",
         },
@@ -1275,12 +1348,14 @@ preconditions_dict = {
         {
             "name": "energy",
             "attribute": "energy",
+            "target": "initiator",
             "satisfy_value": 20,
             "operator": "gt",
         },
         {
             "name": "curiosity",
             "attribute": "personality_traits.openness",
+            "target": "initiator",
             "satisfy_value": 30,
             "operator": "gt",
         },
@@ -1289,12 +1364,14 @@ preconditions_dict = {
         {
             "name": "construction_skill",
             "attribute": "skills.construction",
+            "target": "initiator",
             "satisfy_value": 30,
             "operator": "gt",
         },
         {
             "name": "conscientiousness",
             "attribute": "personality_traits.conscientiousness",
+            "target": "initiator",
             "satisfy_value": 40,
             "operator": "gt",
         },
@@ -1303,26 +1380,30 @@ preconditions_dict = {
         {
             "name": "item_in_inventory",
             "attribute": "inventory.item_count",
+            "target": "initiator",
             "satisfy_value": 1,
             "operator": "gt",
         },
         {
             "name": "generosity",
             "attribute": "personality_traits.agreeableness",
+            "target": "initiator",
             "satisfy_value": 30,
             "operator": "gt",
         },
     ],
     "Receive Item": [
         {
-            "name": "need",
+            "name": "need food",
             "attribute": "hunger_level",
+            "target": "initiator",
             "satisfy_value": 5,
             "operator": "gt",
         },
         {
             "name": "social_wellbeing",
             "attribute": "social_wellbeing",
+            "target": "initiator",
             "satisfy_value": 10,
             "operator": "gt",
         },
@@ -1447,7 +1528,7 @@ class Character:
         friendship_grid=[],
         recent_event: str = "",
         long_term_goal: str = "",
-        home: tb.House = None,
+        home: House = None,
         inventory: ItemInventory = None,
         motives: PersonalMotives = None,
         personality_traits: PersonalityTraits = None,
@@ -1455,97 +1536,120 @@ class Character:
         possible_interactions: List[Action] = [],
         move_speed: int = 1,
         graph_manager: GraphManager = None,
+        action_system: ActionSystem = None,
+        gametime_manager: GameTimeManager = None,
+        location: Location = None,
     ):
 
+        from actions import ActionSystem, Action
+
+        if not action_system:
+            action_system = ActionSystem()
+        self.action_system = action_system
         self.name = self.set_name(name)
         self.age = self.set_age(age)
         self.destination = None
         self.path = []
         self.speed = 1.0  # Units per tick
+        if graph_manager is None:
+            raise ValueError("GraphManager instance required.")
         self.graph_manager = graph_manager
 
         self.character_actions = [
             Action(
                 "Talk",
-                action_system.instantiate_condition(preconditions_dict["Talk"]),
+                self.action_system.instantiate_conditions(preconditions_dict["Talk"]),
                 effects=effect_dict["Talk"],
                 cost=1,
             ),
             Action(
                 "Trade",
-                action_system.instantiate_condition(preconditions_dict["Trade"]),
+                self.action_system.instantiate_conditions(preconditions_dict["Trade"]),
                 effects=effect_dict["Trade"],
                 cost=2,
             ),
             Action(
                 "Help",
-                action_system.instantiate_condition(preconditions_dict["Help"]),
+                self.action_system.instantiate_conditions(preconditions_dict["Help"]),
                 effects=effect_dict["Help"],
                 cost=1,
             ),
             Action(
                 "Attack",
-                action_system.instantiate_condition(preconditions_dict["Attack"]),
+                self.action_system.instantiate_conditions(preconditions_dict["Attack"]),
                 effects=effect_dict["Attack"],
                 cost=3,
             ),
             Action(
                 "Befriend",
-                action_system.instantiate_condition(preconditions_dict["Befriend"]),
+                self.action_system.instantiate_conditions(
+                    preconditions_dict["Befriend"]
+                ),
                 effects=effect_dict["Befriend"],
                 cost=1,
             ),
             Action(
                 "Teach",
-                action_system.instantiate_condition(preconditions_dict["Teach"]),
+                self.action_system.instantiate_conditions(preconditions_dict["Teach"]),
                 effects=effect_dict["Teach"],
                 cost=2,
             ),
             Action(
                 "Learn",
-                action_system.instantiate_condition(preconditions_dict["Learn"]),
+                self.action_system.instantiate_conditions(preconditions_dict["Learn"]),
                 effects=effect_dict["Learn"],
                 cost=1,
             ),
             Action(
                 "Heal",
-                action_system.instantiate_condition(preconditions_dict["Heal"]),
+                self.action_system.instantiate_conditions(preconditions_dict["Heal"]),
                 effects=effect_dict["Heal"],
                 cost=2,
             ),
             Action(
                 "Gather",
-                action_system.instantiate_condition(preconditions_dict["Gather"]),
+                self.action_system.instantiate_conditions(preconditions_dict["Gather"]),
                 effects=effect_dict["Gather"],
                 cost=1,
             ),
             Action(
                 "Build",
-                action_system.instantiate_condition(preconditions_dict["Build"]),
+                self.action_system.instantiate_conditions(preconditions_dict["Build"]),
                 effects=effect_dict["Build"],
                 cost=2,
             ),
             Action(
                 "Give Item",
-                action_system.instantiate_condition(preconditions_dict["Give Item"]),
+                self.action_system.instantiate_conditions(
+                    preconditions_dict["Give Item"]
+                ),
                 effects=effect_dict["Give Item"],
                 cost=1,
             ),
             Action(
                 "Receive Item",
-                action_system.instantiate_condition(preconditions_dict["Receive Item"]),
+                self.action_system.instantiate_conditions(
+                    preconditions_dict["Receive Item"]
+                ),
                 effects=effect_dict["Receive Item"],
                 cost=1,
             ),
         ]
         self.possible_interactions = possible_interactions + self.character_actions
+        self.goap_planner = GOAPPlanner(self.graph_manager)
+        from tiny_prompt_builder import PromptBuilder
 
+        self.prompt_builder = PromptBuilder(self)
         self.pronouns = self.set_pronouns(pronouns)
         self.friendship_grid = friendship_grid if friendship_grid else [{}]
+        self.job = None
         self.job = self.set_job(job)
         self.health_status = self.set_health_status(health_status)
         self.hunger_level = self.set_hunger_level(hunger_level)
         self.wealth_money = self.set_wealth_money(wealth_money)
+        logging.info(
+            f"Character {self.name} has been created with {self.wealth_money} money."
+        )
         self.mental_health = self.set_mental_health(mental_health)
         self.social_wellbeing = self.set_social_wellbeing(social_wellbeing)
 
@@ -1563,7 +1667,7 @@ class Character:
         if home:
             self.home = self.set_home(home)
         else:
-            self.home = self.set_home(tb.CreateBuilding().generate_random_house())
+            self.home = self.set_home()
         self.shelter = self.set_shelter(self.home.calculate_shelter_value())
         self.success = self.set_success(self.calculate_success())
         self.control = self.set_control(self.calculate_control())
@@ -1571,8 +1675,11 @@ class Character:
         self.happiness = self.set_happiness(self.calculate_happiness())
         self.stability = self.set_stability(self.calculate_stability())
         self.personality_traits = self.set_personality_traits(personality_traits)
-        self.motives = self.set_motives(motives)
-        self.goals = self.evaluate_goals()
+
+        if motives:
+            self.motives = self.set_motives(motives)
+        else:
+            self.motives = self.calculate_motives()
         self.stamina = 0
         self.current_satisfaction = 0
         self.current_mood = 0
@@ -1580,15 +1687,36 @@ class Character:
         self.career_goals = career_goals
         self.short_term_goals = []
         self.id = uuid.uuid4()
+        if gametime_manager:
+            self.gametime_manager = gametime_manager
+        else:
+            raise ValueError("GameTimeManager instance required.")
         self.memory_manager = MemoryManager(
             gametime_manager
         )  # Initialize MemoryManager with GameTimeManager instance
-        self.location = Location(0, 0)
+        if location is None:
+            self.location = Location(name, 0, 0, 0, 0, action_system)
+        else:
+            self.location = location
         self.coordinate_location = self.location.get_coordinates()
         self.needed_items = (
             []
         )  # Items needed to complete goals. This is a list of tuples, each tuple is (dict of item requirements, quantity needed)
+        self.goals = []
+        logging.info(
+            f"Character {self.name} has been created with graph manager:  {self.graph_manager}"
+        )
+        self.goals = self.evaluate_goals()
+
         self.state = self.get_state()
+
+    def generate_goals(self):
+        from tiny_graph_manager import GraphManager
+
+        goal_generator = GoalGenerator(
+            self.motives, self.graph_manager, self.goap_planner, self.prompt_builder
+        )
+        return goal_generator.generate_goals(self)
 
     def get_location(self):
         return self.location
@@ -1664,8 +1792,21 @@ class Character:
     def make_decision_based_on_memories(self):
         # Example of how to use memories in decision-making
         important_memories = self.recall_recent_memories()
-        # Decision logic here, possibly using the contents of important_memories
-        pass
+        if important_memories:
+            # Decision logic here, possibly using the contents of important_memories
+            pass
+        # Additional methods to interact with MemoryManager functionalities
+
+    def retrieve_specific_memories(self, query):
+        # Retrieve memories based on a specific query
+        return self.memory_manager.retrieve_memories(query)
+
+    def update_memory_importance(self, description, new_importance):
+        # Example method to update the importance of a specific memory
+        for memory in self.memory_manager.flat_access.get_all_memories():
+            if memory.description == description:
+                memory.importance_score = new_importance
+                break
 
     def __repr__(self):
         return f"Character({self.name}, {self.age}, {self.pronouns}, {self.job}, {self.health_status}, {self.hunger_level}, {self.wealth_money}, {self.mental_health}, {self.social_wellbeing}, {self.job_performance}, {self.community}, {self.friendship_grid}, {self.recent_event}, {self.long_term_goal}, {self.home}, {self.inventory}, {self.motives}, {self.personality_traits})"
@@ -1771,8 +1912,10 @@ class Character:
             self.job = job
         elif isinstance(job, str):
             if job_rules.check_job_name_validity(job):
+                logging.info("Job valid")
                 for job_role in job_rules.ValidJobRoles:
                     if job_role.get_job_name() == job:
+                        logging.info("Job role found")
                         self.job = job_role
             else:
                 self.job = random.choice(job_rules.ValidJobRoles)
@@ -1780,11 +1923,15 @@ class Character:
             self.job = random.choice(job_rules.ValidJobRoles)
         return self.job
 
-    def set_home(self, home):
-        if isinstance(home, tb.House):
+    def set_home(self, home=None):
+        from tiny_buildings import House, CreateBuilding
+
+        if isinstance(home, House):
             self.home = home
         elif isinstance(home, str):
-            self.home = tb.CreateBuilding().create_house_by_type(home)
+            self.home = CreateBuilding().create_house_by_type(home)
+        elif home is None:
+            self.home = CreateBuilding().generate_random_house()
         else:
             raise TypeError("Invalid type for home")
         return self.home
@@ -1988,9 +2135,15 @@ class Character:
     # def calculate_goals(self):
 
     def evaluate_goals(self):
+        from tiny_graph_manager import GraphManager
+
         goal_queue = []
         # if len(self.goals) > 1:
-
+        if not self.goals or len(self.goals) == 0:
+            goal_generator = GoalGenerator(
+                self.motives, self.graph_manager, self.goap_planner, self.prompt_builder
+            )
+            self.goals = goal_generator.generate_goals(self)
         for goal in self.goals:
             utility = goal.get_utility(self)
             goal_queue.append((utility, goal))
@@ -2190,14 +2343,17 @@ class Character:
             self.inventory.set_misc_items(misc_items)
         if personality_traits:
             self.personality_traits = self.set_personality_traits(personality_traits)
+
         if motives:
             self.motives = self.set_motives(motives)
+
         return self
 
     def get_personality_traits(self):
         return self.personality_traits
 
     def set_personality_traits(self, personality_traits):
+        logging.info(f"Setting personality traits: {personality_traits}")
         if isinstance(personality_traits, PersonalityTraits):
             self.personality_traits = personality_traits
             return self.personality_traits
