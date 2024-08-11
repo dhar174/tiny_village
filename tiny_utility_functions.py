@@ -8,6 +8,71 @@ from actions import Action, State
 
 
 # function that evaluates the current importance of the goal based on the character's state and the environment.
+# tiny_utility_functions.py
+
+
+def calculate_importance(
+    health,
+    hunger,
+    social_needs,
+    current_activity,
+    social_factor,
+    event_participation_factor,
+    goal_importance,
+):
+    """
+    Calculate the importance of a goal based on character stats, goal attributes, and additional factors.
+
+    :param health: Character's health level.
+    :param hunger: Character's hunger level.
+    :param social_needs: Character's social needs level.
+    :param goal_urgency: Urgency of the goal.
+    :param goal_benefit: Benefit of achieving the goal.
+    :param goal_consequence: Consequence of not achieving the goal.
+    :param current_activity: Character's current activity.
+    :param social_factor: Influence of relationships.
+    :param location_factor: Impact of location relevance.
+    :param event_factor: Impact of current events.
+    :param resource_factor: Availability of needed resources.
+    :param social_influence: Social influence on the character.
+    :param potential_utility: Utility of achieving the goal.
+    :param path_achieves_goal: Whether the path will achieve the goal.
+    :param safety_factor: Safety of the goal location.
+    :param event_participation_factor: Character's participation in relevant events.
+    :param nearest_resource: Proximity to the nearest resource.
+    :param goal_importance: Specific importance score based on goal type.
+    :return: A float representing the importance score.
+    """
+    # Example weighting factors
+    health_weight = 0.05
+    hunger_weight = 0.1
+    social_needs_weight = 0.05
+    urgency_weight = 0.15
+    benefit_weight = 0.1
+    consequence_weight = 0.1
+    social_weight = 0.1
+    location_weight = 0.05
+    event_weight = 0.05
+    resource_weight = 0.05
+    social_influence_weight = 0.1
+    potential_utility_weight = 0.1
+    path_achieves_goal_weight = 0.1
+    safety_weight = 0.05
+    event_participation_weight = 0.05
+    nearest_resource_weight = 0.05
+    goal_importance_weight = 0.2  # Added to incorporate specific goal importance
+
+    # Calculate the weighted importance score
+    importance_score = (
+        health_weight * health
+        + hunger_weight * hunger
+        + social_needs_weight * social_needs
+        + social_weight * social_factor
+        + event_participation_weight * event_participation_factor
+        + goal_importance_weight * goal_importance
+    )
+
+    return importance_score
 
 
 def evaluate_goal_importance(

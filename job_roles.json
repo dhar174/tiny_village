@@ -1,0 +1,2515 @@
+{
+  "jobs": {
+    "Account Manager": {
+      "Account Manager": {
+        "title": "Account Manager",
+        "description": "An account manager is responsible for managing relationships with clients, ensuring their needs are met, and identifying new business opportunities.",
+        "salary": "$90,000",
+        "skills": [
+          "Communication",
+          "Negotiation",
+          "Problem-solving",
+          "Time management"
+        ],
+        "education": "Bachelors degree in Business, Marketing or related field",
+        "experience": "3-5 years in sales or account management",
+        "associated character motives": [
+          "wealth motive",
+          "success motive",
+          "job performance motive",
+          "social wellbeing motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Accountant": {
+      "Accountant": {
+        "title": "Accountant",
+        "description": "An accountant is responsible for preparing and examining financial records, ensuring accuracy and compliance with laws and regulations.",
+        "salary": "$65,000",
+        "skills": [
+          "Financial analysis",
+          "Accounting software",
+          "Tax laws"
+        ],
+        "education": "Bachelors degree in Accounting or related field",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "wealth motive",
+          "security motive",
+          "job performance motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Administrative Assistant": {
+      "Administrative Assistant": {
+        "title": "Administrative Assistant",
+        "description": "An administrative assistant provides administrative support to an organization, handling tasks such as scheduling, email management, and data entry.",
+        "salary": "$45,000",
+        "skills": [
+          "Organizational skills",
+          "Time management",
+          "Communication",
+          "Data entry"
+        ],
+        "education": "High school diploma or equivalent",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "stability motive",
+          "hunger motive",
+          "shelter motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Animator": {
+      "Animator": {
+        "title": "Animator",
+        "description": "An animator is responsible for creating motion graphics, visual effects, and animations for film, television, video games, or other forms of media.",
+        "salary": "$70,000",
+        "skills": [
+          "Creativity",
+          "Visual Storytelling",
+          "Time Management"
+        ],
+        "education": "Bachelors degree in Animation or related field",
+        "experience": "2-5 years",
+        "associated character motives": [
+          "happiness motive",
+          "artistic motive",
+          "social wellbeing motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "App Developer": {
+      "App Developer": {
+        "title": "App Developer",
+        "description": "An app developer designs, builds, and tests software applications for mobile and web platforms.",
+        "salary": "$120,000",
+        "skills": [
+          "Programming languages (Java, Swift, etc.)",
+          "Mobile app development frameworks (React Native, Flutter, etc.)",
+          "Database management"
+        ],
+        "education": "Bachelor\"s degree in Computer Science or related field",
+        "experience": "3-5 years",
+        "associated character motives": [
+          "happiness motive",
+          "wealth motive",
+          "luxury motive",
+          "success motive",
+          "control motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Architect": {
+      "Architect": {
+        "title": "Architect",
+        "description": "An architect designs buildings and spaces, ensuring they are functional, aesthetically pleasing, and meet building codes and regulations.",
+        "salary": "$120,000",
+        "skills": [
+          "Design",
+          "Construction management",
+          "Project planning"
+        ],
+        "education": "Professional degree in architecture (B.Arch or M.Arch)",
+        "experience": "5-10 years",
+        "associated character motives": [
+          "luxury motive",
+          "beauty motive",
+          "success motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Artist": {
+      "Artist": {
+        "title": "Artist",
+        "description": "An artist is a person who creates works of art, such as paintings, sculptures, or installations, for aesthetic or conceptual purposes.",
+        "salary": "$50,000",
+        "skills": [
+          "Creativity",
+          "Technical skill",
+          "Communication"
+        ],
+        "education": "Bachelor of Fine Arts degree",
+        "experience": "0-5 years",
+        "associated character motives": [
+          "happiness motive",
+          "luxury motive",
+          "beauty motive",
+          "control motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Au Pair": {
+      "Au Pair": {
+        "title": "Au Pair",
+        "description": "An au pair is a domestic worker who lives with a family and provides childcare and light housekeeping services in exchange for room, board, and a stipend.",
+        "salary": "$20,000",
+        "skills": [
+          "Childcare",
+          "Housekeeping",
+          "Communication"
+        ],
+        "education": "High school diploma",
+        "experience": "0-1 year",
+        "associated character motives": [
+          "family motive",
+          "social wellbeing motive",
+          "shelter motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Auditor": {
+      "Auditor": {
+        "title": "Auditor",
+        "description": "An auditor examines and evaluates financial records to ensure accuracy and compliance with laws and regulations.",
+        "salary": "$85,000",
+        "skills": [
+          "Financial analysis",
+          "Accounting",
+          "Attention to detail"
+        ],
+        "education": "Bachelors degree in Accounting or related field",
+        "experience": "3-5 years",
+        "associated character motives": [
+          "hunger motive",
+          "stability motive",
+          "control motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Babysitter": {
+      "Babysitter": {
+        "title": "Babysitter",
+        "description": "A babysitter is responsible for the care and well-being of children, ensuring their safety and happiness while their parents are away.",
+        "salary": "$25,000",
+        "skills": [
+          "Patience",
+          "Responsibility",
+          "Basic First Aid"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "happiness motive",
+          "shelter motive",
+          "family motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Backend Developer": {
+      "Backend Developer": {
+        "title": "Backend Developer",
+        "description": "A backend developer is responsible for designing, developing, and maintaining the server-side logic, database integration, and API connectivity of an application.",
+        "salary": "$120,000",
+        "skills": [
+          "Programming languages (Java, Python, C++),",
+          "Databases (MySQL, MongoDB, PostgreSQL),",
+          "API design and development",
+          "Server-side programming (Node.js, Ruby on Rails)"
+        ],
+        "education": "Bachelors degree in Computer Science or related field",
+        "experience": "4-6 years",
+        "associated character motives": [
+          "wealth motive",
+          "success motive",
+          "stability motive",
+          "control motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Baker": {
+      "Baker": {
+        "title": "Baker",
+        "description": "A baker is responsible for preparing and baking bread, pastries, and other baked goods for consumption. This role requires a combination of culinary skills, attention to detail, and time management.",
+        "salary": "$45,000",
+        "skills": [
+          "Baking",
+          "Mixing",
+          "Measuring",
+          "Attention to detail"
+        ],
+        "education": "High school diploma or culinary degree",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "hunger motive",
+          "stability motive",
+          "material goods motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Barista": {
+      "Barista": {
+        "title": "Barista",
+        "description": "A barista is a skilled coffee maker who prepares and serves coffee drinks to customers in a fast-paced environment.",
+        "salary": "$18,000",
+        "skills": [
+          "Coffee preparation",
+          "Customer service",
+          "Time management"
+        ],
+        "education": "High school diploma",
+        "experience": "0-1 year",
+        "associated character motives": [
+          "happiness motive",
+          "social wellbeing motive",
+          "job performance motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Bartender": {
+      "Bartender": {
+        "title": "Bartender",
+        "description": "A bartender is responsible for serving drinks, managing cash transactions, and providing excellent customer service in a fast-paced environment.",
+        "salary": "$25,000",
+        "skills": [
+          "Multitasking",
+          "Cash handling",
+          "Time management"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "happiness motive",
+          "social wellbeing motive",
+          "luxury motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Bellboy": {
+      "Bellboy": {
+        "title": "Bellboy",
+        "description": "A bellboy is a hotel staff member responsible for assisting guests with their luggage, answering questions, and providing general hospitality.",
+        "salary": "$25,000",
+        "skills": [
+          "Communication",
+          "Basic Math",
+          "Attention to detail"
+        ],
+        "education": "High school diploma",
+        "experience": "0-1 year",
+        "associated character motives": [
+          "hunger motive",
+          "stability motive",
+          "social wellbeing motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Blogger": {
+      "Blogger": {
+        "title": "Blogger",
+        "description": "A blogger is a content creator who writes articles, stories, or reviews to engage with their audience and share their expertise or passions with the world.",
+        "salary": "$45,000",
+        "skills": [
+          "Writing",
+          "Communication",
+          "SEO understanding"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "happiness motive",
+          "social wellbeing motive",
+          "hope motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Bodyguard": {
+      "Bodyguard": {
+        "title": "Bodyguard",
+        "description": "A bodyguard is responsible for providing security and protection to individuals, families, or groups, often in high-risk or high-profile situations.",
+        "salary": "$85,000",
+        "skills": [
+          "Physical combat",
+          "First aid",
+          "Surveillance",
+          "Intelligence gathering"
+        ],
+        "education": "High school diploma or equivalent",
+        "experience": "3-5 years",
+        "associated character motives": [
+          "security motive",
+          "stability motive",
+          "protection motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Bookkeeper": {
+      "Bookkeeper": {
+        "title": "Bookkeeper",
+        "description": "A bookkeeper is responsible for recording and managing financial transactions, maintaining accurate financial records, and ensuring compliance with financial regulations.",
+        "salary": "$55,000",
+        "skills": [
+          "Attention to detail",
+          "Organizational skills",
+          "Basic accounting knowledge"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "stability motive",
+          "wealth motive",
+          "hunger motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Bookstore owner": {
+      "Bookstore Owner": {
+        "title": "Bookstore Owner",
+        "description": "A bookstore owner is responsible for overseeing the daily operations of a bookstore, managing staff, and creating an inviting atmosphere for customers.",
+        "salary": "$80,000",
+        "skills": [
+          "Business management",
+          "Marketing",
+          "Customer service"
+        ],
+        "education": "Bachelors degree in Business or related field",
+        "experience": "5-10 years in retail management",
+        "associated character motives": [
+          "wealth motive",
+          "stability motive",
+          "happiness motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Bouncer": {
+      "Bouncer": {
+        "title": "Bouncer",
+        "description": "A bouncer is a security personnel responsible for maintaining order, enforcing rules, and ensuring the safety of patrons in a nightclub or other venue.",
+        "salary": "$40,000",
+        "skills": [
+          "Physical strength",
+          "Conflict resolution",
+          "Attention to detail"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "stability motive",
+          "control motive",
+          "social wellbeing motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Bus Driver": {
+      "Bus Driver": {
+        "title": "Bus Driver",
+        "description": "A bus driver is responsible for safely transporting passengers from one location to another, following a predetermined route.",
+        "salary": "$40,000",
+        "skills": [
+          "Navigation",
+          "Communication",
+          "Time management"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "stability motive",
+          "shelter motive",
+          "happiness motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Carnival Worker": {
+      "Carnival Worker": {
+        "title": "Carnival Worker",
+        "description": "A carnival worker is responsible for setting up and operating games, rides, and other attractions at carnivals and fairs, ensuring a safe and enjoyable experience for visitors.",
+        "salary": "$25,000",
+        "skills": [
+          "Physical stamina",
+          "Teamwork",
+          "Basic math skills"
+        ],
+        "education": "High school diploma or equivalent",
+        "experience": "0-1 year",
+        "associated character motives": [
+          "happiness motive",
+          "social wellbeing motive",
+          "shelter motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Carpenter": {
+      "Carpenter": {
+        "title": "Carpenter",
+        "description": "A carpenter is a skilled tradesperson responsible for constructing, repairing, and installing structures and fixtures made of wood, wood substitutes, and other materials.",
+        "salary": "$48,000",
+        "skills": [
+          "Manual dexterity",
+          "Problem-solving",
+          "Attention to detail"
+        ],
+        "education": "High school diploma or equivalent",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "stability motive",
+          "family motive",
+          "pride motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Cashier": {
+      "Cashier": {
+        "title": "Cashier",
+        "description": "A cashier is responsible for processing transactions, handling customer inquiries, and maintaining a clean and organized workspace.",
+        "salary": "$20,500",
+        "skills": [
+          "Cash handling",
+          "Customer service",
+          "Basic math"
+        ],
+        "education": "High school diploma",
+        "experience": "0-1 year",
+        "associated character motives": [
+          "stability motive",
+          "material goods motive",
+          "happiness motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Chauffeur": {
+      "Chauffeur": {
+        "title": "Chauffeur",
+        "description": "A chauffeur is a driver who transports passengers in a vehicle, often in a luxury or high-end setting.",
+        "salary": "$45,000",
+        "skills": [
+          "Driving",
+          "Attention to detail",
+          "Discretion"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "wealth motive",
+          "stability motive",
+          "material goods motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Chef": {
+      "Chef": {
+        "title": "Chef",
+        "description": "A chef is a skilled cook who prepares and cooks food in a restaurant, hotel, or other food service establishment.",
+        "salary": "$45,000",
+        "skills": [
+          "Cooking",
+          "Food preparation",
+          "Menu planning",
+          "Kitchen management"
+        ],
+        "education": "Culinary degree or equivalent experience",
+        "experience": "2-5 years",
+        "associated character motives": [
+          "hunger motive",
+          "luxury motive",
+          "beauty motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Coach": {
+      "Coach": {
+        "title": "Coach",
+        "description": "A coach is a person who guides and trains individuals or teams to improve their performance and achieve their goals, often in a specific sport or activity.",
+        "salary": "$55,000",
+        "skills": [
+          "Communication",
+          "Leadership",
+          "Motivation"
+        ],
+        "education": "Bachelors degree",
+        "experience": "3-5 years",
+        "associated character motives": [
+          "happiness motive",
+          "success motive",
+          "stability motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Comic Artist": {
+      "Comic Artist": {
+        "title": "Comic Artist",
+        "description": "A comic artist is a creator of comics and graphic novels, responsible for drawing, writing, and editing stories for publication.",
+        "salary": "$40,000",
+        "skills": [
+          "Drawing",
+          "Writing",
+          "Storytelling",
+          "Illustration"
+        ],
+        "education": "Bachelor\"s degree in Fine Arts or related field",
+        "experience": "1-3 years",
+        "associated character motives": [
+          "happiness motive",
+          "creativity motive",
+          "success motive",
+          "recognition motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Comic store owner": {
+      "Comic Store Owner": {
+        "title": "Comic Store Owner",
+        "description": "A comic store owner is responsible for managing the daily operations of a comic book store, including inventory management, customer service, and community engagement.",
+        "salary": "$80,000",
+        "skills": [
+          "Business management",
+          "Marketing",
+          "Customer service"
+        ],
+        "education": "Bachelors degree in Business or related field",
+        "experience": "5-10 years in retail management",
+        "associated character motives": [
+          "material goods motive",
+          "social wellbeing motive",
+          "happiness motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Construction Worker": {
+      "Construction Worker": {
+        "title": "Construction Worker",
+        "description": "A construction worker is responsible for assisting in the construction of buildings, roads, and other infrastructure projects. Tasks may include laboring, operating equipment, and following safety protocols.",
+        "salary": "$45,000",
+        "skills": [
+          "Physical labor",
+          "Teamwork",
+          "Equipment operation"
+        ],
+        "education": "High school diploma or equivalent",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "shelter motive",
+          "stability motive",
+          "health motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Craftsman": {
+      "Craftsman": {
+        "title": "Craftsman",
+        "description": "A craftsman is a skilled worker who creates or repairs items of beauty or utility by hand, using traditional techniques and materials.",
+        "salary": "$55,000",
+        "skills": [
+          "Hand skills",
+          "Traditional techniques",
+          "Attention to detail"
+        ],
+        "education": "Apprenticeship or vocational training",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "happiness motive",
+          "material goods motive",
+          "job performance motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Customer Service": {
+      "Customer Service Representative": {
+        "title": "Customer Service Representative",
+        "description": "A customer service representative is responsible for responding to customer inquiries, resolving issues, and providing excellent customer service.",
+        "salary": "$45,000",
+        "skills": [
+          "Communication",
+          "Problem-solving",
+          "Patience"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "happiness motive",
+          "social wellbeing motive",
+          "job performance motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Dancer": {
+      "Dancer": {
+        "title": "Dancer",
+        "description": "A dancer is a performer who uses movement and expression to convey emotion and tell stories through various dance styles.",
+        "salary": "$45,000",
+        "skills": [
+          "Flexibility",
+          "Co-ordination",
+          "Rhythm",
+          "Performance",
+          "Creativity"
+        ],
+        "education": "High school diploma",
+        "experience": "2-5 years",
+        "associated character motives": [
+          "happiness motive",
+          "social wellbeing motive",
+          "beauty motive",
+          "luxury motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Database Administrator": {
+      "Database Administrator": {
+        "title": "Database Administrator",
+        "description": "A database administrator is responsible for designing, implementing, and maintaining databases to ensure efficient and secure storage and retrieval of data.",
+        "salary": "$120,000",
+        "skills": [
+          "SQL",
+          "Data Modeling",
+          "Database Design",
+          "Data Analysis",
+          "Troubleshooting"
+        ],
+        "education": "Bachelor of Science in Computer Science or related field",
+        "experience": "5-7 years",
+        "associated character motives": [
+          "stability motive",
+          "control motive",
+          "job performance motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Daycare Worker": {
+      "Daycare Worker": {
+        "title": "Daycare Worker",
+        "description": "A daycare worker is responsible for caring for and supervising young children in a daycare setting, providing a safe and nurturing environment for their physical, emotional, and social development.",
+        "salary": "$35,000",
+        "skills": [
+          "Child development",
+          "Communication",
+          "Patience"
+        ],
+        "education": "High school diploma or equivalent",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "social wellbeing motive",
+          "shelter motive",
+          "family motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Delivery Driver": {
+      "Delivery Driver": {
+        "title": "Delivery Driver",
+        "description": "A delivery driver is responsible for transporting packages and goods to customers, ensuring timely and safe delivery.",
+        "salary": "$45,000",
+        "skills": [
+          "Navigation",
+          "Time management",
+          "Physical stamina"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "shelter motive",
+          "stability motive",
+          "material goods motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Dentist": {
+      "Dentist": {
+        "title": "Dentist",
+        "description": "A dentist is a medical professional responsible for examining, diagnosing, and treating conditions of the teeth and mouth.",
+        "salary": "$120,000",
+        "skills": [
+          "Medical expertise",
+          "Communication",
+          "Attention to detail"
+        ],
+        "education": "Doctoral degree in Dentistry",
+        "experience": "4-6 years",
+        "associated character motives": [
+          "health motive",
+          "wealth motive",
+          "success motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Dishwasher": {
+      "Dishwasher": {
+        "title": "Dishwasher",
+        "description": "A dishwasher is responsible for cleaning and maintaining the cleanliness of dishes, utensils, and equipment in a kitchen setting, adhering to health and safety standards.",
+        "salary": "$25,000",
+        "skills": [
+          "Attention to detail",
+          "Physical stamina",
+          "Teamwork"
+        ],
+        "education": "High school diploma",
+        "experience": "0-1 year",
+        "associated character motives": [
+          "stability motive",
+          "material goods motive",
+          "shelter motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Doctor": {
+      "Doctor": {
+        "title": "Doctor",
+        "description": "A doctor is a medical professional responsible for diagnosing and treating patients, developing treatment plans, and staying up-to-date with the latest medical advancements.",
+        "salary": "$150,000",
+        "skills": [
+          "Medical knowledge",
+          "Communication",
+          "Critical thinking"
+        ],
+        "education": "Medical degree (MD) or Doctor of Osteopathic Medicine (DO)",
+        "experience": "5-10 years",
+        "associated character motives": [
+          "health motive",
+          "happiness motive",
+          "social wellbeing motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Electrician": {
+      "Electrician": {
+        "title": "Electrician",
+        "description": "An electrician installs, maintains, and repairs electrical systems in buildings, homes, and factories.",
+        "salary": "$80,000",
+        "skills": [
+          "Electrical circuit analysis",
+          "Blueprint reading",
+          "Pneumatics and hydraulics"
+        ],
+        "education": "Associate degree or apprenticeship",
+        "experience": "4-5 years",
+        "associated character motives": [
+          "stability motive",
+          "financial security motive",
+          "family motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Engineer": {
+      "Engineer": {
+        "title": "Engineer",
+        "description": "An engineer is responsible for designing, developing, testing, and maintaining various systems, products, and infrastructure.",
+        "salary": "$120,000",
+        "skills": [
+          "Problem-solving",
+          "Analytical thinking",
+          "Programming",
+          "Design"
+        ],
+        "education": "Bachelors degree in Engineering",
+        "experience": "5-7 years",
+        "associated character motives": [
+          "wealth motive",
+          "success motive",
+          "control motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Etsy Seller": {
+      "Etsy Seller": {
+        "title": "Etsy Seller",
+        "description": "An Etsy seller is responsible for creating and selling handmade or unique items on the Etsy online marketplace.",
+        "salary": "$45,000",
+        "skills": [
+          "Crafting",
+          "Marketing",
+          "Time management"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "happiness motive",
+          "shelter motive",
+          "material goods motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Executive Assistant": {
+      "Executive Assistant": {
+        "title": "Executive Assistant",
+        "description": "An executive assistant provides administrative support to high-level executives, managing calendars, coordinating travel, and handling confidential matters.",
+        "salary": "$85,000",
+        "skills": [
+          "Organizational",
+          "Communication",
+          "Discretion"
+        ],
+        "education": "Bachelors degree",
+        "experience": "5-7 years",
+        "associated character motives": [
+          "stability motive",
+          "success motive",
+          "control motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Farmer": {
+      "Farmer": {
+        "title": "Farmer",
+        "description": "A farmer cultivates and harvests crops, raises livestock, and manages the day-to-day activities of a farm.",
+        "salary": "$45,000",
+        "skills": [
+          "Crop management",
+          "Livestock handling",
+          "Mechanization"
+        ],
+        "education": "High school diploma",
+        "experience": "1-5 years",
+        "associated character motives": [
+          "shelter motive",
+          "stability motive",
+          "family motive",
+          "community motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Fast Food Worker": {
+      "Fast Food Worker": {
+        "title": "Fast Food Worker",
+        "description": "A fast food worker is responsible for preparing and serving food to customers in a fast-paced environment, ensuring a positive dining experience and maintaining a clean and safe work area.",
+        "salary": "$20,000",
+        "skills": [
+          "Attention to detail",
+          "Teamwork",
+          "Basic math"
+        ],
+        "education": "High school diploma",
+        "experience": "0-1 year",
+        "associated character motives": [
+          "shelter motive",
+          "stability motive",
+          "material goods motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Financial Advisor": {
+      "Financial Advisor": {
+        "title": "Financial Advisor",
+        "description": "A financial advisor helps clients create personalized financial plans, manages investments, and provides financial guidance to achieve long-term goals.",
+        "salary": "$80,000",
+        "skills": [
+          "Financial planning",
+          "Investment management",
+          "Tax planning"
+        ],
+        "education": "Bachelor\"s degree in finance or related field",
+        "experience": "3-5 years",
+        "associated character motives": [
+          "wealth motive",
+          "security motive",
+          "stability motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Financial Analyst": {
+      "Financial Analyst": {
+        "title": "Financial Analyst",
+        "description": "A financial analyst collects and analyzes financial data to help organizations make informed business decisions.",
+        "salary": "$120,000",
+        "skills": [
+          "Financial modeling",
+          "Data analysis",
+          "Excel skills"
+        ],
+        "education": "Masters degree",
+        "experience": "5-7 years",
+        "associated character motives": [
+          "wealth motive",
+          "stability motive",
+          "success motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Firefighter": {
+      "Firefighter": {
+        "title": "Firefighter",
+        "description": "A firefighter is responsible for responding to emergencies, rescuing people, and extinguishing fires in a timely and efficient manner.",
+        "salary": "$55,000",
+        "skills": [
+          "Physical strength",
+          "Communication",
+          "Teamwork"
+        ],
+        "education": "High school diploma or equivalent",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "shelter motive",
+          "social wellbeing motive",
+          "stability motive",
+          "happiness motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Flight Attendant": {
+      "Flight Attendant": {
+        "title": "Flight Attendant",
+        "description": "A flight attendant is responsible for ensuring passenger safety, comfort, and satisfaction during flights.",
+        "salary": "$45,000",
+        "skills": [
+          "Customer service",
+          "First aid",
+          "Language skills"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "hunger motive",
+          "social wellbeing motive",
+          "community motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Foster Parent": {
+      "Foster Parent": {
+        "title": "Foster Parent",
+        "description": "A foster parent provides a temporary and supportive home for children who are unable to live with their biological parents.",
+        "salary": "$45,000",
+        "skills": [
+          "Patience",
+          "Emotional stability",
+          "Communication"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years of caregiving experience",
+        "associated character motives": [
+          "hunger motive",
+          "shelter motive",
+          "social wellbeing motive",
+          "family motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Frontend Developer": {
+      "Frontend Developer": {
+        "title": "Frontend Developer",
+        "description": "A frontend developer is responsible for designing and building the user interface and user experience of a website or application, using programming languages such as HTML, CSS, and JavaScript.",
+        "salary": "$110,000",
+        "skills": [
+          "HTML",
+          "CSS",
+          "JavaScript",
+          "React",
+          "Angular",
+          "Vue"
+        ],
+        "education": "Bachelor of Science in Computer Science or related field",
+        "experience": "3-5 years",
+        "associated character motives": [
+          "wealth motive",
+          "job performance motive",
+          "stability motive",
+          "happiness motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Gambler": {
+      "Gambler": {
+        "title": "Gambler",
+        "description": "A gambler is someone who engages in betting or wagering on games of chance, often in pursuit of excitement, financial gain, or the thrill of competition.",
+        "salary": "$50,000",
+        "skills": [
+          "Risk management",
+          "Strategic thinking",
+          "Emotional control"
+        ],
+        "education": "High school diploma",
+        "experience": "1-5 years",
+        "associated character motives": [
+          "hunger motive",
+          "luxury motive",
+          "hope motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Game Developer": {
+      "Game Developer": {
+        "title": "Game Developer",
+        "description": "A game developer designs, creates, and tests video games for PCs, consoles, or mobile devices.",
+        "salary": "$120,000",
+        "skills": [
+          "Programming",
+          "Game engines",
+          "Artificial intelligence",
+          "3D modeling"
+        ],
+        "education": "Bachelors degree in Computer Science or related field",
+        "experience": "4-6 years",
+        "associated character motives": [
+          "wealth motive",
+          "happiness motive",
+          "creativity motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Gardener": {
+      "Gardener": {
+        "title": "Gardener",
+        "description": "A gardener is responsible for maintaining gardens and grounds, including planting, pruning, and caring for plants.",
+        "salary": "$40,000",
+        "skills": [
+          "Physical labor",
+          "Plant knowledge",
+          "Attention to detail"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "health motive",
+          "beauty motive",
+          "community motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Graphic Designer": {
+      "Graphic Designer": {
+        "title": "Graphic Designer",
+        "description": "A graphic designer creates visual content to communicate ideas and messages through various media, such as print, digital, and video.",
+        "salary": "$55,000",
+        "skills": [
+          "Adobe Creative Suite",
+          "Visual Design",
+          "Communication"
+        ],
+        "education": "Bachelors degree",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "creativity motive",
+          "self-expression motive",
+          "happiness motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Homemaker": {
+      "Homemaker": {
+        "title": "Homemaker",
+        "description": "A homemaker is responsible for managing and maintaining a household, including cooking, cleaning, and childcare, to ensure a comfortable and safe living environment for family members.",
+        "salary": "$45,000",
+        "skills": [
+          "Cooking",
+          "Cleaning",
+          "Time management",
+          "Organizational skills"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "family motive",
+          "stability motive",
+          "shelter motive",
+          "health motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Hostess": {
+      "Hostess": {
+        "title": "Hostess",
+        "description": "A hostess is responsible for greeting guests, managing reservations, and coordinating the overall dining experience at a restaurant.",
+        "salary": "$35,000",
+        "skills": [
+          "Communication",
+          "Time management",
+          "Customer service"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "happiness motive",
+          "social wellbeing motive",
+          "stability motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Housekeeper": {
+      "Housekeeper": {
+        "title": "Housekeeper",
+        "description": "A housekeeper is responsible for maintaining the cleanliness and organization of a private residence or commercial building, including dusting, vacuuming, and performing other tasks as needed.",
+        "salary": "$30,000",
+        "skills": [
+          "Attention to detail",
+          "Physical stamina",
+          "Time management"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "hunger motive",
+          "stability motive",
+          "shelter motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Illustrator": {
+      "Illustrator": {
+        "title": "Illustrator",
+        "description": "An illustrator is a visual artist who creates original artwork for various mediums, including books, magazines, and advertising.",
+        "salary": "$80,000",
+        "skills": [
+          "Artistic ability",
+          "Creativity",
+          "Design software"
+        ],
+        "education": "Bachelor of Fine Arts degree",
+        "experience": "3-5 years",
+        "associated character motives": [
+          "happiness motive",
+          "creativity motive",
+          "luxury motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Influencer": {
+      "Influencer": {
+        "title": "Influencer",
+        "description": "An influencer is an individual who has built a significant following on social media and uses their platform to promote products, services, or ideas to their audience.",
+        "salary": "$80,000",
+        "skills": [
+          "Content creation",
+          "Social media management",
+          "Branding"
+        ],
+        "education": "High school diploma",
+        "experience": "2-5 years",
+        "associated character motives": [
+          "wealth motive",
+          "luxury motive",
+          "happiness motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Insurance Agent": {
+      "Insurance Agent": {
+        "title": "Insurance Agent",
+        "description": "An insurance agent advises clients on insurance policies and sells insurance products to help protect them against financial risks. They must be knowledgeable about insurance laws, regulations, and products, and be able to communicate effectively with clients to understand their needs and provide tailored solutions.",
+        "salary": "$55,000",
+        "skills": [
+          "Sales",
+          "Communication",
+          "Problem-solving",
+          "Attention to detail"
+        ],
+        "education": "High school diploma or equivalent",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "stability motive",
+          "security motive",
+          "wealth motive",
+          "hope motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Investment Banker": {
+      "Investment Banker": {
+        "title": "Investment Banker",
+        "description": "An investment banker is responsible for raising capital for companies, advising clients on mergers and acquisitions, and managing financial transactions.",
+        "salary": "$120,000",
+        "skills": [
+          "Financial analysis",
+          "Risk management",
+          "Communication",
+          "Negotiation",
+          "Problem-solving"
+        ],
+        "education": "Masters degree in Finance",
+        "experience": "5-7 years",
+        "associated character motives": [
+          "wealth motive",
+          "success motive",
+          "control motive",
+          "luxury motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Janitor": {
+      "Janitor": {
+        "title": "Janitor",
+        "description": "A janitor is responsible for maintaining the cleanliness and organization of buildings, including sweeping, mopping, and emptying trash.",
+        "salary": "$25,000",
+        "skills": [
+          "Attention to detail",
+          "Physical stamina"
+        ],
+        "education": "High school diploma",
+        "experience": "0-1 year",
+        "associated character motives": [
+          "stability motive",
+          "shelter motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Journalist": {
+      "Journalist": {
+        "title": "Journalist",
+        "description": "A journalist researches and writes articles for publication in newspapers, magazines, or online news outlets, often investigating and reporting on current events and news stories.",
+        "salary": "$45,000",
+        "skills": [
+          "Writing",
+          "Research",
+          "Interviewing"
+        ],
+        "education": "Bachelors degree in Journalism or Communications",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "hunger motive",
+          "social wellbeing motive",
+          "community motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Landscaper": {
+      "Landscaper": {
+        "title": "Landscaper",
+        "description": "A landscaper is responsible for designing, installing, and maintaining outdoor spaces, such as gardens, parks, and residential properties.",
+        "salary": "$45,000",
+        "skills": [
+          "Physical labor",
+          "Plant identification",
+          "Equipment operation"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "stability motive",
+          "health motive",
+          "beauty motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Lawyer": {
+      "Lawyer": {
+        "title": "Lawyer",
+        "description": "A lawyer is a professional who advises clients on legal matters, represents them in court, and drafts legal documents.",
+        "salary": "$120,000",
+        "skills": [
+          "Communication",
+          "Analytical thinking",
+          "Problem-solving",
+          "Research",
+          "Writing"
+        ],
+        "education": "Juris Doctor (J.D.) degree",
+        "experience": "5-10 years",
+        "associated character motives": [
+          "wealth motive",
+          "status motive",
+          "job performance motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Loan Officer": {
+      "Loan Officer": {
+        "title": "Loan Officer",
+        "description": "A loan officer is responsible for evaluating loan applications, assessing creditworthiness, and approving or denying loans to borrowers.",
+        "salary": "$80,000",
+        "skills": [
+          "Financial analysis",
+          "Credit evaluation",
+          "Communication"
+        ],
+        "education": "Bachelors degree",
+        "experience": "3-5 years",
+        "associated character motives": [
+          "wealth motive",
+          "stability motive",
+          "material goods motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Lyft Driver": {
+      "Lyft Driver": {
+        "title": "Lyft Driver",
+        "description": "A Lyft driver is responsible for providing transportation services to passengers, ensuring their safety and comfort, and navigating through various routes to meet demand.",
+        "salary": "$25,000",
+        "skills": [
+          "Navigation",
+          "Communication",
+          "Time management"
+        ],
+        "education": "High school diploma",
+        "experience": "0-1 year",
+        "associated character motives": [
+          "financial stability motive",
+          "independence motive",
+          "social wellbeing motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Machine Learning Engineer": {
+      "Machine Learning Engineer": {
+        "title": "Machine Learning Engineer",
+        "description": "A Machine Learning Engineer is responsible for designing, developing, and deploying artificial intelligence and machine learning models that can be integrated into software applications.",
+        "salary": "$140,000",
+        "skills": [
+          "Programming",
+          "Data Structures",
+          "Algorithms",
+          "Statistics",
+          "Mathematics",
+          "Cloud Computing"
+        ],
+        "education": "Masters degree in Computer Science or related field",
+        "experience": "4-6 years",
+        "associated character motives": [
+          "success motive",
+          "wealth motive",
+          "happiness motive",
+          "luxury motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Mayor": {
+      "Mayor": {
+        "title": "Mayor",
+        "description": "A mayor is the chief executive officer of a city or town, responsible for making important decisions and policies to improve the quality of life for its citizens.",
+        "salary": "$120,000",
+        "skills": [
+          "Leadership",
+          "Communication",
+          "Problem-solving",
+          "Public policy",
+          "Budgeting"
+        ],
+        "education": "Graduate degree",
+        "experience": "5-10 years",
+        "associated character motives": [
+          "community motive",
+          "social wellbeing motive",
+          "stability motive",
+          "success motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Musician": {
+      "Musician": {
+        "title": "Musician",
+        "description": "A musician is a performer who creates and performs music, often for live audiences or through recorded media.",
+        "salary": "$50,000",
+        "skills": [
+          "Music theory",
+          "Instrumentation",
+          "Performance technique"
+        ],
+        "education": "High school diploma or equivalent",
+        "experience": "2-5 years",
+        "associated character motives": [
+          "happiness motive",
+          "creativity motive",
+          "expression motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Nanny": {
+      "Nanny": {
+        "title": "Nanny",
+        "description": "A nanny is a caregiver who is responsible for the daily care and well-being of children, often in a private home setting.",
+        "salary": "$40,000",
+        "skills": [
+          "Childcare",
+          "Patience",
+          "Communication"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "family motive",
+          "hope motive",
+          "stability motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Nurse": {
+      "Nurse": {
+        "title": "Nurse",
+        "description": "A nurse is a healthcare professional responsible for providing patient care, administering medications, and educating patients on healthy habits.",
+        "salary": "$85,000",
+        "skills": [
+          "Communication",
+          "Compassion",
+          "Critical thinking"
+        ],
+        "education": "Bachelor of Science in Nursing (BSN)",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "health motive",
+          "happiness motive",
+          "social wellbeing motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Office Manager": {
+      "Office Manager": {
+        "title": "Office Manager",
+        "description": "An office manager is responsible for overseeing the day-to-day operations of an office, ensuring everything runs smoothly and efficiently.",
+        "salary": "$85,000",
+        "skills": [
+          "Leadership",
+          "Organization",
+          "Time management"
+        ],
+        "education": "Bachelors degree",
+        "experience": "5-7 years",
+        "associated character motives": [
+          "stability motive",
+          "success motive",
+          "happiness motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Painter": {
+      "Painter": {
+        "title": "Painter",
+        "description": "A painter is responsible for creating artwork using various techniques and mediums, often for personal or commercial use.",
+        "salary": "$45,000",
+        "skills": [
+          "Artistic ability",
+          "Creativity",
+          "Attention to detail"
+        ],
+        "education": "High school diploma or equivalent",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "happiness motive",
+          "luxury motive",
+          "beauty motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Personal Assistant": {
+      "Personal Assistant": {
+        "title": "Personal Assistant",
+        "description": "A personal assistant provides administrative support to high-level executives, entrepreneurs, or individuals, handling tasks such as scheduling, travel arrangements, and correspondence.",
+        "salary": "$50,000",
+        "skills": [
+          "Organizational skills",
+          "Communication",
+          "Time management",
+          "Discretion"
+        ],
+        "education": "High school diploma or equivalent",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "stability motive",
+          "job performance motive",
+          "wealth motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Personal Trainer": {
+      "Personal Trainer": {
+        "title": "Personal Trainer",
+        "description": "A personal trainer is responsible for designing and implementing fitness programs for clients, providing guidance and support to help them achieve their health and fitness goals.",
+        "salary": "$55,000",
+        "skills": [
+          "Physical fitness",
+          "Communication",
+          "Motivation"
+        ],
+        "education": "Certificate in personal training",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "health motive",
+          "happiness motive",
+          "self-improvement motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Photographer": {
+      "Photographer": {
+        "title": "Photographer",
+        "description": "A photographer is responsible for capturing images for various purposes, including advertising, events, and portraits.",
+        "salary": "$45,000",
+        "skills": [
+          "Camera operation",
+          "Lighting",
+          "Composition",
+          "Editing"
+        ],
+        "education": "High school diploma or equivalent",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "happiness motive",
+          "creativity motive",
+          "beauty motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Physical Therapist": {
+      "Physical Therapist": {
+        "title": "Physical Therapist",
+        "description": "A physical therapist helps patients recover from injuries or illnesses, improving their mobility and reducing pain.",
+        "salary": "$85,000",
+        "skills": [
+          "Communication",
+          "Physical assessment",
+          "Treatment planning",
+          "Exercise prescription"
+        ],
+        "education": "Doctoral degree in Physical Therapy",
+        "experience": "3-5 years",
+        "associated character motives": [
+          "health motive",
+          "social wellbeing motive",
+          "happiness motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Pilot": {
+      "Pilot": {
+        "title": "Pilot",
+        "description": "A pilot is responsible for safely operating an aircraft, ensuring the comfort and safety of passengers, and navigating through various weather conditions.",
+        "salary": "$120,000",
+        "skills": [
+          "Navigation",
+          "Communication",
+          "Multi-tasking",
+          "Decision-making"
+        ],
+        "education": "High school diploma and commercial pilot license",
+        "experience": "5-10 years",
+        "associated character motives": [
+          "wealth motive",
+          "control motive",
+          "security motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Plumber": {
+      "Plumber": {
+        "title": "Plumber",
+        "description": "A plumber is a skilled tradesperson who installs, maintains, and repairs pipes, fixtures, and appliances that are connected to water and gas systems.",
+        "salary": "$55,000",
+        "skills": [
+          "Physical labor",
+          "Problem-solving",
+          "Attention to detail"
+        ],
+        "education": "Vocational training or apprenticeship",
+        "experience": "2-5 years",
+        "associated character motives": [
+          "stability motive",
+          "happiness motive",
+          "shelter motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Police Officer": {
+      "Police Officer": {
+        "title": "Police Officer",
+        "description": "A police officer enforces laws and maintains order in a community, responding to emergency situations, and conducting investigations.",
+        "salary": "$80,000",
+        "skills": [
+          "Communication",
+          "Physical fitness",
+          "Crisis management"
+        ],
+        "education": "High school diploma or associates degree",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "stability motive",
+          "security motive",
+          "community motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Product Manager": {
+      "Product Manager": {
+        "title": "Product Manager",
+        "description": "A product manager is responsible for defining and delivering products that meet customer needs and drive business growth.",
+        "salary": "$120,000",
+        "skills": [
+          "Product development",
+          "Project management",
+          "Communication",
+          "Data analysis"
+        ],
+        "education": "Masters degree",
+        "experience": "3-5 years",
+        "associated character motives": [
+          "success motive",
+          "wealth motive",
+          "happiness motive",
+          "job performance motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Program Manager": {
+      "Program Manager": {
+        "title": "Program Manager",
+        "description": "A program manager is responsible for overseeing the planning, execution, and delivery of specific programs or projects, ensuring they are completed on time and within budget.",
+        "salary": "$120,000",
+        "skills": [
+          "Project management",
+          "Leadership",
+          "Communication"
+        ],
+        "education": "Masters degree",
+        "experience": "5-7 years",
+        "associated character motives": [
+          "wealth motive",
+          "success motive",
+          "job performance motive",
+          "control motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Project Manager": {
+      "Project Manager": {
+        "title": "Project Manager",
+        "description": "A project manager is responsible for planning, organizing, and overseeing the execution of specific projects, ensuring they are completed on time, within budget, and to the required quality standards.",
+        "salary": "$120,000",
+        "skills": [
+          "Leadership",
+          "Time management",
+          "Communication",
+          "Problem-solving"
+        ],
+        "education": "Bachelors degree",
+        "experience": "5-7 years",
+        "associated character motives": [
+          "wealth motive",
+          "success motive",
+          "control motive",
+          "job performance motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Psychologist": {
+      "Psychologist": {
+        "title": "Psychologist",
+        "description": "A psychologist is a mental health professional who studies the human mind and behavior, and provides counseling and therapy to individuals, groups, and communities.",
+        "salary": "$80,000",
+        "skills": [
+          "Communication",
+          "Empathy",
+          "Analytical thinking"
+        ],
+        "education": "Doctoral degree in Psychology",
+        "experience": "5-7 years",
+        "associated character motives": [
+          "mental health motive",
+          "social wellbeing motive",
+          "happiness motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Real Estate Agent": {
+      "Real Estate Agent": {
+        "title": "Real Estate Agent",
+        "description": "A real estate agent helps clients buy, sell, and rent properties, requiring strong communication and negotiation skills.",
+        "salary": "$80,000",
+        "skills": [
+          "Communication",
+          "Negotiation",
+          "Time management"
+        ],
+        "education": "High school diploma or equivalent",
+        "experience": "2-5 years",
+        "associated character motives": [
+          "wealth motive",
+          "success motive",
+          "material goods motive",
+          "stability motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Receptionist": {
+      "Receptionist": {
+        "title": "Receptionist",
+        "description": "A receptionist is the first point of contact for visitors and clients, handling tasks such as answering phones, greeting guests, and managing paperwork.",
+        "salary": "$35,000",
+        "skills": [
+          "Communication",
+          "Organization",
+          "Time Management"
+        ],
+        "education": "High school diploma",
+        "experience": "0-1 year",
+        "associated character motives": [
+          "social wellbeing motive",
+          "shelter motive",
+          "stability motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Reporter": {
+      "Reporter": {
+        "title": "Reporter",
+        "description": "A reporter is a journalist who researches, writes, and presents news stories for publication or broadcast.",
+        "salary": "$45,000",
+        "skills": [
+          "Research",
+          "Writing",
+          "Interviewing",
+          "Storytelling"
+        ],
+        "education": "Bachelors degree in Journalism or related field",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "hunger motive",
+          "social wellbeing motive",
+          "happiness motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Research Scientist": {
+      "Research Scientist": {
+        "title": "Research Scientist",
+        "description": "A research scientist is responsible for designing, conducting, and analyzing experiments to advance knowledge in their field, often in a laboratory or academic setting.",
+        "salary": "$120,000",
+        "skills": [
+          "Scientific inquiry",
+          "Experimental design",
+          "Data analysis",
+          "Communication"
+        ],
+        "education": "PhD in relevant field",
+        "experience": "5-10 years",
+        "associated character motives": [
+          "hunger motive",
+          "wealth motive",
+          "happiness motive",
+          "success motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Retail Worker": {
+      "Retail Worker": {
+        "title": "Retail Worker",
+        "description": "A retail worker is responsible for providing excellent customer service, maintaining store appearance, and processing transactions.",
+        "salary": "$25,000",
+        "skills": [
+          "Communication",
+          "Problem-solving",
+          "Teamwork"
+        ],
+        "education": "High school diploma",
+        "experience": "0-1 year",
+        "associated character motives": [
+          "hunger motive",
+          "stability motive",
+          "community motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Retired": {
+      "Retired": {
+        "title": "Retiree",
+        "description": "A retiree is an individual who has left the workforce and is no longer employed.",
+        "salary": "$0",
+        "skills": [],
+        "education": "High school diploma or equivalent",
+        "experience": "10+ years",
+        "associated character motives": [
+          "happiness motive",
+          "stability motive",
+          "happiness motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Salesperson": {
+      "Salesperson": {
+        "title": "Salesperson",
+        "description": "A salesperson is responsible for identifying and pursuing new sales opportunities, building relationships with customers, and meeting sales targets.",
+        "salary": "$55,000",
+        "skills": [
+          "Communication",
+          "Interpersonal skills",
+          "Product knowledge",
+          "Negotiation"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "wealth motive",
+          "success motive",
+          "material goods motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Scientist": {
+      "Scientist": {
+        "title": "Scientist",
+        "description": "A scientist conducts experiments, collects data, and analyzes results to understand and explain natural phenomena.",
+        "salary": "$120,000",
+        "skills": [
+          "Laboratory techniques",
+          "Data analysis",
+          "Critical thinking"
+        ],
+        "education": "Masters degree or Ph.D.",
+        "experience": "3-5 years",
+        "associated character motives": [
+          "curiosity motive",
+          "knowledge motive",
+          "health motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Secretary": {
+      "Secretary": {
+        "title": "Secretary",
+        "description": "A secretary is responsible for providing administrative support to a business or organization, handling tasks such as scheduling appointments, preparing documents, and answering phone calls.",
+        "salary": "$40,000",
+        "skills": [
+          "Organizational skills",
+          "Communication",
+          "Time management"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "stability motive",
+          "security motive",
+          "community motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Security Guard": {
+      "Security Guard": {
+        "title": "Security Guard",
+        "description": "A security guard is responsible for protecting people and property by monitoring premises, enforcing rules, and responding to emergencies.",
+        "salary": "$45,000",
+        "skills": [
+          "Patrolling",
+          "Observation",
+          "Conflict resolution"
+        ],
+        "education": "High school diploma",
+        "experience": "0-2 years",
+        "associated character motives": [
+          "stability motive",
+          "shelter motive",
+          "hunger motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Single Parent": {
+      "Single Parent": {
+        "title": "Single Parent",
+        "description": "A single parent is a parent who cares for their child alone, often balancing work, childcare, and household responsibilities.",
+        "salary": "$45,000",
+        "skills": [
+          "Multitasking",
+          "Patience",
+          "Responsibility",
+          "Time management"
+        ],
+        "education": "High school diploma",
+        "experience": "Varies",
+        "associated character motives": [
+          "family motive",
+          "stability motive",
+          "happiness motive",
+          "material goods motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Small Business Owner": {
+      "Small Business Owner": {
+        "title": "Small Business Owner",
+        "description": "A small business owner is responsible for overseeing the daily operations of a small business, including managing finances, hiring employees, and making strategic decisions.",
+        "salary": "$120,000",
+        "skills": [
+          "Financial management",
+          "Leadership",
+          "Marketing",
+          "Time management"
+        ],
+        "education": "Bachelor\"s degree",
+        "experience": "5-7 years",
+        "associated character motives": [
+          "wealth motive",
+          "luxury motive",
+          "stability motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Social Worker": {
+      "Social Worker": {
+        "title": "Social Worker",
+        "description": "A social worker is a professional who helps individuals, families, and communities cope with problems such as poverty, education, and healthcare.",
+        "salary": "$55,000",
+        "skills": [
+          "Empathy",
+          "Communication",
+          "Problem-solving"
+        ],
+        "education": "Bachelors degree in Social Work",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "social wellbeing motive",
+          "happiness motive",
+          "hope motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Soldier": {
+      "Soldier": {
+        "title": "Soldier",
+        "description": "A soldier is a military personnel who carries out various tasks to protect and defend a country, its citizens, and its interests.",
+        "salary": "$50,000",
+        "skills": [
+          "Physical strength",
+          "Teamwork",
+          "Communication",
+          "Adaptability"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "stability motive",
+          "happiness motive",
+          "security motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Stay-at-home Mom": {
+      "Stay-at-Home Mom": {
+        "title": "Stay-at-Home Mom",
+        "description": "A stay-at-home mom is responsible for caring for and nurturing children, managing the household, and supporting family members.",
+        "salary": "$40,000",
+        "skills": [
+          "Patience",
+          "Multitasking",
+          "Emotional intelligence"
+        ],
+        "education": "High school diploma or equivalent",
+        "experience": "1-2 years of childcare experience or equivalent",
+        "associated character motives": [
+          "family motive",
+          "happiness motive",
+          "social wellbeing motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Stay-at-home Parent": {
+      "Stay-at-home Parent": {
+        "title": "Stay-at-home Parent",
+        "description": "A stay-at-home parent is responsible for the daily care and well-being of their children, including tasks such as feeding, bathing, and providing emotional support.",
+        "salary": "$0 (unpaid position)",
+        "skills": [
+          "Patience",
+          "Time management",
+          "Multitasking"
+        ],
+        "education": "High school diploma",
+        "experience": "Variable, typically caring for young children",
+        "associated character motives": [
+          "family motive",
+          "stability motive",
+          "happiness motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Stock Clerk": {
+      "Stock Clerk": {
+        "title": "Stock Clerk",
+        "description": "A stock clerk is responsible for receiving, storing, and issuing stockroom supplies, materials, and finished products to production or warehouse operations.",
+        "salary": "$35,000",
+        "skills": [
+          "Attention to detail",
+          "Organizational skills",
+          "Physical stamina"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "hunger motive",
+          "stability motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Stripper": {
+      "Stripper": {
+        "title": "Stripper",
+        "description": "A stripper is a performer who entertains audiences by dancing and performing in a suggestive or erotic manner, often in a nightclub or other adult entertainment venue.",
+        "salary": "$45,000",
+        "skills": [
+          "Dance",
+          "Performance",
+          "Entertainment"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "luxury motive",
+          "happiness motive",
+          "social wellbeing motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Student": {
+      "Student": {
+        "title": "Student",
+        "description": "A student is an individual who is formally engaged in an educational program at a school, college, or university.",
+        "salary": "$0",
+        "skills": [
+          "Time management",
+          "Study skills",
+          "Critical thinking"
+        ],
+        "education": "Currently pursuing a degree",
+        "experience": "Variable",
+        "associated character motives": [
+          "hope motive",
+          "happiness motive",
+          "success motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Taxi Driver": {
+      "Taxi Driver": {
+        "title": "Taxi Driver",
+        "description": "A taxi driver is responsible for safely transporting passengers from one location to another, providing a safe and comfortable experience for the passenger.",
+        "salary": "$45,000",
+        "skills": [
+          "Navigation",
+          "Communication",
+          "Time management"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "stability motive",
+          "material goods motive",
+          "hunger motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Teacher": {
+      "Teacher": {
+        "title": "Teacher",
+        "description": "A teacher is responsible for educating students, creating lesson plans, and assessing student progress to help them achieve academic success.",
+        "salary": "$50,000",
+        "skills": [
+          "Communication",
+          "Patience",
+          "Creativity",
+          "Organization"
+        ],
+        "education": "Bachelor\"s degree in Education",
+        "experience": "1-3 years",
+        "associated character motives": [
+          "happiness motive",
+          "social wellbeing motive",
+          "stability motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Therapist": {
+      "Therapist": {
+        "title": "Therapist",
+        "description": "A therapist works with patients to identify and overcome emotional and psychological issues, promoting mental health and wellbeing through counseling and therapy.",
+        "salary": "$80,000",
+        "skills": [
+          "Empathy",
+          "Active listening",
+          "Counseling techniques"
+        ],
+        "education": "Masters degree in Psychology or related field",
+        "experience": "3-5 years",
+        "associated character motives": [
+          "mental health motive",
+          "social wellbeing motive",
+          "happiness motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Truck Driver": {
+      "Truck Driver": {
+        "title": "Truck Driver",
+        "description": "A truck driver is responsible for transporting goods and materials from one location to another, ensuring timely delivery and safety of cargo.",
+        "salary": "$45,000",
+        "skills": [
+          "Navigation",
+          "Time management",
+          "Physical stamina"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "stability motive",
+          "shelter motive",
+          "hope motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Tutor": {
+      "Tutor": {
+        "title": "Tutor",
+        "description": "A tutor provides one-on-one instruction to students, helping them understand and master a particular subject or skill.",
+        "salary": "$45,000",
+        "skills": [
+          "Patience",
+          "Communication",
+          "Subject expertise"
+        ],
+        "education": "Bachelors degree",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "happiness motive",
+          "social wellbeing motive",
+          "hope motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Uber Driver": {
+      "Uber Driver": {
+        "title": "Uber Driver",
+        "description": "An Uber driver is responsible for transporting passengers safely and efficiently, using a smartphone app to accept ride requests and navigate to pickup and dropoff locations.",
+        "salary": "$40,000",
+        "skills": [
+          "Navigation",
+          "Communication",
+          "Time management"
+        ],
+        "education": "High school diploma",
+        "experience": "0-1 year",
+        "associated character motives": [
+          "stability motive",
+          "shelter motive",
+          "material goods motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Unemployed": {
+      "Unemployed": {
+        "title": "Unemployed",
+        "description": "An unemployed person is someone who is not currently working, often actively seeking employment or further education.",
+        "salary": "$0",
+        "skills": [],
+        "education": "Varies",
+        "experience": "0 years",
+        "associated character motives": [
+          "hunger motive",
+          "shelter motive",
+          "health motive",
+          "stability motive",
+          "hope motive",
+          "material goods motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Voice Actor": {
+      "Voice Actor": {
+        "title": "Voice Actor",
+        "description": "A voice actor is responsible for providing voice-overs for audio and video recordings, such as commercials, animations, and video games.",
+        "salary": "$80,000",
+        "skills": [
+          "Acting",
+          "Vocal technique",
+          "Audio recording software"
+        ],
+        "education": "High school diploma",
+        "experience": "1-3 years",
+        "associated character motives": [
+          "happiness motive",
+          "luxury motive",
+          "wealth motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Waiter": {
+      "Waiter": {
+        "title": "Waiter",
+        "description": "A waiter is responsible for taking orders, serving food and drinks to customers, and providing a positive dining experience.",
+        "salary": "$25,000",
+        "skills": [
+          "Communication",
+          "Multitasking",
+          "Attention to detail"
+        ],
+        "education": "High school diploma",
+        "experience": "0-1 year",
+        "associated character motives": [
+          "hunger motive",
+          "stability motive",
+          "social wellbeing motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Waitress": {
+      "Waitress": {
+        "title": "Waitress",
+        "description": "A waitress is responsible for taking orders, serving food and drinks, and handling customer transactions in a fast-paced dining environment.",
+        "salary": "$25,000",
+        "skills": [
+          "Communication",
+          "Multitasking",
+          "Customer service"
+        ],
+        "education": "High school diploma",
+        "experience": "1-2 years",
+        "associated character motives": [
+          "hunger motive",
+          "social wellbeing motive",
+          "stability motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Web Developer": {
+      "Web Developer": {
+        "title": "Web Developer",
+        "description": "A web developer designs, builds, and maintains websites and web applications using programming languages, frameworks, and databases.",
+        "salary": "$80,000",
+        "skills": [
+          "Programming (HTML, CSS, JavaScript)",
+          "Framework (React, Angular)",
+          "Database management (MySQL, MongoDB)"
+        ],
+        "education": "Bachelor degree in Computer Science",
+        "experience": "3-5 years",
+        "associated character motives": [
+          "hunger motive",
+          "wealth motive",
+          "luxury motive",
+          "control motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    },
+    "Writer": {
+      "Writer": {
+        "title": "Writer",
+        "description": "A writer is responsible for researching and writing engaging content for various mediums, such as articles, blogs, and books.",
+        "salary": "$55,000",
+        "skills": [
+          "Writing",
+          "Research",
+          "Creativity"
+        ],
+        "education": "Bachelor\"s degree in English, Journalism, or Communications",
+        "experience": "2-5 years",
+        "associated character motives": [
+          "happiness motive",
+          "expression motive"
+        ]
+      },
+      "salary": "$10,000",
+      "associated character motives": []
+    }
+  }
+}

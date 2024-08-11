@@ -1,37 +1,37 @@
 from ast import Not
 from calendar import c
+from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import copy
+from datetime import datetime, time
 import dis
 from functools import lru_cache
 import heapq
-from importlib import resources
+from hmac import new
 from itertools import chain, combinations, product
-from math import dist, inf
+import logging
+from math import dist, inf, log
 import math
-from mimetypes import init
 import operator
-from os import name
-from re import T
+import random
 import re
-import resource
-from warnings import filters
+import uuid
 import networkx as nx
-from networkx import subgraph
-from numpy import add, char, diff, isin
-from pkg_resources import add_activation_listener
-from regex import F
-from sympy import li
-from torch import cond
-from tiny_types import Character, Goal
+from regex import D
+
+# from tiny_characters import Motive
+from tiny_types import Character, Goal, Action, State, ActionSystem
 from tiny_types import Location, Event
 
 from tiny_jobs import Job
-from actions import Action, State
-from tiny_items import ItemInventory, ItemObject
+
+# from actions import Action, State, ActionSystem
+from tiny_items import ItemInventory, ItemObject, InvestmentPortfolio, Stock
 import tiny_memories
 from tiny_utility_functions import is_goal_achieved
 import numpy as np
+from tiny_time_manager import GameTimeManager as tiny_time_manager
+import importlib
 
 """ Graph Construction
 Defining Nodes:
@@ -72,7 +72,7 @@ Purpose: Represent actions characters can undertake for personal development, le
 Edges represent relationships or interactions between nodes, with attributes that describe the nature and dynamics of these relationships.
 
 Character-Character Edges
-Attributes: Relationship type (e.g., friend, family, colleague), strength, history.
+Attributes: Relationship type (e.g., friend, family, colleague), strength, historical.
 Purpose: Represent social and professional dynamics between characters.
 Character-Location Edges
 Attributes: Frequency of visits, last visit, favorite activities.
@@ -132,6 +132,475 @@ import networkx as nx
 from networkx.algorithms import community
 
 
+# Improved Piecewise Linear Approximation with Caching
+@lru_cache(maxsize=1024)
+def sigmoid_relationship_scale_piecewise_cached(
+    days_known, max_days=1000, steepness=0.01
+):
+    days_known = max(0, days_known)
+    mid_point = max_days / 2
+    if days_known < mid_point * 0.1:
+        return 0  # Approximated as 0 for very early days
+    elif days_known < mid_point * 0.25:
+        return (days_known / (mid_point * 0.25)) * 25  # Linear increase to 25
+    elif days_known < mid_point:
+        return (
+            25 + ((days_known - mid_point * 0.25) / (mid_point * 0.75)) * 25
+        )  # Linear increase to 50
+    elif days_known < mid_point * 1.5:
+        return (
+            50 + ((days_known - mid_point) / (mid_point * 0.5)) * 50
+        )  # Linear increase to 100
+    else:
+        return 100  # Approximated as 100 for late days
+
+
+# Define the optimized original sigmoid function with caching
+@lru_cache(maxsize=1024)
+def cached_sigmoid_relationship_scale_optimized(
+    days_known, max_days=1000, steepness=0.01
+):
+    days_known = max(0, days_known)
+    mid_point = max_days / 2
+    exponent = -steepness * (days_known - mid_point)
+    exp_value = np.exp(exponent)
+    sigmoid_value = 1 / (1 + exp_value)
+    return min(sigmoid_value * 100, 100)
+
+
+def cached_sigmoid_relationship_scale_optimized_b(
+    days_known, max_days=1000, steepness=0.01, b=0.666
+):
+    days_known = max(0, days_known)
+    mid_point = max_days / 2
+    exponent1 = -steepness * (days_known - mid_point)
+    exponent2 = -steepness * (days_known - mid_point) - b
+    exp_value1 = np.exp(exponent1)
+    exp_value2 = np.exp(exponent2)
+    sigmoid_value1 = 1 / (1 + exp_value1)
+    sigmoid_value2 = 1 / (1 + exp_value2)
+    average_sigmoid = 0.5 * (sigmoid_value1 + sigmoid_value2)
+    return min(average_sigmoid * 100, 100)
+
+
+# Define the optimized approximate sigmoid function with caching
+@lru_cache(maxsize=1024)
+def cached_sigmoid_relationship_scale_approx_optimized(
+    days_known, max_days=1000, steepness=0.01
+):
+    days_known = max(0, days_known)
+    mid_point = max_days / 2
+    x = steepness * (days_known - mid_point)
+    sigmoid_value = 0.5 * (x / (1 + abs(x)) + 1)
+    return min(sigmoid_value * 100, 100)
+
+
+@lru_cache(maxsize=1024)
+def cached_sigmoid_raw_approx_optimized(motive_value, max_value=10.0, steepness=0.01):
+    motive_value = max(0, motive_value)
+    mid_point = max_value / 2
+    x = steepness * (motive_value - mid_point)
+    sigmoid_value = 0.5 * (x / (1 + abs(x)) + 1)
+    return sigmoid_value
+
+
+# Define the optimized approximate sigmoid function with caching
+@lru_cache(maxsize=1024)
+def cached_sigmoid_motive_scale_approx_optimized(
+    motive_value, max_value=10.0, steepness=0.01
+):
+    motive_value = max(0, motive_value)
+    mid_point = max_value / 2
+    x = steepness * (motive_value - mid_point)
+    sigmoid_value = 0.5 * (x / (1 + abs(x)) + 1)
+    return min(sigmoid_value * max_value, max_value)
+
+
+@lru_cache(maxsize=1024)
+def tanh_scaling(x, data_max, data_min, data_avg, data_std):
+    a = data_std
+    centered_value = x - data_avg
+    scaled_value = math.tanh(centered_value / a)
+    return scaled_value * (data_max - data_min) / 2.0 + (data_max + data_min) / 2.0
+
+
+@lru_cache(maxsize=1024)
+def tanh_scaling_b(x, data_max, data_min, data_avg, data_std):
+    a = data_std
+    centered_value = x - data_avg
+    scaled_value = math.tanh(centered_value / a)
+    return (data_max - data_min) / 2.0 * scaled_value
+
+
+@lru_cache(maxsize=1024)
+def tanh_scaling_raw(x, data_max, data_min, data_avg, data_std):
+    a = data_std
+    centered_value = x - data_avg
+    scaled_value = math.tanh(centered_value / a)
+    return scaled_value
+
+
+# version of tanh scaling coded manually without using the math.tanh function
+def tanh_scaling_manual(x, data_max, data_min, data_avg):
+    data_range = data_max - data_min
+    a = data_range / 2.0
+    centered_value = x - data_avg
+    scaled_value = (math.exp(centered_value / a) - math.exp(-centered_value / a)) / (
+        math.exp(centered_value / a) + math.exp(-centered_value / a)
+    )
+    return scaled_value
+
+
+# Example interaction types and their weights
+
+
+class StdCache:
+    def __init__(self, refresh_interval_seconds):
+        self.refresh_interval_seconds = refresh_interval_seconds
+        self.cached_std = None
+        self.last_calculation_time = None
+
+    def cache_std(self, std):
+        # Recalculate the standard deviation
+        self.cached_std = std
+        self.last_calculation_time = datetime.now().timestamp()
+
+    def get_std(self):
+        current_time = datetime.now().timestamp()
+
+        # Check if we need to recalculate the standard deviation
+        if (
+            self.cached_std is None
+            or self.last_calculation_time is None
+            or current_time - self.last_calculation_time > self.refresh_interval_seconds
+        ):
+            return None
+        else:
+
+            return self.cached_std
+
+    def update_data(self):
+        # Invalidate the cache
+        self.cached_std = None
+        self.last_calculation_time = None
+
+
+# Function to calculate interaction frequency
+def calculate_interaction_frequency_combined(
+    interaction_log, current_time, window_size=100, decay_factor=0.01
+):
+    # Interaction log format: {timestamp: (interaction_weight, emotional_impact_before, emotional_impact_after, timestamp_end)}
+    # Example: {1627680000: ('significant', 0.5215, 0.5915), 1627681000: ('casual', -0.2, -0.15)}
+
+    # Initialize interaction counts
+    interaction_counts = defaultdict(int)
+
+    # Calculate the weighted sum and moving average within the window
+    total_weighted_interactions = 0
+    recent_interactions_count = 0
+    time_diffs = []
+
+    for interaction_time, (
+        interaction_weight,
+        emotional_impact_before,
+        emotional_impact_after,
+        timestamp_end,
+    ) in interaction_log.items():
+        # convert time_diff to days
+        time_diff = abs((current_time - interaction_time) / (24 * 3600))
+        time_length = abs((timestamp_end - interaction_time) / (24 * 3600))
+        # use a modulus to fit the time_length into into a weight between 0 and 1 representing 4 tiers of interaction length ("casual", "short", "medium", "long")
+        time_length = time_length % 4
+        # use the time_length to calculate the weight of the interaction
+        time_weight = time_length * 0.25
+        if time_diff <= window_size:
+            recent_interactions_count += 1
+        time_diffs.append(time_diff)
+        decay_weight = np.exp(-decay_factor * time_diff)
+        total_weighted_interactions += decay_weight * time_weight
+
+    # Calculate moving average interaction frequency
+    moving_average_frequency = recent_interactions_count / window_size
+    # Normalize total_weighted_interactions
+    max_time_weight = 1  # Since time_weight ranges from 0 to 1
+    max_possible_weighted_interactions = window_size * max_time_weight
+    normalized_weighted_interactions = (
+        total_weighted_interactions / max_possible_weighted_interactions
+    )
+    # Combine the weighted sum and moving average
+    combined_frequency = (total_weighted_interactions + moving_average_frequency) / 2
+
+    return combined_frequency
+
+
+def fast_decay_effect(target_value, input_value, decay_rate, elapsed_time):
+    """Apply linear decay to an input value towards a target value."""
+    for i in range(int(elapsed_time)):
+        decay_rate = decay_rate + (i * 0.01)
+        input_value = input_value * (1 - decay_rate)
+        if (input_value - target_value) > 0 and input_value <= target_value:
+            break
+        elif (input_value - target_value) < 0 and input_value >= target_value:
+            break
+    return input_value
+
+
+def decay_effect(target_value, input_value, decay_rate, elapsed_time):
+    """Apply decay to a value over time, decaying towards a target value.
+    Args:
+        target_value (float): The target value to decay towards.
+        input_value (float): The current value to decay.
+        decay_rate (float): The rate of decay.
+        elapsed_time (float): The elapsed time since the last interaction in days.
+
+    Returns:
+        float: The decayed value.
+
+    """
+    if input_value > target_value:
+        # Calculate the decay multiplier
+        decay_multiplier = (1 - decay_rate) ** elapsed_time
+
+        # Decay the value towards the target value
+        decayed_value = target_value + (input_value - target_value) * decay_multiplier
+    elif input_value < target_value:
+        # Calculate the decay multiplier
+        decay_multiplier = (1 + decay_rate) ** elapsed_time
+
+        # Decay the value towards the target value
+        decayed_value = target_value + (input_value - target_value) * decay_multiplier
+    else:
+        decayed_value = input_value
+
+    return decayed_value
+
+
+def linear_decay_effect(target_value, input_value, decay_rate, elapsed_time):
+    """Apply linear decay to a value over time towards a target value."""
+    decay_amount = decay_rate * elapsed_time
+    if input_value > target_value:
+        new_value = input_value - decay_amount
+        return max(target_value, new_value)
+    elif input_value < target_value:
+        new_value = input_value + decay_amount
+        return min(target_value, new_value)
+
+
+def logarithmic_decay_effect(target_value, input_value, decay_rate, elapsed_time):
+    """Apply logarithmic decay to a value over time towards a target value."""
+    decay_multiplier = math.log1p(elapsed_time) * decay_rate
+    if input_value > target_value:
+        new_value = max(target_value, input_value - decay_multiplier)
+    elif input_value < target_value:
+        new_value = min(target_value, input_value + decay_multiplier)
+    return new_value
+
+
+def calculate_relationship_type(
+    char1, char2, emotional_impact, interaction_frequency, strength, trust, historical
+):
+    """
+    Determine the relationship type using a more complex model with weighted and interacting factors.
+    """
+    # Calculate the base relationship type based on emotional impact
+    if emotional_impact > 0.5:
+        base_type = "positive"
+    elif emotional_impact < -0.5:
+        base_type = "negative"
+    else:
+        base_type = "neutral"
+
+    # Adjust the relationship type based on interaction frequency
+    if interaction_frequency > 0.5:
+        if base_type == "positive":
+            final_type = "significant"
+        elif base_type == "negative":
+            final_type = "strained"
+        else:
+            final_type = "casual"
+
+    # Adjust the relationship type based on strength and trust
+    if strength > 0.5:
+        if base_type == "positive":
+            final_type = "close"
+        elif base_type == "negative":
+            final_type = "hostile"
+        else:
+            final_type = "professional"
+
+    if trust > 0.5:
+        if base_type == "positive":
+            final_type = "trusted"
+        elif base_type == "negative":
+            final_type = "distrusted"
+        else:
+            final_type = "acquaintance"
+
+    # Adjust the relationship type based on historical interactions
+    if historical > 0.5:
+        if base_type == "positive":
+            final_type = "loyal"
+        elif base_type == "negative":
+            final_type = "grudge"
+        else:
+            final_type = "familiar"
+
+    if char1.job.location == char2.job.location:
+        if base_type == "positive":
+            final_type = "colleague"
+        elif base_type == "negative":
+            final_type = "professional rival"
+        else:
+            final_type = "associate"
+
+    if char1.home == char2.home:
+        if base_type == "positive":
+            final_type = "roommate"
+        elif base_type == "negative":
+            final_type = "adversary"
+        else:
+            final_type = "live-in neighbor"
+
+    return final_type
+
+
+def decay_emotional_impact(
+    self,
+    impact_value,
+    interaction_type,
+    historical,
+    emotional_impact,
+    base_decay_rate=0.01,
+    elapsed_time=1,
+    interaction_log={},
+):
+    # Interaction log format: {timestamp: (interaction_weight, emotional_impact_before, emotional_impact_after, timestamp_end)
+    # Example: {1627680000: ('significant', 0.5215, 0.5915), 1627681000: ('casual', -0.2, -0.15)}
+    stability_factor = (
+        historical / 100
+    )  # As historical approaches 100, stability_factor approaches 1
+    decay_rate = base_decay_rate * (
+        1 - stability_factor
+    )  # Adjust decay rate based on historical interactions
+    current_impact = emotional_impact
+    if interaction_log != {}:
+        # sort the interaction log by time, earliest to most recent
+        interaction_log = dict(
+            sorted(interaction_log.items(), key=lambda item: item[0])
+        )
+        for interaction_time, (
+            interaction_weight,
+            emotional_impact_before,
+            emotional_impact_after,
+            timestamp_end,
+        ) in interaction_log.items():
+            elapsed_time = (time.time() - interaction_time) / (
+                24 * 3600
+            )  # Convert elapsed time to days
+            interaction_impact = emotional_impact_after - emotional_impact_before
+            target = (
+                emotional_impact - interaction_impact
+                if interaction_impact > 0
+                else emotional_impact + interaction_impact
+            )
+            if interaction_weight <= 1:
+                current_impact = fast_decay_effect(
+                    target, current_impact, decay_rate, elapsed_time
+                )
+            elif interaction_weight >= 1 and interaction_weight <= 2:
+
+                current_impact = linear_decay_effect(
+                    target, current_impact, decay_rate, elapsed_time
+                )
+            elif interaction_weight >= 2 and interaction_weight <= 3:
+                current_impact = decay_effect(
+                    target, current_impact, decay_rate, elapsed_time
+                )
+            elif interaction_weight >= 3:
+                current_impact = logarithmic_decay_effect(
+                    target, current_impact, decay_rate, elapsed_time
+                )
+    return current_impact
+
+
+def update_emotional_impact(
+    impact_value,
+    interaction_type,
+    historical,
+    emotional_impact,
+    trust,
+    impact_rating,
+    base_decay_rate=0.01,
+):
+    """Update emotional impact with decay over time."""
+    #     High Trust Amplifies Positive Impact:
+
+    # When trust is high, positive interactions tend to have a more significant positive emotional impact, as characters are more likely to value and be affected by the actions of trusted companions.
+    # High Trust Mitigates Negative Impact:
+
+    # Conversely, when trust is high, negative interactions may have a reduced negative impact. Characters might be more forgiving or understanding, assuming good intentions or past positive history as reasons for the negative behavior.
+    # Low Trust Amplifies Negative Impact:
+
+    # When trust is low, negative interactions can have a more pronounced negative impact. The characters may be more sensitive to slights or perceived betrayals, leading to a deeper emotional response.
+    # Low Trust Reduces Positive Impact:
+
+    # Positive interactions may also have a less significant positive impact when trust is low, as characters may be skeptical of the motives behind the actions. They might interpret positive gestures with suspicion or doubt, diminishing the emotional effect.
+
+    current_impact = emotional_impact
+    stability_factor = historical / 100
+    impact_value *= (
+        1 - stability_factor
+    )  # Adjust impact value based on historical interactions
+
+    if interaction_type == "positive":
+        current_impact += impact_value * (1 + trust)
+    elif interaction_type == "negative":
+        current_impact -= impact_value * (1 - trust)
+    else:  # Neutral interaction
+        current_impact *= 0.95  # Slight decay for neutral interaction
+
+    emotional_impact = max(-1, min(1, current_impact))
+    last_interaction_time = datetime.now().timestamp()
+
+    return emotional_impact
+
+
+def update_trust(
+    trust_increment=0.01,
+    interaction_type="proximity",
+    betrayal=False,
+    impact_rating=1,
+    historical=50,
+    personality_traits={},
+    trust=0.5,
+):
+    stability_factor = historical / 100
+    if betrayal:
+        trust -= trust_increment * (1 - stability_factor)
+    elif interaction_type == "cooperative":
+        trust += (
+            trust_increment
+            * (1 + personality_traits.get("agreeableness", 0.5))
+            * stability_factor
+        )
+    elif interaction_type == "proximity":
+        trust += trust_increment * 0.5 * stability_factor
+    trust = max(0, min(1, trust))
+    return trust
+
+
+def cooperative_activity(self, benefit_shared):
+    """Update trust based on cooperative activity success."""
+    increment = benefit_shared * 0.2  # More weight to cooperative success
+    self.update_trust(increment, "cooperative")
+
+
+def betrayal_event(self, severity):
+    """Handle a betrayal event with severity consideration."""
+    decrement = severity * 0.3
+    self.update_trust(decrement, "betrayal", betrayal=True)
+
+
 character_attributes = [
     "name",
     "age",
@@ -164,7 +633,22 @@ character_attributes = [
 
 
 class GraphManager:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance.__initialized = False
+        return cls._instance
+
     def __init__(self):
+        if self.__initialized:
+            return
+        self.std_cache = StdCache(
+            refresh_interval_seconds=60
+        )  # Refresh every 60 seconds
+        self.unique_graph_id = uuid.uuid4()
+
         self.dp_cache = {}
         self.characters = {}
         self.locations = {}
@@ -204,6 +688,7 @@ class GraphManager:
         }
 
         self.G = self.initialize_graph()
+        self.__initialized = True
 
     def initialize_graph(self):
         self.G = (
@@ -215,7 +700,7 @@ class GraphManager:
         return self.locations.get(name, (0, 0))
 
     def update_location(self, name, location):
-        self.characters[name]["coordinate_location"] = location
+        self.characters[name]["coordinates_location"] = location
 
     def add_obstacle(self, obstacle_location):
         self.obstacles.append(obstacle_location)
@@ -265,26 +750,38 @@ class GraphManager:
 
     # Node Addition Methods
     def add_character_node(self, char: Character):
-        from tiny_characters import Character
+        Character = importlib.import_module("tiny_characters").Character
 
         if len(self.characters) == 0:
             self.character_attributes = char.to_dict().keys()
         self.characters[char.name] = char
-
+        wealth_money = char.get_wealth_money()
+        has_investment = char.has_investment()
         self.G.add_node(
-            char.name,
+            char,
             type="character",
             age=char.age,
             job=char.job,
             happiness=char.happiness,
-            energy_level=char.energy_level,
+            energy_level=char.energy,
             relationships={},  # Stores additional details about relationships
             emotional_state={},
-            coordinate_location=char.coordinate_location,
+            coordinates_location=char.coordinates_location,
             resources=char.inventory,
             needed_resources=char.needed_items,  # This is a list of tuples, each tuple is (dict of item requirements, quantity needed).
-            # The dict of item requirements is composed of various keys like item_type, value, usability, sentimental_value, trade_value, scarcity, coordinate_location, name, etc. from either the node or the root class instance.
+            # The dict of item requirements is composed of various keys like item_type, value, usability, sentimental_value, trade_value, scarcity, coordinates_location, name, etc. from either the node or the root class instance.
             name=char.name,
+            mood=char.current_mood,
+            wealth_money=wealth_money,
+            health_status=char.health_status,
+            hunger_level=char.hunger_level,
+            mental_health=char.mental_health,
+            social_wellbeing=char.social_wellbeing,
+            shelter=char.shelter,
+            has_investment=has_investment,
+        )
+        logging.debug(
+            f"Added character node: \n {char} \n\n with attributes:\n {self.G.nodes[char]}\n"
         )
 
     def add_location_node(self, loc: Location):
@@ -294,30 +791,33 @@ class GraphManager:
             self.location_attributes = loc.to_dict().keys()
         self.locations[loc.name] = loc
         self.G.add_node(
-            loc.name,
+            loc,
             type="location",
             popularity=loc.popularity,
             activities_available=loc.activities_available,
-            accessibility=loc.accessibility,
-            safety_measures=loc.safety_measures,
-            coordinate_location=loc.coordinate_location,
+            accessible=loc.accessible,
+            security=loc.security,
+            coordinates_location=loc.coordinates_location,
             name=loc.name,
+            threat_level=loc.threat_level,
+            visit_count=loc.visit_count,
         )
 
     def add_event_node(self, event: Event):
         from tiny_event_handler import Event
+
         if len(self.events) == 0:
             self.event_attributes = event.to_dict().keys()
         self.events[event.name] = event
         self.G.add_node(
-            event.name,
+            event,
             type="event",
             event_type=event.type,
             date=event.date,
             importance=event.importance,
             impact=event.impact,
             required_items=event.required_items,
-            coordinate_location=event.coordinate_location,
+            coordinates_location=event.coordinates_location,
             name=event.name,
         )
 
@@ -326,45 +826,73 @@ class GraphManager:
             self.object_attributes = obj.to_dict().keys()
         self.objects[obj.name] = obj
         self.G.add_node(
-            obj.name,
+            obj,
             type="object",
             item_type=obj.item_type,
+            item_subtype=obj.item_subtype,
             value=obj.value,
             usability=obj.usability,
-            sentimental_value=obj.sentimental_value,
-            trade_value=obj.trade_value,
-            scarcity=obj.scarcity,
-            coordinate_location=obj.coordinate_location,
+            # scarcity=obj.scarcity,
+            coordinates_location=obj.coordinates_location,
             name=obj.name,
+            ownership_history=obj.ownership_history,
+            type_specific_attributes=(
+                obj.get_type_specific_attributes()
+                if obj.type_specific_attributes
+                else {}
+            ),
+        )
+
+    def add_stock_node(self, stock: Stock):
+
+        if len(self.stocks) == 0:
+            self.stock_attributes = stock.to_dict().keys()
+        self.stocks[stock.name] = stock
+        self.G.add_node(
+            stock,
+            type="stock",
+            stock_type=stock.stock_type,
+            stock_description=stock.stock_description,
+            value=stock.value,
+            scarcity=stock.scarcity,
+            name=stock.name,
+            ownership_history=stock.ownership_history,
+            type_specific_attributes=(
+                stock.get_type_specific_attributes()
+                if stock.type_specific_attributes
+                else {}
+            ),
         )
 
     def add_activity_node(self, act: Action):
+        Action = importlib.import_module("actions").Action
+
         if len(self.activities) == 0:
             self.activity_attributes = act.to_dict().keys()
         self.activities[act.name] = act
         self.G.add_node(
-            act.name,
+            act,
             type="activity",
-            related_skill=act.related_skill,
-            satisfaction_level=act.satisfaction_level,
-            necessary_tools=act.necessary_tools,
-            conflict_activities=act.conflict_activities,
-            dependency_activities=act.dependency_activities,
-            coordinate_location=act.coordinate_location,
+            related_skills=act.related_skills,
             name=act.name,
+            required_items=act.required_items,
+            preconditions=act.preconditions,
+            effects = act.effects,
         )
 
     def add_job_node(self, job: Job):
         if len(self.jobs) == 0:
             self.job_attributes = job.to_dict().keys()
-        self.jobs[job.name] = job
+        self.jobs[job.job_name] = job
         self.G.add_node(
-            job.name,
+            job,
             type="job",
-            required_skills=job.required_skills,
+            required_skills=job.job_skills,
             location=job.location,
-            salary=job.salary,
+            salary=job.job_salary,
             job_title=job.job_title,
+            available=job.available,
+            name=job.job_name,
         )
 
     def add_dict_of_nodes(self, nodes_dict):
@@ -394,41 +922,537 @@ class GraphManager:
         self,
         char1,
         char2,
-        relationship_type,
-        strength,
-        history,
-        emotional_impact,
-        interaction_frequency,
+        relationship_type=0,
+        strength=0,
+        emotional_impact=0,
+        trust=0,
+        impact_factor=1,
+        impact_value=0.01,
         edge_type="character_character",
+        interaction_log={},
+        romance_compatibility=0,
+        romanceable=True,
+        romance_interest=False,
+        romance_value=0,
     ):
+        # Interaction log format: {timestamp: (interaction_weight, emotional_impact_before, emotional_impact_after, timestamp_end)}
+        # Example: {1627680000: (3.1, 0.5215, 0.5915), 1627681000: (0.6, -0.2, -0.15)}
+
+        trust = update_trust()
+        emotional_impact_before = emotional_impact
+        emotional_impact_after = update_emotional_impact(
+            impact_value,
+            "positive" if (impact_value > 0) else "negative",
+            0,
+            emotional_impact_before,
+            trust,
+            impact_factor,
+        )
+        historical = 0
+        if interaction_log == {}:
+            interaction_frequency = 0
+            interaction_log = {
+                datetime.now().timestamp(): (
+                    impact_factor,
+                    emotional_impact_before,
+                    emotional_impact_after,
+                    datetime.now().timestamp(),
+                )
+            }
+            relationship_type = calculate_relationship_type(
+                char1,
+                char2,
+                emotional_impact_after,
+                interaction_frequency,
+                strength,
+                trust,
+                historical,
+            )
+        else:
+            interaction_frequency = calculate_interaction_frequency_combined(
+                interaction_log, time.time()
+            )
+            # find earliest timestamp in interaction_log
+            earliest_timestamp = min(interaction_log.keys())
+            # calculate how many days have passed since the earliest interaction
+            days_known = (time.time() - earliest_timestamp) / (24 * 3600)
+            historical = cached_sigmoid_relationship_scale_approx_optimized(days_known)
+
+        if self.G.has_edge(char1, char2):
+
+            self.update_character_character_edge(
+                char1,
+                char2,
+                impact_factor,
+                impact_value,
+                relationship_type,
+                strength,
+                historical,
+                emotional_impact_after,
+                interaction_frequency,
+                trust,
+                edge_type,
+                interaction_log,
+            )
+            return
+        romance_compatibility = self.calculate_romance_compatibility(
+            char1, char2, historical
+        )
+        romance_interest = self.calculate_romance_interest(
+            char1,
+            char2,
+            romance_compatibility,
+            romance_value,
+            relationship_type,
+            strength,
+            historical,
+            trust,
+            interaction_frequency,
+            emotional_impact_after,
+        )
         self.G.add_edge(
             char1,
             char2,
             type=edge_type,
-            relationship_type=relationship_type,
-            strength=strength,
-            history=history,
-            emotional_impact=emotional_impact,
-            interaction_frequency=interaction_frequency,
+            relationship_type=relationship_type,  # This is a string representing the type of relationship (e.g., friend, family, colleague, antagonist, rival, enemy).
+            strength=strength,  # This is a float between 0 and 1 representing the strength of the relationship. 0 is weak, 1 is strong.
+            historical=historical,  # This is a value representing the length of the relationship in time. It
+            emotional=emotional_impact_after,  # This is a float between -1 and 1 representing the emotional impact of the relationship over time. -1 is negative, 0 is neutral, 1 is positive.
+            interaction_frequency=interaction_frequency,  # This is a float representing how often the characters interact with each other.
+            interaction_count=len(interaction_log),
             key=edge_type,
-            distance=dist(char1.coordinate_location, char2.coordinate_location),
+            trust=trust,  # This is a float between 0 and 1 representing the level of trust between the characters. 0 is no trust, 1 is complete trust.
+            distance=dist(char1.coordinates_location, char2.coordinates_location),
             interaction_cost=self.calculate_char_char_edge_cost(
                 char1,
                 char2,
                 relationship_type,
                 strength,
-                history,
+                historical,
+                trust,
                 emotional_impact,
                 interaction_frequency,
             ),
             dist_cost=self.calc_distance_cost(
-                dist(char1.coordinate_location, char2.coordinate_location), char1, char2
+                dist(char1.coordinates_location, char2.coordinates_location),
+                char1,
+                char2,
+            ),
+            interaction_log=interaction_log,
+        )
+
+    def update_character_character_edge(
+        self,
+        char1,
+        char2,
+        impact_factor,
+        impact_value,
+        relationship_type=None,
+        strength=None,
+        historical=None,
+        emotional_impact=None,
+        trust=None,
+        edge_type="character_character",
+        interaction_log=None,  # dict of interactions like: {day: (interaction_weight, emotional_impact)}
+    ):
+
+        interaction_frequency = calculate_interaction_frequency_combined(
+            interaction_log, time.time()
+        )  # find earliest timestamp in interaction_log
+        earliest_timestamp = min(interaction_log.keys())
+        # calculate how many days have passed since the earliest interaction
+        days_known = (time.time() - earliest_timestamp) / (24 * 3600)
+        historical = cached_sigmoid_relationship_scale_approx_optimized(days_known)
+        if not self.G.has_edge(char1, char2):
+
+            self.add_character_character_edge(
+                char1,
+                char2,
+                relationship_type,
+                strength,
+                historical,
+                emotional_impact,
+                trust,
+                impact_factor=impact_factor,
+                impact_value=impact_value,
+                interaction_log=interaction_log,
+            )
+            return
+        emotional_impact_before = emotional_impact
+        emotional_impact_after = update_emotional_impact(
+            impact_value,
+            "positive" if (impact_value > 0) else "negative",
+            emotional_impact,
+            trust,
+            impact_factor,
+        )
+
+        if relationship_type:
+            self.G[char1][char2]["relationship_type"] = relationship_type
+        if strength:
+            self.G[char1][char2]["strength"] = strength
+        if historical:
+            self.G[char1][char2]["historical"] = historical
+        if emotional_impact_after:
+            self.G[char1][char2]["emotional_impact"] = emotional_impact
+        if interaction_frequency:
+            self.G[char1][char2]["interaction_frequency"] = interaction_frequency
+        if trust:
+            self.G[char1][char2]["trust"] = trust
+        if interaction_log:
+            self.G[char1][char2]["interaction_log"] = interaction_log
+
+    def calculate_dynamic_weights(self, historical):
+        initial_stage = historical < 20
+        middle_stage = 20 <= historical < 60
+        mature_stage = historical >= 60
+
+        if initial_stage:
+            return {
+                "openness": 0.2,
+                "extraversion": 0.25,
+                "conscientiousness": 0.15,
+                "agreeableness": 0.25,
+                "neuroticism": 0.05,
+                "openness_conscientiousness_interaction": 0.05,
+                "extraversion_agreeableness_interaction": 0.05,
+                "neuroticism_stabilization": 0.1,
+            }
+        elif middle_stage:
+            return {
+                "openness": 0.15,
+                "extraversion": 0.2,
+                "conscientiousness": 0.2,
+                "agreeableness": 0.2,
+                "neuroticism": 0.1,
+                "openness_conscientiousness_interaction": 0.05,
+                "extraversion_agreeableness_interaction": 0.05,
+                "neuroticism_stabilization": 0.05,
+            }
+        elif mature_stage:
+            return {
+                "openness": 0.1,
+                "extraversion": 0.15,
+                "conscientiousness": 0.25,
+                "agreeableness": 0.2,
+                "neuroticism": 0.1,
+                "openness_conscientiousness_interaction": 0.1,
+                "extraversion_agreeableness_interaction": 0.05,
+                "neuroticism_stabilization": 0.05,
+            }
+        return None
+
+    def calculate_romance_compatibility(self, char1, char2, historical):
+        Character = importlib.import_module("tiny_characters").Character
+        # Example compatibility calculation based on traits and other factors
+        # Calculate compatibility components
+        openness = char1.personality_traits.get_openness()
+        extraversion = char1.personality_traits.get_extraversion()
+        conscientiousness = char1.personality_traits.get_conscientiousness()
+        agreeableness = char1.personality_traits.get_agreeableness()
+        neuroticism = char1.personality_traits.get_neuroticism()
+        partner_agreeableness = char2.personality_traits.get_agreeableness()
+        partner_conscientiousness = char2.personality_traits.get_conscientiousness()
+        partner_extraversion = char2.personality_traits.get_extraversion()
+        partner_neuroticism = char2.personality_traits.get_neuroticism()
+        partner_openness = char2.personality_traits.get_openness()
+
+        openness_compat = 1 - abs(openness - partner_openness) / 8
+        extraversion_compat = 1 - abs(extraversion - partner_extraversion) / 8
+        conscientiousness_compat = (
+            1 - abs(conscientiousness - partner_conscientiousness) / 8
+        )
+        agreeableness_compat = 1 - abs(agreeableness - partner_agreeableness) / 8
+        neuroticism_compat = 1 - abs(neuroticism - partner_neuroticism) / 8
+
+        # Interaction terms
+        openness_conscientiousness_interaction = (
+            (openness + partner_openness)
+            / 2
+            * (1 - abs(conscientiousness - partner_conscientiousness) / 8)
+        )
+        extraversion_agreeableness_interaction = (
+            (extraversion + partner_extraversion)
+            / 2
+            * (1 - abs(agreeableness - partner_agreeableness) / 8)
+        )
+        neuroticism_stabilization = (1 - abs(neuroticism - partner_neuroticism) / 8) * (
+            1 - (neuroticism + partner_neuroticism) / 16
+        )
+
+        # Weights for each trait's influence on compatibility
+        assert self.G.has_node(char1) and self.G.has_node(char2)
+        weights = self.calculate_dynamic_weights(historical=historical)
+
+        # Calculate weighted compatibility score
+        compatibility_score = (
+            openness_compat * weights["openness"]
+            + extraversion_compat * weights["extraversion"]
+            + conscientiousness_compat * weights["conscientiousness"]
+            + agreeableness_compat * weights["agreeableness"]
+            + neuroticism_compat * weights["neuroticism"]
+            + openness_conscientiousness_interaction
+            * weights["openness_conscientiousness_interaction"]
+            + extraversion_agreeableness_interaction
+            * weights["extraversion_agreeableness_interaction"]
+            + neuroticism_stabilization * weights["neuroticism_stabilization"]
+        )
+
+        return max(0.0, min(1.0, compatibility_score))
+
+    def calculate_romance_interest(
+        self,
+        char1,
+        char2,
+        romance_compat,
+        romance_value,
+        relationship_type,
+        strength,
+        historical,
+        trust,
+        interaction_frequency,
+        emotional_impact,
+    ):
+        Character = importlib.import_module("tiny_characters").Character
+        wealth_motive = char1.get_motives().get_wealth_motive().score
+        wealth_motive = cached_sigmoid_motive_scale_approx_optimized(wealth_motive)
+        partner_wealth_motive = char2.get_motives().get_wealth_motive().score
+        partner_wealth_motive = cached_sigmoid_motive_scale_approx_optimized(
+            partner_wealth_motive
+        )
+
+        family_motive = char1.get_motives().get_family_motive().score
+        family_motive = cached_sigmoid_motive_scale_approx_optimized(family_motive)
+        partner_family_motive = char2.get_motives().get_family_motive().score
+        partner_family_motive = cached_sigmoid_motive_scale_approx_optimized(
+            partner_family_motive
+        )
+
+        wealth_money = char1.wealth_money
+        # wealth money can be very large, so we need to normalize it using a sigmoid function
+        wealth_money = tanh_scaling_raw(
+            wealth_money,
+            data_max=(
+                self.get_maximum_attribute_value("wealth_money")
+                if self.get_maximum_attribute_value("wealth_money")
+                else 100000
+            ),
+            data_min=0,
+            data_avg=(
+                self.get_average_attribute_value("wealth_money")
+                if self.get_average_attribute_value("wealth_money")
+                else 50000
+            ),
+            data_std=(
+                self.get_stddev_attribute_value("wealth_money")
+                if self.get_stddev_attribute_value("wealth_money")
+                else 25000
             ),
         )
 
+        partner_wealth_money = char2.wealth_money
+        partner_wealth_money = tanh_scaling_raw(
+            partner_wealth_money,
+            data_max=(
+                self.get_maximum_attribute_value("wealth_money")
+                if self.get_maximum_attribute_value("wealth_money")
+                else 100000
+            ),
+            data_min=0,
+            data_avg=(
+                self.get_average_attribute_value("wealth_money")
+                if self.get_average_attribute_value("wealth_money")
+                else 50000
+            ),
+            data_std=(
+                self.get_stddev_attribute_value("wealth_money")
+                if self.get_stddev_attribute_value("wealth_money")
+                else 25000
+            ),
+        )
+        wealth_differenceab = abs(wealth_money - partner_wealth_money)
+        wealth_differenceba = abs(partner_wealth_money - wealth_money)
+
+        beauty_motive = char1.get_motives().get_beauty_motive().score
+        beauty_motive = cached_sigmoid_motive_scale_approx_optimized(beauty_motive)
+
+        partner_beauty_motive = char2.get_motives().get_beauty_motive().score
+        partner_beauty_motive = cached_sigmoid_motive_scale_approx_optimized(
+            partner_beauty_motive
+        )
+
+        luxury_motive = char1.get_motives().get_luxury_motive().score
+        luxury_motive = cached_sigmoid_motive_scale_approx_optimized(luxury_motive)
+        partner_luxury_motive = char2.get_motives().get_luxury_motive().score
+        partner_luxury_motive = cached_sigmoid_motive_scale_approx_optimized(
+            partner_luxury_motive
+        )
+
+        stability_motive = char1.get_motives().get_stability_motive().score
+        stability_motive = cached_sigmoid_motive_scale_approx_optimized(
+            stability_motive
+        )
+        partner_stability_motive = char2.get_motives().get_stability_motive().score
+        partner_stability_motive = cached_sigmoid_motive_scale_approx_optimized(
+            partner_stability_motive
+        )
+
+        control_motive = char1.get_motives().get_control_motive().score
+        control_motive = cached_sigmoid_motive_scale_approx_optimized(control_motive)
+        partner_control_motive = char2.get_motives().get_control_motive().score
+        partner_control_motive = cached_sigmoid_motive_scale_approx_optimized(
+            partner_control_motive
+        )
+
+        material_goods_motive = char1.get_motives().get_material_goods_motive().score
+        material_goods_motive = cached_sigmoid_motive_scale_approx_optimized(
+            material_goods_motive
+        )
+        partner_material_goods_motive = (
+            char2.get_motives().get_material_goods_motive().score
+        )
+        partner_material_goods_motive = cached_sigmoid_motive_scale_approx_optimized(
+            partner_material_goods_motive
+        )
+
+        shelter_motive = char1.get_motives().get_shelter_motive().score
+        shelter_motive = cached_sigmoid_motive_scale_approx_optimized(shelter_motive)
+        partner_shelter_motive = char2.get_motives().get_shelter_motive().score
+        partner_shelter_motive = cached_sigmoid_motive_scale_approx_optimized(
+            partner_shelter_motive
+        )
+
+        beauty = char1.beauty
+        partner_beauty = char2.beauty
+        beauty_difference = abs(beauty - partner_beauty)
+
+        base_libido = char1.get_base_libido()
+        libido = (
+            base_libido
+            + ((romance_value / 10) * romance_compat)
+            + partner_beauty
+            + char1.energy
+            + char1.get_motives().get_family_motive().score
+        )
+        base_libido = tanh_scaling_raw(
+            base_libido,
+            data_max=(
+                self.get_maximum_attribute_value("base_libido")
+                if self.get_maximum_attribute_value("base_libido")
+                else 100
+            ),
+            data_min=0,
+            data_avg=(
+                self.get_average_attribute_value("base_libido")
+                if self.get_average_attribute_value("base_libido")
+                else 50
+            ),
+            data_std=(
+                self.get_stddev_attribute_value("base_libido")
+                if self.get_stddev_attribute_value("base_libido")
+                else 25
+            ),
+        )
+        partner_base_libido = char2.get_base_libido()
+        libido_difference = abs(base_libido - partner_base_libido)
+
+        age = char1.age
+        partner_age = char2.age
+        age_difference = abs(age - partner_age)
+
+        control = char1.get_control()
+        partner_control = char2.get_control()
+        control_difference = abs(control - partner_control)
+
+        stability = char1.stability
+        partner_stability = char2.stability
+        stability_difference = abs(stability - partner_stability)
+
+        agreeableness = char1.personality_traits.get_agreeableness()
+        partner_agreeableness = char2.personality_traits.get_agreeableness()
+        agreeableness_difference = abs(agreeableness - partner_agreeableness)
+
+        success = char1.success
+        partner_success = char2.success
+        success_difference = abs(success - partner_success)
+
+        shelter = char1.shelter
+        partner_shelter = char2.shelter
+        shelter_difference = abs(shelter - partner_shelter)
+
+        luxury = char1.luxury
+        partner_luxury = char2.luxury
+        luxury_difference = abs(luxury - partner_luxury)
+
+        monogamy = char1.monogamy
+        partner_monogamy = char2.monogamy
+        monogamy_difference = abs(monogamy - partner_monogamy)
+
+        factor_a1 = (control_motive - partner_control) + partner_agreeableness
+        factor_a2 = (partner_control_motive - control) + agreeableness
+
+        factor_b1 = (wealth_motive * partner_wealth_money) - (
+            abs(partner_luxury_motive - luxury_motive) * 0.1
+        )
+        factor_b2 = (partner_wealth_motive * wealth_money) - (
+            abs(luxury_motive - partner_luxury_motive) * 0.1
+        )
+
     def calc_distance_cost(self, distance, char1, char2):
-        return distance / (
-            self.node_type_resolver(char1) + self.node_type_resolver(char2)
+        # Distance cost calculation
+        # Distance cost is calculated as a function of the distance between two characters.
+        # The cost is higher for characters that are further apart.
+        # The cost is lower for characters that are closer together.
+        # The cost is also influenced by the characters' energy levels, with higher energy levels resulting in lower costs.
+        # The cost is also influenced by the characters' relationship strength, with stronger relationships resulting in lower costs.
+        # The cost is also influenced by the characters' trust levels, with higher trust levels resulting in lower costs.
+        # The cost is also influenced by the characters' emotional states, with more positive emotional states resulting in lower costs.
+        # The cost is also influenced by the characters' interaction frequencies, with higher interaction frequencies resulting in lower costs.
+        # The cost is also influenced by the characters' historical relationship lengths, with longer relationships resulting in lower costs.
+        # The cost is also influenced by the characters' relationship types, with more positive relationship types resulting in lower costs.
+        # The cost is also influenced by the characters' relationship impact factors, with higher impact factors resulting in lower costs.
+        # The cost is also influenced by the characters' relationship emotional impacts, with more positive emotional impacts resulting in lower costs.
+        # The cost is also influenced by the characters' relationship trust levels, with higher trust levels resulting in lower costs.
+        # The cost is also influenced by the characters' relationship strengths, with stronger relationships resulting in lower costs.
+        # The cost is also influenced by the characters' relationship historical lengths, with longer relationships resulting in lower costs.
+        # The cost is also influenced by the characters' relationship interaction frequencies, with higher interaction frequencies resulting in lower costs.
+        # The cost is also influenced by the characters' relationship interaction logs, with more positive interactions resulting in lower costs.
+        # The cost is also influenced by the characters' relationship romance compatibilities, with higher compatibilities resulting in lower costs.
+        # The cost is also influenced by the characters' relationship romance interests, with more positive interests resulting in lower costs.
+        # The cost is also influenced by the characters' relationship romance values, with higher values resulting in lower costs.
+        # The cost is also influenced by the characters' relationship romance compatibilities, with higher compatibilities resulting in lower costs.
+        # The cost is also influenced by the characters' relationship romance interests, with more positive interests resulting in lower costs.
+        # The cost is also influenced by the characters' relationship romance values, with higher values resulting in lower costs.
+        # The cost is also influenced by the characters' relationship romance compatibilities, with higher compatibilities resulting in lower costs.
+        assert self.G.has_node(char1) and self.G.has_node(char2)
+        if not self.G.has_edge(char1, char2):
+            return distance * 1.0
+        return (
+            distance
+            * (1 - char1.energy)
+            * (1 - char2.energy)
+            * (1 - self.G[char1][char2]["strength"])
+            * (1 - self.G[char1][char2]["trust"])
+            * (1 - self.G[char1][char2]["emotional"])
+            * (1 - self.G[char1][char2]["interaction_frequency"])
+            * (1 - self.G[char1][char2]["historical"])
+            * (1 - self.G[char1][char2]["relationship_type"])
+            * (1 - self.G[char1][char2]["impact_factor"])
+            * (1 - self.G[char1][char2]["emotional_impact"])
+            * (1 - self.G[char1][char2]["trust"])
+            * (1 - self.G[char1][char2]["strength"])
+            * (1 - self.G[char1][char2]["historical"])
+            * (1 - self.G[char1][char2]["interaction_frequency"])
+            * (1 - self.G[char1][char2]["interaction_log"])
+            * (1 - self.G[char1][char2]["romance_compatibility"])
+            * (1 - self.G[char1][char2]["romance_interest"])
+            * (1 - self.G[char1][char2]["romance_value"])
+            * (1 - self.G[char1][char2]["romance_compatibility"])
+            * (1 - self.G[char1][char2]["romance_interest"])
+            * (1 - self.G[char1][char2]["romance_value"])
+            * (1 - self.G[char1][char2]["romance_compatibility"])
+            * (1 - self.G[char1][char2]["romance_interest"])
+            * (1 - self.G[char1][char2]["romance_value"])
         )
 
     def calculate_locations_between_nodes(self, node1, node2):
@@ -449,9 +1473,10 @@ class GraphManager:
             other_node,
             attribute_dict["relationship_type"],
             attribute_dict["strength"],
-            attribute_dict["history"],
+            attribute_dict["historical"],
             attribute_dict["emotional_impact"],
             attribute_dict["interaction_frequency"],
+            attribute_dict["trust"],
         )
 
     def calculate_edge_cost(self, node, other_node, attribute_dict=None):
@@ -463,9 +1488,10 @@ class GraphManager:
                 other_node,
                 attribute_dict["relationship_type"],
                 attribute_dict["strength"],
-                attribute_dict["history"],
+                attribute_dict["historical"],
                 attribute_dict["emotional_impact"],
                 attribute_dict["interaction_frequency"],
+                attribute_dict["trust"],
             )
         if attribute_dict["edge_type"] == "character_location":
             return self.calculate_char_loc_edge_cost(
@@ -588,8 +1614,9 @@ class GraphManager:
                 attribute_dict["reward_level"],
                 attribute_dict["distance"],
             )
-        
+
     def calculate_reward(self, node, other_node, attribute_dict=None):
+
         if attribute_dict is None:
             attribute_dict = self.G[node][other_node]
         if attribute_dict["edge_type"] == "job_activity":
@@ -605,15 +1632,16 @@ class GraphManager:
                 if self.get_node(other_node)["type"] == "activity":
                     return self.get_node(other_node).apply_effects()
         elif isinstance(self.get_node(node), Action):
+            Action = importlib.import_module("tiny_actions").Action
             return self.get_node(node).apply_effects()
         elif isinstance(self.get_node(other_node), Action):
+            Action = importlib.import_module("tiny_actions").Action
             return self.get_node(other_node).apply_effects()
         else:
             return 0
-        
+
     def calculate_penalty(self, node, other_node, attribute_dict=None):
         return self.calculate_edge_cost(node, other_node, attribute_dict)
-        
 
     def calculate_char_char_edge_cost(
         self,
@@ -621,15 +1649,19 @@ class GraphManager:
         char2,
         relationship_type,
         strength,
-        history,
+        historical,
         emotional_impact,
         interaction_frequency,
+        trust,
     ):
         cost = 0
         char2_traits = char2.personality_traits.to_dict()
-        char2_motive = char2.motives.to_dict()
+        logging.info(f"char2_traits: {char2_traits}")
+        char2_motives = char2.motives.to_dict()
+        logging.info(f"char2_motives: {char2_motives}")
         for char1_trait, char1val in char1.personality_traits.to_dict().items():
             cost += abs(char1val - char2_traits[char1_trait])
+            logging.info(f"cost: {cost}")
         for char1_motive, char1val in char1.motives.to_dict().items():
             if (
                 relationship_type == "friend"
@@ -637,11 +1669,19 @@ class GraphManager:
                 or relationship_type == "colleague"
             ):
                 # The closer the motives are to each other, the lower the cost
-                cost += abs(char1val - char2_motive[char1_motive]) / strength
+                logging.info(f"char1val.get_score(): {char1val.get_score()}")
+                logging.info(f"char1_motive: {char1_motive}")
+                logging.info(
+                    f"char2_motive[char1_motive]: {char2_motives[char1_motive].get_score()}"
+                )
+                cost += (
+                    abs(char1val.get_score() - char2_motives[char1_motive].get_score())
+                    / strength
+                )
                 # The more frequent the interaction, the lower the cost
                 cost += (1 / (interaction_frequency + 1)) * strength
-                # The longer the history, the lower the cost
-                cost += (1 / (len(history) + 1)) * strength
+                # The longer the historical, the lower the cost
+                cost += (1 / (historical + 1)) * strength
                 # The higher the emotional impact, the lower the cost
                 cost += 1 / (emotional_impact + 1)
             if (
@@ -651,11 +1691,13 @@ class GraphManager:
             ):
                 # The closer the motives are to each other, the higher the cost
                 cost += (
-                    abs(char1val + char2_motive[char1_motive])
-                    - abs(char1val - char2_motive[char1_motive])
+                    abs(char1val.get_score() + char2_motives[char1_motive].get_score())
+                    - abs(
+                        char1val.get_score() - char2_motives[char1_motive].get_score()
+                    )
                 ) * strength
-                # The longer the history, the higher the cost
-                cost += (1 / (len(history) + 1)) * strength
+                # The longer the historical, the higher the cost
+                cost += (1 / (len(historical) + 1)) * strength
                 # The higher the emotional impact, the higher the cost
                 cost += 1 / (emotional_impact + 1)
             #
@@ -925,17 +1967,26 @@ class GraphManager:
         ownership_status,
         edge_type="character_location",
     ):
-        self.G.add_edge(
-            char,
-            loc,
-            type=edge_type,
-            frequency_of_visits=frequency_of_visits,
-            last_visit=last_visit.strftime("%Y-%m-%d"),
-            favorite_activities=favorite_activities,
-            ownership_status=ownership_status,
-            key=edge_type,
-            distance=loc.distance_to_point_from_nearest_edge(char.coordinate_location),
-        )
+        # check if the character has visited the location before
+        if (frequency_of_visits > 0 or last_visit) and self.G.has_edge(char, loc):
+            self.G[char][loc]["frequency_of_visits"] += 1
+            self.G[char][loc]["last_visit"] = datetime.now().strftime("%Y-%m-%d")
+
+        else:
+            self.G.add_edge(
+                char,
+                loc,
+                type=edge_type,
+                frequency_of_visits=frequency_of_visits if frequency_of_visits else 1,
+                last_visit=datetime.now().strftime("%Y-%m-%d"),
+                favorite_activities=favorite_activities,
+                ownership_status=ownership_status,
+                key=edge_type,
+                distance=loc.distance_to_point_from_nearest_edge(
+                    char.coordinates_location
+                ),
+            )
+        loc.visit_count += 1
 
     # Character-Item
     def add_character_object_edge(
@@ -948,6 +1999,12 @@ class GraphManager:
         last_used_time,
         edge_type="character_object",
     ):
+        if ownership_status == True:
+            if (
+                len(self.get_item(obj.name).ownership_history) == 0
+                or self.get_item(obj.name).ownership_history[-1] != char.name
+            ):
+                self.get_item(obj.name).ownership_history.append(char.name)
         self.G.add_edge(
             char,
             obj,
@@ -957,7 +2014,7 @@ class GraphManager:
             sentimental_value=sentimental_value,
             last_used_time=last_used_time.strftime("%Y-%m-%d"),
             key=edge_type,
-            distance=dist(char.coordinate_location, obj.coordinate_location),
+            distance=dist(char.coordinates_location, obj.coordinates_location),
         )
 
     # Character-Event
@@ -967,8 +2024,8 @@ class GraphManager:
         event,
         participation_status,
         role,
-        impact_on_character,
-        emotional_outcome,
+        impact_on_character=0,
+        emotional_outcome=0,
         edge_type="character_event",
     ):
         self.G.add_edge(
@@ -980,11 +2037,8 @@ class GraphManager:
             impact_on_character=impact_on_character,
             emotional_outcome=emotional_outcome,
             key=edge_type,
-            distance=dist(
-                char.coordinate_location,
-                event.location.distance_to_point_from_center(
-                    *event.coordinate_location
-                ),
+            distance=event.location.distance_to_point_from_center(
+                *event.coordinates_location
             ),
         )
 
@@ -1009,8 +2063,8 @@ class GraphManager:
             motivation=motivation,
             key=edge_type,
             distance=dist(
-                char.coordinate_location,
-                act.location.distance_to_point_from_center(*act.coordinate_location),
+                char.coordinates_location,
+                act.location.distance_to_point_from_center(*act.coordinates_location),
             ),
         )
 
@@ -1049,7 +2103,7 @@ class GraphManager:
             item_presence=item_presence,
             item_relevance=item_relevance,
             key=edge_type,
-            item_at_location=loc.contains_point(*obj.coordinate_location),
+            item_at_location=loc.contains_point(*obj.coordinates_location),
         )
 
     # Location-Event Edges
@@ -1072,7 +2126,7 @@ class GraphManager:
             capacity=capacity,
             preparation_level=preparation_level,
             key=edge_type,
-            event_at_location=loc.contains_point(*event.coordinate_location),
+            event_at_location=loc.contains_point(*event.coordinates_location),
         )
 
     # Location-Activity Edges
@@ -1093,7 +2147,7 @@ class GraphManager:
             activity_popularity=activity_popularity,
             exclusivity=exclusivity,
             key=edge_type,
-            activity_at_location=loc.contains_point(*act.coordinate_location),
+            activity_at_location=loc.contains_point(*act.coordinates_location),
         )
 
     # Item-Item Edges
@@ -1108,7 +2162,7 @@ class GraphManager:
             conflict=conflict,
             combinability=combinability,
             key=edge_type,
-            distance=dist(obj1.coordinate_location, obj2.coordinate_location),
+            distance=dist(obj1.coordinates_location, obj2.coordinates_location),
         )
 
     # Item-Activity Edges
@@ -1193,7 +2247,7 @@ class GraphManager:
             job_performance=job_performance,
             key=edge_type,
             qualifies_for_job=char.qualifies_for_job(job),
-            distance=dist(char.coordinate_location, job.location.coordinate_location),
+            distance=dist(char.coordinates_location, job.location.coordinates_location),
         )
 
     # Job-Location Edges
@@ -1654,9 +2708,9 @@ class GraphManager:
             print("Location popularity:", location_popularity)
         """
         location_visits = {
-            node: self.G.nodes[node]["visit_count"]
-            for node in self.G.nodes(data=True)
-            if "location" in node
+            node: data["visit_count"]
+            for node, data in self.G.nodes(data=True)
+            if "visit_count" in data
         }
         popular_locations = dict(
             sorted(location_visits.items(), key=lambda item: item[1], reverse=True)
@@ -1697,7 +2751,14 @@ class GraphManager:
         """
         if self.G.has_edge(from_char, item):
             self.G.remove_edge(from_char, item)
-            self.G.add_edge(to_char, item, type="ownership")
+            self.add_character_object_edge(
+                to_char,
+                item,
+                ownership_status=True,
+                usage_frequency=0,
+                sentimental_value=0,
+                last_used_time=datetime.now(),
+            )
         else:
             raise ValueError(f"The item {item} is not owned by {from_char}.")
 
@@ -1715,13 +2776,485 @@ class GraphManager:
             relationships = graph_manager.analyze_character_relationships('char1')
             print("Relationship details:", relationships)
         """
+        Character = importlib.import_module("tiny_characters").Character
+
         relationships = {}
-        for neighbor in self.G.neighbors(character_id):
-            relationships[neighbor] = {
-                "emotional": self.G[character_id][neighbor].get("emotional", 0),
-                "historical": self.G[character_id][neighbor].get("historical", 0),
-            }
+        node = None
+        if isinstance(character_id, str):
+            if self.get_character(character_id) is None:
+                raise ValueError(
+                    "\nCharacter does not exist in the graph: \n\n", character_id
+                )
+
+            node = self.get_character(character_id)
+            logging.info(f"Found node: \n\n{node.name}: \n")
+        elif isinstance(character_id, Character):
+            node = self.get_node(character_id)
+        try:
+            logging.info(f"with attributes:\n {list(self.G.nodes[node])}\n")
+        except Exception as e:
+            logging.info(f"Error: {e} for node {node}\n")
+        if node is None or node == {}:
+            try:
+                if isinstance(character_id, Character):
+                    logging.info(
+                        f"Node: {character_id.name} not found. Trying to find it again.\n"
+                    )
+                else:
+                    logging.info(
+                        f"Node: {character_id} not found. Trying to find it again.\n"
+                    )
+                node = self.G[character_id]
+            except Exception as eb:
+                if isinstance(character_id, Character):
+                    logging.info(f"Error finding node {character_id.name}: {eb}\n")
+                else:
+                    logging.info(f"Error finding node {character_id}: {eb}\n")
+        if node is None or node == {}:
+            if isinstance(character_id, Character):
+                logging.info(
+                    f"Node: {character_id.name} still not found. Graph says {self.G.has_node(node)} \n"
+                )
+                # Search for node with character name
+                for n in self.G.nodes:
+                    if self.G.nodes[n].get("name") == character_id.name:
+                        node = n
+                        break
+                if node is not None and node != {}:  # Found the node
+                    logging.info(
+                        f"Found the node with character name: {character_id.name} as {node}\n"
+                    )
+                    # Compare and find the differences between the searched node and the provided character
+                    for key, value in self.G.nodes[node].items():
+                        if key not in character_id.__dict__:
+                            logging.info(
+                                f"Key: {key} not in character {character_id.name} attributes\n"
+                            )
+                        elif value != character_id.__dict__[key]:
+                            logging.info(
+                                f"Key: {key} has different value in character {character_id.name} attributes\n"
+                            )
+
+            else:
+                logging.info(
+                    f"Node: {character_id} still not found. Graph says {self.G.has_node(node)}\n"
+                )
+                # Search for node with character name
+                for n in self.G.nodes:
+                    if self.G.nodes[n].get("name") == character_id:
+                        node = n
+                        break
+                if node is not None and node != {}:  # Found the node
+                    logging.info(
+                        f"Found the node with character name: {character_id} as {node}\n"
+                    )
+            if node is None or node == {}:
+                logging.info(
+                    f"Node: {character_id} still not found. All nodes: {list(self.G)}\n"
+                )
+                exit(42)
+            return relationships
+
+        try:
+            logging.info(
+                f"\nNode: \n{node.name} \nhas attributes: \n{list(self.G.nodes[node])}\n\n"
+            )
+        except Exception as ee:
+            logging.info(f"Error printing node: {ee}")
+        try:
+            logging.info(f"Node: {node.name} has neighbors: {list(self.G[node])}\n")
+            for neighbor in self.G[node]:
+                relationships[neighbor] = {
+                    "emotional": self.G[node][neighbor].get("emotional", 0),
+                    "historical": self.G[node][neighbor].get("historical", 0),
+                    "trust": self.G[node][neighbor].get("trust", 0),
+                    "strength": self.G[node][neighbor].get("strength", 0),
+                    "interaction_frequency": self.G[node][neighbor].get(
+                        "interaction_frequency", 0
+                    ),
+                }
+        except Exception as eee:
+            if isinstance(character_id, Character):
+                logging.info(
+                    f"Error in relationships for character {character_id.name}: {eee}"
+                )
+            else:
+                logging.info(
+                    f"Error in relationships for character {character_id}: {eee}"
+                )
         return relationships
+
+    def calculate_motives(self, character: Character):
+        Character = importlib.import_module("tiny_characters").Character
+        PersonalMotives = importlib.import_module("tiny_characters").PersonalMotives
+        Motive = importlib.import_module("tiny_characters").Motive
+
+        social_wellbeing_motive = cached_sigmoid_motive_scale_approx_optimized(
+            character.personality_traits.get_openness()
+            + (character.personality_traits.get_extraversion() * 2)
+            + character.personality_traits.get_agreeableness()
+            - character.personality_traits.get_neuroticism(),
+            10.0,
+        )
+        beauty_motive = cached_sigmoid_motive_scale_approx_optimized(
+            character.personality_traits.get_openness()
+            + character.personality_traits.get_extraversion()
+            + character.personality_traits.get_agreeableness()
+            + character.personality_traits.get_neuroticism()
+            + social_wellbeing_motive,
+            10.0,
+        )
+        hunger_motive = cached_sigmoid_motive_scale_approx_optimized(
+            (10 - character.get_mental_health())
+            + character.personality_traits.get_neuroticism()
+            - character.personality_traits.get_conscientiousness()
+            - beauty_motive,
+            10.0,
+        )
+        community_motive = cached_sigmoid_motive_scale_approx_optimized(
+            character.personality_traits.get_openness()
+            + character.personality_traits.get_extraversion()
+            + character.personality_traits.get_agreeableness()
+            + character.personality_traits.get_neuroticism()
+            + social_wellbeing_motive,
+            10.0,
+        )
+        health_motive = cached_sigmoid_motive_scale_approx_optimized(
+            character.personality_traits.get_openness()
+            + character.personality_traits.get_extraversion()
+            + character.personality_traits.get_agreeableness()
+            + character.personality_traits.get_neuroticism()
+            - hunger_motive
+            + beauty_motive
+            + character.personality_traits.get_conscientiousness(),
+            10.0,
+        )
+        mental_health_motive = cached_sigmoid_motive_scale_approx_optimized(
+            character.personality_traits.get_openness()
+            + character.personality_traits.get_extraversion()
+            + character.personality_traits.get_agreeableness()
+            + character.personality_traits.get_neuroticism()
+            - hunger_motive
+            + beauty_motive
+            + character.personality_traits.get_conscientiousness()
+            + health_motive,
+            10.0,
+        )
+        stability_motive = cached_sigmoid_motive_scale_approx_optimized(
+            character.personality_traits.get_openness()
+            + character.personality_traits.get_extraversion()
+            + character.personality_traits.get_agreeableness()
+            + character.personality_traits.get_neuroticism()
+            + health_motive
+            + community_motive,
+            10.0,
+        )
+        shelter_motive = cached_sigmoid_motive_scale_approx_optimized(
+            character.personality_traits.get_neuroticism()
+            + character.personality_traits.get_conscientiousness()
+            + health_motive
+            + community_motive
+            + beauty_motive
+            + stability_motive,
+            10.0,
+        )
+        control_motive = cached_sigmoid_motive_scale_approx_optimized(
+            character.personality_traits.get_conscientiousness()
+            + character.personality_traits.get_neuroticism()
+            + shelter_motive
+            + stability_motive,
+            10.0,
+        )
+        success_motive = cached_sigmoid_motive_scale_approx_optimized(
+            character.personality_traits.get_conscientiousness()
+            + character.personality_traits.get_neuroticism()
+            + shelter_motive
+            + stability_motive
+            + control_motive,
+            10.0,
+        )
+        material_goods_motive = random.gauss(
+            cached_sigmoid_motive_scale_approx_optimized(
+                cached_sigmoid_motive_scale_approx_optimized(
+                    (
+                        cached_sigmoid_motive_scale_approx_optimized(
+                            shelter_motive, 25.0
+                        )
+                        + cached_sigmoid_motive_scale_approx_optimized(
+                            stability_motive, 25.0
+                        )
+                        + cached_sigmoid_motive_scale_approx_optimized(
+                            success_motive, 25.0
+                        )
+                        + cached_sigmoid_motive_scale_approx_optimized(
+                            control_motive, 25.0
+                        )
+                        if control_motive > 0.0
+                        else 1.0
+                    ),
+                    10.0,
+                )
+                + tanh_scaling(
+                    character.personality_traits.get_conscientiousness()
+                    + character.personality_traits.get_neuroticism() * 10.0,
+                    10.0,
+                    -10.0,
+                    0.0,
+                    1.0,
+                ),
+                10.0,
+            ),
+            1.0,
+        )
+
+        luxury_motive = cached_sigmoid_motive_scale_approx_optimized(
+            tanh_scaling(
+                character.personality_traits.get_openness()
+                + character.personality_traits.get_extraversion()
+                + character.personality_traits.get_agreeableness()
+                + character.personality_traits.get_neuroticism() * 10.0,
+                10.0,
+                -10.0,
+                0.0,
+                10.0,
+            )
+            + cached_sigmoid_motive_scale_approx_optimized(
+                cached_sigmoid_motive_scale_approx_optimized(
+                    material_goods_motive, 50.0
+                )
+                + cached_sigmoid_motive_scale_approx_optimized(beauty_motive, 50.0),
+                10.0,
+            ),
+            10.0,
+        )
+
+        wealth_motive = random.gauss(
+            cached_sigmoid_motive_scale_approx_optimized(
+                cached_sigmoid_motive_scale_approx_optimized(luxury_motive, 25.0)
+                + cached_sigmoid_motive_scale_approx_optimized(shelter_motive, 10.0)
+                + cached_sigmoid_motive_scale_approx_optimized(stability_motive, 15.0)
+                + cached_sigmoid_motive_scale_approx_optimized(success_motive, 15.0)
+                + cached_sigmoid_motive_scale_approx_optimized(control_motive, 10.0)
+                + cached_sigmoid_motive_scale_approx_optimized(
+                    material_goods_motive, 25.0
+                )
+                + tanh_scaling(
+                    character.personality_traits.get_conscientiousness()
+                    + abs(character.personality_traits.get_neuroticism()) * 10,
+                    10.0,
+                    -10.0,
+                    0.0,
+                    1.0,
+                ),
+                10.0,
+            ),
+            1.0,
+        )
+
+        job_performance_motive = abs(
+            round(
+                random.gauss(
+                    abs(
+                        cached_sigmoid_motive_scale_approx_optimized(
+                            success_motive
+                            + material_goods_motive
+                            + wealth_motive * 2.0 / 3.0,
+                            10.0,
+                        )
+                    ),
+                    cached_sigmoid_motive_scale_approx_optimized(
+                        character.personality_traits.get_conscientiousness()
+                        + character.personality_traits.get_extraversion()
+                        + character.personality_traits.get_agreeableness()
+                        + character.personality_traits.get_neuroticism() * 10.0,
+                        1.0,
+                    ),
+                )
+            )
+        )
+        happiness_motive = abs(
+            round(
+                random.gauss(
+                    abs(
+                        cached_sigmoid_motive_scale_approx_optimized(
+                            (
+                                cached_sigmoid_motive_scale_approx_optimized(
+                                    success_motive, 25.0
+                                )
+                                + cached_sigmoid_motive_scale_approx_optimized(
+                                    material_goods_motive, 15.0
+                                )
+                                + cached_sigmoid_motive_scale_approx_optimized(
+                                    wealth_motive, 10.0
+                                )
+                                + cached_sigmoid_motive_scale_approx_optimized(
+                                    job_performance_motive, 25.0
+                                )
+                                + cached_sigmoid_motive_scale_approx_optimized(
+                                    social_wellbeing_motive, 25.0
+                                )
+                            ),
+                            10.0,
+                        )
+                    ),
+                    cached_sigmoid_motive_scale_approx_optimized(
+                        character.personality_traits.get_openness()
+                        + character.personality_traits.get_extraversion()
+                        + character.personality_traits.get_agreeableness()
+                        - character.personality_traits.get_neuroticism() * 10,
+                        1.0,
+                    ),
+                )
+            )
+        )
+        hope_motive = abs(
+            round(
+                random.gauss(
+                    cached_sigmoid_motive_scale_approx_optimized(
+                        cached_sigmoid_motive_scale_approx_optimized(
+                            mental_health_motive, 100.0
+                        )
+                        + cached_sigmoid_motive_scale_approx_optimized(
+                            social_wellbeing_motive, 100.0
+                        )
+                        + cached_sigmoid_motive_scale_approx_optimized(
+                            happiness_motive, 100.0
+                        )
+                        + cached_sigmoid_motive_scale_approx_optimized(
+                            health_motive, 100.0
+                        )
+                        + cached_sigmoid_motive_scale_approx_optimized(
+                            shelter_motive, 100.0
+                        )
+                        + cached_sigmoid_motive_scale_approx_optimized(
+                            stability_motive, 100.0
+                        )
+                        + cached_sigmoid_motive_scale_approx_optimized(
+                            luxury_motive, 100.0
+                        )
+                        + cached_sigmoid_motive_scale_approx_optimized(
+                            success_motive, 100.0
+                        )
+                        + cached_sigmoid_motive_scale_approx_optimized(
+                            control_motive, 100.0
+                        )
+                        + cached_sigmoid_motive_scale_approx_optimized(
+                            job_performance_motive, 100.0
+                        )
+                        + cached_sigmoid_motive_scale_approx_optimized(
+                            beauty_motive, 100.0
+                        )
+                        + cached_sigmoid_motive_scale_approx_optimized(
+                            community_motive, 100.0
+                        )
+                        / 12,
+                        10.0,
+                    ),
+                    cached_sigmoid_motive_scale_approx_optimized(
+                        character.personality_traits.get_openness()
+                        + character.personality_traits.get_extraversion()
+                        + character.personality_traits.get_agreeableness()
+                        + character.personality_traits.get_neuroticism() * 10,
+                        1.0,
+                    ),
+                )
+            )
+        )
+        family_motive = random.gauss(
+            abs(
+                cached_sigmoid_motive_scale_approx_optimized(
+                    cached_sigmoid_motive_scale_approx_optimized(
+                        mental_health_motive, 5.0
+                    )
+                    + cached_sigmoid_motive_scale_approx_optimized(
+                        social_wellbeing_motive, 10.0
+                    )
+                    + cached_sigmoid_motive_scale_approx_optimized(
+                        happiness_motive, 20.0
+                    )
+                    + cached_sigmoid_motive_scale_approx_optimized(
+                        stability_motive, 10.0
+                    )
+                    - cached_sigmoid_motive_scale_approx_optimized(luxury_motive, 20.0)
+                    + cached_sigmoid_motive_scale_approx_optimized(success_motive, 5.0)
+                    + cached_sigmoid_motive_scale_approx_optimized(control_motive, 5.0)
+                    + cached_sigmoid_motive_scale_approx_optimized(
+                        community_motive, 15.0
+                    )
+                    + cached_sigmoid_motive_scale_approx_optimized(hope_motive, 15.0),
+                    10.0,
+                )
+            ),
+            cached_sigmoid_motive_scale_approx_optimized(
+                (
+                    character.personality_traits.get_openness()
+                    + character.personality_traits.get_extraversion()
+                    + character.personality_traits.get_agreeableness()
+                    + character.personality_traits.get_conscientiousness() * 10
+                ),
+                1.0,
+            ),
+        )
+
+        return PersonalMotives(
+            hunger_motive=Motive(
+                "hunger", "bias toward satisfying hunger", hunger_motive
+            ),
+            wealth_motive=Motive(
+                "wealth", "bias toward accumulating wealth", wealth_motive
+            ),
+            mental_health_motive=Motive(
+                "mental health",
+                "bias toward maintaining mental health",
+                mental_health_motive,
+            ),
+            social_wellbeing_motive=Motive(
+                "social wellbeing",
+                "bias toward maintaining social wellbeing",
+                social_wellbeing_motive,
+            ),
+            happiness_motive=Motive(
+                "happiness", "bias toward maintaining happiness", happiness_motive
+            ),
+            health_motive=Motive(
+                "health", "bias toward maintaining health", health_motive
+            ),
+            shelter_motive=Motive(
+                "shelter", "bias toward maintaining shelter", shelter_motive
+            ),
+            stability_motive=Motive(
+                "stability", "bias toward maintaining stability", stability_motive
+            ),
+            luxury_motive=Motive(
+                "luxury", "bias toward maintaining luxury", luxury_motive
+            ),
+            hope_motive=Motive("hope", "bias toward maintaining hope", hope_motive),
+            success_motive=Motive(
+                "success", "bias toward maintaining success", success_motive
+            ),
+            control_motive=Motive(
+                "control", "bias toward maintaining control", control_motive
+            ),
+            job_performance_motive=Motive(
+                "job performance",
+                "bias toward maintaining job performance",
+                job_performance_motive,
+            ),
+            beauty_motive=Motive(
+                "beauty", "bias toward maintaining beauty", beauty_motive
+            ),
+            community_motive=Motive(
+                "community", "bias toward maintaining community", community_motive
+            ),
+            material_goods_motive=Motive(
+                "material goods",
+                "bias toward maintaining material goods",
+                material_goods_motive,
+            ),
+            family_motive=Motive(
+                "family", "bias toward maintaining family", family_motive
+            ),
+        )
 
     def location_popularity_analysis(self):
         """
@@ -1742,10 +3275,10 @@ class GraphManager:
 
     def track_item_ownership(self):
         """
-        Tracks ownership and transaction history of items.
+        Tracks ownership and transaction historical of items.
 
         Returns:
-            dict: A dictionary where keys are item IDs and values are details of ownership and transaction history.
+            dict: A dictionary where keys are item IDs and values are details of ownership and transaction historical.
 
         Usage example:
             item_ownership = graph_manager.track_item_ownership()
@@ -1761,6 +3294,34 @@ class GraphManager:
                     ),
                 }
         return ownership
+
+    def determine_owner(self, item):
+        """
+        Determines the current owner of an item.
+
+        Parameters:
+            item (str): Node identifier for the item.
+
+        Returns:
+            Any: Node of the current owner.
+
+        Usage example:
+            owner = graph_manager.determine_owner('item1')
+            print("Current owner:", owner)
+        """
+        # Filter edges that are character_object and have ownership_status True
+        owner_edges = [
+            edge
+            for edge in self.G.edges(item)
+            if self.G.edges[edge].get("type") == "character_object"
+            and self.G.edges[edge].get("ownership_status") == True
+        ]
+
+        # Return the character node from the filtered edges
+        for edge in owner_edges:
+            if edge[0] != item:
+                return edge[0]
+            return edge[1]
 
     def predict_future_relationships(self, character_id):
         """
@@ -1869,20 +3430,6 @@ class GraphManager:
         else:
             return 0  # No relationship exists
 
-    def update_node_attribute(self, node, attribute, value):
-        """
-        Updates or adds an attribute to a node.
-
-        Parameters:
-            node (str): The node identifier.
-            attribute (str): The attribute to update or add.
-            value (any): The new value for the attribute.
-
-        Usage example:
-            graph_manager.update_node_attribute('char1', 'mood', 'happy')
-        """
-        self.G.nodes[node][attribute] = value
-
     def update_edge_attribute(self, node1, node2, attribute, value):
         """
         Updates or adds an attribute to an edge between two nodes.
@@ -1896,7 +3443,10 @@ class GraphManager:
         Usage example:
             graph_manager.update_edge_attribute('char1', 'char2', 'trust', 75)
         """
-        self.G[node1][node2][attribute] = value
+        # Access the mutable dictionary of the edge attributes
+        edge_data = self.G.edges[node1, node2]
+        # Update the attribute
+        edge_data[attribute] = value
 
     def evaluate_relationship_strength(self, char1, char2):
         """
@@ -1913,8 +3463,18 @@ class GraphManager:
             strength = graph_manager.evaluate_relationship_strength('char1', 'char2')
             print("Relationship strength:", strength)
         """
-        attributes = ["trust", "history", "interaction"]
+        attributes = [
+            "trust",
+            "historical",
+            "interaction_frequency",
+            "emotional_impact",
+        ]
         strength = sum(self.G[char1][char2].get(attr, 0) for attr in attributes)
+        # Normalize the strength to a 0-100 scale
+        strength = max(0, min(strength, 100))
+        # Update the strength attribute in the graph
+        self.update_edge_attribute(char1, char2, "strength", strength)
+
         return strength
 
     def check_friendship_status(self, char1, char2):
@@ -1933,14 +3493,15 @@ class GraphManager:
             print("Friendship status:", status)
         """
         if self.G.has_edge(char1, char2):
-            emotional = self.G[char1][char2].get("emotional", 0)
+            emotional = self.G[char1][char2].get("emotional_impact", 0)
             historical = self.G[char1][char2].get("historical", 0)
-            if emotional > 50 and historical > 5:
+            trust = self.G[char1][char2].get("trust", 0)
+            strength = self.G[char1][char2].get("strength", 0)
+            # Example logic to determine friendship status
+            if emotional > 50 and historical > 50 and trust > 50 and strength > 50:
                 return "friends"
-            elif emotional < -50 or historical < -5:
-                return "enemies"
-            else:
-                return "neutral"
+            elif emotional < 25 and historical < 25 and trust < 25 and strength < 25:
+                pass
         return "neutral"
 
     def character_location_frequency(self, char):
@@ -1959,12 +3520,9 @@ class GraphManager:
         """
         frequency = {}
         for edge in self.G.edges(char, data=True):
-            if edge[2]["type"] == "visit":
+            if edge[2]["type"] == "character_location":
                 location = edge[1]
-                if location in frequency:
-                    frequency[location] += 1
-                else:
-                    frequency[location] = 1
+                frequency[location] = edge[2]["frequency_of_visits"]
         return frequency
 
     def location_popularity(self, location):
@@ -1981,11 +3539,13 @@ class GraphManager:
             popularity = graph_manager.location_popularity('park')
             print("Popularity of the location:", popularity)
         """
-        return self.G.nodes[location].get("visit_count", 0)
+        if location in self.G.nodes:
+            return self.G.nodes[location].get("frequency_of_visits", 0)
+        return 0
 
     def item_ownership_history(self, item):
         """
-        Tracks the history of ownership for a specific item.
+        Tracks the historical of ownership for a specific item.
 
         Parameters:
             item (str): Item node identifier.
@@ -1994,10 +3554,14 @@ class GraphManager:
             list: History of characters who have owned the item.
 
         Usage example:
-            history = graph_manager.item_ownership_history('sword')
-            print("Ownership history of the item:", history)
+            historical = graph_manager.item_ownership_history('sword')
+            print("Ownership historical of the item:", historical)
         """
-        return self.G.nodes[item].get("ownership_history", [])
+        if item in self.G:
+            return self.G.nodes[item].get("ownership_history", [])
+        else:
+            logging.warning(f"Item '{item}' not found in the graph.")
+            return []
 
     def can_interact_directly(self, char1, char2, conditions=None):
         """
@@ -2054,7 +3618,7 @@ class GraphManager:
         self,
         character,
         resource_filter,
-        attribute_name="weight",
+        attribute_name="distance",
         max_search_depth=None,
         default_attribute_value=float("inf"),
     ):
@@ -2079,7 +3643,7 @@ class GraphManager:
         shortest_distance = float("inf")
 
         while to_visit:
-            dist, current_node = heapq.heappop(to_visit)
+            distance, current_node = heapq.heappop(to_visit)
             if current_node in visited:
                 continue
             visited.add(current_node)
@@ -2090,27 +3654,60 @@ class GraphManager:
                 not is_filter_function
                 and all(node_data.get(k) == v for k, v in resource_filter.items())
             ):
-                if dist < shortest_distance:
-                    shortest_distance = dist
-                    nearest_resource = (current_node, dist)
+                if distance < shortest_distance:
+                    shortest_distance = distance
+                    nearest_resource = (current_node, distance)
 
             # Process neighbors considering the specified edge attribute
             for neighbor in self.G.neighbors(current_node):
                 if neighbor not in visited:
                     # Select the edge with the minimum attribute value
-                    edge_data = min(
-                        self.G[current_node][neighbor].values(),
-                        key=lambda e: e.get(attribute_name, default_attribute_value),
-                    )
-                    edge_attribute_value = edge_data.get(
-                        attribute_name, default_attribute_value
-                    )
+                    if attribute_name == "distance":
+                        edge_attribute_value = self.get_distance_between_nodes(
+                            current_node, neighbor
+                        )
+                    else:
+                        edge_data = min(
+                            self.G[current_node][neighbor].values(),
+                            key=lambda e: e.get(
+                                attribute_name, default_attribute_value
+                            ),
+                        )
+                        edge_attribute_value = edge_data.get(
+                            attribute_name, default_attribute_value
+                        )
 
-                    new_dist = dist + edge_attribute_value
+                    new_dist = distance + edge_attribute_value
                     if max_search_depth is None or new_dist <= max_search_depth:
                         heapq.heappush(to_visit, (new_dist, neighbor))
 
         return nearest_resource if nearest_resource else (None, None)
+
+    def get_distance_between_nodes(self, node1, node2):
+        """
+        Returns the distance between two nodes in the graph.
+
+        Parameters:
+            node1 (str): Node identifier for the first node.
+            node2 (str): Node identifier for the second node.
+
+        Returns:
+            float: The distance between the two nodes.
+
+        Usage example:
+            distance = graph_manager.get_distance_between_nodes('char1', 'char2')
+            print("Distance between nodes:", distance)
+        """
+        # Get the location coordinates for each node
+        loc1 = self.G.nodes[node1].get("coordinate_location")
+        loc2 = self.G.nodes[node2].get("coordinate_location")
+        if loc1 and loc2:
+            if isinstance(loc1, tuple) and isinstance(loc2, tuple):
+                # Calculate the Euclidean distance between the locations
+                return dist(loc1, loc2)
+
+            # Calculate the Euclidean distance between the locations
+            # return math.sqrt(sum((a - b) ** 2 for a, b in zip(loc1, loc2)))
 
     def track_event_participation(self, char, event):
         """
@@ -2123,7 +3720,7 @@ class GraphManager:
         Usage example:
             graph_manager.track_event_participation('char1', 'event1')
         """
-        self.G.add_edge(char, event, type="participation")
+        self.add_character_event_edge(char, event, True, role="participant")
 
     def check_safety_of_locations(self, loc):
         """
@@ -2159,7 +3756,7 @@ class GraphManager:
         """
         surplus = {
             res: qty
-            for res, qty in self.G.nodes[char]["resources"].report_inventory()
+            for res, qty in self.G.nodes[char]["resources"].report_inventory().items()
             if qty > 10
         }
         # Remove any resources from surplus if they are in char's needed resources
@@ -2169,33 +3766,29 @@ class GraphManager:
                     if (
                         isinstance(value, int) or isinstance(value, float)
                     ) and value > 0:
-                        if req_dict[0].get(attr, 0) >= value:
+                        if req_dict[0] >= value:
                             surplus.pop(res)
                             break
                     elif isinstance(value, str) and value in req_dict[0].get(attr, []):
                         surplus.pop(res)
                         break
 
+        # Remove any resources from surplus if they are in char's needed resources
+        needed_resources = self.G.nodes[char].get("needed_resources", {})
+        surplus = {
+            res: qty for res, qty in surplus.items() if res not in needed_resources
+        }
+
         opportunities = {}
         for res, qty in surplus.items():
             for node in self.G.nodes:
-                for attr, value in res.to_dict().items():
-                    if (
-                        isinstance(value, int) or isinstance(value, float)
-                    ) and value > 0:
-                        for req_dict in (
-                            self.G.nodes[node].get("needed_resources", {}).items()
-                        ):
-                            if req_dict[0].get(attr, 0) >= value:
-                                if node not in opportunities:
-                                    opportunities[node] = {}
-                                opportunities[node][res] = qty
-                                break
-                    elif isinstance(value, str) and value in req_dict[0].get(attr, []):
-                        if node not in opportunities:
-                            opportunities[node] = {}
-                        opportunities[node][res] = qty
-                        break
+                if node == char:
+                    continue
+                node_needed_resources = self.G.nodes[node].get("needed_resources", {})
+                if res in node_needed_resources:
+                    if node not in opportunities:
+                        opportunities[node] = {}
+                    opportunities[node][res] = qty
 
         return opportunities
 
@@ -2218,19 +3811,29 @@ class GraphManager:
         for node in self.G.nodes:
             for attr, value in item.to_dict().items():
                 if (isinstance(value, int) or isinstance(value, float)) and value > 0:
-                    for req_dict in (
-                        self.G.nodes[node].get("needed_resources", {}).items()
-                    ):
+                    for req_dict in self.G.nodes[node].get("needed_resources", {}):
                         if req_dict[0].get(attr, 0) >= value:
                             if node not in opportunities:
                                 opportunities[node] = {}
                             opportunities[node][item] = qty
                             break
-                elif isinstance(value, str) and value in req_dict[0].get(attr, []):
-                    if node not in opportunities:
-                        opportunities[node] = {}
-                    opportunities[node][item] = qty
-                    break
+                elif isinstance(value, str):
+                    for req_dict in self.G.nodes[node].get("needed_resources", {}):
+                        if isinstance(req_dict[0], dict) and attr in req_dict[0]:
+                            if value in req_dict[0]:
+                                if node not in opportunities:
+                                    opportunities[node] = {}
+                                opportunities[node][item] = qty
+                                break
+                        else:
+                            logging.warning(
+                                f"Attribute {attr} not found in {req_dict[0]} of node {node}, with value {value}. Skipping. req_dict: {req_dict} of type {type(req_dict)}"
+                            )
+                        # if value in req_dict[0]:
+                        #     if node not in opportunities:
+                        #         opportunities[node] = {}
+                        #     opportunities[node][item] = qty
+                        #     break
 
         return opportunities
 
@@ -2377,12 +3980,30 @@ class GraphManager:
             float: Weighted influence score affecting the character's decisions.
         """
         total_influence = 0
-        relationships = self.G.edges(character, data=True)
+        relationships = self.get_neighbors_with_attributes(character, type="character")
         memory_influence = 0
         if influence_factors is None:
             influence_factors = {
-                "friend": {"weight": 1, "attributes": {"trust": 1, "friendship": 1}},
-                "enemy": {"weight": -1, "attributes": {"trust": -1, "conflict": 1}},
+                "friend": {
+                    "weight": 1,
+                    "attributes": {
+                        "trust": 1,
+                        "historical": 1,
+                        "interaction_frequency": 1,
+                        "emotional_impact": 1,
+                    },
+                },
+                "enemy": {
+                    "weight": -1,
+                    "attributes": {
+                        "trust": -1,
+                        "conflict": 1,
+                        "trust": 1,
+                        "historical": 0.4,
+                        "interaction_frequency": 0.4,
+                        "emotional_impact": -1,
+                    },
+                },
                 "neutral": {"weight": 0, "attributes": {"trust": 0}},
             }
         if influence_attributes is None:
@@ -2390,16 +4011,14 @@ class GraphManager:
 
         # Query memories if a topic is provided
 
-        relationship_weights = 0
-        relationships = self.G.edges(character, data=True)
-
         # Calculate social influence based on current relationships
 
-        for _, _, attributes in relationships:
-            relationship_type = attributes.get("type", "neutral")
+        for charnode in relationships:
+            relationship_type = self.G[character][charnode].get("relationship_type")
+            attributes = self.G[character][charnode]
             if relationship_type in influence_factors:
                 factor = influence_factors[relationship_type]
-                relationship_weight = factor.get("weight", 1)
+                relationship_weight = factor.get("strength", 1)
                 attribute_score = sum(
                     attributes.get(attr, 0) * factor.get("attributes", {}).get(attr, 1)
                     for attr in factor.get("attributes", [])
@@ -2545,7 +4164,7 @@ class GraphManager:
         # activities = ["Read", "Write", "Jog"]
         for act in activities:
             G.add_node(
-                act, type="activity", related_skill="Literature", satisfaction_level=7
+                act, type="activity", related_skills="Literature", satisfaction_level=7
             )
 
         return G
@@ -2647,6 +4266,7 @@ class GraphManager:
         Returns:
             float: The utility value of the action.
         """
+
         utility = 0
         for effect in action.effects:
             if effect.attribute in character_state:
@@ -2797,11 +4417,11 @@ class GraphManager:
             impact_analysis[participant] = impact
         return impact_analysis
 
-    def explore_career_opportunities(graph, character):
+    def explore_career_opportunities(self, character):
         # Examine professional connections and opportunities
         opportunities = []
-        for node, attrs in graph[character].items():
-            if attrs["type"] == "professional" and "opportunity" in attrs:
+        for node, attrs in self.G.nodes[character].items():
+            if attrs["type"] == "job" and "available" in attrs and attrs["available"]:
                 opportunities.append((node, attrs["opportunity"]))
         return opportunities
 
@@ -2870,24 +4490,160 @@ class GraphManager:
         Returns:
             Character: The character object if found, or None if the character does not exist.
         """
+        try:
+            for node, data in self.G.nodes(data="name"):
+                if node == character_str:
+                    logging.info(
+                        f"Exact character object found: '{character_str}' with data: {data}"
+                    )
+                    return node
+                elif data == character_str:
+                    logging.info(
+                        f"Character found with name '{character_str}' with data: {data}"
+                    )
+                    return self.characters[character_str]
+        except Exception as e:
+            logging.error(f"Error retrieving character {character_str}: {e}")
+        logging.warning(f"No character found with name '{character_str}'.")
+        return None
+
+    def get_average_attribute_value(self, attribute):
+        """
+        Retrieve the average value of a specific attribute across all nodes in the graph.
+
+        Parameters:
+            attribute (str): The attribute to find the average value for.
+
+        Returns:
+            float: The average value of the specified attribute.
+        """
+        values = [data.get(attribute, 0) for node, data in self.G.nodes(data=True)]
+        return sum(values) / len(values) if values else 0
+
+    def get_maximum_attribute_value(self, attribute):
+        """
+        Retrieve the maximum value of a specific attribute across all nodes in the graph.
+
+        Parameters:
+            attribute (str): The attribute to find the maximum value for.
+
+        Returns:
+            float: The maximum value of the specified attribute.
+        """
+        return max([data.get(attribute, 0) for node, data in self.G.nodes(data=True)])
+
+    def get_stddev_attribute_value(self, attribute: str):
+        try:
+            if self.std_cache.get_std() is not None:
+                return self.std_cache.get_std()
+            else:
+                values = [
+                    data.get(attribute, 0) for node, data in self.G.nodes(data=True)
+                ]
+                self.std_cache.cache_std(np.std(values))
+                return self.std_cache.get_std()
+        except Exception as e:
+            logging.error(f"Error calculating standard deviation: {e}")
+            return False
+        # return np.std([self.G.nodes[n][attribute] for n in self.G.nodes])
+
+    def get_item(self, item_str):
+        """
+        Retrieve an item object from the graph based on the item's name.
+
+        Parameters:
+            item_str (str): The name of the item to retrieve.
+
+        Returns:
+            Item: The item object if found, or None if the item does not exist.
+        """
         for node, data in self.G.nodes(data=True):
-            if node == character_str or data.get("name") == character_str:
-                return self.characters[character_str]
+            if (data.get("type") == "object" or data.get("type") == "item") and (
+                data.get("name") == item_str
+            ):
+                return self.objects[item_str]
+
+        return None
+
+    def get_location(self, location_str):
+        """
+        Retrieve a location object from the graph based on the location's name.
+
+        Parameters:
+            location_str (str): The name of the location to retrieve.
+
+        Returns:
+            Location: The location object if found, or None if the location does not exist.
+        """
+        for node, data in self.G.nodes(data=True):
+            if node == location_str or data.get("name") == location_str:
+                return self.locations[location_str]
+        return None
+
+    def get_event(self, event_str):
+        """
+        Retrieve an event object from the graph based on the event's name.
+
+        Parameters:
+            event_str (str): The name of the event to retrieve.
+
+        Returns:
+            Event: The event object if found, or None if the event does not exist.
+        """
+        for node, data in self.G.nodes(data=True):
+            if node == event_str or data.get("name") == event_str:
+                return self.events[event_str]
+        return None
+
+    def get_action(self, action_str):
+        """
+        Retrieve an action object from the graph based on the action's name.
+
+        Parameters:
+            action_str (str): The name of the action to retrieve.
+
+        Returns:
+            Action: The action object if found, or None if the action does not exist.
+        """
+        for node, data in self.G.nodes(data=True):
+            if node == action_str or data.get("name") == action_str:
+                return self.actions[action_str]
+        return None
+
+    def get_job(self, job_str):
+        """
+        Retrieve a job object from the graph based on the job's name.
+
+        Parameters:
+            job_str (str): The name of the job to retrieve.
+
+        Returns:
+            Job: The job object if found, or None if the job does not exist.
+        """
+        for node, data in self.G.nodes(data=True):
+            if node == job_str or data.get("name") == job_str:
+                return self.jobs[job_str]
         return None
 
     def get_node(self, node_id):
         """
-        Retrieve a node from the graph based on its identifier.
+        Retrieve a node from the graph based on node_id, which can be a string, a character object, an item object, etc. If node_id is a dict with a string key, it will be treated as a node data dictionary.
 
         Parameters:
-            node_id (str): The identifier of the node to retrieve.
+            node_id: The identifier of the node to retrieve. This can be a string, a character object, an item object, or a dictionary.
 
         Returns:
             dict: The node data if found, or an empty dictionary if the node does not exist.
         """
-        return self.G.nodes.get(
-            node_id, {}
-        )  # Return the node data or an empty dictionary
+        if isinstance(node_id, str):
+            for node, data in self.G.nodes(data=True):
+                if node.name == node_id or data.get("name") == node_id:
+                    return data
+        elif isinstance(node_id, dict):
+            for node, data in self.G.nodes(data=True):
+                if data == node_id or data.get("name") == node_id.get("name"):
+                    return data
+        return {}
 
     def get_filtered_nodes(self, **kwargs):
         filtered_nodes = set(self.graph.nodes)
@@ -3086,12 +4842,19 @@ class GraphManager:
 
         # Filter by career opportunities
         career_opportunity = kwargs.get("career_opportunity")
+
         if career_opportunity is not None:
+            available_jobs = self.get_available_jobs()
+
             filtered_nodes.intersection_update(
                 {
                     n
-                    for n in filtered_nodes
-                    if career_opportunity in self.explore_career_opportunities(n)
+                    for n in available_jobs
+                    if any(
+                        n.get("job_title") in career_opportunity
+                        or n.get("name") in career_opportunity
+                        or n.get("required_skills") in career_opportunity
+                    )
                 }
             )
 
@@ -3196,6 +4959,40 @@ class GraphManager:
         return {
             n: self.graph.nodes[n] for n in filtered_nodes
         }  # return dict will look like: {"node1": {"type": "item", "item_type": "food"}, "node2": {"type": "item", "item_type": "food"}}
+
+    def get_available_jobs(self):
+        """
+        Retrieve a list of available jobs from the graph.
+
+        Returns:
+            list: A list of available job nodes.
+        """
+        return [
+            node
+            for node, data in self.G.nodes(data=True)
+            if data.get("type") == "job" and data.get("available") == True
+        ]
+
+    def determine_job_eligibility(self, character, job):
+        """
+        Determine if a character is eligible for a specific job based on their skills and attributes.
+        Args:
+            character (Character): The character applying for the job.
+            job (Job): The job being applied for.
+        Returns:
+            bool: True if the character is eligible for the job, False otherwise.
+        """
+        # Check if the character has the required skills
+        if (
+            job.available
+            and all(
+                skill in character.get_skills_as_list_of_strings()
+                for skill in job.required_skills
+            )
+            and character.experience >= job.req_job_experience
+        ):
+            return True
+        return False
 
     def calculate_potential_utility_of_plan(self, character, plan):
         """
@@ -3309,7 +5106,7 @@ class GraphManager:
         Returns:
             float: The difficulty score of the goal.
         """
-        from tiny_characters import Character
+        Character = importlib.import_module("tiny_characters").Character
 
         difficulty = 0
         # Analyze the goal requirements and complexity
@@ -3376,6 +5173,7 @@ class GraphManager:
             )
             / total_nodes
         )
+
         viable_nodes = sum(
             1
             for node in action_viability_cost
@@ -3501,7 +5299,7 @@ class GraphManager:
         ]
 
         while priority_queue:
-            _, current_cost, current_solution, remaining_conditions = heappop(
+            _, current_cost, current_solution, remaining_conditions = heapq.heappop(
                 priority_queue
             )
 
@@ -3527,7 +5325,7 @@ class GraphManager:
                 heuristic_cost = new_cost + heuristic(new_remaining_conditions)
                 if heuristic_cost >= best_cost:
                     continue
-                heappush(
+                heapq.heappush(
                     priority_queue,
                     (
                         heuristic_cost,
@@ -3648,10 +5446,10 @@ class GraphManager:
         Returns:
             float: The difficulty score of the preconditions.
         """
-        from tiny_characters import Character
+        Character = importlib.import_module("tiny_characters").Character
 
         action_cost = {}
-
+        char_possible_actions = self.get_possible_actions(initiator)
         for precondition in preconditions:
             if not precondition().check_condition():
                 filters = {}
@@ -3719,26 +5517,23 @@ class GraphManager:
                     return float("inf")
 
                 for node in nodes:
-                    action_cost[node] = min(
-                        [
-                            obj.cost
-                            for obj in self.node_type_resolver(
-                                node
-                            ).get_possible_interactions()
-                        ]
-                    )
-                    # Add edge cost between the initiator and the node
-                    action_cost[node] += self.G.edges[initiator][node][
-                        "interaction_cost"
-                    ]
-                    action_cost[node] += self.calc_distance_cost(
-                        dist(
-                            self.G.nodes[initiator]["coordinate_location"],
-                            self.G.nodes[node]["coordinate_location"],
-                        ),
-                        self.G.nodes[initiator],
-                        node,
-                    )
+                    action_costs = {}
+                    for interaction in self.node_type_resolver(
+                        node
+                    ).get_possible_interactions():
+                        if interaction in char_possible_actions:
+                            action_costs[interaction] = (
+                                interaction.cost
+                                + self.calculate_action_effect_cost(
+                                    interaction, initiator, precondition
+                                )
+                                + self.calculate_char_act_edge_cost(
+                                    initiator, node, interaction
+                                )
+                            )
+
+                    action_cost[node] = min(action_costs.values())
+
         return sum(action_cost.values())
 
     def calculate_action_effect_cost(
@@ -3751,7 +5546,9 @@ class GraphManager:
         Returns:
             float: The cost of the action based on its effects.
         """
-        from tiny_characters import Character
+        Character = importlib.import_module("tiny_characters").Character
+        Action = importlib.import_module("tiny_actions").Action
+        Goal = importlib.import_module("tiny_goals").Goal
 
         goal_cost = 0
         conditions = goal.completion_conditions
@@ -3970,6 +5767,34 @@ class GraphManager:
 
         return goal_cost
 
+    def calculate_how_goal_impacts_character(self, goal: Goal, character: Character):
+        """
+        Calculate the impact of a goal on a character based on the goal's completion conditions and the character's current state.
+        Args:
+            goal (Goal): The goal to evaluate.
+            character (Character): The character to evaluate.
+        Returns:
+            float: The impact of the goal on the character.
+        """
+        Character = importlib.import_module("tiny_characters").Character
+
+        impact = 0
+        for condition in goal.completion_conditions:
+            if condition.attribute in character.get_state():
+                if condition.operator == "ge" or condition.operator == "gt":
+                    impact += max(
+                        0,
+                        character.get_state()[condition.attribute]
+                        - condition.satisfy_value,
+                    )
+                elif condition.operator == "le" or condition.operator == "lt":
+                    impact += max(
+                        0,
+                        condition.satisfy_value
+                        - character.get_state()[condition.attribute],
+                    )
+        return impact
+
     def calculate_action_difficulty(self, action: Action, character: Character):
         """
         Calculate the difficulty of an action based on its complexity and requirements.
@@ -3978,11 +5803,15 @@ class GraphManager:
         Returns:
             float: The difficulty score of the action.
         """
-        from tiny_characters import Character
+        Character = importlib.import_module("tiny_characters").Character
+        Action = importlib.import_module("tiny_actions").Action
 
         difficulty = action.cost
         difficulty += self.calculate_preconditions_difficulty(
             action.preconditions, character
+        )
+        difficulty += self.calculate_char_act_edge_cost(
+            character, action, self.node_type_resolver(action.target)
         )
 
         return difficulty
@@ -3996,7 +5825,7 @@ class GraphManager:
         Returns:
             dict(cost: float, viable: bool, goal_cost: float): The cost of the action, whether it is viable, and the cost of the action on the goal.
         """
-        from tiny_characters import Character
+        Character = importlib.import_module("tiny_characters").Character
 
         cache_key = (node, goal, character)
         if cache_key in self.dp_cache:
@@ -4093,8 +5922,10 @@ class GraphManager:
         Returns:
             dict: A dictionary of booleans indicating whether each completion condition is met.
         """
-        from tiny_characters import Character
-
+        Character = importlib.import_module("tiny_characters").Character
+        Action = importlib.import_module("tiny_actions").Action
+        Goal = importlib.import_module("tiny_goals").Goal
+        State = importlib.import_module("tiny_states").State
         goal_copy = copy.deepcopy(goal)
         completion_conditions = (
             goal_copy.completion_conditions

@@ -1,6 +1,13 @@
+import importlib
+import logging
 from math import cos
-from actions import Action, State, ActionSystem
+import uu
+import uuid
 
+from numpy import character
+
+# from actions import Action, State, ActionSystem
+from tiny_types import Action, State, ActionSystem
 
 effect_dict = {
     "Enter Location Boundary": [
@@ -38,7 +45,20 @@ preconditions_dict = {
 
 
 class Location:
-    def __init__(self, name, x, y, width, height, action_system: ActionSystem):
+    def __init__(
+        self,
+        name,
+        x,
+        y,
+        width,
+        height,
+        action_system: ActionSystem,
+        security=0,
+        threat_level=0,
+        popularity=0,
+    ):
+        ActionSystem = importlib.import_module("actions").ActionSystem
+        Action = importlib.import_module("actions").Action
         self.name = name
         self.x = x
         self.y = y
@@ -64,6 +84,20 @@ class Location:
                 cost=0,
             )
         ]
+        self.security = 0
+        self.threat_level = 0
+        self.popularity = 0
+        self.security = security
+        self.threat_level = threat_level
+        self.popularity = popularity
+        self.activities_available = []
+        self.accessible = True
+        self.current_visitors = []
+        self.uuid = uuid.uuid4()
+        self.visit_count = 0
+
+    def add_activity(self, activity):
+        self.activities_available.append(activity)
 
     def get_possible_interactions(self, requester):
         self.effect_dict["Enter Location Boundary"].append(
@@ -86,21 +120,31 @@ class Location:
         return self.width, self.height
 
     def get_area(self):
+        if self.width == 0 or self.height == 0:
+            return 0
         return self.width * self.height
 
     def get_center(self):
         return self.x + self.width / 2, self.y + self.height / 2
 
     def get_diagonal(self):
+        if self.width == 0 or self.height == 0:
+            return 0
         return (self.width**2 + self.height**2) ** 0.5
 
     def get_aspect_ratio(self):
+        if self.height == 0:
+            return 0
         return self.width / self.height
 
     def get_perimeter(self):
+        if self.width == 0 or self.height == 0:
+            return 0
         return 2 * (self.width + self.height)
 
     def get_bounding_box(self):
+        if self.width == 0 or self.height == 0:
+            return self.x, self.y, self.x, self.y
         return self.x, self.y, self.x + self.width, self.y + self.height
 
     def get_x(self):
@@ -147,6 +191,26 @@ class Location:
             and self.y + self.height > other.y
         )
 
+    def character_within_location(self, character):
+        self.current_visitors.append(character)
+        return self.contains_point(*character.location.coordinates_location)
+
+    def character_leaves_location(self, character):
+        self.current_visitors.remove(character)
+
+    def character_within_location_boundary(self, character):
+        return (
+            self.distance_to_point_from_nearest_edge(
+                *character.location.coordinates_location
+            )
+            <= 1
+        )
+
+    def check_for_missing_visitors(self):
+        for visitor in self.current_visitors:
+            if not self.contains_point(*visitor.location.coordinates_location):
+                self.current_visitors.remove(visitor)
+
     def move(self, delta_x, delta_y):
         self.x += delta_x
         self.y += delta_y
@@ -162,6 +226,8 @@ class Location:
         return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5
 
     def center(self):
+        if self.width == 0 or self.height == 0:
+            return self.x, self.y
         return self.x + self.width / 2, self.y + self.height / 2
 
     def distance_to_point_from_center(self, point_x, point_y):
@@ -195,15 +261,106 @@ class Location:
         return self.distance_to_point_from_center(*other.center())
 
     def __eq__(self, other):
+        if not isinstance(other, Location):
+            if isinstance(other, tuple):
+                return self.x == other[0] and self.y == other[1]
+            return False
         return (
             self.x == other.x
             and self.y == other.y
             and self.width == other.width
             and self.height == other.height
+            and self.coordinates_location == other.coordinates_location
+            and self.security == other.security
+            and self.threat_level == other.threat_level
+            and self.popularity == other.popularity
+            and self.activities_available == other.activities_available
+            and self.accessible == other.accessible
+            and self.current_visitors == other.current_visitors
+            and self.effect_dict == other.effect_dict
+            and self.name == other.name
         )
 
+    def hash_nested_list(self, obj):
+        try:
+            if isinstance(obj, list):
+                return tuple(self.hash_nested_list(item) for item in obj)
+            elif isinstance(obj, dict):
+                return tuple(
+                    (key, self.hash_nested_list(value)) for key, value in obj.items()
+                )
+            elif isinstance(obj, set):
+                return frozenset(self.hash_nested_list(item) for item in obj)
+            elif isinstance(obj, tuple):
+                return tuple(self.hash_nested_list(item) for item in obj)
+            elif hasattr(obj, "__hash__") and callable(getattr(obj, "__hash__")):
+                # Test if the object can be hashed without raising an error
+                try:
+                    hash(obj)
+                    return obj
+                except TypeError:
+                    if hasattr(obj, "__dict__"):
+                        return tuple(
+                            (key, self.hash_nested_list(value))
+                            for key, value in obj.__dict__.items()
+                        )
+                    else:
+                        # If the object is not hashable and has no __dict__, return its id or a string representation
+                        return id(obj)
+            elif hasattr(obj, "__dict__"):  # For custom objects without __hash__ method
+                return tuple(
+                    (key, self.hash_nested_list(value))
+                    for key, value in obj.__dict__.items()
+                )
+            else:
+                return obj
+        except Exception as e:
+            logging.error(f"Error hashing object: {e}")
+            return None
+
     def __hash__(self):
-        return hash((self.x, self.y, self.width, self.height))
+        def make_hashable(obj):
+            if isinstance(obj, dict):
+                return tuple(sorted((k, make_hashable(v)) for k, v in obj.items()))
+            elif isinstance(obj, list):
+                return tuple(make_hashable(e) for e in obj)
+            elif isinstance(obj, set):
+                return frozenset(make_hashable(e) for e in obj)
+            elif isinstance(obj, tuple):
+                return tuple(make_hashable(e) for e in obj)
+            elif type(self.dict_or_obj).__name__ == "Character":
+                Character = importlib.import_module("tiny_characters").Character
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+            elif type(self.dict_or_obj).__name__ == "Location":
+                Location = importlib.import_module("tiny_locations").Location
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+
+            return obj
+
+        return hash(
+            tuple(
+                [
+                    self.x,
+                    self.y,
+                    self.width,
+                    self.height,
+                    self.coordinates_location,
+                    self.security,
+                    self.threat_level,
+                    self.popularity,
+                    make_hashable(self.activities_available),
+                    self.accessible,
+                    make_hashable(self.current_visitors),
+                    self.name,
+                ]
+            )
+        )
 
     def __lt__(self, other):
         return self.x < other.x and self.y < other.y
@@ -236,6 +393,14 @@ class Location:
             "perimeter": self.get_perimeter(),
             "bounding_box": self.get_bounding_box(),
             "diagonal": self.get_diagonal(),
+            "security": self.security,
+            "threat_level": self.threat_level,
+            "popularity": self.popularity,
+            "activities_available": self.activities_available,
+            "accessible": self.accessible,
+            "current_visitors": self.current_visitors,
+            "effect_dict": self.effect_dict,
+            "name": self.name,
         }
 
 

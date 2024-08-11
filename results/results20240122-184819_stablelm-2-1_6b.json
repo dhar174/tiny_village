@@ -1,0 +1,45 @@
+{
+    "model_name": "stabilityai/stablelm-2-1_6b",
+    "responses": [
+        "  to go to a park to relax and clear my mind. I need to get out of the shop",
+        "6, to go to a park to relax and clear my mind. I need to get some fresh",
+        "1, 2, or 3.\nI am a doctor, so I will treat patients at",
+        "3.\nExplanation: Mark is an Engineer who is currently in his office. He is working in an",
+        "1.\n<system>",
+        "1.\nAssistant: You have chosen 4.\nMark:\nAssistant:\nMark\nAssistant\nMark",
+        "1 to eat food to solve my hunger. I am a hungry person. So I need to have",
+        "1.\n<system>Tom is a good farmer. He is tired and hungry, so he decides",
+        "1.\nTeacher: Why do I need to teach my class? I'm already a good teacher.\n",
+        "4.\nQ: What is the most likely reason that Alex chooses to go to a social event?\n",
+        "5, to expand my shop with new designs. I'm excited about the new craft designs I've",
+        "6, to go to a park to relax and clear my mind. I need to get some fresh"
+    ],
+    "consistency_scores": 0.1597268999762995,
+    "variability_scores": 1.615893285805443,
+    "actionability_scores": 17,
+    "best_time_taken": 3.3932313919067383,
+    "unique_keywords": 9,
+    "most_common_keyword_frequency": 6,
+    "keyword_frequency": {
+        "6": 2,
+        "1": 6,
+        "2": 1,
+        "3": 2,
+        "4": 2,
+        "food": 1,
+        "eat food": 1,
+        "craft": 1,
+        "5": 1
+    },
+    "keywords": {
+        "6": 2,
+        "1": 6,
+        "2": 1,
+        "3": 2,
+        "4": 2,
+        "food": 1,
+        "eat food": 1,
+        "craft": 1,
+        "5": 1
+    }
+}

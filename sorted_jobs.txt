@@ -1,0 +1,136 @@
+Account Manager
+Accountant
+Administrative Assistant
+Alcoholic
+Animator
+App Developer
+Architect
+Artist
+Artist
+Au Pair
+Auditor
+Babysitter
+Backend Developer
+Baker
+Barista
+Bartender
+Bellboy
+Blogger
+Bodyguard
+Bookkeeper
+Bookstore owner
+Bouncer
+Bus Driver
+Carnival Worker
+Carpenter
+Cashier
+Chauffeur
+Chef
+Coach
+Comic Artist
+Comic store owner
+Construction Worker
+Crackhead
+Crackpot
+Crackwhore
+Craftsman
+Customer Service
+Dancer
+Data Scientist
+Database Administrator
+Daycare Worker
+Delivery Driver
+Dentist
+Disabled
+Dishwasher
+Doctor
+Drug Addict
+Drug Dealer
+Electrician
+Engineer
+Escort
+Escort
+Etsy Seller
+Executive Assistant
+Farmer
+Fast Food Worker
+Financial Advisor
+Financial Analyst
+Firefighter
+Flight Attendant
+Foster Parent
+Frontend Developer
+Gambler
+Game Developer
+Gardener
+Graphic Designer
+Homemaker
+Hostess
+Housekeeper
+Illustrator
+Influencer
+Insurance Agent
+Investment Banker
+Janitor
+Journalist
+Landscaper
+Lawyer
+Librarian
+Loan Officer
+Lyft Driver
+Machine Learning Engineer
+Mayor
+Mechanic
+Musician
+Musician
+Nanny
+Network Administrator
+Nurse
+Office Manager
+Painter
+Personal Assistant
+Personal Trainer
+Photographer
+Physical Therapist
+Pilot
+Plumber
+Police Officer
+Pornstar
+Product Manager
+Program Manager
+Project Manager
+Prostitute
+Psychologist
+Real Estate Agent
+Receptionist
+Reporter
+Reseach Scientist
+Retail Worker
+Retired
+Salesperson
+Scientist
+Secretary
+Security Guard
+Single Parent
+Small Business Owner
+Social Worker
+Software Engineer
+Soldier
+Stay-at-home Mom
+Stay-at-home Parent
+Stock Clerk
+Stripper
+Student
+Taxi Driver
+Teacher
+Therapist
+Truck Driver
+Tutor
+Uber Driver
+Unemployed
+Voice Actor
+Waiter
+Waitress
+Web Developer
+Writer
+Writer

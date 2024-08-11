@@ -1,49 +1,98 @@
+import json
+import logging
+
+
 class JobRoles:
     def __init__(
         self,
         job_name,
+        job_title,
         job_description,
         job_salary,
         job_skills,
         job_education,
-        job_experience,
+        req_job_experience,
         job_motives,
+        location=None,
     ):
         self.job_name = self.set_job_name(job_name)
+        self.job_title = job_title
         self.job_description = self.set_job_description(job_description)
         self.job_salary = self.set_job_salary(job_salary)
         self.job_skills = self.set_job_skills(job_skills)
         self.job_education = self.set_job_education(job_education)
-        self.job_experience = self.set_job_experience(job_experience)
+        self.req_job_experience = self.set_job_experience(req_job_experience)
         self.job_motives = self.set_job_motives(job_motives)
+        self.location = location
 
     def __repr__(self):
-        return f"JobRoles({self.job_name}, {self.job_description}, {self.job_salary}, {self.job_skills}, {self.job_education}, {self.job_experience}, {self.job_motives})"
+        return f"JobRoles({self.job_name}, {self.job_description}, {self.job_salary}, {self.job_skills}, {self.job_education}, {self.req_job_experience}, {self.job_motives})"
 
     def __str__(self):
-        return f"JobRoles with name {self.job_name}, description {self.job_description}, salary {self.job_salary}, skills {self.job_skills}, education {self.job_education}, experience {self.job_experience}, motives {self.job_motives}."
+        return f"JobRoles with name {self.job_name}, description {self.job_description}, salary {self.job_salary}, skills {self.job_skills}, education {self.job_education}, experience {self.req_job_experience}, motives {self.job_motives}."
 
     def __eq__(self, other):
+        if not isinstance(other, JobRoles):
+            return False
         return (
             self.job_name == other.job_name
             and self.job_description == other.job_description
             and self.job_salary == other.job_salary
             and self.job_skills == other.job_skills
             and self.job_education == other.job_education
-            and self.job_experience == other.job_experience
+            and self.req_job_experience == other.req_job_experience
             and self.job_motives == other.job_motives
         )
 
+    def hash_nested_list(self, obj):
+        try:
+            if isinstance(obj, list):
+                return tuple(self.hash_nested_list(item) for item in obj)
+            elif isinstance(obj, dict):
+                return tuple(
+                    (key, self.hash_nested_list(value)) for key, value in obj.items()
+                )
+            elif isinstance(obj, set):
+                return frozenset(self.hash_nested_list(item) for item in obj)
+            elif isinstance(obj, tuple):
+                return tuple(self.hash_nested_list(item) for item in obj)
+            elif hasattr(obj, "__hash__") and callable(getattr(obj, "__hash__")):
+                # Test if the object can be hashed without raising an error
+                try:
+                    hash(obj)
+                    return obj
+                except TypeError:
+                    if hasattr(obj, "__dict__"):
+                        return tuple(
+                            (key, self.hash_nested_list(value))
+                            for key, value in obj.__dict__.items()
+                        )
+                    else:
+                        # If the object is not hashable and has no __dict__, return its id or a string representation
+                        return id(obj)
+            elif hasattr(obj, "__dict__"):  # For custom objects without __hash__ method
+                return tuple(
+                    (key, self.hash_nested_list(value))
+                    for key, value in obj.__dict__.items()
+                )
+            else:
+                return obj
+        except Exception as e:
+            logging.error(f"Error hashing object: {e}")
+            return None
+
     def __hash__(self):
         return hash(
-            (
-                self.job_name,
-                self.job_description,
-                self.job_salary,
-                self.job_skills,
-                self.job_education,
-                self.job_experience,
-                self.job_motives,
+            tuple(
+                [
+                    self.job_name,
+                    self.job_description,
+                    self.job_salary,
+                    tuple(self.job_skills),
+                    self.job_education,
+                    self.req_job_experience,
+                    tuple(self.job_motives),
+                ]
             )
         )
 
@@ -85,11 +134,11 @@ class JobRoles:
         return self.job_education
 
     def get_job_experience(self):
-        return self.job_experience
+        return self.req_job_experience
 
-    def set_job_experience(self, job_experience):
-        self.job_experience = job_experience
-        return self.job_experience
+    def set_job_experience(self, req_job_experience):
+        self.req_job_experience = req_job_experience
+        return self.req_job_experience
 
     def get_job_motives(self):
         return self.job_motives
@@ -105,197 +154,71 @@ class JobRoles:
             "salary": self.job_salary,
             "skills": self.job_skills,
             "education": self.job_education,
-            "experience": self.job_experience,
+            "experience": self.req_job_experience,
             "motives": self.job_motives,
         }
 
 
 class JobRules:
     def __init__(self):
-
+        job_roles = json.load(open("job_roles.json"))
+        job_count = len([job_roles["jobs"][job_role] for job_role in job_roles["jobs"]])
+        logging.debug(f"Job count: {job_count}")
+        if job_count != len(
+            [
+                job_roles["jobs"][job_role][jobname]
+                for job_role in job_roles["jobs"]
+                for jobname in job_roles["jobs"][job_role]
+                if job_role.lower() == jobname.lower()
+            ]
+        ):
+            logging.error(
+                f"Not all job roles parsed correctly, counted {job_count} but parsed {len([job_roles['jobs'][job_role][jobname] for job_role in job_roles['jobs'] for jobname in job_roles['jobs'][job_role] if job_role.lower() == jobname.lower()])}"
+            )
+            if job_count > len(
+                [
+                    job_roles["jobs"][job_role][jobname]
+                    for job_role in job_roles["jobs"]
+                    for jobname in job_roles["jobs"][job_role]
+                    if job_role.lower() == jobname.lower()
+                ]
+            ):
+                logging.error(
+                    f"Missing job roles: {[job_role for job_role in job_roles['jobs'] if job_role not in [jobname for job_role in job_roles['jobs'] for jobname in job_roles['jobs'][job_role] if job_role.lower() == jobname.lower()]]}"
+                )
+            elif job_count < len(
+                [
+                    job_roles["jobs"][job_role][jobname]
+                    for job_role in job_roles["jobs"]
+                    for jobname in job_roles["jobs"][job_role]
+                    if job_role.lower() == jobname.lower()
+                ]
+            ):
+                logging.error(
+                    f"Extra job roles: {[jobname for job_role in job_roles['jobs'] for jobname in job_roles['jobs'][job_role] if job_role.lower() == jobname.lower() and jobname not in [job_role for job_role in job_roles['jobs']]]}"
+                )
+        logging.debug(
+            f"Job roles: {[job_roles['jobs'][job_role][jobname] for job_role in job_roles['jobs'] for jobname in job_roles['jobs'][job_role] if ((job_role.lower() == jobname.lower() or job_role.lower() in jobname.lower())or (jobname.lower() == job_role.lower() or jobname.lower() in job_role.lower()))]}"
+        )
         self.ValidJobRoles = [
-            JobRoles("unemployed", "no job", 0, [], [], [], []),
             JobRoles(
-                "cashier",
-                "works at a grocery store",
-                10,
-                [
-                    "customer service",
-                    "mathematics",
-                    "communication",
-                    "time management",
-                    "organization",
-                ],
-                ["high school diploma"],
-                ["none"],
-                ["wealth", "happiness", "job performance"],
-            ),
-            JobRoles(
-                "chef",
-                "works at a restaurant",
-                10,
-                [
-                    "cooking",
-                    "customer service",
-                    "communication",
-                    "time management",
-                    "organization",
-                ],
-                ["high school diploma"],
-                ["none"],
-                ["wealth", "happiness", "job performance"],
-            ),
-            JobRoles(
-                "janitor",
-                "cleans buildings",
-                10,
-                [
-                    "customer service",
-                    "mathematics",
-                    "communication",
-                    "time management",
-                    "organization",
-                ],
-                ["high school diploma"],
-                ["none"],
-                ["wealth", "happiness", "job performance"],
-            ),
-            JobRoles(
-                "teacher",
-                "teaches students",
-                10,
-                [
-                    "customer service",
-                    "mathematics",
-                    "communication",
-                    "time management",
-                    "organization",
-                ],
-                ["high school diploma"],
-                ["none"],
-                ["wealth", "happiness", "job performance"],
-            ),
-            JobRoles(
-                "police officer",
-                "enforces the law",
-                10,
-                [
-                    "customer service",
-                    "mathematics",
-                    "communication",
-                    "time management",
-                    "organization",
-                ],
-                ["high school diploma"],
-                ["none"],
-                ["wealth", "happiness", "job performance"],
-            ),
-            JobRoles(
-                "doctor",
-                "treats patients",
-                10,
-                [
-                    "customer service",
-                    "mathematics",
-                    "communication",
-                    "time management",
-                    "organization",
-                ],
-                ["high school diploma"],
-                ["none"],
-                ["wealth", "happiness", "job performance"],
-            ),
-            JobRoles(
-                "engineer",
-                "builds things",
-                10,
-                [
-                    "customer service",
-                    "mathematics",
-                    "communication",
-                    "time management",
-                    "organization",
-                ],
-                ["high school diploma"],
-                ["none"],
-                ["wealth", "happiness", "job performance"],
-            ),
-            JobRoles(
-                "farmer",
-                "grows crops",
-                10,
-                [
-                    "customer service",
-                    "mathematics",
-                    "communication",
-                    "time management",
-                    "organization",
-                ],
-                ["high school diploma"],
-                ["none"],
-                ["wealth", "happiness", "job performance"],
-            ),
-            JobRoles(
-                "firefighter",
-                "fights fires",
-                10,
-                [
-                    "customer service",
-                    "mathematics",
-                    "communication",
-                    "time management",
-                    "organization",
-                ],
-                ["high school diploma"],
-                ["none"],
-                ["wealth", "happiness", "job performance"],
-            ),
-            JobRoles(
-                "lawyer",
-                "represents clients in court",
-                10,
-                [
-                    "customer service",
-                    "mathematics",
-                    "communication",
-                    "time management",
-                    "organization",
-                ],
-                ["high school diploma"],
-                ["none"],
-                ["wealth", "happiness", "job performance"],
-            ),
-            JobRoles(
-                "mechanic",
-                "repairs vehicles",
-                10,
-                [
-                    "customer service",
-                    "mathematics",
-                    "communication",
-                    "time management",
-                    "organization",
-                ],
-                ["high school diploma"],
-                ["none"],
-                ["wealth", "happiness", "job performance"],
-            ),
-            JobRoles(
-                "software engineer",
-                "writes code",
-                10,
-                [
-                    "customer service",
-                    "mathematics",
-                    "communication",
-                    "time management",
-                    "organization",
-                ],
-                ["high school diploma"],
-                ["none"],
-                ["wealth", "happiness", "job performance"],
-            ),
+                key, title, description, salary, skills, education, experience, motives
+            )
+            for job_role in job_roles["jobs"]
+            for key, job_data in job_roles["jobs"][job_role].items()
+            if isinstance(job_data, dict)
+            and (
+                (job_role.lower() == key.lower() or job_role.lower() in key.lower())
+                or (key.lower() == job_role.lower() or key.lower() in job_role.lower())
+            )
+            for title, description, salary, skills, education, experience, motives in [
+                job_data.values()
+            ]
         ]
+        logging.debug(f"Valid job roles: {self.ValidJobRoles}")
+        logging.debug(
+            f"Found: {[job_role.get_job_name() for job_role in self.ValidJobRoles]}"
+        )
 
     def __repr__(self):
         return f"JobRules({self.ValidJobRoles})"
@@ -304,6 +227,11 @@ class JobRules:
         return f"JobRules with valid job roles {self.ValidJobRoles}."
 
     def __eq__(self, other):
+        if not isinstance(other, JobRules):
+            if isinstance(other, list):
+                return self.ValidJobRoles == other
+            else:
+                return False
         return self.ValidJobRoles == other.ValidJobRoles
 
     def check_job_role_validity(self, job_role: JobRoles):
@@ -314,9 +242,17 @@ class JobRules:
 
     def check_job_name_validity(self, job_name: str):
         for job_role in self.ValidJobRoles:
-            if job_role.get_job_name() == job_name:
-                return job_name
-        return "unemployed"
+            if (
+                job_role.get_job_name() == job_name
+                or job_name in job_role.get_job_name()
+                or job_role.get_job_name() in job_name
+                or job_name.lower() == job_role.job_title.lower()
+                or job_role.job_title.lower() in job_name.lower()
+                or job_name.lower() in job_role.job_title.lower()
+            ):
+
+                return True
+        return False
 
 
 # Job class is a subclass of JobRoles and inherits from it
@@ -328,17 +264,21 @@ class Job(JobRoles):
         job_salary,
         job_skills,
         job_education,
-        job_experience,
+        req_job_experience,
         job_motives,
+        job_title="",
+        location=None,
     ):
         super().__init__(
             job_name,
+            job_title,
             job_description,
             job_salary,
             job_skills,
             job_education,
-            job_experience,
+            req_job_experience,
             job_motives,
+            location,
         )
         # Warning: Name MUST be unique! Check for duplicates before setting.
 
@@ -347,24 +287,96 @@ class Job(JobRoles):
         self.job_salary = job_salary
         self.job_skills = job_skills
         self.job_education = job_education
-        self.job_experience = job_experience
+        self.req_job_experience = req_job_experience
         self.job_motives = job_motives
+        self.available = True
+        self.job_title = job_title
+        self.location = location
 
     def __repr__(self):
-        return f"Job({self.job_name}, {self.job_description}, {self.job_salary}, {self.job_skills}, {self.job_education}, {self.job_experience}, {self.job_motives})"
+        return f"Job({self.job_name}, {self.job_description}, {self.job_salary}, {self.job_skills}, {self.job_education}, {self.req_job_experience}, {self.job_motives})"
 
     def __str__(self):
-        return f"Job with name {self.job_name}, description {self.job_description}, salary {self.job_salary}, skills {self.job_skills}, education {self.job_education}, experience {self.job_experience}, motives {self.job_motives}."
+        return f"Job with name {self.job_name}, description {self.job_description}, salary {self.job_salary}, skills {self.job_skills}, education {self.job_education}, experience {self.req_job_experience}, motives {self.job_motives}."
 
     def __eq__(self, other):
+        if not isinstance(other, Job) or not isinstance(other, JobRoles):
+            return False
         return (
             self.job_name == other.job_name
             and self.job_description == other.job_description
             and self.job_salary == other.job_salary
             and self.job_skills == other.job_skills
             and self.job_education == other.job_education
-            and self.job_experience == other.job_experience
+            and self.req_job_experience == other.req_job_experience
             and self.job_motives == other.job_motives
+            and self.available == other.available
+            and self.job_title == other.job_title
+            and self.location == other.location
+        )
+
+    def hash_nested_list(self, obj):
+        try:
+            if isinstance(obj, list):
+                return tuple(self.hash_nested_list(item) for item in obj)
+            elif isinstance(obj, dict):
+                return tuple(
+                    (key, self.hash_nested_list(value)) for key, value in obj.items()
+                )
+            elif isinstance(obj, set):
+                return frozenset(self.hash_nested_list(item) for item in obj)
+            elif isinstance(obj, tuple):
+                return tuple(self.hash_nested_list(item) for item in obj)
+            elif hasattr(obj, "__hash__") and callable(getattr(obj, "__hash__")):
+                # Test if the object can be hashed without raising an error
+                try:
+                    hash(obj)
+                    return obj
+                except TypeError:
+                    if hasattr(obj, "__dict__"):
+                        return tuple(
+                            (key, self.hash_nested_list(value))
+                            for key, value in obj.__dict__.items()
+                        )
+                    else:
+                        # If the object is not hashable and has no __dict__, return its id or a string representation
+                        return id(obj)
+            elif hasattr(obj, "__dict__"):  # For custom objects without __hash__ method
+                return tuple(
+                    (key, self.hash_nested_list(value))
+                    for key, value in obj.__dict__.items()
+                )
+            else:
+                return obj
+        except Exception as e:
+            logging.error(f"Error hashing object: {e}")
+            return None
+
+    def __hash__(self):
+        def make_hashable(obj):
+            if isinstance(obj, dict):
+                return tuple(sorted((k, make_hashable(v)) for k, v in obj.items()))
+            elif isinstance(obj, list):
+                return tuple(make_hashable(e) for e in obj)
+            elif isinstance(obj, set):
+                return frozenset(make_hashable(e) for e in obj)
+            return obj
+
+        return hash(
+            tuple(
+                [
+                    self.job_name,
+                    self.job_description,
+                    self.job_salary,
+                    make_hashable(self.job_skills),
+                    self.job_education,
+                    self.req_job_experience,
+                    make_hashable(self.job_motives),
+                    self.available,
+                    self.job_title,
+                    make_hashable(self.location),
+                ]
+            )
         )
 
     def get_job_name(self):
@@ -411,7 +423,7 @@ class Job(JobRoles):
             "salary": self.job_salary,
             "skills": self.job_skills,
             "education": self.job_education,
-            "experience": self.job_experience,
+            "experience": self.req_job_experience,
             "motives": self.job_motives,
         }
 
@@ -427,6 +439,8 @@ class JobManager:
         return f"JobManager with job rules {self.job_rules}."
 
     def __eq__(self, other):
+        if not isinstance(other, JobManager):
+            return False
         return self.job_rules == other.job_rules
 
     def get_job_rules(self):

@@ -1,0 +1,36 @@
+Model: stabilityai/stablelm-2-1_6b
+
+ 
+Best Time: 3.3633131980895996
+
+ 
+Empty Results: 0
+
+ 
+Actionable Results: 11
+
+ 
+Stored Results: [{'model_name': '', 'responses': [], 'best_time_taken': ''}, {'model_name': 'alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2', 'responses': [" 2, Spending_time_in_workshop{'to craft new item'}\n\nEx", "2, Spending_time_in_workshop{'to craft new item'}\nA:", '1, 2, or 3 as my focus.', '1, Continued Work.', "1 Treating_patients{'at'} my clinics. I aim for community wellness", "1 Continued Work - Current Job {'engineer'} - Stress Management. I'", '1, Eating_food to Address_hunger\n', "1 EAT_FOOD to Address my hungery. I'll head to my fields", '1, Continued teaching_skill.', "2, I'll head to a local market to buy some fresh produce.", "2, Spending time at a Local Cafe. I'm feeling hunty and want to", "2, Spent_time_in_workshop {'to craft item'} ���"], 'best_time_taken': 2.905371904373169}, {'model_name': 'stabilityai/stablelm-2-1_6b', 'responses': ['  to go to a park to relax and clear my mind. I need to get out of the shop', '6, to go to a park to relax and clear my mind. I need to get some fresh', '1, 2, or 3.\nI am a doctor, so I will treat patients at', '3.\nExplanation: Mark is an Engineer who is currently in his office. He is working in an', '1.\n<system>', '1.\nAssistant: You have chosen 4.\nMark:\nAssistant:\nMark\nAssistant\nMark', '1 to eat food to solve my hunger. I am a hungry person. So I need to have', '1.\n<system>Tom is a good farmer. He is tired and hungry, so he decides', "1.\nTeacher: Why do I need to teach my class? I'm already a good teacher.\n", '4.\nQ: What is the most likely reason that Alex chooses to go to a social event?\n', "5, to expand my shop with new designs. I'm excited about the new craft designs I've", '6, to go to a park to relax and clear my mind. I need to get some fresh'], 'best_time_taken': 3.3633131980895996}]
+
+ 
+Consistency of results: 0.1597268999762995
+
+ 
+Variability of results: 1.615893285805443
+
+ 
+Actionability of results: 17
+
+ 
+Best time taken: 3.3633131980895996
+
+ 
+
+
+
+Full Details:
+
+ 
+Test(model_name=stabilityai/stablelm-2-1_6b, responses=['  to go to a park to relax and clear my mind. I need to get out of the shop', '6, to go to a park to relax and clear my mind. I need to get some fresh', '1, 2, or 3.\nI am a doctor, so I will treat patients at', '3.\nExplanation: Mark is an Engineer who is currently in his office. He is working in an', '1.\n<system>', '1.\nAssistant: You have chosen 4.\nMark:\nAssistant:\nMark\nAssistant\nMark', '1 to eat food to solve my hunger. I am a hungry person. So I need to have', '1.\n<system>Tom is a good farmer. He is tired and hungry, so he decides', "1.\nTeacher: Why do I need to teach my class? I'm already a good teacher.\n", '4.\nQ: What is the most likely reason that Alex chooses to go to a social event?\n', "5, to expand my shop with new designs. I'm excited about the new craft designs I've", '6, to go to a park to relax and clear my mind. I need to get some fresh'])
+
+ 

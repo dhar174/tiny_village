@@ -27,11 +27,19 @@ Where it happens: goap_system.py and graph_manager.py
 What happens: The GOAP planner uses the graph to analyze relationships and preferences, and formulates a plan consisting of a sequence of actions that maximize the character’s utility for the day.
 """
 
-from tiny_types import Goal
+from tiny_types import Goal, Character, GraphManager
 from actions import Action, State
-from tiny_graph_manager import GraphManager
+
+# from tiny_graph_manager import GraphManager
 
 from heapq import heappush, heappop
+
+import tiny_utility_functions as util_funcs
+
+import logging
+import importlib
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class Plan:
@@ -53,6 +61,7 @@ class Plan:
         self.action_queue = []
         self.current_goal_index = 0
         self.completed_actions = set()
+        self.current_action_index = 0
 
         if actions is not None:
             for action in actions:
@@ -179,10 +188,41 @@ class Plan:
                 cost=5,
                 target=failed_action.target,
                 initiator=failed_action.initiator,
+                related_skills=failed_action.related_skills,
             ),
             "priority": 1,
             "dependencies": [],
         }
+
+    def __str__(self):
+        return f"Plan: {self.name} - Goals: {self.goals} - Actions: {self.action_queue} - Completed Actions: {self.completed_actions} - Current Goal Index: {self.current_goal_index} - Current Action Index: {self.current_action_index} - Completed: {self.evaluate()}"
+
+    def __repr__(self):
+        return f"Plan: {self.name} - Goals: {self.goals} - Actions: {self.action_queue} - Completed Actions: {self.completed_actions} - Current Goal Index: {self.current_goal_index} - Current Action Index: {self.current_action_index} - Completed: {self.evaluate()}"
+
+    def __eq__(self, other):
+        return (
+            self.name == other.name
+            and self.goals == other.goals
+            and self.action_queue == other.action_queue
+            and self.completed_actions == other.completed_actions
+            and self.current_goal_index == other.current_goal_index
+            and self.current_action_index == other.current_action_index
+            and self.evaluate() == other.evaluate()
+        )
+
+    def __hash__(self):
+        return hash(
+            tuple(
+                self.name,
+                self.goals,
+                self.action_queue,
+                self.completed_actions,
+                self.current_goal_index,
+                self.current_action_index,
+                self.evaluate(),
+            )
+        )
 
 
 # # Example of using the Plan class with Goal and Action classes
@@ -229,7 +269,8 @@ class Plan:
 
 
 class GOAPPlanner:
-    def __init__(self, graph_manager: GraphManager):
+    def __init__(self, graph_manager: "GraphManager"):
+        GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
         self.graph_manager = graph_manager
         self.plans = {}
 
@@ -250,7 +291,9 @@ class GOAPPlanner:
         Returns:
             plan (list): A list of actions that form a plan to achieve the goal.
         """
-        from tiny_characters import Goal
+        Goal = importlib.import_module("tiny_characters").Goal
+        Character = importlib.import_module("tiny_characters").Character
+        State = importlib.import_module("tiny_characters").State
 
         # Initialize the open list with the initial state
         open_list = [(char_state, [])]
@@ -298,7 +341,209 @@ class GOAPPlanner:
             "lowest_goal_cost_path_cost": lowest_goal_cost_path_cost,
         }
         """
+        Character = importlib.import_module("tiny_characters").Character
+        Goal = importlib.import_module("tiny_characters").Goal
         return self.graph_manager.calculate_goal_difficulty(goal, character)
+
+    def evaluate_goal_importance(
+        self, character: Character, goal: Goal, graph_manager: GraphManager, **kwargs
+    ) -> float:
+        """
+        Evaluates the importance of a goal to a character based on the current game state, character's stats, and personal motives.
+
+        :param character: Character object containing all attributes and current state.
+        :param goal: Goal object containing the details of the goal.
+        :param graph_manager: GraphManager object to access the game graph.
+        :return: A float value representing the importance of the goal.
+        """
+        Character = importlib.import_module("tiny_characters").Character
+        Goal = importlib.import_module("tiny_characters").Goal
+        GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
+        logging.info(
+            f"Evaluating importance of goal {goal.name} for character {character.name}"
+        )
+        # logging.debug(f"Character:\n {character}\n")
+        # logging.debug(f"Goal:\n {goal}\n")
+        for arg in kwargs:
+            logging.debug(
+                f"\nAdditional argument:\n {arg} \nof type {type(kwargs[arg])}"
+            )
+        # TODO: We need Machine Learning here
+        # Fetch character attributes
+        health = character.health_status
+        hunger = character.hunger_level
+        social_needs = character.social_wellbeing
+        current_activity = (
+            character.current_activity
+        )  # Action class object of the current activity
+        financial_status = character.wealth_money
+
+        # Fetch goal attributes
+        goal_benefit = goal.completion_reward
+        goal_consequence = goal.failure_penalty
+        goal_type = goal.goal_type  # Added to differentiate goal types
+
+        # Fetch personal motives
+        motives = character.motives
+        social_factor = 0
+        event_participation_factor = 0
+
+        # Analyze character relationships if the character has been fully initialized
+        if character._initialized:
+            relationships = graph_manager.analyze_character_relationships(character)
+            social_factor = sum(
+                graph_manager.evaluate_relationship_strength(character, rel)
+                for rel in relationships.keys()
+            )
+
+            # TODO: Implement the relationship analysis
+            # for rel in relationships.keys():
+            #     impact = self.graph_manager.calculate_how_goal_impacts_character(
+            #         goal, character
+            #     )
+
+            # Analyze location relevance and safety
+            # location = graph_manager.G.nodes[character.name].get(
+            #     "coordinates_location", None
+            # )
+            # location_factor = 0
+            # safety_factor = 0
+            # if location and goal.target_location:
+            #     path = graph_manager.find_shortest_path(location, goal.target_location)
+            #     location_factor = (
+            #         1 / (len(path) + 1) if path else 0
+            #     )  # Simplified proximity impact
+            #     safety_factor = (
+            #         1
+            #         if graph_manager.check_safety_of_locations(goal.target_location)
+            #         else 0
+            #     )
+
+            # Analyze event impact and participation
+            current_events = [
+                event for event in graph_manager.events.values() if event.is_active()
+            ]
+            event_participation_factor = sum(
+                event.importance
+                for event in current_events
+                if self.graph_manager.G[character.name][event.name][
+                    "participation_status"
+                ]
+                == True
+            )
+
+        # # Check if the path will achieve the goal
+        # path_achieves_goal = graph_manager.will_path_achieve_goal(character.name, goal)
+
+        # Add specific criteria based on goal type and personal motives
+        goal_importance = 0
+        if goal_type == "Basic Needs":
+            goal_importance = self.calculate_basic_needs_importance(
+                health, hunger, motives
+            )
+        elif goal_type == "Social":
+            goal_importance = self.calculate_social_goal_importance(
+                social_needs, social_factor, motives
+            )
+        elif goal_type == "Career":
+            goal_importance = self.calculate_career_goal_importance(
+                character, goal, graph_manager, motives
+            )
+        elif goal_type == "Personal Development":
+            goal_importance = self.calculate_personal_development_importance(
+                character, goal, graph_manager, motives
+            )
+        elif goal_type == "Economic":
+            goal_importance = self.calculate_economic_goal_importance(
+                financial_status, goal, graph_manager, motives
+            )
+        elif goal_type == "Health":
+            goal_importance = self.calculate_health_goal_importance(
+                health, goal, graph_manager, motives
+            )
+        elif goal_type == "Safety":
+            goal_importance = self.calculate_safety_goal_importance(goal, motives)
+        elif goal_type == "Long-term Aspiration":
+            goal_importance = self.calculate_long_term_goal_importance(
+                character, goal, graph_manager, motives
+            )
+
+        # Combine general and specific criteria
+        importance_score = util_funcs.calculate_importance(
+            health=health,
+            hunger=hunger,
+            social_needs=social_needs,
+            current_activity=current_activity,
+            social_factor=social_factor,
+            event_participation_factor=event_participation_factor,
+            goal_importance=goal_importance,  # Specific to the goal type
+        )
+
+        return importance_score
+
+    def calculate_basic_needs_importance(self, health, hunger, motives):
+        # Calculate the importance of basic needs goals
+        return (
+            0.3 * health
+            + 0.4 * hunger
+            + 0.2 * motives.hunger_motive.value
+            + 0.1 * motives.health_motive.value
+        )
+
+    def calculate_social_goal_importance(self, social_needs, social_factor, motives):
+        # Calculate the importance of social goals
+        return (
+            0.5 * social_needs
+            + 0.3 * social_factor
+            + 0.2 * motives.social_wellbeing_motive.value
+        )
+
+    def calculate_career_goal_importance(self, character, goal, graph_manager, motives):
+        # Calculate the importance of career goals
+        job_opportunities = graph_manager.explore_career_opportunities(character.name)
+        career_impact = graph_manager.analyze_career_impact(character.name, goal)
+        return (
+            0.4 * character.skills
+            + 0.4 * job_opportunities
+            + 0.2 * motives.job_performance_motive.value
+        )
+
+    def calculate_personal_development_importance(
+        self, character, goal, graph_manager, motives
+    ):
+        # Calculate the importance of personal development goals
+        current_skill_level = character.skills.get(goal.skill, 0)
+        potential_benefits = graph_manager.calculate_potential_utility_of_plan(
+            character.name, goal
+        )
+        return 0.5 * current_skill_level + 0.5 * motives.happiness_motive.value
+
+    def calculate_economic_goal_importance(
+        self, financial_status, goal, graph_manager, motives
+    ):
+        # Calculate the importance of economic goals
+        trade_opportunities = graph_manager.evaluate_trade_opportunities_for_item(
+            goal.required_resource
+        )
+        return 0.5 * financial_status + 0.5 * motives.wealth_motive.value
+
+    def calculate_health_goal_importance(self, health, goal, graph_manager, motives):
+        # Calculate the importance of health goals
+        nearest_health_facility = graph_manager.get_nearest_resource(
+            goal.target_location, "health"
+        )
+        return 0.7 * health + 0.3 * motives.health_motive.value
+
+    def calculate_safety_goal_importance(self, goal, motives):
+        # Calculate the importance of safety goals
+        return safety_factor * goal.urgency + motives.stability_motive.value
+
+    def calculate_long_term_goal_importance(
+        self, character, goal, graph_manager, motives
+    ):
+        # Calculate the importance of long-term goals
+        progress = graph_manager.calculate_goal_progress(character.name, goal)
+        return progress * goal.urgency + motives.hope_motive.value
 
     def calculate_utility(self, action, character):
         # Placeholder for calculating action utility

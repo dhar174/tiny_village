@@ -1,13 +1,144 @@
 from enum import unique
+import importlib
+import logging
 import operator
+from re import T
 import uuid
 from typing import List
 
-from actions import Action, ActionSystem
+from regex import F
+
+# from actions import Action, ActionSystem
 from tiny_locations import Location
+
+from tiny_types import Action, ActionSystem, GraphManager
+
+
+class Stock:
+    def __init__(self, name, value, quantity, stock_description=None):
+        self.name = name
+        self.value = value
+        self.quantity = quantity
+        self.stock_description = stock_description
+        self.uuid = uuid.uuid4()
+        self.scarcity = None
+        self.ownership_history = ["unowned"]
+
+    def __repr__(self):
+        return f"Stock({self.name}, {self.value}, {self.quantity})"
+
+    def __eq__(self, other):
+        if not isinstance(other, Stock):
+            return False
+        return (
+            self.name == other.name
+            and self.value == other.value
+            and self.quantity == other.quantity
+        )
+
+    def __hash__(self):
+        return hash(tuple([self.name, self.value, self.quantity]))
+
+    def get_name(self):
+        return self.name
+
+    def set_name(self, name):
+        self.name = name
+        return self.name
+
+    def get_value(self):
+        return self.value
+
+    def set_value(self, value):
+        self.value = value
+        return self.value
+
+    def get_quantity(self):
+        return self.quantity
+
+    def set_quantity(self, quantity):
+        self.quantity = quantity
+        return self.quantity
+
+    def increase_quantity(self, quantity):
+        self.quantity += quantity
+        return self.quantity
+
+    def decrease_quantity(self, quantity):
+        self.quantity -= quantity
+        return self.quantity
+
+    def increase_value(self, value):
+        self.value += value
+        return self.value
+
+    def decrease_value(self, value):
+        self.value -= value
+        return self.value
+
+    def to_dict(self):
+        return {"name": self.name, "value": self.value, "quantity": self.quantity}
+
+
+class InvestmentPortfolio:
+    def __init__(self, stocks: List[Stock]):
+        self.stocks = stocks
+
+    def __repr__(self):
+        return f"InvestmentPortfolio({self.stocks})"
+
+    def __eq__(self, other):
+        return self.stocks == other.stocks
+
+    def __hash__(self):
+        return hash(tuple(self.stocks))
+
+    def get_stocks(self):
+        return self.stocks
+
+    def set_stocks(self, stocks):
+        self.stocks = stocks
+        return self.stocks
+
+    def add_stock(self, stock):
+        self.stocks.append(stock)
+        return self.stocks
+
+    def remove_stock(self, stock):
+        self.stocks.remove(stock)
+        return self.stocks
+
+    def update_stock(self, stock):
+        if stock in self.stocks:
+            self.stocks.remove(stock)
+            self.stocks.append(stock)
+        return self.stocks
+
+    def get_stock_by_name(self, name):
+        for stock in self.stocks:
+            if stock.name == name:
+                return stock
+        return None
+
+    def sell_stock(self, stock):
+        if stock in self.stocks:
+            self.stocks.remove(stock)
+            return stock
+        return None
+
+    def buy_stock(self, stock):
+        self.stocks.append(stock)
+        return self.stocks
+
+    def get_portfolio_value(self):
+        total_value = 0
+        for stock in self.stocks:
+            total_value += stock.value
+        return total_value
 
 
 class ItemObject:
+
     def __init__(
         self,
         name,
@@ -16,19 +147,30 @@ class ItemObject:
         weight,
         quantity,
         item_type="misc",
-        possible_interactions=[],
+        item_subtype=None,
+        status="new",
+        possible_interactions: List[Action] = [],
         action_system: ActionSystem = None,
+        coordinates_location=(0, 0),
     ):
+        ActionSystem = importlib.import_module("actions").ActionSystem
+        Action = importlib.import_module("actions").Action
         self.name = name
         self.description = description
         self.value = value
         self.weight = weight
         self.quantity = quantity
-        self.id = uuid.uuid4()
+        self.uuid = uuid.uuid4()
         self.item_type = item_type
+        self.item_subtype = item_subtype
         self.location = Location(name, 0, 0, 0, 0, ActionSystem())
-        self.coordinate_location = (0, 0)
-        self.possible_interactions: List[Action] = []
+        self.coordinates_location = coordinates_location
+        self.possible_interactions = possible_interactions
+        self.usability = True
+        self.ownership_history = ["unowned"]
+        self.status = status
+        self.type_specific_attributes = False
+        # self.action_system = action_system
 
     def __repr__(self):
         return f"Item({self.name}, {self.description}, {self.value}, {self.weight}, {self.quantity})"
@@ -37,17 +179,71 @@ class ItemObject:
         return f"Item named {self.name} with description {self.description} and value {self.value}."
 
     def __eq__(self, other):
+        if not isinstance(other, ItemObject):
+            if isinstance(other, dict):
+                return self.to_dict() == other
+            return False
         return (
             self.name == other.name
             and self.description == other.description
             and self.value == other.value
             and self.weight == other.weight
             and self.quantity == other.quantity
+            and self.uuid == other.uuid
+            and self.coordinates_location == other.coordinates_location
+            and self.item_type == other.item_type
+            and self.item_subtype == other.item_subtype
+            and self.status == other.status
+            and self.type_specific_attributes == other.type_specific_attributes
+            and self.usability == other.usability
+            and self.ownership_history == other.ownership_history
+            and self.location == other.location
         )
 
     def __hash__(self):
+        def make_hashable(obj):
+            if isinstance(obj, dict):
+                return tuple(sorted((k, make_hashable(v)) for k, v in obj.items()))
+            elif isinstance(obj, list):
+                return tuple(make_hashable(e) for e in obj)
+            elif isinstance(obj, set):
+                return frozenset(make_hashable(e) for e in obj)
+            elif isinstance(obj, tuple):
+                return tuple(make_hashable(e) for e in obj)
+            elif type(obj).__name__ == "Character":
+                Character = importlib.import_module("tiny_characters").Character
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+            elif type(obj).__name__ == "Location":
+                Location = importlib.import_module("tiny_locations").Location
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+
+            return obj
+
         return hash(
-            (self.name, self.description, self.value, self.weight, self.quantity)
+            tuple(
+                [
+                    self.name,
+                    self.description,
+                    self.value,
+                    self.weight,
+                    self.quantity,
+                    self.uuid,
+                    self.coordinates_location,
+                    self.item_type,
+                    self.item_subtype,
+                    self.status,
+                    make_hashable(self.type_specific_attributes),
+                    self.usability,
+                    make_hashable(self.ownership_history),
+                    make_hashable(self.location),
+                ]
+            )
         )
 
     def get_name(self):
@@ -87,14 +283,14 @@ class ItemObject:
         return self.quantity
 
     def get_id(self):
-        return self.id
+        return self.uuid
 
     def set_id(self, id):
-        self.id = id
-        return self.id
+        self.uuid = id
+        return self.uuid
 
         self.location = Location(0, 0)
-        self.coordinate_location = self.location.get_coordinates()
+        self.coordinates_location = self.location.get_coordinates()
 
     def get_location(self):
         return self.location
@@ -129,8 +325,8 @@ class ItemObject:
             "value": self.value,
             "weight": self.weight,
             "quantity": self.quantity,
-            "id": self.id,
-            "coordinate_location": self.coordinate_location,
+            "uuid": self.uuid,
+            "coordinates_location": self.coordinates_location,
         }
 
 
@@ -175,6 +371,7 @@ preconditions_dict = {
 
 
 class FoodItem(ItemObject):
+
     def __init__(
         self,
         name,
@@ -183,9 +380,13 @@ class FoodItem(ItemObject):
         perishable,
         weight,
         quantity,
+        action_system: ActionSystem,
         calories=0,
-        action_system: ActionSystem = ActionSystem(),
+        cooked=False,
+        coordinates_location=(0, 0),
     ):
+        ActionSystem = importlib.import_module("actions").ActionSystem
+        Action = importlib.import_module("actions").Action
         effect = effect_dict["Eat"]
         effect[0]["change_value"] = calories
         possible_interactions = [
@@ -203,11 +404,16 @@ class FoodItem(ItemObject):
             weight,
             quantity,
             item_type="food",
+            item_subtype=name,
             possible_interactions=possible_interactions,
+            coordinates_location=coordinates_location,
         )
         self.calories = calories
         self.item_type = "food"
         self.possible_interactions = possible_interactions
+        self.perishable = perishable
+        self.cooked = cooked
+        self.type_specific_attributes = True
 
     def __repr__(self):
         return f"FoodItem({self.name}, {self.description}, {self.value}, {self.weight}, {self.quantity}, {self.calories})"
@@ -216,6 +422,27 @@ class FoodItem(ItemObject):
         return f"FoodItem named {self.name} with description {self.description} and value {self.value}."
 
     def __eq__(self, other):
+        if not isinstance(other, FoodItem):
+            if isinstance(other, dict):
+                return self.to_dict() == other
+            if isinstance(other, ItemObject):
+                return (
+                    self.name == other.name
+                    and self.description == other.description
+                    and self.value == other.value
+                    and self.weight == other.weight
+                    and self.quantity == other.quantity
+                    and self.calories == other.calories
+                    and self.perishable == other.perishable
+                    and self.cooked == other.cooked
+                    and self.type_specific_attributes == other.type_specific_attributes
+                    and self.item_type == other.item_type
+                    and self.status == other.status
+                    and self.usability == other.usability
+                    and self.ownership_history == other.ownership_history
+                    and self.location == other.location
+                    and self.coordinates_location == other.coordinates_location
+                )
         return (
             self.name == other.name
             and self.description == other.description
@@ -223,17 +450,62 @@ class FoodItem(ItemObject):
             and self.weight == other.weight
             and self.quantity == other.quantity
             and self.calories == other.calories
+            and self.perishable == other.perishable
+            and self.cooked == other.cooked
+            and self.type_specific_attributes == other.type_specific_attributes
+            and self.item_type == other.item_type
+            and self.status == other.status
+            and self.usability == other.usability
+            and self.ownership_history == other.ownership_history
+            and self.location == other.location
+            and self.coordinates_location == other.coordinates_location
         )
 
     def __hash__(self):
+        def make_hashable(obj):
+            if isinstance(obj, dict):
+                return tuple(sorted((k, make_hashable(v)) for k, v in obj.items()))
+            elif isinstance(obj, list):
+                return tuple(make_hashable(e) for e in obj)
+            elif isinstance(obj, set):
+                return frozenset(make_hashable(e) for e in obj)
+            elif isinstance(obj, tuple):
+                return tuple(make_hashable(e) for e in obj)
+            elif type(obj).__name__ == "Character":
+                Character = importlib.import_module("tiny_characters").Character
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+            elif type(obj).__name__ == "Location":
+                Location = importlib.import_module("tiny_locations").Location
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+
+            return obj
+
         return hash(
-            (
-                self.name,
-                self.description,
-                self.value,
-                self.weight,
-                self.quantity,
-                self.calories,
+            tuple(
+                [
+                    self.name,
+                    self.description,
+                    self.value,
+                    self.weight,
+                    self.quantity,
+                    self.calories,
+                    self.perishable,
+                    self.cooked,
+                    self.uuid,
+                    make_hashable(self.type_specific_attributes),
+                    self.item_type,
+                    self.status,
+                    self.usability,
+                    make_hashable(self.ownership_history),
+                    make_hashable(self.location),
+                    self.coordinates_location,
+                ]
             )
         )
 
@@ -247,6 +519,13 @@ class FoodItem(ItemObject):
         self.calories = calories
         return self.calories
 
+    def get_type_specific_attributes(self):
+        return {
+            "perishable": self.perishable,
+            "cooked": self.cooked,
+            "calories": self.calories,
+        }
+
     def to_dict(self):
         return {
             "name": self.name,
@@ -254,9 +533,12 @@ class FoodItem(ItemObject):
             "value": self.value,
             "weight": self.weight,
             "quantity": self.quantity,
-            "id": self.id,
-            "coordinate_location": self.coordinate_location,
+            "id": self.uuid,
+            "coordinates_location": self.coordinates_location,
             "calories": self.calories,
+            "perishable": self.perishable,
+            "cooked": self.cooked,
+            "type_specific_attributes": self.type_specific_attributes,
         }
 
 
@@ -268,8 +550,10 @@ class Door(ItemObject):
         value,
         weight,
         quantity,
-        action_system: ActionSystem = ActionSystem(),
+        action_system: ActionSystem,
     ):
+        ActionSystem = importlib.import_module("actions").ActionSystem
+        Action = importlib.import_module("actions").Action
         effect = effect_dict["Open"]
         possible_interactions = [
             Action(
@@ -298,22 +582,55 @@ class Door(ItemObject):
         return f"Door named {self.name} with description {self.description} and value {self.value}."
 
     def __eq__(self, other):
+        if not isinstance(other, Door):
+            if isinstance(other, dict):
+                return self.to_dict() == other
+            if isinstance(other, ItemObject):
+                return (
+                    self.name == other.name
+                    and self.description == other.description
+                    and self.value == other.value
+                    and self.weight == other.weight
+                    and self.quantity == other.quantity
+                    and self.type_specific_attributes == other.type_specific_attributes
+                    and self.item_type == other.item_type
+                    and self.status == other.status
+                    and self.usability == other.usability
+                    and self.ownership_history == other.ownership_history
+                    and self.location == other.location
+                )
         return (
             self.name == other.name
             and self.description == other.description
             and self.value == other.value
             and self.weight == other.weight
             and self.quantity == other.quantity
+            and self.type_specific_attributes == other.type_specific_attributes
+            and self.item_type == other.item_type
+            and self.status == other.status
+            and self.usability == other.usability
+            and self.ownership_history == other.ownership_history
+            and self.location == other.location
         )
 
     def __hash__(self):
         return hash(
-            (
-                self.name,
-                self.description,
-                self.value,
-                self.weight,
-                self.quantity,
+            tuple(
+                [
+                    self.name,
+                    self.description,
+                    self.value,
+                    self.weight,
+                    self.quantity,
+                    self.uuid,
+                    self.coordinates_location,
+                    self.item_type,
+                    self.status,
+                    tuple(self.type_specific_attributes),
+                    self.usability,
+                    tuple(self.ownership_history),
+                    self.location,
+                ]
             )
         )
 
@@ -327,8 +644,8 @@ class Door(ItemObject):
             "value": self.value,
             "weight": self.weight,
             "quantity": self.quantity,
-            "id": self.id,
-            "coordinate_location": self.coordinate_location,
+            "id": self.uuid,
+            "coordinates_location": self.coordinates_location,
         }
 
 
@@ -398,6 +715,7 @@ class ItemInventory:
 
     def report_inventory(self):
         report = {}
+        self.get_all_items()
         for item in self.all_items:
             report[item] = item.get_quantity()
         return report
@@ -409,6 +727,8 @@ class ItemInventory:
         return f"ItemInventory with food items {self.food_items}, clothing items {self.clothing_items}, tools items {self.tools_items}, weapons items {self.weapons_items}, medicine items {self.medicine_items}, misc items {self.misc_items}."
 
     def __eq__(self, other):
+        if not isinstance(other, ItemInventory):
+            return False
         return (
             self.food_items == other.food_items
             and self.clothing_items == other.clothing_items
@@ -418,15 +738,52 @@ class ItemInventory:
             and self.misc_items == other.misc_items
         )
 
+    def get_all_items(self):
+        self.all_items = (
+            self.food_items
+            + self.clothing_items
+            + self.tools_items
+            + self.weapons_items
+            + self.medicine_items
+            + self.misc_items
+        )
+        return self.all_items
+
     def __hash__(self):
+        def make_hashable(obj):
+            if isinstance(obj, dict):
+                return tuple(sorted((k, make_hashable(v)) for k, v in obj.items()))
+            elif isinstance(obj, list):
+                return tuple(make_hashable(e) for e in obj)
+            elif isinstance(obj, set):
+                return frozenset(make_hashable(e) for e in obj)
+            elif isinstance(obj, tuple):
+                return tuple(make_hashable(e) for e in obj)
+            elif type(obj).__name__ == "Character":
+                Character = importlib.import_module("tiny_characters").Character
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+            elif type(obj).__name__ == "Location":
+                Location = importlib.import_module("tiny_locations").Location
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+
+            return obj
+
         return hash(
-            (
-                self.food_items,
-                self.clothing_items,
-                self.tools_items,
-                self.weapons_items,
-                self.medicine_items,
-                self.misc_items,
+            tuple(
+                [
+                    make_hashable(self.food_items),
+                    make_hashable(self.clothing_items),
+                    make_hashable(self.tools_items),
+                    make_hashable(self.weapons_items),
+                    make_hashable(self.medicine_items),
+                    make_hashable(self.misc_items),
+                ]
             )
         )
 
@@ -757,6 +1114,17 @@ class ItemInventory:
             )
         else:
             return False
+
+    def check_has_item_by_attribute_value(self, attribute, value, oper="ge"):
+        if oper not in self.ops:
+            oper = self.symb_map[oper]
+        for item in self.all_items:
+            return bool(
+                True
+                if self.ops[oper](item.get_attribute_value(attribute), value)
+                else False
+            )
+        return False
 
     def to_dict(self):
         return {

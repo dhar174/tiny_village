@@ -7,6 +7,12 @@ class House:
     pass
 
 
+class PersonalMotives:
+    """Placeholder for PersonalMotives type hinting"""
+
+    pass
+
+
 class Character:
     """Placeholder for Character type hinting"""
 
@@ -55,7 +61,7 @@ class GraphManager:
     pass
 
 
-class Item:
+class ItemObject:
     """Placeholder for Item type hinting"""
 
     pass
@@ -69,6 +75,18 @@ class Event:
 
 class PromptBuilder:
     """Placeholder for PromptBuilder type hinting"""
+
+    pass
+
+
+class ItemObject:
+    """Placeholder for ItemObject type hinting"""
+
+    pass
+
+
+class Stock:
+    """Placeholder for Stock type hinting"""
 
     pass
 

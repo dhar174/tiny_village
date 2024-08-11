@@ -3,16 +3,20 @@
 from ast import arg
 from calendar import c
 import heapq
+import imp
+import importlib
 from math import e
 import random
 import re
 from typing import List
 import uuid
+import attr
 from numpy import rint
-from tiny_types import PromptBuilder
+from regex import F
+from tiny_types import PromptBuilder, GraphManager
 from pyparsing import Char
 from sympy import im
-from torch import eq, rand
+from torch import Graph, eq, rand
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
@@ -28,16 +32,16 @@ from actions import (
     State,
 )
 from tiny_event_handler import Event
-import tiny_utility_functions as tuf
+import tiny_utility_functions as goap_planner
 from tiny_goap_system import GOAPPlanner
 from tiny_jobs import JobRoles, JobRules, Job
 
 
 from tiny_util_funcs import ClampedIntScore, tweener
 
-from tiny_items import ItemInventory, FoodItem, ItemObject
+from tiny_items import ItemInventory, FoodItem, ItemObject, InvestmentPortfolio, Stock
 
-from tiny_graph_manager import GraphManager
+# GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
 from tiny_memories import Memory, MemoryManager
 from tiny_time_manager import GameTimeManager
 
@@ -51,6 +55,7 @@ def heuristic(a, b):
 
 
 def a_star_search(graph, start, goal):
+    GraphManager = importlib.import_module("tiny_graph_manager")
     frontier = []
     heapq.heappush(frontier, (0, start))
     came_from = {start: None}
@@ -259,7 +264,7 @@ class Goal:
         character (Character): The character who has this goal.
         target (Character, Item, Location, etc): Represents the target of the goal (could be same as character, does not have to be)
         completion_conditions (dict): A dictionary of functions to check if the goal is completed, with the key being a bool representing whether the condition has been met. Example: {False: Condition(name="has_food", attribute="inventory.check_has_item_by_type(['food'])", satisfy_value=True, op="==")}
-        evaluate_utility (function): A function that evaluates the current importance of the goal based on the character's state and the environment.
+        evaluate_utility_function (function): A function that evaluates the current importance of the goal based on the character's state and the environment.
         difficulty (function): A function that calculates the difficulty of the goal based on the character's state and the environment.
         completion_reward (function): A function that calculates the reward for completing the goal based on the character's state and the environment.
         failure_penalty (function): A function that calculates the penalty for failing to complete the goal based on the character's state and the environment.
@@ -269,6 +274,8 @@ class Goal:
         required_items (list): A list of items required to complete the goal.
 
     """
+
+    GraphManager = importlib.import_module("tiny_graph_manager")
 
     def __init__(
         self,
@@ -286,6 +293,7 @@ class Goal:
         failure_message,  # function that generates a message when the goal is failed based on the character's state and the environment.
         criteria,  # list of criteria (as dicts) that need to be met for the goal to be completed
         graph_manager,
+        goal_type,
         # desired_results,  # list of desired results (as dicts of dicts representing State attributes) when the goal is completed
     ):
         self.name = name
@@ -303,9 +311,10 @@ class Goal:
         self.required_items = (
             self.extract_required_items()
         )  # list of tuples, each tuple is (dict of item requirements, quantity needed).
-        # The dict of item requirements is composed of various keys like item_type, value, usability, sentimental_value, trade_value, scarcity, coordinate_location, name,
+        # The dict of item requirements is composed of various keys like item_type, value, usability, sentimental_value, trade_value, scarcity, coordinates_location, name,
         self.target = target
         self.environment = graph_manager
+        self.goal_type = goal_type
         # self.desired_results = desired_results
 
     def extract_required_items(self):
@@ -313,7 +322,7 @@ class Goal:
         required_items = (
             []
         )  # list of tuples, each tuple is (dict of item requirements, quantity needed).
-        # The dict of item requirements is composed of various keys like item_type, value, usability, sentimental_value, trade_value, scarcity, coordinate_location, name,
+        # The dict of item requirements is composed of various keys like item_type, value, usability, sentimental_value, trade_value, scarcity, coordinates_location, name,
         for criterion in self.criteria:
             if "node_attributes" in criterion:
                 if (
@@ -321,72 +330,165 @@ class Goal:
                     or criterion["node_attributes"]["type"] == "item"
                 ):
                     required_items.append(criterion["node_attributes"])
-        for condition in self.completion_conditions:
-            if "inventory.check_has_item_by_type" in condition["attribute"]:
-                args = re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
-                args = [arg.strip("'") for arg in args.split(",")]
-                if args[0] not in [item["item_type"] for item in required_items]:
-                    required_items.append(
-                        ({"item_type": args[0]}, condition["satisfy_value"])
-                    )
-            elif "inventory.check_has_item_by_name" in condition["attribute"]:
-                args = re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
-                args = [arg.strip("'") for arg in args.split(",")]
-                if args[0] not in [item["name"] for item in required_items]:
-                    required_items.append(
-                        ({"name": args[0]}, condition["satisfy_value"])
-                    )
-            elif "inventory.check_has_item_by_value" in condition["attribute"]:
-                args = re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
-                args = [arg.strip("'") for arg in args.split(",")]
-                if args[0] not in [item["value"] for item in required_items]:
-                    required_items.append(
-                        ({"value": args[0]}, condition["satisfy_value"])
-                    )
-            elif "inventory.check_has_item_by_usability" in condition["attribute"]:
-                args = re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
-                args = [arg.strip("'") for arg in args.split(",")]
-                if args[0] not in [item["usability"] for item in required_items]:
-                    required_items.append(
-                        ({"usability": args[0]}, condition["satisfy_value"])
-                    )
-            elif (
-                "inventory.check_has_item_by_sentimental_value"
-                in condition["attribute"]
-            ):
-                args = re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
-                args = [arg.strip("'") for arg in args.split(",")]
-                if args[0] not in [
-                    item["sentimental_value"] for item in required_items
-                ]:
-                    required_items.append(
-                        ({"sentimental_value": args[0]}, condition["satisfy_value"])
-                    )
-            elif "inventory.check_has_item_by_trade_value" in condition["attribute"]:
-                args = re.search(r"\[.*\]", condition["attribute"]).group().strip("[]")
-                args = [arg.strip("'") for arg in args.split(",")]
-                if args[0] not in [item["trade_value"] for item in required_items]:
-                    required_items.append(
-                        ({"trade_value": args[0]}, condition["satisfy_value"])
-                    )
+        # logging.debug(f"self.completion_conditions: {self.completion_conditions}")
+        for condition_list in self.completion_conditions.values():
+            for condition in condition_list:
+                # logging.debug(
+                #     f"Condition: {condition.attribute} of type {type(condition.attribute)}"
+                # )
+                if "inventory.check_has_item_by_type" in condition.attribute:
+                    args = re.search(r"\[.*\]", condition.attribute).group().strip("[]")
+                    args = [arg.strip("'") for arg in args.split(",")]
+                    if args[0] not in [item["item_type"] for item in required_items]:
+                        required_items.append(
+                            ({"item_type": args[0]}, condition.satisfy_value)
+                        )
+                elif "inventory.check_has_item_by_name" in condition.attribute:
+                    args = re.search(r"\[.*\]", condition.attribute).group().strip("[]")
+                    args = [arg.strip("'") for arg in args.split(",")]
+                    if args[0] not in [item["name"] for item in required_items]:
+                        required_items.append(
+                            ({"name": args[0]}, condition.satisfy_value)
+                        )
+                elif "inventory.check_has_item_by_value" in condition.attribute:
+                    args = re.search(r"\[.*\]", condition.attribute).group().strip("[]")
+                    args = [arg.strip("'") for arg in args.split(",")]
+                    if args[0] not in [item["value"] for item in required_items]:
+                        required_items.append(
+                            ({"value": args[0]}, condition.satisfy_value)
+                        )
+                elif "inventory.check_has_item_by_usability" in condition.attribute:
+                    args = re.search(r"\[.*\]", condition.attribute).group().strip("[]")
+                    args = [arg.strip("'") for arg in args.split(",")]
+                    if args[0] not in [item["usability"] for item in required_items]:
+                        required_items.append(
+                            ({"usability": args[0]}, condition.satisfy_value)
+                        )
+                elif (
+                    "inventory.check_has_item_by_sentimental_value"
+                    in condition.attribute
+                ):
+                    args = re.search(r"\[.*\]", condition.attribute).group().strip("[]")
+                    args = [arg.strip("'") for arg in args.split(",")]
+                    if args[0] not in [
+                        item["sentimental_value"] for item in required_items
+                    ]:
+                        required_items.append(
+                            ({"sentimental_value": args[0]}, condition.satisfy_value)
+                        )
+                elif "inventory.check_has_item_by_trade_value" in condition.attribute:
+                    args = re.search(r"\[.*\]", condition.attribute).group().strip("[]")
+                    args = [arg.strip("'") for arg in args.split(",")]
+                    if args[0] not in [item["trade_value"] for item in required_items]:
+                        required_items.append(
+                            ({"trade_value": args[0]}, condition.satisfy_value)
+                        )
 
         return required_items
 
     def __repr__(self):
-        return f"Goal({self.name}, {self.description}, {self.score})"
-
-    def __str__(self):
-        return f"Goal named {self.name} with description {self.description} and score {self.score}."
+        return f"Goal({self.name}, {self.description}, {self.score} {self.character.name}, {self.target.name}, {self.completion_conditions}, {self.evaluate_utility_function}, {self.difficulty}, {self.completion_reward}, {self.failure_penalty}, {self.completion_message}, {self.failure_message}, {self.criteria}, {self.required_items}, {self.environment}, {self.goal_type})"
 
     def __eq__(self, other):
+        if not isinstance(other, Goal):
+            return False
         return (
             self.name == other.name
             and self.description == other.description
             and self.score == other.score
+            and self.target == other.target
+            and self.completion_conditions == other.completion_conditions
+            and self.evaluate_utility_function == other.evaluate_utility_function
+            and self.difficulty == other.difficulty
+            and self.completion_reward == other.completion_reward
+            and self.failure_penalty == other.failure_penalty
+            and self.completion_message == other.completion_message
+            and self.failure_message == other.failure_message
+            and self.criteria == other.criteria
+            and self.required_items == other.required_items
+            and self.environment == other.environment
+            and self.goal_type == other
         )
 
+    def hash_nested_list(self, obj):
+        try:
+            if isinstance(obj, list):
+                return tuple(self.hash_nested_list(item) for item in obj)
+            elif isinstance(obj, dict):
+                return tuple(
+                    (key, self.hash_nested_list(value)) for key, value in obj.items()
+                )
+            elif isinstance(obj, set):
+                return frozenset(self.hash_nested_list(item) for item in obj)
+            elif isinstance(obj, tuple):
+                return tuple(self.hash_nested_list(item) for item in obj)
+            elif hasattr(obj, "__hash__") and callable(getattr(obj, "__hash__")):
+                # Test if the object can be hashed without raising an error
+                try:
+                    hash(obj)
+                    return obj
+                except TypeError:
+                    if hasattr(obj, "__dict__"):
+                        return tuple(
+                            (key, self.hash_nested_list(value))
+                            for key, value in obj.__dict__.items()
+                        )
+                    else:
+                        # If the object is not hashable and has no __dict__, return its id or a string representation
+                        return id(obj)
+            elif hasattr(obj, "__dict__"):  # For custom objects without __hash__ method
+                return tuple(
+                    (key, self.hash_nested_list(value))
+                    for key, value in obj.__dict__.items()
+                )
+            else:
+                return obj
+        except Exception as e:
+            logging.error(f"Error hashing object: {e}")
+            return None
+
     def __hash__(self):
-        return hash((self.name, self.description, self.score))
+        def make_hashable(obj):
+            if isinstance(obj, dict):
+                return tuple(sorted((k, make_hashable(v)) for k, v in obj.items()))
+            elif isinstance(obj, list):
+                return tuple(make_hashable(e) for e in obj)
+            elif isinstance(obj, set):
+                return frozenset(make_hashable(e) for e in obj)
+            elif isinstance(obj, tuple):
+                return tuple(make_hashable(e) for e in obj)
+            elif type(obj).__name__ == "Character":
+                Character = importlib.import_module("tiny_characters").Character
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+            elif type(obj).__name__ == "Location":
+                Location = importlib.import_module("tiny_locations").Location
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+
+            return obj
+
+        return hash(
+            (
+                self.name,
+                self.description,
+                self.score,
+                make_hashable(self.completion_conditions),
+                str(self.evaluate_utility_function),
+                self.difficulty,
+                make_hashable(self.completion_reward),
+                self.failure_penalty,
+                self.completion_message,
+                self.failure_message,
+                make_hashable(self.criteria),
+                make_hashable(self.required_items),
+                self.goal_type,
+            )
+        )
 
     def get_name(self):
         return self.name
@@ -414,6 +516,19 @@ class Goal:
             "name": self.name,
             "description": self.description,
             "score": self.score,
+            "character": self.character,
+            "target": self.target,
+            "completion_conditions": self.completion_conditions,
+            "evaluate_utility_function": self.evaluate_utility_function,
+            "difficulty": self.difficulty,
+            "completion_reward": self.completion_reward,
+            "failure_penalty": self.failure_penalty,
+            "completion_message": self.completion_message,
+            "failure_message": self.failure_message,
+            "criteria": self.criteria,
+            "required_items": self.required_items,
+            "environment": self.environment,
+            "goal_type": self.goal_type,
         }
 
     def check_completion(self):
@@ -424,7 +539,7 @@ class Goal:
             ]
         )
 
-    def evaluate_utility(self):
+    def evaluate_utility_function(self):
         return self.evaluate_utility_function(
             self.character,
             self.character.environment,
@@ -437,7 +552,7 @@ class Goal:
 
 
 class Motive:
-    def __init__(self, name, description, score):
+    def __init__(self, name: str, description: str, score: float):
         self.name = name
         self.description = description
         self.score = score  # Represents the strength of the motive
@@ -445,10 +560,23 @@ class Motive:
     def __repr__(self):
         return f"Motive({self.name}, {self.description}, {self.score})"
 
-    def __str__(self):
-        return f"Motive named {self.name} with description {self.description} and score {self.score}."
-
     def __eq__(self, other):
+        if not isinstance(other, Motive):
+            if isinstance(other, dict):
+                return (
+                    self.name == other["name"]
+                    and self.description == other["description"]
+                    and self.score == other["score"]
+                )
+            elif isinstance(other, tuple):
+                return (
+                    self.name == other[0]
+                    and self.description == other[1]
+                    and self.score == other[2]
+                )
+            elif isinstance(other, float) or isinstance(other, int):
+                return self.score == float(other)
+            return False
         return (
             self.name == other.name
             and self.description == other.description
@@ -456,7 +584,31 @@ class Motive:
         )
 
     def __hash__(self):
-        return hash((self.name, self.description, self.score))
+        def make_hashable(obj):
+            if isinstance(obj, dict):
+                return tuple(sorted((k, make_hashable(v)) for k, v in obj.items()))
+            elif isinstance(obj, list):
+                return tuple(make_hashable(e) for e in obj)
+            elif isinstance(obj, set):
+                return frozenset(make_hashable(e) for e in obj)
+            elif isinstance(obj, tuple):
+                return tuple(make_hashable(e) for e in obj)
+            elif type(obj).__name__ == "Character":
+                Character = importlib.import_module("tiny_characters").Character
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+            elif type(obj).__name__ == "Location":
+                Location = importlib.import_module("tiny_locations").Location
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+
+            return obj
+
+        return hash(make_hashable(self.to_dict()))
 
     def get_name(self):
         return self.name
@@ -502,6 +654,7 @@ class PersonalMotives:
         beauty_motive: Motive,
         community_motive: Motive,
         material_goods_motive: Motive,
+        family_motive: Motive,
     ):
         self.hunger_motive = self.set_hunger_motive(hunger_motive)
         self.wealth_motive = self.set_wealth_motive(wealth_motive)
@@ -525,6 +678,7 @@ class PersonalMotives:
         self.material_goods_motive = self.set_material_goods_motive(
             material_goods_motive
         )
+        self.family_motive = self.set_family_motive(family_motive)
         self._attributes = [
             "hunger_motive",
             "wealth_motive",
@@ -542,32 +696,141 @@ class PersonalMotives:
             "beauty_motive",
             "community_motive",
             "material_goods_motive",
+            "family_motive",
         ]
         self._index = 0
 
     def __repr__(self):
-        return f"PersonalMotives({self.hunger_motive}, {self.wealth_motive}, {self.mental_health_motive}, {self.social_wellbeing_motive}, {self.happiness_motive})"
-
-    def __str__(self):
-        return f"PersonalMotives with hunger {self.hunger_motive}, wealth {self.wealth_motive}, mental health {self.mental_health_motive}, social wellbeing {self.social_wellbeing_motive}, happiness {self.happiness_motive}."
+        return f"PersonalMotives({self.hunger_motive}, {self.wealth_motive}, {self.mental_health_motive}, {self.social_wellbeing_motive}, {self.happiness_motive}, {self.health_motive}, {self.shelter_motive}, {self.stability_motive}, {self.luxury_motive}, {self.hope_motive}, {self.success_motive}, {self.control_motive}, {self.job_performance_motive}, {self.beauty_motive}, {self.community_motive}, {self.material_goods_motive}, {self.family_motive})"
 
     def __eq__(self, other):
+        if not isinstance(other, PersonalMotives):
+            if isinstance(other, dict):
+                return (
+                    self.hunger_motive == other["hunger_motive"]
+                    and self.wealth_motive == other["wealth_motive"]
+                    and self.mental_health_motive == other["mental_health_motive"]
+                    and self.social_wellbeing_motive == other["social_wellbeing_motive"]
+                    and self.happiness_motive == other["happiness_motive"]
+                    and self.health_motive == other["health_motive"]
+                    and self.shelter_motive == other["shelter_motive"]
+                    and self.stability_motive == other["stability_motive"]
+                    and self.luxury_motive == other["luxury_motive"]
+                    and self.hope_motive == other["hope_motive"]
+                    and self.success_motive == other["success_motive"]
+                    and self.control_motive == other["control_motive"]
+                    and self.job_performance_motive == other["job_performance_motive"]
+                    and self.beauty_motive == other["beauty_motive"]
+                    and self.community_motive == other["community_motive"]
+                    and self.material_goods_motive == other["material_goods_motive"]
+                    and self.family_motive == other["family_motive"]
+                )
+            else:
+                return False
+
         return (
-            self.hunger_motive == other.hunger
+            self.hunger_motive == other.hunger_motive
             and self.wealth_motive == other.wealth_motive
             and self.mental_health_motive == other.mental_health_motive
             and self.social_wellbeing_motive == other.social_wellbeing_motive
             and self.happiness_motive == other.happiness_motive
+            and self.health_motive == other.health_motive
+            and self.shelter_motive == other.shelter_motive
+            and self.stability_motive == other.stability_motive
+            and self.luxury_motive == other.luxury_motive
+            and self.hope_motive == other.hope_motive
+            and self.success_motive == other.success_motive
+            and self.control_motive == other.control_motive
+            and self.job_performance_motive == other.job_performance_motive
+            and self.beauty_motive == other.beauty_motive
+            and self.community_motive == other.community_motive
+            and self.material_goods_motive == other.material_goods_motive
+            and self.family_motive == other.family_motive
         )
 
+    def hash_nested_list(self, obj):
+        try:
+            if isinstance(obj, list):
+                return tuple(self.hash_nested_list(item) for item in obj)
+            elif isinstance(obj, dict):
+                return tuple(
+                    (key, self.hash_nested_list(value)) for key, value in obj.items()
+                )
+            elif isinstance(obj, set):
+                return frozenset(self.hash_nested_list(item) for item in obj)
+            elif isinstance(obj, tuple):
+                return tuple(self.hash_nested_list(item) for item in obj)
+            elif hasattr(obj, "__hash__") and callable(getattr(obj, "__hash__")):
+                # Test if the object can be hashed without raising an error
+                try:
+                    hash(obj)
+                    return obj
+                except TypeError:
+                    if hasattr(obj, "__dict__"):
+                        return tuple(
+                            (key, self.hash_nested_list(value))
+                            for key, value in obj.__dict__.items()
+                        )
+                    else:
+                        # If the object is not hashable and has no __dict__, return its id or a string representation
+                        return id(obj)
+            elif hasattr(obj, "__dict__"):  # For custom objects without __hash__ method
+                return tuple(
+                    (key, self.hash_nested_list(value))
+                    for key, value in obj.__dict__.items()
+                )
+            else:
+                return obj
+        except Exception as e:
+            logging.error(f"Error hashing object: {e}")
+            return None
+
     def __hash__(self):
+        def make_hashable(obj):
+            if isinstance(obj, dict):
+                return tuple(sorted((k, make_hashable(v)) for k, v in obj.items()))
+            elif isinstance(obj, list):
+                return tuple(make_hashable(e) for e in obj)
+            elif isinstance(obj, set):
+                return frozenset(make_hashable(e) for e in obj)
+            elif isinstance(obj, tuple):
+                return tuple(make_hashable(e) for e in obj)
+            elif type(obj).__name__ == "Character":
+                Character = importlib.import_module("tiny_characters").Character
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+            elif type(obj).__name__ == "Location":
+                Location = importlib.import_module("tiny_locations").Location
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+
+            return obj
+
         return hash(
-            (
-                self.hunger_motive,
-                self.wealth_motive,
-                self.mental_health_motive,
-                self.social_wellbeing_motive,
-                self.happiness_motive,
+            tuple(
+                [
+                    make_hashable(self.hunger_motive),
+                    make_hashable(self.wealth_motive),
+                    make_hashable(self.mental_health_motive),
+                    make_hashable(self.social_wellbeing_motive),
+                    make_hashable(self.happiness_motive),
+                    make_hashable(self.health_motive),
+                    make_hashable(self.shelter_motive),
+                    make_hashable(self.stability_motive),
+                    make_hashable(self.luxury_motive),
+                    make_hashable(self.hope_motive),
+                    make_hashable(self.success_motive),
+                    make_hashable(self.control_motive),
+                    make_hashable(self.job_performance_motive),
+                    make_hashable(self.beauty_motive),
+                    make_hashable(self.community_motive),
+                    make_hashable(self.material_goods_motive),
+                    make_hashable(self.family_motive),
+                ]
             )
         )
 
@@ -582,6 +845,13 @@ class PersonalMotives:
             return getattr(self, attr_name)
         else:
             raise StopIteration
+
+    def set_family_motive(self, family_motive):
+        self.family_motive = family_motive
+        return self.family_motive
+
+    def get_family_motive(self):
+        return self.family_motive
 
     def get_hunger_motive(self):
         return self.hunger_motive
@@ -695,12 +965,12 @@ class PersonalMotives:
         self.material_goods_motive = material_goods_motive
         return self.material_goods_motive
 
-    def get_friendship_grid_motive(self):
-        return self.friendship_grid_motive
+    def get_family_motive(self):
+        return self.family_motive
 
-    def set_friendship_grid_motive(self, friendship_grid_motive):
-        self.friendship_grid_motive = friendship_grid_motive
-        return self.friendship_grid_motive
+    def set_family_motive(self, family_motive):
+        self.family_motive = family_motive
+        return self.family_motive
 
     def to_dict(self):
         return {
@@ -720,28 +990,29 @@ class PersonalMotives:
             "beauty": self.beauty_motive,
             "community": self.community_motive,
             "material goods": self.material_goods_motive,
+            "family": self.family_motive,
         }
 
 
-example_criteria1 = [
+example_criteria__a = [
     {
         "node_attributes": {"type": "character"},
         "edge_attributes": {"relationship": "friend", "strength": 0.8},
         "max_distance": 20,
     }
 ]
-example_criteria2 = [
+example_criteria_b = [
     {
         "node_attributes": {"type": "character"},
         "relationship": "enemy",
         "max_distance": 20,
     }
 ]
-example_criteria3 = [
+example_criteria_c = [
     {
         "node_attributes": {"type": "character"},
         "relationship": "family",
-        "max_distance": 100,
+        "max_distance": 100.0,
     },
     {
         "node_attributes": {"type": "location"},
@@ -749,35 +1020,45 @@ example_criteria3 = [
         "max_distance": 50,
     },
 ]
-example_criteria5 = [
+example_criteria_d = [
     {
         "node_attributes": {"type": "item", "item_type": "food"},
         "max_distance": 20,
     }
 ]
-example_criteria6 = [
+example_criteria_e = [
     {
         "node_attributes": {"type": "item", "item_type": "weapon", "usability": 0.8},
         "max_distance": 20,
     }
 ]
-example_criteria7 = [
+example_criteria_f = [
     {
-        "node_attributes": {"type": "item", "trade_value": 100},
+        "node_attributes": {
+            "type": "object",
+            "item_type": "food",
+            "type_specific_attributes": ("cooked", False),
+        },
+        "max_distance": 20,
+    }
+]
+example_criteria_g = [
+    {
+        "node_attributes": {"type": "object", "trade_value": 100.0},
         "max_distance": 20,
     },
     {
-        "node_attributes": {"type": "item", "scarcity": 0.2},
+        "node_attributes": {"type": "object", "scarcity": 0.2},
         "max_distance": 20,
     },
 ]
-example_criteria9 = [
+example_criteria_h = [
     {
         "node_attributes": {"type": "item", "item_type": "luxury", "value": 0.8},
         "max_distance": 20,
     }
 ]
-example_criteria10 = [
+example_criteria_i = [
     {
         "event_participation": Event(
             name="Festival",
@@ -786,12 +1067,12 @@ example_criteria10 = [
             importance=0.8,
             impact=0.8,
             required_items=["food", "decorations"],
-            coordinate_location=(100, 100),
+            coordinates_location=(100.0, 100.0),
         ),
     }
 ]
 
-example_criteria11 = [
+example_criteria_j = [
     {
         "offer_item_trade": ItemInventory(
             food_items=[
@@ -803,6 +1084,7 @@ example_criteria11 = [
                     weight=0.5,
                     quantity=1,
                     calories=2,
+                    action_system=importlib.import_module("actions").ActionSystem(),
                 )
             ]
         ),
@@ -810,7 +1092,29 @@ example_criteria11 = [
     }
 ]
 
-# example_criteria12 = [{
+example_criteria_k = [
+    {
+        "node_attributes": {
+            "type": "job",
+            "item_type": "food",
+            "career_opportunities": ["farmer", "chef"],
+        },
+        "max_distance": 20,
+    }
+]
+
+example_criteria_l = [
+    {
+        "node_attributes": {
+            "type": "job",
+            "item_type": "food",
+            "career_opportunities": ["farming", "cooking"],
+        },
+        "max_distance": 20,
+    }
+]
+
+# example_criteria_12 = [{
 #     "trade_opportunity": Character(
 #         name="Joe",
 #         description="A traveling merchant.",
@@ -830,7 +1134,7 @@ example_criteria11 = [
 #     "max_distance": 20,
 # }
 
-# example_criteria13 = [{
+# example_criteria_13 = [{
 #     "desired_resource": Character(
 #         name="Joe",
 #         description="A traveling merchant.",
@@ -848,7 +1152,7 @@ example_criteria11 = [
 #     ),
 # }
 
-# example_criteria14 = [{
+# example_criteria_14 = [{
 #     "want_item_trade": FoodItem(
 #         name="Apple",
 #         description="A juicy red apple.",
@@ -866,79 +1170,185 @@ def motive_to_goals(
     goap_planner: GOAPPlanner,
     prompt_builder: PromptBuilder,
 ):
-    from tiny_graph_manager import GraphManager
-    from tiny_prompt_builder import PromptBuilder
+    GraphManager = importlib.import_module("tiny_graph_manager")
+    PromptBuilder = importlib.import_module("tiny_prompt_builder")
 
     goals = []
     if motive.name == "hunger":
         goals.append(
-            Goal(
-                name="Find Food",
-                description="Search for food to satisfy hunger.",
-                score=motive.score,
-                character=character,
-                target=character,
-                completion_conditions={
-                    False: [
-                        Condition(  # Remember the key is False because the condition is not met yet
-                            name="has_food",
-                            attribute="inventory.check_has_item_by_type(['food'])",
-                            target=character,
-                            satisfy_value=True,
-                            op="==",
-                            weight=1,  # This is the weight representing the importance of this condition toward the goal. This will be used in a division operation to calculate the overall importance of the goal.
-                        )
-                    ]
-                },
-                evaluate_utility_function=tuf.evaluate_goal_importance,
-                difficulty=graph_manager.calculate_goal_difficulty,
-                completion_reward=graph_manager.calculate_reward,
-                failure_penalty=graph_manager.calculate_penalty,
-                completion_message=prompt_builder.generate_completion_message,
-                failure_message=prompt_builder.generate_failure_message,
-                criteria=example_criteria5,
-                graph_manager=graph_manager,
+            (
+                0,
+                Goal(
+                    name="Find Food",
+                    description="Search for food to satisfy hunger.",
+                    score=motive.score,
+                    character=character,
+                    target=character,
+                    completion_conditions={
+                        False: [
+                            Condition(  # Remember the key is False because the condition is not met yet
+                                name="has_food",
+                                attribute="inventory.check_has_item_by_type(['food'])",
+                                target=character,
+                                satisfy_value=True,
+                                op="==",
+                                weight=1,  # This is the weight representing the importance of this condition toward the goal. This will be used in a division operation to calculate the overall importance of the goal.
+                            )
+                        ]
+                    },
+                    evaluate_utility_function=goap_planner.evaluate_goal_importance,
+                    difficulty=graph_manager.calculate_goal_difficulty,
+                    completion_reward=graph_manager.calculate_reward,
+                    failure_penalty=graph_manager.calculate_penalty,
+                    completion_message=prompt_builder.generate_completion_message,
+                    failure_message=prompt_builder.generate_failure_message,
+                    criteria=example_criteria_d,
+                    graph_manager=graph_manager,
+                    goal_type="basic",
+                ),
             )
         )
         goals.append(
-            Goal(
-                name="Hunt",
-                description="Go hunting to gather food.",
-                score=motive.score,
-                character=character,
-                completion_conditions=lambda char: char.has_food,
-                evaluate_utility=lambda char: char.hunger * 1.5,
+            (
+                0,
+                Goal(
+                    name="Hunt",
+                    description="Go hunting to gather food.",
+                    target=character,
+                    score=motive.score,
+                    character=character,
+                    completion_conditions={
+                        False: [
+                            Condition(
+                                name="has_food",
+                                attribute="inventory.check_has_item_by_type(['food'])",
+                                target=character,
+                                satisfy_value=True,
+                                op="==",
+                                weight=1,
+                            )
+                        ]
+                    },
+                    evaluate_utility_function=goap_planner.evaluate_goal_importance,
+                    difficulty=graph_manager.calculate_goal_difficulty,
+                    completion_reward=graph_manager.calculate_reward,
+                    failure_penalty=graph_manager.calculate_penalty,
+                    completion_message=prompt_builder.generate_completion_message,
+                    failure_message=prompt_builder.generate_failure_message,
+                    criteria=example_criteria_e,
+                    graph_manager=graph_manager,
+                    goal_type="basic",
+                ),
             )
         )
         goals.append(
-            Goal(
-                name="Cook",
-                description="Cook a meal to eat.",
-                score=motive.score,
-                character=character,
-                completion_conditions=lambda char: char.has_food,
-                evaluate_utility=lambda char: char.hunger * 1.2,
+            (
+                0,
+                Goal(
+                    name="Cook",
+                    description="Cook a meal to eat.",
+                    target=character,
+                    score=motive.score,
+                    character=character,
+                    completion_conditions={
+                        False: [
+                            Condition(
+                                name="has_food",
+                                attribute="inventory.check_has_item_by_type(['food'])",
+                                target=character,
+                                satisfy_value=True,
+                                op="==",
+                                weight=1,
+                            )
+                        ],
+                        False: [
+                            Condition(
+                                name="has_cooked_food",
+                                attribute="inventory.check_has_item_by_attribute_value(['cooked'], ['True'])",
+                                target=character,
+                                satisfy_value=True,
+                                op="==",
+                                weight=1,
+                            )
+                        ],
+                    },
+                    evaluate_utility_function=goap_planner.evaluate_goal_importance,
+                    difficulty=graph_manager.calculate_goal_difficulty,
+                    completion_reward=graph_manager.calculate_reward,
+                    failure_penalty=graph_manager.calculate_penalty,
+                    completion_message=prompt_builder.generate_completion_message,
+                    failure_message=prompt_builder.generate_failure_message,
+                    criteria=example_criteria_f,
+                    graph_manager=graph_manager,
+                    goal_type="basic",
+                ),
             )
         )
     elif motive.name == "wealth":
         goals.append(
-            Goal(
-                name="Earn Money",
-                description="Get a job to earn money.",
-                score=motive.score,
-                character=character,
-                completion_conditions=lambda char: char.money > 1000,
-                evaluate_utility=lambda char: char.money / 100,
+            (
+                0,
+                Goal(
+                    name="Earn Money",
+                    description="Get a job to earn money.",
+                    target=character,
+                    score=motive.score,
+                    character=character,
+                    completion_conditions={
+                        False: [
+                            Condition(
+                                name="has_job",
+                                attribute="has_job",
+                                target=character,
+                                satisfy_value=True,
+                                op="==",
+                                weight=1,
+                            )
+                        ]
+                    },
+                    evaluate_utility_function=goap_planner.evaluate_goal_importance,
+                    difficulty=graph_manager.calculate_goal_difficulty,
+                    completion_reward=graph_manager.calculate_reward,
+                    failure_penalty=graph_manager.calculate_penalty,
+                    completion_message=prompt_builder.generate_completion_message,
+                    failure_message=prompt_builder.generate_failure_message,
+                    criteria=example_criteria_k,
+                    graph_manager=graph_manager,
+                    goal_type="economic",
+                ),
             )
         )
         goals.append(
-            Goal(
-                name="Invest",
-                description="Invest money in stocks.",
-                score=motive.score,
-                character=character,
-                completion_conditions=lambda char: char.investment_portfolio,
-                evaluate_utility=lambda char: char.money / 200,
+            (
+                0,
+                Goal(
+                    name="Invest",
+                    description="Invest money in stocks.",
+                    target=character,
+                    score=motive.score,
+                    character=character,
+                    completion_conditions={
+                        False: [
+                            Condition(
+                                name="has_investment",
+                                attribute="has_investment",
+                                target=character,
+                                satisfy_value=True,
+                                op="==",
+                                weight=1,
+                            )
+                        ]
+                    },
+                    evaluate_utility_function=goap_planner.evaluate_goal_importance,
+                    difficulty=graph_manager.calculate_goal_difficulty,
+                    completion_reward=graph_manager.calculate_reward,
+                    failure_penalty=graph_manager.calculate_penalty,
+                    completion_message=prompt_builder.generate_completion_message,
+                    failure_message=prompt_builder.generate_failure_message,
+                    criteria=example_criteria_g,
+                    graph_manager=graph_manager,
+                    goal_type="economic",
+                ),
             )
         )
     # Add similar elif blocks for other motives
@@ -953,7 +1363,7 @@ class GoalGenerator:
         goap_planner: GOAPPlanner,
         prompt_builder: PromptBuilder,
     ):
-        from tiny_graph_manager import GraphManager
+        GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
 
         self.personal_motives = personal_motives
         self.graph_manager = graph_manager
@@ -976,7 +1386,7 @@ class GoalGenerator:
                     self.prompt_builder,
                 )
             )
-        for goal in goals:
+        for _, goal in goals:
             for item in goal.required_items:
                 character.update_required_items(item)
 
@@ -1000,7 +1410,7 @@ class PersonalityTraits:
     Description: High levels of neuroticism are associated with emotional instability, anxiety, moodiness, irritability, and sadness.
     Application: Characters with high neuroticism might react more negatively to stress, have more fluctuating moods, and could require more support from friends or activities to maintain happiness. Those with low neuroticism (high emotional stability) tend to remain calmer in stressful situations and have a more consistent mood.
     Implementing Personality Traits in TinyVillage
-    Quantitative Measures: Represent each personality trait with a numeric value (e.g., 0 to 100) for each character. This allows for nuanced differences between characters and can influence decision-making algorithms.
+    Quantitative Measures: Represent each personality trait with a numeric value (e.g., 0 to 100.0) for each character. This allows for nuanced differences between characters and can influence decision-making algorithms.
     Dynamic Interactions: Use personality traits to dynamically influence character interactions. For example, an extraverted character might initiate conversations more frequently, while a highly agreeable character might have more options to support others.
     Influence on Life Choices: Personality can affect career choice, hobbies, and life decisions within the game. For instance, an open and conscientious character might pursue a career in science or exploration.
     Character Development: Allow for personality development over time, influenced by game events, achievements, and relationships. This can add depth to the characters and reflect personal growth or change.
@@ -1008,11 +1418,11 @@ class PersonalityTraits:
 
     def __init__(
         self,
-        openness: int = 0,
-        conscientiousness: int = 0,
-        extraversion: int = 0,
-        agreeableness: int = 0,
-        neuroticism: int = 0,
+        openness: float = 0.0,
+        conscientiousness: float = 0.0,
+        extraversion: float = 0.0,
+        agreeableness: float = 0.0,
+        neuroticism: float = 0.0,
     ):
         self.openness = self.set_openness(ClampedIntScore().clamp_score(openness))
         self.conscientiousness = self.set_conscientiousness(
@@ -1032,9 +1442,6 @@ class PersonalityTraits:
     def __repr__(self):
         return f"PersonalityTraits({self.openness}, {self.conscientiousness}, {self.extraversion}, {self.agreeableness}, {self.neuroticism})"
 
-    def __str__(self):
-        return f"PersonalityTraits with openness {self.openness}, conscientiousness {self.conscientiousness}, extraversion {self.extraversion}, agreeableness {self.agreeableness}, neuroticism {self.neuroticism}."
-
     def __eq__(self, other):
         return (
             self.openness == other.openness
@@ -1046,12 +1453,14 @@ class PersonalityTraits:
 
     def __hash__(self):
         return hash(
-            (
-                self.openness,
-                self.conscientiousness,
-                self.extraversion,
-                self.agreeableness,
-                self.neuroticism,
+            tuple(
+                [
+                    self.openness,
+                    self.conscientiousness,
+                    self.extraversion,
+                    self.agreeableness,
+                    self.neuroticism,
+                ]
             )
         )
 
@@ -1102,24 +1511,39 @@ class PersonalityTraits:
     def get_motives(self):
         return self.motives
 
+    def get_personality_trait(self, trait):
+        if trait == "openness":
+            return self.openness
+        elif trait == "conscientiousness":
+            return self.conscientiousness
+        elif trait == "extraversion":
+            return self.extraversion
+        elif trait == "agreeableness":
+            return self.agreeableness
+        elif trait == "neuroticism":
+            return self.neuroticism
+        else:
+            return None
+
     def set_motives(
         self,
-        hunger_motive: int = 0,
-        wealth_motive: int = 0,
-        mental_health_motive: int = 0,
-        social_wellbeing_motive: int = 0,
-        happiness_motive: int = 0,
-        health_motive: int = 0,
-        shelter_motive: int = 0,
-        stability_motive: int = 0,
-        luxury_motive: int = 0,
-        hope_motive: int = 0,
-        success_motive: int = 0,
-        control_motive: int = 0,
-        job_performance_motive: int = 0,
-        beauty_motive: int = 0,
-        community_motive: int = 0,
-        material_goods_motive: int = 0,
+        hunger_motive: float = 0.0,
+        wealth_motive: float = 0.0,
+        mental_health_motive: float = 0.0,
+        social_wellbeing_motive: float = 0.0,
+        happiness_motive: float = 0.0,
+        health_motive: float = 0.0,
+        shelter_motive: float = 0.0,
+        stability_motive: float = 0.0,
+        luxury_motive: float = 0.0,
+        hope_motive: float = 0.0,
+        success_motive: float = 0.0,
+        control_motive: float = 0.0,
+        job_performance_motive: float = 0.0,
+        beauty_motive: float = 0.0,
+        community_motive: float = 0.0,
+        material_goods_motive: float = 0.0,
+        family_motive: float = 0.0,
     ):
         self.motives = PersonalMotives(
             hunger_motive=Motive(
@@ -1176,6 +1600,9 @@ class PersonalityTraits:
                 "bias toward maintaining material goods",
                 material_goods_motive,
             ),
+            family_motive=Motive(
+                "family", "bias toward maintaining family", family_motive
+            ),
         )
 
 
@@ -1184,25 +1611,102 @@ class CharacterSkills:
         self.action_skills = []
         self.job_skills = []
         self.other_skills = []
+        self.skills = []
         self.set_skills(skills)
 
     def __repr__(self):
-        return f"CharacterSkills({self.skills})"
-
-    def __str__(self):
-        return f"CharacterSkills with skills {self.skills}."
+        return f"CharacterSkills({self.skills}, {self.job_skills}, {self.action_skills}, {self.other_skills})"
 
     def __eq__(self, other):
-        return self.skills == other.skills
+        return (
+            self.skills == other.skills
+            and self.job_skills == other.job_skills
+            and self.action_skills == other.action_skills
+            and self.other_skills == other.other_skills
+        )
+
+    def hash_nested_list(self, obj):
+        try:
+            if isinstance(obj, list):
+                return tuple(self.hash_nested_list(item) for item in obj)
+            elif isinstance(obj, dict):
+                return tuple(
+                    (key, self.hash_nested_list(value)) for key, value in obj.items()
+                )
+            elif isinstance(obj, set):
+                return frozenset(self.hash_nested_list(item) for item in obj)
+            elif isinstance(obj, tuple):
+                return tuple(self.hash_nested_list(item) for item in obj)
+            elif hasattr(obj, "__hash__") and callable(getattr(obj, "__hash__")):
+                # Test if the object can be hashed without raising an error
+                try:
+                    hash(obj)
+                    return obj
+                except TypeError:
+                    if hasattr(obj, "__dict__"):
+                        return tuple(
+                            (key, self.hash_nested_list(value))
+                            for key, value in obj.__dict__.items()
+                        )
+                    else:
+                        # If the object is not hashable and has no __dict__, return its id or a string representation
+                        return id(obj)
+            elif hasattr(obj, "__dict__"):  # For custom objects without __hash__ method
+                return tuple(
+                    (key, self.hash_nested_list(value))
+                    for key, value in obj.__dict__.items()
+                )
+            else:
+                return obj
+        except Exception as e:
+            logging.error(f"Error hashing object: {e}")
+            return None
 
     def __hash__(self):
-        return hash(self.skills)
+        def make_hashable(obj):
+            if isinstance(obj, dict):
+                return tuple(sorted((k, make_hashable(v)) for k, v in obj.items()))
+            elif isinstance(obj, list):
+                return tuple(make_hashable(e) for e in obj)
+            elif isinstance(obj, set):
+                return frozenset(make_hashable(e) for e in obj)
+            elif isinstance(obj, tuple):
+                return tuple(make_hashable(e) for e in obj)
+            elif type(obj).__name__ == "Character":
+                Character = importlib.import_module("tiny_characters").Character
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+            elif type(obj).__name__ == "Location":
+                Location = importlib.import_module("tiny_locations").Location
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+
+            return obj
+
+        return hash(
+            tuple(
+                [
+                    make_hashable(self.skills),
+                    make_hashable(self.job_skills),
+                    make_hashable(self.action_skills),
+                    make_hashable(self.other_skills),
+                ]
+            )
+        )
 
     def get_skills(self):
         return self.skills
 
+    def get_skills_as_list_of_strings(self):
+        return [skill.name for skill in self.skills]
+
     def set_skills(self, skills):
         for skill in skills:
+            self.skills.append(skill)
             if isinstance(skill, JobSkill):
                 self.job_skills.append(skill)
             elif isinstance(skill, ActionSkill):
@@ -1501,6 +2005,14 @@ effect_dict = {
 }
 
 
+pronoun_mapper = {
+    "he/him": ["he", "him", "his", "himself", "man"],
+    "she/her": ["she", "her", "her", "herself", "woman"],
+    "they/them": ["they", "them", "their", "themselves", "person"],
+    "it/it": ["it", "it", "its", "itself", "thing"],
+}
+
+
 class Character:
     """
     Character Attributes
@@ -1539,10 +2051,19 @@ class Character:
         action_system: ActionSystem = None,
         gametime_manager: GameTimeManager = None,
         location: Location = None,
+        energy: int = 10,
+        romanceable: bool = True,
+        physical_appearance: str = "",
+        physical_beauty: int = random.randint(0, 100.0),
     ):
+        GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
+        self._updating = False  # Flag to prevent recursion
+        self._initialized = False  # Flag to prevent recursion
 
-        from actions import ActionSystem, Action
-
+        ActionSystem = importlib.import_module("actions")
+        Action = importlib.import_module("actions").Action
+        GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
+        self.move_speed = move_speed
         if not action_system:
             action_system = ActionSystem()
         self.action_system = action_system
@@ -1554,7 +2075,7 @@ class Character:
         if graph_manager is None:
             raise ValueError("GraphManager instance required.")
         self.graph_manager = graph_manager
-
+        self.energy = energy
         self.character_actions = [
             Action(
                 "Talk",
@@ -1653,9 +2174,6 @@ class Character:
         self.mental_health = self.set_mental_health(mental_health)
         self.social_wellbeing = self.set_social_wellbeing(social_wellbeing)
 
-        self.luxury = 0  # fluctuates with environment
-
-        self.job_performance = self.set_job_performance(job_performance)
         self.beauty = 0  # fluctuates with environment
         self.community = self.set_community(community)
 
@@ -1663,30 +2181,39 @@ class Character:
         self.recent_event = self.set_recent_event(recent_event)
         self.long_term_goal = self.set_long_term_goal(long_term_goal)
         self.inventory = self.set_inventory(inventory)
-        self.material_goods = self.set_material_goods(self.calculate_material_goods())
         if home:
             self.home = self.set_home(home)
         else:
             self.home = self.set_home()
+
+        self.personality_traits = self.set_personality_traits(personality_traits)
+
+        if motives is not None:
+            self.motives = self.set_motives(motives)
+        elif motives is None or not self.motives:
+            self.motives = self.calculate_motives()
+        self.luxury = 0  # fluctuates with environment
+
+        self.job_performance = self.set_job_performance(job_performance)
+        self.material_goods = self.set_material_goods(self.calculate_material_goods())
+
         self.shelter = self.set_shelter(self.home.calculate_shelter_value())
         self.success = self.set_success(self.calculate_success())
         self.control = self.set_control(self.calculate_control())
         self.hope = self.set_hope(self.calculate_hope())
-        self.happiness = self.set_happiness(self.calculate_happiness())
         self.stability = self.set_stability(self.calculate_stability())
-        self.personality_traits = self.set_personality_traits(personality_traits)
+        self.happiness = self.set_happiness(self.calculate_happiness())
 
-        if motives:
-            self.motives = self.set_motives(motives)
-        else:
-            self.motives = self.calculate_motives()
         self.stamina = 0
         self.current_satisfaction = 0
-        self.current_mood = 0
+        self.current_mood = 50
+        self.current_activity = None
         self.skills = CharacterSkills([])
         self.career_goals = career_goals
         self.short_term_goals = []
-        self.id = uuid.uuid4()
+        self.uuid = uuid.uuid4()
+        # Check that character has a unique id
+
         if gametime_manager:
             self.gametime_manager = gametime_manager
         else:
@@ -1698,20 +2225,67 @@ class Character:
             self.location = Location(name, 0, 0, 0, 0, action_system)
         else:
             self.location = location
-        self.coordinate_location = self.location.get_coordinates()
+        self.coordinates_location = self.location.get_coordinates()
+
         self.needed_items = (
             []
         )  # Items needed to complete goals. This is a list of tuples, each tuple is (dict of item requirements, quantity needed)
         self.goals = []
-        logging.info(
-            f"Character {self.name} has been created with graph manager:  {self.graph_manager}"
-        )
-        self.goals = self.evaluate_goals()
 
         self.state = self.get_state()
+        self.romantic_relationships = []
+        self.romanceable = romanceable
+        self.exclusive_relationship = None
+        self.base_libido = self.calculate_base_libido()
+        self.monogamy = 0
+        self.investment_portfolio = InvestmentPortfolio([])
+
+        self.monogamy = self.calculate_monogamy()
+        self.goals = self.evaluate_goals()
+        # Check graph_manager to see if character has been added to the graph
+        if not self.graph_manager.get_node(node_id=self):
+            logging.info(
+                f"Adding character {self.name} to graph manager with id {self.graph_manager.unique_graph_id}\n"
+            )
+            self.graph_manager.add_character_node(self)
+            logging.info(
+                f"Character {self.name} added to graph manager {self.graph_manager.unique_graph_id, self.graph_manager.G[self]} with node attributes \n {[self.graph_manager.G.nodes[self]]}\n"
+            )
+
+        self.post_init()
+
+    # def __setattr__(self, name, value):
+    #     super().__setattr__(name, value)
+    #     if name != "uuid" and not self._updating:
+    #         self.update_function()
+
+    # def __getattribute__(self, name):
+    #     if name != "uuid" and name != "_updating":
+    #         self._updating = True
+    #         self.update_function()
+    #         self._updating = False
+    #     return object.__getattribute__(self, name)
+
+    # def update_function(self):
+    #     self.dynamic_function = lambda: self._value
+
+    # def set_value(self, value):
+    #     self._value = value
+
+    def get_base_libido(self):
+        return self.base_libido
+
+    def post_init(self):
+
+        logging.info(f"Character {self.name} has been created\n")
+        self._initialized = True
+
+    def add_to_inventory(self, item: ItemObject):
+        if not self.graph_manager.G.has_node(item):
+            self.graph_manager.add_item_node(item)
+        self.inventory.add_item(item)
 
     def generate_goals(self):
-        from tiny_graph_manager import GraphManager
 
         goal_generator = GoalGenerator(
             self.motives, self.graph_manager, self.goap_planner, self.prompt_builder
@@ -1732,10 +2306,10 @@ class Character:
 
         return self.location
 
-    def get_coordinate_location(self):
+    def get_coordinates_location(self):
         return self.location.get_coordinates()
 
-    def set_coordinate_location(self, *coordinates):
+    def set_coordinates_location(self, *coordinates):
         if len(coordinates) == 1:
             if isinstance(coordinates[0], tuple):
                 self.location.set_coordinates(coordinates[0])
@@ -1768,17 +2342,20 @@ class Character:
         )
 
         # Apply combined force to location
-        self.set_coordinate_location(
+        self.set_coordinates_location(
             self.location[0] + combined_force[0],
             self.location[1] + combined_force[1],
         )
 
-        self.graph_manager.update_location(self.name, self.get_coordinate_location())
+        self.graph_manager.update_location(self.name, self.get_coordinates_location())
 
-        if self.get_coordinate_location() == next_waypoint:
+        if self.get_coordinates_location() == next_waypoint:
             self.path.pop(0)
             if not self.path:
                 self.destination = None
+
+    def add_new_goal(self, goal):
+        self.goals.append((0, goal))
 
     def create_memory(self, description, timestamp, importance):
         memory = Memory(
@@ -1809,12 +2386,40 @@ class Character:
                 break
 
     def __repr__(self):
-        return f"Character({self.name}, {self.age}, {self.pronouns}, {self.job}, {self.health_status}, {self.hunger_level}, {self.wealth_money}, {self.mental_health}, {self.social_wellbeing}, {self.job_performance}, {self.community}, {self.friendship_grid}, {self.recent_event}, {self.long_term_goal}, {self.home}, {self.inventory}, {self.motives}, {self.personality_traits})"
+        return f"Character({self.name}, {self.age}, {self.pronouns}, {self.job}, {self.health_status}, {self.hunger_level}, {self.wealth_money}, {self.mental_health}, {self.social_wellbeing}, {self.job_performance}, {self.community}, {self.recent_event}, {self.long_term_goal}, {self.home}, {self.inventory}, {self.motives}, {self.personality_traits}, {self.skills}, {self.career_goals}, {self.possible_interactions}, {self.move_speed}, {self.location}, {self.energy}, {self.romanceable}, {self.romantic_relationships}, {self.exclusive_relationship}, {self.base_libido}, {self.monogamy}, {self.investment_portfolio}, {self.goals}, {self.needed_items}, {self.stamina}, {self.current_satisfaction}, {self.current_mood}, {self.current_activity}, {self.speed}, {self.path}, {self.destination})"
 
     def __str__(self):
-        return f"Character named {self.name}, age {self.age}, pronouns {self.pronouns}, job {self.job}, health status {self.health_status}, hunger level {self.hunger_level}, wealth {self.wealth_money}, mental health {self.mental_health}, social wellbeing {self.social_wellbeing}, job performance {self.job_performance}, community {self.community}, friendship grid {self.friendship_grid}, recent event {self.recent_event}, long term goal {self.long_term_goal}, home {self.home}, inventory {self.inventory}, motives {self.motives}, personality traits {self.personality_traits}."
+        return f"\n{self.name} is a {self.age}-year-old {self.pronouns}. {pronoun_mapper[self.pronouns][0].capitalize()} is a {self.job.job_title if isinstance(self.job, JobRoles) else self.job} with {self.wealth_money} money. {pronoun_mapper[self.pronouns][0].capitalize()} is feeling {self.current_mood}. {pronoun_mapper[self.pronouns][0].capitalize()} is currently located at {self.location.name} with coordinates {self.location.get_coordinates()}. \n \
+          {self.name} has the following investment portfolio: {self.investment_portfolio}. \n \
+          {self.name} has the following motives: {self.motives}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following skills: {self.skills.get_skills_as_list_of_strings()}. \n \
+          {self.name} has the following career goals: {[goal for goal in self.career_goals]}.\n \
+          {self.name} has the following long-term goals: {self.long_term_goal}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following recent event: {self.recent_event}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following inventory: {self.inventory}. \n \
+          {self.name} has the following personality traits: {self.personality_traits}. \n \
+          {self.name} has the following romantic relationships: {self.romantic_relationships}. \n \
+          {self.name} is currently in an exclusive relationship: {self.exclusive_relationship}. \n \
+          {self.name} has the following investment portfolio: {self.investment_portfolio}. \n \
+          {self.name} lives at {self.home.name} at {self.home.address} with a shelter level of {self.home.shelter_value} and a beauty level of {self.home.beauty_value}, with {self.home.bedrooms} bedrooms, {self.home.bathrooms} bathrooms, {self.home.stories} stories, and {self.home.area} square feet with a price of {self.home.price} and is located on the map at {self.home.get_coordinates()}.\n \
+          {self.name} has the following energy: {self.energy}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following health status: {self.health_status}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following hunger level: {self.hunger_level}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following mental health: {self.mental_health}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following social wellbeing: {self.social_wellbeing}.\n \
+          {self.name} has the following job performance: {self.job_performance}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following community: {self.community}. {pronoun_mapper[self.pronouns][0].capitalize()} has the current mood: {self.current_mood}{pronoun_mapper[self.pronouns][0].capitalize()} has the following stamina: {self.stamina}.\n \
+          {self.name} has the following current satisfaction: {self.current_satisfaction}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following current activity: {self.current_activity}. \n \
+          {self.name} has the following speed: {self.speed}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following path: {self.path}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following destination: {self.destination}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following move speed: {self.move_speed}. \n \
+          {self.name} has the following romanceable status: {self.romanceable}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following monogamy level: {self.monogamy}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following base libido: {self.base_libido}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following exclusive relationship status: {[f'Exclusive with {self.exclusive_relationship}' if self.exclusive_relationship else 'Not exclusive']}.\n \
+          {self.name} has the following luxury level: {self.luxury}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following success level: {self.success}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following control level: {self.control}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following hope level: {self.hope}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following happiness level: {self.happiness}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following stability level: {self.stability}.\n \
+          {self.name} has the following shelter level: {self.shelter}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following beauty level: {self.beauty}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following state: {self.state}. \n \
+          {self.name} has the following goals: {[goal[1].name for goal in self.goals]}.  \n \
+          {pronoun_mapper[self.pronouns][0].capitalize()} has the following needed items: {self.needed_items}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following friendship grid: {self.friendship_grid}. \n \
+          {self.name} has the following id: {self.uuid}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following character actions: {[action_name.name for action_name in self.character_actions]}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following possible interactions: {[action_name.name for action_name in self.possible_interactions]}.\n \
+          {self.name} has the following romanceable status: {self.romanceable}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following romantic relationships: {self.romantic_relationships}. {pronoun_mapper[self.pronouns][0].capitalize()} has the following exclusive relationship status: {self.exclusive_relationship}.\n\n\n"
+
+    def get_char_attribute(self, attribute):
+        if attribute in self.__dict__:
+            return self.__dict__[attribute]
+        else:
+            return None
 
     def __eq__(self, other):
+        if not isinstance(other, Character):
+            return False
         return (
             self.name == other.name
             and self.age == other.age
@@ -1827,13 +2432,32 @@ class Character:
             and self.social_wellbeing == other.social_wellbeing
             and self.job_performance == other.job_performance
             and self.community == other.community
-            and self.friendship_grid == other.friendship_grid
             and self.recent_event == other.recent_event
             and self.long_term_goal == other.long_term_goal
             and self.home == other.home
             and self.inventory == other.inventory
             and self.motives == other.motives
             and self.personality_traits == other.personality_traits
+            and self.skills == other.skills
+            and self.career_goals == other.career_goals
+            and self.possible_interactions == other.possible_interactions
+            and self.move_speed == other.move_speed
+            and self.location == other.location
+            and self.energy == other.energy
+            and self.romanceable == other.romanceable
+            and self.romantic_relationships == other.romantic_relationships
+            and self.exclusive_relationship == other.exclusive_relationship
+            and self.base_libido == other.base_libido
+            and self.monogamy == other.monogamy
+            and self.investment_portfolio == other.investment_portfolio
+            and self.needed_items == other.needed_items
+            and self.stamina == other.stamina
+            and self.current_satisfaction == other.current_satisfaction
+            and self.current_mood == other.current_mood
+            and self.current_activity == other.current_activity
+            and self.speed == other.speed
+            and self.path == other.path
+            and self.destination == other.destination
         )
 
     def get_possible_interactions(self):
@@ -1906,18 +2530,40 @@ class Character:
     def get_job(self):
         return self.job
 
+    def check_graph_uuid(self):
+        return self.graph_manager.unique_graph_id
+
     def set_job(self, job):
         job_rules = JobRules()
         if isinstance(job, JobRoles):
             self.job = job
         elif isinstance(job, str):
-            if job_rules.check_job_name_validity(job):
+            check = job_rules.check_job_name_validity(job)
+            if check not in [None, False]:
                 logging.info("Job valid")
                 for job_role in job_rules.ValidJobRoles:
-                    if job_role.get_job_name() == job:
+                    if (
+                        job_role.get_job_name().lower() == job.lower()
+                        or job_role.get_job_name().lower() in job.lower()
+                    ) or (
+                        job.lower() == job_role.get_job_name().lower()
+                        or job.lower() in job_role.get_job_name().lower()
+                    ):
                         logging.info("Job role found")
                         self.job = job_role
+                    elif (
+                        job_role.get_job_name().lower() == job.lower()
+                        or job_role.get_job_name().lower() in job.lower()
+                    ) or (
+                        job.lower() == job_role.get_job_name().lower()
+                        or job.lower() in job_role.get_job_name().lower()
+                    ):
+                        logging.info("Job role found")
+                        self.job = job_role
+
             else:
+                logging.info(f"Job role not found for job {job}")
+                exit(12)
                 self.job = random.choice(job_rules.ValidJobRoles)
         else:
             self.job = random.choice(job_rules.ValidJobRoles)
@@ -1929,7 +2575,10 @@ class Character:
         if isinstance(home, House):
             self.home = home
         elif isinstance(home, str):
-            self.home = CreateBuilding().create_house_by_type(home)
+            if home != "homeless":
+                self.home = CreateBuilding().create_house_by_type(home)
+            else:
+                return None
         elif home is None:
             self.home = CreateBuilding().generate_random_house()
         else:
@@ -2135,7 +2784,6 @@ class Character:
     # def calculate_goals(self):
 
     def evaluate_goals(self):
-        from tiny_graph_manager import GraphManager
 
         goal_queue = []
         # if len(self.goals) > 1:
@@ -2144,59 +2792,106 @@ class Character:
                 self.motives, self.graph_manager, self.goap_planner, self.prompt_builder
             )
             self.goals = goal_generator.generate_goals(self)
-        for goal in self.goals:
-            utility = goal.get_utility(self)
+        for _, goal in self.goals:
+            utility = goal.evaluate_utility_function(self, goal, self.graph_manager)
             goal_queue.append((utility, goal))
         goal_queue.sort(reverse=True, key=lambda x: x[0])
         return goal_queue
 
     def calculate_material_goods(self):
         material_goods = round(
-            tweener(self.inventory.count_total_items(), 1000, 0, 100, 2)
+            tweener(self.inventory.count_total_items(), 1000, 0, 100.0, 2)
         )  # Tweening the wealth value
         return material_goods
 
     def calculate_stability(self):
+        from tiny_graph_manager import cached_sigmoid_raw_approx_optimized
+
         stability = 0
         stability += self.get_shelter()
         stability += round(
-            tweener(self.get_luxury(), 100, 0, 10, 2)
+            tweener(self.get_luxury(), 100.0, 0, 10, 2)
         )  # Tweening the luxury value
         stability += self.get_hope()
         stability += round(
-            tweener(self.get_success(), 100, 0, 10, 2)
+            tweener(self.get_success(), 100.0, 0, 10, 2)
         )  # Tweening the success value
         stability += round(
-            tweener(self.get_control(), 100, 0, 10, 2)
+            tweener(self.get_control(), 100.0, 0, 10, 2)
         )  # Tweening the control value
         stability += round(
-            tweener(self.get_beauty(), 100, 0, 10, 2)
+            tweener(self.get_beauty(), 100.0, 0, 10, 2)
         )  # Tweening the job performance value
         stability += self.get_community()
         stability += round(
-            tweener(self.get_material_goods(), 100, 0, 10, 2)
+            tweener(self.get_material_goods(), 100.0, 0, 10, 2)
         )  # Tweening the material goods value
         stability += self.get_social_wellbeing()
-        return stability
+        return cached_sigmoid_raw_approx_optimized(stability, 100.0)
 
     def calculate_happiness(self):
+        from tiny_graph_manager import cached_sigmoid_raw_approx_optimized
+
         happiness = 0
         happiness += self.get_hope()
-        happiness += round(tweener(self.get_success(), 100, 0, 10, 2))
-        happiness += round(tweener(self.get_control(), 100, 0, 10, 2))
-        happiness += round(tweener(self.get_beauty(), 100, 0, 10, 2))
+        happiness += cached_sigmoid_raw_approx_optimized(
+            min(self.get_success(), self.motives.get_success_motive().get_score() * 10),
+            100.0,
+        )
+        happiness += cached_sigmoid_raw_approx_optimized(
+            min(self.get_control(), self.motives.get_control_motive().get_score() * 10),
+            100.0,
+        )
+        happiness += cached_sigmoid_raw_approx_optimized(
+            min(self.get_beauty(), self.motives.get_beauty_motive().get_score() * 10),
+            100.0,
+        )
         happiness += self.get_community()
-        happiness += round(tweener(self.get_material_goods(), 100, 0, 10, 2))
+        happiness += cached_sigmoid_raw_approx_optimized(
+            min(
+                self.get_job_performance(),
+                self.motives.get_job_performance_motive().get_score() * 10,
+            ),
+            100.0,
+        )
+        # TODO: Add luxury calculation based on recent history of environmental luxury
+        # happiness += cached_sigmoid_raw_approx_optimized(
+        #     min(
+        #         self.get_luxury(),
+        #         self.motives.get_luxury_motive().get_score() * 10,
+        #     ),
+        #     100.0,
+        # )
+        happiness += cached_sigmoid_raw_approx_optimized(
+            min(
+                self.get_material_goods(),
+                self.motives.get_material_goods_motive().get_score() * 10,
+            ),
+            100.0,
+        )
         happiness += self.get_social_wellbeing()
-        return happiness
+        happiness *= cached_sigmoid_raw_approx_optimized(self.get_stability(), 100.0)
+        happiness *= cached_sigmoid_raw_approx_optimized(self.get_hope(), 100.0)
+        happiness *= cached_sigmoid_raw_approx_optimized(
+            self.get_mental_health(), 100.0
+        )
+        # TODO: Add happiness calculation based on motives
+
+        # TODO: Add happiness calculation based on social relationships
+
+        # TODO: Add happiness calculation based on romantic relationships
+
+        # TODO: Add happiness calculation based on family relationships
+
+        return cached_sigmoid_raw_approx_optimized(happiness, 100.0)
 
     def calculate_success(self):
         success = 0
         success += round(
-            tweener(self.get_job_performance(), 100, 0, 50, 2)
+            tweener(self.get_job_performance(), 100.0, 0, 50, 2)
         )  # Tweening the job performance value
         success += round(
-            tweener(self.get_material_goods(), 100, 0, 20, 2)
+            tweener(self.get_material_goods(), 100.0, 0, 20, 2)
         )  # Tweening the material goods value
         success += round(
             tweener(self.get_wealth_money(), 1000, 0, 20, 2)
@@ -2206,57 +2901,224 @@ class Character:
     def calculate_control(self):
         control = 0
         control += self.get_shelter()
-        control += round(tweener(self.get_success(), 100, 0, 10, 2))
+        control += round(tweener(self.get_success(), 100.0, 0, 10, 2))
         control += round(
-            tweener(self.get_material_goods(), 100, 0, 20, 2)
+            tweener(self.get_material_goods(), 100.0, 0, 20, 2)
         )  # Tweening the material goods value
         control += round(
             tweener(self.get_wealth_money(), 1000, 0, 20, 2)
         )  # Tweening the wealth value
         return control
 
+    def calculate_monogamy(self):
+        monogamy = 0
+        monogamy -= self.personality_traits.get_openness()
+        monogamy += self.personality_traits.get_conscientiousness()
+        monogamy -= self.personality_traits.get_extraversion()
+        monogamy += 1 if self.has_job() == False else 0
+        monogamy += (
+            1
+            if self.get_wealth_money()
+            <= self.graph_manager.get_average_attribute_value("wealth_money")
+            else 0
+        )
+        logging.info(self.get_home())
+        monogamy += 1 if self.get_home() is None else 0
+        monogamy += max(0, (50 - self.base_libido) // 10)
+
+        monogamy += self.age / 100.0
+        monogamy += self.motives.get_control_motive().get_score()
+        monogamy += self.motives.get_hope_motive().get_score()
+        monogamy += self.motives.get_mental_health_motive().get_score()
+        monogamy += self.motives.get_stability_motive().get_score()
+        monogamy += self.motives.get_family_motive().get_score() * 2
+        monogamy += self.stability / 100.0
+        options_score = 0
+        if self._initialized:
+            romanceable_nodes = [
+                node
+                for node in list(self.graph_manager.G.nodes(data="romanceable"))
+                if node[1] == True
+            ]
+
+            romanceable_nodes = sorted(
+                romanceable_nodes,
+                key=lambda x: self.graph_manager.G.edges(x, data=True)[0][2][
+                    "romance_value"
+                ],
+                reverse=True,
+            )
+
+            for node in romanceable_nodes:
+                options_score += (
+                    self.graph_manager.G[self][node]["romance_value"] / 10
+                ) * self.graph_manager.G[self][node]["romance_compatibility"]
+            if len(romanceable_nodes) > 0:
+                options_score = options_score / len(romanceable_nodes)
+                options_score += max(10, max(0, (10 + len(romanceable_nodes)) // 10))
+            interested_nodes = [
+                node
+                for node in self.graph_manager.G[self]
+                if self.graph_manager.G[self][node]["romance_interest"] == True
+            ]
+            options_scoreb = 0
+            for node in interested_nodes:
+                options_scoreb += (
+                    self.graph_manager.G[self][node]["romance_value"]
+                    / 10
+                    * self.graph_manager.G[self][node]["romance_compatibility"]
+                )
+            if len(interested_nodes) > 0:
+                options_scoreb = options_scoreb / len(interested_nodes)
+                options_scoreb += max(10, max(0, (10 + len(interested_nodes)) // 10))
+
+        monogamy = max(1, (monogamy - options_score))
+        # monogamy = max(1, (monogamy - options_scoreb))
+
+        return monogamy
+
     def calculate_hope(self):
+        from tiny_graph_manager import cached_sigmoid_raw_approx_optimized
+
         hope = 0
         hope += round(
-            tweener(self.get_beauty(), 100, 0, 10, 2)
+            tweener(self.get_beauty(), 100.0, 0.0, 10.0, 2.0)
         )  # Tweening the luxury value
         hope += round(
-            tweener(self.get_success(), 100, 0, 10, 2)
+            tweener(self.get_success(), 100.0, 0.0, 10.0, 2)
         )  # Tweening the success value
         hope += self.get_community()
         hope += round(
-            tweener(self.get_material_goods(), 100, 0, 10, 2)
+            tweener(self.get_material_goods(), 100.0, 0.0, 10, 2.0)
         )  # Tweening the material goods value
         hope += self.get_social_wellbeing()
-        return hope
+        return cached_sigmoid_raw_approx_optimized(hope, 100.0)
 
-    def __repr__(self):
-        return f"Character({self.name}, {self.job}, {self.health_status}, {self.hunger_level}, {self.wealth_money}, {self.long_term_goal}, {self.recent_event})"
+    def calculate_base_libido(self):
+        """Calculate the base libido based on the character's personality traits"""
+        base_libido = 0
+        base_libido += self.personality_traits.get_openness()
+        base_libido += self.personality_traits.get_extraversion()
+        base_libido += self.personality_traits.get_agreeableness()
+        base_libido -= self.personality_traits.get_neuroticism()
+        base_libido = max(0, base_libido)
 
-    def __str__(self):
-        return f"Character named {self.name} with job {self.job} and health status {self.health_status}."
+        base_libido -= self.get_age() / 10
+        base_libido = max(0, base_libido)
 
-    def __eq__(self, other):
-        return (
-            self.name == other.name
-            and self.job == other.job
-            and self.health_status == other.health_status
-            and self.hunger_level == other.hunger_level
-            and self.wealth_money == other.wealth_money
-            and self.long_term_goal == other.long_term_goal
-            and self.recent_event == other.recent_event
-        )
+        base_libido += self.get_health_status() / 10
+        base_libido += self.get_happiness() / 10
+        base_libido += self.get_social_wellbeing() / 10
+        base_libido += random.randint(-4, 4)
+        base_libido += self.get_control() / 10
+        base_libido = max(0, base_libido)
+        # Scale and normalize the base libido to a range of 0-100.0
+        base_libido = round(tweener(base_libido, 60, 0, 60, 2))
+
+        return base_libido
+
+    # def __repr__(self):
+    #     try:
+    #         return (
+    #             f"Character(name={self.name}, job={self.job}, health_status={self.health_status}, "
+    #             f"hunger_level={self.hunger_level}, wealth_money={self.wealth_money}, "
+    #             f"long_term_goal={self.long_term_goal}, recent_event={self.recent_event}, "
+    #             f"personality_traits={self.personality_traits}, motives={self.motives}, "
+    #             f"inventory={self.inventory}, home={self.home}, community={self.community}, "
+    #             f"beauty={self.beauty}, control={self.control}, success={self.success}, "
+    #             f"hope={self.hope}, stability={self.stability}, luxury={self.luxury}, "
+    #             f"romanceable={self.romanceable}, base_libido={self.base_libido}, "
+    #             f"monogamy={self.monogamy}, romantic_relationships={self.romantic_relationships}, "
+    #             f"exclusive_relationship={self.exclusive_relationship}, skills={self.skills}, "
+    #             f"career_goals={self.career_goals}, short_term_goals={self.short_term_goals}, "
+    #             f"id={self.uuid}, location={self.location}, coordinates_location={self.coordinates_location}, "
+    #             f"goals={self.goals}, state={self.state}, character_actions={self.character_actions}, "
+    #             f"speed={self.speed}, energy={self.energy}, pronouns={self.pronouns}, "
+    #             f"age={self.age}, "
+    #             f"destination={self.destination}, path={self.path}, needed_items={self.needed_items}, "
+    #             f"possible_interactions={self.possible_interactions}, "
+    #             f"job_performance={self.job_performance}, "
+    #             f"friendship_grid={self.friendship_grid}, material_goods={self.material_goods})"
+    #         )
+    #     except Exception as e:
+    #         return f"Character(An error occurred in __repr__: {e})"
+
+    def has_job(self):
+        if isinstance(self.job, str):
+            if self.job == "unemployed":
+                return False
+        else:
+            return self.job is not None and self.job.job_name != "unemployed"
+
+    def has_investment(self):
+        return len(self.investment_portfolio.get_stocks()) > 0
 
     def __hash__(self):
+        def make_hashable(obj):
+            if isinstance(obj, dict):
+                return tuple(sorted((k, make_hashable(v)) for k, v in obj.items()))
+            elif isinstance(obj, list):
+                return tuple(make_hashable(e) for e in obj)
+            elif isinstance(obj, set):
+                return frozenset(make_hashable(e) for e in obj)
+            elif isinstance(obj, tuple):
+                return tuple(make_hashable(e) for e in obj)
+            elif type(obj).__name__ == "Character":
+                Character = importlib.import_module("tiny_characters").Character
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+            elif type(obj).__name__ == "Location":
+                Location = importlib.import_module("tiny_locations").Location
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+
+            return obj
+
         return hash(
-            (
-                self.name,
-                self.job,
-                self.health_status,
-                self.hunger_level,
-                self.wealth_money,
-                self.long_term_goal,
-                self.recent_event,
+            tuple(
+                [
+                    self.name,
+                    self.job,
+                    self.health_status,
+                    self.hunger_level,
+                    self.wealth_money,
+                    self.long_term_goal,
+                    self.recent_event,
+                    make_hashable(self.personality_traits.to_dict()),
+                    self.motives,
+                    self.inventory,
+                    self.home,
+                    self.community,
+                    self.beauty,
+                    self.control,
+                    self.success,
+                    self.hope,
+                    self.stability,
+                    self.luxury,
+                    self.romanceable,
+                    self.base_libido,
+                    self.monogamy,
+                    make_hashable(self.romantic_relationships),
+                    self.exclusive_relationship,
+                    self.skills,
+                    make_hashable(self.career_goals),
+                    make_hashable(self.short_term_goals),
+                    self.uuid,
+                    self.location,
+                    tuple(self.coordinates_location),
+                    make_hashable(self.goals),
+                    self.speed,
+                    self.energy,
+                    make_hashable(self.pronouns),
+                    self.age,
+                    self.destination,
+                    make_hashable(self.path),
+                    self.job_performance,
+                ]
             )
         )
 
@@ -2353,7 +3215,7 @@ class Character:
         return self.personality_traits
 
     def set_personality_traits(self, personality_traits):
-        logging.info(f"Setting personality traits: {personality_traits}")
+        logging.info(f"Setting personality traits: \n{personality_traits}")
         if isinstance(personality_traits, PersonalityTraits):
             self.personality_traits = personality_traits
             return self.personality_traits
@@ -2385,257 +3247,7 @@ class Character:
             self.needed_items.append((item, item_count))
 
     def calculate_motives(self):
-        social_wellbeing_motive = abs(
-            self.personality_traits.get_openness()
-            + (self.personality_traits.get_extraversion() * 2)
-            + self.personality_traits.get_agreeableness()
-            - self.personality_traits.get_neuroticism()
-        )
-        beauty_motive = abs(
-            self.personality_traits.get_openness()
-            + self.personality_traits.get_extraversion()
-            + self.personality_traits.get_agreeableness()
-            + self.personality_traits.get_neuroticism()
-            + social_wellbeing_motive
-        )
-        hunger_motive = abs(
-            (10 - self.get_mental_health())
-            + self.personality_traits.get_neuroticism()
-            - self.personality_traits.get_conscientiousness()
-            - beauty_motive
-        )
-        community_motive = abs(
-            self.personality_traits.get_openness()
-            + self.personality_traits.get_extraversion()
-            + self.personality_traits.get_agreeableness()
-            + self.personality_traits.get_neuroticism()
-            + social_wellbeing_motive
-        )
-        health_motive = abs(
-            self.personality_traits.get_openness()
-            + self.personality_traits.get_extraversion()
-            + self.personality_traits.get_agreeableness()
-            + self.personality_traits.get_neuroticism()
-            - hunger_motive
-            + beauty_motive
-            + self.personality_traits.get_conscientiousness()
-        )
-        mental_health_motive = abs(
-            self.personality_traits.get_openness()
-            + self.personality_traits.get_extraversion()
-            + self.personality_traits.get_agreeableness()
-            + self.personality_traits.get_neuroticism()
-            - hunger_motive
-            + beauty_motive
-            + self.personality_traits.get_conscientiousness()
-            + health_motive
-        )
-        stability_motive = abs(
-            self.personality_traits.get_openness()
-            + self.personality_traits.get_extraversion()
-            + self.personality_traits.get_agreeableness()
-            + self.personality_traits.get_neuroticism()
-            + health_motive
-            + community_motive
-        )
-        shelter_motive = abs(
-            self.personality_traits.get_neuroticism()
-            + self.personality_traits.get_conscientiousness()
-            + health_motive
-            + community_motive
-            + beauty_motive
-            + stability_motive
-        )
-        control_motive = abs(
-            self.personality_traits.get_conscientiousness()
-            + self.personality_traits.get_neuroticism()
-            + shelter_motive
-            + stability_motive
-        )
-        success_motive = abs(
-            self.personality_traits.get_conscientiousness()
-            + self.personality_traits.get_neuroticism()
-            + shelter_motive
-            + stability_motive
-            + control_motive
-        )
-        material_goods_motive = abs(
-            round(
-                random.gauss(
-                    abs(
-                        (
-                            shelter_motive
-                            + stability_motive
-                            + success_motive
-                            + control_motive
-                        )
-                        / 1000
-                    ),
-                    (
-                        self.personality_traits.get_conscientiousness()
-                        + self.personality_traits.get_neuroticism()
-                    )
-                    * 10,
-                )
-            )
-        )
-        luxury_motive = abs(
-            self.personality_traits.get_openness()
-            + self.personality_traits.get_extraversion()
-            + self.personality_traits.get_agreeableness()
-            + self.personality_traits.get_neuroticism()
-            + material_goods_motive
-            + beauty_motive
-        )
-        wealth_motive = abs(
-            round(
-                random.gauss(
-                    abs(
-                        (
-                            luxury_motive
-                            + shelter_motive
-                            + stability_motive
-                            + success_motive
-                            + control_motive
-                            + material_goods_motive
-                            + luxury_motive
-                        )
-                        / 1000
-                    ),
-                    (
-                        self.personality_traits.get_conscientiousness()
-                        + self.personality_traits.get_neuroticism()
-                    )
-                    * 10,
-                )
-            )
-        )
-        job_performance_motive = abs(
-            round(
-                random.gauss(
-                    abs(
-                        ((success_motive + material_goods_motive + wealth_motive) * 2)
-                        / 1000
-                    ),
-                    (
-                        self.personality_traits.get_conscientiousness()
-                        + self.personality_traits.get_extraversion()
-                        + self.personality_traits.get_agreeableness()
-                        + self.personality_traits.get_neuroticism()
-                    )
-                    * 10,
-                )
-            )
-        )
-        happiness_motive = abs(
-            round(
-                random.gauss(
-                    abs(
-                        (
-                            success_motive
-                            + material_goods_motive
-                            + wealth_motive
-                            + job_performance_motive
-                            + social_wellbeing_motive
-                        )
-                        / 1000
-                    ),
-                    (
-                        self.personality_traits.get_openness()
-                        + self.personality_traits.get_extraversion()
-                        + self.personality_traits.get_agreeableness()
-                        - self.personality_traits.get_neuroticism()
-                    )
-                    * 10,
-                )
-            )
-        )
-        hope_motive = abs(
-            round(
-                random.gauss(
-                    abs(
-                        (
-                            mental_health_motive
-                            + social_wellbeing_motive
-                            + happiness_motive
-                            + health_motive
-                            + shelter_motive
-                            + stability_motive
-                            + luxury_motive
-                            + success_motive
-                            + control_motive
-                            + job_performance_motive
-                            + beauty_motive
-                            + community_motive
-                        )
-                        / 1000
-                    ),
-                    (
-                        self.personality_traits.get_openness()
-                        + self.personality_traits.get_extraversion()
-                        + self.personality_traits.get_agreeableness()
-                        + self.personality_traits.get_neuroticism()
-                    )
-                    * 10,
-                )
-            )
-        )
-        return PersonalMotives(
-            hunger_motive=Motive(
-                "hunger", "bias toward satisfying hunger", hunger_motive
-            ),
-            wealth_motive=Motive(
-                "wealth", "bias toward accumulating wealth", wealth_motive
-            ),
-            mental_health_motive=Motive(
-                "mental health",
-                "bias toward maintaining mental health",
-                mental_health_motive,
-            ),
-            social_wellbeing_motive=Motive(
-                "social wellbeing",
-                "bias toward maintaining social wellbeing",
-                social_wellbeing_motive,
-            ),
-            happiness_motive=Motive(
-                "happiness", "bias toward maintaining happiness", happiness_motive
-            ),
-            health_motive=Motive(
-                "health", "bias toward maintaining health", health_motive
-            ),
-            shelter_motive=Motive(
-                "shelter", "bias toward maintaining shelter", shelter_motive
-            ),
-            stability_motive=Motive(
-                "stability", "bias toward maintaining stability", stability_motive
-            ),
-            luxury_motive=Motive(
-                "luxury", "bias toward maintaining luxury", luxury_motive
-            ),
-            hope_motive=Motive("hope", "bias toward maintaining hope", hope_motive),
-            success_motive=Motive(
-                "success", "bias toward maintaining success", success_motive
-            ),
-            control_motive=Motive(
-                "control", "bias toward maintaining control", control_motive
-            ),
-            job_performance_motive=Motive(
-                "job performance",
-                "bias toward maintaining job performance",
-                job_performance_motive,
-            ),
-            beauty_motive=Motive(
-                "beauty", "bias toward maintaining beauty", beauty_motive
-            ),
-            community_motive=Motive(
-                "community", "bias toward maintaining community", community_motive
-            ),
-            material_goods_motive=Motive(
-                "material goods",
-                "bias toward maintaining material goods",
-                material_goods_motive,
-            ),
-        )
+        return self.graph_manager.calculate_motives(self)
 
     def to_dict(self):
         return {
@@ -2666,6 +3278,23 @@ class Character:
             "home": self.home,
             "personality_traits": self.personality_traits,
             "motives": self.motives,
+            "base_libido": self.base_libido,
+            "monogamy": self.monogamy,
+            "romantic_relationships": self.romantic_relationships,
+            "exclusive_relationship": self.exclusive_relationship,
+            "skills": self.skills,
+            "career_goals": self.career_goals,
+            "short_term_goals": self.short_term_goals,
+            "location": self.location,
+            "coordinates_location": self.coordinates_location,
+            "goals": self.goals,
+            "speed": self.speed,
+            "energy": self.energy,
+            "destination": self.destination,
+            "path": self.path,
+            "needed_items": self.needed_items,
+            "possible_interactions": self.possible_interactions,
+            "community": self.community,
         }
 
     def get_state(self):
@@ -2714,9 +3343,6 @@ class CreateCharacter:
     def __repr__(self):
         return f"CreateCharacter()"
 
-    def __str__(self):
-        return f"CreateCharacter class."
-
     def create_new_character(
         self,
         mode: str = "auto",
@@ -2724,13 +3350,13 @@ class CreateCharacter:
         age: int = 18,
         pronouns: str = "they/them",
         job: str = "unemployed",
-        health_status: int = 0,
-        hunger_level: int = 0,
-        wealth_money: int = 0,
-        mental_health: int = 0,
-        social_wellbeing: int = 0,
-        job_performance: int = 0,
-        community: int = 0,
+        health_status: float = 0.0,
+        hunger_level: float = 0.0,
+        wealth_money: float = 0.0,
+        mental_health: float = 0.0,
+        social_wellbeing: float = 0.0,
+        job_performance: float = 0.0,
+        community: float = 0.0,
         friendship_grid: dict = {},
         recent_event: str = "",
         long_term_goal: str = "",
@@ -2739,6 +3365,8 @@ class CreateCharacter:
         motives: PersonalMotives = None,
         home: str = "",
     ):
+        from tiny_buildings import House, CreateBuilding
+
         if mode != "auto":
             if name == "John Doe":
                 name = input("What is your character's name? ")
@@ -2770,11 +3398,11 @@ class CreateCharacter:
             if job_performance == 0:
                 job_performance = int(
                     input(
-                        "How well does your character perform at their job? A number between 0 and 100"
+                        "How well does your character perform at their job? A number between 0 and 100.0"
                     )
                 )
             if home == "":
-                home = tb.CreateBuilding().create_house_by_type(
+                home = CreateBuilding().create_house_by_type(
                     input("Where does your character live? ")
                 )
             if recent_event == "":
@@ -2985,7 +3613,7 @@ class CreateCharacter:
             if job_performance == 0:
                 job_performance = round(random.gauss(50, 20))
             if home == "":
-                home = tb.CreateBuilding().generate_random_house()
+                home = CreateBuilding().generate_random_house()
 
             if personality_traits is None:
                 openness = max(-4, min(4, random.gauss(0, 2)))

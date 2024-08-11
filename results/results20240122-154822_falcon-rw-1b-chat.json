@@ -1,0 +1,41 @@
+{
+    "model_name": "ericzzz/falcon-rw-1b-chat",
+    "responses": [
+        " \n\n",
+        "\nOption 4. Organize an event to Teach Others and Build Community Ties\n\n",
+        "_________ as my focus for today.",
+        "\nOption 1: Continue Working on the current project\nI am excited about the new projects I am",
+        "_________ as my focus for today.",
+        "\n\n",
+        " to pursue hobby{gardens} as it is a relaxing and enjoyable activity that can help me unw",
+        "_________ to do today.",
+        " to take a short break to eat some food. I am feeling hungry and need to refuel my energy",
+        " option 4. I will attend the merchant\u2019s guild meetings to learn about the latest market trend",
+        " to go to my workshop and craft a 'new' craft item. I'm excited about the new",
+        " to go to a cafe for lunch. I'm feeling hungry and need to recharge my energy."
+    ],
+    "consistency_scores": 0.131265407824098,
+    "variability_scores": 0.4879500364742666,
+    "actionability_scores": 9,
+    "best_time_taken": 3.3257009983062744,
+    "unique_keywords": 7,
+    "most_common_keyword_frequency": 2,
+    "keyword_frequency": {
+        "4": 2,
+        "1": 1,
+        "pursue hobby": 1,
+        "food": 1,
+        "workshop": 1,
+        "craft": 1,
+        "craft item": 2
+    },
+    "keywords": {
+        "4": 2,
+        "1": 1,
+        "pursue hobby": 1,
+        "food": 1,
+        "workshop": 1,
+        "craft": 1,
+        "craft item": 2
+    }
+}

@@ -1,0 +1,295 @@
+Query: Where was the World Cup held in 2018? 
+Hierarchy search time for edge weight: 0.24789166450500488 
+Hierarchy weight results: 
+ 
+The 2032 Summer Olympics will be held in Sydney., weight: [0.44310433] 
+Flat access search time: 0.04352760314941406 
+Flat access results: 
+ 
+The 2018 World Cup was held in Russia., weight: 3.0699524879455566 
+The 2026 World Cup will be held in the United States., weight: 6.654885292053223 
+The 2016 Olympics were held in Rio de Janeiro., weight: 9.242575645446777 
+The 2032 Summer Olympics will be held in Sydney., weight: 11.263809204101562 
+The 2028 Summer Olympics will be held in Los Angeles., weight: 11.309673309326172 
+The 2020 Tokyo Olympics were postponed., weight: 11.801560401916504 
+Query: I think someone is planning a surprise party 
+Hierarchy search time for edge weight: 0.25002193450927734 
+Hierarchy weight results: 
+ 
+John Doe is planning a surprise party., weight: [0.74381757] 
+George told me that he loves surprise birthday parties., weight: [0.6450669] 
+Jimmy had said that the bar the Bunker has poor service., weight: [0.3527695] 
+I am learning to play the guitar., weight: [0.40409312] 
+Flat access search time: 0.04281926155090332 
+Flat access results: 
+ 
+John Doe is planning a surprise party., weight: 5.033926010131836 
+George told me that he loves surprise birthday parties., weight: 9.077071189880371 
+Linda told me that ebola is spreading., weight: 12.692962646484375 
+Jack told me that the Rabbit Hole is a popular nightclub., weight: 12.741835594177246 
+Isabella Rodriguez is setting out the pastries., weight: 13.364738464355469 
+Kevin told me that the electric car is the future., weight: 13.466939926147461 
+Jill told me that bowties are in fashion., weight: 13.525310516357422 
+Alice told me that coq au vin is a popular French dish., weight: 13.622621536254883 
+Mallory told me that Smartwatches are selling like hotcakes., weight: 14.182703018188477 
+Query: I need to think of a popular tourist attraction 
+Hierarchy search time for edge weight: 0.13714146614074707 
+Hierarchy weight results: 
+ 
+Alice told me that coq au vin is a popular French dish., weight: [0.47544408] 
+The Eiffel Tower is a popular tourist attraction., weight: [0.62861514] 
+Eve told me that Digital Fortress is a popular book., weight: [0.43754792] 
+Jimmy had said that the bar the Bunker has poor service., weight: [0.3401224] 
+The Grand Canyon is a natural wonder., weight: [0.6338873] 
+The Great Wall of China is a historic site., weight: [0.6718638] 
+The Statue of Liberty is a symbol of freedom., weight: [0.56232053] 
+The 2032 Summer Olympics will be held in Sydney., weight: [0.36206073] 
+Flat access search time: 0.04248952865600586 
+Flat access results: 
+ 
+The Eiffel Tower is a popular tourist attraction., weight: 9.809796333312988 
+The Great Wall of China is a historic site., weight: 10.022226333618164 
+The Grand Canyon is a natural wonder., weight: 10.58643627166748 
+The Statue of Liberty is a symbol of freedom., weight: 12.477883338928223 
+I am planning a trip to Europe in June., weight: 12.954648971557617 
+Jack told me that the Rabbit Hole is a popular nightclub., weight: 13.050537109375 
+The 2028 Summer Olympics will be held in Los Angeles., weight: 13.172906875610352 
+The 2016 Olympics were held in Rio de Janeiro., weight: 13.524396896362305 
+The 2026 World Cup will be held in the United States., weight: 13.690813064575195 
+Query: I am planning a trip to Europe 
+Hierarchy search time for edge weight: 0.16371846199035645 
+Hierarchy weight results: 
+ 
+John Doe is planning a surprise party., weight: [0.4405111] 
+The Eiffel Tower is a popular tourist attraction., weight: [0.560452] 
+I am learning to play the guitar., weight: [0.4545356] 
+Flat access search time: 0.04409313201904297 
+Flat access results: 
+ 
+I am planning a trip to Europe in June., weight: 1.7988781929016113 
+The Eiffel Tower is a popular tourist attraction., weight: 12.459355354309082 
+The 2024 Summer Olympics will be held in Paris., weight: 13.825287818908691 
+Bob is a travel agent., weight: 14.257349014282227 
+Alice told me that coq au vin is a popular French dish., weight: 14.535652160644531 
+The 2028 Summer Olympics will be held in Los Angeles., weight: 14.913469314575195 
+The 2026 World Cup will be held in the United States., weight: 14.943009376525879 
+Query: Who is learning to play the guitar? 
+Hierarchy search time for edge weight: 0.09183216094970703 
+Hierarchy weight results: 
+ 
+Jane Smith is learning to play the guitar., weight: [0.67761326] 
+I am learning to play the guitar., weight: [0.72637653] 
+Flat access search time: 0.0417172908782959 
+Flat access results: 
+ 
+I am learning to play the guitar., weight: 5.609498977661133 
+Jane Smith is learning to play the guitar., weight: 7.0263447761535645 
+Eve told me that Digital Fortress is a popular book., weight: 15.333990097045898 
+Kevin told me that the electric car is the future., weight: 15.406051635742188 
+Linda told me that ebola is spreading., weight: 15.45234489440918 
+Alice told me that coq au vin is a popular French dish., weight: 15.659245491027832 
+Nancy said potatoes are cheap these days but see the most demand., weight: 15.789105415344238 
+Jimmy had said that the bar the Bunker has poor service., weight: 16.10344696044922 
+Query: I think someone is studying for a Chemistry test 
+Hierarchy search time for edge weight: 0.10697722434997559 
+Hierarchy weight results: 
+ 
+Jane Smith is learning to play the guitar., weight: [0.44663012] 
+I am learning to play the guitar., weight: [0.4448968] 
+Flat access search time: 0.04290366172790527 
+Flat access results: 
+ 
+Maria Lopez is studying for a Chemistry test while drinking coffee., weight: 8.151708602905273 
+I am studying for a Chemistry test, weight: 9.533153533935547 
+John Doe is planning a surprise party., weight: 14.437901496887207 
+Alice told me that coq au vin is a popular French dish., weight: 14.7635498046875 
+Isabella Rodriguez is setting out the pastries., weight: 15.079177856445312 
+Jane Smith is learning to play the guitar., weight: 15.408941268920898 
+Kevin told me that the electric car is the future., weight: 15.431392669677734 
+I am learning to play the guitar., weight: 15.473882675170898 
+Query: What product should I sell in my electronics store? 
+Hierarchy search time for edge weight: 0.11769819259643555 
+Hierarchy weight results: 
+ 
+Eve told me that Digital Fortress is a popular book., weight: [0.46881598] 
+Mallory told me that Smartwatches are selling like hotcakes., weight: [0.5070548] 
+Charlie told me that the new iPhone is not worth the price., weight: [0.4105329] 
+Flat access search time: 0.04540848731994629 
+Flat access results: 
+ 
+Mallory told me that Smartwatches are selling like hotcakes., weight: 11.947832107543945 
+Kevin told me that the electric car is the future., weight: 13.505270004272461 
+Nancy said potatoes are cheap these days but see the most demand., weight: 13.792430877685547 
+Eve told me that Digital Fortress is a popular book., weight: 13.85389518737793 
+Oliver told me that ginger root crop has the highest profit margin., weight: 14.828688621520996 
+Charlie told me that the new iPhone is not worth the price., weight: 14.85052490234375 
+Isabella Rodriguez is setting out the pastries., weight: 15.81712532043457 
+The Eiffel Tower is a popular tourist attraction., weight: 15.868335723876953 
+Linda told me that ebola is spreading., weight: 15.996362686157227 
+Query: What should I eat at the French restaurant? 
+Hierarchy search time for edge weight: 0.4798576831817627 
+Hierarchy weight results: 
+ 
+Alice told me that coq au vin is a popular French dish., weight: [0.63406265] 
+Flat access search time: 0.042867183685302734 
+Flat access results: 
+ 
+Alice told me that coq au vin is a popular French dish., weight: 8.76887321472168 
+The Eiffel Tower is a popular tourist attraction., weight: 11.553760528564453 
+Isabella Rodriguez is setting out the pastries., weight: 12.292057037353516 
+I am planning a trip to Europe in June., weight: 13.7943115234375 
+Jimmy had said that the bar the Bunker has poor service., weight: 13.844456672668457 
+Nancy said potatoes are cheap these days but see the most demand., weight: 14.981292724609375 
+Jack told me that the Rabbit Hole is a popular nightclub., weight: 15.117786407470703 
+The 2024 Summer Olympics will be held in Paris., weight: 15.307870864868164 
+Query: What book should I read? 
+Hierarchy search time for edge weight: 0.26500487327575684 
+Hierarchy weight results: 
+ 
+Eve told me that Digital Fortress is a popular book., weight: [0.5641594] 
+Flat access search time: 0.041742563247680664 
+Flat access results: 
+ 
+Eve told me that Digital Fortress is a popular book., weight: 9.662137985229492 
+Kevin told me that the electric car is the future., weight: 14.58111572265625 
+I am learning to play the guitar., weight: 15.003414154052734 
+Maria Lopez is studying for a Chemistry test while drinking coffee., weight: 15.084939956665039 
+John Doe is planning a surprise party., weight: 15.248857498168945 
+Alice told me that coq au vin is a popular French dish., weight: 15.560989379882812 
+Mallory told me that Smartwatches are selling like hotcakes., weight: 15.561086654663086 
+Jane Smith is learning to play the guitar., weight: 15.886075973510742 
+Query: Where should I go for a night out to have drinks  and meet someone? 
+Hierarchy search time for edge weight: 0.1094214916229248 
+Hierarchy weight results: 
+ 
+Jimmy had said that the bar the Bunker has poor service., weight: [0.37299907] 
+Flat access search time: 0.041121482849121094 
+Flat access results: 
+ 
+John Doe is planning a surprise party., weight: 12.977310180664062 
+Jack told me that the Rabbit Hole is a popular nightclub., weight: 13.201385498046875 
+Jimmy had said that the bar the Bunker has poor service., weight: 14.120843887329102 
+I am planning a trip to Europe in June., weight: 14.368738174438477 
+George told me that he loves surprise birthday parties., weight: 14.541803359985352 
+I am learning to play the guitar., weight: 15.150724411010742 
+Alice told me that coq au vin is a popular French dish., weight: 15.33124828338623 
+The 2018 World Cup was held in Russia., weight: 15.864370346069336 
+Query: What bar should I avoid? 
+Hierarchy search time for edge weight: 0.2931814193725586 
+Hierarchy weight results: 
+ 
+Alice told me that coq au vin is a popular French dish., weight: [0.45211345] 
+Flat access search time: 0.04238128662109375 
+Flat access results: 
+ 
+Jimmy had said that the bar the Bunker has poor service., weight: 9.379093170166016 
+Jack told me that the Rabbit Hole is a popular nightclub., weight: 11.788603782653809 
+John Doe is planning a surprise party., weight: 14.108599662780762 
+Alice told me that coq au vin is a popular French dish., weight: 14.993127822875977 
+Charlie told me that the new iPhone is not worth the price., weight: 15.110758781433105 
+The Eiffel Tower is a popular tourist attraction., weight: 15.327611923217773 
+I am learning to play the guitar., weight: 15.39157772064209 
+I am planning a trip to Europe in June., weight: 15.809558868408203 
+Query: What fashion accessory should I wear to the party? 
+Hierarchy search time for edge weight: 0.3593907356262207 
+Hierarchy weight results: 
+ 
+John Doe is planning a surprise party., weight: [0.5510525] 
+Jill told me that bowties are in fashion., weight: [0.4390125] 
+Flat access search time: 0.045725345611572266 
+Flat access results: 
+ 
+John Doe is planning a surprise party., weight: 12.004152297973633 
+Jill told me that bowties are in fashion., weight: 13.359971046447754 
+George told me that he loves surprise birthday parties., weight: 14.829822540283203 
+Alice told me that coq au vin is a popular French dish., weight: 15.586549758911133 
+Jack told me that the Rabbit Hole is a popular nightclub., weight: 16.036094665527344 
+The Eiffel Tower is a popular tourist attraction., weight: 16.03788185119629 
+I am planning a trip to Europe in June., weight: 16.203720092773438 
+I am learning to play the guitar., weight: 16.486309051513672 
+Jimmy had said that the bar the Bunker has poor service., weight: 16.55404281616211 
+Query: What is the future of transportation? 
+Hierarchy search time for edge weight: 0.0916910171508789 
+Hierarchy weight results: 
+ 
+Kevin told me that the electric car is the future., weight: [0.5258515] 
+Flat access search time: 0.04240083694458008 
+Flat access results: 
+ 
+Kevin told me that the electric car is the future., weight: 9.016255378723145 
+Bob is a travel agent., weight: 14.445901870727539 
+The 2030 Winter Olympics will be held in Vancouver., weight: 14.917830467224121 
+Nancy said potatoes are cheap these days but see the most demand., weight: 15.044782638549805 
+Mallory told me that Smartwatches are selling like hotcakes., weight: 15.049764633178711 
+The 2024 Summer Olympics will be held in Paris., weight: 15.166763305664062 
+Linda told me that ebola is spreading., weight: 15.238183975219727 
+The 2028 Summer Olympics will be held in Los Angeles., weight: 15.244101524353027 
+Query: What is the current state of the ebola outbreak? 
+Hierarchy search time for edge weight: 0.11651992797851562 
+Hierarchy weight results: 
+ 
+Alice told me that coq au vin is a popular French dish., weight: [0.4724473] 
+Flat access search time: 0.04357767105102539 
+Flat access results: 
+ 
+Linda told me that ebola is spreading., weight: 6.5302276611328125 
+The Eiffel Tower is a popular tourist attraction., weight: 14.201774597167969 
+Mallory told me that Smartwatches are selling like hotcakes., weight: 14.503898620605469 
+The 2020 Tokyo Olympics were postponed., weight: 14.548640251159668 
+Alice told me that coq au vin is a popular French dish., weight: 14.60368537902832 
+Charlie told me that the new iPhone is not worth the price., weight: 14.969879150390625 
+I am planning a trip to Europe in June., weight: 15.121492385864258 
+The 2016 Olympics were held in Rio de Janeiro., weight: 15.159635543823242 
+Query: I am a farmer, what crop should I grow to make the most profit? 
+Hierarchy search time for edge weight: 0.0939626693725586 
+Hierarchy weight results: 
+ 
+Michael said rice is seeing a price hike., weight: [0.3120185] 
+Oliver told me that ginger root crop has the highest profit margin., weight: [0.54171443] 
+Flat access search time: 0.040415287017822266 
+Flat access results: 
+ 
+Oliver told me that ginger root crop has the highest profit margin., weight: 8.112034797668457 
+Nancy said potatoes are cheap these days but see the most demand., weight: 10.564242362976074 
+Kevin told me that the electric car is the future., weight: 15.514811515808105 
+Alice told me that coq au vin is a popular French dish., weight: 15.61007022857666 
+Michael said rice is seeing a price hike., weight: 15.791502952575684 
+Isabella Rodriguez is setting out the pastries., weight: 16.22888946533203 
+Linda told me that ebola is spreading., weight: 16.627010345458984 
+Mallory told me that Smartwatches are selling like hotcakes., weight: 16.6690673828125 
+Query: Is the new iPhone worth buying? 
+Hierarchy search time for edge weight: 0.08645486831665039 
+Hierarchy weight results: 
+ 
+Charlie told me that the new iPhone is not worth the price., weight: [0.6096376] 
+Flat access search time: 0.042931318283081055 
+Flat access results: 
+ 
+Charlie told me that the new iPhone is not worth the price., weight: 8.310033798217773 
+Mallory told me that Smartwatches are selling like hotcakes., weight: 13.194282531738281 
+Kevin told me that the electric car is the future., weight: 14.956067085266113 
+Eve told me that Digital Fortress is a popular book., weight: 15.475011825561523 
+The Eiffel Tower is a popular tourist attraction., weight: 15.900613784790039 
+Nancy said potatoes are cheap these days but see the most demand., weight: 15.944787979125977 
+Linda told me that ebola is spreading., weight: 16.30492401123047 
+Jill told me that bowties are in fashion., weight: 16.891965866088867 
+Michael said rice is seeing a price hike., weight: 17.03278923034668 
+I am planning a trip to Europe in June., weight: 17.055164337158203 
+Query: What vegetables are selling the most at the market? 
+Hierarchy search time for edge weight: 0.09473776817321777 
+Hierarchy weight results: 
+ 
+Mallory told me that Smartwatches are selling like hotcakes., weight: [0.46012735] 
+Michael said rice is seeing a price hike., weight: [0.31503594] 
+Oliver told me that ginger root crop has the highest profit margin., weight: [0.5701239] 
+Flat access search time: 0.04503059387207031 
+Flat access results: 
+ 
+Oliver told me that ginger root crop has the highest profit margin., weight: 7.147933006286621 
+Nancy said potatoes are cheap these days but see the most demand., weight: 9.57374382019043 
+Alice told me that coq au vin is a popular French dish., weight: 12.628889083862305 
+Mallory told me that Smartwatches are selling like hotcakes., weight: 13.600645065307617 
+I am planning a trip to Europe in June., weight: 14.660430908203125 
+Isabella Rodriguez is setting out the pastries., weight: 14.937994003295898 
+Jill told me that bowties are in fashion., weight: 15.02617073059082 
+Michael said rice is seeing a price hike., weight: 15.3328857421875 

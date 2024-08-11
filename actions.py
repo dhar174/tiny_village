@@ -9,19 +9,26 @@ For instance, if a new technology is discovered in the game, related actions (li
 
 """
 
-from calendar import c
+import importlib
+
 import json
-from mimetypes import init
 import operator
-import stat
-from typing import Any
-from venv import create
+
+from pyparsing import Char
+from regex import P
+from torch import Graph
+
 
 # from tiny_characters import Character
 
-from tiny_types import GraphManager as graph_manager
-from tiny_types import Character, Location, Item, Event
+
+# from tiny_types import GraphManager as self.graph_manager
+from tiny_types import Character, Location, ItemObject, Event
 from tiny_util_funcs import is_numeric
+
+# from tiny_graph_manager import GraphManager
+
+# self.graph_manager = GraphManager()
 
 
 class State:
@@ -84,7 +91,46 @@ class State:
         self.dict_or_obj[key] = value
 
     def __str__(self):
-        return ", ".join([f"{key}: {val}" for key, val in self.dict_or_obj.items()])
+        if self.dict_or_obj is None:
+            return "State object with no data"
+        if isinstance(self.dict_or_obj, dict):
+            return ", ".join([f"{key}: {val}" for key, val in self.dict_or_obj.items()])
+        elif type(self.dict_or_obj).__name__ == "Character":
+            Character = importlib.import_module("tiny_characters").Character
+
+            return f"State object of Character object {self.dict_or_obj.name}"
+        elif type(self.dict_or_obj).__name__ == "Location":
+            Location = importlib.import_module("tiny_locations").Location
+
+            return f"State object of Location object {self.dict_or_obj.name} with coordinates ({self.dict_or_obj.x}, {self.dict_or_obj.y})"
+        elif type(self.dict_or_obj).__name__ == "ItemObject":
+            ItemObject = importlib.import_module("tiny_items").ItemObject
+
+            return f"State object of Item object {self.dict_or_obj.name} with type {self.dict_or_obj.item_type} and value {self.dict_or_obj.value}, and weight {self.dict_or_obj.weight}, and quantity {self.dict_or_obj.quantity}"
+        elif type(self.dict_or_obj).__name__ == "Event":
+            Event = importlib.import_module("tiny_events").Event
+
+            return f"State object of Event object {self.dict_or_obj.name} with date {self.dict_or_obj.date} and type {self.dict_or_obj.event_type} and importance {self.dict_or_obj.importance} and impact {self.dict_or_obj.impact} at coordinates {self.dict_or_obj.coordinates_location}"
+        elif type(self.dict_or_obj).__name__ == "Goal":
+            Goal = importlib.import_module("tiny_characters").Goal
+
+            return f"State object of Goal object {self.dict_or_obj.name} with priority {self.dict_or_obj.priority} and deadline {self.dict_or_obj.deadline} and description {self.dict_or_obj.description}"
+        elif type(self.dict_or_obj).__name__ == "Plan":
+            Plan = importlib.import_module("tiny_characters").Plan
+
+            return f"State object of Plan object {self.dict_or_obj.name} with actions {self.dict_or_obj.actions} and goal {self.dict_or_obj.goal}"
+        elif type(self.dict_or_obj).__name__ == "Building":
+            Building = importlib.import_module("tiny_buildings").Building
+
+            return f"State object of Building object {self.dict_or_obj.name} with type {self.dict_or_obj.building_type} and coordinates {self.dict_or_obj.x}, {self.dict_or_obj.y} and size {self.dict_or_obj.area()} and value {self.dict_or_obj.price_value}. It has {self.dict_or_obj.num_rooms} rooms and {self.dict_or_obj.stories} floors and is owned by {self.dict_or_obj.owner}"
+        elif isinstance(self.dict_or_obj, str):
+            return self.dict_or_obj
+        elif isinstance(self.dict_or_obj, list):
+            return ", ".join([str(item) for item in self.dict_or_obj])
+        elif isinstance(self.dict_or_obj, set):
+            return ", ".join([str(item) for item in self.dict_or_obj])
+        elif isinstance(self.dict_or_obj, tuple):
+            return ", ".join([str(item) for item in self.dict_or_obj])
 
     def compare_to_condition(self, condition):
 
@@ -95,6 +141,83 @@ class State:
         return self.ops[condition.operator](
             self[condition.attribute], condition.satisfy_value
         )
+
+    def __eq__(self, other):
+        if not isinstance(other, State):
+            if isinstance(other, dict):
+                return self.dict_or_obj == other
+            if isinstance(other, list):
+                return self.dict_or_obj == other
+            if isinstance(other, set):
+                return self.dict_or_obj == other
+            if isinstance(other, tuple):
+                return self.dict_or_obj == other
+            if isinstance(other, str):
+                return self.dict_or_obj == other
+            if isinstance(other, int):
+                return self.dict_or_obj == other
+            if isinstance(other, float):
+                return self.dict_or_obj == other
+            if isinstance(other, bool):
+                return self.dict_or_obj == other
+            if type(self.dict_or_obj).__name__ == "Character":
+                Character = importlib.import_module("tiny_characters").Character
+
+                return self.dict_or_obj == other
+            if type(self.dict_or_obj).__name__ == "Location":
+                Location = importlib.import_module("tiny_locations").Location
+
+                return self.dict_or_obj == other
+            if type(self.dict_or_obj).__name__ == "ItemObject":
+                ItemObject = importlib.import_module("tiny_items").ItemObject
+
+                return self.dict_or_obj == other
+            if type(self.dict_or_obj).__name__ == "Event":
+                Event = importlib.import_module("tiny_events").Event
+
+                return self.dict_or_obj == other
+            if type(self.dict_or_obj).__name__ == "Goal":
+                Goal = importlib.import_module("tiny_characters").Goal
+
+                return self.dict_or_obj == other
+            if type(self.dict_or_obj).__name__ == "Plan":
+                Plan = importlib.import_module("tiny_characters").Plan
+
+                return self.dict_or_obj == other
+            if type(self.dict_or_obj).__name__ == "Building":
+                Building = importlib.import_module("tiny_buildings").Building
+
+                return self.dict_or_obj == other
+            return False
+
+        return self.dict_or_obj == other.dict_or_obj
+
+    def __hash__(self):
+        def make_hashable(obj):
+            if isinstance(obj, dict):
+                return tuple(sorted((k, make_hashable(v)) for k, v in obj.items()))
+            elif isinstance(obj, list):
+                return tuple(make_hashable(e) for e in obj)
+            elif isinstance(obj, set):
+                return frozenset(make_hashable(e) for e in obj)
+            elif isinstance(obj, tuple):
+                return tuple(make_hashable(e) for e in obj)
+            elif type(self.dict_or_obj).__name__ == "Character":
+                Character = importlib.import_module("tiny_characters").Character
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+            elif type(self.dict_or_obj).__name__ == "Location":
+                Location = importlib.import_module("tiny_locations").Location
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+
+            return obj
+
+        return hash(make_hashable(self.dict_or_obj))
 
 
 class Condition:
@@ -131,6 +254,7 @@ class Condition:
         self.attribute = attribute
         self.operator = op
         self.target = target
+        self.target_id = target.uuid if hasattr(target, "uuid") else id(target)
         self.weight = weight
 
     def __str__(self):
@@ -146,6 +270,32 @@ class Condition:
             state = self.target.get_state()
         return self.check_condition(state)
 
+    def __hash__(self):
+        return hash(
+            tuple(
+                [
+                    self.name,
+                    self.attribute,
+                    self.target_id,
+                    self.satisfy_value,
+                    self.operator,
+                    self.weight,
+                ]
+            )
+        )
+
+    def __eq__(self, other):
+        if not isinstance(other, Condition):
+            return False
+        return (
+            self.name == other.name
+            and self.attribute == other.attribute
+            and self.target_id == other.target_id
+            and self.satisfy_value == other.satisfy_value
+            and self.operator == other.operator
+            and self.weight == other.weight
+        )
+
 
 class Action:
     def __init__(
@@ -156,16 +306,26 @@ class Action:
         cost=0,
         target=None,
         initiator=None,
+        related_skills=[],
         # change_value=None,
         default_target_is_initiator=False,
+        impact_rating_on_target=None,  # number representing the weight of the impact on the target ranging from 0 to 3, with 0 being no impact and 3 being a high impact
+        impact_rating_on_initiator=None,  # number representing the weight of the impact on the initiator ranging from 0 to 3
+        impact_rating_on_other=None,  # Dict with keys like "proximity" and "relationship" and values ranging from 0 to 3 representing the weight of the impact on other characters as defined by the keys
     ):
+        GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
         # Warning: Name MUST be unique! Check for duplicates before setting.
+        self.impact_rating_on_target = impact_rating_on_target
+        self.impact_rating_on_initiator = impact_rating_on_initiator
+        self.impact_rating_on_other = impact_rating_on_other
 
         self.name = name
         self.preconditions = (
             preconditions  # Dict of conditions needed to perform the action
         )
         self.effects = effects  # List of Dicts of state changes the action causes, like [{"targets": ["initiator","target"], "attribute": "social_wellbeing", "change_value": 8}]
+        # calculate an emotional impact value per target based on the effects in self.effects
+
         self.cost = float(cost)  # Cost to perform the action, for planning optimality
         self.target = target  # Target of the action, if applicable
         self.initiator = initiator  # Initiator of the action, if applicable
@@ -176,6 +336,10 @@ class Action:
             self.target = initiator
         elif target is not None:
             self.target = target
+        self.change_value = 0
+        self.target_id = target.uuid if hasattr(target, "uuid") else id(target)
+        self.graph_manager = GraphManager()
+        self.related_skills = related_skills
 
     def to_dict(self):
         return {
@@ -218,6 +382,7 @@ class Action:
         return state
 
     def apply_effects(self, state: State):
+        State = importlib.import_module("tiny_types").State
         try:
 
             for effect in self.effects:
@@ -268,8 +433,7 @@ class Action:
             method(*method_args)
 
     def execute(self, target=None, initiator=None, extra_targets=[], change_value=None):
-        from tiny_graph_manager import GraphManager as graph_manager
-
+        Character = importlib.import_module("tiny_characters").Character
         if initiator is not None and self.initiator is None:
             self.initiator = initiator
         else:
@@ -284,9 +448,86 @@ class Action:
             for d in self.effects:
                 targets = d["targets"]
                 if extra_targets:
-                    targets += extra_targets
+                    targets.extend(extra_targets)
                 for tgt in targets:
+                    if tgt != "initiator":
+                        if d["attribute"] in [
+                            "social_wellbeing",
+                            "happiness",
+                            "wealth_money",
+                            "luxury",
+                            "health_status",
+                            "mental_health",
+                            "hunger_level",
+                            "energy",
+                            "hope",
+                            "stability",
+                            "control",
+                            "success",
+                            "shelter",
+                            "current_mood",
+                            "stamina",
+                            "current_satisfaction",
+                        ]:
+                            emotional_impact_value = 0
+                            change_count = 0
+                            for d["attribute"] in [
+                                "social_wellbeing",
+                                "happiness",
+                                "wealth_money",
+                                "luxury",
+                                "health_status",
+                                "mental_health",
+                                "hunger_level",
+                                "energy",
+                                "hope",
+                                "stability",
+                                "control",
+                                "success",
+                                "shelter",
+                                "current_mood",
+                                "stamina",
+                                "current_satisfaction",
+                            ]:
+                                change_count += 1
+                                if d["change_value"] > 0:
+                                    emotional_impact_value += d["change_value"]
+                                elif d["change_value"] < 0:
+                                    emotional_impact_value -= d["change_value"]
+                            emotional_impact_value = (
+                                emotional_impact_value / change_count
+                            )
+                            emotional_impact_value *= 0.01
+
+                            if self.graph_manager.get_character(tgt) or (
+                                self.graph_manager.get_node(tgt)
+                                and isinstance(
+                                    self.graph_manager.get_node(tgt), Character
+                                )
+                            ):
+                                if self.graph_manager.G.has_edge(self.initiator, tgt):
+                                    self.graph_manager.update_character_character_edge(
+                                        self.initiator,
+                                        tgt,
+                                        (
+                                            self.impact_rating_on_target
+                                            if tgt == "target"
+                                            else self.impact_rating_on_other
+                                        ),
+                                        emotional_impact_value,
+                                    )
+                                self.graph_manager.add_character_character_edge(
+                                    self.initiator,
+                                    tgt,
+                                    d["attribute"],
+                                    d["change_value"],
+                                )
+                            self.graph_manager.add_character_character_edge(
+                                self.initiator, tgt, d["attribute"], d["change_value"]
+                            )
+
                     if tgt == "initiator":
+
                         self.apply_effects(self.initiator.get_state(), change_value)
                         if d["method"]:
                             self.invoke_method(
@@ -305,28 +546,38 @@ class Action:
                             self.invoke_method(tgt, d["method"], d["method_args"])
                     else:
                         if isinstance(tgt, str):
-                            if graph_manager.get_node(tgt):
-                                node = graph_manager.get_node(tgt)
+                            if self.graph_manager.get_node(tgt):
+                                node = self.graph_manager.get_node(tgt)
                                 if (
                                     tgt
-                                    in graph_manager.type_to_dict_map[node.type].keys()
+                                    in self.graph_manager.type_to_dict_map[
+                                        node.type
+                                    ].keys()
                                 ):
                                     self.apply_effects(
-                                        graph_manager.type_to_dict_map[node.type][
+                                        self.graph_manager.type_to_dict_map[node.type][
                                             tgt
                                         ].get_state(),
                                         change_value,
                                     )
                                 if d["method"]:
                                     self.invoke_method(
-                                        graph_manager.type_to_dict_map[node.type][tgt],
+                                        self.graph_manager.type_to_dict_map[node.type][
+                                            tgt
+                                        ],
                                         d["method"],
                                         d["method_args"],
                                     )
                         else:
-                            from tiny_characters import Character
-                            from tiny_locations import Location
-                            from tiny_items import Item
+                            Character = importlib.import_module(
+                                "tiny_characters"
+                            ).Character
+                            Location = importlib.import_module(
+                                "tiny_locations"
+                            ).Location
+                            ItemObject = importlib.import_module(
+                                "tiny_items"
+                            ).ItemObject
 
                             try:
                                 classes_list = [
@@ -364,6 +615,64 @@ class Action:
 
     def add_precondition(self, precondition):
         self.preconditions.append(precondition)
+
+    def __hash__(self):
+        def make_hashable(obj):
+            if isinstance(obj, dict):
+                return tuple(sorted((k, make_hashable(v)) for k, v in obj.items()))
+            elif isinstance(obj, list):
+                return tuple(make_hashable(e) for e in obj)
+            elif isinstance(obj, set):
+                return frozenset(make_hashable(e) for e in obj)
+            elif isinstance(obj, tuple):
+                return tuple(make_hashable(e) for e in obj)
+            elif type(obj).__name__ == "Character":
+                Character = importlib.import_module("tiny_characters").Character
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+            elif type(obj).__name__ == "Location":
+                Location = importlib.import_module("tiny_locations").Location
+
+                return tuple(
+                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
+                )
+
+            return obj
+
+        return hash(
+            tuple(
+                [
+                    self.name,
+                    make_hashable(self.preconditions),
+                    make_hashable(self.effects),
+                    self.target_id,
+                    self.cost,
+                    self.default_target_is_initiator,
+                    self.impact_rating_on_target,
+                    self.impact_rating_on_initiator,
+                    self.impact_rating_on_other,
+                    self.change_value,
+                    make_hashable(self.related_skills),
+                ]
+            )
+        )
+
+    def __eq__(self, other):
+        if not isinstance(other, Action):
+            return False
+        return (
+            self.name == other.name
+            and self.preconditions == other.preconditions
+            and self.effects == other.effects
+            and self.cost == other.cost
+            and self.default_target_is_initiator == other.default_target_is_initiator
+            and self.impact_rating_on_target == other.impact_rating_on_target
+            and self.impact_rating_on_initiator == other.impact_rating_on_initiator
+            and self.impact_rating_on_other == other.impact_rating_on_other
+            and self.change_value == other.change_value
+        )
 
 
 class TalkAction(Action):
@@ -457,6 +766,14 @@ class Skill:
 
     def __str__(self):
         return f"{self.name} (Level {self.level})"
+
+    def __hash__(self):
+        return hash((self.name, self.level))
+
+    def __eq__(self, other):
+        if not isinstance(other, Skill):
+            return False
+        return self.name == other.name and self.level == other.level
 
 
 class JobSkill(Skill):

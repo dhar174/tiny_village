@@ -1,0 +1,21 @@
+Consistency of results: []
+
+ 
+Variability of results: 0
+
+ 
+Actionability of results: {}
+
+ 
+Best time taken: 100000
+
+ 
+
+
+
+Full Details:
+
+ 
+Test(model_name=alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2, responses=[])
+
+ 

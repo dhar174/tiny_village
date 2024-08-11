@@ -1,0 +1,39 @@
+{
+    "model_name": "alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2",
+    "responses": [
+        " 2, Spending_time_in_workshop{'to craft new item'}\n\nEx",
+        "2, Spending_time_in_workshop{'to craft new item'}\nA:",
+        "1, 2, or 3 as my focus.",
+        "1, Continued Work.",
+        "1 Treating_patients{'at'} my clinics. I aim for community wellness",
+        "1 Continued Work - Current Job {'engineer'} - Stress Management. I'",
+        "1, Eating_food to Address_hunger\n",
+        "1 EAT_FOOD to Address my hungery. I'll head to my fields",
+        "1, Continued teaching_skill.",
+        "2, I'll head to a local market to buy some fresh produce.",
+        "2, Spending time at a Local Cafe. I'm feeling hunty and want to",
+        "2, Spent_time_in_workshop {'to craft item'} \ufffd\ufffd\ufffd"
+    ],
+    "consistency_scores": 0.13168635701111633,
+    "variability_scores": 2.581988897471611,
+    "actionability_scores": 20,
+    "best_time_taken": 2.9984536170959473,
+    "unique_keywords": 6,
+    "most_common_keyword_frequency": 7,
+    "keyword_frequency": {
+        "craft": 3,
+        "2": 6,
+        "1": 7,
+        "3": 1,
+        "eat_food": 1,
+        "craft item": 2
+    },
+    "keywords": {
+        "craft": 3,
+        "2": 6,
+        "1": 7,
+        "3": 1,
+        "eat_food": 1,
+        "craft item": 2
+    }
+}
