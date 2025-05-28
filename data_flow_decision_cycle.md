@@ -119,6 +119,4 @@ sequenceDiagram
     Char->>MM: store_memory(Action_Outcome_Description)
     MM->>MM: NLP_Process_Memory()
     MM->>MM: Index_Memory_Embedding_FAISS() 
-
-end
 ```
