@@ -175,7 +175,7 @@ tifffile==2023.7.10
 tiktoken==0.5.2
 tokenizers==0.19.1
 tomli==2.0.1
-torch==2.4.0
+torch==2.6.0
 torch-tb-profiler==0.4.3
 torch_geometric==2.5.3
 torchvision==0.19.0
