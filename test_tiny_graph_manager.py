@@ -2955,10 +2955,9 @@ if __name__ == "__main__":
     # unittest.main()
     try:
         import torch
-        import sys
 
         cuda_version = torch.version.cuda
-        sys.stderr.write(f"CUDA Version: {cuda_version}\n")
+        logging.info(f"CUDA Version: {cuda_version}")
     except ImportError:
         print("PyTorch is not installed. Skipping CUDA version check.")
     # exit()
