@@ -61,6 +61,49 @@ The `MemoryManager` in `tiny_memories.py` handles how characters perceive, store
 *   **Hybrid Retrieval:** Combines semantic search with structured filtering.
 *   **Detailed NLP Analysis:** Provides deep understanding of textual content.
 
+## Usage Example
+
+Here's a practical example of how to instantiate and use the `MemoryManager`:
+
+```python
+from datetime import datetime
+from tiny_memories import MemoryManager, GeneralMemory, SpecificMemory, MemoryQuery
+from tiny_time_manager import TinyTimeManager
+
+# Initialize time manager and memory manager
+time_manager = TinyTimeManager()
+manager = MemoryManager(time_manager)
+
+# Create and add general memories
+social_memory = GeneralMemory("Memories about social interactions")
+work_memory = GeneralMemory("Memories about work and career")
+
+manager.add_general_memory(social_memory)
+manager.add_general_memory(work_memory)
+
+# Add specific memories
+social_memory.add_specific_memory(
+    SpecificMemory("Met John at the coffee shop yesterday", social_memory, importance_score=7)
+)
+work_memory.add_specific_memory(
+    SpecificMemory("Completed the quarterly report", work_memory, importance_score=8)
+)
+
+# Query memories using string
+results = manager.search_memories("coffee shop meeting")
+
+# Query memories using MemoryQuery object
+query = MemoryQuery("work progress", query_time=datetime.now(), gametime_manager=time_manager)
+results = manager.retrieve_memories(query)
+
+# Access flat memory search for global queries
+flat_results = manager.flat_access.find_memories_by_query(
+    MemoryQuery("John", query_time=datetime.now(), gametime_manager=time_manager)
+)
+
+print(f"Found {len(results)} relevant memories")
+```
+
 ## Potential Challenges
 
 *   **Complexity & NLP Accuracy:** The system is intricate, and its effectiveness hinges on the NLP pipeline's accuracy.
