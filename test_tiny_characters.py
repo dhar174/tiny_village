@@ -1,8 +1,8 @@
 import unittest
 
-from regex import P
 from tiny_characters import CreateCharacter, Character
 import tiny_buildings as tb
+
 
 class TestCreateCharacter(unittest.TestCase):
     def setUp(self):
@@ -40,10 +40,8 @@ class TestCreateCharacter(unittest.TestCase):
     #     assert self.character.job_performance == 90
     #     assert isinstance(self.character.get_home(), tb.House)
     #     assert self.character.get_home().get_name().lower() == "hovel"
-    #     assert self.character.recent_event == "Won a coding competition"  
+    #     assert self.character.recent_event == "Won a coding competition"
     #     assert self.character.long_term_goal == "Start a tech company"
-
-        
 
     def test_create_new_character_auto(self):
         # Test creating a character automatically
@@ -57,5 +55,5 @@ class TestCreateCharacter(unittest.TestCase):
             print(key, val)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

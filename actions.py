@@ -15,7 +15,6 @@ import json
 import operator
 
 from pyparsing import Char
-from regex import P
 from torch import Graph
 
 
