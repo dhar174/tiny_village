@@ -38,7 +38,6 @@ fairscale==0.4.6
 faiss-cpu==1.8.0
 fastrlock==0.8.2
 filelock==3.7.1
-flash-attn==2.6.3
 flatbuffers==24.3.25
 fonttools==4.49.0
 frozenlist==1.4.1
