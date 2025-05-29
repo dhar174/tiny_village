@@ -42,7 +42,7 @@ from tiny_util_funcs import ClampedIntScore, tweener
 from tiny_items import ItemInventory, FoodItem, ItemObject, InvestmentPortfolio, Stock
 
 # GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
-# from tiny_memories import Memory, MemoryManager  # Temporarily commented out for testing
+from tiny_memories import Memory, MemoryManager  # Temporarily commented out for testing
 from tiny_time_manager import GameTimeManager
 
 from tiny_locations import Location, LocationManager
