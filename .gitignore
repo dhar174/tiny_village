@@ -258,7 +258,6 @@ test_specific_memories_embeddings.npy
 test_openmp_clang
 test_openmp.cpp
 mkl_test.c
-.gitignore
 GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
 mkl_test
 generate_spritesheets.py
@@ -268,8 +267,6 @@ generate_3d.py
 rig_and_animate.py
 generate_spritesheets.py
 faiss-1.8.0-py311-none-any.whl
-.gitignore
-.gitignore
 cuda-keyring_1.0-1_all.deb
 cuda-keyring_1.1-1_all.deb
 =2.12
