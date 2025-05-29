@@ -1822,7 +1822,7 @@ class FlatMemoryAccess:
 # These will be properly initialized in the main section or when the module is imported
 manager = None
 model = None
-sentiment_analysis = None
+sentiment_analysis = SentimentAnalysis()
 
 
 # @track_calls
