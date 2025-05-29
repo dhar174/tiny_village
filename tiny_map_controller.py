@@ -1,6 +1,10 @@
 # tiny_map_controller.py
 import pygame
 import heapq
+import time
+import logging
+from typing import Dict, List, Tuple, Optional, Set
+from functools import lru_cache
 
 
 class MapController:
@@ -9,7 +13,46 @@ class MapController:
         self.map_data = map_data  # Metadata about map features
         self.characters = {}  # Dictionary of characters currently on the map
         self.selected_character = None  # For user interactions
-        self.pathfinder = AStarPathfinder(self.map_data)  # Pathfinding system
+        self.pathfinder = EnhancedAStarPathfinder(self.map_data)  # Enhanced pathfinding system
+        self.dynamic_obstacles = set()  # Dynamic obstacles that can change
+        self.obstacle_update_time = 0  # Track when obstacles were last updated
+        self.path_cache = {}  # Cache for computed paths
+        self.cache_timeout = 5.0  # Cache timeout in seconds
+
+    def add_dynamic_obstacle(self, position: Tuple[int, int]):
+        """Add a dynamic obstacle that can be updated in real-time"""
+        self.dynamic_obstacles.add(position)
+        self.pathfinder.add_dynamic_obstacle(position)
+        self.invalidate_path_cache()
+        self.obstacle_update_time = time.time()
+
+    def remove_dynamic_obstacle(self, position: Tuple[int, int]):
+        """Remove a dynamic obstacle"""
+        self.dynamic_obstacles.discard(position)
+        self.pathfinder.remove_dynamic_obstacle(position)
+        self.invalidate_path_cache()
+        self.obstacle_update_time = time.time()
+
+    def invalidate_path_cache(self):
+        """Clear the path cache when obstacles change"""
+        self.path_cache.clear()
+
+    def find_path_cached(self, start: Tuple[int, int], goal: Tuple[int, int]) -> List[Tuple[int, int]]:
+        """Find path with caching for better performance"""
+        cache_key = (start, goal)
+        current_time = time.time()
+
+        # Check if we have a valid cached path
+        if cache_key in self.path_cache:
+            cached_path, cache_time = self.path_cache[cache_key]
+            if current_time - cache_time < self.cache_timeout and cache_time > self.obstacle_update_time:
+                return cached_path
+
+        # Compute new path
+        path = self.pathfinder.find_path(start, goal)
+        self.path_cache[cache_key] = (path, current_time)
+
+        return path
 
     def render(self, surface):
         # Render the map image
@@ -153,6 +196,290 @@ class AStarPathfinder:
         )
 
     def reconstruct_path(self, came_from, current):
+        path = [current]
+        while current in came_from:
+            current = came_from[current]
+            path.append(current)
+        path.reverse()
+        return path
+
+
+class EnhancedAStarPathfinder:
+    def __init__(self, map_data):
+        self.map_data = map_data
+        self.grid = self.create_grid(map_data)
+        self.dynamic_obstacles = set()
+        self.movement_costs = {}  # Different terrain movement costs
+        self.path_smoothing = True  # Enable path smoothing
+
+    def create_grid(self, map_data):
+        """Create a grid for pathfinding with terrain costs"""
+        grid = []
+        for y in range(map_data["height"]):
+            row = []
+            for x in range(map_data["width"]):
+                # Default terrain cost (0 = walkable, higher numbers = more expensive)
+                terrain_cost = map_data.get("terrain", {}).get((x, y), 1)
+                row.append(terrain_cost)
+            grid.append(row)
+
+        # Mark buildings as non-walkable
+        for building in map_data["buildings"]:
+            for y in range(building["rect"].top, building["rect"].bottom):
+                for x in range(building["rect"].left, building["rect"].right):
+                    if 0 <= y < len(grid) and 0 <= x < len(grid[0]):
+                        grid[y][x] = float('inf')  # Impassable
+
+        return grid
+
+    def add_dynamic_obstacle(self, position: Tuple[int, int]):
+        """Add a dynamic obstacle"""
+        self.dynamic_obstacles.add(position)
+
+    def remove_dynamic_obstacle(self, position: Tuple[int, int]):
+        """Remove a dynamic obstacle"""
+        self.dynamic_obstacles.discard(position)
+
+    def find_path(self, start: Tuple[int, int], goal: Tuple[int, int]) -> List[Tuple[int, int]]:
+        """Enhanced A* algorithm with dynamic obstacles and jump point search optimization"""
+        if not self.is_walkable(start) or not self.is_walkable(goal):
+            logging.warning(f"Invalid start {start} or goal {goal} for pathfinding")
+            return []
+
+        # Use Jump Point Search for better performance on open areas
+        if self.should_use_jps(start, goal):
+            return self.jump_point_search(start, goal)
+        else:
+            return self.standard_astar(start, goal)
+
+    def should_use_jps(self, start: Tuple[int, int], goal: Tuple[int, int]) -> bool:
+        """Determine if Jump Point Search should be used"""
+        # Use JPS for longer distances with fewer obstacles
+        distance = abs(start[0] - goal[0]) + abs(start[1] - goal[1])
+        obstacle_density = len(self.dynamic_obstacles) / (self.map_data["width"] * self.map_data["height"])
+        return distance > 20 and obstacle_density < 0.1
+
+    def jump_point_search(self, start: Tuple[int, int], goal: Tuple[int, int]) -> List[Tuple[int, int]]:
+        """Jump Point Search implementation for faster pathfinding"""
+        open_set = []
+        heapq.heappush(open_set, (0, start))
+        came_from = {}
+        g_score = {start: 0}
+        f_score = {start: self.heuristic(start, goal)}
+
+        directions = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+
+        while open_set:
+            _, current = heapq.heappop(open_set)
+
+            if current == goal:
+                path = self.reconstruct_path(came_from, current)
+                return self.smooth_path(path) if self.path_smoothing else path
+
+            # Find jump points in all directions
+            for dx, dy in directions:
+                jump_point = self.jump(current, (dx, dy), goal)
+                if jump_point:
+                    new_cost = g_score[current] + self.heuristic(current, jump_point)
+
+                    if jump_point not in g_score or new_cost < g_score[jump_point]:
+                        came_from[jump_point] = current
+                        g_score[jump_point] = new_cost
+                        f_score[jump_point] = new_cost + self.heuristic(jump_point, goal)
+                        heapq.heappush(open_set, (f_score[jump_point], jump_point))
+
+        return []
+
+    def jump(self, current: Tuple[int, int], direction: Tuple[int, int], goal: Tuple[int, int]) -> Optional[Tuple[int, int]]:
+        """Jump function for Jump Point Search"""
+        x, y = current
+        dx, dy = direction
+
+        next_x, next_y = x + dx, y + dy
+
+        if not self.is_walkable((next_x, next_y)):
+            return None
+
+        if (next_x, next_y) == goal:
+            return (next_x, next_y)
+
+        # Check for forced neighbors (indicating a jump point)
+        if self.has_forced_neighbors((next_x, next_y), direction):
+            return (next_x, next_y)
+
+        # Diagonal movement
+        if dx != 0 and dy != 0:
+            # Check horizontal and vertical jumps
+            if self.jump((next_x, next_y), (dx, 0), goal) or self.jump((next_x, next_y), (0, dy), goal):
+                return (next_x, next_y)
+
+        # Continue jumping in the same direction
+        return self.jump((next_x, next_y), direction, goal)
+
+    def has_forced_neighbors(self, position: Tuple[int, int], direction: Tuple[int, int]) -> bool:
+        """Check if a position has forced neighbors (jump point condition)"""
+        x, y = position
+        dx, dy = direction
+
+        if dx == 0 or dy == 0:  # Straight movement
+            if dx == 0:  # Vertical movement
+                return (not self.is_walkable((x - 1, y - dy)) and self.is_walkable((x - 1, y))) or \
+                       (not self.is_walkable((x + 1, y - dy)) and self.is_walkable((x + 1, y)))
+            else:  # Horizontal movement
+                return (not self.is_walkable((x - dx, y - 1)) and self.is_walkable((x, y - 1))) or \
+                       (not self.is_walkable((x - dx, y + 1)) and self.is_walkable((x, y + 1)))
+        else:  # Diagonal movement
+            return (not self.is_walkable((x - dx, y)) and self.is_walkable((x - dx, y + dy))) or \
+                   (not self.is_walkable((x, y - dy)) and self.is_walkable((x + dx, y - dy)))
+
+    def standard_astar(self, start: Tuple[int, int], goal: Tuple[int, int]) -> List[Tuple[int, int]]:
+        """Standard A* algorithm with terrain costs"""
+        open_set = []
+        heapq.heappush(open_set, (0, start))
+        came_from = {}
+        g_score = {start: 0}
+        f_score = {start: self.heuristic(start, goal)}
+
+        while open_set:
+            _, current = heapq.heappop(open_set)
+
+            if current == goal:
+                path = self.reconstruct_path(came_from, current)
+                return self.smooth_path(path) if self.path_smoothing else path
+
+            for neighbor in self.get_neighbors(current):
+                # Calculate movement cost including terrain
+                movement_cost = self.get_movement_cost(current, neighbor)
+                tentative_g_score = g_score[current] + movement_cost
+
+                if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
+                    came_from[neighbor] = current
+                    g_score[neighbor] = tentative_g_score
+                    f_score[neighbor] = g_score[neighbor] + self.heuristic(neighbor, goal)
+                    heapq.heappush(open_set, (f_score[neighbor], neighbor))
+
+        return []
+
+    def get_movement_cost(self, from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> float:
+        """Calculate movement cost between two positions"""
+        base_cost = 1.0
+
+        # Diagonal movement costs more
+        if abs(from_pos[0] - to_pos[0]) + abs(from_pos[1] - to_pos[1]) == 2:
+            base_cost = 1.414  # sqrt(2)
+
+        # Add terrain cost
+        x, y = to_pos
+        if 0 <= y < len(self.grid) and 0 <= x < len(self.grid[0]):
+            terrain_cost = self.grid[y][x]
+            if terrain_cost == float('inf'):
+                return float('inf')
+            base_cost *= terrain_cost
+
+        return base_cost
+
+    def smooth_path(self, path: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
+        """Smooth the path by removing unnecessary waypoints"""
+        if len(path) <= 2:
+            return path
+
+        smoothed = [path[0]]
+        i = 0
+
+        while i < len(path) - 1:
+            j = len(path) - 1
+
+            # Find the farthest visible point
+            while j > i + 1:
+                if self.line_of_sight(path[i], path[j]):
+                    break
+                j -= 1
+
+            smoothed.append(path[j])
+            i = j
+
+        return smoothed
+
+    def line_of_sight(self, start: Tuple[int, int], end: Tuple[int, int]) -> bool:
+        """Check if there's a clear line of sight between two points"""
+        x0, y0 = start
+        x1, y1 = end
+
+        # Bresenham's line algorithm
+        dx = abs(x1 - x0)
+        dy = abs(y1 - y0)
+
+        sx = 1 if x0 < x1 else -1
+        sy = 1 if y0 < y1 else -1
+
+        err = dx - dy
+
+        while True:
+            if not self.is_walkable((x0, y0)):
+                return False
+
+            if x0 == x1 and y0 == y1:
+                break
+
+            e2 = 2 * err
+
+            if e2 > -dy:
+                err -= dy
+                x0 += sx
+
+            if e2 < dx:
+                err += dx
+                y0 += sy
+
+        return True
+
+    def heuristic(self, a: Tuple[int, int], b: Tuple[int, int]) -> float:
+        """Improved heuristic function (octile distance for 8-directional movement)"""
+        dx = abs(a[0] - b[0])
+        dy = abs(a[1] - b[1])
+        return max(dx, dy) + (1.414 - 1) * min(dx, dy)
+
+    def get_neighbors(self, node: Tuple[int, int]) -> List[Tuple[int, int]]:
+        """Get 8-directional neighbors"""
+        x, y = node
+        neighbors = []
+
+        # 8-directional movement
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                if dx == 0 and dy == 0:
+                    continue
+
+                new_x, new_y = x + dx, y + dy
+                if self.is_walkable((new_x, new_y)):
+                    # Check for corner cutting in diagonal movement
+                    if dx != 0 and dy != 0:
+                        if not self.is_walkable((x + dx, y)) or not self.is_walkable((x, y + dy)):
+                            continue
+                    neighbors.append((new_x, new_y))
+
+        return neighbors
+
+    def is_walkable(self, node: Tuple[int, int]) -> bool:
+        """Check if a node is walkable considering dynamic obstacles"""
+        x, y = node
+
+        # Check bounds
+        if not (0 <= x < len(self.grid[0]) and 0 <= y < len(self.grid)):
+            return False
+
+        # Check static obstacles
+        if self.grid[y][x] == float('inf'):
+            return False
+
+        # Check dynamic obstacles
+        if (x, y) in self.dynamic_obstacles:
+            return False
+
+        return True
+
+    def reconstruct_path(self, came_from: Dict, current: Tuple[int, int]) -> List[Tuple[int, int]]:
+        """Reconstruct path from came_from dictionary"""
         path = [current]
         while current in came_from:
             current = came_from[current]

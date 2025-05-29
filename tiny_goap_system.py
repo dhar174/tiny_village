@@ -1,4 +1,4 @@
-""" GOAP System Structure
+"""GOAP System Structure
 Define Goals:
 Goals are end states that the character aims to achieve. These could range from personal (e.g., improve a relationship, learn a skill) to professional (e.g., get a promotion, change careers).
 Define Actions:
@@ -15,7 +15,7 @@ Use the output from the graph analysis to set conditions for actions. For exampl
 Graph-Based Effect Prediction:
 Predict the potential effects of actions on the character’s network by simulating changes in the graph. For instance, attending social events might strengthen certain relationships.
 Feedback Loop:
-Post-action, update the graph based on the outcomes, which then informs future GOAP planning. 
+Post-action, update the graph based on the outcomes, which then informs future GOAP planning.
 
 Further Development
 Action Definitions: Further detail actions with specific conditions and effects based on the character’s attributes and the graph analysis.
@@ -369,6 +369,8 @@ class GOAPPlanner:
                 f"\nAdditional argument:\n {arg} \nof type {type(kwargs[arg])}"
             )
         # TODO: We need Machine Learning here
+        # For now, implement a comprehensive heuristic-based approach
+
         # Fetch character attributes
         health = character.health_status
         hunger = character.hunger_level
@@ -396,9 +398,41 @@ class GOAPPlanner:
                 for rel in relationships.keys()
             )
 
-            # TODO: Implement the relationship analysis
-            # for rel in relationships.keys():
-            #     impact = self.graph_manager.calculate_how_goal_impacts_character(
+            # Implement the relationship analysis
+            try:
+                for rel_name, rel_data in relationships.items():
+                    # Calculate how this goal impacts each relationship
+                    if hasattr(graph_manager, "calculate_how_goal_impacts_character"):
+                        impact = graph_manager.calculate_how_goal_impacts_character(
+                            character, rel_name, goal
+                        )
+
+                        # Weight the impact by relationship strength
+                        rel_strength = graph_manager.evaluate_relationship_strength(
+                            character, rel_name
+                        )
+                        weighted_impact = impact * rel_strength
+
+                        # Add to social factor (positive or negative)
+                        social_factor += weighted_impact
+
+                    # Consider relationship type and goals
+                    if hasattr(rel_data, "relationship_type"):
+                        rel_type = rel_data.relationship_type
+                        if rel_type in ["family", "romantic"]:
+                            # Family and romantic relationships have higher impact
+                            social_factor *= 1.5
+                        elif rel_type in ["friend", "colleague"]:
+                            social_factor *= 1.2
+                        elif rel_type in ["enemy", "rival"]:
+                            # Negative relationships might actually motivate certain goals
+                            if goal_type in ["competitive", "achievement"]:
+                                social_factor += 10  # Boost competitive goals
+            except Exception as e:
+                logging.warning(
+                    f"Error in relationship analysis for goal evaluation: {e}"
+                )
+                # Continue with basic social factor calculation
             #         goal, character
             #     )
 

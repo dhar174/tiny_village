@@ -877,7 +877,7 @@ class GraphManager:
             name=act.name,
             required_items=act.required_items,
             preconditions=act.preconditions,
-            effects = act.effects,
+            effects=act.effects,
         )
 
     def add_job_node(self, job: Job):
@@ -3501,7 +3501,9 @@ class GraphManager:
             if emotional > 50 and historical > 50 and trust > 50 and strength > 50:
                 return "friends"
             elif emotional < 25 and historical < 25 and trust < 25 and strength < 25:
-                pass
+                return "adversaries"
+            elif emotional > 35 or historical > 35 or trust > 35 or strength > 35:
+                return "acquaintances"
         return "neutral"
 
     def character_location_frequency(self, char):
@@ -5435,7 +5437,54 @@ class GraphManager:
         }
 
     def is_goal_achieved(self, character, goal: Goal):
-        raise NotImplementedError
+        """
+        Check if a goal is achieved by evaluating its completion conditions.
+
+        Args:
+            character: The character for whom to check goal achievement
+            goal (Goal): The goal to check for completion
+
+        Returns:
+            bool: True if goal is achieved, False otherwise
+        """
+        try:
+            Character = importlib.import_module("tiny_characters").Character
+            Goal = importlib.import_module("tiny_characters").Goal
+            State = importlib.import_module("actions").State
+
+            # Get character's current state
+            character_state = State(character)
+
+            # Check if all completion conditions are met
+            if hasattr(goal, "completion_conditions") and goal.completion_conditions:
+                for condition in goal.completion_conditions:
+                    if not condition.check_condition(character_state):
+                        return False
+                return True
+
+            # Fallback: check based on goal priority and description
+            if hasattr(goal, "priority") and goal.priority >= 10:
+                # High priority goals might be considered "achieved" if certain thresholds are met
+                if "wealth" in goal.description.lower():
+                    return character.wealth_money >= 500
+                elif "social" in goal.description.lower():
+                    return character.social_wellbeing >= 80
+                elif "health" in goal.description.lower():
+                    return character.health_status >= 90
+                elif "food" in goal.description.lower():
+                    return character.hunger_level <= 20
+                elif (
+                    "job" in goal.description.lower()
+                    or "career" in goal.description.lower()
+                ):
+                    return character.job_performance >= 80
+
+            # Default: goal not achieved
+            return False
+
+        except Exception as e:
+            logging.error(f"Error checking goal achievement for {character.name}: {e}")
+            return False
 
     def calculate_preconditions_difficulty(self, preconditions, initiator: Character):
         """
@@ -5981,7 +6030,86 @@ class GraphManager:
         Returns:
             bool: True if the path fulfills the goal, False otherwise.
         """
-        pass
+        try:
+            import copy
+            from actions import State
+
+            # Initialize current state from the goal's initial state
+            current_state = (
+                copy.deepcopy(goal.current_state)
+                if hasattr(goal, "current_state")
+                else {}
+            )
+
+            # Track which goal conditions have been fulfilled
+            goal_conditions = set()
+            if hasattr(goal, "completion_conditions") and goal.completion_conditions:
+                for condition in goal.completion_conditions:
+                    condition_key = f"{condition.attribute}_{condition.satisfy_value}_{condition.op}"
+                    goal_conditions.add(condition_key)
+
+            fulfilled_conditions = set()
+
+            # Simulate actions along the path
+            for node in path:
+                if node not in self.G.nodes:
+                    logging.warning(f"Node {node} not found in graph")
+                    continue
+
+                node_data = self.G.nodes[node]
+                possible_interactions = node_data.get("possible_interactions", [])
+
+                # Process each possible action at this node
+                for action in possible_interactions:
+                    if not hasattr(action, "effects") or not action.effects:
+                        continue
+
+                    # Check if action preconditions are met
+                    if hasattr(action, "preconditions") and action.preconditions:
+                        preconditions_met = True
+                        for precondition in action.preconditions.values():
+                            if hasattr(precondition, "check_condition"):
+                                state_obj = State(current_state)
+                                if not precondition.check_condition(state_obj):
+                                    preconditions_met = False
+                                    break
+
+                        if not preconditions_met:
+                            continue
+
+                    # Apply action effects to current state
+                    for effect in action.effects:
+                        if "attribute" in effect and "change_value" in effect:
+                            attr = effect["attribute"]
+                            change_val = effect["change_value"]
+
+                            # Update state
+                            if attr in current_state:
+                                if isinstance(change_val, (int, float)):
+                                    current_state[attr] += change_val
+                                else:
+                                    current_state[attr] = change_val
+                            else:
+                                current_state[attr] = change_val
+
+                            # Check if this effect fulfills any goal conditions
+                            for condition in (
+                                goal.completion_conditions
+                                if hasattr(goal, "completion_conditions")
+                                else []
+                            ):
+                                if condition.attribute == attr:
+                                    state_obj = State(current_state)
+                                    if condition.check_condition(state_obj):
+                                        condition_key = f"{condition.attribute}_{condition.satisfy_value}_{condition.op}"
+                                        fulfilled_conditions.add(condition_key)
+
+            # Check if all goal conditions are fulfilled
+            return fulfilled_conditions >= goal_conditions
+
+        except Exception as e:
+            logging.error(f"Error evaluating path for goal achievement: {e}")
+            return False
 
     ###TODO: Calculate the difficulty of a goal using the graph and goal criteria, using get_possible_actions on the filtered_nodes. Also figure out how to initialize the criteria.
     ### Also finish the calculate_utility function above get_possible_actions.

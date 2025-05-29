@@ -2367,12 +2367,109 @@ class Character:
         return self.memory_manager.flat_access.get_recent_memories()
 
     def make_decision_based_on_memories(self):
-        # Example of how to use memories in decision-making
+        """
+        Makes decisions based on recent memories and their importance scores.
+        Returns a decision context that can influence character behavior.
+        """
+        # Get recent memories
         important_memories = self.recall_recent_memories()
+        decision_context = {
+            "memory_influenced": False,
+            "emotional_bias": 0,
+            "risk_tolerance": 50,  # Default neutral
+            "social_inclination": 50,  # Default neutral
+            "preferred_actions": [],
+            "avoided_actions": [],
+        }
+
         if important_memories:
-            # Decision logic here, possibly using the contents of important_memories
-            pass
-        # Additional methods to interact with MemoryManager functionalities
+            total_emotional_impact = 0
+            positive_memories = 0
+            negative_memories = 0
+            social_memories = 0
+
+            for memory in important_memories:
+                importance = getattr(
+                    memory, "importance_score", 5
+                )  # Default importance
+                emotional_content = getattr(memory, "emotional_impact", 0)
+                memory_description = getattr(memory, "description", "")
+
+                # Analyze memory content for decision influence
+                if importance > 7:  # High importance memories have more influence
+                    decision_context["memory_influenced"] = True
+
+                    # Emotional bias based on memory emotional content
+                    total_emotional_impact += emotional_content * (importance / 10)
+
+                    if emotional_content > 0:
+                        positive_memories += 1
+                    elif emotional_content < 0:
+                        negative_memories += 1
+
+                    # Check for social context in memories
+                    social_keywords = [
+                        "friend",
+                        "talk",
+                        "meet",
+                        "party",
+                        "social",
+                        "relationship",
+                    ]
+                    if any(
+                        keyword in memory_description.lower()
+                        for keyword in social_keywords
+                    ):
+                        social_memories += 1
+
+                    # Influence risk tolerance based on memory outcomes
+                    if (
+                        "success" in memory_description.lower()
+                        or "achieve" in memory_description.lower()
+                    ):
+                        decision_context["risk_tolerance"] = min(
+                            100, decision_context["risk_tolerance"] + 10
+                        )
+                    elif (
+                        "fail" in memory_description.lower()
+                        or "mistake" in memory_description.lower()
+                    ):
+                        decision_context["risk_tolerance"] = max(
+                            0, decision_context["risk_tolerance"] - 15
+                        )
+
+                    # Influence action preferences
+                    if "work" in memory_description.lower() and emotional_content > 0:
+                        decision_context["preferred_actions"].append("Work")
+                    elif "help" in memory_description.lower() and emotional_content > 0:
+                        decision_context["preferred_actions"].append("Help")
+                    elif (
+                        "conflict" in memory_description.lower()
+                        and emotional_content < 0
+                    ):
+                        decision_context["avoided_actions"].append("Attack")
+
+            # Set emotional bias
+            decision_context["emotional_bias"] = max(
+                -50, min(50, total_emotional_impact)
+            )
+
+            # Adjust social inclination based on social memories
+            if social_memories > 0:
+                if positive_memories > negative_memories:
+                    decision_context["social_inclination"] = min(
+                        100,
+                        decision_context["social_inclination"] + (social_memories * 10),
+                    )
+                else:
+                    decision_context["social_inclination"] = max(
+                        0,
+                        decision_context["social_inclination"] - (social_memories * 5),
+                    )
+
+        # Store decision context for use by other systems
+        self.memory_decision_context = decision_context
+        return decision_context
 
     def retrieve_specific_memories(self, query):
         # Retrieve memories based on a specific query
@@ -2464,7 +2561,26 @@ class Character:
         return self.possible_interactions
 
     def play_animation(self, animation):
-        print(f"{self.name} is playing animation: {animation}")
+        """Play an animation for this character using the animation system."""
+        try:
+            from tiny_animation_system import get_animation_system
+
+            animation_system = get_animation_system()
+            success = animation_system.play_animation(self.name, animation)
+
+            if success:
+                logging.info(f"{self.name} started playing animation: {animation}")
+            else:
+                logging.warning(f"Failed to play animation {animation} for {self.name}")
+
+            return success
+        except ImportError:
+            # Fallback to simple print if animation system not available
+            logging.info(f"{self.name} is playing animation: {animation}")
+            return True
+        except Exception as e:
+            logging.error(f"Error playing animation {animation} for {self.name}: {e}")
+            return False
 
     def describe(self):
         print(
@@ -2502,8 +2618,154 @@ class Character:
         return "confronts the issue directly"
 
     def define_descriptors(self):
-        self.job
-        return self.job
+        """
+        Creates comprehensive descriptors for the character based on their attributes,
+        personality, relationships, and current state.
+        """
+        descriptors = {
+            # Basic information
+            "name": self.name,
+            "age": self.age,
+            "pronouns": self.pronouns,
+            "job": self.job,
+            # Physical and mental state
+            "health_status": self.health_status,
+            "mental_health": self.mental_health,
+            "energy_level": self.energy,
+            "hunger_level": self.hunger_level,
+            # Social and economic status
+            "wealth_money": self.wealth_money,
+            "social_wellbeing": self.social_wellbeing,
+            "job_performance": self.job_performance,
+            "community_standing": self.community,
+            # Personality descriptors
+            "personality_summary": {
+                "openness": (
+                    self.personality_traits.get_openness()
+                    if self.personality_traits
+                    else 0
+                ),
+                "conscientiousness": (
+                    self.personality_traits.get_conscientiousness()
+                    if self.personality_traits
+                    else 0
+                ),
+                "extraversion": (
+                    self.personality_traits.get_extraversion()
+                    if self.personality_traits
+                    else 0
+                ),
+                "agreeableness": (
+                    self.personality_traits.get_agreeableness()
+                    if self.personality_traits
+                    else 0
+                ),
+                "neuroticism": (
+                    self.personality_traits.get_neuroticism()
+                    if self.personality_traits
+                    else 0
+                ),
+            },
+            # Life status
+            "recent_event": self.recent_event,
+            "long_term_goal": self.long_term_goal,
+            "current_mood": getattr(self, "current_mood", 50),
+            "current_activity": getattr(self, "current_activity", "None"),
+            # Living situation
+            "home_status": "housed" if self.home else "homeless",
+            "shelter_value": getattr(self, "shelter", 0),
+            "stability": getattr(self, "stability", 0),
+            # Calculated values
+            "happiness": getattr(self, "happiness", 0),
+            "success": getattr(self, "success", 0),
+            "hope": getattr(self, "hope", 0),
+            "luxury": getattr(self, "luxury", 0),
+            "control": getattr(self, "control", 0),
+            "beauty": getattr(self, "beauty", 0),
+            # Relationships
+            "friendship_count": (
+                len(self.friendship_grid) if self.friendship_grid else 0
+            ),
+            "relationship_status": (
+                "in_relationship"
+                if getattr(self, "exclusive_relationship", None)
+                else "single"
+            ),
+            "romanceable": getattr(self, "romanceable", True),
+            # Goals and aspirations
+            "goals_count": len(self.goals) if self.goals else 0,
+            "has_career_goals": len(getattr(self, "career_goals", [])) > 0,
+            # Inventory and possessions
+            "item_count": self.inventory.count_total_items() if self.inventory else 0,
+            "material_goods": getattr(self, "material_goods", 0),
+            # Location
+            "current_location": self.location.name if self.location else "Unknown",
+            "coordinates": (
+                self.coordinates_location
+                if hasattr(self, "coordinates_location")
+                else [0, 0]
+            ),
+        }
+
+        # Generate text descriptors based on values
+        text_descriptors = []
+
+        # Health and wellbeing descriptors
+        if descriptors["health_status"] > 8:
+            text_descriptors.append("healthy and robust")
+        elif descriptors["health_status"] < 4:
+            text_descriptors.append("struggling with health issues")
+
+        if descriptors["mental_health"] > 8:
+            text_descriptors.append("mentally stable and positive")
+        elif descriptors["mental_health"] < 4:
+            text_descriptors.append("dealing with mental health challenges")
+
+        # Personality descriptors
+        personality = descriptors["personality_summary"]
+        if personality["extraversion"] > 2:
+            text_descriptors.append("outgoing and social")
+        elif personality["extraversion"] < -2:
+            text_descriptors.append("introverted and reserved")
+
+        if personality["agreeableness"] > 2:
+            text_descriptors.append("kind and cooperative")
+        elif personality["agreeableness"] < -2:
+            text_descriptors.append("competitive and skeptical")
+
+        if personality["conscientiousness"] > 2:
+            text_descriptors.append("organized and hardworking")
+        elif personality["conscientiousness"] < -2:
+            text_descriptors.append("spontaneous and flexible")
+
+        # Economic descriptors
+        if descriptors["wealth_money"] > 1000:
+            text_descriptors.append("financially comfortable")
+        elif descriptors["wealth_money"] < 50:
+            text_descriptors.append("struggling financially")
+
+        # Social descriptors
+        if descriptors["friendship_count"] > 5:
+            text_descriptors.append("well-connected socially")
+        elif descriptors["friendship_count"] == 0:
+            text_descriptors.append("socially isolated")
+
+        # Professional descriptors
+        if descriptors["job"] != "unemployed":
+            if descriptors["job_performance"] > 80:
+                text_descriptors.append(f"excelling as a {descriptors['job']}")
+            elif descriptors["job_performance"] < 30:
+                text_descriptors.append(
+                    f"struggling in their role as a {descriptors['job']}"
+                )
+            else:
+                text_descriptors.append(f"working as a {descriptors['job']}")
+        else:
+            text_descriptors.append("currently unemployed")
+
+        descriptors["text_summary"] = ", ".join(text_descriptors)
+
+        return descriptors
 
     def get_name(self):
         return self.name
@@ -2721,7 +2983,53 @@ class Character:
         return self.friendship_grid
 
     def generate_friendship_grid(self):
-        pass
+        """
+        Generates a friendship grid based on character relationships in the graph manager.
+        Returns a list of dictionaries containing relationship data.
+        """
+        friendship_grid = []
+
+        try:
+            # Get all character relationships from the graph manager
+            relationships = self.graph_manager.analyze_character_relationships(self)
+
+            for neighbor, relationship_data in relationships.items():
+                if hasattr(neighbor, "name"):  # Ensure it's a character node
+                    friendship_entry = {
+                        "character_name": neighbor.name,
+                        "character_id": neighbor,
+                        "emotional_impact": relationship_data.get("emotional", 0),
+                        "trust_level": relationship_data.get("trust", 0),
+                        "relationship_strength": relationship_data.get("strength", 0),
+                        "historical_bond": relationship_data.get("historical", 0),
+                        "interaction_frequency": relationship_data.get(
+                            "interaction_frequency", 0
+                        ),
+                        "friendship_status": self.graph_manager.check_friendship_status(
+                            self, neighbor
+                        ),
+                    }
+
+                    # Calculate overall friendship score
+                    friendship_score = (
+                        friendship_entry["emotional_impact"] * 0.3
+                        + friendship_entry["trust_level"] * 0.25
+                        + friendship_entry["relationship_strength"] * 0.25
+                        + friendship_entry["historical_bond"] * 0.1
+                        + friendship_entry["interaction_frequency"] * 0.1
+                    )
+                    friendship_entry["friendship_score"] = max(
+                        0, min(100, friendship_score)
+                    )
+
+                    friendship_grid.append(friendship_entry)
+
+        except Exception as e:
+            logging.warning(f"Error generating friendship grid for {self.name}: {e}")
+            # Return basic structure if graph analysis fails
+            friendship_grid = [{}]
+
+        return friendship_grid
 
     def set_friendship_grid(self, friendship_grid):
         if isinstance(friendship_grid, list) and len(friendship_grid) > 0:
