@@ -14,12 +14,11 @@ import time
 import token
 from typing import final
 from cycler import V
-from llama_cpp import deque
+from collections import deque
 from networkx import node_link_data
 import numpy as np
 from datetime import datetime, timedelta
 import pandas as pd
-from regex import F, P
 import scipy as sp
 from sklearn import tree
 from sklearn.metrics.pairwise import cosine_similarity

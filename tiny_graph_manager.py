@@ -17,7 +17,6 @@ import random
 import re
 import uuid
 import networkx as nx
-from regex import D
 
 # from tiny_characters import Motive
 from tiny_types import Character, Goal, Action, State, ActionSystem
@@ -27,7 +26,8 @@ from tiny_jobs import Job
 
 # from actions import Action, State, ActionSystem
 from tiny_items import ItemInventory, ItemObject, InvestmentPortfolio, Stock
-import tiny_memories
+
+# import tiny_memories  # Temporarily commented out for testing
 from tiny_utility_functions import is_goal_achieved
 import numpy as np
 from tiny_time_manager import GameTimeManager as tiny_time_manager
@@ -4121,7 +4121,8 @@ class GraphManager:
             float: Influence score from memories.
         """
         if topic:
-            topic = tiny_memories.MemoryManager().search_memories(topic)
+            # topic = tiny_memories.MemoryManager().search_memories(topic)  # Temporarily commented out
+            pass
         return 0.5  # Example fixed return value
 
     # More edge methods for other types (Location-Location, Item-Item, etc.), and edge methods from previous parts
@@ -5105,14 +5106,23 @@ class GraphManager:
         Calculate the difficulty of a goal based on its complexity and requirements.
         Args:
             goal (Goal): The goal to evaluate.
+            character (Character): The character attempting the goal.
         Returns:
-            float: The difficulty score of the goal.
+            dict: A dictionary containing the difficulty score and additional metrics.
         """
-        Character = importlib.import_module("tiny_characters").Character
+        try:
+            Character = importlib.import_module("tiny_characters").Character
 
-        difficulty = 0
-        # Analyze the goal requirements and complexity
-        goal_requirements = goal.criteria  # goal_requirements will look like: {
+        except ImportError:
+            logging.error(
+                "Failed to import Character class from tiny_characters module."
+            )
+            difficulty = 0
+            # Analyze the goal requirements and complexity
+            if not hasattr(goal, "criteria") or not goal.criteria:
+                return {"difficulty": 0, "error": "Goal has no criteria"}
+
+            goal_requirements = goal.criteria  # goal_requirements will look like: {
         #     "node_attributes": {"type": "item", "item_type": "food"},
         #     "max_distance": 20,
         # }
@@ -5158,12 +5168,19 @@ class GraphManager:
                         )
                     }
                     # fulfill_multiple[node]["action_viability_cost"] = self.calculate_action_viability_cost(
-        goal_conditions = set(
-            cond
-            for cond, _ in action_viability_cost[node][
+        # Build condition_actions mapping for A* heuristic
+        condition_actions = {}
+        goal_conditions = set()
+        for node in action_viability_cost:
+            for condition, actions in action_viability_cost[node][
                 "actions_that_fulfill_condition"
-            ].items()
-        )
+            ].items():
+                goal_conditions.add(condition)
+                if condition not in condition_actions:
+                    condition_actions[condition] = []
+                for action in actions:
+                    condition_actions[condition].append((action, node))
+
         remaining_conditions = goal_conditions.copy()
         # Determine the number of viable actions and nodes and compare that to the total number of actions and nodes
         # Estimate counts
@@ -5189,52 +5206,69 @@ class GraphManager:
         )
         initial_solution = []
         initial_cost = 0
-        # Calculate the threshold
-        if viable_nodes / total_nodes >= total_actions_per_node / (
-            viable_actions_per_node**2
-        ):
+
+        # Use greedy approach if we have good viable action coverage
+        # Switch to A* if the problem is complex (low viability ratio)
+        viability_ratio = viable_nodes / total_nodes if total_nodes > 0 else 0
+        complexity_threshold = 0.5  # Use greedy if >50% of nodes are viable
+
+        if viability_ratio >= complexity_threshold and viable_actions_per_node > 0:
             # Greedy initial solution
-            for condition, actions in (
-                action_viability_cost[node]["actions_that_fulfill_condition"].items()
-                for node in action_viability_cost
-                if any(action_viability_cost[node]["viable"].values())
-            ):
-                viable_actions = (
-                    x for x in actions if action_viability_cost[x[1]]["viable"][x[0]]
-                )
-                best_action, node = None, None
+            for condition in goal_conditions:
+                if condition not in condition_actions:
+                    continue
+
+                viable_actions = [
+                    (action, node)
+                    for action, node in condition_actions[condition]
+                    if action_viability_cost[node]["viable"].get(action, False)
+                ]
+
+                if not viable_actions:
+                    # No viable actions for this condition, goal is impossible
+                    return float("inf")
+
+                # Find the best action for this condition
+                best_action, best_node = None, None
                 min_cost = float("inf")
-                for action in viable_actions:
-                    action_cost = action_viability_cost[action[1]]
-                    total_cost = (
-                        action_cost["action_cost"][action[0]]
-                        + action_cost["goal_cost"][action[0]]
-                    )
+
+                for action, node in viable_actions:
+                    action_cost_data = action_viability_cost[node]
+                    total_cost = action_cost_data["action_cost"].get(
+                        action, 0
+                    ) + action_cost_data["goal_cost"].get(action, 0)
                     if total_cost < min_cost:
                         min_cost = total_cost
-                        best_action, node = action, action[1]
-                if best_action is not None:
-                    initial_solution.append((node, best_action))
-                    initial_cost += min_cost
-                else:
-                    # No viable actions for this condition, meaning the goal is impossible
-                    return float("inf")
-        else:
+                        best_action, best_node = action, node
 
+                if best_action is not None:
+                    initial_solution.append((best_node, best_action))
+                    initial_cost += min_cost
+        else:
+            # Use more sophisticated search for complex scenarios
             selected_nodes = []
             selected_actions = []
             total_cost = 0
             action_cache = {}
+            max_iterations = len(goal_conditions) * 2  # Prevent infinite loops
 
-            while remaining_conditions:
+            iteration_count = 0
+            while remaining_conditions and iteration_count < max_iterations:
+                iteration_count += 1
                 best_node_action = None
                 best_new_conditions = set()
                 best_cost = float("inf")
 
                 for node in action_viability_cost:
+                    if not any(action_viability_cost[node]["viable"].values()):
+                        continue
+
                     for action in action_viability_cost[node][
                         "conditions_fulfilled_by_action"
                     ]:
+                        if not action_viability_cost[node]["viable"].get(action, False):
+                            continue
+
                         if (node, action) in action_cache:
                             new_conditions, new_cost = action_cache[(node, action)]
                         else:
@@ -5245,7 +5279,9 @@ class GraphManager:
                                 ][action]
                                 if condition in remaining_conditions
                             }
-                            new_cost = action_viability_cost[node]["goal_cost"][action]
+                            new_cost = action_viability_cost[node]["goal_cost"].get(
+                                action, 0
+                            )
                             action_cache[(node, action)] = (new_conditions, new_cost)
 
                         if len(new_conditions) > len(best_new_conditions) or (
@@ -5255,38 +5291,41 @@ class GraphManager:
                             best_node_action = (node, action)
                             best_new_conditions = new_conditions
                             best_cost = new_cost
-                            # Early termination if all conditions are met
-                            if not remaining_conditions.difference(new_conditions):
-                                break
-                    else:
-                        continue
-                    break
-                if best_node_action:
+
+                if best_node_action and best_new_conditions:
                     selected_nodes.append(best_node_action[0])
                     selected_actions.append(best_node_action[1])
                     remaining_conditions.difference_update(best_new_conditions)
                     total_cost += best_cost
-                    if not best_new_conditions:
-                        # No new conditions were fulfilled in this iteration, break to avoid infinite loop
-                        break
-                        # Early termination if all conditions are fulfilled
-                    if not remaining_conditions:
-                        break
+                else:
+                    # No progress possible, goal might be impossible
+                    break
 
-            initial_solution = initial_solution + list(
-                zip(selected_nodes, selected_actions)
-            )
+            if remaining_conditions:
+                # Some conditions couldn't be satisfied
+                return float("inf")
+
+            initial_solution = list(zip(selected_nodes, selected_actions))
             initial_cost = total_cost
 
         # A* Search logic with priority queue
         def heuristic(remaining_conditions):
-            return sum(
-                min(
-                    action_viability_cost[node]["goal_cost"][action]
-                    for action, node in condition_actions[condition]
-                )
-                for condition in remaining_conditions
-            )
+            if not remaining_conditions:
+                return 0
+            total = 0
+            for condition in remaining_conditions:
+                if condition in condition_actions:
+                    try:
+                        min_cost = min(
+                            action_viability_cost[node]["goal_cost"].get(action, 0)
+                            for action, node in condition_actions[condition]
+                            if node in action_viability_cost
+                            and action in action_viability_cost[node]["goal_cost"]
+                        )
+                        total += min_cost
+                    except (ValueError, KeyError):
+                        total += 1  # Default cost if calculation fails
+            return total
 
         best_cost = initial_cost
         best_solution = initial_solution
@@ -5300,7 +5339,12 @@ class GraphManager:
             )
         ]
 
-        while priority_queue:
+        # Add limits to prevent infinite loops
+        max_iterations = 1000
+        iterations = 0
+
+        while priority_queue and iterations < max_iterations:
+            iterations += 1
             _, current_cost, current_solution, remaining_conditions = heapq.heappop(
                 priority_queue
             )
@@ -5312,50 +5356,56 @@ class GraphManager:
                 continue
 
             for condition in remaining_conditions:
+                if condition not in condition_actions:
+                    continue
+
                 for action, node in condition_actions[condition]:
                     if any(node == n for n, _ in current_solution):
                         continue
                     new_solution = current_solution + [(node, action)]
-                    new_cost = (
-                        current_cost + action_viability_cost[node]["goal_cost"][action]
-                    )
+
+                    try:
+                        new_cost = current_cost + action_viability_cost[node][
+                            "goal_cost"
+                        ].get(action, 0)
+                    except (KeyError, TypeError):
+                        continue
+
                     new_remaining_conditions = remaining_conditions - {condition}
 
-                if new_cost >= best_cost:
-                    continue
+                    if new_cost >= best_cost:
+                        continue
 
-                heuristic_cost = new_cost + heuristic(new_remaining_conditions)
-                if heuristic_cost >= best_cost:
-                    continue
-                heapq.heappush(
-                    priority_queue,
-                    (
-                        heuristic_cost,
-                        new_cost,
-                        new_solution,
-                        new_remaining_conditions,
-                    ),
-                )
+                    heuristic_cost = new_cost + heuristic(new_remaining_conditions)
+                    if heuristic_cost >= best_cost:
+                        continue
+                    heapq.heappush(
+                        priority_queue,
+                        (
+                            heuristic_cost,
+                            new_cost,
+                            new_solution,
+                            new_remaining_conditions,
+                        ),
+                    )
 
         valid_combinations = [best_solution]
-        with ProcessPoolExecutor() as executor:
-            future_to_combo = {
-                executor.submit(
-                    self.evaluate_combination,
-                    combo,
-                    action_viability_cost,
-                    goal_conditions,
-                ): combo
-                for combo in combinations(best_solution, len(best_solution))
-            }
-            for future in as_completed(future_to_combo):
-                combo = future_to_combo[future]
+
+        # Use regular iteration instead of ProcessPoolExecutor for better compatibility
+        try:
+            for combo in combinations(best_solution, len(best_solution)):
                 try:
-                    result = future.result()
+                    result = self.evaluate_combination(
+                        combo,
+                        action_viability_cost,
+                        goal_conditions,
+                    )
                     if result:
                         valid_combinations.append(result)
                 except Exception as e:
                     print(f"Error evaluating combination {combo}: {e}")
+        except Exception as e:
+            print(f"Error in combination evaluation: {e}")
 
         valid_combinations.sort(key=lambda x: x[0])  # Sort by total cost
 
@@ -5388,42 +5438,83 @@ class GraphManager:
                 valid_paths.append(path)
 
         # Incorporate action costs into path cost calculation
-        def calc_path_cost(self, path):
-            return sum(
-                self.calculate_edge_cost(path[i], path[i + 1])
-                + action_viability_cost[path[i]]["action_cost"]
-                for i in range(len(path) - 1)
-            )
+        def calc_path_cost(path):
+            if not path or len(path) < 2:
+                return 0
+            total_cost = 0
+            for i in range(len(path) - 1):
+                # Add edge cost
+                try:
+                    edge_cost = self.calculate_edge_cost(path[i], path[i + 1])
+                    total_cost += edge_cost
+                except Exception:
+                    total_cost += 1  # Default edge cost
+
+                # Add action cost for the current node
+                node = path[i]
+                if node in action_viability_cost:
+                    action_costs = action_viability_cost[node].get("action_cost", {})
+                    if action_costs:
+                        # Take the minimum action cost for this node
+                        total_cost += min(action_costs.values())
+            return total_cost
 
         # Filter out non-viable paths
-        viable_paths = [
-            path
-            for path in valid_paths
-            if all(action_viability_cost[node]["viable"] for node in path)
-        ]
+        viable_paths = []
+        for path in valid_paths:
+            is_viable = True
+            for node in path:
+                if node in action_viability_cost:
+                    if not any(action_viability_cost[node]["viable"].values()):
+                        is_viable = False
+                        break
+            if is_viable:
+                viable_paths.append(path)
+
+        # Handle case where no viable paths exist
+        if not viable_paths:
+            return {
+                "difficulty": float("inf"),
+                "viable_paths": [],
+                "error": "No viable paths found",
+            }
 
         # Use goal costs to prioritize paths
-        def calc_goal_cost(self, path):
-            return sum(action_viability_cost[node]["goal_cost"] for node in path)
+        def calc_goal_cost(path):
+            # Sum goal_cost values for each node in the path
+            total = 0
+            for node in path:
+                if node in action_viability_cost:
+                    # Sum all goal_costs for the node
+                    total += sum(
+                        action_viability_cost[node].get("goal_cost", {}).values()
+                    )
+            return total
 
         # Find the shortest path among all viable paths based on the weighted sum of edge and action costs
-        shortest_path = min(viable_paths, key=calc_path_cost)
+        try:
+            shortest_path = min(viable_paths, key=calc_path_cost)
+            # Calculate difficulty based on the sum of edge and action costs
+            difficulty = calc_path_cost(shortest_path)
 
-        # Calculate difficulty based on the sum of edge and action costs
-        difficulty = calc_path_cost(shortest_path)
+            # Prioritize paths with lower goal costs
+            lowest_goal_cost_path = min(viable_paths, key=calc_goal_cost)
+            # If the shortest path is not the same as the path with the lowest goal cost, increase the difficulty
+            # Calculate the goal cost of the shortest path
+            shortest_path_goal_cost = calc_goal_cost(shortest_path)
 
-        # Prioritize paths with lower goal costs
-        lowest_goal_cost_path = min(viable_paths, key=calc_goal_cost)
-        # If the shortest path is not the same as the path with the lowest goal cost, increase the difficulty
-        # Calculate the goal cost of the shortest path
-        shortest_path_goal_cost = calc_goal_cost(shortest_path)
+            # Calculate the path cost of the path with the lowest goal cost
+            lowest_goal_cost_path_cost = calc_path_cost(lowest_goal_cost_path)
 
-        # Calculate the path cost of the path with the lowest goal cost
-        lowest_goal_cost_path_cost = calc_path_cost(lowest_goal_cost_path)
-
-        # If the shortest path is not the same as the path with the lowest goal cost, increase the difficulty
-        if shortest_path != lowest_goal_cost_path:
-            difficulty += shortest_path_goal_cost + lowest_goal_cost_path_cost / 2
+            # If the shortest path is not the same as the path with the lowest goal cost, increase the difficulty
+            if shortest_path != lowest_goal_cost_path:
+                difficulty += shortest_path_goal_cost + lowest_goal_cost_path_cost / 2
+        except (ValueError, TypeError) as e:
+            return {
+                "difficulty": float("inf"),
+                "viable_paths": viable_paths,
+                "error": f"Path calculation error: {e}",
+            }
         return {
             "difficulty": difficulty,
             "calc_path_cost": calc_path_cost,

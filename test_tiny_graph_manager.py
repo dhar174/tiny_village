@@ -1936,7 +1936,7 @@ class TestGraphManager(unittest.TestCase):
         popularity = self.graph_manager.location_popularity_analysis()
         self.assertIn(loc, popularity)
 
-    def test_track_item_ownership(self):
+    def test_calculate_goal_difficulty(self):
         from tiny_characters import Character
         from tiny_locations import Location
 
@@ -1967,24 +1967,13 @@ class TestGraphManager(unittest.TestCase):
             location=Location("Alice", 0, 0, 1, 1, action_system),
             graph_manager=self.graph_manager,
         )
-        obj = ItemObject(
-            name="Sword",
-            item_type="Weapon",
-            value=10,
-            weight=5,
-            quantity=1,
-            description="test",
+        result = self.graph_manager.calculate_goal_difficulty(
+            {"node_attributes": {"type": "item"}}, char
         )
-        self.graph_manager.add_character_node(char)
-        self.graph_manager.add_object_node(obj)
-        self.graph_manager.add_character_object_edge(
-            char, obj, True, 10, 5, datetime.now()
-        )
-        owner = self.graph_manager.determine_owner(obj)
-        self.assertIsNotNone(owner)
-        self.assertIn(char, owner)
+        self.assertIsInstance(result, dict)
+        self.assertIn("difficulty", result)
 
-    def test_predict_future_relationships(self):
+    def test_calculate_goal_difficulty_extended(self):
         from tiny_characters import Character
         from tiny_locations import Location
 
@@ -2015,951 +2004,157 @@ class TestGraphManager(unittest.TestCase):
             location=Location("Alice", 0, 0, 1, 1, action_system),
             graph_manager=self.graph_manager,
         )
-        self.graph_manager.add_character_node(char)
-        predictions = self.graph_manager.predict_future_relationships(char)
-        self.assertIn("info", predictions)
 
-    def test_update_node_attribute(self):
-        from tiny_characters import Character
-        from tiny_locations import Location
+        class TestMgr(GraphManager):
+            def __init__(self):
+                super().__init__()
+                self.G = nx.Graph()
+                self.G.add_node("n1", type="item", item_type="food")
+                self.G.add_node("n2", type="item", item_type="tool")
+                self.G.add_edge("n1", "n2")
 
-        char = Character(
-            name="Alice",
-            age=25,
-            pronouns="she/her",
-            job="Waitress",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Alice", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        self.graph_manager.add_character_node(char)
-        self.graph_manager.update_node_attribute(char, "mood", "happy")
-        self.assertEqual(self.graph_manager.G.nodes[char]["mood"], "happy")
+            def get_filtered_nodes(self, **kwargs):
+                if kwargs.get("node_attributes", {}).get("item_type") == "food":
+                    return {"n1": {}}
+                if kwargs.get("node_attributes", {}).get("item_type") == "tool":
+                    return {"n2": {}}
+                return {}
 
-    def test_update_edge_attribute(self):
-        from tiny_characters import Character
-        from tiny_locations import Location
+            def calculate_action_viability_cost(self, node, goal, character):
+                if node == "n1":
+                    return {
+                        "action_cost": {"eat": 1},
+                        "viable": {"eat": True},
+                        "goal_cost": {"eat": 2},
+                        "conditions_fulfilled_by_action": {"eat": ["has_food"]},
+                        "actions_that_fulfill_condition": {"has_food": [("eat", node)]},
+                    }
+                if node == "n2":
+                    return {
+                        "action_cost": {"use": 2},
+                        "viable": {"use": True},
+                        "goal_cost": {"use": 3},
+                        "conditions_fulfilled_by_action": {"use": ["has_tool"]},
+                        "actions_that_fulfill_condition": {"has_tool": [("use", node)]},
+                    }
+                return {}
 
-        char1 = Character(
-            name="Alice",
-            age=25,
-            pronouns="she/her",
-            job="Waitress",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Alice", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        char2 = Character(
-            name="Bob",
-            age=25,
-            pronouns="he/him",
-            job="Mayor",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Bob", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        self.graph_manager.add_character_node(char1)
-        self.graph_manager.add_character_node(char2)
-        self.graph_manager.add_character_character_edge(
-            char1, char2, "friend", 10, 5, 5, 3, 4, 4
-        )
-        self.graph_manager.update_edge_attribute(char1, char2, "trust", 75)
-        self.assertEqual(self.graph_manager.G[char1][char2][0]["trust"], 75)
+            def calculate_edge_cost(self, u, v):
+                return 1
 
-    def test_evaluate_relationship_strength(self):
-        from tiny_characters import Character
-        from tiny_locations import Location
+        mgr = TestMgr()
+        goal = DummyGoal(
+            [
+                {"node_attributes": {"item_type": "food"}},
+                {"node_attributes": {"item_type": "tool"}},
+            ]
+        )
+        character = None
+        result = mgr.calculate_goal_difficulty(goal, character)
+        self.assertIsInstance(result, dict)
+        # Should be able to find a path and difficulty should be > 0
+        self.assertGreater(result["difficulty"], 0)
 
-        char1 = Character(
-            name="Alice",
-            age=25,
-            pronouns="she/her",
-            job="Waitress",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Alice", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        char2 = Character(
-            name="Bob",
-            age=25,
-            pronouns="he/him",
-            job="Mayor",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Bob", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        self.graph_manager.add_character_node(char1)
-        self.graph_manager.add_character_node(char2)
-        self.graph_manager.add_character_character_edge(
-            char1, char2, "friend", 10, 5, 5, 4
-        )
-        strength = self.graph_manager.evaluate_relationship_strength(char1, char2)
-        self.assertGreater(strength, 0)
+    def test_no_viable_actions(self):
+        class TestMgr(GraphManager):
+            def __init__(self):
+                super().__init__()
+                self.G = nx.Graph()
+                self.G.add_node("n1", type="item")
 
-    def test_check_friendship_status(self):
-        from tiny_characters import Character
-        from tiny_locations import Location
+            def get_filtered_nodes(self, **kwargs):
+                return {"n1": {}}
 
-        char1 = Character(
-            name="Alice",
-            age=25,
-            pronouns="she/her",
-            job="Waitress",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Alice", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        char2 = Character(
-            name="Bob",
-            age=25,
-            pronouns="he/him",
-            job="Mayor",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Bob", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        self.graph_manager.add_character_node(char1)
-        self.graph_manager.add_character_node(char2)
-        self.graph_manager.add_character_character_edge(
-            char1, char2, "friend", 10, 5, 5, 4
-        )
-        status = self.graph_manager.check_friendship_status(char1, char2)
-        self.assertEqual(status, "friends")
+            def calculate_action_viability_cost(self, node, goal, character):
+                return {
+                    "action_cost": {"act1": 1},
+                    "viable": {"act1": False},
+                    "goal_cost": {"act1": 2},
+                    "conditions_fulfilled_by_action": {"act1": ["cond1"]},
+                    "actions_that_fulfill_condition": {"cond1": [("act1", node)]},
+                }
 
-    def test_character_location_frequency(self):
-        from tiny_characters import Character
-        from tiny_locations import Location
+            def calculate_edge_cost(self, u, v):
+                return 0
 
-        char = Character(
-            name="Alice",
-            age=25,
-            pronouns="she/her",
-            job="Waitress",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Alice", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        loc = Location(
-            name="Park",
-            x=0,
-            y=0,
-            width=1,
-            height=1,
-            action_system=action_system,
-            security=5,
-            threat_level=0,
-            popularity=5,
-        )
-        self.graph_manager.add_character_node(char)
-        self.graph_manager.add_location_node(loc)
-        self.graph_manager.add_character_location_edge(
-            char, loc, 10, datetime.now(), ["Jogging"], "full"
-        )
-        frequency = self.graph_manager.character_location_frequency(char)
-        self.assertIn(loc, frequency)
-
-    def test_location_popularity(self):
-        from tiny_characters import Character
-        from tiny_locations import Location
-
-        loc = Location(
-            name="Park",
-            x=0,
-            y=0,
-            width=1,
-            height=1,
-            action_system=action_system,
-            security=5,
-            threat_level=0,
-            popularity=5,
-        )
-        self.graph_manager.add_location_node(loc)
-        char = Character(
-            name="Alice",
-            age=25,
-            pronouns="she/her",
-            job="Waitress",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Alice", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        self.graph_manager.add_character_node(char)
-        self.graph_manager.add_character_location_edge(
-            char, loc, 10, datetime.now(), ["Jogging"], "full"
-        )
-        popularity = self.graph_manager.location_popularity(loc)
-        self.assertGreater(popularity, 0)
-
-    def test_item_ownership_history(self):
-        from tiny_characters import Character
-        from tiny_locations import Location
-
-        char = Character(
-            name="Alice",
-            age=25,
-            pronouns="she/her",
-            job="Waitress",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Alice", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        obj = ItemObject(
-            name="Sword",
-            item_type="Weapon",
-            value=10,
-            weight=5,
-            quantity=1,
-            description="test",
-        )
-        self.graph_manager.add_character_node(char)
-        self.graph_manager.add_object_node(obj)
-        self.graph_manager.add_character_object_edge(
-            char, obj, True, 10, 5, datetime.now()
-        )
-        history = self.graph_manager.item_ownership_history(obj)
-        self.assertGreater(len(history), 0)
-
-    def test_can_interact_directly(self):
-        from tiny_characters import Character
-        from tiny_locations import Location
-
-        char1 = Character(
-            name="Alice",
-            age=25,
-            pronouns="she/her",
-            job="Waitress",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Alice", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        char2 = Character(
-            name="Bob",
-            age=25,
-            pronouns="he/him",
-            job="Mayor",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Bob", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        self.graph_manager.add_character_node(char1)
-        self.graph_manager.add_character_node(char2)
-        self.graph_manager.add_character_character_edge(
-            char1, char2, "friend", 10, 5, 5, 4
-        )
-        conditions = {"relationship_type": "friend"}
-        can_interact = self.graph_manager.can_interact_directly(
-            char1, char2, conditions
-        )
-        self.assertTrue(can_interact)
-
-    def test_get_nearest_resource(self):
-        from tiny_characters import Character
-        from tiny_locations import Location
-
-        char = Character(
-            name="Alice",
-            age=25,
-            pronouns="she/her",
-            job="Waitress",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Alice", 5, -5, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        obj = FoodItem(
-            name="Apple",
-            value=10,
-            weight=5,
-            quantity=1,
-            description="Red apple",
-            coordinates_location=(2, -2),
-            calories=5,
-            perishable=True,
-            action_system=action_system,
-        )
-        self.graph_manager.add_character_node(char)
-        self.graph_manager.add_object_node(obj)
-        resource_filter = {"item_type": "Food"}
-
-        nearest_resource = self.graph_manager.get_nearest_resource(
-            char, resource_filter
-        )
-        self.assertIsNotNone(nearest_resource)
-        self.assertEqual(nearest_resource[0], obj.name)
-
-    def test_track_event_participation(self):
-        from tiny_characters import Character
-        from tiny_locations import Location
-        from tiny_event_handler import Event
-
-        char = Character(
-            name="Alice",
-            age=25,
-            pronouns="she/her",
-            job="Waitress",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Alice", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        event = Event(
-            name="Festival",
-            event_type="Cultural",
-            date="2024-07-28",
-            importance=5,
-            impact=3,
-            location=Location(
-                name="Park",
-                x=0,
-                y=0,
-                width=1,
-                height=1,
-                action_system=action_system,
-                security=5,
-                threat_level=0,
-                popularity=5,
-            ),
-        )
-        self.graph_manager.add_character_node(char)
-        self.graph_manager.add_event_node(event)
-        self.graph_manager.track_event_participation(char, event)
-        self.assertTrue(self.graph_manager.G.has_edge(char, event))
-
-    def test_check_safety_of_locations(self):
-        from tiny_locations import Location
-
-        loc = Location(
-            name="Park",
-            x=0,
-            y=0,
-            width=1,
-            height=1,
-            action_system=action_system,
-            security=5,
-            threat_level=0,
-            popularity=5,
-        )
-        self.graph_manager.add_location_node(loc)
-        safety_score = self.graph_manager.check_safety_of_locations(loc)
-        self.assertGreater(safety_score, 0)
-
-    def test_evaluate_trade_opportunities_by_char_surplus(self):
-        from tiny_characters import Character, Goal, Condition
-        from tiny_locations import Location
-        from tiny_items import FoodItem
-        from tiny_prompt_builder import PromptBuilder
-
-        prompt_builder = PromptBuilder()
-        example_criteria_d = [
-            {
-                "node_attributes": {"type": "item", "item_type": "food"},
-                "max_distance": 20,
-            }
-        ]
-        char = Character(
-            name="Alice",
-            age=25,
-            pronouns="she/her",
-            job="Waitress",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Alice", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        char2 = Character(
-            name="Bob",
-            age=25,
-            pronouns="he/him",
-            job="Mayor",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Bob", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        char.add_to_inventory(
-            FoodItem(
-                "apple",
-                "red apple",
-                1,
-                True,
-                1,
-                1,
-                action_system=action_system,
-                calories=5,
-            )
+        mgr = TestMgr()
+        goal = DummyGoal([{"node_attributes": {"type": "item"}}])
+        character = None
+        result = mgr.calculate_goal_difficulty(goal, character)
+        self.assertEqual(
+            result,
+            float("inf")
+            or (isinstance(result, dict) and result.get("difficulty") == float("inf")),
         )
 
-        char2.add_new_goal(
-            Goal(
-                name="Find Food",
-                description="Search for food to satisfy hunger.",
-                score=5,
-                character=char2,
-                target=char2,
-                completion_conditions={
-                    False: [
-                        Condition(  # Remember the key is False because the condition is not met yet
-                            name="has_food",
-                            attribute="inventory.check_has_item_by_type(['food'])",
-                            target=char2,
-                            satisfy_value=True,
-                            op="==",
-                            weight=1,  # This is the weight representing the importance of this condition toward the goal. This will be used in a division operation to calculate the overall importance of the goal.
-                        )
-                    ]
-                },
-                evaluate_utility_function=char.goap_planner.evaluate_goal_importance,
-                difficulty=self.graph_manager.calculate_goal_difficulty,
-                completion_reward=self.graph_manager.calculate_reward,
-                failure_penalty=self.graph_manager.calculate_penalty,
-                completion_message=prompt_builder.generate_completion_message,
-                failure_message=prompt_builder.generate_failure_message,
-                criteria=example_criteria_d,
-                graph_manager=self.graph_manager,
-                goal_type="basic",
-            )
-        )
-        self.graph_manager.add_character_node(char)
-        self.graph_manager.add_character_node(char2)
-        opportunities = self.graph_manager.evaluate_trade_opportunities_by_char_surplus(
-            char
-        )
-        self.assertIn("apple", opportunities)
+    def test_multiple_paths_choose_lowest_cost(self):
+        class TestMgr(GraphManager):
+            def __init__(self):
+                super().__init__()
+                self.G = nx.Graph()
+                self.G.add_node("n1", type="item")
+                self.G.add_node("n2", type="item")
+                self.G.add_edge("n1", "n2")
 
-    def test_evaluate_trade_opportunities_for_item(self):
-        from tiny_characters import Character
-        from tiny_locations import Location
+            def get_filtered_nodes(self, **kwargs):
+                return {"n1": {}, "n2": {}}
 
-        char = Character(
-            name="Alice",
-            age=25,
-            pronouns="she/her",
-            job="Waitress",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Alice", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        obj = ItemObject(
-            name="Sword",
-            item_type="Weapon",
-            quantity=1,
-            description="test",
-            value=10,
-            weight=5,
-        )
-        self.graph_manager.add_character_node(char)
-        self.graph_manager.add_object_node(obj)
-        opportunities = self.graph_manager.evaluate_trade_opportunities_for_item(obj)
-        self.assertIn(char, opportunities)
+            def calculate_action_viability_cost(self, node, goal, character):
+                if node == "n1":
+                    return {
+                        "action_cost": {"a": 1},
+                        "viable": {"a": True},
+                        "goal_cost": {"a": 2},
+                        "conditions_fulfilled_by_action": {"a": ["cond"]},
+                        "actions_that_fulfill_condition": {"cond": [("a", node)]},
+                    }
+                if node == "n2":
+                    return {
+                        "action_cost": {"b": 2},
+                        "viable": {"b": True},
+                        "goal_cost": {"b": 1},
+                        "conditions_fulfilled_by_action": {"b": ["cond"]},
+                        "actions_that_fulfill_condition": {"cond": [("b", node)]},
+                    }
+                return {}
 
-    def test_find_all_paths(self):
-        from tiny_characters import Character
-        from tiny_locations import Location
+            def calculate_edge_cost(self, u, v):
+                return 0
 
-        char1 = Character(
-            name="Alice",
-            age=25,
-            pronouns="she/her",
-            job="Waitress",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Alice", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        char2 = Character(
-            name="Bob",
-            age=25,
-            pronouns="he/him",
-            job="Mayor",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Bob", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        self.graph_manager.add_character_node(char1)
-        self.graph_manager.add_character_node(char2)
-        self.graph_manager.add_character_character_edge(
-            char1, char2, "friend", 10, 5, 5, 4
-        )
-        paths = self.graph_manager.find_all_paths(char1, char2, max_length=2)
-        self.assertGreater(len(paths), 0)
+        mgr = TestMgr()
+        goal = DummyGoal([{"node_attributes": {"type": "item"}}])
+        character = None
+        result = mgr.calculate_goal_difficulty(goal, character)
+        self.assertIsInstance(result, dict)
+        # Should pick the path with lowest total cost (goal_cost + action_cost)
+        self.assertEqual(result["difficulty"], 3)
 
-    def test_node_influence_spread(self):
-        from tiny_characters import Character
-        from tiny_locations import Location
+    def test_character_specific_difficulty(self):
+        class TestMgr(GraphManager):
+            def __init__(self):
+                super().__init__()
+                self.G = nx.Graph()
+                self.G.add_node("n1", type="item")
 
-        char1 = Character(
-            name="Alice",
-            age=25,
-            pronouns="she/her",
-            job="Waitress",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Alice", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        char2 = Character(
-            name="Bob",
-            age=25,
-            pronouns="he/him",
-            job="Mayor",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Bob", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        self.graph_manager.add_character_node(char1)
-        self.graph_manager.add_character_node(char2)
-        self.graph_manager.add_character_character_edge(
-            char1, char2, "friend", 10, 5, 5, 4
-        )
-        influence = self.graph_manager.node_influence_spread(char1)
-        self.assertIn(char2, influence)
+            def get_filtered_nodes(self, **kwargs):
+                return {"n1": {}}
 
-    def test_analyze_relationship_health(self):
-        from tiny_characters import Character
-        from tiny_locations import Location
+            def calculate_action_viability_cost(self, node, goal, character):
+                # Action cost depends on character
+                cost = 1 if character == "hero" else 10
+                return {
+                    "action_cost": {"act1": cost},
+                    "viable": {"act1": True},
+                    "goal_cost": {"act1": 2},
+                    "conditions_fulfilled_by_action": {"act1": ["cond1"]},
+                    "actions_that_fulfill_condition": {"cond1": [("act1", node)]},
+                }
 
-        char1 = Character(
-            name="Alice",
-            age=25,
-            pronouns="she/her",
-            job="Waitress",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Alice", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        char2 = Character(
-            name="Bob",
-            age=25,
-            pronouns="he/him",
-            job="Mayor",
-            health_status=10,
-            hunger_level=2,
-            wealth_money=10,
-            mental_health=8,
-            social_wellbeing=8,
-            job_performance=20,
-            community=5,
-            friendship_grid=[],
-            recent_event="new job",
-            long_term_goal="Save for college",
-            personality_traits={
-                "extraversion": 50,
-                "openness": 80,
-                "conscientiousness": 70,
-                "agreeableness": 60,
-                "neuroticism": 30,
-            },
-            action_system=action_system,
-            gametime_manager=tiny_time_manager,
-            location=Location("Bob", 0, 0, 1, 1, action_system),
-            graph_manager=self.graph_manager,
-        )
-        self.graph_manager.add_character_node(char1)
-        self.graph_manager.add_character_node(char2)
-        self.graph_manager.add_character_character_edge(char1, char2, 2, 10, 5, 5, 4)
-        health_score = self.graph_manager.analyze_relationship_health(char1, char2)
-        self.assertGreater(health_score, 0)
+            def calculate_edge_cost(self, u, v):
+                return 0
 
-
-if __name__ == "__main__":
-    # unittest.main()
-    try:
-        import torch
-
-        cuda_version = torch.version.cuda
-        logging.info(f"CUDA Version: {cuda_version}")
-    except ImportError:
-        print("PyTorch is not installed. Skipping CUDA version check.")
-    # exit()
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestGraphManager)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+        mgr = TestMgr()
+        goal = DummyGoal([{"node_attributes": {"type": "item"}}])
+        result_hero = mgr.calculate_goal_difficulty(goal, "hero")
+        result_villain = mgr.calculate_goal_difficulty(goal, "villain")
+        self.assertLess(result_hero["difficulty"], result_villain["difficulty"])

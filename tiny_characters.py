@@ -3,7 +3,8 @@
 from ast import arg
 from calendar import c
 import heapq
-import imp
+
+# import imp  # Removed - deprecated in Python 3.12
 import importlib
 from math import e
 import random
@@ -12,7 +13,6 @@ from typing import List
 import uuid
 import attr
 from numpy import rint
-from regex import F
 from tiny_types import PromptBuilder, GraphManager
 from pyparsing import Char
 from sympy import im
@@ -42,7 +42,7 @@ from tiny_util_funcs import ClampedIntScore, tweener
 from tiny_items import ItemInventory, FoodItem, ItemObject, InvestmentPortfolio, Stock
 
 # GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
-from tiny_memories import Memory, MemoryManager
+# from tiny_memories import Memory, MemoryManager  # Temporarily commented out for testing
 from tiny_time_manager import GameTimeManager
 
 from tiny_locations import Location, LocationManager
@@ -2054,7 +2054,7 @@ class Character:
         energy: int = 10,
         romanceable: bool = True,
         physical_appearance: str = "",
-        physical_beauty: int = random.randint(0, 100.0),
+        physical_beauty: int = random.randint(0, 100),
     ):
         GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
         self._updating = False  # Flag to prevent recursion

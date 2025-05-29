@@ -6,7 +6,6 @@ from re import T
 import uuid
 from typing import List
 
-from regex import F
 
 # from actions import Action, ActionSystem
 from tiny_locations import Location
