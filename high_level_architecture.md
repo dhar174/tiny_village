@@ -48,32 +48,30 @@ The TinyVillage system is designed as a modular, agent-based architecture. The p
 
 ```mermaid
 graph TD
-    A[MainApplication] -->|Triggers| B(EventHandler);
-    B -->|Events| A;
-    A -->|Updates Strategy| C(StrategyManager);
-    C -->|Gets State/Actions| D(GraphManager);
-    C -->|Requests Plan| E(GOAPPlanner);
-    E -->|World State, Action Costs| D;
-    C -->|Needs LLM Decision| F(PromptBuilder);
-    F -->|Character/World Context| D;
-    F -->|Character State| G(Character);
-    F -->|Sends Prompt| H(TinyBrainIO);
-    H -->|LLM Interaction| I((LLM));
-    I -->|LLM Text Response| J(OutputInterpreter);
-    J -->|Executable Actions| A;
-    A -->|Executes Action via| K(ActionSystem);
-    G -->|Executes Action via| K;
-    K -->|Updates State| D;
-    G -->|Updates Own State in| D;
-    G -->|Records Memory| L(MemoryManager);
-    D -->|Provides Data for Memory| L;
-    A -->|Render Updates| M(MapController);
-    G -->|Location/Movement| M;
-
+    A[MainApplication] -->|"Triggers"| B(EventHandler)
+    B -->|"Events"| A
+    A -->|"Updates Strategy"| C(StrategyManager)
+    C -->|"Gets State/Actions"| D(GraphManager)
+    C -->|"Requests Plan"| E(GOAPPlanner)
+    E -->|"World State, Action Costs"| D
+    C -->|"Needs LLM Decision"| F(PromptBuilder)
+    F -->|"Character/World Context"| D
+    F -->|"Character State"| G(Character)
+    F -->|"Sends Prompt"| H(TinyBrainIO)
+    H -->|"LLM Interaction"| I((LLM))
+    I -->|"LLM Text Response"| J(OutputInterpreter)
+    J -->|"Executable Actions"| A
+    A -->|"Executes Action via"| K(ActionSystem)
+    G -->|"Executes Action via"| K
+    K -->|"Updates State"| D
+    G -->|"Updates Own State in"| D
+    G -->|"Records Memory"| L(MemoryManager)
+    D -->|"Provides Data for Memory"| L
+    A -->|"Render Updates"| M(MapController)
+    G -->|"Location/Movement"| M
     subgraph LLM_Interface
         F
         H
         J
     end
-end
 ```
