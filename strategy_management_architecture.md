@@ -114,15 +114,15 @@ graph TB
     CHAR[tiny_characters.py<br/>Character Data]
     
     %% Main Workflow
-    EH -->|Detect Events| GC
-    GC -->|Trigger Strategy Update| SM
-    SM -->|Request Planning| GOAP
-    GOAP -->|Calculate Utilities| UF
-    UF -->|Return Scores| GOAP
-    GOAP -->|Return Plan| SM
-    SM -->|Return Decisions| GC
-    GC -->|Execute Actions| GC
-    GC -->|Generate New Events| EH
+    EH -->|1 Detect Events| GC
+    GC -->|2 Trigger Strategy Update| SM
+    SM -->|3 Request Planning| GOAP
+    GOAP -->|4 Calculate Utilities| UF
+    UF -->|5 Return Scores| GOAP
+    GOAP -->|6 Return Plan| SM
+    SM -->|7 Return Decisions| GC
+    GC -->|8 Execute Actions| GC
+    GC -->|9 Generate New Events| EH
     
     %% Cross-cutting Dependencies
     SM -.->|Get Character State| GM
