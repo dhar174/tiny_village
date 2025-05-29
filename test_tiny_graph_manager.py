@@ -2953,5 +2953,10 @@ class TestGraphManager(unittest.TestCase):
 
 if __name__ == "__main__":
     # unittest.main()
+    import torch
+
+    cuda_version = torch.version.cuda
+    print(f"CUDA Version: {cuda_version}")
+    # exit()
     suite = unittest.TestLoader().loadTestsFromTestCase(TestGraphManager)
     unittest.TextTestRunner(verbosity=2).run(suite)
