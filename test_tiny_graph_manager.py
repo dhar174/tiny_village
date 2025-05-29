@@ -2953,10 +2953,14 @@ class TestGraphManager(unittest.TestCase):
 
 if __name__ == "__main__":
     # unittest.main()
-    import torch
+    try:
+        import torch
+        import sys
 
-    cuda_version = torch.version.cuda
-    print(f"CUDA Version: {cuda_version}")
+        cuda_version = torch.version.cuda
+        sys.stderr.write(f"CUDA Version: {cuda_version}\n")
+    except ImportError:
+        print("PyTorch is not installed. Skipping CUDA version check.")
     # exit()
     suite = unittest.TestLoader().loadTestsFromTestCase(TestGraphManager)
     unittest.TextTestRunner(verbosity=2).run(suite)
