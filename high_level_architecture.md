@@ -69,7 +69,6 @@ graph TD
     D -->|"Provides Data for Memory"| L
     A -->|"Render Updates"| M(MapController)
     G -->|"Location/Movement"| M
-
     subgraph LLM_Interface
         F
         H
