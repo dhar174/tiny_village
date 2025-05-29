@@ -227,7 +227,8 @@ class GameplayController:
                     self.running = False
                 elif event.key == pygame.K_SPACE:
                     # Pause/unpause simulation
-                    pass
+                    self.paused = not getattr(self, "paused", False)
+                    print(f"Game {'paused' if self.paused else 'unpaused'}")
                 elif event.key == pygame.K_r:
                     # Reset/regenerate characters
                     self._reset_characters()
@@ -270,6 +271,10 @@ class GameplayController:
 
     def update_game_state(self, dt):
         """Update all game systems with delta time."""
+        # Check if game is paused
+        if getattr(self, "paused", False):
+            return  # Skip all updates when paused
+
         # Update the map controller (handles character movement and pathfinding)
         self.map_controller.update(dt)
 
@@ -333,6 +338,11 @@ class GameplayController:
             )
             self.screen.blit(char_count_text, (10, 10))
 
+            # Render pause status
+            if getattr(self, "paused", False):
+                pause_text = font.render("PAUSED", True, (255, 255, 0))
+                self.screen.blit(pause_text, (self.screen.get_width() - 100, 10))
+
             # Render time if available
             if hasattr(self, "gametime_manager"):
                 try:
@@ -367,6 +377,8 @@ class GameplayController:
             instructions = [
                 "Click characters to select them",
                 "Click buildings to interact",
+                "SPACE to pause/unpause",
+                "R to reset characters",
                 "ESC to quit",
             ]
 

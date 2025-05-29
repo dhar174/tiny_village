@@ -3183,13 +3183,74 @@ class Character:
         happiness *= cached_sigmoid_raw_approx_optimized(
             self.get_mental_health(), 100.0
         )
-        # TODO: Add happiness calculation based on motives
 
-        # TODO: Add happiness calculation based on social relationships
+        # Add happiness calculation based on motives
+        motive_satisfaction = 0
+        if hasattr(self, "motives") and self.motives:
+            try:
+                # Average satisfaction across all motives
+                basic_motives = [
+                    self.motives.get_food_motive().get_score(),
+                    self.motives.get_shelter_motive().get_score(),
+                    self.motives.get_safety_motive().get_score(),
+                    self.motives.get_social_motive().get_score(),
+                ]
+                motive_satisfaction = sum(basic_motives) / len(basic_motives)
+                happiness += cached_sigmoid_raw_approx_optimized(
+                    motive_satisfaction * 10, 100.0
+                )
+            except:
+                pass
 
-        # TODO: Add happiness calculation based on romantic relationships
+        # Add happiness calculation based on social relationships
+        social_happiness = 0
+        if hasattr(self, "relationships") and self.relationships:
+            try:
+                positive_relationships = sum(
+                    1 for rel in self.relationships.values() if rel > 0.5
+                )
+                total_relationships = max(len(self.relationships), 1)
+                social_score = (positive_relationships / total_relationships) * 100
+                social_happiness = cached_sigmoid_raw_approx_optimized(
+                    social_score, 100.0
+                )
+                happiness += social_happiness * 0.3  # Weight social relationships
+            except:
+                pass
 
-        # TODO: Add happiness calculation based on family relationships
+        # Add happiness calculation based on romantic relationships
+        romantic_happiness = 0
+        if hasattr(self, "romantic_partner") and self.romantic_partner:
+            try:
+                # If has romantic partner, check relationship quality
+                partner_relationship = self.relationships.get(self.romantic_partner, 0)
+                if partner_relationship > 0.7:
+                    romantic_happiness = cached_sigmoid_raw_approx_optimized(
+                        partner_relationship * 100, 100.0
+                    )
+                    happiness += (
+                        romantic_happiness * 0.2
+                    )  # Weight romantic relationships
+            except:
+                pass
+
+        # Add happiness calculation based on family relationships
+        family_happiness = 0
+        if hasattr(self, "family_members") and self.family_members:
+            try:
+                family_scores = []
+                for family_member in self.family_members:
+                    if family_member in self.relationships:
+                        family_scores.append(self.relationships[family_member])
+
+                if family_scores:
+                    avg_family_score = sum(family_scores) / len(family_scores)
+                    family_happiness = cached_sigmoid_raw_approx_optimized(
+                        avg_family_score * 100, 100.0
+                    )
+                    happiness += family_happiness * 0.25  # Weight family relationships
+            except:
+                pass
 
         return cached_sigmoid_raw_approx_optimized(happiness, 100.0)
 

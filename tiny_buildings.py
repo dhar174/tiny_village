@@ -1,5 +1,6 @@
 import logging
 import uuid
+import random
 from actions import Action, ActionSystem
 from tiny_locations import Location, LocationManager
 from tiny_types import Character, GraphManager
@@ -429,19 +430,89 @@ class House(Building):
 
 
 class CreateBuilding:
-    def __init__(self):
+    def __init__(self, map_data=None):
         self.description = "This is a class to create a building."
-        # if structure == None:
-        #     if name == None or height == None or width == None or length == None or address == None or stories == None:
-        #         return self.create_house_manually()
-        #     elif bedrooms == None or bathrooms == None:
-        #         return self.create_building(name, height, width, length, stories, address)
-        #     elif initial_beauty_value == None or price_value == None:
-        #         return self.create_house(name, height, width, length, address, stories, bedrooms, bathrooms)
-        #     else:
-        #         return self.create_house(name, height, width, length, address, stories, bedrooms, bathrooms, initial_beauty_value, price_value)
-        # else:
-        #     return self.create_house_by_type(structure)
+        self.map_data = map_data or {"width": 100, "height": 100, "buildings": []}
+        self.occupied_areas = set()  # Track occupied grid positions
+
+        # Initialize occupied areas with existing buildings
+        for building in self.map_data.get("buildings", []):
+            rect = building.get("rect")
+            if rect:
+                for x in range(rect.left, rect.right):
+                    for y in range(rect.top, rect.bottom):
+                        self.occupied_areas.add((x, y))
+
+    def find_valid_coordinates(self, width, length, max_attempts=100):
+        """
+        Find valid x, y coordinates for a building placement.
+
+        Args:
+            width: Building width in grid units
+            length: Building length in grid units
+            max_attempts: Maximum placement attempts before giving up
+
+        Returns:
+            tuple: (x, y) coordinates or (0, 0) if placement fails
+        """
+        for attempt in range(max_attempts):
+            # Generate random coordinates with buffer from edges
+            buffer = 5
+            max_x = max(buffer, self.map_data["width"] - width - buffer)
+            max_y = max(buffer, self.map_data["height"] - length - buffer)
+
+            if max_x <= buffer or max_y <= buffer:
+                logging.warning(f"Building too large for map: {width}x{length}")
+                return (0, 0)
+
+            x = random.randint(buffer, max_x)
+            y = random.randint(buffer, max_y)
+
+            # Check if placement area is free
+            placement_valid = True
+            for bx in range(x, x + width):
+                for by in range(y, y + length):
+                    if (bx, by) in self.occupied_areas:
+                        placement_valid = False
+                        break
+                if not placement_valid:
+                    break
+
+            if placement_valid:
+                # Reserve the area
+                for bx in range(x, x + width):
+                    for by in range(y, y + length):
+                        self.occupied_areas.add((bx, by))
+                return (x, y)
+
+        # If we can't find a spot, try systematic placement
+        return self._systematic_placement(width, length)
+
+    def _systematic_placement(self, width, length):
+        """
+        Systematically search for placement starting from corners.
+        """
+        buffer = 2
+        for x in range(buffer, self.map_data["width"] - width - buffer, 5):
+            for y in range(buffer, self.map_data["height"] - length - buffer, 5):
+                placement_valid = True
+                for bx in range(x, x + width):
+                    for by in range(y, y + length):
+                        if (bx, by) in self.occupied_areas:
+                            placement_valid = False
+                            break
+                    if not placement_valid:
+                        break
+
+                if placement_valid:
+                    # Reserve the area
+                    for bx in range(x, x + width):
+                        for by in range(y, y + length):
+                            self.occupied_areas.add((bx, by))
+                    return (x, y)
+
+        logging.warning("Could not find valid placement for building")
+        return (0, 0)
 
     def create_house_manually(self):
         self.name = input("What is the name of the building? ")
@@ -476,9 +547,13 @@ class CreateBuilding:
         initial_beauty_value=10,
         price_value=0,
     ):
-        # TODO: "Add x and y coordinates selection"
-        x = 0
-        y = 0
+        # Find valid coordinates for building placement
+        # Convert dimensions to grid units (assuming 1 unit per meter)
+        grid_width = max(1, int(width / 10))  # Scale down to grid units
+        grid_length = max(1, int(length / 10))
+
+        x, y = self.find_valid_coordinates(grid_width, grid_length)
+
         return House(
             name,
             x,
@@ -497,7 +572,13 @@ class CreateBuilding:
         )
 
     def create_building(self, name, height, width, length, stories, address):
-        return Building(name, height, width, length, stories, address)
+        # Find valid coordinates for building placement
+        grid_width = max(1, int(width / 10))
+        grid_length = max(1, int(length / 10))
+
+        x, y = self.find_valid_coordinates(grid_width, grid_length)
+
+        return Building(name, x, y, height, width, length, stories, address=address)
 
     def create_house_by_type(self, structure: str = "hovel"):
         if "hovel" in structure.lower():
