@@ -1,4 +1,4 @@
-""" GOAP System Structure
+"""GOAP System Structure
 Define Goals:
 Goals are end states that the character aims to achieve. These could range from personal (e.g., improve a relationship, learn a skill) to professional (e.g., get a promotion, change careers).
 Define Actions:
@@ -15,7 +15,7 @@ Use the output from the graph analysis to set conditions for actions. For exampl
 Graph-Based Effect Prediction:
 Predict the potential effects of actions on the character’s network by simulating changes in the graph. For instance, attending social events might strengthen certain relationships.
 Feedback Loop:
-Post-action, update the graph based on the outcomes, which then informs future GOAP planning. 
+Post-action, update the graph based on the outcomes, which then informs future GOAP planning.
 
 Further Development
 Action Definitions: Further detail actions with specific conditions and effects based on the character’s attributes and the graph analysis.
@@ -90,36 +90,28 @@ class Plan:
         """
         Replans the sequence of actions based on the current game state.
         """
-        from tiny_characters import Goal
-
         print("Replanning based on new game state...")
-        # # Example logic for dynamic replanning
-        # if self.character.get_state().get("hunger") > 80:
-        #     new_goal = Goal(
-        #         description="Find water",
-        #         character=self.character,
-        #         target=water_source,
-        #         score=8,
-        #         name="find_water",
-        #         completion_conditions=[...],
-        #         evaluate_utility=...,
-        #         difficulty=...,
-        #         completion_reward=...,
-        #         failure_penalty=...,
-        #         completion_message=...,
-        #         failure_message=...,
-        #         criteria=[...],
-        #     )
-        #     self.add_goal(new_goal)
-        #     new_action = Action(
-        #         name="search_for_water",
-        #         preconditions={...},
-        #         effects={...},
-        #         cost=4,
-        #         target=water_source,
-        #         initiator=self.character,
-        #     )
-        #     self.add_action(new_action, priority=1)
+
+        # Clear current action queue to rebuild with updated priorities
+        old_queue = list(self.action_queue)
+        self.action_queue = []
+
+        # Re-evaluate and re-prioritize actions based on current goals
+        for priority, action, dependencies in old_queue:
+            # Skip actions that are already completed
+            if action.name in self.completed_actions:
+                continue
+
+            # Re-calculate priority based on current state
+            # Higher priority (lower number) for more urgent actions
+            new_priority = priority
+
+            # Adjust priority based on action urgency and current goal progress
+            if hasattr(action, "cost") and hasattr(action, "urgency"):
+                new_priority = action.cost / max(action.urgency, 0.1)
+
+            # Re-add action with updated priority
+            heappush(self.action_queue, (new_priority, action, dependencies))
 
     def execute(self):
         while self.current_goal_index < len(self.goals):
@@ -177,22 +169,38 @@ class Plan:
                 self.execute()
 
     def find_alternative_action(self, failed_action):
-        # Logic to find an alternative action for the failed action
+        """Logic to find an alternative action for the failed action"""
         print(f"Finding alternative action for {failed_action.name}")
-        # Example alternative action (this should be dynamically determined)
-        return {
-            "action": Action(
-                name="alternative_action",
-                preconditions={...},
-                effects={...},
-                cost=5,
-                target=failed_action.target,
-                initiator=failed_action.initiator,
-                related_skills=failed_action.related_skills,
-            ),
-            "priority": 1,
-            "dependencies": [],
-        }
+
+        # Look for actions with similar effects but different preconditions
+        alternative_name = f"alt_{failed_action.name}"
+
+        # Create a simplified alternative with relaxed preconditions
+        try:
+            # Copy basic properties from failed action
+            alt_preconditions = {}
+            alt_effects = getattr(failed_action, "effects", {})
+            alt_cost = getattr(failed_action, "cost", 5) + 2  # Slightly higher cost
+
+            # Create alternative action with more flexible requirements
+            alternative_action = Action(
+                name=alternative_name,
+                preconditions=alt_preconditions,  # Empty preconditions for flexibility
+                effects=alt_effects,
+                cost=alt_cost,
+                target=getattr(failed_action, "target", None),
+                initiator=getattr(failed_action, "initiator", None),
+                related_skills=getattr(failed_action, "related_skills", []),
+            )
+
+            return {
+                "action": alternative_action,
+                "priority": 2,  # Lower priority than original
+                "dependencies": [],
+            }
+        except Exception as e:
+            print(f"Could not create alternative action: {e}")
+            return None
 
     def __str__(self):
         return f"Plan: {self.name} - Goals: {self.goals} - Actions: {self.action_queue} - Completed Actions: {self.completed_actions} - Current Goal Index: {self.current_goal_index} - Current Action Index: {self.current_action_index} - Completed: {self.evaluate()}"
@@ -369,6 +377,8 @@ class GOAPPlanner:
                 f"\nAdditional argument:\n {arg} \nof type {type(kwargs[arg])}"
             )
         # TODO: We need Machine Learning here
+        # For now, implement a comprehensive heuristic-based approach
+
         # Fetch character attributes
         health = character.health_status
         hunger = character.hunger_level
@@ -396,9 +406,41 @@ class GOAPPlanner:
                 for rel in relationships.keys()
             )
 
-            # TODO: Implement the relationship analysis
-            # for rel in relationships.keys():
-            #     impact = self.graph_manager.calculate_how_goal_impacts_character(
+            # Implement the relationship analysis
+            try:
+                for rel_name, rel_data in relationships.items():
+                    # Calculate how this goal impacts each relationship
+                    if hasattr(graph_manager, "calculate_how_goal_impacts_character"):
+                        impact = graph_manager.calculate_how_goal_impacts_character(
+                            character, rel_name, goal
+                        )
+
+                        # Weight the impact by relationship strength
+                        rel_strength = graph_manager.evaluate_relationship_strength(
+                            character, rel_name
+                        )
+                        weighted_impact = impact * rel_strength
+
+                        # Add to social factor (positive or negative)
+                        social_factor += weighted_impact
+
+                    # Consider relationship type and goals
+                    if hasattr(rel_data, "relationship_type"):
+                        rel_type = rel_data.relationship_type
+                        if rel_type in ["family", "romantic"]:
+                            # Family and romantic relationships have higher impact
+                            social_factor *= 1.5
+                        elif rel_type in ["friend", "colleague"]:
+                            social_factor *= 1.2
+                        elif rel_type in ["enemy", "rival"]:
+                            # Negative relationships might actually motivate certain goals
+                            if goal_type in ["competitive", "achievement"]:
+                                social_factor += 10  # Boost competitive goals
+            except Exception as e:
+                logging.warning(
+                    f"Error in relationship analysis for goal evaluation: {e}"
+                )
+                # Continue with basic social factor calculation
             #         goal, character
             #     )
 
@@ -546,13 +588,68 @@ class GOAPPlanner:
         return progress * goal.urgency + motives.hope_motive.value
 
     def calculate_utility(self, action, character):
-        # Placeholder for calculating action utility
-        return action["satisfaction"] - action["energy_cost"]
+        """Calculate action utility based on multiple factors"""
+        if isinstance(action, dict):
+            # Handle dictionary format
+            satisfaction = action.get("satisfaction", 0)
+            energy_cost = action.get("energy_cost", 0)
+            urgency = action.get("urgency", 1)
+            base_utility = satisfaction - energy_cost
+        else:
+            # Handle Action object format
+            satisfaction = getattr(action, "satisfaction", 0)
+            energy_cost = getattr(action, "cost", 0)
+            urgency = getattr(action, "urgency", 1)
+            base_utility = satisfaction - energy_cost
+
+        # Factor in character state if available
+        if hasattr(character, "get_state"):
+            char_state = character.get_state()
+            # Adjust utility based on character's current needs
+            if "energy" in char_state and energy_cost > 0:
+                energy_factor = char_state["energy"] / 100.0  # Normalize to 0-1
+                base_utility *= energy_factor
+
+        # Apply urgency multiplier
+        final_utility = base_utility * urgency
+
+        return final_utility
 
     def evaluate_utility(self, plan, character):
-        # Placeholder for evaluating the utility of a plan
-        return max(plan, key=lambda x: self.calculate_utility(x, character))
+        """Evaluate the utility of a plan by finding the action with highest utility"""
+        if not plan:
+            return None
+
+        try:
+            return max(plan, key=lambda x: self.calculate_utility(x, character))
+        except (TypeError, ValueError) as e:
+            print(f"Error evaluating plan utility: {e}")
+            return plan[0] if plan else None
 
     def evaluate_feasibility_of_goal(self, goal, state):
-        # Placeholder for evaluating the feasibility of a goal
-        return all(goal[k] <= state.get(k, 0) for k in goal)
+        """Evaluate if a goal is feasible given the current state"""
+        if not goal or not state:
+            return False
+
+        # Handle different goal formats
+        if hasattr(goal, "completion_conditions"):
+            # Goal object with completion conditions
+            conditions = goal.completion_conditions
+            if isinstance(conditions, dict):
+                return all(state.get(k, 0) >= v for k, v in conditions.items())
+            elif isinstance(conditions, list):
+                # Assume conditions are callable functions
+                return all(
+                    condition(state) if callable(condition) else True
+                    for condition in conditions
+                )
+        elif isinstance(goal, dict):
+            # Dictionary format goal
+            return all(
+                state.get(k, 0) >= v
+                for k, v in goal.items()
+                if isinstance(v, (int, float))
+            )
+
+        # Default to feasible if we can't determine otherwise
+        return True
