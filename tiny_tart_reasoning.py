@@ -166,7 +166,7 @@ def compute_reward(state, action, next_state):
         return float(reward)
 
     except Exception as e:
-        print(f"Error computing reward: {e}")
+        logging.error(f"Error computing reward: {e}")
         return 0.0
 
 
