@@ -1,7 +1,3 @@
-from ast import Raise
-from calendar import c
-from cgitb import text
-import dis
 import html
 import json
 import pickle
@@ -11,9 +7,7 @@ import random
 import math
 import re
 import time
-import token
-from typing import final
-from cycler import V
+
 from collections import deque
 from networkx import node_link_data
 import numpy as np
@@ -1824,6 +1818,10 @@ class FlatMemoryAccess:
             yield memory
 
 
+# Global variable declarations - initialized here to prevent NameError in class definitions
+# These will be properly initialized in the main section or when the module is imported
+manager = None
+model = None
 sentiment_analysis = SentimentAnalysis()
 
 
@@ -5077,12 +5075,16 @@ def manage_index_and_search(index_type, normalization, filename, memory_dict, qu
 # for memory in retrieved_memories:
 #     #print(memory.description)
 if __name__ == "__main__":
+    # Declare global variables to ensure we're modifying the module-level variables
+    global manager, model, sentiment_analysis
+    
     tiny_calendar = ttm.GameCalendar()
     tiny_time_manager = ttm.GameTimeManager(tiny_calendar)
     manager = MemoryManager(tiny_time_manager, "ip_no_norm.bin")
     tiny_brain_io = tbi.TinyBrainIO("alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2")
 
     model = EmbeddingModel()
+    sentiment_analysis = SentimentAnalysis()
 
     # Determine whether there is a saved flat_access_memories file
     if os.path.exists("flat_access_memories.pkl"):

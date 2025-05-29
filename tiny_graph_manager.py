@@ -26,8 +26,7 @@ from tiny_jobs import Job
 
 # from actions import Action, State, ActionSystem
 from tiny_items import ItemInventory, ItemObject, InvestmentPortfolio, Stock
-
-# import tiny_memories  # Temporarily commented out for testing
+import tiny_memories  # Temporarily commented out for testing
 from tiny_utility_functions import is_goal_achieved
 import numpy as np
 from tiny_time_manager import GameTimeManager as tiny_time_manager
@@ -4121,8 +4120,11 @@ class GraphManager:
             float: Influence score from memories.
         """
         if topic:
-            # topic = tiny_memories.MemoryManager().search_memories(topic)  # Temporarily commented out
-            pass
+            topic = tiny_memories.MemoryManager().search_memories(
+                topic
+            )  # Temporarily commented out
+        # else:
+        #     topic = tiny_memories.MemoryManager().get_all_memories(character)
         return 0.5  # Example fixed return value
 
     # More edge methods for other types (Location-Location, Item-Item, etc.), and edge methods from previous parts
