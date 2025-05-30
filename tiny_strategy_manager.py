@@ -162,29 +162,29 @@ class StrategyManager:
         # ... (rest of original logic, likely needs rework)
         return []
 
-    def plan_daily_activities(self, character: Character):
-        # This method also needs integration with the new get_daily_actions
-        # and potentially a GOAP system that consumes utility-ranked actions.
-        print(f"Warning: plan_daily_activities called for {character.name if hasattr(character, 'name') else 'Unknown Character'}.")
-        
-        # Define the goal for daily activities (example, might come from character)
-        # daily_goal = Goal(name="HaveAGoodDay", target_effects={"happiness": 0.5}, priority=0.8) 
-        daily_goal = None # For now, let get_daily_actions work without a specific goal
+    def plan_daily_activities(self, character):
+        """
+        Plans the daily activities for the given character.
+        It defines the goal for daily activities, gets potential actions, and uses the graph to analyze current relationships and preferences.
+        """
+        # Define the goal for daily activities
+        goal = {"satisfaction": max, "energy_usage": min}
 
-        # Get potential actions, now ranked by utility
-        ranked_actions = self.get_daily_actions(character, current_goal=daily_goal)
+        # Get potential actions from a dynamic or context-specific action generator
+        actions = self.get_daily_actions(character)
 
-        # The original plan involved GOAPPlanner and graph_analysis.
-        # For this subtask, we'll just return the top ranked actions as the "plan".
-        # A real GOAP system would use these utilities to form a sequence.
-        
-        # if self.goap_planner and hasattr(self, 'graph_analysis'):
-        #    current_state = self.graph_analysis(character_graph, character, "daily") # Needs character_graph
-        #    plan = self.goap_planner(character, goal, current_state, actions)
-        #    final_decision = evaluate_utility(plan, character) # evaluate_utility is for plans
-        #    return final_decision
-        
-        return ranked_actions[:3] # Return top 3 actions as a simple plan
+        # Use the graph to analyze current relationships and preferences
+        current_state = self.graph_analysis(character_graph, character, "daily")
+
+        # Plan the career steps using GOAP
+        plan = self.goap_planner(character, goal, current_state, actions)
+
+        # Evaluate the utility of each step in the plan
+        final_decision = evaluate_utility(plan, character)
+
+        return final_decision
+
+    def get_daily_actions(self, character):
 
     def get_career_actions(self, character, job_details):
         # This is a placeholder and would need similar utility-based ranking

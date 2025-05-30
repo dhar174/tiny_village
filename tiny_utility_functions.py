@@ -5,17 +5,8 @@ What happens: Actions are evaluated based on their expected outcomes, like impro
 
 from actions import Action, State # Assuming Action class is available and has cost & effects
 
-# --- Placeholder Goal Class (if not available elsewhere) ---
-class Goal:
-    def __init__(self, name, target_effects=None, priority=1.0):
-        self.name = name
-        # target_effects: dict, e.g., {"hunger": -0.7} (meaning goal is to reduce hunger by 0.7)
-        # or {"has_item_A": True}
-        self.target_effects = target_effects if target_effects else {}
-        self.priority = priority # 0.0 to 1.0+
-
-    def __repr__(self):
-        return f"Goal(name='{self.name}', priority={self.priority}, target_effects={self.target_effects})"
+# function that evaluates the current importance of the goal based on the character's state and the environment.
+# tiny_utility_functions.py
 
 # --- Existing Functions ---
 def calculate_importance(
@@ -27,10 +18,46 @@ def calculate_importance(
     event_participation_factor,
     goal_importance,
 ):
+    """
+    Calculate the importance of a goal based on character stats, goal attributes, and additional factors.
+    :param health: Character's health level.
+    :param hunger: Character's hunger level.
+    :param social_needs: Character's social needs level.
+    :param goal_urgency: Urgency of the goal.
+    :param goal_benefit: Benefit of achieving the goal.
+    :param goal_consequence: Consequence of not achieving the goal.
+    :param current_activity: Character's current activity.
+    :param social_factor: Influence of relationships.
+    :param location_factor: Impact of location relevance.
+    :param event_factor: Impact of current events.
+    :param resource_factor: Availability of needed resources.
+    :param social_influence: Social influence on the character.
+    :param potential_utility: Utility of achieving the goal.
+    :param path_achieves_goal: Whether the path will achieve the goal.
+    :param safety_factor: Safety of the goal location.
+    :param event_participation_factor: Character's participation in relevant events.
+    :param nearest_resource: Proximity to the nearest resource.
+    :param goal_importance: Specific importance score based on goal type.
+    :return: A float representing the importance score.
+    """
+    # Example weighting factors
     health_weight = 0.05
     hunger_weight = 0.1
     social_needs_weight = 0.05
-    # ... (rest of original weights)
+    urgency_weight = 0.15
+    benefit_weight = 0.1
+    consequence_weight = 0.1
+    social_weight = 0.1
+    location_weight = 0.05
+    event_weight = 0.05
+    resource_weight = 0.05
+    social_influence_weight = 0.1
+    potential_utility_weight = 0.1
+    path_achieves_goal_weight = 0.1
+    safety_weight = 0.05
+    event_participation_weight = 0.05
+    nearest_resource_weight = 0.05
+    goal_importance_weight = 0.2  # Added to incorporate specific goal importance
     social_weight = 0.1
     event_participation_weight = 0.05
     goal_importance_weight = 0.2
@@ -48,6 +75,15 @@ def calculate_importance(
 def evaluate_goal_importance(
     goal, character_state: State, environment: dict, difficulty: float, criteria: dict
 ):
+    """
+    Evaluates the importance of a goal based on the character's current state and the environment.
+    Args:
+        goal (Goal): The goal to evaluate.
+        character_state (State): The character's current state.
+        environment (dict): The environment's state.
+    Returns:
+        importance (int): The importance of the goal.
+    """
     importance = 0
     if hasattr(goal, 'attributes') and isinstance(goal.attributes, dict):
         for attribute, value in goal.attributes.items():
@@ -61,12 +97,12 @@ def evaluate_goal_importance(
     return importance
 
 def is_goal_achieved(goal, character_state: State):
-    if hasattr(goal, 'attributes') and isinstance(goal.attributes, dict):
-        for attribute, value in goal.attributes.items():
-            if character_state.get(attribute, 0) < value:
+    if hasattr(goal, 'target_effects') and isinstance(goal.target_effects, dict):
+        for effect, target_value in goal.target_effects.items():
+            if character_state.get(effect, 0) < target_value:
                 return False
         return True
-    return False # Default if goal has no attributes to check
+    return False # Default if goal has no target_effects to check
 
 # --- New Utility Calculation Functions ---
 
@@ -98,19 +134,19 @@ def calculate_action_utility(character_state: dict, action: Action, current_goal
                 # Higher current hunger + action reduces hunger = good
                 current_hunger = character_state.get("hunger", 0.0)
                 if change < 0: # Action reduces hunger
-                    need_fulfillment_score += current_hunger * abs(change) * 20.0 # Scaler for impact
+                    need_fulfillment_score += current_hunger * abs(change) * HUNGER_SCALER # Scaler for impact
             elif attribute == "energy":
                 # Lower current energy + action increases energy = good
                 current_energy = character_state.get("energy", 0.0) # Assume 0 is empty, 1 is full
                 if change > 0: # Action increases energy
-                    need_fulfillment_score += (1.0 - current_energy) * change * 15.0 # Scaler for impact
+                    need_fulfillment_score += (1.0 - current_energy) * change * ENERGY_SCALER # Scaler for impact
             elif attribute == "money":
                 # This is a resource change, not directly "need" fulfillment in the same way.
                 # Could be handled by specific actions like "Work" having positive utility here,
                 # or costs handling money decrease.
                 # For now, let's say getting money is a direct utility gain if not a primary need.
                 if change > 0:
-                    need_fulfillment_score += change * 0.5 # Money gained is somewhat good
+                    need_fulfillment_score += change * MONEY_SCALER # Money gained is somewhat good
     
     utility += need_fulfillment_score
 
