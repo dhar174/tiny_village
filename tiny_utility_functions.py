@@ -1,16 +1,20 @@
-""" 
+"""
 4. Utility Evaluation
 Where it happens: Part of goap_system.py or a dedicated utility module
-What happens: Actions are evaluated based on their expected outcomes, like improving mood or health, with adjustments based on current needs and previous experiences. """
+What happens: Actions are evaluated based on their expected outcomes, like improving mood or health, with adjustments based on current needs and previous experiences.
+"""
 
-# from tiny_characters import Goal
-from actions import Action, State
-
+from actions import (
+    Action,
+    State,
+)  # Assuming Action class is available and has cost & effects
+from tiny_types import Goal  # Import Goal class
 
 # function that evaluates the current importance of the goal based on the character's state and the environment.
 # tiny_utility_functions.py
 
 
+# --- Existing Functions ---
 def calculate_importance(
     health,
     hunger,
@@ -90,86 +94,182 @@ def evaluate_goal_importance(
         importance (int): The importance of the goal.
     """
     importance = 0
-    # Evaluate the importance of the goal based on the character's state
-    for attribute, value in goal.attributes.items():
-        importance += value * character_state[attribute]
+    if hasattr(goal, "attributes") and isinstance(goal.attributes, dict):
+        for attribute, value in goal.attributes.items():
+            # Assuming character_state can be accessed like a dict or has a get method
+            importance += value * character_state.get(attribute, 0)
 
-    # Adjust the importance based on the environment
-    for attribute, value in environment.items():
-        if attribute in goal.attributes:
-            importance += value * goal.attributes[attribute]
-
+    if (
+        hasattr(goal, "attributes")
+        and isinstance(goal.attributes, dict)
+        and isinstance(environment, dict)
+    ):
+        for attribute, value in environment.items():
+            if attribute in goal.attributes:
+                importance += value * goal.attributes[attribute]
     return importance
 
 
 def is_goal_achieved(goal, character_state: State):
+    if hasattr(goal, "target_effects") and isinstance(goal.target_effects, dict):
+        for effect, target_value in goal.target_effects.items():
+            if character_state.get(effect, 0) < target_value:
+                return False
+        return True
+    return False  # Default if goal has no target_effects to check
+
+
+# --- New Utility Calculation Functions ---
+
+
+def calculate_action_utility(
+    character_state: dict, action: Action, current_goal: Goal = None
+) -> float:
     """
-    Checks if the goal has been achieved based on the character's current state.
+    Calculates the utility of a single action for a character.
 
-    Args:
-        goal (Goal): The goal to check.
-        character_state (State): The character's current state.
-
-    Returns:
-        achieved (bool): True if the goal is achieved, False otherwise.
+    Assumptions:
+    - character_state (dict): Keys are need/resource names (e.g., "hunger", "energy", "money").
+        - For needs like "hunger": Higher value means more need (0 is full, 1+ is very hungry).
+        - For resources like "energy", "money": Higher value means more resource.
+    - action.cost (float): Represents a generic cost (e.g., time, effort).
+    - action.effects (list of dicts): Each dict is `{'attribute': str, 'change_value': float}`.
+        - For "hunger", a negative change_value is beneficial (reduces hunger).
+        - For "energy", a positive change_value is beneficial (increases energy).
+    - current_goal (Goal object, optional): Assumed to have `name` and `target_effects` (dict).
     """
-    for attribute, value in goal.attributes.items():
-        if character_state.get(attribute, 0) < value:
-            return False
-    return True
+    utility = 0.0
+    need_fulfillment_score = 0.0
+    goal_progress_score = 0.0
+
+    # 1. Need Fulfillment
+    if action.effects:
+        for effect in action.effects:
+            attribute = effect.get("attribute")
+            change = effect.get("change_value", 0.0)
+
+            if attribute == "hunger":
+                # Higher current hunger + action reduces hunger = good
+                current_hunger = character_state.get("hunger", 0.0)
+                if change < 0:  # Action reduces hunger
+                    need_fulfillment_score += (
+                        current_hunger * abs(change) * HUNGER_SCALER
+                    )  # Scaler for impact
+            elif attribute == "energy":
+                # Lower current energy + action increases energy = good
+                current_energy = character_state.get(
+                    "energy", 0.0
+                )  # Assume 0 is empty, 1 is full
+                if change > 0:  # Action increases energy
+                    need_fulfillment_score += (
+                        (1.0 - current_energy) * change * ENERGY_SCALER
+                    )  # Scaler for impact
+            elif attribute == "money":
+                # This is a resource change, not directly "need" fulfillment in the same way.
+                # Could be handled by specific actions like "Work" having positive utility here,
+                # or costs handling money decrease.
+                # For now, let's say getting money is a direct utility gain if not a primary need.
+                if change > 0:
+                    need_fulfillment_score += (
+                        change * MONEY_SCALER
+                    )  # Money gained is somewhat good
+
+    utility += need_fulfillment_score
+
+    # 2. Goal Progress
+    if (
+        current_goal
+        and hasattr(current_goal, "target_effects")
+        and current_goal.target_effects
+    ):
+        if action.effects:
+            for effect in action.effects:
+                attr = effect.get("attribute")
+                change = effect.get("change_value", 0.0)
+                if attr in current_goal.target_effects:
+                    goal_target_change = current_goal.target_effects[attr]
+                    # If action moves attribute towards goal (e.g., hunger goal -0.5, action does -0.2)
+                    if (goal_target_change < 0 and change < 0) or (
+                        goal_target_change > 0 and change > 0
+                    ):
+                        # Simple progress: add priority * scale. More sophisticated: % of goal achieved.
+                        goal_progress_score += current_goal.priority * 25.0
+                        # Break if one effect contributes, to avoid over-counting for multi-effect actions
+                        # This is a simplification.
+                        break
+
+    utility += goal_progress_score
+
+    # 3. Action Cost
+    # Assuming action.cost is a non-negative value representing effort/time/direct_resource_depletion
+    # This cost is separate from specific resource changes in 'effects' (e.g. an Eat action might have low cost but eating an item removes it)
+    action_cost_score = 0.0
+    if hasattr(action, "cost"):
+        action_cost_score = float(action.cost) * 10.0  # Scaler for cost impact
+
+    utility -= action_cost_score
+
+    # Consider inherent utility/disutility of certain actions if not captured by needs/goals/cost
+    # Example: "Rest" might have a small positive base utility if not costly and energy is low.
+    # "Argue" might have a small negative base utility.
+    # For now, this is not explicitly added.
+
+    return utility
 
 
-# class UtilityEvaluator:
-#     """
-#     The UtilityEvaluator class is responsible for evaluating the utility of each possible action based on the character's current state and the planning context.
-#     """
+def calculate_plan_utility(
+    character_state: dict,
+    plan: list[Action],
+    current_goal: Goal = None,
+    simulate_effects=False,
+) -> float:
+    """
+    Calculates the utility of a sequence of actions (a plan).
 
-#     def __init__(self, actions, character_state, planning_context):
-#         self.actions = actions
-#         self.character_state = character_state
-#         self.planning_context = planning_context
+    If simulate_effects is True, the character_state is updated after each action
+    to calculate the utility of subsequent actions more accurately.
+    """
+    total_utility = 0.0
 
-#     def evaluate_utility(self):
-#         """
-#         Evaluates the utility of each possible action.
+    if not simulate_effects:
+        for action in plan:
+            total_utility += calculate_action_utility(
+                character_state, action, current_goal
+            )
+    else:
+        # Create a deep copy for simulation if character_state can contain nested dicts/lists
+        # For simple dict of floats, .copy() is fine.
+        simulated_state = character_state.copy()
+        for action in plan:
+            action_utility = calculate_action_utility(
+                simulated_state, action, current_goal
+            )
+            total_utility += action_utility
 
-#         Returns:
-#             ranked_actions (list): Actions sorted by their utility scores.
-#         """
-#         utilities = {}
-#         for action in self.actions:
-#             utility_score = 0
-#             # Evaluate base on planning context specifics
-#             if self.planning_context == "daily":
-#                 utility_score += (
-#                     action["time_efficiency"] * self.character_state["time_preference"]
-#                 )
-#                 utility_score += (
-#                     action["satisfaction"]
-#                     * self.character_state["happiness_importance"]
-#                 )
-#             elif self.planning_context == "career":
-#                 utility_score += (
-#                     action["career_growth"] * self.character_state["career_ambition"]
-#                 )
-#                 utility_score += (
-#                     action["risk"] * -1 * self.character_state["risk_aversion"]
-#                 )
-#             elif self.planning_context == "relationship":
-#                 utility_score += (
-#                     action["relationship_improvement"]
-#                     * self.character_state["social_importance"]
-#                 )
-#                 utility_score += (
-#                     action["emotional_cost"]
-#                     * -1
-#                     * self.character_state["emotional_stability"]
-#                 )
+            # Update simulated_state based on action's effects
+            if action.effects:
+                for effect in action.effects:
+                    attribute = effect.get("attribute")
+                    change = effect.get("change_value", 0.0)
 
-#             utilities[action["name"]] = utility_score
+                    if attribute:  # Ensure attribute is not None
+                        current_value = simulated_state.get(attribute, 0.0)
+                        # Special handling for needs like hunger (lower is better) vs resources (higher is better)
+                        # This simplistic update assumes all attributes are numeric and additive/subtractive.
+                        simulated_state[attribute] = current_value + change
 
-#         # Sort actions based on utility scores in descending order
-#         ranked_actions = sorted(
-#             utilities.items(), key=lambda item: item[1], reverse=True
-#         )
-#         return [action[0] for action in ranked_actions]
+                        # Clamp values if necessary (e.g., hunger 0-1, energy 0-1)
+                        if attribute == "hunger":
+                            simulated_state[attribute] = max(
+                                0.0, min(simulated_state[attribute], 1.0)
+                            )
+                        elif attribute == "energy":
+                            simulated_state[attribute] = max(
+                                0.0, min(simulated_state[attribute], 1.0)
+                            )
+                        # Money can be unbounded (or have a floor of 0)
+                        elif attribute == "money":
+                            simulated_state[attribute] = max(
+                                0.0, simulated_state[attribute]
+                            )
+    return total_utility

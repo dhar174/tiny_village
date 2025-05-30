@@ -43,7 +43,15 @@ from sklearn.decomposition import LatentDirichletAllocation
 os.environ["TRANSFORMERS_CACHE"] = "/mnt/d/transformers_cache"
 remove_list = ["\)", "\(", "–", '"', "”", '"', "\[.*\]", ".*\|.*", "—"]
 lda = LatentDirichletAllocation(n_components=3)
-nlp = spacy.load("en_core_web_trf")
+# Try to load the transformer model, fallback to smaller model if not available
+try:
+    nlp = spacy.load("en_core_web_trf")
+except OSError:
+    try:
+        nlp = spacy.load("en_core_web_sm")
+    except OSError:
+        print("Warning: No spaCy model found. Using basic NLP functions.")
+        nlp = None
 import nltk
 import os
 from spacy.matcher import Matcher
@@ -5076,9 +5084,7 @@ def manage_index_and_search(index_type, normalization, filename, memory_dict, qu
 #     #print(memory.description)
 if __name__ == "__main__":
     # Initialize the module-level variables
-    # Declare global variables to ensure we're modifying the module-level variables
-    global manager, model, sentiment_analysis
-    
+
     tiny_calendar = ttm.GameCalendar()
     tiny_time_manager = ttm.GameTimeManager(tiny_calendar)
     manager = MemoryManager(tiny_time_manager, "ip_no_norm.bin")

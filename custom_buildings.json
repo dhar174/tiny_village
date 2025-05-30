@@ -1,0 +1,13 @@
+{
+  "buildings": [
+    {
+      "name": "Custom Building",
+      "type": "special",
+      "x": 250,
+      "y": 250,
+      "width": 50,
+      "height": 50,
+      "description": "A custom building for special purposes"
+    }
+  ]
+}
