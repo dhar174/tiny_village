@@ -1,3 +1,10 @@
+"""
+Manages the main game loop, game state, and coordinates interactions between various game systems.
+
+This module includes the GameplayController class, which is central to running the
+TinyVillage simulation, handling events, updates, and rendering. It also includes
+the ActionResolver class for processing character actions.
+"""
 import pygame
 import random
 import logging
@@ -7,6 +14,7 @@ from tiny_strategy_manager import StrategyManager
 from tiny_event_handler import EventHandler, Event
 from tiny_types import GraphManager
 from tiny_map_controller import MapController
+from tiny_utility_functions import log_error
 
 """ 
 This script integrates with the game loop, applying decisions from the strategy manager to the game state.
@@ -203,11 +211,11 @@ class ActionResolver:
             if isinstance(action_data, str):
                 return self._resolve_by_name(action_data, character)
 
-            logger.warning(f"Unknown action format: {type(action_data)}")
+            log_error(f"Unknown action format: {type(action_data)}", context=f"{self.__class__.__name__}.resolve_action", level="WARNING")
             return None
 
         except Exception as e:
-            logger.error(f"Error resolving action {action_data}: {e}")
+            log_error(f"Error resolving action {action_data}", exception_obj=e, context=f"{self.__class__.__name__}.resolve_action")
             return None
 
     def _dict_to_action(self, action_dict: Dict, character=None):
@@ -254,7 +262,7 @@ class ActionResolver:
             return action
 
         except Exception as e:
-            logger.error(f"Error converting dict to action: {e}")
+            log_error(f"Error converting dict to action: {action_dict.get('name', 'Unknown')}", exception_obj=e, context=f"{self.__class__.__name__}._dict_to_action")
             return None
 
     def _resolve_by_name(self, action_name: str, character=None):
@@ -276,7 +284,7 @@ class ActionResolver:
             )
 
         except Exception as e:
-            logger.error(f"Error resolving action by name {action_name}: {e}")
+            log_error(f"Error resolving action by name {action_name}", exception_obj=e, context=f"{self.__class__.__name__}._resolve_by_name")
             return None
 
     def get_fallback_action(self, character=None):
@@ -285,10 +293,59 @@ class ActionResolver:
 
 
 class GameplayController:
+    """
+    Orchestrates the main game loop, manages game state, and coordinates interactions
+    between various game systems such as character management, event handling,
+    action resolution, and rendering.
+
+    Key Responsibilities:
+    - Running the main game loop (handle_events, update_game_state, render).
+    - Initializing and managing core game systems (StrategyManager, GraphManager, MapController, etc.).
+    - Handling user input and system-level events.
+    - Updating character states and AI decision-making processes.
+    - Rendering the game world and UI elements.
+    - Managing game statistics and system health.
+
+    Interactions:
+    - Receives strategic decisions from StrategyManager.
+    - Uses ActionResolver to process and execute character actions.
+    - Manages Character instances and their updates.
+    - Interacts with MapController for spatial awareness and character movement.
+    - Uses EventHandler to process and react to game events.
+    - Relies on GameTimeManager for temporal progression.
+    """
     def __init__(
         self, graph_manager: GraphManager = None, config: Dict[str, Any] = None
     ):
-        """Initialize the gameplay controller with improved error handling and configuration."""
+        """
+        Initializes the GameplayController, setting up core game systems and configurations.
+
+        Args:
+            graph_manager (GraphManager, optional): An instance of the graph manager for
+                managing complex relationships and game world data. Defaults to None,
+                in which case a new GraphManager instance may be created.
+            config (Dict[str, Any], optional): A dictionary containing game-wide
+                configurations, such as screen dimensions, FPS targets, and paths
+                to assets. Defaults to None, using default configurations.
+
+        Attributes Initialized:
+            config (Dict): Stores the game configuration.
+            initialization_errors (List): Tracks errors encountered during system setup.
+            running (bool): Flag to control the main game loop.
+            paused (bool): Flag to pause/unpause game updates.
+            strategy_manager (StrategyManager): Manages high-level AI strategy.
+            graph_manager (GraphManager): Manages game world graph data.
+            event_handler (EventHandler): Handles game events.
+            screen (pygame.Surface): The main display surface for Pygame.
+            clock (pygame.time.Clock): Pygame clock for managing FPS.
+            map_controller (MapController): Manages the game map and character positions.
+            action_resolver (ActionResolver): Resolves and executes actions.
+            characters (Dict[str, Character]): Stores character instances.
+            events (List): Stores pending game events.
+            game_statistics (Dict): Tracks various game metrics.
+            gametime_manager (GameTimeManager): Manages in-game time.
+            animation_system (AnimationSystem): Manages animations.
+        """
         self.config = config or {}
         self.initialization_errors = []
         self.running = True
@@ -298,7 +355,7 @@ class GameplayController:
         try:
             self.strategy_manager = StrategyManager()
         except Exception as e:
-            logger.error(f"Failed to initialize StrategyManager: {e}")
+            log_error("Failed to initialize StrategyManager", exception_obj=e, context=f"{self.__class__.__name__}.__init__")
             self.strategy_manager = None
             self.initialization_errors.append("StrategyManager initialization failed")
 
@@ -309,7 +366,7 @@ class GameplayController:
 
                 self.graph_manager = ActualGraphManager()
             except Exception as e:
-                logger.error(f"Failed to initialize GraphManager: {e}")
+                log_error("Failed to initialize GraphManager", exception_obj=e, context=f"{self.__class__.__name__}.__init__")
                 self.graph_manager = None
                 self.initialization_errors.append("GraphManager initialization failed")
         else:
@@ -321,7 +378,7 @@ class GameplayController:
                 EventHandler(self.graph_manager) if self.graph_manager else None
             )
         except Exception as e:
-            logger.error(f"Failed to initialize EventHandler: {e}")
+            log_error("Failed to initialize EventHandler", exception_obj=e, context=f"{self.__class__.__name__}.__init__")
             self.event_handler = None
             self.initialization_errors.append("EventHandler initialization failed")
 
@@ -334,7 +391,7 @@ class GameplayController:
             pygame.display.set_caption("Tiny Village")
             self.clock = pygame.time.Clock()
         except Exception as e:
-            logger.error(f"Failed to initialize pygame: {e}")
+            log_error("Failed to initialize pygame", exception_obj=e, context=f"{self.__class__.__name__}.__init__")
             self.screen = None
             self.clock = None
             self.initialization_errors.append("Pygame initialization failed")
@@ -351,7 +408,7 @@ class GameplayController:
                 },
             )
         except Exception as e:
-            logger.error(f"Failed to initialize MapController: {e}")
+            log_error("Failed to initialize MapController", exception_obj=e, context=f"{self.__class__.__name__}.__init__")
             self.map_controller = None
             self.initialization_errors.append("MapController initialization failed")
 
@@ -427,9 +484,7 @@ class GameplayController:
                     module = __import__(module_name, fromlist=[class_name])
                     imported_modules[class_name] = getattr(module, class_name)
                 except Exception as e:
-                    logger.error(
-                        f"Failed to import {class_name} from {module_name}: {e}"
-                    )
+                    log_error(f"Failed to import {class_name} from {module_name}", exception_obj=e, context=f"{self.__class__.__name__}.initialize_game_systems")
                     system_init_errors.append(f"Import {class_name} failed")
 
             # Initialize core systems with fallbacks
@@ -440,7 +495,7 @@ class GameplayController:
                     self.action_resolver = ActionResolver(self.action_system)
                     logger.info("Action system initialized successfully")
                 except Exception as e:
-                    logger.error(f"ActionSystem initialization failed: {e}")
+                    log_error("ActionSystem initialization failed", exception_obj=e, context=f"{self.__class__.__name__}.initialize_game_systems")
                     self.action_system = None
                     self.action_resolver = (
                         ActionResolver()
@@ -462,7 +517,7 @@ class GameplayController:
                     )
                     logger.info("Time management system initialized")
                 except Exception as e:
-                    logger.error(f"Time management initialization failed: {e}")
+                    log_error("Time management initialization failed", exception_obj=e, context=f"{self.__class__.__name__}.initialize_game_systems")
                     self.gametime_manager = None
                     system_init_errors.append("Time management failed")
             else:
@@ -475,7 +530,7 @@ class GameplayController:
                 self.animation_system = get_animation_system()
                 logger.info("Animation system initialized")
             except Exception as e:
-                logger.warning(f"Animation system initialization failed: {e}")
+                log_error("Animation system initialization failed", exception_obj=e, context=f"{self.__class__.__name__}.initialize_game_systems", level="WARNING")
                 self.animation_system = None
                 # Not adding to errors as animation is optional
 
@@ -494,12 +549,12 @@ class GameplayController:
                         f"Successfully created {len(self.characters)} characters"
                     )
                 except Exception as e:
-                    logger.error(f"Character creation failed: {e}")
+                    log_error("Character creation failed", exception_obj=e, context=f"{self.__class__.__name__}.initialize_game_systems")
                     system_init_errors.append("Character creation failed")
                     # Create minimal fallback characters
                     self._create_fallback_characters()
             else:
-                logger.warning("Cannot create characters due to missing dependencies")
+                log_error("Cannot create characters due to missing dependencies", context=f"{self.__class__.__name__}.initialize_game_systems", level="WARNING")
                 self._create_fallback_characters()
 
             # Initialize events system
@@ -515,8 +570,8 @@ class GameplayController:
                 logger.info("All game systems initialized successfully")
 
         except Exception as e:
-            logger.error(f"Critical error initializing game systems: {e}")
-            logger.error(traceback.format_exc())
+            log_error("Critical error initializing game systems", exception_obj=e, context=f"{self.__class__.__name__}.initialize_game_systems")
+            # logger.error(traceback.format_exc()) # log_error can include exception details
             # Ensure minimal fallback state
             self.characters = {}
             self.events = []
@@ -553,7 +608,7 @@ class GameplayController:
 
             logger.info("Fallback character created successfully")
         except Exception as e:
-            logger.error(f"Even fallback character creation failed: {e}")
+            log_error("Even fallback character creation failed", exception_obj=e, context=f"{self.__class__.__name__}._create_fallback_characters")
             # Ensure characters dict exists even if empty
             self.characters = {}
 
@@ -619,9 +674,7 @@ class GameplayController:
                     characters.append(character)
                     logger.debug(f"Created character: {char_data['name']}")
             except Exception as e:
-                logger.error(
-                    f"Error creating character {char_data.get('name', 'Unknown')}: {e}"
-                )
+                log_error(f"Error creating character {char_data.get('name', 'Unknown')}", exception_obj=e, context=f"{self.__class__.__name__}._create_sample_characters")
                 continue
 
         return characters
@@ -673,9 +726,7 @@ class GameplayController:
                     )
                     food_items.append(food_item)
                 except Exception as e:
-                    logger.warning(
-                        f"Failed to create food item {item_data.get('name', 'Unknown')}: {e}"
-                    )
+                    log_error(f"Failed to create food item {item_data.get('name', 'Unknown')}", exception_obj=e, context=f"{self.__class__.__name__}._create_single_character", level="WARNING")
 
             inventory = ItemInventory(food_items=food_items)
 
@@ -691,9 +742,7 @@ class GameplayController:
                     self.action_system,
                 )
             except Exception as e:
-                logger.warning(
-                    f"Failed to create location for {char_data['name']}: {e}"
-                )
+                log_error(f"Failed to create location for {char_data['name']}", exception_obj=e, context=f"{self.__class__.__name__}._create_single_character", level="WARNING")
                 location = None
 
             # Generate personality traits with defaults
@@ -752,10 +801,8 @@ class GameplayController:
             return character
 
         except Exception as e:
-            logger.error(
-                f"Failed to create character {char_data.get('name', 'Unknown')}: {e}"
-            )
-            logger.error(traceback.format_exc())
+            log_error(f"Failed to create character {char_data.get('name', 'Unknown')}", exception_obj=e, context=f"{self.__class__.__name__}._create_single_character")
+            # logger.error(traceback.format_exc()) # log_error can include exception, traceback can be logged if needed by setting up logger
             return None
 
     def _register_characters(self, characters: List):
@@ -786,7 +833,7 @@ class GameplayController:
                 self.characters[character.uuid] = character
 
             except Exception as e:
-                logger.error(f"Error registering character {character.name}: {e}")
+                log_error(f"Error registering character {character.name}", exception_obj=e, context=f"{self.__class__.__name__}._register_characters")
                 continue
 
     def game_loop(self):
@@ -845,7 +892,7 @@ class GameplayController:
                     try:
                         self.map_controller.handle_event(event)
                     except Exception as e:
-                        logger.warning(f"Error handling event in map controller: {e}")
+                        log_error("Error handling event in map controller", exception_obj=e, context=f"{self.__class__.__name__}.handle_events", level="WARNING")
 
     def _handle_keydown(self, event):
         """Handle keyboard input with configurable key bindings."""
@@ -916,9 +963,7 @@ class GameplayController:
                     ).FoodItem,
                 }
             except Exception as e:
-                logger.error(
-                    f"Failed to import required modules for character reset: {e}"
-                )
+                log_error("Failed to import required modules for character reset", exception_obj=e, context=f"{self.__class__.__name__}._reset_characters")
                 self._create_fallback_characters()
                 return
 
@@ -937,24 +982,40 @@ class GameplayController:
                     self.game_statistics["characters_created"] += len(self.characters)
 
                 except Exception as e:
-                    logger.error(f"Error during character creation in reset: {e}")
+                    log_error("Error during character creation in reset", exception_obj=e, context=f"{self.__class__.__name__}._reset_characters")
                     self._create_fallback_characters()
             else:
-                logger.warning(
-                    "Cannot create full characters during reset, using fallback"
-                )
+                log_error("Cannot create full characters during reset, using fallback", context=f"{self.__class__.__name__}._reset_characters", level="WARNING")
                 self._create_fallback_characters()
 
         except Exception as e:
-            logger.error(f"Critical error resetting characters: {e}")
-            logger.error(traceback.format_exc())
+            log_error("Critical error resetting characters", exception_obj=e, context=f"{self.__class__.__name__}._reset_characters")
+            # logger.error(traceback.format_exc())
             # Ensure we have at least empty character dict
             self.characters = {}
             if self.map_controller and hasattr(self.map_controller, "characters"):
                 self.map_controller.characters = {}
 
-    def update_game_state(self, dt):
-        """Update all game systems with delta time and improved error handling."""
+    def update_game_state(self, dt: float):
+        """
+        Updates all active game systems based on the elapsed time (delta time).
+
+        This method is called once per frame in the main game loop. It's responsible
+        for progressing the game state, including character AI, movement,
+        time progression, and event processing. Updates are skipped if the game is paused.
+
+        Args:
+            dt (float): The delta time, representing the time elapsed (in seconds)
+                        since the last frame. This ensures game updates are
+                        frame-rate independent.
+
+        Sequence of Updates:
+        1. MapController: Handles character movement and pathfinding.
+        2. Characters: Updates AI, decision-making, and internal states for each character.
+        3. GameTimeManager: Processes scheduled behaviors and advances game time.
+        4. AnimationSystem: Updates ongoing animations.
+        5. Event Processing: Handles any pending game events.
+        """
         # Check if game is paused
         if getattr(self, "paused", False):
             return  # Skip all updates when paused
@@ -966,7 +1027,7 @@ class GameplayController:
             try:
                 self.map_controller.update(dt)
             except Exception as e:
-                logger.error(f"Error updating map controller: {e}")
+                    log_error("Error updating map controller", exception_obj=e, context=f"{self.__class__.__name__}.update_game_state")
                 update_errors.append("Map controller update failed")
 
         # Update character AI and decision making
@@ -978,7 +1039,7 @@ class GameplayController:
                         f"Character {character.name if hasattr(character, 'name') else character_id} update failed"
                     )
             except Exception as e:
-                logger.error(f"Error updating character {character_id}: {e}")
+                log_error(f"Error updating character {character_id}", exception_obj=e, context=f"{self.__class__.__name__}.update_game_state")
                 update_errors.append(f"Character {character_id} update failed")
                 continue
 
@@ -991,9 +1052,9 @@ class GameplayController:
                     try:
                         behavior.check_calendar()
                     except Exception as e:
-                        logger.warning(f"Error processing scheduled behavior: {e}")
+                        log_error("Error processing scheduled behavior", exception_obj=e, context=f"{self.__class__.__name__}.update_game_state", level="WARNING")
             except Exception as e:
-                logger.error(f"Error updating time manager: {e}")
+                log_error("Error updating time manager", exception_obj=e, context=f"{self.__class__.__name__}.update_game_state")
                 update_errors.append("Time manager update failed")
 
         # Update animation system
@@ -1001,7 +1062,7 @@ class GameplayController:
             try:
                 self.animation_system.update(dt)
             except Exception as e:
-                logger.warning(f"Error updating animation system: {e}")
+                    log_error("Error updating animation system", exception_obj=e, context=f"{self.__class__.__name__}.update_game_state", level="WARNING")
                 # Animation errors are not critical
 
         # Process any pending events
@@ -1009,7 +1070,7 @@ class GameplayController:
             try:
                 self._process_pending_events()
             except Exception as e:
-                logger.error(f"Error processing events: {e}")
+                    log_error("Error processing events", exception_obj=e, context=f"{self.__class__.__name__}.update_game_state")
                 update_errors.append("Event processing failed")
 
         # Log update errors if any occurred
@@ -1024,7 +1085,7 @@ class GameplayController:
         try:
             # Check if character has required methods
             if not hasattr(character, "name"):
-                logger.warning(f"Character missing name attribute")
+                log_error(f"Character missing name attribute: {character}", context=f"{self.__class__.__name__}._update_character", level="WARNING")
                 return False
 
             # Update character's memory and decision making
@@ -1036,9 +1097,7 @@ class GameplayController:
             return memory_success or goals_success or actions_success
 
         except Exception as e:
-            logger.error(
-                f"Critical error updating character {getattr(character, 'name', 'Unknown')}: {e}"
-            )
+            log_error(f"Critical error updating character {getattr(character, 'name', 'Unknown')}", exception_obj=e, context=f"{self.__class__.__name__}._update_character")
             return False
 
     def _update_character_memory(self, character) -> bool:
@@ -1048,7 +1107,7 @@ class GameplayController:
                 character.recall_recent_memories()
                 return True
         except Exception as e:
-            logger.warning(f"Error updating memory for {character.name}: {e}")
+            log_error(f"Error updating memory for {character.name}", exception_obj=e, context=f"{self.__class__.__name__}._update_character_memory", level="WARNING")
         return False
 
     def _update_character_goals(self, character) -> bool:
@@ -1058,7 +1117,7 @@ class GameplayController:
                 goals = character.evaluate_goals()
                 return goals is not None
         except Exception as e:
-            logger.warning(f"Error evaluating goals for {character.name}: {e}")
+            log_error(f"Error evaluating goals for {character.name}", exception_obj=e, context=f"{self.__class__.__name__}._update_character_goals", level="WARNING")
         return False
 
     def _execute_character_actions(self, character) -> bool:
@@ -1081,7 +1140,7 @@ class GameplayController:
             return True  # No actions is not necessarily a failure
 
         except Exception as e:
-            logger.warning(f"Error executing actions for {character.name}: {e}")
+            log_error(f"Error executing actions for {character.name}", exception_obj=e, context=f"{self.__class__.__name__}._execute_character_actions", level="WARNING")
             self.game_statistics["actions_failed"] += 1
             return False
 
@@ -1091,11 +1150,11 @@ class GameplayController:
             for action_data in actions:
                 success = self._execute_single_action(character, action_data)
                 if not success:
-                    logger.warning(f"Action {action_data} failed for {character.name}")
+                    log_error(f"Action {action_data} failed for {character.name}", context=f"{self.__class__.__name__}._apply_character_actions", level="WARNING")
                     # Continue with other actions even if one fails
             return True
         except Exception as e:
-            logger.error(f"Error applying actions to {character.name}: {e}")
+            log_error(f"Error applying actions to {character.name}", exception_obj=e, context=f"{self.__class__.__name__}._apply_character_actions")
             return False
 
     def _execute_single_action(self, character, action_data) -> bool:
@@ -1105,7 +1164,8 @@ class GameplayController:
             action = self.action_resolver.resolve_action(action_data, character)
 
             if not action:
-                logger.warning(f"Could not resolve action: {action_data}")
+                # log_error is already called by resolve_action in this case
+                # log_error(f"Could not resolve action: {action_data}", context=f"{self.__class__.__name__}._execute_single_action", level="WARNING")
                 return False
 
             # Execute the action
@@ -1117,18 +1177,18 @@ class GameplayController:
                         self._update_character_state_after_action(character, action)
                         return True
                     else:
-                        logger.warning(f"Action {action.name} execution returned False")
+                        log_error(f"Action {action.name} execution returned False", context=f"{self.__class__.__name__}._execute_single_action", level="WARNING")
                         return False
                 except Exception as e:
-                    logger.error(f"Error executing action {action.name}: {e}")
+                    log_error(f"Error executing action {action.name}", exception_obj=e, context=f"{self.__class__.__name__}._execute_single_action")
                     # Try fallback action
                     return self._execute_fallback_action(character)
             else:
-                logger.warning(f"Action {action} has no execute method")
+                log_error(f"Action {action} has no execute method", context=f"{self.__class__.__name__}._execute_single_action", level="WARNING")
                 return False
 
         except Exception as e:
-            logger.error(f"Critical error executing single action: {e}")
+            log_error(f"Critical error executing single action for {character.name if hasattr(character, 'name') else 'Unknown char'}", exception_obj=e, context=f"{self.__class__.__name__}._execute_single_action")
             return self._execute_fallback_action(character)
 
     def _execute_fallback_action(self, character) -> bool:
@@ -1149,7 +1209,7 @@ class GameplayController:
             return True
 
         except Exception as e:
-            logger.error(f"Even fallback action failed for {character.name}: {e}")
+            log_error(f"Even fallback action failed for {character.name}", exception_obj=e, context=f"{self.__class__.__name__}._execute_fallback_action")
             return False
 
     def _update_character_state_after_action(self, character, action):
@@ -1162,9 +1222,7 @@ class GameplayController:
                 try:
                     self.graph_manager.update_character_state(character)
                 except Exception as e:
-                    logger.warning(
-                        f"Error updating graph manager for {character.name}: {e}"
-                    )
+                    log_error(f"Error updating graph manager for {character.name}", exception_obj=e, context=f"{self.__class__.__name__}._update_character_state_after_action", level="WARNING")
 
             # Update any other systems that need to know about state changes
             # TODO: Add memory system updates
@@ -1178,7 +1236,7 @@ class GameplayController:
             # TODO: Add reputation system updates
 
         except Exception as e:
-            logger.warning(f"Error updating character state after action: {e}")
+            log_error("Error updating character state after action", exception_obj=e, context=f"{self.__class__.__name__}._update_character_state_after_action", level="WARNING")
 
     def _process_pending_events(self):
         """Process any pending events with error handling."""
@@ -1197,7 +1255,7 @@ class GameplayController:
                 # For now, just mark events as processed
                 events_to_remove.append(i)
             except Exception as e:
-                logger.error(f"Error processing event {event}: {e}")
+                log_error(f"Error processing event {event}", exception_obj=e, context=f"{self.__class__.__name__}._process_pending_events")
                 events_to_remove.append(i)  # Remove problematic events
 
         # Remove processed/failed events in reverse order to maintain indices
@@ -1233,7 +1291,7 @@ class GameplayController:
             try:
                 self.map_controller.render(self.screen)
             except Exception as e:
-                logger.error(f"Error rendering map: {e}")
+                    log_error("Error rendering map", exception_obj=e, context=f"{self.__class__.__name__}.render")
                 # TODO: Add fallback rendering for when map fails
 
         # Render UI elements
@@ -1354,7 +1412,7 @@ class GameplayController:
                 try:
                     events = self.event_handler.check_events()
                 except Exception as e:
-                    logger.warning(f"Error checking events: {e}")
+                    log_error("Error checking events", exception_obj=e, context=f"{self.__class__.__name__}.update", level="WARNING")
 
             # Update strategy based on events if strategy manager exists
             decisions = []
@@ -1362,17 +1420,17 @@ class GameplayController:
                 try:
                     decisions = self.strategy_manager.update_strategy(events)
                 except Exception as e:
-                    logger.warning(f"Error updating strategy: {e}")
+                    log_error("Error updating strategy", exception_obj=e, context=f"{self.__class__.__name__}.update", level="WARNING")
 
             # Apply decisions to game state
             for decision in decisions:
                 try:
                     self.apply_decision(decision, game_state)
                 except Exception as e:
-                    logger.error(f"Error applying decision: {e}")
+                    log_error(f"Error applying decision: {decision}", exception_obj=e, context=f"{self.__class__.__name__}.update")
 
         except Exception as e:
-            logger.error(f"Error in legacy update method: {e}")
+            log_error("Error in legacy update method", exception_obj=e, context=f"{self.__class__.__name__}.update")
 
     def apply_decision(self, decision, game_state=None):
         """
@@ -1419,9 +1477,9 @@ class GameplayController:
                         successful_actions += 1
                         logger.debug(f"Successfully executed action: {action}")
                     else:
-                        logger.warning(f"Failed to execute action: {action}")
+                        log_error(f"Failed to execute action: {action}", context=f"{self.__class__.__name__}.apply_decision", level="WARNING")
                 except Exception as e:
-                    logger.error(f"Error executing decision action {action}: {e}")
+                    log_error(f"Error executing decision action {action}", exception_obj=e, context=f"{self.__class__.__name__}.apply_decision")
                     continue
 
             # Log decision execution results
@@ -1440,8 +1498,8 @@ class GameplayController:
                 )
 
         except Exception as e:
-            logger.error(f"Critical error applying decision: {e}")
-            logger.error(traceback.format_exc())
+            log_error("Critical error applying decision", exception_obj=e, context=f"{self.__class__.__name__}.apply_decision")
+            # logger.error(traceback.format_exc()) # log_error can include exception details
 
     def _execute_decision_action(
         self, action, target_character=None, game_state=None
@@ -1464,7 +1522,8 @@ class GameplayController:
             )
 
             if not resolved_action:
-                logger.warning(f"Could not resolve action: {action}")
+                # log_error is already called by resolve_action in this case
+                # log_error(f"Could not resolve action: {action}", context=f"{self.__class__.__name__}._execute_decision_action", level="WARNING")
                 return False
 
             # Execute the resolved action
@@ -1492,24 +1551,20 @@ class GameplayController:
 
                         return True
                     else:
-                        logger.warning(
-                            f"Action {resolved_action.name if hasattr(resolved_action, 'name') else resolved_action} execution returned False"
-                        )
+                        log_error(f"Action {resolved_action.name if hasattr(resolved_action, 'name') else resolved_action} execution returned False", context=f"{self.__class__.__name__}._execute_decision_action", level="WARNING")
                         self.game_statistics["actions_failed"] += 1
                         return False
 
                 except Exception as e:
-                    logger.error(f"Error executing resolved action: {e}")
+                    log_error(f"Error executing resolved action: {resolved_action.name if hasattr(resolved_action, 'name') else resolved_action}", exception_obj=e, context=f"{self.__class__.__name__}._execute_decision_action")
                     self.game_statistics["actions_failed"] += 1
                     return False
             else:
-                logger.error(
-                    f"Resolved action has no execute method: {resolved_action}"
-                )
+                log_error(f"Resolved action has no execute method: {resolved_action}", context=f"{self.__class__.__name__}._execute_decision_action")
                 return False
 
         except Exception as e:
-            logger.error(f"Critical error executing decision action: {e}")
+            log_error("Critical error executing decision action", exception_obj=e, context=f"{self.__class__.__name__}._execute_decision_action")
             self.game_statistics["actions_failed"] += 1
             return False
 
@@ -1592,7 +1647,7 @@ class GameplayController:
                     self.strategy_manager = StrategyManager()
                     logger.info("Strategy manager recovery successful")
                 except Exception as e:
-                    logger.error(f"Strategy manager recovery failed: {e}")
+                    log_error("Strategy manager recovery failed", exception_obj=e, context=f"{self.__class__.__name__}.attempt_system_recovery")
                     recovery_successful = False
 
             # Attempt to recover graph manager
@@ -1603,7 +1658,7 @@ class GameplayController:
                     self.graph_manager = ActualGraphManager()
                     logger.info("Graph manager recovery successful")
                 except Exception as e:
-                    logger.error(f"Graph manager recovery failed: {e}")
+                    log_error("Graph manager recovery failed", exception_obj=e, context=f"{self.__class__.__name__}.attempt_system_recovery")
                     recovery_successful = False
 
             # Attempt to recover event handler
@@ -1612,7 +1667,7 @@ class GameplayController:
                     self.event_handler = EventHandler(self.graph_manager)
                     logger.info("Event handler recovery successful")
                 except Exception as e:
-                    logger.error(f"Event handler recovery failed: {e}")
+                    log_error("Event handler recovery failed", exception_obj=e, context=f"{self.__class__.__name__}.attempt_system_recovery")
                     recovery_successful = False
 
             # Attempt to recover action system
@@ -1625,7 +1680,7 @@ class GameplayController:
                     self.action_resolver = ActionResolver(self.action_system)
                     logger.info("Action system recovery successful")
                 except Exception as e:
-                    logger.error(f"Action system recovery failed: {e}")
+                    log_error("Action system recovery failed", exception_obj=e, context=f"{self.__class__.__name__}.attempt_system_recovery")
                     recovery_successful = False
 
             # Update recovery statistics
@@ -1638,7 +1693,7 @@ class GameplayController:
             return recovery_successful
 
         except Exception as e:
-            logger.error(f"Critical error during system recovery: {e}")
+            log_error("Critical error during system recovery", exception_obj=e, context=f"{self.__class__.__name__}.attempt_system_recovery")
             return False
 
     def export_configuration(self) -> Dict[str, Any]:
@@ -1669,7 +1724,7 @@ class GameplayController:
             return export_config
 
         except Exception as e:
-            logger.error(f"Error exporting configuration: {e}")
+            log_error("Error exporting configuration", exception_obj=e, context=f"{self.__class__.__name__}.export_configuration")
             return {"error": str(e)}
 
     def import_configuration(self, config_data: Dict[str, Any]) -> bool:
@@ -1694,11 +1749,11 @@ class GameplayController:
                 logger.info("Configuration imported successfully")
                 return True
             else:
-                logger.error("Invalid configuration data format")
+                log_error("Invalid configuration data format", context=f"{self.__class__.__name__}.import_configuration")
                 return False
 
         except Exception as e:
-            logger.error(f"Error importing configuration: {e}")
+            log_error("Error importing configuration", exception_obj=e, context=f"{self.__class__.__name__}.import_configuration")
             return False
 
     # TODO: Add save/load game state functionality

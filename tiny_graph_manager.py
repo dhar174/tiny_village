@@ -1,3 +1,12 @@
+"""
+Manages the game world's graph structure using NetworkX.
+
+This module provides the GraphManager class, responsible for creating,
+modifying, and querying the graph that represents locations, characters,
+items, and their relationships within the TinyVillage simulation. It supports
+operations like adding/removing nodes and edges, finding paths, and analyzing
+graph properties to inform game logic and AI behavior.
+"""
 from ast import Not
 from calendar import c
 from collections import defaultdict

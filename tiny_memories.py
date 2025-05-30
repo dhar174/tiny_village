@@ -1,3 +1,12 @@
+"""
+Manages memory systems for characters in TinyVillage.
+
+This module includes classes for different types of memories (GeneralMemory,
+SpecificMemory), memory querying (MemoryQuery), and overall memory management
+(MemoryManager, FlatMemoryAccess). It handles memory creation, storage,
+retrieval, and analysis, including embedding generation and similarity search
+using FAISS.
+"""
 import html
 import json
 import pickle
@@ -31,10 +40,12 @@ from textblob import TextBlob
 from sklearn.feature_extraction.text import TfidfVectorizer, ENGLISH_STOP_WORDS
 from nltk.corpus import stopwords
 import heapq
+import logging # Added for log_error to function if not already configured
 import tiny_brain_io as tbi
 import tiny_time_manager as ttm
 import os
 import sys
+from tiny_utility_functions import log_error
 import tiny_sr_mapping as tsm
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import CountVectorizer
@@ -375,24 +386,29 @@ class MemoryQuery:
         return self.query_embedding
 
     def generate_embedding(self):
-        description = [self.query.strip()]
-        input = model.tokenizer(
-            description,
+        query_text = [self.query.strip()] # Ensure it's a list for the tokenizer
+
+        # Tokenize the input using the global model's tokenizer
+        inputs = model.tokenizer(
+            query_text,
             padding=True,
             truncation=True,
             add_special_tokens=True,
-            is_split_into_words=True,
+            # is_split_into_words=True, # Assuming self.query is a single string
             pad_to_multiple_of=8,
             return_tensors="pt",
         ).to(model.device)
-        outputs = model.model(
-            input["input_ids"],
-            attention_mask=input["attention_mask"],
-            output_hidden_states=True,
-            return_dict=True,
-            return_tensors="pt",
-        )
-        return [outputs.last_hidden_state, input["attention_mask"]]
+
+        # Get model outputs using the global model's forward method
+        with torch.no_grad(): # Ensure gradients are not computed
+            outputs = model.forward(
+                input_ids=inputs["input_ids"],
+                attention_mask=inputs["attention_mask"]
+            )
+
+        # As per requirements, this method returns the raw model output and attention mask
+        # because the caller (MemoryQuery.get_embedding) performs the mean_pooling.
+        return [outputs.last_hidden_state, inputs["attention_mask"]]
 
     def add_complex_query(self, attribute, query):
         self.attribute = attribute
@@ -776,28 +792,38 @@ class GeneralMemory(Memory):
 
     def get_embedding(self):
         if self.description_embedding is None:
+            # The generate_embedding method will now return the pooled embedding directly.
             self.description_embedding = self.generate_embedding()
         return self.description_embedding
 
     def generate_embedding(self):
         description = [self.description.strip()]
-        input = model.tokenizer(
+        # Tokenize the input description using the global model's tokenizer
+        inputs = model.tokenizer(
             description,
             padding=True,
             truncation=True,
             add_special_tokens=True,
-            is_split_into_words=True,
+            # is_split_into_words=True, # Assuming description is a single string, not pre-tokenized words
             pad_to_multiple_of=8,
             return_tensors="pt",
         ).to(model.device)
-        outputs = model.model(
-            input["input_ids"],
-            attention_mask=input["attention_mask"],
-            output_hidden_states=True,
-            return_dict=True,
-            return_tensors="pt",
+
+        # Get model outputs using the global model's forward method
+        # No need to use model.model directly, model.forward is the intended interface
+        with torch.no_grad(): # Ensure gradients are not computed during inference
+            outputs = model.forward(
+                input_ids=inputs["input_ids"],
+                attention_mask=inputs["attention_mask"]
+            )
+
+        # Perform mean pooling using the global mean_pooling function
+        # outputs.last_hidden_state is the correct input for mean_pooling
+        sentence_embedding = mean_pooling(
+            outputs.last_hidden_state,
+            inputs["attention_mask"]
         )
-        return [outputs.last_hidden_state, input["attention_mask"]]
+        return sentence_embedding
 
     def init_specific_memories(self, specific_memories):
         # self.specific_memories = specific_memories
@@ -989,6 +1015,24 @@ class SpecificMemory(Memory):
         self.map_fact_embeddings = {}
         self.analyze_description()
 
+    # TODO: The analysis performed here (sentiment, emotion, keywords, facts, etc.)
+    # is similar to parts of MemoryManager.analyze_query_context.
+    # Consider delegating this to a shared 'MemoryContentAnalyzer' service to avoid redundancy
+    # and ensure consistency. This service could be used by both SpecificMemory and QueryAnalyzer.
+    def analyze_description(self):
+        self.analysis = manager.analyze_query_context(self.description)
+        self.sentiment_score = self.analysis["sentiment_score"]
+        self.emotion_classification = self.analysis["emotion_classification"]
+        self.keywords = self.analysis["keywords"]
+        # self.entities = self.analysis["named_entities"]
+        self.main_subject = self.analysis["main_subject"]
+        self.main_verb = self.analysis["main_verb"]
+        self.main_object = self.analysis["main_object"]
+        # self.temporal_expressions = self.analysis["temporal_expressions"]
+        self.verb_aspects = self.analysis["verb_aspects"]
+        self.facts = self.analysis["facts"]
+        self.facts_embeddings = self.get_facts_embeddings()
+
     def __getstate__(self):
         state = self.__dict__.copy()
         # Remove the embedding attribute
@@ -1004,20 +1048,6 @@ class SpecificMemory(Memory):
         self.embedding = None
         self.att_mask = None
         self.facts_embeddings = None
-
-    def analyze_description(self):
-        self.analysis = manager.analyze_query_context(self.description)
-        self.sentiment_score = self.analysis["sentiment_score"]
-        self.emotion_classification = self.analysis["emotion_classification"]
-        self.keywords = self.analysis["keywords"]
-        # self.entities = self.analysis["named_entities"]
-        self.main_subject = self.analysis["main_subject"]
-        self.main_verb = self.analysis["main_verb"]
-        self.main_object = self.analysis["main_object"]
-        # self.temporal_expressions = self.analysis["temporal_expressions"]
-        self.verb_aspects = self.analysis["verb_aspects"]
-        self.facts = self.analysis["facts"]
-        self.facts_embeddings = self.get_facts_embeddings()
 
     def get_parent_memory_from_string(self, parent_memory):
         try:
@@ -1058,61 +1088,105 @@ class SpecificMemory(Memory):
             related_memory.add_related_memory(self)  # Ensuring bidirectional link
 
     def get_embedding(self, normalize=None):
+        # If normalize is specified and different from the current state, regenerate embedding
         if normalize is not None and self.normalized_embeddings != normalize:
-            self.normalized_embeddings = normalize
-            self.embedding = None
+            self.embedding = None # Force regeneration
+            self.normalized_embeddings = normalize # Update normalization state
+
+        # If normalize is not specified, use the current normalization state
+        current_normalize_setting = normalize if normalize is not None else self.normalized_embeddings
+
         if self.embedding is None:
-            self.embedding_and_mask = self.generate_embedding(
-                normalize=self.normalized_embeddings
-            )
-            self.embedding = mean_pooling(
-                self.embedding_and_mask[0], self.embedding_and_mask[1]
-            )
+            # generate_embedding now returns the final pooled and optionally normalized embedding.
+            # It also handles setting self.att_mask internally.
+            self.embedding = self.generate_embedding(string=self.description, normalize=current_normalize_setting)
+            # self.normalized_embeddings has been set if normalize was provided, or reflects existing state
+            if normalize is not None: # Ensure the class attribute reflects the setting used
+                 self.normalized_embeddings = normalize
+
+        # self.att_mask is set by generate_embedding if needed
         return self.embedding, self.att_mask
 
+    # TODO: Embedding generation is critical. Ensure this uses a centralized
+    # embedding service/model to maintain consistency with query embeddings.
+    # Currently uses global 'model'.
     def generate_embedding(self, string=None, normalize=None):
         if string is None:
             string = self.description
-        description = [string.strip()]
-        input = model.tokenizer(
-            description,
+
+        text_to_embed = [string.strip()] # Ensure it's a list for the tokenizer
+
+        # Tokenize the input using the global model's tokenizer
+        inputs = model.tokenizer(
+            text_to_embed,
             padding=True,
             truncation=True,
             add_special_tokens=True,
-            is_split_into_words=True,
+            # is_split_into_words=True, # Assuming string is a single sentence
             pad_to_multiple_of=8,
             return_tensors="pt",
         ).to(model.device)
-        outputs = model.model(
-            input["input_ids"],
-            attention_mask=input["attention_mask"],
-            output_hidden_states=True,
-            return_dict=True,
-            return_tensors="pt",
+
+        # Store attention mask if it's intended to be used by callers of get_embedding
+        self.att_mask = inputs["attention_mask"]
+
+        # Get model outputs using the global model's forward method
+        with torch.no_grad(): # Ensure gradients are not computed
+            outputs = model.forward(
+                input_ids=inputs["input_ids"],
+                attention_mask=inputs["attention_mask"]
+            )
+
+        # Perform mean pooling using the global mean_pooling function
+        sentence_embedding = mean_pooling(
+            outputs.last_hidden_state,
+            inputs["attention_mask"]
         )
-        if normalize is not None:
-            if normalize:
-                outputs.last_hidden_state = faiss.normalize_L2(
-                    outputs.last_hidden_state
-                )
-        return [outputs.last_hidden_state, input["attention_mask"]]
+
+        # Apply FAISS L2 normalization if requested
+        # Note: normalize_L2 expects a NumPy array or a PyTorch tensor on CPU.
+        # The sentence_embedding is likely on self.device (cuda if available).
+        if normalize:
+            if sentence_embedding.is_cuda:
+                sentence_embedding_np = sentence_embedding.cpu().numpy()
+                faiss.normalize_L2(sentence_embedding_np)
+                sentence_embedding = torch.from_numpy(sentence_embedding_np).to(model.device)
+            else:
+                sentence_embedding_np = sentence_embedding.numpy()
+                faiss.normalize_L2(sentence_embedding_np)
+                sentence_embedding = torch.from_numpy(sentence_embedding_np)
+            self.normalized_embeddings = True # Record that the current embedding is normalized
+        else:
+            self.normalized_embeddings = False # Record that the current embedding is not normalized
+
+
+        return sentence_embedding
 
     def get_facts_embeddings(self):
         if self.facts_embeddings is None:
             facts = self.facts
             facts_embeddings = []
-            for fact in facts:
-                fact_embedding = self.generate_embedding(fact)
-                fact_embedding = mean_pooling(fact_embedding[0], fact_embedding[1])
+            for fact_text in facts:
+                # generate_embedding now returns the final pooled embedding.
+                # Normalization for fact embeddings: decide if needed, default to False for now or make it configurable.
+                fact_embedding = self.generate_embedding(string=fact_text, normalize=False)
                 facts_embeddings.append(fact_embedding)
-                self.map_fact_embeddings[fact_embedding] = fact
+                # Storing mapping from embedding to fact text. Be cautious if embeddings are not unique.
+                # Consider mapping from fact text to embedding, or using a list of (fact_text, embedding) tuples.
+                self.map_fact_embeddings[fact_embedding.tobytes()] = fact_text # Use tobytes for tensor key
             self.facts_embeddings = facts_embeddings
 
+        # TODO: Embedding generation for facts should also use the centralized embedding service.
         return self.facts_embeddings
 
 
 # @track_calls
 class FlatMemoryAccess:
+    # TODO: Refactor FAISS index management (init, save, load, add, search, normalization handling)
+    # into a dedicated 'FaissIndexManager' class. FlatMemoryAccess would then use this manager.
+    # TODO: The mapping between FAISS indices and memory objects/descriptions (index_id_to_node_id, specific_memories dict)
+    # needs careful management, especially if index files are saved/loaded independently.
+    # This might be part of the FaissIndexManager's responsibility or a separate MemoryMapper.
     def __init__(self, memory_embeddings={}, json_file=None, index_load_filename=None):
         self.index_load_filename = index_load_filename
         self.index_is_normalized = False
@@ -1172,27 +1246,46 @@ class FlatMemoryAccess:
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        del state["faiss_index"]
-        del state["memory_embeddings"]
-        del state["recent_memories"]
+        # FAISS index is not directly pickleable and should be saved/loaded separately
+        # via save_index_to_file and load_index_from_file.
+        if "faiss_index" in state:
+            del state["faiss_index"]
 
+        # Memory embeddings are managed by SpecificMemory's __getstate__ (for individual embeddings)
+        # and FlatMemoryAccess's save/load_all_specific_memories_embeddings_to_file for bulk.
+        # The self.memory_embeddings dict in FlatMemoryAccess is a cache/copy and can be rebuilt.
+        if "memory_embeddings" in state:
+            del state["memory_embeddings"]
+
+        # Recent memories (MemoryQuery objects) are transient and not intended for persistence.
+        # MemoryQuery objects themselves might contain non-serializable analysis if not handled,
+        # but they are excluded here anyway.
+        if "recent_memories" in state:
+            del state["recent_memories"]
+
+        # self.specific_memories (dict of SpecificMemory objects) will be pickled.
+        # SpecificMemory.__getstate__ handles exclusion of its non-serializable parts (embeddings).
+        # SpecificMemory.analysis should now contain only serializable data due to changes
+        # in MemoryManager.analyze_query_context.
         return state
 
     def __setstate__(self, state):
-        # Restore instance attributes
+        # Restore instance attributes from the pickled state.
         self.__dict__.update(state)
-        # Add the embedding attribute back so it doesn't cause issues
-        self.faiss_index = None
-        self.memory_embeddings = {}
-        self.recent_memories = deque(maxlen=50)
-        # Convert string representations of Token objects back to Token objects
-        # for key, value in vars(self).items():
-        #     if isinstance(value, str):
-        #         self.__dict__[key] = nlp(value)[0]
-        #     elif isinstance(value, dict):
-        #         for k, v in value.items():
-        #             if isinstance(v, str):
-        #                 self.__dict__[key][k] = nlp(v)[0]
+
+        # Re-initialize attributes that were excluded during __getstate__ to their default states.
+        # This ensures the object is in a consistent state after unpickling,
+        # especially if the pickle is from an older version or if these attributes are expected.
+        self.faiss_index = None # Should be loaded via load_index_from_file
+        self.memory_embeddings = {} # Can be repopulated if needed
+        self.recent_memories = deque(maxlen=50) # Transient state
+
+        # The previous commented-out code for re-hydrating Spacy Token objects from strings
+        # is not the correct approach for handling Spacy objects during pickling.
+        # The strategy is to convert Spacy objects to serializable formats *before* pickling.
+        # If Spacy objects were needed after unpickling, they would typically be recreated
+        # by re-running analysis on the stored text data, not by trying to directly
+        # reconstruct Spacy's internal C structures from strings.
 
     def save_all_specific_memories_embeddings_to_file(self, filename):
         # save all specific memories embeddings to file as a numpy array.
@@ -1297,8 +1390,8 @@ class FlatMemoryAccess:
                 print(f"\n Loaded index from file {index_load_filename} \n")
                 # Type
                 return None
-            except:
-                print(f"Could not load FAISS index from {index_load_filename}")
+            except Exception as e:
+                log_error(f"Could not load FAISS index from {index_load_filename}", exception_obj=e, context=f"{self.__class__.__name__}.initialize_faiss_index")
                 self.faiss_index = None
                 raise ValueError("Could not load FAISS index from file")
 
@@ -1827,7 +1920,15 @@ sentiment_analysis = SentimentAnalysis()
 
 # @track_calls
 class MemoryManager:
+    # TODO: MemoryManager is a large class with multiple responsibilities.
+    # Consider breaking it down into more focused components:
+    # - QueryProcessor: For handling query analysis, keyword extraction, embedding.
+    # - MemoryRetriever: For different strategies of fetching memories (FAISS, BST, graph-based).
+    # - IndexManager: For managing FAISS indexes specifically if FlatMemoryAccess itself isn't specialized enough.
+    # - SentimentEmotionService: If the sentiment_analysis object becomes more complex or used elsewhere.
     def __init__(self, gametime_manager, index_load_filename=None):
+        # TODO: FlatMemoryAccess could be further specialized, potentially by a dedicated FaissIndexManager.
+        # See comments in FlatMemoryAccess class.
         self.flat_access = FlatMemoryAccess(index_load_filename=index_load_filename)
         self.index_load_filename = index_load_filename
         self.memory_embeddings = {}
@@ -1848,6 +1949,9 @@ class MemoryManager:
             learning_offset=50.0,
             random_state=0,
         )
+        # TODO: Group keyword extraction methods (TF-IDF, RAKE, LDA, entities)
+        # into a 'KeywordExtractor' utility class or module.
+        # This class would be instantiated here or passed in.
         self.tfidf_vectorizer = TfidfVectorizer(
             stop_words=sentiment_analysis.stop_words
         )
@@ -1860,6 +1964,8 @@ class MemoryManager:
             general_memory.index_memories()
             self.flat_access.add_memory(general_memory)
 
+    # TODO: Index management for recent queries (FAISS L2, HNSW) could be part of a
+    # specialized 'RecentQueryIndexManager' or integrated into a broader 'IndexManager'.
     def index_recent_queries_flatl2(self):
         # print(f"\n Indexing recent queries \n")
         if len(self.recent_queries) < 1:
@@ -1904,6 +2010,8 @@ class MemoryManager:
         self.update_embeddings(general_memory)
         return general_memory
 
+    # TODO: Embedding management (updating, storing) could be handled by an 'EmbeddingManager'
+    # or be part of the 'QueryProcessor' if it also generates embeddings.
     def update_embeddings(self, memory=None):
         if isinstance(memory, SpecificMemory):
             self.memory_embeddings.update({memory.description: memory.get_embedding()})
@@ -1962,7 +2070,7 @@ class MemoryManager:
             with open(filename, "wb") as f:
                 pickle.dump(self.flat_access, f)
         except (pickle.PicklingError, IOError) as e:
-            print(f"Error while saving memories: {e}")
+            log_error("Error while saving memories", exception_obj=e, context=f"{self.__class__.__name__}.save_all_flat_access_memories_to_file")
 
     def load_all_flat_access_memories_from_file(self, filename):
         try:
@@ -1974,11 +2082,13 @@ class MemoryManager:
             ), "Loaded object is not an instance of FlatMemoryAccess"
             self.flat_access.index_load_filename = None
         except (pickle.UnpicklingError, IOError) as e:
-            print(f"Error while loading memories: {e}")
+            log_error("Error while loading memories", exception_obj=e, context=f"{self.__class__.__name__}.load_all_flat_access_memories_from_file")
 
     def add_memory(self, memory):
         self.flat_access.add_memory(memory)
 
+    # TODO: Group keyword extraction methods (TF-IDF, RAKE, LDA, entities)
+    # into a 'KeywordExtractor' utility class or module.
     def extract_entities(self, text):
         if isinstance(text, list):
             text = " ".join(text)
@@ -1986,7 +2096,7 @@ class MemoryManager:
         return [ent.text for ent in doc.ents]
 
     # Function to perform LDA topic modeling
-
+    # TODO: Part of 'KeywordExtractor'
     def extract_lda_keywords(self, docs, num_topics=3, num_words=3):
         tokenizer = self.lda_tokenizer
         docs = [
@@ -2012,6 +2122,7 @@ class MemoryManager:
         return lda_keywords
 
     # Function to extract keywords using TF-IDF
+    # TODO: Part of 'KeywordExtractor'
     def extract_tfidf_keywords(self, docs, top_n=3):
         if not isinstance(docs, list):
             docs = [docs]
@@ -2025,6 +2136,7 @@ class MemoryManager:
         return tfidf_keywords
 
     # Function to extract keywords using RAKE
+    # TODO: Part of 'KeywordExtractor'
     def extract_rake_keywords(self, docs, top_n=2):
         # print(type(docs))
 
@@ -2034,18 +2146,39 @@ class MemoryManager:
         rake_keywords = set(self.rake.get_ranked_phrases()[:top_n])
         return rake_keywords
 
-    def get_query_embedding(self, query):
-        input = model.tokenizer(
-            query, return_tensors="pt", padding=True, truncation=True
-        )
-        input = input.to(model.device)
-        outputs = model.forward(input["input_ids"], input["attention_mask"])
-        # print(f"\n Shape of query embedding: {outputs.last_hidden_state.shape}")
-        query_embedding = mean_pooling(
-            outputs.last_hidden_state, input["attention_mask"]
-        )
-        return query_embedding
+    # TODO: This should be part of an 'EmbeddingManager' or 'QueryProcessor'.
+    def get_query_embedding(self, query_text):
+        # Ensure query_text is a list for the tokenizer, even if it's a single query
+        if isinstance(query_text, str):
+            query_text = [query_text.strip()]
 
+        # Tokenize the input using the global model's tokenizer
+        inputs = model.tokenizer(
+            query_text,
+            padding=True,
+            truncation=True,
+            add_special_tokens=True,
+            # is_split_into_words=False, # Assuming query_text is raw string(s)
+            pad_to_multiple_of=8,
+            return_tensors="pt",
+        ).to(model.device)
+
+        # Get model outputs using the global model's forward method
+        with torch.no_grad(): # Ensure gradients are not computed
+            outputs = model.forward(
+                input_ids=inputs["input_ids"],
+                attention_mask=inputs["attention_mask"]
+            )
+
+        # Perform mean pooling using the global mean_pooling function
+        sentence_embedding = mean_pooling(
+            outputs.last_hidden_state,
+            inputs["attention_mask"]
+        )
+        return sentence_embedding
+
+    # TODO: Retrieval strategies (BST, flat access, similarity thresholds) could be managed
+    # by a 'MemoryRetriever' class, making MemoryManager more of a coordinator.
     def retrieve_memories_bst(self, general_memory, query):
         # print(f"\n Retrieving memories from BST for general memory: {general_memory.description} and query: {query.query}")
         exit(0)
@@ -2068,6 +2201,7 @@ class MemoryManager:
         # print(f"\n Matching memories BST: {matching_memories}")
         return matching_memories
 
+    # TODO: Part of 'MemoryRetriever'. is_relevant_flat_memory could also be a helper or part of Query object.
     def retrieve_from_flat_access(self, query_features):
         # print(f"\n Retrieving from flat access: {query_features.query}")
         # rel_mems = [memory for memory in self.flat_access.get_specific_memories() if self.is_relevant_flat_memory(memory, query_features)]
@@ -2079,6 +2213,7 @@ class MemoryManager:
         # print(f"\n Relevant memories and scores, flat access: {rel_mems}")
         return rel_mems
 
+    # TODO: These could be part of a 'SentimentEmotionService' if not already handled by the global sentiment_analysis object.
     def get_sentiment_score(self, text):
         return sentiment_analysis.get_sentiment_score(text)
 
@@ -2155,6 +2290,10 @@ class MemoryManager:
 
         return facts
 
+    # TODO: Refactor analyze_query_context into a dedicated 'QueryAnalyzer' class.
+    # This class would encapsulate all linguistic processing of queries (entities, SRL, complexity, etc.).
+    # Individual analysis steps (e.g., complexity, verb aspect, fact extraction, relationship extraction)
+    # could be separate methods or sub-components within QueryAnalyzer.
     def analyze_query_context(self, query):
         # print(f"\n Analyzing query: {query}")
         # Linguistic Analysis
@@ -4579,29 +4718,97 @@ class MemoryManager:
         )
 
         # Create a string of the template: "Who is doing what and to whom or what?"
-        if main_entity:
-            template = f"{main_entity} is doing {main_verb} to {main_object}"
-            if len(named_entities) > 1:
-                template += f" and {', '.join(named_entities.keys())} are also involved"
+        # if main_entity: # main_entity is already a string here
+        #     template = f"{main_entity} is doing {main_verb} to {main_object}" # main_verb, main_object are strings
+        #     if named_entities: # named_entities is a dict of lists of strings
+        #         all_other_entities = [item for sublist in named_entities.values() for item in sublist if item != main_entity]
+        #         if all_other_entities:
+        #             template += f" and {', '.join(all_other_entities)} are also involved"
 
-        # Check if main_subject is in named_entities
-        if main_subject:
-            main_subject_lower = main_subject.lower()
-            for entity in named_entities:
-                entity_lower = entity.lower()
-                if (
-                    main_subject_lower in entity_lower
-                    or entity_lower in main_subject_lower
-                ):
-                    main_subject = entity
-        # print(f"\n Definite Main Subject: {main_subject}")
+        # Ensure main_subject, main_verb, main_object are strings for serialization
+        main_subject_text = main_subject.text if hasattr(main_subject, 'text') else str(main_subject) if main_subject is not None else None
+        main_verb_text = main_verb.text if hasattr(main_verb, 'text') else str(main_verb) if main_verb is not None else None
+        main_object_text = main_object.text if hasattr(main_object, 'text') else str(main_object) if main_object is not None else None
 
-        for head, roles in semantic_roles.items():
-            print(
-                f"Head: {head.text} (POS: {head.pos_}) (dep: {head.dep_}) (tag: {head.tag_}) (index: {head.i})"
-            )
-            for role in roles:
-                print(f"  Role: {role}")
+        # Convert lists of Spacy Tokens to lists of strings
+        modals_text = [token.text for token in modals]
+        adverbs_text = [token.text for token in adverbs] # adverbs list was already created
+        adjectives_text = [token.text for token in adjectives]
+        pronouns_text = [token.text for token in pronouns]
+        proper_nouns_text = [token.text for token in proper_nouns]
+        common_nouns_text = [token.text for token in common_nouns]
+        verbs_text = [token.text for token in verbs]
+        adpositions_text = [token.text for token in adpositions]
+        auxiliaries_text = [token.text for token in auxiliaries]
+        conjunctions_text = [token.text for token in conjunctions] # conjunctions list from Spacy
+        # advanced_vocabulary_text = [token.text for token in advanced_vocabulary] # Assuming advanced_vocabulary is list of Tokens
+        # simple_vocabulary_text = [token.text for token in simple_vocabulary] # Assuming simple_vocabulary is list of Tokens
+        numbers_text = [token.text for token in numbers]
+        symbols_text = [token.text for token in symbols]
+        punctuations_text = [token.text for token in punctuations]
+        particles_text = [token.text for token in particles]
+        interjections_text = [token.text for token in interjections]
+
+        # Convert 'spans' (dict of Spacy Spans) to dict of strings
+        temporal_expressions_text = {key: span.text for key, span in spans.items()}
+
+        # 'prepositions' is a list of (token, dep_str, head_token) tuples
+        # This needs careful conversion to be fully serializable if it's included.
+        # For now, let's assume it's not critical for the returned analysis dictionary's primary use,
+        # or it will be handled if explicitly requested.
+        # If it were to be included and made serializable:
+        # prepositions_serializable = []
+        # for prep_token, dep_str, head_token in prepositions:
+        #     prepositions_serializable.append({
+        #         "token": prep_token.text,
+        #         "dep": dep_str,
+        #         "head": head_token.text
+        #     })
+
+        # named_entities is already Dict[str, List[str]]
+        # features (tokens, lemmas, pos_tags) are already List[str]
+        # verb_aspects is already Dict[str, str]
+        # dependency_tree is already Dict[str, List[Dict[str,str]]]
+        # word_frequencies is Dict[str, float]
+        # facts (templates) is List[str]
+
+        # semantic_roles: This is complex. For now, deferring full serialization.
+        # If it needs to be fully serialized, each Token/Span object within its structure
+        # would need to be converted to text or a serializable representation.
+        # A simplified text version or placeholder might be needed if full structure isn't pickle-safe.
+        # For this pass, we will exclude it or use a placeholder if it causes issues.
+        # The print loop for semantic_roles already shows how to access .text, .pos_ etc.
+
+        # print(f"\n Definite Main Subject: {main_subject_text}")
+
+        # Serialize 'semantic_roles'
+        # Original structure: {spacy.Token: [{"text": str, "dep": str, ..., "token": spacy.Token}, ...]}
+        # Target structure: {str(head_token_text): [{"text": str, "dep": str, ..., "token_text": str(token_text)}, ...]}
+        semantic_roles_serializable = {}
+        if semantic_roles: # semantic_roles is populated earlier in the function
+            for head_token, roles_list in semantic_roles.items():
+                head_token_text = head_token.text if hasattr(head_token, 'text') else str(head_token)
+                serialized_roles_list = []
+                for role_dict in roles_list:
+                    serialized_role_dict = {}
+                    for key, value in role_dict.items():
+                        if isinstance(value, (spacy.tokens.Token, spacy.tokens.Span, spacy.tokens.Doc)):
+                            serialized_role_dict[key] = value.text
+                        # elif key == "token" and hasattr(value, 'text'): # Redundant due to isinstance check
+                        #    serialized_role_dict["token_text"] = value.text # Store original token's text
+                        else:
+                            serialized_role_dict[key] = value
+                    serialized_roles_list.append(serialized_role_dict)
+                semantic_roles_serializable[head_token_text] = serialized_roles_list
+
+        # Serialize 'prepositions' list of (token, dep_str, head_token) tuples
+        prepositions_serializable = []
+        for prep_token, dep_str, head_token_obj in prepositions: # prepositions list was created earlier
+             prepositions_serializable.append({
+                 "token": prep_token.text,
+                 "dep": dep_str,
+                 "head": head_token_obj.text
+             })
 
         # 5. Verb-Adjective Relationship
 
@@ -4617,6 +4824,60 @@ class MemoryManager:
         complexity += int(avg_word_length)
 
         complexity += lexical_diversity * 10
+
+        # --- BEGIN SERIALIZATION OF SPACY OBJECTS ---
+        # Ensure main_subject, main_verb, main_object are strings for serialization
+        # These might have been Spacy tokens/spans if not handled by string conversion during their assignment earlier.
+        main_subject_text = main_subject.text if hasattr(main_subject, 'text') else str(main_subject) if main_subject is not None else None
+        main_verb_text = main_verb.text if hasattr(main_verb, 'text') else str(main_verb) if main_verb is not None else None
+        main_object_text = main_object.text if hasattr(main_object, 'text') else str(main_object) if main_object is not None else None
+
+        # Convert lists of Spacy Tokens to lists of strings (ensure these variables exist and are lists of tokens at this point)
+        modals_text = [token.text for token in modals if hasattr(token, 'text')]
+        adverbs_text = [token.text for token in adverbs if hasattr(token, 'text')]
+        adjectives_text = [token.text for token in adjectives if hasattr(token, 'text')]
+        pronouns_text = [token.text for token in pronouns if hasattr(token, 'text')]
+        proper_nouns_text = [token.text for token in proper_nouns if hasattr(token, 'text')]
+        common_nouns_text = [token.text for token in common_nouns if hasattr(token, 'text')]
+        verbs_text = [token.text for token in verbs if hasattr(token, 'text')] # verbs list was populated earlier
+        adpositions_text = [token.text for token in adpositions if hasattr(token, 'text')]
+        auxiliaries_text = [token.text for token in auxiliaries if hasattr(token, 'text')]
+        conjunctions_text = [token.text for token in conjunctions if hasattr(token, 'text')] # conjunctions list from Spacy
+
+        numbers_text = [token.text for token in numbers if hasattr(token, 'text')]
+        symbols_text = [token.text for token in symbols if hasattr(token, 'text')]
+        punctuations_text = [token.text for token in punctuations if hasattr(token, 'text')]
+        particles_text = [token.text for token in particles if hasattr(token, 'text')]
+        interjections_text = [token.text for token in interjections if hasattr(token, 'text')]
+
+        # Convert 'spans' (dict of Spacy Spans used for temporal_expressions)
+        temporal_expressions_text = {key: span_obj.text for key, span_obj in spans.items() if hasattr(span_obj, 'text')}
+
+        # Serialize 'semantic_roles'
+        semantic_roles_serializable = {}
+        if semantic_roles:
+            for head_token, roles_list in semantic_roles.items():
+                head_token_text = head_token.text if hasattr(head_token, 'text') else str(head_token)
+                serialized_roles_list = []
+                for role_dict in roles_list:
+                    serialized_role_dict = {}
+                    for r_key, r_value in role_dict.items():
+                        if isinstance(r_value, (spacy.tokens.Token, spacy.tokens.Span, spacy.tokens.Doc)):
+                            serialized_role_dict[r_key] = r_value.text
+                        else:
+                            serialized_role_dict[r_key] = r_value
+                    serialized_roles_list.append(serialized_role_dict)
+                semantic_roles_serializable[head_token_text] = serialized_roles_list
+
+        # Serialize 'prepositions' list of (token, dep_str, head_token) tuples
+        prepositions_serializable = []
+        for prep_token, dep_str, head_token_obj in prepositions:
+             prepositions_serializable.append({
+                 "token": prep_token.text if hasattr(prep_token, 'text') else str(prep_token),
+                 "dep": dep_str,
+                 "head": head_token_obj.text if hasattr(head_token_obj, 'text') else str(head_token_obj)
+             })
+        # --- END SERIALIZATION OF SPACY OBJECTS ---
 
         keywords = self.extract_keywords(query)
 
@@ -4674,6 +4935,60 @@ class MemoryManager:
 
         # reading_level =
 
+        # --- BEGIN SERIALIZATION OF SPACY OBJECTS ---
+        # Ensure main_subject, main_verb, main_object are strings for serialization
+        main_subject_text = main_subject.text if hasattr(main_subject, 'text') else str(main_subject) if main_subject is not None else None
+        main_verb_text = main_verb.text if hasattr(main_verb, 'text') else str(main_verb) if main_verb is not None else None
+        main_object_text = main_object.text if hasattr(main_object, 'text') else str(main_object) if main_object is not None else None
+
+        # Convert lists of Spacy Tokens to lists of strings
+        modals_text = [token.text for token in modals if hasattr(token, 'text')]
+        adverbs_text = [token.text for token in adverbs if hasattr(token, 'text')]
+        adjectives_text = [token.text for token in adjectives if hasattr(token, 'text')]
+        pronouns_text = [token.text for token in pronouns if hasattr(token, 'text')]
+        proper_nouns_text = [token.text for token in proper_nouns if hasattr(token, 'text')]
+        common_nouns_text = [token.text for token in common_nouns if hasattr(token, 'text')]
+        verbs_text = [token.text for token in verbs if hasattr(token, 'text')]
+        adpositions_text = [token.text for token in adpositions if hasattr(token, 'text')]
+        auxiliaries_text = [token.text for token in auxiliaries if hasattr(token, 'text')]
+        conjunctions_text = [token.text for token in conjunctions if hasattr(token, 'text')]
+
+        numbers_text = [token.text for token in numbers if hasattr(token, 'text')]
+        symbols_text = [token.text for token in symbols if hasattr(token, 'text')]
+        punctuations_text = [token.text for token in punctuations if hasattr(token, 'text')]
+        particles_text = [token.text for token in particles if hasattr(token, 'text')]
+        interjections_text = [token.text for token in interjections if hasattr(token, 'text')]
+
+        # Convert 'spans' (dict of Spacy Spans used for temporal_expressions)
+        temporal_expressions_text = {key: span_obj.text for key, span_obj in spans.items() if hasattr(span_obj, 'text')}
+
+        # Serialize 'semantic_roles'
+        semantic_roles_serializable = {}
+        if 'semantic_roles' in locals() and semantic_roles:
+            for head_token, roles_list in semantic_roles.items():
+                head_token_text = head_token.text if hasattr(head_token, 'text') else str(head_token)
+                serialized_roles_list = []
+                for role_dict in roles_list:
+                    serialized_role_dict = {}
+                    for r_key, r_value in role_dict.items():
+                        if isinstance(r_value, (spacy.tokens.Token, spacy.tokens.Span, spacy.tokens.Doc)):
+                            serialized_role_dict[r_key] = r_value.text
+                        else:
+                            serialized_role_dict[r_key] = r_value
+                    serialized_roles_list.append(serialized_role_dict)
+                semantic_roles_serializable[head_token_text] = serialized_roles_list
+
+        # Serialize 'prepositions' list of (token, dep_str, head_token) tuples
+        prepositions_serializable = []
+        if 'prepositions' in locals() and prepositions:
+            for prep_token, dep_str, head_token_obj in prepositions:
+                 prepositions_serializable.append({
+                     "token": prep_token.text if hasattr(prep_token, 'text') else str(prep_token),
+                     "dep": dep_str,
+                     "head": head_token_obj.text if hasattr(head_token_obj, 'text') else str(head_token_obj)
+                 })
+        # --- END SERIALIZATION OF SPACY OBJECTS ---
+
         ambiguity_score = complexity / 10
         sentiment_score = self.get_sentiment_score(query)
         emotion_classification = self.get_emotion_classification(query)
@@ -4689,13 +5004,13 @@ class MemoryManager:
             "emotion_classification": emotion_classification,
             "ambiguity_score": ambiguity_score,
             "keywords": keywords,
-            # "themes": themes,
+            # "themes": themes, # Ensure serializable if used
             "text": query,
-            "main_subject": main_subject,
-            "main_verb": main_verb,
-            "main_object": main_object,
-            # "named_entities": named_entities,
-            # "temporal_expressions": spans,
+            "main_subject": main_subject_text,
+            "main_verb": main_verb_text,
+            "main_object": main_object_text,
+            "named_entities": named_entities,
+            "temporal_expressions": temporal_expressions_text,
             "verb_aspects": verb_aspects,
             "complexity": complexity,
             "is_common_query": is_common_query,
@@ -4704,33 +5019,29 @@ class MemoryManager:
             "type_token_ratio": type_token_ratio,
             "avg_word_length": avg_word_length,
             "lexical_diversity": lexical_diversity,
-            # "passive_voice": passive_voice,
-            # "active_voice": active_voice,
-            # "modals": modals,
-            # "determiners": determiners,
-            # "semantic_roles": semantic_roles,
-            # "dependencies": dependency_tree,
-            # "relationships": relationships,
-            # "proper_nouns": proper_nouns,
-            # "common_nouns": common_nouns,
-            # "verbs": verbs,
-            # "adpositions": adpositions,
-            # "adverbs": adverbs,
-            # "auxiliaries": auxiliaries,
-            # "conjunctions": conjunctions,
-            # "advanced_vocabulary": advanced_vocabulary,
-            # "simple_vocabulary": simple_vocabulary,
-            # "numbers": numbers,
-            # "symbols": symbols,
-            # "punctuations": punctuations,
-            # "particles": particles,
-            # "interjections": interjections,
-            # "prepositions": prepositions,
-            # "conjunctions": conjunctions,
-            # "pronouns": pronouns,
-            # "adjectives": adjectives,
-            # "adverbs": adverbs,
-            # "word_frequency": word_frequencies,
+            "modals": modals_text,
+            "determiners": determiners,
+            "semantic_roles": semantic_roles_serializable,
+            "dependencies": dependency_tree,
+            # "relationships": relationships, # Ensure serializable if used
+            "proper_nouns": proper_nouns_text,
+            "common_nouns": common_nouns_text,
+            "verbs": verbs_text,
+            "adpositions": adpositions_text,
+            "adverbs": adverbs_text,
+            "auxiliaries": auxiliaries_text,
+            "conjunctions": conjunctions_text,
+            # "advanced_vocabulary": [token.text for token in advanced_vocabulary if hasattr(token, 'text')],
+            # "simple_vocabulary": [token.text for token in simple_vocabulary if hasattr(token, 'text')],
+            "numbers": numbers_text,
+            "symbols": symbols_text,
+            "punctuations": punctuations_text,
+            "particles": particles_text,
+            "interjections": interjections_text,
+            "prepositions": prepositions_serializable,
+            "pronouns": pronouns_text,
+            "adjectives": adjectives_text,
+            "word_frequency": word_frequencies,
             "facts": templates,
         }
 

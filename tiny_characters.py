@@ -1,3 +1,13 @@
+"""
+Defines the core character model and related components for TinyVillage.
+
+This module includes the `Character` class, which represents AI agents in the
+simulation, managing their state, goals, personality, and interactions.
+It also includes supporting classes like `Goal`, `Motive`, `PersonalityTraits`,
+`CharacterState`, `CharacterMovement`, `CharacterGoalManager`,
+`CharacterSocialManager`, and `CharacterEconomicProfile` to structure character data
+and behavior.
+"""
 # ==== HELPER CLASSES INSERTED BY AGENT ====
 class CharacterState:
     """
@@ -7,13 +17,13 @@ class CharacterState:
                  mental_health: int = 100, social_wellbeing: int = 100,
                  current_satisfaction: float = 75.0, current_mood: str = "neutral"):
         self.health_status = ClampedIntScore(health_status)
-        self.hunger_level = ClampedIntScore(hunger_level, min_val=0, max_val=100) 
+        self.hunger_level = ClampedIntScore(hunger_level, min_val=0, max_val=100)
         self.energy = ClampedIntScore(energy)
         self.mental_health = ClampedIntScore(mental_health)
         self.social_wellbeing = ClampedIntScore(social_wellbeing)
-        self.current_satisfaction = current_satisfaction 
-        self.current_mood = current_mood 
-        self.active_conditions = [] 
+        self.current_satisfaction = current_satisfaction
+        self.current_mood = current_mood
+        self.active_conditions = []
 
     def update_health(self, change: int):
         self.health_status.add(change)
@@ -48,15 +58,15 @@ class CharacterMovement:
     Manages character movement, location, and pathfinding.
     """
     def __init__(self, initial_location: Location, current_speed: float = 1.0, move_speed_base: int = 1, graph_manager_ref: Optional[GraphManager] = None):
-        self.location: Location = initial_location 
-        self.coordinates_location: List[float] = initial_location.get_coordinates() 
-        self.destination: Optional[Location] = None 
-        self.path: Optional[List[Any]] = None 
-        self.current_speed: float = current_speed 
-        self.move_speed_base: int = move_speed_base 
-        self._graph_manager: Optional[GraphManager] = graph_manager_ref 
+        self.location: Location = initial_location
+        self.coordinates_location: List[float] = initial_location.get_coordinates()
+        self.destination: Optional[Location] = None
+        self.path: Optional[List[Any]] = None
+        self.current_speed: float = current_speed
+        self.move_speed_base: int = move_speed_base
+        self._graph_manager: Optional[GraphManager] = graph_manager_ref
         self.is_moving: bool = False
-        self.movement_mode: str = "walking" 
+        self.movement_mode: str = "walking"
 
     def set_destination(self, destination: Location, graph_manager: Optional[GraphManager] = None):
         self.destination = destination
@@ -77,8 +87,8 @@ class CharacterMovement:
             if not self.path: logging.debug("Path is empty or not set.")
             return
 
-        next_waypoint_coords = self.path[0] 
-        self.location.set_coordinates(next_waypoint_coords) 
+        next_waypoint_coords = self.path[0]
+        self.location.set_coordinates(next_waypoint_coords)
         self.coordinates_location = self.location.get_coordinates()
         logging.debug(f"Moved to {self.coordinates_location}. Remaining path: {self.path[1:]}")
         self.path.pop(0)
@@ -87,19 +97,19 @@ class CharacterMovement:
             self.is_moving = False
             if self.destination and self.location.get_coordinates() == self.destination.get_coordinates():
                 logging.debug(f"Destination {self.destination.name} reached.")
-                self.destination = None 
+                self.destination = None
             else: logging.debug("End of path reached, but may not be final destination if destination coords differ.")
-            
+
     def update_location(self, new_location: Location):
         self.location = new_location
         self.coordinates_location = new_location.get_coordinates()
-        self.is_moving = False 
+        self.is_moving = False
         self.path = None
         self.destination = None
         logging.debug(f"Location updated directly to {self.location.name} at {self.coordinates_location}")
 
     def is_at_destination(self) -> bool:
-        if not self.destination: return True 
+        if not self.destination: return True
         return self.location.get_coordinates() == self.destination.get_coordinates()
 
 # --- Start of Helper Class Definitions (Part 2b) ---
@@ -108,11 +118,11 @@ class CharacterGoalManager:
     """
     Manages character goals, including generation, prioritization, and tracking.
     """
-    def __init__(self, character_ref: 'Character', 
-                 goals: Optional[List['Goal']] = None, 
-                 short_term_goals: Optional[List['Goal']] = None, 
-                 long_term_goal: Optional[str] = None, 
-                 needed_items: Optional[List[Any]] = None, 
+    def __init__(self, character_ref: 'Character',
+                 goals: Optional[List['Goal']] = None,
+                 short_term_goals: Optional[List['Goal']] = None,
+                 long_term_goal: Optional[str] = None,
+                 needed_items: Optional[List[Any]] = None,
                  motives: Optional['PersonalMotives'] = None, # Forward reference
                  graph_manager: Optional[GraphManager] = None, # GraphManager is likely imported
                  goap_planner: Optional['GOAPPlanner'] = None,  # Forward reference
@@ -122,13 +132,13 @@ class CharacterGoalManager:
         self.short_term_goals = short_term_goals if short_term_goals is not None else []
         self.long_term_goal = long_term_goal if long_term_goal is not None else ""
         self.needed_items = needed_items if needed_items is not None else []
-        self.motives = motives 
+        self.motives = motives
 
         self._graph_manager = graph_manager
-        self._goap_planner = goap_planner 
+        self._goap_planner = goap_planner
         self._prompt_builder = prompt_builder
-        
-        # Example: self._goal_generator = GoalGenerator(self.motives, self._graph_manager, self._goap_planner, self._prompt_builder) 
+
+        # Example: self._goal_generator = GoalGenerator(self.motives, self._graph_manager, self._goap_planner, self._prompt_builder)
         # Actual GoalGenerator might need to be imported or defined before it can be instantiated.
 
     def evaluate_goals(self) -> List['Goal']: # Mark 'Goal' as forward reference
@@ -151,18 +161,18 @@ class CharacterGoalManager:
         logging.debug(f"Generating goals for {self.character_ref.name}")
         # Placeholder: Implementation would use GoalGenerator or similar logic.
         # Example: if self._goal_generator: return self._goal_generator.generate_goals(self.character_ref)
-        return [] 
+        return []
 
     def update_required_items_list(self, item_node_attrs: List[Dict], item_count: int = 1):
         """Updates the list of items needed for current goals."""
         logging.debug(f"Updating required items for {self.character_ref.name}.")
-        for item_spec in item_node_attrs: 
+        for item_spec in item_node_attrs:
             self.needed_items.append((item_spec, item_count))
         pass
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "goals": [g.name for g in self.goals if hasattr(g, 'name')], 
+            "goals": [g.name for g in self.goals if hasattr(g, 'name')],
             "long_term_goal": self.long_term_goal,
             "needed_items": self.needed_items, # May need specific serialization for item_spec
             "motives": self.motives.to_dict() if hasattr(self.motives, 'to_dict') else vars(self.motives) if self.motives else None,
@@ -173,10 +183,10 @@ class CharacterSocialManager:
     Manages character's social relationships, interactions, and reputation.
     """
     def __init__(self, character_ref: 'Character',
-                 friendship_grid: Optional[List[Dict]] = None, 
-                 romantic_relationships: Optional[List[Any]] = None, 
-                 exclusive_relationship: Optional[Any] = None, 
-                 romanceable: bool = True, 
+                 friendship_grid: Optional[List[Dict]] = None,
+                 romantic_relationships: Optional[List[Any]] = None,
+                 exclusive_relationship: Optional[Any] = None,
+                 romanceable: bool = True,
                  base_libido: Optional['ClampedIntScore'] = None, # Forward reference
                  monogamy: Optional['ClampedIntScore'] = None, # Forward reference
                  community_score: Optional['ClampedIntScore'] = None): # Forward reference
@@ -191,16 +201,16 @@ class CharacterSocialManager:
 
     def _generate_friendship_grid_default(self) -> List[Dict]:
         logging.debug(f"Generating default friendship grid for {self.character_ref.name}")
-        return [] 
+        return []
 
-    def generate_friendship_grid(self) -> List[Dict]: 
+    def generate_friendship_grid(self) -> List[Dict]:
         logging.warning(f"generate_friendship_grid called on manager, actual logic should be in Character or delegated from it.")
         # This method in Character would use self.character_ref.graph_manager.analyze_character_relationships(self.character_ref)
         return self._generate_friendship_grid_default()
-        
+
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "friendship_grid_summary": f"{len(self.friendship_grid)} relationships", 
+            "friendship_grid_summary": f"{len(self.friendship_grid)} relationships",
             "romantic_relationships_count": len(self.romantic_relationships),
             "is_exclusive": self.exclusive_relationship is not None,
             "romanceable": self.romanceable,
@@ -214,28 +224,28 @@ class CharacterEconomicProfile:
     Manages character's economic status, including job, wealth, inventory, and assets.
     """
     def __init__(self, character_ref: 'Character',
-                 job: Any = "unemployed", 
-                 job_performance: Optional['ClampedIntScore'] = None, 
-                 wealth_money: Optional['ClampedIntScore'] = None, 
+                 job: Any = "unemployed",
+                 job_performance: Optional['ClampedIntScore'] = None,
+                 wealth_money: Optional['ClampedIntScore'] = None,
                  inventory: Optional['ItemInventory'] = None, # Forward reference
                  investment_portfolio: Optional['InvestmentPortfolio'] = None, # Forward reference
                  home: Optional['House'] = None, # Forward reference
                  career_goals: Optional[List[str]] = None):
         self.character_ref = character_ref
-        self._job: Any = "unemployed" 
+        self._job: Any = "unemployed"
         self.job_rules = JobRules() # JobRules needs to be available
-        self.set_job(job) 
+        self.set_job(job)
 
         self.job_performance = job_performance if job_performance is not None else ClampedIntScore(20)
         self.wealth_money = wealth_money if wealth_money is not None else ClampedIntScore(10)
-        self.inventory = inventory if inventory is not None else ItemInventory() 
+        self.inventory = inventory if inventory is not None else ItemInventory()
         self.investment_portfolio = investment_portfolio if investment_portfolio is not None else InvestmentPortfolio([])
-        self.home = home 
+        self.home = home
         self.career_goals = career_goals if career_goals is not None else []
 
     def set_job(self, job_input: Union[str, 'JobRoles', None]): # Forward reference for JobRoles
         logging.debug(f"Setting job for {self.character_ref.name} to {job_input}")
-        if isinstance(job_input, JobRoles): 
+        if isinstance(job_input, JobRoles):
             self._job = job_input
         elif isinstance(job_input, str):
             # This assumes JobRules and its ValidJobRoles list are accessible
@@ -244,7 +254,7 @@ class CharacterEconomicProfile:
             else: self._job = "unemployed"
         else: self._job = "unemployed"
         return self._job
-        
+
     def get_job(self) -> Union[str, 'JobRoles', None]: # Forward reference for JobRoles
         return self._job
 
@@ -252,33 +262,143 @@ class CharacterEconomicProfile:
         logging.debug(f"Adding {item.name} to {self.character_ref.name}'s inventory.")
         self.inventory.add_item(item)
         pass # Actual graph logic would be in Character class or passed via graph_manager_ref
-        
-    def set_home_object(self, home_obj: Optional['House']): 
+
+    def set_home_object(self, home_obj: Optional['House']):
         self.home = home_obj
         # If CharacterDerivedStats exists and needs update:
-        # if hasattr(self.character_ref, 'derived_stats') and self.character_ref.derived_stats: 
-        #     self.character_ref.derived_stats.update_shelter_value() 
+        # if hasattr(self.character_ref, 'derived_stats') and self.character_ref.derived_stats:
+        #     self.character_ref.derived_stats.update_shelter_value()
         pass
 
-    def get_home_object(self) -> Optional['House']: 
+    def get_home_object(self) -> Optional['House']:
         return self.home
-    
+
     def has_job(self) -> bool:
         return self._job is not None and self._job != "unemployed"
 
     def has_investment(self) -> bool:
         return self.investment_portfolio and len(self.investment_portfolio.get_stocks()) > 0
-            
+
     def to_dict(self) -> Dict[str, Any]:
         job_name = self._job.name if isinstance(self._job, JobRoles) else self._job
         return {
             "job_name": job_name,
             "job_performance": self.job_performance.get_score() if self.job_performance else None,
             "wealth_money": self.wealth_money.get_score() if self.wealth_money else None,
-            "inventory_summary": f"{self.inventory.count_total_items() if self.inventory else 0} items", 
+            "inventory_summary": f"{self.inventory.count_total_items() if self.inventory else 0} items",
             "investment_portfolio_value": self.investment_portfolio.get_total_value() if self.investment_portfolio else 0,
-            "home_address": self.home.address if self.home else "Homeless", 
+            "home_address": self.home.address if self.home else "Homeless",
             "career_goals": self.career_goals,
+        }
+
+class CharacterDerivedStats:
+    """
+    Manages the calculation and caching of derived statistics for a character.
+    These stats are based on the character's core state, economic profile, social life, and goals.
+    """
+    def __init__(self, character_ref: 'Character',
+                 state_manager_ref: 'CharacterState',
+                 economic_profile_ref: 'CharacterEconomicProfile',
+                 social_manager_ref: 'CharacterSocialManager',
+                 goal_manager_ref: 'CharacterGoalManager'):
+        self.character_ref = character_ref # Direct reference to the character if needed for attributes not yet moved
+        self.state_manager = state_manager_ref
+        self.economic_profile = economic_profile_ref
+        self.social_manager = social_manager_ref
+        self.goal_manager = goal_manager_ref
+
+        # Internal storage for calculated stats
+        self._stability: float = 0.0
+        self._happiness: float = 0.0
+        self._success: float = 0.0
+        self._control: float = 0.0
+        self._hope: float = 0.0
+        # self._material_goods: float = 0.0 # Example if moved here
+
+        # Initial calculation upon instantiation
+        self.update_all_derived_stats()
+
+    @property
+    def stability(self) -> float:
+        return self._stability
+
+    @property
+    def happiness(self) -> float:
+        return self._happiness
+
+    @property
+    def success(self) -> float:
+        return self._success
+
+    @property
+    def control(self) -> float:
+        return self._control
+
+    @property
+    def hope(self) -> float:
+        return self._hope
+
+    # --- Calculation Methods (to be filled with logic moved from Character) ---
+    def calculate_stability(self) -> float:
+        # Original Character.calculate_stability logic to be moved here.
+        # This method will use the manager references (e.g., self.economic_profile.home)
+        # For now, just a placeholder calculation.
+        logging.debug(f"Calculating stability for {self.character_ref.name}")
+        # Example: shelter_value = self.economic_profile.get_home_object().calculate_shelter_value() if self.economic_profile.get_home_object() else 0
+        # self._stability = shelter_value * 0.5 # Simplified
+        pass
+        return self._stability
+
+    def calculate_happiness(self) -> float:
+        # Original Character.calculate_happiness logic to be moved here.
+        logging.debug(f"Calculating happiness for {self.character_ref.name}")
+        # Example: self._happiness = self.state_manager.mental_health.get_score() * 0.5 + self.social_manager.community_score.get_score() * 0.5
+        pass
+        return self._happiness
+
+    def calculate_success(self) -> float:
+        # Original Character.calculate_success logic to be moved here.
+        logging.debug(f"Calculating success for {self.character_ref.name}")
+        # Example: self._success = self.economic_profile.job_performance.get_score() * 0.7 + len(self.goal_manager.goals) * 0.3
+        pass
+        return self._success
+
+    def calculate_control(self) -> float:
+        # Original Character.calculate_control logic to be moved here.
+        logging.debug(f"Calculating control for {self.character_ref.name}")
+        # Example: self._control = self.economic_profile.wealth_money.get_score() * 0.6 + self.state_manager.energy.get_score() * 0.4
+        pass
+        return self._control
+
+    def calculate_hope(self) -> float:
+        # Original Character.calculate_hope logic to be moved here.
+        logging.debug(f"Calculating hope for {self.character_ref.name}")
+        # Example: self._hope = (self.goal_manager.long_term_goal != "") * 50 + self.state_manager.current_satisfaction * 0.5
+        pass
+        return self._hope
+
+    def update_all_derived_stats(self):
+        """
+        Calls all individual calculation methods to update the derived stats.
+        This should be called after any significant state change in the character.
+        """
+        logging.info(f"Updating all derived stats for {self.character_ref.name}")
+        self._stability = self.calculate_stability()
+        self._happiness = self.calculate_happiness()
+        self._success = self.calculate_success()
+        self._control = self.calculate_control()
+        self._hope = self.calculate_hope()
+        # Add other calculations here, e.g., self._material_goods = self.calculate_material_goods()
+        logging.debug(f"Derived stats updated for {self.character_ref.name}: Stability={self._stability}, Happiness={self._happiness}, etc.")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "stability": self.stability,
+            "happiness": self.happiness,
+            "success": self.success,
+            "control": self.control,
+            "hope": self.hope,
+            # "material_goods": self.material_goods, # If moved
         }
 
 # --- End of Helper Class Definitions (Part 2b) ---
@@ -586,29 +706,52 @@ class Goal:
         # desired_results,  # list of desired results (as dicts of dicts representing State attributes) when the goal is completed
     ):
         self.name = name
+        # TODO: Refactor completion conditions into a dedicated 'GoalCompletionManager' class.
+        # This class would hold the conditions and provide methods like check_all_conditions_met(character, environment).
+        # The Condition class itself might also be expanded or made more robust.
         self.completion_conditions = completion_conditions
         self.description = description
-        self.score = score
-        self.character = character
+        self.score = score # Represents the importance/priority of the goal.
+        self.character = character # Character this goal belongs to.
+
+        # TODO: Consider a 'GoalLifecycleCallbacks' or 'GoalParameterEvaluator' class
+        # to manage these function-based attributes (utility, difficulty, reward, penalty, messages).
+        # This could provide a more structured way to define and call these evaluations/generations.
+        # These functions are currently expected to be passed in, likely from a GOAP planner or similar system.
         self.evaluate_utility_function = evaluate_utility_function
         self.difficulty = difficulty
         self.completion_reward = completion_reward
         self.failure_penalty = failure_penalty
         self.completion_message = completion_message
         self.failure_message = failure_message
+
+        # TODO: Refactor criteria evaluation into a 'GoalCriteriaEvaluator' class.
+        # This class would take the criteria and provide methods to check them against character/world state.
+        # Criteria define the specific conditions or state of the world/character that this goal aims to achieve or that enable it.
         self.criteria = criteria
+
+        # TODO: The logic in extract_required_items is complex and relies on string parsing.
+        # This could be part of a 'GoalRequirementsManager' that works with more structured
+        # condition/criteria objects to define item needs.
+        # Agent decisions and memory for item requirements should also be integrated here.
         self.required_items = (
             self.extract_required_items()
         )  # list of tuples, each tuple is (dict of item requirements, quantity needed).
         # The dict of item requirements is composed of various keys like item_type, value, usability, sentimental_value, trade_value, scarcity, coordinates_location, name,
-        self.target = target
-        self.environment = graph_manager
-        self.goal_type = goal_type
-        self.target_effects = target_effects
+
+        self.target = target # The entity (character, item, location) this goal is directed towards.
+        self.environment = graph_manager # Reference to the game world/graph.
+        self.goal_type = goal_type # Categorization of the goal (e.g., "basic", "economic", "social").
+
+        # TODO: Refactor target_effects into a 'GoalEffectsApplicator' or similar.
+        # This would manage how the successful (or failed) completion of this goal modifies the character/world state.
+        self.target_effects = target_effects # Desired outcomes or changes upon goal completion.
         # self.desired_results = desired_results
 
     def extract_required_items(self):
-        ##TODO: We will need multiple paths to adding items to the required items list, including with the agents decisions and with the completion conditions. Some of this will require the agent to remember which items fulfill goals
+        # TODO: This method's logic should be moved to the 'GoalRequirementsManager' (see above).
+        # The parsing of condition attributes is brittle and should be replaced with a more robust system
+        # where conditions/criteria directly specify item requirements in a structured format.
         required_items = (
             []
         )  # list of tuples, each tuple is (dict of item requirements, quantity needed).
@@ -822,22 +965,26 @@ class Goal:
         }
 
     def check_completion(self):
+        # TODO: This logic should move to the 'GoalCompletionManager'.
+        # It would iterate through its managed conditions and evaluate them.
         return all(
             [
-                condition.check_condition()
-                for condition in self.completion_conditions.values()
+                condition.check_condition() # Assumes Condition objects have a check_condition method
+                for condition_list in self.completion_conditions.values() for condition in condition_list
             ]
         )
 
-    def evaluate_utility_function(self):
+    def evaluate_utility_function(self): # TODO: This method should be part of 'GoalLifecycleCallbacks' or 'GoalParameterEvaluator'.
+        # The actual execution of the passed-in function.
         return self.evaluate_utility_function(
             self.character,
-            self.character.environment,
-            self.difficulty,
+            self.character.environment, # Should ideally be self.environment
+            self.difficulty, # The difficulty function itself is passed, not its result.
             self.criteria,
         )
 
-    def calculate_goal_difficulty(self):
+    def calculate_goal_difficulty(self): # TODO: This method should be part of 'GoalLifecycleCallbacks' or 'GoalParameterEvaluator'.
+        # The actual execution of the passed-in function.
         return self.difficulty(self.character, self.environment)
 
 
@@ -2009,7 +2156,7 @@ class CharacterSkills:
         return self.skills
 
 # Forward declaration for type hinting if Character class is defined later in the file
-# class Character: pass 
+# class Character: pass
 # class PersonalMotives: pass # Assuming PersonalMotives might also be defined later or imported
 # class Goal: pass # Assuming Goal is defined
 # class GOAPPlanner: pass # Assuming GOAPPlanner is defined or imported
@@ -2025,26 +2172,26 @@ class CharacterGoalManager:
     """
     Manages character goals, including generation, prioritization, and tracking.
     """
-    def __init__(self, character_ref: 'Character', 
-                 goals: Optional[List['Goal']] = None, 
-                 short_term_goals: Optional[List['Goal']] = None, 
-                 long_term_goal: Optional[str] = None, 
-                 needed_items: Optional[List[Any]] = None, 
+    def __init__(self, character_ref: 'Character',
+                 goals: Optional[List['Goal']] = None,
+                 short_term_goals: Optional[List['Goal']] = None,
+                 long_term_goal: Optional[str] = None,
+                 needed_items: Optional[List[Any]] = None,
                  motives: Optional['PersonalMotives'] = None,
                  graph_manager: Optional[GraphManager] = None, # GraphManager is likely imported
-                 goap_planner: Optional['GOAPPlanner'] = None, 
+                 goap_planner: Optional['GOAPPlanner'] = None,
                  prompt_builder: Optional['PromptBuilder'] = None):
         self.character_ref = character_ref
         self.goals = goals if goals is not None else []
         self.short_term_goals = short_term_goals if short_term_goals is not None else []
         self.long_term_goal = long_term_goal if long_term_goal is not None else ""
         self.needed_items = needed_items if needed_items is not None else []
-        self.motives = motives 
+        self.motives = motives
 
         self._graph_manager = graph_manager
-        self._goap_planner = goap_planner 
+        self._goap_planner = goap_planner
         self._prompt_builder = prompt_builder
-        
+
         # self._goal_generator = GoalGenerator(self.motives, self._graph_manager, self._goap_planner, self._prompt_builder) # GoalGenerator needs to be defined/imported
 
     def evaluate_goals(self) -> List['Goal']:
@@ -2064,19 +2211,19 @@ class CharacterGoalManager:
         """Generates new goals for the character."""
         logging.debug(f"Generating goals for {self.character_ref.name}")
         # To be implemented: e.g., using self._goal_generator
-        return [] 
+        return []
 
     def update_required_items_list(self, item_node_attrs: List[Dict], item_count: int = 1):
         """Updates the list of items needed for current goals."""
         # Renamed from update_required_items to avoid clash with Character's method if it's different
         logging.debug(f"Updating required items for {self.character_ref.name}.")
-        for item_spec in item_node_attrs: 
+        for item_spec in item_node_attrs:
             self.needed_items.append((item_spec, item_count))
         pass
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "goals": [g.name for g in self.goals], 
+            "goals": [g.name for g in self.goals],
             "long_term_goal": self.long_term_goal,
             "needed_items": self.needed_items,
         }
@@ -2086,11 +2233,11 @@ class CharacterSocialManager:
     Manages character's social relationships, interactions, and reputation.
     """
     def __init__(self, character_ref: 'Character',
-                 friendship_grid: Optional[List[Dict]] = None, 
-                 romantic_relationships: Optional[List[Any]] = None, 
-                 exclusive_relationship: Optional[Any] = None, 
-                 romanceable: bool = True, 
-                 base_libido: Optional['ClampedIntScore'] = None, 
+                 friendship_grid: Optional[List[Dict]] = None,
+                 romantic_relationships: Optional[List[Any]] = None,
+                 exclusive_relationship: Optional[Any] = None,
+                 romanceable: bool = True,
+                 base_libido: Optional['ClampedIntScore'] = None,
                  monogamy: Optional['ClampedIntScore'] = None,
                  community_score: Optional['ClampedIntScore'] = None):
         self.character_ref = character_ref
@@ -2105,17 +2252,17 @@ class CharacterSocialManager:
     def _generate_friendship_grid_default(self) -> List[Dict]:
         """Generates a default or initializes the friendship grid."""
         logging.debug(f"Generating default friendship grid for {self.character_ref.name}")
-        return [] 
+        return []
 
     def generate_friendship_grid(self) -> List[Dict]: # Actual method to be implemented by Character
         """To be implemented by Character or call a utility, this is a placeholder if called directly."""
         # This method in Character would use self.graph_manager.analyze_character_relationships(self)
         logging.warning(f"generate_friendship_grid called on manager, should be on Character or delegated.")
         return self._generate_friendship_grid_default()
-        
+
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "friendship_grid_summary": f"{len(self.friendship_grid)} relationships", 
+            "friendship_grid_summary": f"{len(self.friendship_grid)} relationships",
             "romantic_relationships_count": len(self.romantic_relationships),
             "is_exclusive": self.exclusive_relationship is not None,
             "romanceable": self.romanceable,
@@ -2129,23 +2276,23 @@ class CharacterEconomicProfile:
     Manages character's economic status, including job, wealth, inventory, and assets.
     """
     def __init__(self, character_ref: 'Character',
-                 job: Any = "unemployed", 
-                 job_performance: Optional['ClampedIntScore'] = None, 
-                 wealth_money: Optional['ClampedIntScore'] = None, 
+                 job: Any = "unemployed",
+                 job_performance: Optional['ClampedIntScore'] = None,
+                 wealth_money: Optional['ClampedIntScore'] = None,
                  inventory: Optional['ItemInventory'] = None,
                  investment_portfolio: Optional['InvestmentPortfolio'] = None,
-                 home: Optional['House'] = None, 
+                 home: Optional['House'] = None,
                  career_goals: Optional[List[str]] = None):
         self.character_ref = character_ref
-        self._job: Any = "unemployed" 
+        self._job: Any = "unemployed"
         self.job_rules = JobRules() # JobRules needs to be available
-        self.set_job(job) 
+        self.set_job(job)
 
         self.job_performance = job_performance if job_performance is not None else ClampedIntScore(20)
         self.wealth_money = wealth_money if wealth_money is not None else ClampedIntScore(10)
-        self.inventory = inventory if inventory is not None else ItemInventory() 
+        self.inventory = inventory if inventory is not None else ItemInventory()
         self.investment_portfolio = investment_portfolio if investment_portfolio is not None else InvestmentPortfolio([])
-        self.home = home 
+        self.home = home
         self.career_goals = career_goals if career_goals is not None else []
 
     def set_job(self, job_input: Union[str, 'JobRoles', None]):
@@ -2159,7 +2306,7 @@ class CharacterEconomicProfile:
             else: self._job = "unemployed"
         else: self._job = "unemployed"
         return self._job
-        
+
     def get_job(self) -> Union[str, 'JobRoles', None]:
         return self._job
 
@@ -2168,7 +2315,7 @@ class CharacterEconomicProfile:
         logging.debug(f"Adding {item.name} to {self.character_ref.name}'s inventory.")
         self.inventory.add_item(item)
         pass
-        
+
     def set_home_object(self, home_obj: Optional['House']): # Renamed to avoid conflict with Character.set_home
         """Sets the character's home to a specific House object."""
         self.home = home_obj
@@ -2177,16 +2324,16 @@ class CharacterEconomicProfile:
 
     def get_home_object(self) -> Optional['House']:  # Renamed
         return self.home
-    
+
     def to_dict(self) -> Dict[str, Any]:
         job_name = self._job.name if isinstance(self._job, JobRoles) else self._job
         return {
             "job_name": job_name,
             "job_performance": self.job_performance.get_score() if self.job_performance else None,
             "wealth_money": self.wealth_money.get_score() if self.wealth_money else None,
-            "inventory_summary": f"{self.inventory.count_total_items() if self.inventory else 0} items", 
+            "inventory_summary": f"{self.inventory.count_total_items() if self.inventory else 0} items",
             "investment_portfolio_value": self.investment_portfolio.get_total_value() if self.investment_portfolio else 0,
-            "home_address": self.home.address if self.home else "Homeless", 
+            "home_address": self.home.address if self.home else "Homeless",
             "career_goals": self.career_goals,
         }
 
@@ -2486,13 +2633,27 @@ pronoun_mapper = {
 
 class Character:
     """
-    Character Attributes
-    Basic Attributes: These include name, age, gender identity, and appearance. Consider allowing for a diverse range of attributes to make each character unique and relatable to a wide audience.
-    Personality Traits: Utilize established models like the Big Five Personality Traits (Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism) to create varied and predictable behavior patterns.
-    Preferences: Likes, dislikes, hobbies, and interests can dictate how characters interact with the environment, objects, and other characters.
-    Skills and Careers: Define a skill system and potential careers that characters can pursue, influencing their daily routines, income, and interactions with others.
-    Relationships and Social Networks: Outline how characters form friendships, rivalities, and romantic relationships, affecting their social life and decisions.
+    Represents an individual character (AI agent) in the TinyVillage simulation.
 
+    The Character class encapsulates all aspects of an agent, including their
+    current state (health, hunger, energy), personality, goals, social relationships,
+    economic status, inventory, skills, and decision-making processes. Characters
+    interact with the game world, other characters, and events based on these
+    attributes and their underlying AI logic.
+
+    Key Responsibilities:
+    - Maintaining and updating its internal state (physical, mental, social).
+    - Managing and evaluating personal goals and motives.
+    - Making decisions based on its state, goals, memories, and environment.
+    - Interacting with other characters, items, and locations in the game world.
+    - Performing actions resolved by the ActionResolver.
+    - Storing and recalling memories of past events and interactions.
+
+    The character's behavior is driven by a combination of its personality traits,
+    current motives, active goals, and reactions to game events. It utilizes
+    various manager components (CharacterState, CharacterMovement, CharacterGoalManager,
+    CharacterSocialManager, CharacterEconomicProfile, CharacterDerivedStats, MemoryManager)
+    to organize and process its complex data and behaviors.
     """
 
     def __init__(
@@ -2540,16 +2701,16 @@ class Character:
         self.action_system = action_system
         self.name = self.set_name(name)
         self.age = self.set_age(age)
-        
+
         if graph_manager is None:
             raise ValueError("GraphManager instance required.")
         self.graph_manager = graph_manager
 
-        # Instantiate CharacterState 
+        # Instantiate CharacterState
         self.state = CharacterState(
             health_status=health_status,
             hunger_level=hunger_level,
-            energy=energy, 
+            energy=energy,
             mental_health=mental_health,
             social_wellbeing=social_wellbeing
         )
@@ -2574,11 +2735,11 @@ class Character:
         # self.move_speed = move_speed # Managed by self.movement
 
         # Home object resolution (needed for EconomicProfile)
-        _current_home_obj = None 
+        _current_home_obj = None
         if isinstance(home, House): _current_home_obj = home
         elif isinstance(home, str) and home != "homeless": _current_home_obj = CreateBuilding().create_house_by_type(home)
         elif home is None: _current_home_obj = CreateBuilding().generate_random_house()
-        
+
         # Initial Motives calculation (needed for GoalManager)
         _initial_motives = motives
         if _initial_motives is None:
@@ -2587,12 +2748,12 @@ class Character:
         # Instantiate CharacterEconomicProfile
         self.economic_profile = CharacterEconomicProfile(
             character_ref=self,
-            job=job, 
-            job_performance=ClampedIntScore(job_performance), 
-            wealth_money=ClampedIntScore(wealth_money),       
-            inventory=(inventory if inventory is not None else ItemInventory()), 
-            investment_portfolio=InvestmentPortfolio([]), 
-            home=_current_home_obj, 
+            job=job,
+            job_performance=ClampedIntScore(job_performance),
+            wealth_money=ClampedIntScore(wealth_money),
+            inventory=(inventory if inventory is not None else ItemInventory()),
+            investment_portfolio=InvestmentPortfolio([]),
+            home=_current_home_obj,
             career_goals=(career_goals if career_goals is not None else [])
         )
         # self.job = self.set_job(job) # Now managed by self.economic_profile
@@ -2605,17 +2766,17 @@ class Character:
 
         # Instantiate CharacterSocialManager
         self.personality_traits = self.set_personality_traits(personality_traits) # Set this first
-        _base_libido_val = self.calculate_base_libido() 
-        _monogamy_val = self.calculate_monogamy()     
+        _base_libido_val = self.calculate_base_libido()
+        _monogamy_val = self.calculate_monogamy()
         self.social_manager = CharacterSocialManager(
             character_ref=self,
             friendship_grid=(friendship_grid if friendship_grid else []),
-            romantic_relationships=[], 
-            exclusive_relationship=None, 
+            romantic_relationships=[],
+            exclusive_relationship=None,
             romanceable=romanceable,
             base_libido=ClampedIntScore(_base_libido_val),
             monogamy=ClampedIntScore(_monogamy_val),
-            community_score=ClampedIntScore(community) 
+            community_score=ClampedIntScore(community)
         )
         # self.friendship_grid = friendship_grid if friendship_grid else [{}] # Managed by self.social_manager
         # self.community = self.set_community(community) # Managed by self.social_manager
@@ -2624,17 +2785,17 @@ class Character:
         # self.exclusive_relationship = None # Managed by self.social_manager
         # self.base_libido = self.calculate_base_libido() # Managed by self.social_manager
         # self.monogamy = self.calculate_monogamy() # Managed by self.social_manager
-        
+
         # Instantiate CharacterGoalManager
-        self.goap_planner = GOAPPlanner(self.graph_manager) 
-        self.prompt_builder = PromptBuilder(self) 
+        self.goap_planner = GOAPPlanner(self.graph_manager)
+        self.prompt_builder = PromptBuilder(self)
         self.goal_manager = CharacterGoalManager(
             character_ref=self,
-            goals=[], 
-            short_term_goals=[], 
-            long_term_goal=long_term_goal, 
-            needed_items=[], 
-            motives=_initial_motives, 
+            goals=[],
+            short_term_goals=[],
+            long_term_goal=long_term_goal,
+            needed_items=[],
+            motives=_initial_motives,
             graph_manager=self.graph_manager,
             goap_planner=self.goap_planner,
             prompt_builder=self.prompt_builder
@@ -2643,84 +2804,84 @@ class Character:
         # self.short_term_goals = [] # Managed by self.goal_manager
         # self.goals = []  # Managed by self.goal_manager
         # self.needed_items = [] # Managed by self.goal_manager
-        
+
         # Home object resolution (needed for EconomicProfile)
-        _current_home_obj = None 
+        _current_home_obj = None
         if isinstance(home, House): _current_home_obj = home
         elif isinstance(home, str) and home != "homeless": _current_home_obj = CreateBuilding().create_house_by_type(home) # Assumes CreateBuilding is available
         elif home is None: _current_home_obj = CreateBuilding().generate_random_house() # Assumes CreateBuilding is available
-        
+
         # Initial Motives calculation (needed for GoalManager)
         # self.calculate_motives() is an existing Character method.
         # self.personality_traits is needed for calculate_base_libido/calculate_monogamy, ensure it's set first.
         self.personality_traits = self.set_personality_traits(personality_traits) # Stays on Character for now
-        
+
         _initial_motives = motives
         if _initial_motives is None:
-             _initial_motives = self.calculate_motives() 
+             _initial_motives = self.calculate_motives()
 
         # Instantiate CharacterEconomicProfile
         self.economic_profile = CharacterEconomicProfile(
             character_ref=self,
-            job=job, 
-            job_performance=ClampedIntScore(job_performance), 
-            wealth_money=ClampedIntScore(wealth_money),       
-            inventory=(inventory if inventory is not None else ItemInventory()), 
-            investment_portfolio=InvestmentPortfolio([]), 
-            home=_current_home_obj, 
+            job=job,
+            job_performance=ClampedIntScore(job_performance),
+            wealth_money=ClampedIntScore(wealth_money),
+            inventory=(inventory if inventory is not None else ItemInventory()),
+            investment_portfolio=InvestmentPortfolio([]),
+            home=_current_home_obj,
             career_goals=(career_goals if career_goals is not None else [])
         )
         # Original economic attributes now managed by self.economic_profile:
-        # self.job = self.set_job(job) 
-        # self.wealth_money = self.set_wealth_money(wealth_money) 
-        # self.inventory = self.set_inventory(inventory) 
-        # self.investment_portfolio = InvestmentPortfolio([]) 
-        # self.job_performance = self.set_job_performance(job_performance) 
-        # self.career_goals = career_goals 
+        # self.job = self.set_job(job)
+        # self.wealth_money = self.set_wealth_money(wealth_money)
+        # self.inventory = self.set_inventory(inventory)
+        # self.investment_portfolio = InvestmentPortfolio([])
+        # self.job_performance = self.set_job_performance(job_performance)
+        # self.career_goals = career_goals
         # self.home = _current_home_obj (original assignment was here)
 
         # Instantiate CharacterSocialManager
-        _base_libido_val = self.calculate_base_libido() 
-        _monogamy_val = self.calculate_monogamy()     
+        _base_libido_val = self.calculate_base_libido()
+        _monogamy_val = self.calculate_monogamy()
         self.social_manager = CharacterSocialManager(
             character_ref=self,
             friendship_grid=(friendship_grid if friendship_grid else []),
-            romantic_relationships=[], 
-            exclusive_relationship=None, 
+            romantic_relationships=[],
+            exclusive_relationship=None,
             romanceable=romanceable,
             base_libido=ClampedIntScore(_base_libido_val),
             monogamy=ClampedIntScore(_monogamy_val),
-            community_score=ClampedIntScore(community) 
+            community_score=ClampedIntScore(community)
         )
         # Original social attributes now managed by self.social_manager:
-        # self.friendship_grid = friendship_grid if friendship_grid else [{}] 
-        # self.community = self.set_community(community) 
-        # self.romanceable = romanceable 
-        # self.romantic_relationships = [] 
-        # self.exclusive_relationship = None 
+        # self.friendship_grid = friendship_grid if friendship_grid else [{}]
+        # self.community = self.set_community(community)
+        # self.romanceable = romanceable
+        # self.romantic_relationships = []
+        # self.exclusive_relationship = None
         # self.base_libido = self.calculate_base_libido()
-        # self.monogamy = self.calculate_monogamy() 
-        
+        # self.monogamy = self.calculate_monogamy()
+
         # Instantiate CharacterGoalManager
-        self.goap_planner = GOAPPlanner(self.graph_manager) 
-        self.prompt_builder = PromptBuilder(self) 
+        self.goap_planner = GOAPPlanner(self.graph_manager)
+        self.prompt_builder = PromptBuilder(self)
         self.goal_manager = CharacterGoalManager(
             character_ref=self,
-            goals=[], 
-            short_term_goals=[], 
-            long_term_goal=long_term_goal, 
-            needed_items=[], 
-            motives=_initial_motives, 
+            goals=[],
+            short_term_goals=[],
+            long_term_goal=long_term_goal,
+            needed_items=[],
+            motives=_initial_motives,
             graph_manager=self.graph_manager,
             goap_planner=self.goap_planner,
             prompt_builder=self.prompt_builder
         )
         # Original goal attributes now managed by self.goal_manager:
-        # self.long_term_goal = self.set_long_term_goal(long_term_goal) 
-        # self.short_term_goals = [] 
-        # self.goals = []  
-        # self.needed_items = [] 
-        
+        # self.long_term_goal = self.set_long_term_goal(long_term_goal)
+        # self.short_term_goals = []
+        # self.goals = []
+        # self.needed_items = []
+
         # The following attributes were part of the original __init__ after character_actions.
         # They need to be re-evaluated: some will be passed to managers, some stay on Character, some become derived.
         # self.pronouns = self.set_pronouns(pronouns) # Already set before managers
@@ -2849,7 +3010,7 @@ class Character:
         # self.friendship_grid = friendship_grid if friendship_grid else [{}] # Now managed by social_manager
         # self.job = None # Now managed by economic_profile
         # self.job = self.set_job(job) # Now managed by economic_profile
-        
+
         # health_status, hunger_level, mental_health, social_wellbeing are part of CharacterState (from Part 2a)
         # self.health_status = self.set_health_status(health_status)
         # self.hunger_level = self.set_hunger_level(hunger_level)
@@ -2863,7 +3024,7 @@ class Character:
         self.recent_event = self.set_recent_event(recent_event) # Remains on Character or moves to a Logbook/EventManager component
         # self.long_term_goal = self.set_long_term_goal(long_term_goal) # Now managed by goal_manager
         # self.inventory = self.set_inventory(inventory) # Now managed by economic_profile
-        
+
         # Home object itself might be managed by EconomicProfile or a dedicated PropertyManager
         _current_home_obj = None
         if isinstance(home, House): # home is passed as House object directly
@@ -2913,7 +3074,7 @@ class Character:
             monogamy=ClampedIntScore(self.calculate_monogamy()),       # Calculate and pass as ClampedIntScore
             community_score=ClampedIntScore(community) # Passed from Character __init__, ensure it's ClampedIntScore
         )
-        
+
         # Instantiate EconomicProfile
         self.economic_profile = CharacterEconomicProfile(
             character_ref=self,
@@ -2927,7 +3088,7 @@ class Character:
         )
         # Ensure derived stats like shelter are updated after home is set in economic_profile
         # self.shelter = self.set_shelter(self.economic_profile.get_home_object().calculate_shelter_value() if self.economic_profile.get_home_object() else 0)
-        # These derived stats will be handled by a CharacterDerivedStats component later, 
+        # These derived stats will be handled by a CharacterDerivedStats component later,
         # or calculated on the fly using data from other components.
         # self.success = self.set_success(self.calculate_success())
         # self.control = self.set_control(self.calculate_control())
@@ -2939,12 +3100,12 @@ class Character:
         self.current_satisfaction = 0 # Already in CharacterState
         self.current_mood = 50 # Already in CharacterState
         self.current_activity = None # To CharacterState or ActivityScheduler component
-        
+
         self.skills = CharacterSkills([]) # Could be its own component CharacterSkillsManager
         # self.career_goals = career_goals # Now managed by economic_profile
         # self.short_term_goals = [] # Now managed by goal_manager
         self.uuid = uuid.uuid4()
-        
+
         if gametime_manager:
             self.gametime_manager = gametime_manager
         else:
@@ -2969,18 +3130,31 @@ class Character:
         # self.exclusive_relationship = None
         # self.base_libido = self.calculate_base_libido() # Passed to SocialManager
         # self.monogamy = 0 # Passed to SocialManager
-        
+
         # self.investment_portfolio = InvestmentPortfolio([]) # Now managed by economic_profile
 
         # self.monogamy = self.calculate_monogamy() # Done during SocialManager instantiation
         # self.goals = self.evaluate_goals() # Now self.goal_manager.evaluate_goals()
         # Call evaluate_goals on the manager instance after it's created
-        if self.goal_manager:
+
+        # Instantiate CharacterDerivedStats (must be after all its dependencies are created)
+        self.derived_stats = CharacterDerivedStats(
+            character_ref=self,
+            state_manager_ref=self.state,
+            economic_profile_ref=self.economic_profile,
+            social_manager_ref=self.social_manager,
+            goal_manager_ref=self.goal_manager
+        )
+
+        if self.goal_manager: # Ensure goal_manager exists before calling methods on it
             self.goal_manager.goals = self.goal_manager.evaluate_goals()
+
+        # Update all derived stats once all components are initialized
+        self.derived_stats.update_all_derived_stats()
 
         # CharacterState and CharacterMovement would be instantiated here (as per Part 2a)
         # For this subtask, assuming they are already handled.
-        # self.state = CharacterState(...) 
+        # self.state = CharacterState(...)
         # self.movement = CharacterMovement(...)
         # Check graph_manager to see if character has been added to the graph
         if not self.graph_manager.get_node(node_id=self):
@@ -3012,8 +3186,43 @@ class Character:
     # def set_value(self, value):
     #     self._value = value
 
-    def get_base_libido(self):
-        return self.base_libido
+    @property
+    def base_libido(self):
+        # Delegates to self.social_manager.base_libido (ClampedIntScore)
+        if hasattr(self, 'social_manager') and hasattr(self.social_manager, 'base_libido') and self.social_manager.base_libido is not None:
+            return self.social_manager.base_libido.get_score()
+        logging.warning("Attempted to get base_libido before social_manager was fully initialized or lacks attribute.")
+        return 0 # Default
+
+    @base_libido.setter
+    def base_libido(self, value):
+        # Delegates to self.social_manager.base_libido (ClampedIntScore)
+        if hasattr(self, 'social_manager') and hasattr(self.social_manager, 'base_libido') and self.social_manager.base_libido is not None:
+            self.social_manager.base_libido.set_score(value)
+        elif hasattr(self, 'social_manager'):
+            self.social_manager.base_libido = ClampedIntScore(value) # Initialize if not present
+            logging.info(f"Initialized base_libido on social_manager for {self.name} with value {value}")
+        else:
+            logging.warning(f"Attempted to set base_libido '{value}' before social_manager was fully initialized.")
+
+    @property
+    def monogamy(self):
+        # Delegates to self.social_manager.monogamy (ClampedIntScore)
+        if hasattr(self, 'social_manager') and hasattr(self.social_manager, 'monogamy') and self.social_manager.monogamy is not None:
+            return self.social_manager.monogamy.get_score()
+        logging.warning("Attempted to get monogamy before social_manager was fully initialized or lacks attribute.")
+        return 0 # Default
+
+    @monogamy.setter
+    def monogamy(self, value):
+        # Delegates to self.social_manager.monogamy (ClampedIntScore)
+        if hasattr(self, 'social_manager') and hasattr(self.social_manager, 'monogamy') and self.social_manager.monogamy is not None:
+            self.social_manager.monogamy.set_score(value)
+        elif hasattr(self, 'social_manager'):
+            self.social_manager.monogamy = ClampedIntScore(value) # Initialize if not present
+            logging.info(f"Initialized monogamy on social_manager for {self.name} with value {value}")
+        else:
+            logging.warning(f"Attempted to set monogamy '{value}' before social_manager was fully initialized.")
 
     def post_init(self):
 
@@ -3021,11 +3230,11 @@ class Character:
         self._initialized = True
 
     # To CharacterEconomicProfile (initial annotation, will be refined later)
-    def add_to_inventory(self, item: ItemObject): 
+    def add_to_inventory(self, item: ItemObject):
         # Should delegate to self.economic_profile.add_to_inventory(item, self.graph_manager)
         if hasattr(self.economic_profile, 'add_to_inventory'):
-            self.economic_profile.add_to_inventory(item) 
-        else: 
+            self.economic_profile.add_to_inventory(item)
+        else:
             logging.warning("CharacterEconomicProfile does not yet have add_to_inventory method.")
             if not self.graph_manager.G.has_node(item):
                 self.graph_manager.add_item_node(item)
@@ -3033,13 +3242,14 @@ class Character:
             self.economic_profile.inventory.add_item(item)
 
     # To CharacterGoalManager (initial annotation, will be refined later)
-    def generate_goals(self): 
+    # Delegates to self.goal_manager.generate_goals()
+    def generate_goals(self):
         # Should delegate to self.goal_manager.generate_goals()
-        if hasattr(self.goal_manager, 'generate_goals'):
+        if hasattr(self.goal_manager, 'generate_goals') and self.goal_manager is not None:
             return self.goal_manager.generate_goals()
-        else: 
-            logging.warning("CharacterGoalManager does not yet have generate_goals method.")
-            return []
+
+        logging.warning("Character.generate_goals called, but goal_manager or its method is not available.")
+        return [] # Fallback
 
     # --- Movement Methods (delegating to self.movement) ---
     def get_location(self) -> Location:
@@ -3056,11 +3266,11 @@ class Character:
                 new_loc_obj = Location(name=f"{self.name}_loc_at_{loc_data[0]}_{loc_data[1]}", x=loc_data[0], y=loc_data[1], z=loc_data[2] if len(loc_data) > 2 else 0, capacity=0, action_system=self.action_system)
             else:
                 raise TypeError("Invalid single argument for set_location. Must be Location object or coordinate tuple/list.")
-        elif len(location_input) >= 2: 
+        elif len(location_input) >= 2:
             new_loc_obj = Location(name=f"{self.name}_loc_at_{location_input[0]}_{location_input[1]}", x=location_input[0], y=location_input[1], z=location_input[2] if len(location_input) > 2 else 0, capacity=0, action_system=self.action_system)
         else:
             raise ValueError("Invalid arguments for set_location.")
-        
+
         if new_loc_obj:
             self.movement.update_location(new_loc_obj)
         return self.movement.location
@@ -3069,10 +3279,10 @@ class Character:
         return self.movement.coordinates_location
 
     def set_coordinates_location(self, *coordinates: Any):
-        current_loc_obj = self.movement.location 
+        current_loc_obj = self.movement.location
         if not current_loc_obj:
             current_loc_obj = Location(name=f"{self.name}_implicit_loc", x=0,y=0,z=0,capacity=0,action_system=self.action_system)
-            self.movement.location = current_loc_obj 
+            self.movement.location = current_loc_obj
 
         coords_to_set = None
         if len(coordinates) == 1:
@@ -3081,14 +3291,14 @@ class Character:
                 coords_to_set = coord_data
             else:
                 raise TypeError("Invalid single argument for set_coordinates_location. Must be tuple or list of coordinates.")
-        elif len(coordinates) >= 2: 
+        elif len(coordinates) >= 2:
             coords_to_set = coordinates
         else:
             raise ValueError("Invalid arguments for set_coordinates_location.")
 
         if coords_to_set:
             current_loc_obj.set_coordinates(coords_to_set)
-            self.movement.coordinates_location = current_loc_obj.get_coordinates() 
+            self.movement.coordinates_location = current_loc_obj.get_coordinates()
         return self.movement.coordinates_location
 
     def set_destination(self, destination: Location):
@@ -3100,7 +3310,7 @@ class Character:
         # For now, directly call the CharacterMovement's simpler version.
         # The more complex steering logic from Character might be reintegrated into CharacterMovement later.
         self.movement.move_towards_next_waypoint(potential_field)
-        
+
         # If graph updates are needed after movement, that logic might also move or be signaled.
         # Example: self.graph_manager.update_location(self.name, self.movement.coordinates_location)
         # This depends on whether CharacterMovement directly updates graph_manager or if Character is responsible.
@@ -3112,8 +3322,18 @@ class Character:
 
     # --- End of Movement Methods ---
 
-    def add_new_goal(self, goal): # To be updated to use CharacterGoalManager
-        self.goals.append((0, goal))
+    # Delegates to self.goal_manager.add_new_goal
+    def add_new_goal(self, goal):
+        if hasattr(self, 'goal_manager') and self.goal_manager is not None:
+            self.goal_manager.add_new_goal(goal) # Pass the goal itself
+        else:
+            # Fallback if goal_manager is not yet initialized (should not happen in normal flow)
+            logging.warning(f"add_new_goal called on Character {self.name} before goal_manager was initialized. Goal '{goal.name if hasattr(goal, 'name') else goal}' not added to manager.")
+            # If the self.goals property is robust enough to handle direct appends (e.g., if it's a list):
+            # current_goals = self.goals # Get current list via property
+            # current_goals.append(goal) # Modify (assuming goal is the correct type, not a tuple)
+            # self.goals = current_goals # Set back via property
+            # However, direct manipulation like this if goal_manager is supposed to handle it is risky.
 
     def create_memory(self, description, timestamp, importance):
 
@@ -3580,66 +3800,50 @@ class Character:
         self.pronouns = pronouns
         return self.pronouns
 
-    def get_job(self):
-        return self.job
+    @property
+    def job(self):
+        # Delegates to self.economic_profile.get_job()
+        if hasattr(self, 'economic_profile') and hasattr(self.economic_profile, 'get_job'):
+            return self.economic_profile.get_job()
+        logging.warning("Attempted to get job before economic_profile was fully initialized or lacks get_job method.")
+        return None # Or a sensible default like "unemployed"
+
+    @job.setter
+    def job(self, value):
+        # Delegates to self.economic_profile.set_job(value)
+        # The actual logic for validating and setting the job should be within CharacterEconomicProfile.set_job()
+        if hasattr(self, 'economic_profile') and hasattr(self.economic_profile, 'set_job'):
+            self.economic_profile.set_job(value)
+        else:
+            logging.warning(f"Attempted to set job '{value}' before economic_profile was fully initialized or lacks set_job method.")
+            # Optionally, store temporarily if this happens during early __init__ before economic_profile is ready
+            # self._temp_job = value
 
     def check_graph_uuid(self):
         return self.graph_manager.unique_graph_id
 
-    def set_job(self, job):
-        job_rules = JobRules()
-        if isinstance(job, JobRoles):
-            self.job = job
-        elif isinstance(job, str):
-            check = job_rules.check_job_name_validity(job)
-            if check not in [None, False]:
-                logging.info("Job valid")
-                for job_role in job_rules.ValidJobRoles:
-                    if (
-                        job_role.get_job_name().lower() == job.lower()
-                        or job_role.get_job_name().lower() in job.lower()
-                    ) or (
-                        job.lower() == job_role.get_job_name().lower()
-                        or job.lower() in job_role.get_job_name().lower()
-                    ):
-                        logging.info("Job role found")
-                        self.job = job_role
-                    elif (
-                        job_role.get_job_name().lower() == job.lower()
-                        or job_role.get_job_name().lower() in job.lower()
-                    ) or (
-                        job.lower() == job_role.get_job_name().lower()
-                        or job.lower() in job_role.get_job_name().lower()
-                    ):
-                        logging.info("Job role found")
-                        self.job = job_role
+    @property
+    def home(self):
+        # Delegates to self.economic_profile.get_home_object()
+        if hasattr(self, 'economic_profile') and hasattr(self.economic_profile, 'get_home_object'):
+            return self.economic_profile.get_home_object()
+        logging.warning("Attempted to get home before economic_profile was fully initialized or lacks get_home_object method.")
+        return None
 
-            else:
-                logging.info(f"Job role not found for job {job}")
-                exit(12)
-                self.job = random.choice(job_rules.ValidJobRoles)
+    @home.setter
+    def home(self, value):
+        # Delegates to self.economic_profile.set_home_object(value)
+        # The actual logic for creating/validating the home object should be handled before calling this setter,
+        # or within CharacterEconomicProfile.set_home_object() if it's designed to take various input types.
+        if hasattr(self, 'economic_profile') and hasattr(self.economic_profile, 'set_home_object'):
+            # Ensure 'value' is a House object or None, as expected by CharacterEconomicProfile.set_home_object
+            # If 'value' can be a string (e.g., "shack"), it should be resolved to a House object *before* this point,
+            # or CharacterEconomicProfile.set_home_object should handle string-to-object conversion.
+            # For now, we assume 'value' is a House object or None.
+            self.economic_profile.set_home_object(value)
         else:
-            self.job = random.choice(job_rules.ValidJobRoles)
-        return self.job
-
-    def set_home(self, home=None):
-        from tiny_buildings import House, CreateBuilding
-
-        if isinstance(home, House):
-            self.home = home
-        elif isinstance(home, str):
-            if home != "homeless":
-                self.home = CreateBuilding().create_house_by_type(home)
-            else:
-                return None
-        elif home is None:
-            self.home = CreateBuilding().generate_random_house()
-        else:
-            raise TypeError("Invalid type for home")
-        return self.home
-
-    def get_home(self):
-        return self.home
+            logging.warning(f"Attempted to set home '{value}' before economic_profile was fully initialized or lacks set_home_object method.")
+            # self._temp_home = value # Optional temporary storage
 
     def get_job_role(self):
         # This method might be deprecated if job_role is fully managed by EconomicProfile.
@@ -3707,7 +3911,7 @@ class Character:
     @current_satisfaction.setter
     def current_satisfaction(self, value: float):
         self.state.current_satisfaction = value
-        
+
     @property
     def current_mood(self) -> str:
         return self.state.current_mood
@@ -3716,7 +3920,7 @@ class Character:
         self.state.current_mood = value
 
     # Getter for wealth_money (delegates to economic_profile) - example for economic attributes later
-    def get_wealth_money(self) -> int: 
+    def get_wealth_money(self) -> int:
         # Should delegate to self.economic_profile.wealth_money.get_score()
         if hasattr(self, 'economic_profile') and self.economic_profile.wealth_money:
             return self.economic_profile.wealth_money.get_score()
@@ -3739,18 +3943,42 @@ class Character:
             self.derived_stats.happiness = happiness
 
     def get_shelter(self):
-        return self.shelter
+        # This should likely be a derived stat based on home quality from economic_profile
+        # For now, if a direct self.shelter was set, return that, otherwise try to get from derived_stats
+        if hasattr(self, '_shelter_direct_value_temp'): # A temporary direct value if set before derived_stats
+             return self._shelter_direct_value_temp
+        if hasattr(self, 'derived_stats') and hasattr(self.derived_stats, 'shelter'): # Ideal future state
+             # Assuming shelter becomes a property on derived_stats, similar to stability
+             # return self.derived_stats.shelter
+             pass # Placeholder
+        return 0 # Fallback
 
-    def set_shelter(self, shelter):
-        self.shelter = shelter
-        return self.shelter
+    # Commenting out direct setter for shelter, as it should be derived
+    # def set_shelter(self, shelter):
+    #     # self.shelter = shelter
+    #     # If derived_stats manages shelter, this setter might not be needed on Character
+    #     # Or it could trigger a recalculation: self.derived_stats.calculate_shelter()
+    #     self._shelter_direct_value_temp = shelter # Temporary until fully moved
+    #     return shelter
 
-    def get_stability(self):
-        return self.stability
+    @property
+    def stability(self):
+        # Delegates to self.derived_stats.stability
+        if hasattr(self, 'derived_stats'):
+            return self.derived_stats.stability
+        logging.warning("Attempted to get stability before derived_stats was initialized.")
+        return 0.0 # Default
 
-    def set_stability(self, stability):
-        self.stability = stability
-        return self.stability
+    # Removing direct setter for stability as it's a derived stat
+    # def set_stability(self, stability):
+    #     # This should not be set directly. It's calculated by CharacterDerivedStats.
+    #     # If a manual override is ever needed, it should be a specific method on derived_stats.
+    #     # For now, we log if an attempt is made to set it.
+    #     logging.warning(f"Attempt to directly set derived stat 'stability' on Character {self.name} was ignored.")
+    #     # To maintain previous behavior if Character.stability was directly assigned:
+    #     # if hasattr(self, 'derived_stats'): self.derived_stats._stability = stability
+    #     return self.stability
+
 
     def get_luxury(self):
         return self.luxury
@@ -3780,12 +4008,26 @@ class Character:
         self.control = control
         return self.control
 
-    def get_job_performance(self):
-        return self.job_performance
+    @property
+    def job_performance(self):
+        # Delegates to self.economic_profile.job_performance
+        if hasattr(self, 'economic_profile') and hasattr(self.economic_profile, 'job_performance') and self.economic_profile.job_performance is not None:
+            return self.economic_profile.job_performance.get_score()
+        logging.warning("Attempted to get job_performance before economic_profile was fully initialized or lacks job_performance attribute.")
+        return 0 # Default or placeholder
 
-    def set_job_performance(self, job_performance):
-        self.job_performance = job_performance
-        return self.job_performance
+    @job_performance.setter
+    def job_performance(self, value):
+        # Delegates to self.economic_profile.job_performance
+        if hasattr(self, 'economic_profile') and hasattr(self.economic_profile, 'job_performance') and self.economic_profile.job_performance is not None:
+            self.economic_profile.job_performance.set_score(value)
+        elif hasattr(self, 'economic_profile'):
+            # If economic_profile exists but job_performance (as ClampedIntScore) doesn't, create it.
+            self.economic_profile.job_performance = ClampedIntScore(value)
+            logging.info(f"Initialized job_performance on economic_profile for {self.name} with value {value}")
+        else:
+            logging.warning(f"Attempted to set job_performance '{value}' before economic_profile was fully initialized.")
+            # self._temp_job_performance = value # Optional temporary storage
 
     def get_beauty(self):
         return self.beauty
@@ -3794,12 +4036,25 @@ class Character:
         self.beauty = beauty
         return self.beauty
 
-    def get_community(self):
-        return self.community
+    @property
+    def community(self):
+        # Delegates to self.social_manager.community_score (which is a ClampedIntScore)
+        if hasattr(self, 'social_manager') and hasattr(self.social_manager, 'community_score') and self.social_manager.community_score is not None:
+            return self.social_manager.community_score.get_score()
+        logging.warning("Attempted to get community score before social_manager was fully initialized or lacks community_score.")
+        return 0 # Default
 
-    def set_community(self, community):
-        self.community = community
-        return self.community
+    @community.setter
+    def community(self, value):
+        # Delegates to self.social_manager.community_score (which is a ClampedIntScore)
+        if hasattr(self, 'social_manager') and hasattr(self.social_manager, 'community_score') and self.social_manager.community_score is not None:
+            self.social_manager.community_score.set_score(value)
+        elif hasattr(self, 'social_manager'):
+            # If social_manager exists but community_score (as ClampedIntScore) doesn't, create it.
+            self.social_manager.community_score = ClampedIntScore(value)
+            logging.info(f"Initialized community_score on social_manager for {self.name} with value {value}")
+        else:
+            logging.warning(f"Attempted to set community score '{value}' before social_manager was fully initialized.")
 
     def get_material_goods(self):
         return self.material_goods
@@ -3808,22 +4063,90 @@ class Character:
         self.material_goods = material_goods
         return self.material_goods
 
-    def get_friendship_grid(self):
-        return self.friendship_grid
+    @property
+    def friendship_grid(self):
+        # Delegates to self.social_manager.friendship_grid
+        if hasattr(self, 'social_manager') and hasattr(self.social_manager, 'friendship_grid'):
+            return self.social_manager.friendship_grid
+        logging.warning("Attempted to get friendship_grid before social_manager was fully initialized or lacks attribute.")
+        return [] # Default
+
+    @friendship_grid.setter
+    def friendship_grid(self, value):
+        # Delegates to self.social_manager.friendship_grid
+        # CharacterSocialManager might need a dedicated setter if complex logic (like auto-generation) is required.
+        if hasattr(self, 'social_manager'):
+            self.social_manager.friendship_grid = value
+            logging.debug(f"Friendship grid set on social_manager for {self.name}")
+        else:
+            logging.warning(f"Attempted to set friendship_grid '{value}' before social_manager was fully initialized.")
+
+    @property
+    def romantic_relationships(self):
+        # Delegates to self.social_manager.romantic_relationships
+        if hasattr(self, 'social_manager') and hasattr(self.social_manager, 'romantic_relationships'):
+            return self.social_manager.romantic_relationships
+        logging.warning("Attempted to get romantic_relationships before social_manager was fully initialized.")
+        return []
+
+    @romantic_relationships.setter
+    def romantic_relationships(self, value):
+        # Delegates to self.social_manager.romantic_relationships
+        if hasattr(self, 'social_manager'):
+            self.social_manager.romantic_relationships = value
+        else:
+            logging.warning(f"Attempted to set romantic_relationships '{value}' before social_manager was fully initialized.")
+
+    @property
+    def exclusive_relationship(self):
+        # Delegates to self.social_manager.exclusive_relationship
+        if hasattr(self, 'social_manager') and hasattr(self.social_manager, 'exclusive_relationship'):
+            return self.social_manager.exclusive_relationship
+        logging.warning("Attempted to get exclusive_relationship before social_manager was fully initialized.")
+        return None
+
+    @exclusive_relationship.setter
+    def exclusive_relationship(self, value):
+        # Delegates to self.social_manager.exclusive_relationship
+        if hasattr(self, 'social_manager'):
+            self.social_manager.exclusive_relationship = value
+        else:
+            logging.warning(f"Attempted to set exclusive_relationship '{value}' before social_manager was fully initialized.")
+
+    @property
+    def romanceable(self):
+        # Delegates to self.social_manager.romanceable
+        if hasattr(self, 'social_manager') and hasattr(self.social_manager, 'romanceable'):
+            return self.social_manager.romanceable
+        logging.warning("Attempted to get romanceable status before social_manager was fully initialized.")
+        return True # Default value
+
+    @romanceable.setter
+    def romanceable(self, value):
+        # Delegates to self.social_manager.romanceable
+        if hasattr(self, 'social_manager'):
+            self.social_manager.romanceable = value
+        else:
+            logging.warning(f"Attempted to set romanceable status '{value}' before social_manager was fully initialized.")
 
     def generate_friendship_grid(self):
+        # Delegates to self.social_manager.generate_friendship_grid
         """
         Generates a friendship grid based on character relationships in the graph manager.
         Returns a list of dictionaries containing relationship data.
         """
+        if hasattr(self, 'social_manager') and hasattr(self.social_manager, 'generate_friendship_grid'):
+            # Note: The actual analysis logic using self.graph_manager.analyze_character_relationships(self)
+            # should be implemented within CharacterSocialManager.generate_friendship_grid
+            return self.social_manager.generate_friendship_grid()
+
+        logging.warning("generate_friendship_grid called, but social_manager or its method is not available. Returning default.")
+        # Fallback to original Character logic if social_manager isn't ready (should ideally not happen post-refactor)
         friendship_grid = []
-
         try:
-            # Get all character relationships from the graph manager
             relationships = self.graph_manager.analyze_character_relationships(self)
-
             for neighbor, relationship_data in relationships.items():
-                if hasattr(neighbor, "name"):  # Ensure it's a character node
+                if hasattr(neighbor, "name"):
                     friendship_entry = {
                         "character_name": neighbor.name,
                         "character_id": neighbor,
@@ -3831,40 +4154,28 @@ class Character:
                         "trust_level": relationship_data.get("trust", 0),
                         "relationship_strength": relationship_data.get("strength", 0),
                         "historical_bond": relationship_data.get("historical", 0),
-                        "interaction_frequency": relationship_data.get(
-                            "interaction_frequency", 0
-                        ),
-                        "friendship_status": self.graph_manager.check_friendship_status(
-                            self, neighbor
-                        ),
+                        "interaction_frequency": relationship_data.get("interaction_frequency", 0),
+                        "friendship_status": self.graph_manager.check_friendship_status(self, neighbor),
                     }
-
-                    # Calculate overall friendship score
                     friendship_score = (
-                        friendship_entry["emotional_impact"] * 0.3
-                        + friendship_entry["trust_level"] * 0.25
-                        + friendship_entry["relationship_strength"] * 0.25
-                        + friendship_entry["historical_bond"] * 0.1
-                        + friendship_entry["interaction_frequency"] * 0.1
+                        friendship_entry["emotional_impact"] * 0.3 +
+                        friendship_entry["trust_level"] * 0.25 +
+                        friendship_entry["relationship_strength"] * 0.25 +
+                        friendship_entry["historical_bond"] * 0.1 +
+                        friendship_entry["interaction_frequency"] * 0.1
                     )
-                    friendship_entry["friendship_score"] = max(
-                        0, min(100, friendship_score)
-                    )
-
+                    friendship_entry["friendship_score"] = max(0, min(100, friendship_score))
                     friendship_grid.append(friendship_entry)
-
         except Exception as e:
-            logging.warning(f"Error generating friendship grid for {self.name}: {e}")
-            # Return basic structure if graph analysis fails
+            logging.warning(f"Error generating friendship grid for {self.name} (fallback): {e}")
             friendship_grid = [{}]
-
         return friendship_grid
 
-    def set_friendship_grid(self, friendship_grid):
-        if isinstance(friendship_grid, list) and len(friendship_grid) > 0:
-            self.friendship_grid = friendship_grid
-        else:
-            self.friendship_grid = self.generate_friendship_grid()
+    # def set_friendship_grid(self, friendship_grid): # Original set_friendship_grid logic is now in the setter.
+    #     if isinstance(friendship_grid, list) and len(friendship_grid) > 0:
+    #         self.friendship_grid = friendship_grid
+    #     else:
+    #         self.friendship_grid = self.generate_friendship_grid()
 
     def get_recent_event(self):
         return self.recent_event
@@ -3873,105 +4184,234 @@ class Character:
         self.recent_event = recent_event
         return self.recent_event
 
-    def get_long_term_goal(self):
-        return self.long_term_goal
+    @property
+    def long_term_goal(self):
+        # Delegates to self.goal_manager.long_term_goal
+        if hasattr(self, 'goal_manager') and hasattr(self.goal_manager, 'long_term_goal'):
+            return self.goal_manager.long_term_goal
+        logging.warning("Attempted to get long_term_goal before goal_manager was fully initialized.")
+        return "" # Default
 
-    def set_long_term_goal(self, long_term_goal):
-        self.long_term_goal = long_term_goal
-        return self.long_term_goal
+    @long_term_goal.setter
+    def long_term_goal(self, value):
+        # Delegates to self.goal_manager.long_term_goal
+        if hasattr(self, 'goal_manager'):
+            self.goal_manager.long_term_goal = value
+        else:
+            logging.warning(f"Attempted to set long_term_goal '{value}' before goal_manager was fully initialized.")
+            # self._temp_long_term_goal = value # Optional temporary storage
 
-    def get_inventory(self):
-        return self.inventory
+    @property
+    def inventory(self):
+        # Delegates to self.economic_profile.inventory
+        if hasattr(self, 'economic_profile') and hasattr(self.economic_profile, 'inventory'):
+            return self.economic_profile.inventory
+        logging.warning("Attempted to get inventory before economic_profile was fully initialized or lacks inventory attribute.")
+        # Return a default empty inventory to prevent errors if accessed too early
+        return ItemInventory()
 
-    def set_inventory(
-        self,
-        food_items: List[FoodItem] = [],
-        clothing_items: List[ItemObject] = [],
-        tools_items: List[ItemObject] = [],
-        weapons_items: List[ItemObject] = [],
-        medicine_items: List[ItemObject] = [],
-        misc_items: List[ItemObject] = [],
-    ):
-        self.inventory = ItemInventory(
-            food_items,
-            clothing_items,
-            tools_items,
-            weapons_items,
-            medicine_items,
-            misc_items,
-        )
-        if food_items:
-            self.inventory.set_food_items(food_items)
-        if clothing_items:
-            self.inventory.set_clothing_items(clothing_items)
-        if tools_items:
-            self.inventory.set_tools_items(tools_items)
-        if weapons_items:
-            self.inventory.set_weapons_items(weapons_items)
-        if medicine_items:
-            self.inventory.set_medicine_items(medicine_items)
-        if misc_items:
-            self.inventory.set_misc_items(misc_items)
-        return self.inventory
+    @inventory.setter
+    def inventory(self, value):
+        # Delegates to self.economic_profile.inventory
+        # Note: 'value' should ideally be an ItemInventory object.
+        # The original set_inventory method in Character was more complex, accepting lists of items.
+        # If direct assignment of lists is needed, CharacterEconomicProfile.inventory
+        # would need a custom setter or a dedicated method to handle such input.
+        # For now, this assumes 'value' is a pre-constructed ItemInventory object.
+        if hasattr(self, 'economic_profile'):
+            self.economic_profile.inventory = value
+            logging.debug(f"Inventory set on economic_profile for {self.name}")
+        else:
+            logging.warning(f"Attempted to set inventory '{value}' before economic_profile was fully initialized.")
+            # self._temp_inventory = value # Optional temporary storage
 
-    def set_goals(self, goals):
-        self.goals = goals
-        return self.goals
+    @property
+    def goals(self):
+        # Delegates to self.goal_manager.goals
+        if hasattr(self, 'goal_manager') and hasattr(self.goal_manager, 'goals'):
+            return self.goal_manager.goals
+        logging.warning("Attempted to get goals before goal_manager was fully initialized or lacks attribute.")
+        return [] # Default
+
+    @goals.setter
+    def goals(self, value):
+        # Delegates to self.goal_manager.goals
+        if hasattr(self, 'goal_manager'):
+            self.goal_manager.goals = value
+        else:
+            logging.warning(f"Attempted to set goals '{value}' before goal_manager was fully initialized.")
+            # self._temp_goals = value # Optional temporary storage
 
     # def calculate_goals(self):
 
+    # Delegates to self.goal_manager.evaluate_goals()
     def evaluate_goals(self):
+        """
+        Evaluates the character's current goals, potentially generating new ones,
+        and prioritizes them based on utility and current state.
 
+        This method typically delegates the core logic to the `CharacterGoalManager`.
+        It ensures that the character has a set of active and prioritized goals
+        that can be used for decision-making. The evaluation might consider
+        the character's motives, personality, current needs, and environmental factors.
+
+        Returns:
+            List[Tuple[float, Goal]]: A list of (utility_score, Goal_object) tuples,
+                                      sorted by utility in descending order. This list
+                                      represents the character's prioritized goals.
+                                      Returns an empty list if no goals are active or generated.
+        """
+        # The core logic for goal evaluation and generation is now primarily within CharacterGoalManager.
+        # Character.__init__ calls self.goal_manager.evaluate_goals() after goal_manager is created.
+        # This method on Character can act as a direct pass-through if needed, or be phased out if
+        # all external calls go directly to character.goal_manager.evaluate_goals().
+        if hasattr(self, 'goal_manager') and self.goal_manager is not None:
+            return self.goal_manager.evaluate_goals()
+
+        logging.warning("evaluate_goals called on Character, but goal_manager is not available. Falling back to basic list from self.goals property.")
+        # Fallback to current self.goals property if manager not ready (should be rare after __init__)
+        # This fallback still uses the old GoalGenerator logic directly if self.goals (property) is empty.
+        # This could be further simplified if CharacterGoalManager.evaluate_goals also handles initial generation.
+        current_goals = self.goals # Access via property
+        if not current_goals:
+             goal_generator = GoalGenerator(
+                 self.motives, self.graph_manager, self.goap_planner, self.prompt_builder # self.motives is a property
+             )
+             # The self.goals property setter will delegate to goal_manager.goals
+             self.goals = goal_generator.generate_goals(self)
+             current_goals = self.goals # Re-fetch after potential generation
+
+        # The following utility calculation would ideally be part of CharacterGoalManager.evaluate_goals
         goal_queue = []
-        # if len(self.goals) > 1:
-        if not self.goals or len(self.goals) == 0:
-            goal_generator = GoalGenerator(
-                self.motives, self.graph_manager, self.goap_planner, self.prompt_builder
-            )
-            self.goals = goal_generator.generate_goals(self)
-        for _, goal in self.goals:
-            utility = goal.evaluate_utility_function(self, goal, self.graph_manager)
-            goal_queue.append((utility, goal))
+        for goal_obj in current_goals: # Assuming current_goals is now a list of Goal objects
+            # The original code was iterating over tuples like (0, goal_obj)
+            # Adjusting to iterate over Goal objects directly, assuming self.goals property returns List[Goal]
+            if hasattr(goal_obj, 'evaluate_utility_function') and callable(goal_obj.evaluate_utility_function):
+                 utility = goal_obj.evaluate_utility_function(self, goal_obj, self.graph_manager)
+                 goal_queue.append((utility, goal_obj))
+            else:
+                 logging.warning(f"Goal object {goal_obj.name if hasattr(goal_obj, 'name') else goal_obj} lacks callable evaluate_utility_function.")
+                 # Assign a default utility or skip
+                 goal_queue.append((0, goal_obj)) # Default utility of 0
+
         goal_queue.sort(reverse=True, key=lambda x: x[0])
         return goal_queue
 
     def calculate_material_goods(self):
+        # To be moved to CharacterEconomicProfile or CharacterDerivedStats. For now, accesses self.inventory directly.
+        # Note: self.inventory is now a property that delegates to self.economic_profile.inventory.
         material_goods = round(
             tweener(self.inventory.count_total_items(), 1000, 0, 100.0, 2)
         )  # Tweening the wealth value
         return material_goods
 
+    # To be moved to CharacterDerivedStats
     def calculate_stability(self):
-        from tiny_graph_manager import cached_sigmoid_raw_approx_optimized
+        # Delegates to self.derived_stats.calculate_stability()
+        if hasattr(self, 'derived_stats'):
+            return self.derived_stats.calculate_stability()
+        logging.warning("calculate_stability called before derived_stats initialized.")
+        return 0.0 # Fallback
 
-        stability = 0
-        stability += self.get_shelter()
-        stability += round(
-            tweener(self.get_luxury(), 100.0, 0, 10, 2)
-        )  # Tweening the luxury value
-        stability += self.get_hope()
-        stability += round(
-            tweener(self.get_success(), 100.0, 0, 10, 2)
-        )  # Tweening the success value
-        stability += round(
-            tweener(self.get_control(), 100.0, 0, 10, 2)
-        )  # Tweening the control value
-        stability += round(
-            tweener(self.get_beauty(), 100.0, 0, 10, 2)
-        )  # Tweening the job performance value
-        stability += self.get_community()
-        stability += round(
-            tweener(self.get_material_goods(), 100.0, 0, 10, 2)
-        )  # Tweening the material goods value
-        stability += self.get_social_wellbeing()
-        return cached_sigmoid_raw_approx_optimized(stability, 100.0)
-
+    # To be moved to CharacterDerivedStats
     def calculate_happiness(self):
-        from tiny_graph_manager import cached_sigmoid_raw_approx_optimized
+        # Delegates to self.derived_stats.calculate_happiness()
+        if hasattr(self, 'derived_stats'):
+            # This will call CharacterDerivedStats.calculate_happiness,
+            # which should then update self.derived_stats._happiness
+            # and this property will return the updated value.
+            return self.derived_stats.calculate_happiness()
+        logging.warning("calculate_happiness called before derived_stats initialized.")
+        return 0.0 # Fallback
 
-        happiness = 0
-        happiness += self.get_hope()
-        happiness += cached_sigmoid_raw_approx_optimized(
+    # The original complex logic for calculate_happiness is being moved to CharacterDerivedStats.
+    # The Character.happiness property will fetch the value from self.derived_stats.happiness.
+
+    # Property for happiness
+    @property
+    def happiness(self):
+        # Delegates to self.derived_stats.happiness
+        if hasattr(self, 'derived_stats'):
+            return self.derived_stats.happiness
+        logging.warning("Attempted to get happiness before derived_stats was initialized.")
+        return 0.0 # Default
+
+    # Removing direct setter for happiness as it's a derived stat
+    # def set_happiness(self, happiness: float): # Original setter, now removed/commented
+    #     # self.happiness = happiness # Original direct assignment
+    #     # This should not be set directly.
+    #     logging.warning(f"Attempt to directly set derived stat 'happiness' on Character {self.name} was ignored.")
+
+    # To be moved to CharacterSocialManager or CharacterDerivedStats.
+    def calculate_monogamy(self): # This was calculate_success before, correcting to calculate_monogamy
+        monogamy = 0
+        monogamy -= self.personality_traits.get_openness()
+        monogamy += self.personality_traits.get_conscientiousness()
+        monogamy -= self.personality_traits.get_extraversion()
+        monogamy += 1 if self.has_job() == False else 0
+        monogamy += (
+            1
+            if self.get_wealth_money()
+            <= self.graph_manager.get_average_attribute_value("wealth_money")
+            else 0
+        )
+        logging.info(self.get_home())
+        monogamy += 1 if self.get_home() is None else 0
+        monogamy += max(0, (50 - self.base_libido) // 10)
+
+        monogamy += self.age / 100.0
+        monogamy += self.motives.get_control_motive().get_score()
+        monogamy += self.motives.get_hope_motive().get_score()
+        monogamy += self.motives.get_mental_health_motive().get_score()
+        monogamy += self.motives.get_stability_motive().get_score()
+        monogamy += self.motives.get_family_motive().get_score() * 2
+        monogamy += self.stability / 100.0
+        options_score = 0
+        if self._initialized:
+            romanceable_nodes = [
+                node
+                for node in list(self.graph_manager.G.nodes(data="romanceable"))
+                if node[1] == True
+            ]
+
+            romanceable_nodes = sorted(
+                romanceable_nodes,
+                key=lambda x: self.graph_manager.G.edges(x, data=True)[0][2][
+                    "romance_value"
+                ],
+                reverse=True,
+            )
+
+            for node in romanceable_nodes:
+                options_score += (
+                    self.graph_manager.G[self][node]["romance_value"] / 10
+                ) * self.graph_manager.G[self][node]["romance_compatibility"]
+            if len(romanceable_nodes) > 0:
+                options_score = options_score / len(romanceable_nodes)
+                options_score += max(10, max(0, (10 + len(romanceable_nodes)) // 10))
+            interested_nodes = [
+                node
+                for node in self.graph_manager.G[self]
+                if self.graph_manager.G[self][node]["romance_interest"] == True
+            ]
+            options_scoreb = 0
+            for node in interested_nodes:
+                options_scoreb += (
+                    self.graph_manager.G[self][node]["romance_value"]
+                    / 10
+                    * self.graph_manager.G[self][node]["romance_compatibility"]
+                )
+            if len(interested_nodes) > 0:
+                options_scoreb = options_scoreb / len(interested_nodes)
+                options_scoreb += max(10, max(0, (10 + len(interested_nodes)) // 10))
+
+        monogamy = max(1, (monogamy - options_score))
+        # monogamy = max(1, (monogamy - options_scoreb))
+
+        return monogamy
+
+    def calculate_success(self):
+        success = 0
             min(self.get_success(), self.motives.get_success_motive().get_score() * 10),
             100.0,
         )
@@ -4083,31 +4523,7 @@ class Character:
 
         return cached_sigmoid_raw_approx_optimized(happiness, 100.0)
 
-    def calculate_success(self):
-        success = 0
-        success += round(
-            tweener(self.get_job_performance(), 100.0, 0, 50, 2)
-        )  # Tweening the job performance value
-        success += round(
-            tweener(self.get_material_goods(), 100.0, 0, 20, 2)
-        )  # Tweening the material goods value
-        success += round(
-            tweener(self.get_wealth_money(), 1000, 0, 20, 2)
-        )  # Tweening the wealth value
-        return success
-
-    def calculate_control(self):
-        control = 0
-        control += self.get_shelter()
-        control += round(tweener(self.get_success(), 100.0, 0, 10, 2))
-        control += round(
-            tweener(self.get_material_goods(), 100.0, 0, 20, 2)
-        )  # Tweening the material goods value
-        control += round(
-            tweener(self.get_wealth_money(), 1000, 0, 20, 2)
-        )  # Tweening the wealth value
-        return control
-
+    # To be moved to CharacterSocialManager or CharacterDerivedStats.
     def calculate_monogamy(self):
         monogamy = 0
         monogamy -= self.personality_traits.get_openness()
@@ -4175,25 +4591,135 @@ class Character:
 
         return monogamy
 
+    # To be moved to CharacterDerivedStats
+    def calculate_success(self):
+        # Delegates to self.derived_stats.calculate_success()
+        if hasattr(self, 'derived_stats'):
+            return self.derived_stats.calculate_success()
+        logging.warning("calculate_success called before derived_stats initialized.")
+        return 0.0
+
+    @property
+    def success(self):
+        if hasattr(self, 'derived_stats'):
+            return self.derived_stats.success
+        logging.warning("Attempted to get success before derived_stats was initialized.")
+        return 0.0
+
+    # Removing direct set_success
+    # def set_success(self, success):
+    #     logging.warning(f"Attempt to directly set derived stat 'success' on Character {self.name} was ignored.")
+
+    # To be moved to CharacterDerivedStats
+    def calculate_control(self):
+        # Delegates to self.derived_stats.calculate_control()
+        if hasattr(self, 'derived_stats'):
+            return self.derived_stats.calculate_control()
+        logging.warning("calculate_control called before derived_stats initialized.")
+        return 0.0
+
+    @property
+    def control(self):
+        if hasattr(self, 'derived_stats'):
+            return self.derived_stats.control
+        logging.warning("Attempted to get control before derived_stats was initialized.")
+        return 0.0
+
+    # Removing direct set_control
+    # def set_control(self, control):
+    #     logging.warning(f"Attempt to directly set derived stat 'control' on Character {self.name} was ignored.")
+
+    # To be moved to CharacterDerivedStats
     def calculate_hope(self):
-        from tiny_graph_manager import cached_sigmoid_raw_approx_optimized
+        # Delegates to self.derived_stats.calculate_hope()
+        if hasattr(self, 'derived_stats'):
+            return self.derived_stats.calculate_hope()
+        logging.warning("calculate_hope called before derived_stats initialized.")
+        return 0.0
 
-        hope = 0
-        hope += round(
-            tweener(self.get_beauty(), 100.0, 0.0, 10.0, 2.0)
-        )  # Tweening the luxury value
-        hope += round(
-            tweener(self.get_success(), 100.0, 0.0, 10.0, 2)
-        )  # Tweening the success value
-        hope += self.get_community()
-        hope += round(
-            tweener(self.get_material_goods(), 100.0, 0.0, 10, 2.0)
-        )  # Tweening the material goods value
-        hope += self.get_social_wellbeing()
-        return cached_sigmoid_raw_approx_optimized(hope, 100.0)
+    @property
+    def hope(self):
+        if hasattr(self, 'derived_stats'):
+            return self.derived_stats.hope
+        logging.warning("Attempted to get hope before derived_stats was initialized.")
+        return 0.0
 
+    # Removing direct set_hope
+    # def set_hope(self, hope):
+    #    logging.warning(f"Attempt to directly set derived stat 'hope' on Character {self.name} was ignored.")
+
+    # To be moved to CharacterSocialManager or CharacterDerivedStats.
     def calculate_base_libido(self):
         """Calculate the base libido based on the character's personality traits"""
+    # To be moved to CharacterSocialManager or CharacterDerivedStats.
+    def calculate_monogamy(self):
+        monogamy = 0
+        monogamy -= self.personality_traits.get_openness()
+        monogamy += self.personality_traits.get_conscientiousness()
+        monogamy -= self.personality_traits.get_extraversion()
+        monogamy += 1 if self.has_job() == False else 0
+        monogamy += (
+            1
+            if self.get_wealth_money()
+            <= self.graph_manager.get_average_attribute_value("wealth_money")
+            else 0
+        )
+        logging.info(self.get_home())
+        monogamy += 1 if self.get_home() is None else 0
+        monogamy += max(0, (50 - self.base_libido) // 10)
+
+        monogamy += self.age / 100.0
+        monogamy += self.motives.get_control_motive().get_score()
+        monogamy += self.motives.get_hope_motive().get_score()
+        monogamy += self.motives.get_mental_health_motive().get_score()
+        monogamy += self.motives.get_stability_motive().get_score()
+        monogamy += self.motives.get_family_motive().get_score() * 2
+        monogamy += self.stability / 100.0
+        options_score = 0
+        if self._initialized:
+            romanceable_nodes = [
+                node
+                for node in list(self.graph_manager.G.nodes(data="romanceable"))
+                if node[1] == True
+            ]
+
+            romanceable_nodes = sorted(
+                romanceable_nodes,
+                key=lambda x: self.graph_manager.G.edges(x, data=True)[0][2][
+                    "romance_value"
+                ],
+                reverse=True,
+            )
+
+            for node in romanceable_nodes:
+                options_score += (
+                    self.graph_manager.G[self][node]["romance_value"] / 10
+                ) * self.graph_manager.G[self][node]["romance_compatibility"]
+            if len(romanceable_nodes) > 0:
+                options_score = options_score / len(romanceable_nodes)
+                options_score += max(10, max(0, (10 + len(romanceable_nodes)) // 10))
+            interested_nodes = [
+                node
+                for node in self.graph_manager.G[self]
+                if self.graph_manager.G[self][node]["romance_interest"] == True
+            ]
+            options_scoreb = 0
+            for node in interested_nodes:
+                options_scoreb += (
+                    self.graph_manager.G[self][node]["romance_value"]
+                    / 10
+                    * self.graph_manager.G[self][node]["romance_compatibility"]
+                )
+            if len(interested_nodes) > 0:
+                options_scoreb = options_scoreb / len(interested_nodes)
+                options_scoreb += max(10, max(0, (10 + len(interested_nodes)) // 10))
+
+        monogamy = max(1, (monogamy - options_score))
+        # monogamy = max(1, (monogamy - options_scoreb))
+
+        return monogamy
+
+    def calculate_success(self):
         base_libido = 0
         base_libido += self.personality_traits.get_openness()
         base_libido += self.personality_traits.get_extraversion()
@@ -4241,15 +4767,19 @@ class Character:
     #     except Exception as e:
     #         return f"Character(An error occurred in __repr__: {e})"
 
-    def has_job(self):
-        if isinstance(self.job, str):
-            if self.job == "unemployed":
-                return False
-        else:
-            return self.job is not None and self.job.job_name != "unemployed"
+    def has_job(self) -> bool:
+        # Delegates to self.economic_profile.has_job
+        if hasattr(self, 'economic_profile') and hasattr(self.economic_profile, 'has_job'):
+            return self.economic_profile.has_job()
+        logging.warning("Attempted to check has_job before economic_profile was fully initialized or lacks has_job method.")
+        return False # Default: assumes no job if profile not ready
 
-    def has_investment(self):
-        return len(self.investment_portfolio.get_stocks()) > 0
+    def has_investment(self) -> bool:
+        # Delegates to self.economic_profile.has_investment
+        if hasattr(self, 'economic_profile') and hasattr(self.economic_profile, 'has_investment'):
+            return self.economic_profile.has_investment()
+        logging.warning("Attempted to check has_investment before economic_profile was fully initialized or lacks has_investment method.")
+        return False # Default: assumes no investments if profile not ready
 
     def __hash__(self):
         def make_hashable(obj):
@@ -4429,21 +4959,46 @@ class Character:
         else:
             raise TypeError("Invalid type for personality traits")
 
-    def get_motives(self):
-        return self.motives
+    @property
+    def motives(self):
+        # Delegates to self.goal_manager.motives
+        if hasattr(self, 'goal_manager') and hasattr(self.goal_manager, 'motives'):
+            return self.goal_manager.motives
+        logging.warning("Attempted to get motives before goal_manager was fully initialized or lacks attribute.")
+        return None # Or a default PersonalMotives object
 
-    def set_motives(self, motives):
-        self.motives = motives
-        return self.motives
+    @motives.setter
+    def motives(self, value):
+        # Delegates to self.goal_manager.motives
+        if hasattr(self, 'goal_manager'):
+            self.goal_manager.motives = value
+            logging.debug(f"Motives set on goal_manager for {self.name}")
+        else:
+            # This case might happen if motives are set in __init__ before goal_manager is ready.
+            # Consider temporary storage or ensure goal_manager is initialized before motives are set.
+            logging.warning(f"Attempted to set motives '{value}' before goal_manager was fully initialized. Storing temporarily on character.")
+            self._temp_motives = value # Fallback: store on character instance if no manager
 
     def get_character_data(self):
         response = self.to_dict()
         return response.json()
 
+    # Delegates to self.goal_manager.update_required_items_list
     def update_required_items(self, item_node_attrs, item_count=1):
-        for item in item_node_attrs:
-            self.needed_items.append((item, item_count))
+        # This should delegate to self.goal_manager.update_required_items_list or similar
+        if hasattr(self, 'goal_manager') and self.goal_manager is not None:
+            self.goal_manager.update_required_items_list(item_node_attrs, item_count)
+        else:
+            logging.warning(f"update_required_items called on Character {self.name} before goal_manager initialized.")
+            # Fallback to old behavior if necessary, though this indicates an issue.
+            # This direct manipulation of needed_items might be problematic if self.needed_items is also a property.
+            # For now, assuming direct list append was the old fallback.
+            # if not hasattr(self, 'needed_items') or self.needed_items is None: self.needed_items = []
+            # for item_spec in item_node_attrs:
+            #     self.needed_items.append((item_spec, item_count))
 
+
+    # To be moved to CharacterGoalManager or as a utility function. It uses self.graph_manager.
     def calculate_motives(self):
         return self.graph_manager.calculate_motives(self)
 

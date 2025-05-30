@@ -146,6 +146,120 @@ class TestCreateCharacter(unittest.TestCase): # Original test class
             #    for motive_obj in self.character.get_motives(): # Iterate through Motive objects
             #        print(motive_obj.name, motive_obj.score)
 
+# New Test Class for Goal
+from tiny_characters import Goal # Ensure Goal is imported
+
+class TestGoal(unittest.TestCase):
+    def setUp(self):
+        # Basic setup that might be common for several tests
+        # Mock dependencies that Goal's constructor might need
+        self.mock_character = Mock(spec=Character)
+        self.mock_character.name = "TestCharacter"
+        # If Character has complex attributes accessed in Goal, mock them too
+        # For example, if goal accesses character.inventory.get_item_count:
+        # self.mock_character.inventory = Mock()
+        # self.mock_character.inventory.get_item_count = Mock(return_value=0)
+
+        # It's good practice to mock specific classes if they are defined,
+        # otherwise, a generic Mock will do for simple attribute/method access.
+        # from tiny_graph_manager import GraphManager # Assuming these exist
+        # from tiny_action_system import ActionSystem
+        # from tiny_prompt_builder import PromptBuilder
+
+        self.mock_graph_manager = Mock() # Mock(spec=GraphManager)
+        self.mock_action_system = Mock() # Mock(spec=ActionSystem)
+        # self.mock_gametime_manager is already set up in TestCharacterGoalIntegration,
+        # but for TestGoal, we might need its own or ensure Goal doesn't need it deeply.
+        # For now, assume Goal can take a generic mock for gametime_manager if it's a direct param.
+        self.mock_gametime_manager = Mock() # Mock(spec=GameTimeManager)
+        self.mock_prompt_builder = Mock() # Mock(spec=PromptBuilder)
+
+        # If Goal.__init__ expects these on the character object, ensure they are there.
+        # self.mock_character.graph_manager = self.mock_graph_manager
+        # self.mock_character.action_system = self.mock_action_system
+        # self.mock_character.gametime_manager = self.mock_gametime_manager
+        # self.mock_character.prompt_builder = self.mock_prompt_builder
+
+
+    def test_goal_creation_successful(self):
+        """Test basic successful creation of a Goal object."""
+        goal_name = "Test Goal"
+        goal_description = "This is a test goal."
+        goal_score = 0.75
+        completion_conditions = [
+            {"condition_type": "attribute", "attribute": "energy", "operator": ">=", "value": 50}
+        ]
+        criteria = [
+            {"criterion_type": "item_present", "item_name": "key", "value": True}
+        ]
+        priority = 5
+        deadline = "2024-12-31"
+
+        goal = Goal(
+            character=self.mock_character, # Passed directly
+            name=goal_name,
+            description=goal_description,
+            completion_conditions=completion_conditions,
+            criteria=criteria,
+            score=goal_score,
+            priority=priority,
+            deadline=deadline,
+            graph_manager=self.mock_graph_manager, # Passed directly
+            action_system=self.mock_action_system, # Passed directly
+            gametime_manager=self.mock_gametime_manager, # Passed directly
+            prompt_builder=self.mock_prompt_builder # Passed directly
+        )
+
+        self.assertIsNotNone(goal, "Goal object should be created.")
+        self.assertEqual(goal.name, goal_name, "Goal name not set correctly.")
+        self.assertEqual(goal.description, goal_description, "Goal description not set correctly.")
+        self.assertEqual(goal.score, goal_score, "Goal score not set correctly.")
+        self.assertEqual(goal.priority, priority, "Goal priority not set correctly.")
+        self.assertEqual(goal.deadline, deadline, "Goal deadline not set correctly.")
+        self.assertEqual(goal.completion_conditions, completion_conditions, "Completion conditions not set correctly.")
+        self.assertEqual(goal.criteria, criteria, "Criteria not set correctly.")
+        self.assertIsInstance(goal.required_items, list, "Required items should be a list.")
+        self.assertIsInstance(goal.target_effects, dict, "Target effects should be a dict.")
+        self.assertIsInstance(goal.tasks, list, "Tasks should be a list.")
+
+    def test_extract_required_items_basic(self):
+        """Test basic functionality of extract_required_items."""
+        completion_conditions = [
+            {"condition_type": "item_check", "item_type": "food", "quantity": 1, "source": "inventory.check_has_item_by_type(['food'])"}
+        ]
+        criteria = [
+            # Criteria processing for items is not explicitly shown in Goal.extract_required_items
+            # It mainly processes 'item_check' from completion_conditions.
+            # {"criterion_type": "item_present", "item_name": "key", "value": True}
+        ]
+
+        goal = Goal(
+            character=self.mock_character,
+            name="Food Goal",
+            description="Need to find food.",
+            completion_conditions=completion_conditions,
+            criteria=criteria,
+            score=0.8,
+            priority=7,
+            deadline="2024-01-01",
+            graph_manager=self.mock_graph_manager,
+            action_system=self.mock_action_system,
+            gametime_manager=self.mock_gametime_manager,
+            prompt_builder=self.mock_prompt_builder
+        )
+
+        # extract_required_items is called in __init__.
+        # We expect it to find 'food' from completion_conditions.
+        # Expected format from condition: ({'item_type': 'food', 'quantity': 1}, True)
+
+        found_food = False
+        for item_dict, is_essential in goal.required_items:
+            if item_dict.get('item_type') == 'food' and item_dict.get('quantity') == 1:
+                found_food = True
+                self.assertTrue(is_essential, "Food item from item_check should be essential.")
+
+        self.assertTrue(found_food, "Required item 'food' not extracted correctly from completion_conditions.")
+
 
 if __name__ == "__main__":
     unittest.main()

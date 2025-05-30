@@ -1,3 +1,12 @@
+"""
+Handles the creation, processing, and dispatching of game events in TinyVillage.
+
+This module defines the `Event` class and the `EventHandler` class.
+The `Event` class represents various occurrences within the game that can
+affect characters or the game world. The `EventHandler` is responsible for
+managing the queue of events, processing their effects, and potentially
+triggering new events or character actions based on outcomes.
+"""
 # tiny_event_handler.py
 """4. Event Handler (event_handler.py)
 This module will be responsible for detecting and handling game events, triggering strategic updates.

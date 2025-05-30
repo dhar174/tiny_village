@@ -124,6 +124,12 @@ def calculate_action_utility(character_state: dict, action: Action, current_goal
     need_fulfillment_score = 0.0
     goal_progress_score = 0.0
 
+    # Define scalers, consider moving them to a config or constants file
+    HUNGER_SCALER = 1.0
+    ENERGY_SCALER = 1.0
+    MONEY_SCALER = 0.5
+
+
     # 1. Need Fulfillment
     if action.effects:
         for effect in action.effects:
@@ -151,7 +157,7 @@ def calculate_action_utility(character_state: dict, action: Action, current_goal
     utility += need_fulfillment_score
 
     # 2. Goal Progress
-    if current_goal and hasattr(current_goal, 'target_effects') and current_goal.target_effects:
+    if current_goal and hasattr(current_goal, 'target_effects') and current_goal.target_effects and hasattr(current_goal, 'priority'):
         if action.effects:
             for effect in action.effects:
                 attr = effect.get("attribute")
@@ -227,3 +233,88 @@ def calculate_plan_utility(character_state: dict, plan: list[Action], current_go
                         elif attribute == "money":
                              simulated_state[attribute] = max(0.0, simulated_state[attribute])
     return total_utility
+
+# --- Error Logging Utility ---
+import logging
+import datetime
+from typing import Optional
+
+# Ensure a logger is available for the utility function itself
+# This will use the root logger if no specific configuration is made elsewhere for 'tiny_utility_functions'
+utility_logger = logging.getLogger(__name__)
+
+def log_error(message: str, exception_obj: Optional[Exception] = None, context: Optional[str] = None, level: str = "ERROR"):
+    """
+    Standardized error logging utility.
+
+    Args:
+        message (str): The primary error message.
+        exception_obj (Optional[Exception]): The caught exception object, if any.
+        context (Optional[str]): Information about where the error occurred (e.g., "ClassName.method_name").
+        level (str): Logging level ('ERROR', 'WARNING', 'CRITICAL', 'INFO', 'DEBUG').
+    """
+    timestamp = datetime.datetime.now().isoformat()
+    log_message_parts = [f"[{timestamp}]"]
+
+    if context:
+        log_message_parts.append(f"[{context}]")
+
+    log_message_parts.append(f"- {message}")
+
+    if exception_obj:
+        log_message_parts.append(f"- Exception: {type(exception_obj).__name__}({str(exception_obj)})")
+
+    full_log_message = " ".join(log_message_parts)
+
+    level_upper = level.upper()
+    if level_upper == "CRITICAL":
+        utility_logger.critical(full_log_message)
+    elif level_upper == "WARNING":
+        utility_logger.warning(full_log_message)
+    elif level_upper == "INFO":
+        utility_logger.info(full_log_message)
+    elif level_upper == "DEBUG":
+        utility_logger.debug(full_log_message)
+    else: # Default to ERROR
+        utility_logger.error(full_log_message)
+
+# Example Usage (can be removed or kept for testing):
+if __name__ == '__main__':
+    # Basic logging configuration for demonstration purposes
+    logging.basicConfig(level=logging.DEBUG, format='%(levelname)s: %(message)s')
+
+    log_error("This is a test error message.", context="TestContext.main")
+    try:
+        x = 1 / 0
+    except ZeroDivisionError as e:
+        log_error("A division error occurred!", exception_obj=e, context="TestContext.division_test", level="CRITICAL")
+
+    log_error("This is a warning.", context="TestContext.warning_test", level="WARNING")
+    log_error("This is an info message.", context="TestContext.info_test", level="INFO")
+
+    # Test with the module's own logger
+    utility_logger.info("Direct utility_logger info message for comparison.")
+    log_error("Error using utility_logger", context="TestContext.utility_logger_test_error")
+
+    # Test Goal and Action classes if available, otherwise this part will fail
+    # This is just placeholder to avoid NameError if Goal/Action are not fully defined for standalone run
+    class Goal:
+        pass
+    # class Action:
+    #     pass
+
+    # Example calls to existing functions if needed for testing them alongside
+    # print(calculate_importance(0.8, 0.5, 0.6, "Idle", 0.7, 0.5, 0.9))
+    # test_goal = Goal()
+    # test_goal.attributes = {"hunger": 0.8}
+    # test_state = State({"hunger": 0.7})
+    # print(evaluate_goal_importance(test_goal, test_state, {}, 0.5, {}))
+
+    # More comprehensive test for log_error
+    log_error(message="Failed to process user input", context="InputHandler.process")
+    log_error(message="Network timeout", exception_obj=TimeoutError("Connection timed out after 10s"), context="APIClient.request_data", level="WARNING")
+    log_error(message="Critical system failure: Unrecoverable state", context="MainLoop.critical_section", level="CRITICAL")
+    log_error(message="User authentication successful", context="AuthService.login", level="INFO")
+    log_error(message="Debugging intermediate variable", context="DataProcessor.debug_step", level="DEBUG")
+
+    print("Error logging tests complete. Check console output.")
