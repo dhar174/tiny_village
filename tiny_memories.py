@@ -5077,7 +5077,6 @@ def manage_index_and_search(index_type, normalization, filename, memory_dict, qu
 if __name__ == "__main__":
     # Initialize the module-level variables
     # Declare global variables to ensure we're modifying the module-level variables
-    global manager, model, sentiment_analysis
     
     tiny_calendar = ttm.GameCalendar()
     tiny_time_manager = ttm.GameTimeManager(tiny_calendar)
