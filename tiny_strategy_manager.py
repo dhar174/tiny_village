@@ -24,6 +24,7 @@ from tiny_utility_functions import (
 from tiny_characters import Character  # Assuming Character class is imported
 from actions import Action  # Use the modified Action from actions.py
 
+
 # Define placeholder/simplified Action classes for use within StrategyManager if not using complex ones from actions.py
 # These are structured to be compatible with calculate_action_utility
 
@@ -68,11 +69,9 @@ class WanderAction(Action):  # Example generic action
             name=name, preconditions={}, effects=effects if effects else [], cost=cost
         )
 
-
 class StrategyManager:
     """
     The StrategyManager class is responsible for managing the strategies used in goal-oriented action planning and utility evaluation.
-    It uses the GOAPPlanner and GraphManager to plan actions and manage graphs respectively.
     """
 
     def __init__(self):
@@ -131,6 +130,7 @@ class StrategyManager:
             WanderAction(effects=[{"attribute": "energy", "change_value": -0.05}])
         )  # Wandering costs a little energy
 
+
         # 2. Contextual Actions
         # Assumed Character object structure:
         # - character.inventory: an object with get_food_items() -> list of FoodItem objects
@@ -151,6 +151,7 @@ class StrategyManager:
         if hasattr(character, "inventory") and hasattr(
             character.inventory, "get_food_items"
         ):
+
             food_items = character.inventory.get_food_items()
             if food_items:
                 # Consider eating the first available food item for simplicity
@@ -222,6 +223,7 @@ class StrategyManager:
 
         return [action_tuple[0] for action_tuple in sorted_actions]
 
+
     # --- Other methods from the original file (potentially needing updates) ---
     def update_strategy(self, events, subject="Emma"):
         # This method likely needs significant updates to use Character objects
@@ -262,8 +264,9 @@ class StrategyManager:
         # This is a placeholder for daily action logic
         return []
 
+
     def get_career_actions(self, character, job_details):
-        # Example actions based on job details
+        # This is a placeholder and would need similar utility-based ranking
         return [
             {
                 "name": "Accept Offer",
@@ -277,10 +280,12 @@ class StrategyManager:
                 "cost": 0,
                 "effects": [],
             },
+
             {"name": "Decline Offer", "career_progress": 0, "cost": 0, "effects": []},
         ]
 
     def respond_to_job_offer(self, character, job_details, graph):
+        # FIX: This method also needs significant updates
         goal = {"career_progress": "max"}
         current_state = {"satisfaction": 100}  # Assuming current job satisfaction
         actions = self.get_career_actions(character, job_details)

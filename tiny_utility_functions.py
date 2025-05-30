@@ -10,9 +10,9 @@ from actions import (
 )  # Assuming Action class is available and has cost & effects
 from tiny_types import Goal  # Import Goal class
 
+
 # function that evaluates the current importance of the goal based on the character's state and the environment.
 # tiny_utility_functions.py
-
 
 # --- Existing Functions ---
 def calculate_importance(
@@ -26,7 +26,6 @@ def calculate_importance(
 ):
     """
     Calculate the importance of a goal based on character stats, goal attributes, and additional factors.
-
     :param health: Character's health level.
     :param hunger: Character's hunger level.
     :param social_needs: Character's social needs level.
@@ -65,8 +64,10 @@ def calculate_importance(
     event_participation_weight = 0.05
     nearest_resource_weight = 0.05
     goal_importance_weight = 0.2  # Added to incorporate specific goal importance
+    social_weight = 0.1
+    event_participation_weight = 0.05
+    goal_importance_weight = 0.2
 
-    # Calculate the weighted importance score
     importance_score = (
         health_weight * health
         + hunger_weight * hunger
@@ -75,21 +76,17 @@ def calculate_importance(
         + event_participation_weight * event_participation_factor
         + goal_importance_weight * goal_importance
     )
-
     return importance_score
-
 
 def evaluate_goal_importance(
     goal, character_state: State, environment: dict, difficulty: float, criteria: dict
 ):
     """
     Evaluates the importance of a goal based on the character's current state and the environment.
-
     Args:
         goal (Goal): The goal to evaluate.
         character_state (State): The character's current state.
         environment (dict): The environment's state.
-
     Returns:
         importance (int): The importance of the goal.
     """
@@ -104,14 +101,15 @@ def evaluate_goal_importance(
         and isinstance(goal.attributes, dict)
         and isinstance(environment, dict)
     ):
+
         for attribute, value in environment.items():
             if attribute in goal.attributes:
                 importance += value * goal.attributes[attribute]
     return importance
 
-
 def is_goal_achieved(goal, character_state: State):
     if hasattr(goal, "target_effects") and isinstance(goal.target_effects, dict):
+
         for effect, target_value in goal.target_effects.items():
             if character_state.get(effect, 0) < target_value:
                 return False
@@ -142,6 +140,7 @@ def calculate_action_utility(
     need_fulfillment_score = 0.0
     goal_progress_score = 0.0
 
+
     # 1. Need Fulfillment
     if action.effects:
         for effect in action.effects:
@@ -164,6 +163,7 @@ def calculate_action_utility(
                     need_fulfillment_score += (
                         (1.0 - current_energy) * change * ENERGY_SCALER
                     )  # Scaler for impact
+
             elif attribute == "money":
                 # This is a resource change, not directly "need" fulfillment in the same way.
                 # Could be handled by specific actions like "Work" having positive utility here,
@@ -182,6 +182,7 @@ def calculate_action_utility(
         and hasattr(current_goal, "target_effects")
         and current_goal.target_effects
     ):
+
         if action.effects:
             for effect in action.effects:
                 attr = effect.get("attribute")
@@ -208,6 +209,7 @@ def calculate_action_utility(
         action_cost_score = float(action.cost) * 10.0  # Scaler for cost impact
 
     utility -= action_cost_score
+
 
     # Consider inherent utility/disutility of certain actions if not captured by needs/goals/cost
     # Example: "Rest" might have a small positive base utility if not costly and energy is low.
@@ -246,6 +248,7 @@ def calculate_plan_utility(
             )
             total_utility += action_utility
 
+
             # Update simulated_state based on action's effects
             if action.effects:
                 for effect in action.effects:
@@ -253,11 +256,11 @@ def calculate_plan_utility(
                     change = effect.get("change_value", 0.0)
 
                     if attribute:  # Ensure attribute is not None
+
                         current_value = simulated_state.get(attribute, 0.0)
                         # Special handling for needs like hunger (lower is better) vs resources (higher is better)
                         # This simplistic update assumes all attributes are numeric and additive/subtractive.
                         simulated_state[attribute] = current_value + change
-
                         # Clamp values if necessary (e.g., hunger 0-1, energy 0-1)
                         if attribute == "hunger":
                             simulated_state[attribute] = max(

@@ -207,6 +207,7 @@ class ActionResolver:
             logger.error(f"Error generating action analytics: {e}")
             return {"error": str(e)}
 
+
     def _dict_to_action(self, action_dict: Dict, character=None):
         """Convert dictionary action to Action object."""
         try:
@@ -446,6 +447,7 @@ class SystemRecoveryManager:
         return status
 
 
+
 class GameplayController:
     def __init__(
         self, graph_manager: GraphManager = None, config: Dict[str, Any] = None
@@ -460,6 +462,7 @@ class GameplayController:
         self.recovery_manager = SystemRecoveryManager(self)
 
         # Initialize core systems with error handling and recovery
+
         try:
             self.strategy_manager = StrategyManager()
         except Exception as e:
@@ -468,6 +471,7 @@ class GameplayController:
             self.initialization_errors.append("StrategyManager initialization failed")
             # Attempt immediate recovery
             self.recovery_manager.attempt_recovery("strategy_manager")
+
 
         # Initialize graph manager if not provided
         if graph_manager is None:
@@ -480,6 +484,7 @@ class GameplayController:
                 self.graph_manager = None
                 self.initialization_errors.append("GraphManager initialization failed")
                 self.recovery_manager.attempt_recovery("graph_manager")
+
         else:
             self.graph_manager = graph_manager
 
@@ -2046,7 +2051,6 @@ class GameplayController:
         """Update economic state based on action costs and benefits."""
         try:
             action_name = getattr(action, "name", str(action)).lower()
-
             # Economic actions and their effects
             if "work" in action_name or "craft" in action_name:
                 if hasattr(character, "wealth_money"):
@@ -2325,7 +2329,19 @@ class GameplayController:
 
     def _render_ui(self):
         """Render user interface elements with improved layout, new features, and system status."""
+
         try:
+            # TODO: Implement modular UI system with panels
+            # TODO: Add character relationship visualization
+            # TODO: Add village statistics dashboard
+            # TODO: Add interactive building information panels
+            # TODO: Add mini-map or overview mode
+            # TODO: Add save/load game functionality UI
+            # TODO: Add settings and configuration panels
+            # TODO: Add help and tutorial overlays
+            # TODO: Add drag-and-drop interaction hints
+            # TODO: Add notification system for important events
+
             # Create font for UI text
             font = pygame.font.Font(None, 24)
             small_font = pygame.font.Font(None, 18)
@@ -3239,6 +3255,7 @@ class GameplayController:
             "automated_testing": "NOT_STARTED",
             "configuration_ui": "NOT_STARTED",
         }
+
 
 
 if __name__ == "__main__":
