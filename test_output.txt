@@ -1,0 +1,23 @@
+Traceback (most recent call last):
+  File "/workspaces/tiny_village/test_utility_simple.py", line 78, in <module>
+    doc = get_utility_system_info()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/tiny_village/tiny_utility_functions.py", line 841, in get_utility_system_info
+    """.format(
+        ^^^^^^^
+KeyError: '"attribute"'
+✓ Successfully imported utility functions
+✓ Successfully imported mock classes
+
+=== Testing Basic Functionality ===
+Test 1 - Basic utility: 11.6 (expected: 11.6)
+✓ Basic utility calculation works correctly
+Test 2 - Utility with goal: 31.6 (expected: 31.6)
+✓ Utility calculation with goal works correctly
+Test 3 - Plan utility: 11.1 (expected: 11.1)
+✓ Plan utility calculation works correctly
+Test 4 - Importance calculation: 8.0
+✓ Importance calculation works correctly
+Test 5 - Advanced utility: 11.6
+✓ UtilityEvaluator works correctly
+❌ ERROR: '"attribute"'
