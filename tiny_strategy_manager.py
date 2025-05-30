@@ -51,9 +51,8 @@ class StrategyManager:
     """
 
     def __init__(self):
-        # self.goap_planner = GOAPPlanner() # GOAP planner might not be used in get_daily_actions directly
-        # self.graph_manager = GraphManager() # Avoid direct instantiation if not essential for this method
-        pass
+        self.goap_planner = GOAPPlanner()
+        self.graph_manager = GraphManager()
 
     def get_character_state_dict(self, character: Character) -> dict:
         """
@@ -153,14 +152,11 @@ class StrategyManager:
         # For now, focusing on get_daily_actions as per subtask.
         for event in events:
             if event.type == "new_day":
-                # Assuming 'subject' is a character name, needs to fetch Character object
-                # char_obj = self.graph_manager.get_character_node(subject) # Example
-                # if char_obj:
-                #    return self.plan_daily_activities(char_obj)
-                print(f"Warning: update_strategy called for {subject}, but needs Character object.")
-                return [] # Placeholder
-        # ... (rest of original logic, likely needs rework)
-        return []
+                return self.plan_daily_activities("Emma")
+            character_state = self.graph_manager.get_character_state("Emma")
+            actions = self.graph_manager.get_possible_actions("Emma")
+            plan = self.goap_planner.plan_actions(character_state, actions)
+            return plan
 
     def plan_daily_activities(self, character):
         """
@@ -196,10 +192,14 @@ class StrategyManager:
 
     def respond_to_job_offer(self, character, job_details, graph):
         # This method also needs significant updates
-        print("Warning: respond_to_job_offer called, needs rework with utility functions.")
-        # goal = {"career_progress": "max"}
-        # current_state = {"satisfaction": 100} 
-        # actions_data = self.get_career_actions(character, job_details)
-        # actions = [Action(a['name'], {}, a.get('effects',[]), a.get('cost',0)) for a in actions_data]
-        # ...
-        return []
+        goal = {"career_progress": "max"}
+        current_state = {"satisfaction": 100}  # Assuming current job satisfaction
+        actions = self.get_career_actions(character, job_details)
+
+        # Use GOAP to plan career moves
+        plan = self.goap_planner(character, goal, current_state, actions)
+
+        # Evaluate the utility of the plan
+        final_decision = evaluate_utility(plan, character)
+
+        return final_decision
