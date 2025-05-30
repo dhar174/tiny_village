@@ -1,0 +1,21 @@
+{
+  "screen_width": 1024,
+  "screen_height": 768,
+  "target_fps": 60,
+  "characters": {
+    "count": 6,
+    "use_custom": true,
+    "characters_file": "custom_characters.json"
+  },
+  "map": {
+    "buildings_file": "custom_buildings.json"
+  },
+  "render": {
+    "background_color": [
+      20,
+      50,
+      80
+    ],
+    "vsync": true
+  }
+}

@@ -10,6 +10,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import re
 from collections import defaultdict
+import statistic
 import os
 
 os.environ["TRANSFORMERS_CACHE"] = "/mnt/d/transformers_cache"

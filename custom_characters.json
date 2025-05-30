@@ -1,0 +1,35 @@
+{
+  "characters": [
+    {
+      "name": "Custom Character 1",
+      "age": 25,
+      "pronouns": "they/them",
+      "job": "Artisan",
+      "recent_event": "Moved to the village",
+      "long_term_goal": "Master their craft",
+      "personality": {
+        "extraversion": 60,
+        "openness": 80,
+        "conscientiousness": 70,
+        "agreeableness": 75,
+        "neuroticism": 40
+      },
+      "specialties": [
+        "crafting",
+        "creativity"
+      ],
+      "inventory_items": [
+        {
+          "name": "Tools",
+          "type": "equipment",
+          "quantity": 1
+        },
+        {
+          "name": "Bread",
+          "type": "food",
+          "quantity": 2
+        }
+      ]
+    }
+  ]
+}
