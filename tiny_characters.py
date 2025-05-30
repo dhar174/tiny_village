@@ -317,7 +317,7 @@ class Goal:
         self.target = target
         self.environment = graph_manager
         self.goal_type = goal_type
-        self.target_effects
+        self.target_effects = target_effects
         # self.desired_results = desired_results
 
     def extract_required_items(self):
