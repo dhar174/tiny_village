@@ -342,6 +342,7 @@ utility_evaluator = UtilityEvaluator()
 
 # === ENHANCED EXISTING FUNCTIONS ===
 
+
 # function that evaluates the current importance of the goal based on the character's state and the environment.
 # tiny_utility_functions.py
 
@@ -536,6 +537,7 @@ def calculate_action_utility(
     need_fulfillment_score = 0.0
     goal_progress_score = 0.0
 
+
     # 1. Need Fulfillment
     if action.effects:
         for effect in action.effects:
@@ -570,10 +572,12 @@ def calculate_action_utility(
                     need_fulfillment_score += (
                         current_social_needs * abs(change) * SOCIAL_SCALER
                     )
+
             elif attribute == "money":
                 # Money gained is generally positive utility
                 if change > 0:
                     need_fulfillment_score += change * MONEY_SCALER
+
 
     utility += need_fulfillment_score
 
@@ -583,6 +587,7 @@ def calculate_action_utility(
         and hasattr(current_goal, "target_effects")
         and current_goal.target_effects
     ):
+
         if action.effects:
             for effect in action.effects:
                 attr = effect.get("attribute")
@@ -597,6 +602,7 @@ def calculate_action_utility(
                         goal_priority = getattr(current_goal, "priority", 0.5)
                         goal_progress_score += goal_priority * 25.0
                         # Break if one effect contributes, to avoid over-counting for multi-effect actions
+
                         break
 
     utility += goal_progress_score
@@ -607,6 +613,13 @@ def calculate_action_utility(
         action_cost_score = float(action.cost) * 10.0  # Scaler for cost impact
 
     utility -= action_cost_score
+
+
+
+    # Consider inherent utility/disutility of certain actions if not captured by needs/goals/cost
+    # Example: "Rest" might have a small positive base utility if not costly and energy is low.
+    # "Argue" might have a small negative base utility.
+    # For now, this is not explicitly added.
 
     return utility
 
@@ -639,6 +652,7 @@ def calculate_plan_utility(
                 simulated_state, action, current_goal
             )
             total_utility += action_utility
+
 
             # Update simulated_state based on action's effects
             if action.effects:
