@@ -5078,6 +5078,7 @@ if __name__ == "__main__":
     # Initialize the module-level variables
     # Declare global variables to ensure we're modifying the module-level variables
         global manager, model, sentiment_analysis
+        
     tiny_calendar = ttm.GameCalendar()
     tiny_time_manager = ttm.GameTimeManager(tiny_calendar)
     manager = MemoryManager(tiny_time_manager, "ip_no_norm.bin")
