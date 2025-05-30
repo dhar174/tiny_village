@@ -1,0 +1,194 @@
+{
+    "Talk": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 10,
+            "operator": "gt"
+        },
+        {
+            "name": "extraversion",
+            "attribute": "personality_traits.extraversion",
+            "target": "initiator",
+            "satisfy_value": 50,
+            "operator": "gt"
+        }
+    ],
+    "Trade": [
+        {
+            "name": "wealth_money",
+            "attribute": "wealth_money",
+            "target": "initiator",
+            "satisfy_value": 5,
+            "operator": "gt"
+        },
+        {
+            "name": "conscientiousness",
+            "attribute": "personality_traits.conscientiousness",
+            "target": "target",
+            "satisfy_value": 30,
+            "operator": "gt"
+        }
+    ],
+    "Help": [
+        {
+            "name": "social_wellbeing",
+            "attribute": "social_wellbeing",
+            "target": "initiator",
+            "satisfy_value": 20,
+            "operator": "gt"
+        },
+        {
+            "name": "agreeableness",
+            "attribute": "personality_traits.agreeableness",
+            "target": "initiator",
+            "satisfy_value": 40,
+            "operator": "gt"
+        }
+    ],
+    "Attack": [
+        {
+            "name": "anger",
+            "attribute": "current_mood",
+            "target": "initiator",
+            "satisfy_value": -10,
+            "operator": "lt"
+        },
+        {
+            "name": "strength",
+            "attribute": "skills.strength",
+            "target": "initiator",
+            "satisfy_value": 20,
+            "operator": "gt"
+        }
+    ],
+    "Befriend": [
+        {
+            "name": "openness",
+            "attribute": "personality_traits.openness",
+            "target": "initiator",
+            "satisfy_value": 50,
+            "operator": "gt"
+        },
+        {
+            "name": "social_wellbeing",
+            "attribute": "social_wellbeing",
+            "target": "initiator",
+            "satisfy_value": 30,
+            "operator": "gt"
+        }
+    ],
+    "Teach": [
+        {
+            "name": "knowledge",
+            "attribute": "skills.knowledge",
+            "target": "initiator",
+            "satisfy_value": 50,
+            "operator": "gt"
+        },
+        {
+            "name": "patience",
+            "attribute": "personality_traits.agreeableness",
+            "target": "initiator",
+            "satisfy_value": 30,
+            "operator": "gt"
+        }
+    ],
+    "Learn": [
+        {
+            "name": "curiosity",
+            "attribute": "personality_traits.openness",
+            "target": "initiator",
+            "satisfy_value": 50,
+            "operator": "gt"
+        },
+        {
+            "name": "focus",
+            "attribute": "mental_health",
+            "target": "initiator",
+            "satisfy_value": 40,
+            "operator": "gt"
+        }
+    ],
+    "Heal": [
+        {
+            "name": "medical_knowledge",
+            "attribute": "skills.medical_knowledge",
+            "target": "initiator",
+            "satisfy_value": 40,
+            "operator": "gt"
+        },
+        {
+            "name": "compassion",
+            "attribute": "personality_traits.agreeableness",
+            "target": "initiator",
+            "satisfy_value": 40,
+            "operator": "gt"
+        }
+    ],
+    "Gather": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 20,
+            "operator": "gt"
+        },
+        {
+            "name": "curiosity",
+            "attribute": "personality_traits.openness",
+            "target": "initiator",
+            "satisfy_value": 30,
+            "operator": "gt"
+        }
+    ],
+    "Build": [
+        {
+            "name": "construction_skill",
+            "attribute": "skills.construction",
+            "target": "initiator",
+            "satisfy_value": 30,
+            "operator": "gt"
+        },
+        {
+            "name": "conscientiousness",
+            "attribute": "personality_traits.conscientiousness",
+            "target": "initiator",
+            "satisfy_value": 40,
+            "operator": "gt"
+        }
+    ],
+    "Give Item": [
+        {
+            "name": "item_in_inventory",
+            "attribute": "inventory.item_count",
+            "target": "initiator",
+            "satisfy_value": 1,
+            "operator": "gt"
+        },
+        {
+            "name": "generosity",
+            "attribute": "personality_traits.agreeableness",
+            "target": "initiator",
+            "satisfy_value": 30,
+            "operator": "gt"
+        }
+    ],
+    "Receive Item": [
+        {
+            "name": "need food",
+            "attribute": "hunger_level",
+            "target": "initiator",
+            "satisfy_value": 5,
+            "operator": "gt"
+        },
+        {
+            "name": "social_wellbeing",
+            "attribute": "social_wellbeing",
+            "target": "initiator",
+            "satisfy_value": 10,
+            "operator": "gt"
+        }
+    ]
+}

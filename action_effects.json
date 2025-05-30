@@ -1,0 +1,89 @@
+{
+    "Talk": [
+        {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 5},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -2},
+        {"targets": ["target"], "attribute": "social_wellbeing", "change_value": 5},
+        {
+            "targets": ["initiator"],
+            "method": "play_animation",
+            "method_args": ["talking"]
+        }
+    ],
+    "Eat": [
+        {"targets": ["initiator"], "attribute": "hunger_level", "change_value": -5},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": 5},
+        {
+            "targets": ["initiator"],
+            "method": "play_animation",
+            "method_args": ["eating"]
+        }
+    ],
+    "Trade": [
+        {"targets": ["initiator"], "attribute": "wealth_money", "change_value": -5},
+        {
+            "targets": ["initiator"],
+            "attribute": "inventory.item_count",
+            "change_value": -1
+        },
+        {"targets": ["target"], "attribute": "wealth_money", "change_value": 5},
+        {"targets": ["target"], "attribute": "inventory.item_count", "change_value": 1}
+    ],
+    "Help": [
+        {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 10},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -5},
+        {"targets": ["target"], "attribute": "health_status", "change_value": 10}
+    ],
+    "Attack": [
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -5},
+        {"targets": ["target"], "attribute": "health_status", "change_value": -10}
+    ],
+    "Befriend": [
+        {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 8},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -3},
+        {"targets": ["target"], "attribute": "social_wellbeing", "change_value": 8}
+    ],
+    "Teach": [
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -4},
+        {"targets": ["target"], "attribute": "skills.knowledge", "change_value": 5}
+    ],
+    "Learn": [
+        {"targets": ["initiator"], "attribute": "skills.knowledge", "change_value": 7},
+        {"targets": ["initiator"], "attribute": "mental_health", "change_value": 3},
+        {"targets": ["target"], "attribute": "skills.teaching", "change_value": 1}
+    ],
+    "Heal": [
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -6},
+        {"targets": ["target"], "attribute": "health_status", "change_value": 15}
+    ],
+    "Gather": [
+        {"targets": ["initiator"], "attribute": "wealth_money", "change_value": 5},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -4}
+    ],
+    "Build": [
+        {"targets": ["initiator"], "attribute": "material_goods", "change_value": 10},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -8}
+    ],
+    "Give Item": [
+        {
+            "targets": ["initiator"],
+            "attribute": "inventory.item_count",
+            "change_value": -1
+        },
+        {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 5},
+        {"targets": ["target"], "attribute": "inventory.item_count", "change_value": 1},
+        {"targets": ["target"], "attribute": "social_wellbeing", "change_value": 5}
+    ],
+    "Receive Item": [
+        {
+            "targets": ["initiator"],
+            "attribute": "inventory.item_count",
+            "change_value": 1
+        },
+        {"targets": ["initiator"], "attribute": "hunger_level", "change_value": -5},
+        {
+            "targets": ["target"],
+            "attribute": "inventory.item_count",
+            "change_value": -1
+        }
+    ]
+}
