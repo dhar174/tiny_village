@@ -267,6 +267,7 @@ class Goal:
         evaluate_utility_function (function): A function that evaluates the current importance of the goal based on the character's state and the environment.
         difficulty (function): A function that calculates the difficulty of the goal based on the character's state and the environment.
         completion_reward (function): A function that calculates the reward for completing the goal based on the character's state and the environment.
+        target_effects (dict): A dict of the target effects completing the goal will result in, ie, the desired effects of the goal.
         failure_penalty (function): A function that calculates the penalty for failing to complete the goal based on the character's state and the environment.
         completion_message (function): A function that generates a message when the goal is completed based on the character's state and the environment.
         failure_message (function): A function that generates a message when the goal is failed based on the character's state and the environment.
@@ -294,6 +295,7 @@ class Goal:
         criteria,  # list of criteria (as dicts) that need to be met for the goal to be completed
         graph_manager,
         goal_type,
+        target_effects
         # desired_results,  # list of desired results (as dicts of dicts representing State attributes) when the goal is completed
     ):
         self.name = name
@@ -315,6 +317,7 @@ class Goal:
         self.target = target
         self.environment = graph_manager
         self.goal_type = goal_type
+        self.target_effects
         # self.desired_results = desired_results
 
     def extract_required_items(self):
