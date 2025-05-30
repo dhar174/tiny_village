@@ -41,7 +41,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 
 os.environ["TRANSFORMERS_CACHE"] = "/mnt/d/transformers_cache"
-remove_list = ["\)", "\(", "–", '"', "”", '"', "\[.*\]", ".*\|.*", "—"]
+remove_list = [r"\)", r"\(", r"–", r'"', r"”", r'"', r"\[.*\]", r".*\|.*", r"—"]
 lda = LatentDirichletAllocation(n_components=3)
 # Try to load the transformer model, fallback to smaller model if not available
 try:
@@ -57,6 +57,7 @@ import os
 from spacy.matcher import Matcher
 from spacy.tokens import Span
 
+nltk.download("stopwords")
 if not os.path.exists(nltk.data.find("corpora/stopwords")):
     nltk.download("stopwords")
 
