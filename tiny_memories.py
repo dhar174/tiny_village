@@ -8,30 +8,52 @@ import math
 import re
 import time
 
+print("Importing libraries...")
 from collections import deque
 from networkx import node_link_data
+
+print("Importing Numpy next")
 import numpy as np
 from datetime import datetime, timedelta
+
+print("Importing Pandas")
 import pandas as pd
+
+print("Importing Scipy")
 import scipy as sp
 from sklearn import tree
 from sklearn.metrics.pairwise import cosine_similarity
 import networkx as nx
-from sympy import Q, comp, lex, per
+
+print("Importing Torch")
 import torch
+
+print("Importing Torchvision")
 from transformers import AutoModel, AutoTokenizer, pipeline
 from rake_nltk import Rake
-import faiss
+
+print("Importing Spacy")
 import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
 from gensim import corpora, models
+
+print("Importing NLTK")
 import nltk
 from nltk.tokenize import RegexpTokenizer
 from textblob import TextBlob
 from sklearn.feature_extraction.text import TfidfVectorizer, ENGLISH_STOP_WORDS
 from nltk.corpus import stopwords
 import heapq
+
+print("Importing Tiny Brain IO")
 import tiny_brain_io as tbi
+
+print("Importing Tiny Time Manager")
+import logging
+
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 import tiny_time_manager as ttm
 import os
 import sys
@@ -40,19 +62,58 @@ from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 
-os.environ["TRANSFORMERS_CACHE"] = "/mnt/d/transformers_cache"
+SKLEARNSETUP_NO_OPENMP = 1
+# also do it in bashrc
+os.environ["SKLEARN_NO_OPENMP"] = "1"
+# os.environ["TRANSFORMERS_CACHE"] = "/mnt/d/transformers_cache"
 remove_list = [r"\)", r"\(", r"–", r'"', r"”", r'"', r"\[.*\]", r".*\|.*", r"—"]
-lda = LatentDirichletAllocation(n_components=3)
+
 # Try to load the transformer model, fallback to smaller model if not available
-try:
-    nlp = spacy.load("en_core_web_trf")
-except OSError:
-    try:
-        nlp = spacy.load("en_core_web_sm")
-    except OSError:
-        print("Warning: No spaCy model found. Using basic NLP functions.")
-        nlp = None
-import nltk
+logging.info("Loading spaCy model...")
+
+import os, sys, ctypes
+
+# 1️⃣  run this *before* the crash point
+import re
+
+with open("/proc/self/maps") as f:
+    libs = sorted(set(re.findall(r"/[^\s]+\.so[^\s]*", f.read())))
+print("\n".join(libs))
+
+import re, pathlib, subprocess, sys, os
+
+print("libgomp paths in process:")
+maps = pathlib.Path("/proc/%d/maps" % os.getpid()).read_text()
+for l in sorted(set(re.findall(r"/[^\s]*libgomp[^\s]*", maps))):
+    print(" ", l)
+# 2️⃣  optional: write the list to disk so you still have it after the abort
+open("/tmp/loaded.txt", "w").write("\n".join(sys.modules))
+
+
+nlp = spacy.load("en_core_web_trf")
+logging.info(nlp.pipe_names)
+logging.info("Configuring latent Dirichlet Allocation")
+lda = LatentDirichletAllocation(n_components=3)
+# try:
+#     nlp = spacy.load("en_core_web_trf")
+# except Exception as e:
+#     logging.error(f"Error loading spaCy model: {e}")
+#     nlp = None
+#     raise e
+# except OSError:
+#     logging.warning("en_core_web_trf model not found, loading en_core_web_sm instead.")
+#     # Fallback to smaller model
+#     try:
+#         nlp = spacy.load("en_core_web_sm")
+#     except OSError:
+#         print("Warning: No spaCy model found. Using basic NLP functions.")
+#         nlp = None
+#         raise OSError(
+#             "No spaCy model found. Please install a model using 'python -m spacy download en_core_web_sm' or 'en_core_web_trf'."
+#         )
+
+
+logging.info("Spacy model loaded successfully.")
 import os
 from spacy.matcher import Matcher
 from spacy.tokens import Span
@@ -67,7 +128,6 @@ matplotlib.use("TkAgg")  # or 'Qt5Agg', or 'inline' for Jupyter notebooks
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
 import functools
 
 import inspect
@@ -75,16 +135,26 @@ from nltk.corpus import wordnet
 from nltk.tokenize import word_tokenize
 from nltk import pos_tag
 
+logging.info("Loading NLTK resources...")
+nltk.download("punkt")
+nltk.download("averaged_perceptron_tagger")
+nltk.download("wordnet")
+
 class_interaction_graph = nx.DiGraph()
 call_flow_diagram = nx.DiGraph()
 from nltk.stem import PorterStemmer
+
+logging.info("Gensim is being imported")
 import gensim
 
 # Write a line of code that will identify how many classes are in this module:
 num_classes = 0
+class_list = []
 for name, obj in inspect.getmembers(sys.modules[__name__]):
     if inspect.isclass(obj):
         num_classes += 1
+        class_list.append(name)
+logging.info(f"Number of classes in this module: {num_classes} - {class_list}")
 
 
 debug = True
@@ -252,13 +322,26 @@ def sigmoid(x):
     return 1 / (1 + math.exp(-x))
 
 
+logging.info("Loading NMF from sklearn.decomposition")
 from sklearn.decomposition import NMF
+
+print("About to import faiss")
+print("Importing faiss")
+try:
+    import faiss
+except ImportError as e:
+    print(
+        "Failed to import faiss. Please install it using 'pip install faiss-cpu' or 'pip install faiss-gpu'."
+    )
+    raise e
+print("Successfully imported faiss")
 
 
 # Example usage:
 # @track_calls
 class EmbeddingModel:
     def __init__(self):
+        logging.info("Loading embedding model...")
         self.tokenizer = AutoTokenizer.from_pretrained(
             "sentence-transformers/all-mpnet-base-v2",
             trust_remote_code=True,
@@ -269,6 +352,9 @@ class EmbeddingModel:
             trust_remote_code=True,
             cache_dir="/mnt/d/transformers_cache",
         )
+        logging.info(
+            f"Model loaded: {self.model.config._name_or_path} with {self.model.config.hidden_size} hidden size"
+        )
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model.to(self.device)
         self.model.eval()
@@ -276,7 +362,7 @@ class EmbeddingModel:
 
     def forward(self, input_ids, attention_mask):
         outputs = self.model(input_ids=input_ids, attention_mask=attention_mask)
-        # print(f"Shape of outputs: {outputs.last_hidden_state.shape}")
+        print(f"Shape of outputs: {outputs.last_hidden_state.shape}")
         return outputs
 
 
@@ -307,12 +393,12 @@ class SentimentAnalysis:
         analysisPol = TextBlob(text).polarity
         analysisSub = TextBlob(text).subjectivity
         sentiment_score = {"polarity": analysisPol, "subjectivity": analysisSub}
-        # print(f"Sentiment score: {sentiment_score}")
+        print(f"Sentiment score: {sentiment_score}")
         return sentiment_score
 
     def get_emotion_classification(self, text):
         result = self.emo_classifier(text)
-        # print(f"Emotion classification: {result[0]['label']}")
+        print(f"Emotion classification: {result[0]['label']}")
         return result[0]["label"]
 
     def extract_simple_words(self, text):
@@ -326,8 +412,8 @@ class SentimentAnalysis:
 
 
 def mean_pooling(model_output, attention_mask):
-    # #print(type(model_output))
-    # #print(type(attention_mask))
+    # print(type(model_output))
+    # print(type(attention_mask))
     token_embeddings = (
         model_output  # Assuming model_output is already just the embeddings
     )
@@ -740,8 +826,8 @@ class GeneralMemory(Memory):
 
         self.description_embedding = None
         self.description_embedding = self.generate_embedding()
-        # #print(self.description_embedding[0].shape)
-        # #print(self.description_embedding[1].shape)
+        # print(self.description_embedding[0].shape)
+        # print(self.description_embedding[1].shape)
 
         self.description_embedding = mean_pooling(
             self.description_embedding[0], self.description_embedding[1]
@@ -828,7 +914,7 @@ class GeneralMemory(Memory):
             tree.specific_memories_root,
             lambda node: specific_memories.append(node.memory),
         )
-        # #print(f"Specific memories: {[memory.description for memory in specific_memories]}")
+        # print(f"Specific memories: {[memory.description for memory in specific_memories]}")
 
         return specific_memories
 
@@ -933,10 +1019,10 @@ class GeneralMemory(Memory):
         # embeddings = torch.stack(embeddings)
         # attention_mask = torch.stack(att_mask)
 
-        # #print(embeddings)
+        # print(embeddings)
         self.faiss_index = faiss.IndexFlatL2(embeddings.shape[1])
         # for embedding in embeddings:
-        # #print(embeddings[0].shape)
+        # print(embeddings[0].shape)
         self.faiss_index.add(embeddings.cpu().detach().numpy())
         return self.faiss_index
 
@@ -1290,219 +1376,237 @@ class FlatMemoryAccess:
 
 
         """
-        if (
-            index_load_filename is not None
-            and self.index_load_filename != index_load_filename
-        ):
-            self.index_load_filename = index_load_filename
-
-        self.set_all_memory_embeddings_to_normalized(normalize)
-
-        if self.index_load_filename is not None and os.path.exists(
-            self.index_load_filename
-        ):
-            try:
-                self.faiss_index = faiss.read_index(index_load_filename)
-                print(f"\n Loaded index from file {index_load_filename} \n")
-                # Type
-                return None
-            except:
-                print(f"Could not load FAISS index from {index_load_filename}")
-                self.faiss_index = None
-                raise ValueError("Could not load FAISS index from file")
-
-        if dimension <= 0 or dimension is None:
-            dimension = 768  # Default dimension for BERT embeddings
-
-        N = 1000000
-
-        # Param of PQ
-        M = 16  # The number of sub-vector. Typically this is 8, 16, 32, etc.
-        nbits = 8  # bits per sub-vector. This is typically 8, so that each sub-vec is encoded by 1 byte
-        # Param of IVF
-        nlist = 1000  # The number of cells (space partition). Typical value is sqrt(N)
-        # Param of HNSW
-        hnsw_m = 32  # The number of neighbors for HNSW. This is typically 32
-
-        if metric == "l2":
-            # Exact Search for L2
-            self.faiss_index = faiss.IndexFlatL2(dimension)
-        elif metric == "ip":
-            # Exact Search for Inner Product
-            self.faiss_index = faiss.IndexFlatIP(dimension)
-        elif metric == "hnsw" or metric == "nsw":
-            # Hierarchical Navigable Small World graph exploration
-            self.faiss_index = faiss.IndexHNSWFlat(dimension, 32)
-        elif metric == "pq":
-            # Product quantizer (PQ) in flat mode
-            self.faiss_index = faiss.IndexPQ(dimension, 8, 8, 0)
-        elif metric == "opq":
-            # Optimized Product Quantizer (OPQ) in flat mode
-            self.faiss_index = faiss.IndexFlatL2(dimension)
-            self.faiss_index = faiss.IndexPreTransform(
-                self.faiss_index, faiss.OPQMatrix(dimension, 64)
-            )
-
-        elif metric == "lsh":
-            # Locality-Sensitive Hashing (binary flat index)
-            nbits = 16
-            self.faiss_index = faiss.IndexLSH(dimension, nbits)
-
-        elif metric == "ivf":
-            # Inverted file with exact post-verification
-            self.faiss_index = faiss.IndexIVFFlat(
-                self.quantizer, dimension, 100, faiss.METRIC_L2
-            )
-
-        elif metric == "sq8":
-            # Scalar quantizer with 8 bits per component
-            self.faiss_index = faiss.IndexScalarQuantizer(
-                dimension, faiss.ScalarQuantizer.QT_8bit
-            )
-        elif metric == "ivfx,sq8" or metric == "ivfsq":
-            # Inverted file with scalar quantizer (8 bits per component)
-            self.faiss_index = faiss.IndexIVFScalarQuantizer(
-                self.quantizer, dimension, 100, faiss.ScalarQuantizer.QT_8bit
-            )
-        elif metric == "ivfpq":
-            # Inverted file with product quantizer
-            self.faiss_index = faiss.IndexIVFPQ(self.quantizer, dimension, 100, 8, 8)
-        elif metric == "ivfpqr":
-            # Inverted file with product quantizer and re-ranking
-            self.faiss_index = faiss.IndexIVFPQR(self.quantizer, dimension, 100, 8, 8)
-
-        # print(f"FAISS index initialized with dimension {self.faiss_index.d} and metric {metric}")
-        embeddings = []
-        index_key = 0
-        # Check the specific memories dict is not empty
-        if len(self.specific_memories) == 0:
-            return None
-        for specific_memory in self.get_specific_memories():
+        print(
+            f"Initializing FAISS index with dimension {dimension} and metric {metric}"
+        )
+        try:
             if (
-                isinstance(specific_memory, SpecificMemory)
-                and specific_memory.embedding is not None
+                index_load_filename is not None
+                and self.index_load_filename != index_load_filename
             ):
-                embeddings.append(specific_memory.get_embedding()[0])
-                for fact in specific_memory.get_facts_embeddings():
-                    embeddings.append(fact)
-                self.index_id_to_node_id[manager.flat_access.faiss_index.ntotal - 1] = (
-                    specific_memory.description
-                )
-                index_key += 1
-            elif (
-                isinstance(specific_memory, SpecificMemory)
-                and specific_memory.embedding is None
+                self.index_load_filename = index_load_filename
+
+            self.set_all_memory_embeddings_to_normalized(normalize)
+
+            if self.index_load_filename is not None and os.path.exists(
+                self.index_load_filename
             ):
-                # specific_memory.get_embedding()
-                embeddings.append(specific_memory.get_embedding()[0], normalize)
-                for fact in specific_memory.get_facts_embeddings():
-                    embeddings.append(fact)
-                self.index_id_to_node_id[manager.flat_access.faiss_index.ntotal - 1] = (
-                    specific_memory.description
-                )
-
-                index_key += 1
-
-        if embeddings:
-            # print(f"Adding {len(embeddings)} embeddings to the FAISS index")
-            # for em in embeddings:
-            # print(f"Embedding shape: {em.shape}")
-            # embeddings = np.array([e.cpu().detach() for e in embeddings])
-
-            print(f"Embedding type: {type(embeddings)}")
-            first_type = type(embeddings[0])
-            for i in range(len(embeddings)):
-                if type(embeddings[i]) != first_type:
-                    raise ValueError(
-                        f"Embedding type mismatch: {type(embeddings[i])} != {first_type}"
-                    )
-
-                embeddings[i] = embeddings[i].cpu().detach().numpy()
-                # if normalize:
-                #     faiss.normalize_L2(embeddings[i])
-            if normalize:
-                self.index_is_normalized = True
-            else:
-                self.index_is_normalized = False
-            embeddings = np.concatenate(embeddings)
-            # if normalize:
-            #     faiss.normalize_L2(embeddings)
-            # embeddings = torch.stack([e.squeeze(0) for e in embeddings]).cpu().detach().numpy()
-            # print(f"Embedding shape: {embeddings.shape}")
-            # print(f"Embedding type: {type(embeddings)}")
-            assert (
-                embeddings.shape[1] == self.faiss_index.d
-            ), f"Data dimensionality ({embeddings.shape[1]}) does not match index dimensionality ({self.faiss_index.d})"
-
-            if metric == "l2" or metric == "ip" or metric == "cosine":
-                self.faiss_index.add(embeddings)
-
-            elif metric == "hnsw" or metric == "nsw":
-                self.faiss_index.add_with_ids(
-                    embeddings,
-                    np.array(list(self.index_id_to_node_id.keys()))
-                    .cpu()
-                    .detach()
-                    .numpy(),
-                )
-                try:  # efConstruction is the number of neighbors that are accessed during the construction of the graph. Higher efConstruction leads to higher accuracy but slower construction.
-                    self.faiss_index.efConstruction = 32
-                    self.faiss_index.efSearch = 64
+                try:
+                    self.faiss_index = faiss.read_index(index_load_filename)
+                    print(f"\n Loaded index from file {index_load_filename} \n")
+                    # Type
+                    return None
                 except:
-                    pass
-            elif metric == "ann" or metric == "approximate":
-                # HNSW + IVFPQ
-                # Define the index
-                quantizer = faiss.IndexHNSWFlat(
-                    dimension, hnsw_m
-                )  # we use HNSW to assign the vectors to the cells
-                self.faiss_index = faiss.IndexIVFPQ(
-                    quantizer, dimension, nlist, M, nbits
+                    print(f"Could not load FAISS index from {index_load_filename}")
+                    self.faiss_index = None
+                    raise ValueError("Could not load FAISS index from file")
+
+            if dimension <= 0 or dimension is None:
+                dimension = 768  # Default dimension for BERT embeddings
+
+            N = 1000000
+
+            # Param of PQ
+            M = 16  # The number of sub-vector. Typically this is 8, 16, 32, etc.
+            nbits = 8  # bits per sub-vector. This is typically 8, so that each sub-vec is encoded by 1 byte
+            # Param of IVF
+            nlist = (
+                1000  # The number of cells (space partition). Typical value is sqrt(N)
+            )
+            # Param of HNSW
+            hnsw_m = 32  # The number of neighbors for HNSW. This is typically 32
+
+            if metric == "l2":
+                # Exact Search for L2
+                self.faiss_index = faiss.IndexFlatL2(dimension)
+            elif metric == "ip":
+                # Exact Search for Inner Product
+                self.faiss_index = faiss.IndexFlatIP(dimension)
+            elif metric == "hnsw" or metric == "nsw":
+                # Hierarchical Navigable Small World graph exploration
+                self.faiss_index = faiss.IndexHNSWFlat(dimension, 32)
+            elif metric == "pq":
+                # Product quantizer (PQ) in flat mode
+                self.faiss_index = faiss.IndexPQ(dimension, 8, 8, 0)
+            elif metric == "opq":
+                # Optimized Product Quantizer (OPQ) in flat mode
+                self.faiss_index = faiss.IndexFlatL2(dimension)
+                self.faiss_index = faiss.IndexPreTransform(
+                    self.faiss_index, faiss.OPQMatrix(dimension, 64)
                 )
 
-                # train the index
-                self.faiss_index.train(embeddings.cpu().detach().numpy())
-                self.faiss_index.add(embeddings.cpu().detach().numpy())
-            elif metric == "pq":
-                self.faiss_index.train(embeddings.cpu().detach().numpy())
-                self.faiss_index.add(embeddings.cpu().detach().numpy())
-            elif metric == "opq":
-                self.faiss_index.train(embeddings.cpu().detach().numpy())
-                self.faiss_index.add(embeddings.cpu().detach().numpy())
             elif metric == "lsh":
-                self.faiss_index.add(embeddings.cpu().detach().numpy())
-                if (
-                    self.faiss_index.buckets is not None
-                    and len(self.faiss_index.buckets) > 0
-                ):
-                    buckets = self.faiss_index.buckets
-                else:
-                    buckets = faiss.vector_to_array(self.faiss_index.codes)
-                # use buckets for LSH forest techniques
+                # Locality-Sensitive Hashing (binary flat index)
+                nbits = 16
+                self.faiss_index = faiss.IndexLSH(dimension, nbits)
 
             elif metric == "ivf":
-                self.faiss_index.train(np.array(embeddings).cpu().detach().numpy())
-                self.faiss_index.add(np.array(embeddings).cpu().detach().numpy())
+                # Inverted file with exact post-verification
+                self.faiss_index = faiss.IndexIVFFlat(
+                    self.quantizer, dimension, 100, faiss.METRIC_L2
+                )
+
             elif metric == "sq8":
-                self.faiss_index.train(np.array(embeddings).cpu().detach().numpy())
-                self.faiss_index.add(np.array(embeddings).cpu().detach().numpy())
-            else:
-                self.faiss_index.add(embeddings.cpu().detach().numpy())
+                # Scalar quantizer with 8 bits per component
+                self.faiss_index = faiss.IndexScalarQuantizer(
+                    dimension, faiss.ScalarQuantizer.QT_8bit
+                )
+            elif metric == "ivfx,sq8" or metric == "ivfsq":
+                # Inverted file with scalar quantizer (8 bits per component)
+                self.faiss_index = faiss.IndexIVFScalarQuantizer(
+                    self.quantizer, dimension, 100, faiss.ScalarQuantizer.QT_8bit
+                )
+            elif metric == "ivfpq":
+                # Inverted file with product quantizer
+                self.faiss_index = faiss.IndexIVFPQ(
+                    self.quantizer, dimension, 100, 8, 8
+                )
+            elif metric == "ivfpqr":
+                # Inverted file with product quantizer and re-ranking
+                self.faiss_index = faiss.IndexIVFPQR(
+                    self.quantizer, dimension, 100, 8, 8
+                )
 
-            # print(f"FAISS index populated with {self.faiss_index.ntotal} embeddings")
-            self.index_build_count += 1
-            # self.faiss_index.add(np.array(embeddings))
-
-        else:
-            print("No embeddings found to populate the FAISS index")
-            time.sleep(5)
-            raise ValueError("No embeddings found to populate the FAISS index")
-        print(f"The current index type is: {type(self.faiss_index).__name__} \n")
-
-        with open("results.txt", "a") as f:
-            f.write(
-                f"\n Index type: {type(self.faiss_index).__name__} build count: {self.index_build_count}\n \n \n"
+            print(
+                f"FAISS index initialized with dimension {self.faiss_index.d} and metric {metric}"
             )
+            embeddings = []
+            index_key = 0
+            # Check the specific memories dict is not empty
+            if len(self.specific_memories) == 0:
+                return None
+            for specific_memory in self.get_specific_memories():
+                if (
+                    isinstance(specific_memory, SpecificMemory)
+                    and specific_memory.embedding is not None
+                ):
+                    embeddings.append(specific_memory.get_embedding()[0])
+                    for fact in specific_memory.get_facts_embeddings():
+                        embeddings.append(fact)
+                    self.index_id_to_node_id[
+                        manager.flat_access.faiss_index.ntotal - 1
+                    ] = specific_memory.description
+                    index_key += 1
+                elif (
+                    isinstance(specific_memory, SpecificMemory)
+                    and specific_memory.embedding is None
+                ):
+                    # specific_memory.get_embedding()
+                    embeddings.append(specific_memory.get_embedding()[0], normalize)
+                    for fact in specific_memory.get_facts_embeddings():
+                        embeddings.append(fact)
+                    self.index_id_to_node_id[
+                        manager.flat_access.faiss_index.ntotal - 1
+                    ] = specific_memory.description
+
+                    index_key += 1
+
+            if embeddings:
+                print(f"Adding {len(embeddings)} embeddings to the FAISS index")
+                # for em in embeddings:
+                print(f"Embedding shape: {em.shape}")
+                # embeddings = np.array([e.cpu().detach() for e in embeddings])
+
+                print(f"Embedding type: {type(embeddings)}")
+                first_type = type(embeddings[0])
+                for i in range(len(embeddings)):
+                    if type(embeddings[i]) != first_type:
+                        raise ValueError(
+                            f"Embedding type mismatch: {type(embeddings[i])} != {first_type}"
+                        )
+
+                    embeddings[i] = embeddings[i].cpu().detach().numpy()
+                    # if normalize:
+                    #     faiss.normalize_L2(embeddings[i])
+                if normalize:
+                    self.index_is_normalized = True
+                else:
+                    self.index_is_normalized = False
+                embeddings = np.concatenate(embeddings)
+                # if normalize:
+                #     faiss.normalize_L2(embeddings)
+                # embeddings = torch.stack([e.squeeze(0) for e in embeddings]).cpu().detach().numpy()
+                print(f"Embedding shape: {embeddings.shape}")
+                print(f"Embedding type: {type(embeddings)}")
+                assert (
+                    embeddings.shape[1] == self.faiss_index.d
+                ), f"Data dimensionality ({embeddings.shape[1]}) does not match index dimensionality ({self.faiss_index.d})"
+
+                if metric == "l2" or metric == "ip" or metric == "cosine":
+                    self.faiss_index.add(embeddings)
+
+                elif metric == "hnsw" or metric == "nsw":
+                    self.faiss_index.add_with_ids(
+                        embeddings,
+                        np.array(list(self.index_id_to_node_id.keys()))
+                        .cpu()
+                        .detach()
+                        .numpy(),
+                    )
+                    try:  # efConstruction is the number of neighbors that are accessed during the construction of the graph. Higher efConstruction leads to higher accuracy but slower construction.
+                        self.faiss_index.efConstruction = 32
+                        self.faiss_index.efSearch = 64
+                    except:
+                        pass
+                elif metric == "ann" or metric == "approximate":
+                    # HNSW + IVFPQ
+                    # Define the index
+                    quantizer = faiss.IndexHNSWFlat(
+                        dimension, hnsw_m
+                    )  # we use HNSW to assign the vectors to the cells
+                    self.faiss_index = faiss.IndexIVFPQ(
+                        quantizer, dimension, nlist, M, nbits
+                    )
+
+                    # train the index
+                    self.faiss_index.train(embeddings.cpu().detach().numpy())
+                    self.faiss_index.add(embeddings.cpu().detach().numpy())
+                elif metric == "pq":
+                    self.faiss_index.train(embeddings.cpu().detach().numpy())
+                    self.faiss_index.add(embeddings.cpu().detach().numpy())
+                elif metric == "opq":
+                    self.faiss_index.train(embeddings.cpu().detach().numpy())
+                    self.faiss_index.add(embeddings.cpu().detach().numpy())
+                elif metric == "lsh":
+                    self.faiss_index.add(embeddings.cpu().detach().numpy())
+                    if (
+                        self.faiss_index.buckets is not None
+                        and len(self.faiss_index.buckets) > 0
+                    ):
+                        buckets = self.faiss_index.buckets
+                    else:
+                        buckets = faiss.vector_to_array(self.faiss_index.codes)
+                    # use buckets for LSH forest techniques
+
+                elif metric == "ivf":
+                    self.faiss_index.train(np.array(embeddings).cpu().detach().numpy())
+                    self.faiss_index.add(np.array(embeddings).cpu().detach().numpy())
+                elif metric == "sq8":
+                    self.faiss_index.train(np.array(embeddings).cpu().detach().numpy())
+                    self.faiss_index.add(np.array(embeddings).cpu().detach().numpy())
+                else:
+                    self.faiss_index.add(embeddings.cpu().detach().numpy())
+
+                print(
+                    f"FAISS index populated with {self.faiss_index.ntotal} embeddings"
+                )
+                self.index_build_count += 1
+                # self.faiss_index.add(np.array(embeddings))
+
+            else:
+                print("No embeddings found to populate the FAISS index")
+                time.sleep(5)
+                raise ValueError("No embeddings found to populate the FAISS index")
+            print(f"The current index type is: {type(self.faiss_index).__name__} \n")
+
+            with open("results.txt", "a") as f:
+                f.write(
+                    f"\n Index type: {type(self.faiss_index).__name__} build count: {self.index_build_count}\n \n \n"
+                )
+        except Exception as e:
+            print(f"Error initializing FAISS index: {e}")
+            self.faiss_index = None
+            raise ValueError(f"Error initializing FAISS index: {e}")
 
     def delete_index(self):
         self.faiss_index.reset()
@@ -1575,7 +1679,7 @@ class FlatMemoryAccess:
             else:
                 query_embedding = query.query_embedding
         if query_embedding is None:
-            # print(f"Error retrieving embedding for query {query}")
+            print(f"Error retrieving embedding for query {query}")
             return {}
         if self.faiss_index is None:
             raise ValueError("FAISS index is not initialized")
@@ -1595,17 +1699,23 @@ class FlatMemoryAccess:
         else:
             similarities = distances
 
-        # print(f"Similarities: {similarities},\n Indices: {indices},\n Distances: {distances}\n")
-        # print(self.get_graph().nodes)
-        # print(self.index_id_to_node_id)
+        print(
+            f"Similarities: {similarities},\n Indices: {indices},\n Distances: {distances}\n"
+        )
+        print(self.get_graph().nodes)
+        print(self.index_id_to_node_id)
 
         # Convert indices to memory IDs
         # for idx in indices[0]:
         #     if idx != -1:
-        # print(f"Memory ID: {self.index_id_to_node_id[idx]}")
-        # print(f"Corresponding graph node: {manager.hierarchy.memory_graph.nodes[self.index_id_to_node_id[idx]]}")
+        print(f"Memory ID: {self.index_id_to_node_id[idx]}")
+        print(
+            f"Corresponding graph node: {manager.hierarchy.memory_graph.nodes[self.index_id_to_node_id[idx]]}"
+        )
 
-        # print(f"Corresponding graph node: {self.get_graph().nodes[self.index_id_to_node_id[idx]]}")
+        print(
+            f"Corresponding graph node: {self.get_graph().nodes[self.index_id_to_node_id[idx]]}"
+        )
         similar_memories = {
             self.specific_memories[self.index_id_to_node_id[idx]]: float(similarity)
             for idx, similarity in zip(indices[0], similarities[0])
@@ -1621,7 +1731,9 @@ class FlatMemoryAccess:
         ), f"Similar memories is not a dictionary: {similar_memories}"
 
         end_time = time.time()
-        # print(f"Time taken to find similar memories: {end_time - start_time:.4f} seconds")
+        print(
+            f"Time taken to find similar memories: {end_time - start_time:.4f} seconds"
+        )
         return similar_memories
 
     def find_similar_memories(
@@ -1664,7 +1776,9 @@ class FlatMemoryAccess:
             try:
                 query_memory.get_embedding()
             except Exception as e:
-                # print(f"Error retrieving embedding for memory {specific_memory_id}: {e}")
+                print(
+                    f"Error retrieving embedding for memory {specific_memory_id}: {e}"
+                )
                 return []
 
         similarities = {}
@@ -1675,7 +1789,7 @@ class FlatMemoryAccess:
                 try:
                     self.get_graph().nodes[memory].get_embedding()
                 except Exception as e:
-                    # print(f"Error retrieving embedding for memory {memory}: {e}")
+                    print(f"Error retrieving embedding for memory {memory}: {e}")
                     continue
             if similarity_metric == "cosine":
                 similarities[memory] = 1 - cosine_similarity(
@@ -1700,7 +1814,9 @@ class FlatMemoryAccess:
             try:
                 query_memory.get_embedding()
             except Exception as e:
-                # print(f"Error retrieving embedding for memory {specific_memory_id}: {e}")
+                print(
+                    f"Error retrieving embedding for memory {specific_memory_id}: {e}"
+                )
                 return []
 
         pagerank_scores = nx.pagerank(self.memory_graph)
@@ -1713,7 +1829,7 @@ class FlatMemoryAccess:
                 try:
                     self.get_graph().nodes[memory].get_embedding()
                 except Exception as e:
-                    # print(f"Error retrieving embedding for memory {memory}: {e}")
+                    print(f"Error retrieving embedding for memory {memory}: {e}")
                     continue
             if similarity_metric == "cosine":
                 similarities[memory] = 1 - cosine_similarity(
@@ -1725,7 +1841,9 @@ class FlatMemoryAccess:
                 )
 
         end_time = time.time()
-        # print(f"Time taken to find similar memories: {end_time - start_time:.4f} seconds")
+        print(
+            f"Time taken to find similar memories: {end_time - start_time:.4f} seconds"
+        )
         return similarities
 
     def find_similar_memories_faiss(
@@ -1743,11 +1861,15 @@ class FlatMemoryAccess:
             try:
                 query_memory.get_embedding()
             except Exception as e:
-                # print(f"Error retrieving embedding for memory {specific_memory_id}: {e}")
+                print(
+                    f"Error retrieving embedding for memory {specific_memory_id}: {e}"
+                )
                 return []
 
         if self.faiss_index is None or self.faiss_index.ntotal == 0:
-            # print(f"(Re)Initializing FAISS index with {query_memory.embedding.shape[0]} dimensions")
+            print(
+                f"(Re)Initializing FAISS index with {query_memory.embedding.shape[0]} dimensions"
+            )
             self.initialize_faiss_index(query_memory.embedding.shape[0])
 
         # self.faiss_index.nprobe = num_clusters
@@ -1768,7 +1890,9 @@ class FlatMemoryAccess:
         ]
 
         end_time = time.time()
-        # print(f"Time taken to find similar memories: {end_time - start_time:.4f} seconds")
+        print(
+            f"Time taken to find similar memories: {end_time - start_time:.4f} seconds"
+        )
         return similar_memories
 
     def add_memory(self, memory: SpecificMemory):
@@ -1837,6 +1961,7 @@ sentiment_analysis = SentimentAnalysis()
 # @track_calls
 class MemoryManager:
     def __init__(self, gametime_manager, index_load_filename=None):
+        print("Initializing MemoryManager")
         self.flat_access = FlatMemoryAccess(index_load_filename=index_load_filename)
         self.index_load_filename = index_load_filename
         self.memory_embeddings = {}
@@ -1860,7 +1985,12 @@ class MemoryManager:
         self.tfidf_vectorizer = TfidfVectorizer(
             stop_words=sentiment_analysis.stop_words
         )
-        self.rake = Rake()
+        self.rake = Rake(
+            stopwords=stopwords.words("english"),
+            punctuations=remove_list,
+            min_length=1,
+            max_length=3,
+        )
         assert self.gametime_manager is not None, "Game time manager is required"
 
     def init_memories(self, general_memories):
@@ -1870,11 +2000,11 @@ class MemoryManager:
             self.flat_access.add_memory(general_memory)
 
     def index_recent_queries_flatl2(self):
-        # print(f"\n Indexing recent queries \n")
+        print(f"\n Indexing recent queries \n")
         if len(self.recent_queries) < 1:
             return None
         embeddings = [query.query_embedding for query in self.recent_queries]
-        # print(f"Length of embeddings: {len(embeddings)}")
+        print(f"Length of embeddings: {len(embeddings)}")
 
         if len(embeddings) > 0 and embeddings[0] is not None:
             embeddings = torch.cat(embeddings, dim=0)
@@ -1888,7 +2018,7 @@ class MemoryManager:
         return None
 
     def index_recent_queries_hnsw(self):
-        # print(f"\n Indexing recent queries \n")
+        print(f"\n Indexing recent queries \n")
         if len(self.recent_queries) < 1:
             return None
         embeddings = [query.query_embedding for query in self.recent_queries]
@@ -2035,7 +2165,7 @@ class MemoryManager:
 
     # Function to extract keywords using RAKE
     def extract_rake_keywords(self, docs, top_n=2):
-        # print(type(docs))
+        print(type(docs))
 
         if isinstance(docs, list):
             docs = " ".join(docs)
@@ -2049,14 +2179,16 @@ class MemoryManager:
         )
         input = input.to(model.device)
         outputs = model.forward(input["input_ids"], input["attention_mask"])
-        # print(f"\n Shape of query embedding: {outputs.last_hidden_state.shape}")
+        print(f"\n Shape of query embedding: {outputs.last_hidden_state.shape}")
         query_embedding = mean_pooling(
             outputs.last_hidden_state, input["attention_mask"]
         )
         return query_embedding
 
     def retrieve_memories_bst(self, general_memory, query):
-        # print(f"\n Retrieving memories from BST for general memory: {general_memory.description} and query: {query.query}")
+        print(
+            f"\n Retrieving memories from BST for general memory: {general_memory.description} and query: {query.query}"
+        )
         exit(0)
         # This function is designed to traverse a BST within a GeneralMemory instance
         # to find SpecificMemory instances that match the given query criteria.
@@ -2074,18 +2206,18 @@ class MemoryManager:
             bst_traversal(node.right)
 
         bst_traversal(general_memory.specific_memories_root)
-        # print(f"\n Matching memories BST: {matching_memories}")
+        print(f"\n Matching memories BST: {matching_memories}")
         return matching_memories
 
     def retrieve_from_flat_access(self, query_features):
-        # print(f"\n Retrieving from flat access: {query_features.query}")
+        print(f"\n Retrieving from flat access: {query_features.query}")
         # rel_mems = [memory for memory in self.flat_access.get_specific_memories() if self.is_relevant_flat_memory(memory, query_features)]
 
         rel_mems = self.flat_access.find_memories_by_query(
             query_features, threshold=0.5
         )
 
-        # print(f"\n Relevant memories and scores, flat access: {rel_mems}")
+        print(f"\n Relevant memories and scores, flat access: {rel_mems}")
         return rel_mems
 
     def get_sentiment_score(self, text):
@@ -2095,7 +2227,7 @@ class MemoryManager:
         return sentiment_analysis.get_emotion_classification(text)
 
     def extract_relationships(self, semantic_roles, text):
-        # print(f"\n Extracting relationships from semantic roles: {semantic_roles}")
+        print(f"\n Extracting relationships from semantic roles: {semantic_roles}")
         # Extract relationships from the semantic roles and text
         # Remember, who is doing what to whom is what this function extracts
         relationships = []
@@ -2165,10 +2297,10 @@ class MemoryManager:
         return facts
 
     def analyze_query_context(self, query):
-        # print(f"\n Analyzing query: {query}")
+        print(f"\n Analyzing query: {query}")
         # Linguistic Analysis
         docs = nlp(query)
-        # print(docs)
+        print(docs)
         features = {
             "tokens": [token.text for token in docs],
             "lemmas": [token.lemma_ for token in docs],
@@ -2188,15 +2320,15 @@ class MemoryManager:
         # outputs = tiny_brain_io.model(**inputs, labels=inputs["input_ids"], return_dict=True, output_hidden_states=True)
         outputs = self.get_query_embedding(query)
         # response = tiny_brain_io.input_to_model(query)
-        # #print(f"Outputs: {outputs}")
+        # print(f"Outputs: {outputs}")
         # inputs_decoded = tiny_brain_io.tokenizer.decode(outputs[1][0], skip_special_tokens=True)
-        # #print(f"Input ids decoded: {inputs_decoded}")
+        # print(f"Input ids decoded: {inputs_decoded}")
         # outputs_decodedb = tiny_brain_io.tokenizer.decode(outputs[0].logits.argmax(2)[0], skip_special_tokens=True)
 
-        # #print(f"Outputs decodedb: {outputs_decodedb}")
+        # print(f"Outputs decodedb: {outputs_decodedb}")
 
         # perplexity = torch.exp(outputs[0])
-        # #print(f"Perplexity: {perplexity}")
+        # print(f"Perplexity: {perplexity}")
         words = query.split()
         num_words = len(words)
         avg_word_length = sum(len(word) for word in words) / num_words
@@ -2215,7 +2347,7 @@ class MemoryManager:
         flesch_kincaid_grade_level = (
             0.39 * (num_words / 1) + 11.8 * (avg_word_length / 1) - 15.59
         )
-        # print(f"Flesch-Kincaid Grade Level: {flesch_kincaid_grade_level}")
+        print(f"Flesch-Kincaid Grade Level: {flesch_kincaid_grade_level}")
 
         # Calculate the complexity of the sentence using the Gunning Fog Index
         # https://en.wikipedia.org/wiki/Gunning_fog_index
@@ -2229,7 +2361,7 @@ class MemoryManager:
             (num_words / 1)
             + 100 * (sum([1 for word in words if len(word) > 3]) / num_words)
         )
-        # print(f"Gunning Fog Index: {gunning_fog_index}")
+        print(f"Gunning Fog Index: {gunning_fog_index}")
 
         # Calculate the complexity of the sentence using the Coleman-Liau Index
         # https://en.wikipedia.org/wiki/Coleman%E2%80%93Liau_index
@@ -2238,7 +2370,7 @@ class MemoryManager:
         # 7-8: 7th & 8th grade
         # 9-12: 9th to 12th grade
         coleman_liau_index = 5.89 * (num_words / 1) - 29.6 * (1 / 1) - 15.8
-        # print(f"Coleman-Liau Index: {coleman_liau_index}")
+        print(f"Coleman-Liau Index: {coleman_liau_index}")
 
         # Calculate the complexity of the sentence using the Automated Readability Index
         # https://en.wikipedia.org/wiki/Automated_readability_index
@@ -2254,7 +2386,7 @@ class MemoryManager:
             + 0.5 * (num_words / 1)
             - 21.43
         )
-        # print(f"Automated Readability Index: {automated_readability_index}")
+        print(f"Automated Readability Index: {automated_readability_index}")
 
         # Calculate the complexity of the sentence using the Simple Measure of Gobbledygook (SMOG) Index
         # https://en.wikipedia.org/wiki/SMOG
@@ -2269,7 +2401,7 @@ class MemoryManager:
             30 * (sum([1 for word in words if word.isalpha()]) / num_words) ** 0.5
             + 3.1291
         )
-        # print(f"SMOG Index: {smog_index}")
+        print(f"SMOG Index: {smog_index}")
 
         # Calculate the complexity of the sentence using the Dale-Chall Readability Score
         # https://en.wikipedia.org/wiki/Dale%E2%80%93Chall_readability_formula
@@ -2295,7 +2427,7 @@ class MemoryManager:
                 / num_words
             )
         ) + 0.0496 * (num_words / 1)
-        # print(f"Dale-Chall Readability Score: {dale_chall_readability_score}")
+        print(f"Dale-Chall Readability Score: {dale_chall_readability_score}")
 
         # Calculate the complexity of the sentence using the Linsear Write Formula
         # https://en.wikipedia.org/wiki/Linsear_Write
@@ -2321,7 +2453,7 @@ class MemoryManager:
                 ]
             )
         ) / num_words
-        # print(f"Linsear Write Formula: {linsear_write_formula}")
+        print(f"Linsear Write Formula: {linsear_write_formula}")
 
         # Calculate the complexity of the sentence using the Spache Readability Formula
         # https://en.wikipedia.org/wiki/Spache_Readability_Formula
@@ -2347,7 +2479,7 @@ class MemoryManager:
             + 0.082 * (num_words / 1)
             + 0.659
         )
-        # print(f"Spache Readability Formula: {spache_readability_formula}")
+        print(f"Spache Readability Formula: {spache_readability_formula}")
 
         # Determine the depth of the parse tree for the sentence
         parse_tree = [list(sent.subtree) for sent in docs.sents]
@@ -2514,7 +2646,7 @@ class MemoryManager:
 
         # Calculate the lexical density of the input
         lexical_density = num_content_words / num_words
-        # print(f"\n Lexical Density: {lexical_density}")
+        print(f"\n Lexical Density: {lexical_density}")
 
         # Calculate the type-token ratio of the input
         type_token_ratio = len(set([token.text for token in docs])) / num_words
@@ -2531,30 +2663,30 @@ class MemoryManager:
 
         # Calculate the lexical diversity of the input
         lexical_diversity = len(set([token.text for token in docs])) / num_words
-        # print(f"\n Lexical Diversity: {lexical_diversity}")
+        print(f"\n Lexical Diversity: {lexical_diversity}")
 
         # Calculate the use of passive voice in the input
         passive_voice = len([token for token in docs if token.dep_ == "nsubjpass"])
         # Use passive_voice to determine the subject and object of the passive voice
         passive_voice_details = {}
-        # print(f"\n Passive Voice: {passive_voice}")
+        print(f"\n Passive Voice: {passive_voice}")
         for token in docs:
             if token.dep_ == "nsubjpass":
                 subject = token.text
                 object = token.head.text
-                # print(f"Passive Voice: Subject: {subject}, Object: {object} \n")
+                print(f"Passive Voice: Subject: {subject}, Object: {object} \n")
                 passive_voice_details[subject] = object
 
         # Calculate the use of active voice in the input
         active_voice = len([token for token in docs if token.dep_ == "nsubj"])
         # Use active_voice to determine the subject and object of the active voice
         active_voice_details = {}
-        # print(f"\n Active Voice: {active_voice}")
+        print(f"\n Active Voice: {active_voice}")
         for token in docs:
             if token.dep_ == "nsubj":
                 subject = token.text
                 object = token.head.text
-                # print(f"Active Voice: Subject: {subject}, Object: {object} \n")
+                print(f"Active Voice: Subject: {subject}, Object: {object} \n")
                 active_voice_details[subject] = object
 
         # Calculate the use of modals in the input
@@ -2583,7 +2715,7 @@ class MemoryManager:
 
         # # Calculate the use of conjunctions in the input
         # conjunctions = [token for token in docs if token.pos_ == "CCONJ"]
-        # print(f"\n Conjunctions: {conjunctions}")
+        print(f"\n Conjunctions: {conjunctions}")
         # conjunction_len = len(conjunctions)
         # conjunction_frequency = sum([token.prob for token in conjunctions if token.prob != -1])
 
@@ -2591,7 +2723,7 @@ class MemoryManager:
         # determiners = [token for token in docs if token.pos_ == "DET"]
 
         determiners = []
-        # print(f"\n Determiners: {determiners}")
+        print(f"\n Determiners: {determiners}")
         for token in docs:
             if token.pos_ == "DET":
                 determiner = token.text
@@ -2805,7 +2937,7 @@ class MemoryManager:
         #     if value["subject"] not in subject_object_relationships:
         #         subject_object_relationships[value["subject"]] = []
         #     subject_object_relationships[value["subject"]].append(value["object"])
-        #     # print(
+        #     print(
         #     #     f"Subject-Object Relationship: {value['subject']}, Object: {value['object']}"
         #     # )
 
@@ -2820,7 +2952,7 @@ class MemoryManager:
         #             semantic_roles[token.head.text] = []
         #         semantic_roles[token.head.text].append({token.text: token.dep_})
         #         print(f"Semantic Role: {token.text}, Role: {token.dep_}")
-        # print(f"\n Semantic Roles: {semantic_roles}")
+        print(f"\n Semantic Roles: {semantic_roles}")
         semantic_roles = {}
 
         for token in docs:
@@ -3029,8 +3161,8 @@ class MemoryManager:
             #             if child.dep_ == "prep":
             #                 semantic_rolesb["why"].append(child.text)
 
-        # print(f"Actions: {actions}")
-        # print(f"Facts: {facts}")
+        print(f"Actions: {actions}")
+        print(f"Facts: {facts}")
         print(semantic_rolesb)
         # Check if the number of subordinate clauses is equal to the number of actions minus 1
         assert (
@@ -3220,7 +3352,7 @@ class MemoryManager:
                                         ]
                                         and token.i < tkk.i
                                     ):
-                                        # print(f"FART1: {tkk}")
+                                        print(f"FART1: {tkk}")
                                         # exit(0)
                                         if tkk not in compound:
                                             if (
@@ -3330,7 +3462,7 @@ class MemoryManager:
                                 ]
                                 and token.i < tkk.i
                             ):
-                                # print(f"FART2: {tkk}")
+                                print(f"FART2: {tkk}")
                                 # exit(0)
                                 if tkk not in compound:
                                     if (
@@ -3798,7 +3930,7 @@ class MemoryManager:
                 ):
                     if tk not in obj_compound:
                         obj_compound.append(tk)
-                        # print(f"added to obj_compound: {tk.text}")
+                        print(f"added to obj_compound: {tk.text}")
                     if tk.dep_ == "attr":
                         for tkk in tk.children:
                             if tkk not in obj_compound:
@@ -4187,8 +4319,8 @@ class MemoryManager:
                     dobj_text = " ".join(
                         [token.text for token in token.sent if token in obj_compound]
                     )
-                    # print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
-                    # print(f"Action Compound: {action_compound}")
+                    print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
+                    print(f"Action Compound: {action_compound}")
                     template = f"{subj_text} {action_text} {dobj_text}"
                     print(f"\n \n Template (C3): {template}\n \n")
                     templates.append(template)
@@ -4225,8 +4357,8 @@ class MemoryManager:
                     dobj_text = " ".join(
                         [token.text for token in token.sent if token in obj_compound]
                     )
-                    # print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
-                    # print(f"Action Compound: {action_compound}")
+                    print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
+                    print(f"Action Compound: {action_compound}")
                     template = f"{subj_text} {action_text} {dobj_text}"
                     print(f"\n \n Template (C4): {template}\n \n")
                     templates.append(template)
@@ -4262,9 +4394,9 @@ class MemoryManager:
                     dobj_text = " ".join(
                         [token.text for token in token.sent if token in obj_compound]
                     )
-                    # print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
-                    # print(f"Action Compound: {action_compound}")
-                    # print(f"Object Compound: {obj_compound}")
+                    print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
+                    print(f"Action Compound: {action_compound}")
+                    print(f"Object Compound: {obj_compound}")
                     template = f"{subj_text} {action_text} {dobj_text}"
                     print(f"\n \n Template (C5): {template}\n \n")
                     templates.append(template)
@@ -4304,8 +4436,8 @@ class MemoryManager:
                     dobj_text = " ".join(
                         [token.text for token in token.sent if token in obj_compound]
                     )
-                    # print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
-                    # print(f"Action Compound: {action_compound}")
+                    print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
+                    print(f"Action Compound: {action_compound}")
                     template = f"{subj_text} {action_text} {dobj_text}"
                     print(f"\n \n Template (C6): {template}\n \n")
                     templates.append(template)
@@ -4361,8 +4493,8 @@ class MemoryManager:
                                 if token in obj_compound
                             ]
                         )
-                        # print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
-                        # print(f"Action Compound: {action_compound}")
+                        print(f"Subject: {subj}, Action: {action}, Object: {dobj}")
+                        print(f"Action Compound: {action_compound}")
                         template = f"{subj_text} {action_text} {dobj_text}"
                         print(f"\n \n Template (C7): {template}\n \n")
                         templates.append(template)
@@ -4383,14 +4515,14 @@ class MemoryManager:
             if ent.label_ not in named_entities:
                 named_entities[ent.label_] = []
             named_entities[ent.label_].append(ent.text)
-            # print(f"Named Entity: {ent.text}, Label: {ent.label_}")
-        # print(f"\n Named Entities: {named_entities}")
+            print(f"Named Entity: {ent.text}, Label: {ent.label_}")
+        print(f"\n Named Entities: {named_entities}")
 
         # # 6. Coreference Resolution
         # coreferences = {}
         # for cluster in docs._.coref_clusters:
         #     coreferences[cluster.main.text] = [mention.text for mention in cluster.mentions]
-        #     #print(f"Coreference: {cluster.main.text}, Mentions: {[mention.text for mention in cluster.mentions]}")
+        #     print(f"Coreference: {cluster.main.text}, Mentions: {[mention.text for mention in cluster.mentions]}")
 
         # 7 Dependency Parsing
         dependency_tree = {}
@@ -4399,7 +4531,7 @@ class MemoryManager:
                 if token.head.text not in dependency_tree:
                     dependency_tree[token.head.text] = []
                 dependency_tree[token.head.text].append({token.text: token.dep_})
-                # print(f"Dependency: {token.text}, Relation: {token.dep_}")
+                print(f"Dependency: {token.text}, Relation: {token.dep_}")
 
         date_pattern = [{"SHAPE": "dddd"}]  # Matches a four-digit year, e.g., 2019
         future_pattern = [
@@ -4418,13 +4550,13 @@ class MemoryManager:
         # Create a function to categorize verb aspects
         verb_aspects = {}
 
-        # Iterate over matches and #print results
+        # Iterate over matches and print results
         spans = {}
         for match_id, start, end in matches:
             span = Span(docs, start, end)
-            # print(f"Temporal expression found: {span.text}")
+            print(f"Temporal expression found: {span.text}")
             spans[span.text] = span
-        # print(f"\n Temporal Expressions: {spans}")
+        print(f"\n Temporal Expressions: {spans}")
 
         # Use span to determine the temporal expression of the input
 
@@ -4530,7 +4662,9 @@ class MemoryManager:
         entities = []
         relationships = {}
         for prep, relation, head in prepositions:
-            # print(f"\n Preposition: {prep.text}, Relation: {relation}, Head: {head.text}")
+            print(
+                f"\n Preposition: {prep.text}, Relation: {relation}, Head: {head.text}"
+            )
             if relation == "pobj":  # Object of preposition
                 if "nsubj" in head.dep_:  # Subject of the verb
                     entities.append(head.text)  # Subject of the verb
@@ -4566,7 +4700,7 @@ class MemoryManager:
             )
             main_subject = next(iter(docs.noun_chunks)).root.text
         print(f"\n Named Entities: {named_entities}")
-        # print(f"\n Main Entity: {main_subject if main_subject else 'None'}")
+        print(f"\n Main Entity: {main_subject if main_subject else 'None'}")
         main_entity = main_subject
         previous_token = None
         for token in docs:
@@ -4575,14 +4709,14 @@ class MemoryManager:
             if "nsubj" in token.dep_ and (
                 previous_token and previous_token.dep_ == "compound"
             ):
-                # print(f"token text: {token.text}")
+                print(f"token text: {token.text}")
                 main_subject = f"{previous_token.text} {token.text}"
             elif token.dep_ == "nsubj":  # Subject of the verb
                 main_subject = token.text
             if token.dep_ == "dobj":
                 main_object = token.text
             previous_token = token if token.dep_ == "compound" else None
-        # print(f"\n Main Subject: {main_subject}")
+        print(f"\n Main Subject: {main_subject}")
         print(
             f"\n Main Subject: {main_subject}, Main Verb: {main_verb}, Main Object: {main_object} \n"
         )
@@ -4603,7 +4737,7 @@ class MemoryManager:
                     or entity_lower in main_subject_lower
                 ):
                     main_subject = entity
-        # print(f"\n Definite Main Subject: {main_subject}")
+        print(f"\n Definite Main Subject: {main_subject}")
 
         for head, roles in semantic_roles.items():
             print(
@@ -4630,12 +4764,12 @@ class MemoryManager:
         keywords = self.extract_keywords(query)
 
         query_embedding = outputs
-        # print(f"Shape of query embedding: {query_embedding.shape}")
+        print(f"Shape of query embedding: {query_embedding.shape}")
         # kmeans = KMeans(n_clusters=2)
 
         # kmeans.fit(outputs[0][-1].cpu().detach().numpy())
-        # #print(f"Kmeans labels: {kmeans.labels_}")
-        # #print(f"Kmeans cluster centers: {kmeans.cluster_centers_}")
+        # print(f"Kmeans labels: {kmeans.labels_}")
+        # print(f"Kmeans cluster centers: {kmeans.cluster_centers_}")
         # # Step 3: Create a transition model
         # G = nx.DiGraph()
         # prev_cluster = None
@@ -4651,7 +4785,7 @@ class MemoryManager:
 
         # # Step 4: Measure complexity (e.g., by looking at the number of transitions)
         # complexity = sum([data["weight"] for _, _, data in G.edges(data=True)])
-        # #print(f"Complexity: {complexity}")
+        # print(f"Complexity: {complexity}")
         # for token in docs:
         #     if token.dep_ == "xcomp":
         #         print(f"Xcomp: {token.text}")
@@ -4669,10 +4803,10 @@ class MemoryManager:
                 )
 
                 # for dist, index in zip(dists, indices):
-                #     #print(f"Distance: {dist}, Index: {index}")
+                #     print(f"Distance: {dist}, Index: {index}")
 
                 if dists[0][0] < 0.1:
-                    # print(f"Query is similar to recent queries \n")
+                    print(f"Query is similar to recent queries \n")
                     is_common_query = True
 
         # Extract themes with the SRL data using the semantic_roles and extract_themes method
@@ -4744,13 +4878,17 @@ class MemoryManager:
         }
 
     def is_relevant_flat_memory(self, flat_memory, query_features):
-        # print(f"\n Checking relevance of flat memory: {flat_memory.description} to query: {query_features.text} \n")
+        print(
+            f"\n Checking relevance of flat memory: {flat_memory.description} to query: {query_features.text} \n"
+        )
         # Simpler logic compared to hierarchical/graph-based layers
         # Example: Check for keyword or category match, or use a basic text similarity measure
 
         # Extract keywords or categories from the memory and the query
         if flat_memory.keywords is None or len(flat_memory.keywords) == 0:
-            # print(f"\n Extracting keywords for flat memory: {flat_memory.description} \n")
+            print(
+                f"\n Extracting keywords for flat memory: {flat_memory.description} \n"
+            )
             if (
                 flat_memory.analysis["keywords"] is None
                 or len(flat_memory.analysis["keywords"]) == 0
@@ -4801,7 +4939,7 @@ class MemoryManager:
 
     def retrieve_memories(self, query, urgent=False, common=False, key=None):
         if query.analysis is None:
-            # print(f"\n Analyzing query: {query.query}")
+            print(f"\n Analyzing query: {query.query}")
             if is_question(query.query):
                 print(f"\n Query is a question: {query.query}")
                 query.query_embedding = self.get_query_embedding(query.query)
@@ -4812,10 +4950,10 @@ class MemoryManager:
                 query.query_embedding = query.analysis["embedding"]
             # for k, value in query.analysis.items():
             #     if k != 'embedding' and value is not None and value != {} and value != [] and value != '':
-            # print(f"Key: {k}, Value: {value}")
+            print(f"Key: {k}, Value: {value}")
         self.recent_queries.append(query)
         if urgent or common:
-            # print(f"\n Retrieving urgent memories: {urgent}, common memories: {common}")
+            print(f"\n Retrieving urgent memories: {urgent}, common memories: {common}")
             return (
                 self.flat_access.get_urgent_query_memories()
                 if urgent
@@ -4848,30 +4986,30 @@ class MemoryManager:
                 query_embedding.cpu().detach().numpy(), k=1
             )
             if dists[0][0] < 0.1:
-                # print(f"Query is similar to recent queries")
+                print(f"Query is similar to recent queries")
                 return False
 
         is_long = len(query_features.analysis["text"].split()) > length_threshold
         if is_long:
-            # print(f"Query is long")
+            print(f"Query is long")
             return True
         has_specific_keywords = any(
             self.keyword_specificity(keyword) > specificity_threshold
             for keyword in query_features.analysis["keywords"]
         )
         if has_specific_keywords:
-            # print(f"Query has specific keywords")
+            print(f"Query has specific keywords")
             return True
         is_ambiguous = query_features.analysis["ambiguity_score"] > ambiguity_threshold
         if is_ambiguous:
-            # print(f"Query is ambiguous {query_features.analysis['ambiguity_score']}")
+            print(f"Query is ambiguous {query_features.analysis['ambiguity_score']}")
             return True
 
         is_polarized = (
             query_features.analysis["sentiment_score"]["polarity"] > polarity_threshold
         )
         if is_polarized:
-            # print(f"Query is polarized")
+            print(f"Query is polarized")
             return True
 
         is_subjective = (
@@ -4880,14 +5018,14 @@ class MemoryManager:
         )
 
         if is_subjective:
-            # print(f"Query is subjective")
+            print(f"Query is subjective")
             return True
 
         is_emotional = query_features.analysis["emotion_classification"] != "others"
         if is_emotional:
-            # print(f"Query is emotional")
+            print(f"Query is emotional")
             return True
-        # print(f"Query is not complex")
+        print(f"Query is not complex")
         return False
 
     # def cosine_similarity(vec1, vec2):
@@ -4903,9 +5041,9 @@ class MemoryManager:
         # Extract keywords using different methods
         stemmer = PorterStemmer
         rake_keywords = self.extract_rake_keywords(text)
-        # print(f"Rake keywords: {rake_keywords}")
-        # print(f"Type of text: {type(text)}")
-        # print(f"Text: {text}")
+        print(f"Rake keywords: {rake_keywords}")
+        print(f"Type of text: {type(text)}")
+        print(f"Text: {text}")
         # if isinstance(text, list):
         #     lda_keywords = self.extract_lda_keywords(text)
         # else:
@@ -4913,13 +5051,17 @@ class MemoryManager:
         # #remove duplicates from lda_keywords, keep the order
         # lda_keywords = list(dict.fromkeys(lda_keywords))
 
-        # #print(f"LDA keywords: {lda_keywords}")
+        # print(f"LDA keywords: {lda_keywords}")
         tfidf_keywords = self.extract_tfidf_keywords(text)
-        # print(f"TF-IDF keywords: {tfidf_keywords}")
-        # print(f"Type of tfidf_keywords: {type(tfidf_keywords)}")
+        print(f"TF-IDF keywords: {tfidf_keywords}")
+        print(f"Type of tfidf_keywords: {type(tfidf_keywords)}")
         entity_keywords = self.extract_entities(text)
-        # print(f"Entity keywords: {entity_keywords}") if entity_keywords else #print(f"No entity keywords found")
-        # print(f"Type of entity_keywords: {type(entity_keywords)}")
+        (
+            print(f"Entity keywords: {entity_keywords}")
+            if entity_keywords
+            else print(f"No entity keywords found")
+        )
+        print(f"Type of entity_keywords: {type(entity_keywords)}")
 
         # Combine keywords from different methods
         keywords = list(rake_keywords.union(tfidf_keywords).union(entity_keywords))
@@ -5082,7 +5224,7 @@ def manage_index_and_search(index_type, normalization, filename, memory_dict, qu
 
 # # Display the retrieved memories
 # for memory in retrieved_memories:
-#     #print(memory.description)
+#     print(memory.description)
 if __name__ == "__main__":
     # Initialize the module-level variables
 
@@ -5181,23 +5323,29 @@ if __name__ == "__main__":
             f"\n Test specific memory: {memories[random_index]['memory']} found in flat access memories, so not adding test file memories"
         )
 
-    # print(f"\n \n \n Keywords for each memory: {[(mem.description, mem.keywords) for mem in manager.hierarchy.general_memories]} \n \n \n")
+    print(
+        f"\n \n \n Keywords for each memory: {[(mem.description, mem.keywords) for mem in manager.hierarchy.general_memories]} \n \n \n"
+    )
 
     # time.sleep(2)
 
-    # print(f"\n \n \n List of specific memories for each general memory: {[(mem.description, [specific_memory.description for specific_memory in mem.get_specific_memories()]) for mem in manager.hierarchy.general_memories]} \n \n \n")
+    print(
+        f"\n \n \n List of specific memories for each general memory: {[(mem.description, [specific_memory.description for specific_memory in mem.get_specific_memories()]) for mem in manager.hierarchy.general_memories]} \n \n \n"
+    )
 
     # time.sleep(2)
 
-    # print(f"\n \n \n General Memories: {[mem.description for mem in manager.hierarchy.general_memories]} \n \n \n")
+    print(
+        f"\n \n \n General Memories: {[mem.description for mem in manager.hierarchy.general_memories]} \n \n \n"
+    )
 
     # Display several views of the initial networkx graph in the hierarchy using networkx and matplotlib
     # Create a new graph that contains only the structure of the original graph
     # visualization_graph = nx.Graph()
 
-    # #print(f"Memory graph: {manager.hierarchy.memory_graph.nodes()}")
+    # print(f"Memory graph: {manager.hierarchy.memory_graph.nodes()}")
     # node_mapping = {node.description: node for node in manager.hierarchy.memory_graph.nodes()}
-    # #print(f"Node mapping: {node_mapping}")
+    # print(f"Node mapping: {node_mapping}")
 
     # edge_colors = []
     # edge_list  = []
@@ -5208,10 +5356,10 @@ if __name__ == "__main__":
     # descriptions = []
     # # Add nodes with integer labels
     # for node in manager.hierarchy.memory_graph.nodes():
-    #     #print(f"Node: {node}")
-    #     #print(f"Node description: {node.description}")
+    #     print(f"Node: {node}")
+    #     print(f"Node description: {node.description}")
     #     # if node.description in descriptions:
-    #         #print(f"\n Node description: {node.description} already in descriptions! \n ")
+    #         print(f"\n Node description: {node.description} already in descriptions! \n ")
     #     descriptions.append(node.description)
     #     visualization_graph.add_node(node.description)
     #     if isinstance(node, GeneralMemory):
@@ -5221,7 +5369,7 @@ if __name__ == "__main__":
     #         node_colors.append('yellow')
     #         node_sizes.append(node.importance_score * 10)
     #     else:
-    #         #print(f"\n atypical Node type: {type(node)} \n")
+    #         print(f"\n atypical Node type: {type(node)} \n")
     #         node_colors.append('black')  # default color
     #         node_sizes.append(50)
     #     visualization_graph.remove_edges_from(list(visualization_graph.edges()))
@@ -5232,23 +5380,23 @@ if __name__ == "__main__":
     #     if node1.description == node2.description:
     #         continue
     #     # if node1.description not in descriptions or node2.description not in descriptions:
-    #         #print(f"\n Node1: {node1.description}, Node2: {node2.description} not in descriptions! \n ")
+    #         print(f"\n Node1: {node1.description}, Node2: {node2.description} not in descriptions! \n ")
     #     if visualization_graph.has_node(node1.description) and visualization_graph.has_node(node2.description) and not visualization_graph.has_edge(node1.description, node2.description) and not visualization_graph.has_edge(node2.description, node1.description) and node1.description != node2.description and data > 0:
     #         visualization_graph.add_edge(node1.description, node2.description, weight=data)
     #         edge_list.append((node1.description, node2.description))
-    # print(f"Edge added: {node1.description} to {node2.description} with weight: {data}")
+    print(f"Edge added: {node1.description} to {node2.description} with weight: {data}")
     # elif not visualization_graph.has_node(node1.description):
-    #     #print(f"\n Node1: {node1.description} not in visualization graph! \n ")
+    #     print(f"\n Node1: {node1.description} not in visualization graph! \n ")
     # elif not visualization_graph.has_node(node2.description):
-    #     #print(f"\n Node2: {node2.description} not in visualization graph! \n ")
+    #     print(f"\n Node2: {node2.description} not in visualization graph! \n ")
     # elif visualization_graph.has_edge(node1.description, node2.description):
-    #     #print(f"\n Edge between {node1.description} and {node2.description} already exists! \n ")
+    #     print(f"\n Edge between {node1.description} and {node2.description} already exists! \n ")
     # elif visualization_graph.has_edge(node2.description, node1.description):
-    #     #print(f"\n Edge between {node2.description} and {node1.description} already exists! \n ")
+    #     print(f"\n Edge between {node2.description} and {node1.description} already exists! \n ")
     # elif node1.description == node2.description:
-    #     #print(f"\n Node1: {node1.description} is the same as Node2: {node2.description}! \n ")
+    #     print(f"\n Node1: {node1.description} is the same as Node2: {node2.description}! \n ")
     # elif data <= 0:
-    # print(f"\n Edge weight is 0 for {node1.description} and {node2.description}! \n ")
+    print(f"\n Edge weight is 0 for {node1.description} and {node2.description}! \n ")
 
     # # Add edges with colors based on their attributes
     # for edge in visualization_graph.edges():
@@ -5281,10 +5429,10 @@ if __name__ == "__main__":
     #         edge_colors.append('white')
     #     edge_widths.append(edge_data.get('similarity', 0) * 2 if edge_data else 1)
     # Draw the new graph
-    # print(f"Number of nodes: {visualization_graph.number_of_nodes()}")
-    # print(f"Number of node sizes: {len(node_sizes)}")
+    print(f"Number of nodes: {visualization_graph.number_of_nodes()}")
+    print(f"Number of node sizes: {len(node_sizes)}")
 
-    # print(f"Number of edges: {visualization_graph.number_of_edges()}")
+    print(f"Number of edges: {visualization_graph.number_of_edges()}")
 
     # nx.draw_networkx(visualization_graph, with_labels=True, node_color=node_colors, node_size=node_sizes,  font_size=8, font_color='blue', font_weight='bold', pos=nx.random_layout(visualization_graph))
     # plt.show()
@@ -5318,18 +5466,18 @@ if __name__ == "__main__":
     #                 plt.show()
 
     #             except Exception as e:
-    #                 #print(f"Error with layout: {layout}, {e} for graph for general memory {general_memory.description}")
+    #                 print(f"Error with layout: {layout}, {e} for graph for general memory {general_memory.description}")
 
     # Create 2 subgraphs that contains only the specific memories that are relevant to a query, one just cosine and the other the score passed from the manager
     #
     # query = MemoryQuery(query,query_time=datetime.now(), gametime_manager=tiny_time_manager)
     # query_embedding = query.get_embedding()
     # relevant_specific_memories = manager.search_memories(query)
-    # #print(f"\n \n Relevant specific memories for query '{query}': {relevant_specific_memories} \n \n ")
+    # print(f"\n \n Relevant specific memories for query '{query}': {relevant_specific_memories} \n \n ")
     # query = "Where was the World Cup held in 2018?"
 
     # relevant_specific_memories = manager.search_memories(query)
-    # #print(f"\n \n Relevant specific memories for query '{query}': {relevant_specific_memories} \n \n ")
+    # print(f"\n \n Relevant specific memories for query '{query}': {relevant_specific_memories} \n \n ")
     # subgraph1 = nx.Graph()
     # subgraph2 = nx.Graph()
     # node_colors = []
@@ -5357,7 +5505,7 @@ if __name__ == "__main__":
     #             plt.title(f"Graph for subgraph2 score from manager with layout: {lname}")
     #             plt.show()
     #         except Exception as e:
-    #             #print(f"Error with layout: {layout}, {e} for subgraph1 cosine query similarity and subgraph2 score from manager")
+    #             print(f"Error with layout: {layout}, {e} for subgraph1 cosine query similarity and subgraph2 score from manager")
 
     # Create a subgraph that splits the specific memories into clusters based on their similarity
     # subgraph1 = nx.Graph()
@@ -5385,7 +5533,9 @@ if __name__ == "__main__":
     #             plt.title(f"Graph for subgraph2 weight from manager graph with layout: {lname}")
     #             plt.show()
     #         except Exception as e:
-    # print(f"Error with layout: {layout}, {e} for subgraph1 cosine similarity and subgraph2 weight from manager graph")
+    print(
+        f"Error with layout: {layout}, {e} for subgraph1 cosine similarity and subgraph2 weight from manager graph"
+    )
 
     # Define the queries
     queries = [
@@ -5583,23 +5733,23 @@ if __name__ == "__main__":
         )
 
     # for mem in memory:
-    #     #print(f"Memory lower: {mem} \n")
-    # print(f"Memory description: {mem.description} \n")
-    # print(f"Memory parent memory: {mem.parent_memory} \n")
+    #     print(f"Memory lower: {mem} \n")
+    print(f"Memory description: {mem.description} \n")
+    print(f"Memory parent memory: {mem.parent_memory} \n")
     # if not isinstance(mem.parent_memory, GeneralMemory) and isinstance(mem.parent_memory, str):
-    #     #print(f"Memory parent memory description: {[m.description for m in manager.hierarchy.general_memories if m.description == mem.parent_memory]} \n")
-    #     #print(f"Memory parent general memory keywords: {[m.keywords for m in manager.hierarchy.general_memories if m.description == mem.parent_memory]} \n")
+    #     print(f"Memory parent memory description: {[m.description for m in manager.hierarchy.general_memories if m.description == mem.parent_memory]} \n")
+    #     print(f"Memory parent general memory keywords: {[m.keywords for m in manager.hierarchy.general_memories if m.description == mem.parent_memory]} \n")
     # elif isinstance(mem.parent_memory, GeneralMemory):
-    #     #print(f"Memory parent memory description: {mem.parent_memory.description} \n")
-    #     #print(f"Memory parent general memory keywords: {mem.parent_memory.keywords} \n")
-    # #print(f"Memory related memories: {mem.related_memories} \n")
-    # #print(f"Memory keywords: {mem.keywords} \n")
-    # print(f"Memory tags: {mem.tags} \n")
-    # print(f"Memory importance score: {mem.importance_score} \n")
-    # print(f"Memory sentiment score: {mem.sentiment_score} \n")
-    # print(f"Memory emotion classification: {mem.emotion_classification} \n")
-    # print(f"Memory last access time: {mem.last_access_time} \n")
-    # print(f"Memory recency index: {index} \n")
+    #     print(f"Memory parent memory description: {mem.parent_memory.description} \n")
+    #     print(f"Memory parent general memory keywords: {mem.parent_memory.keywords} \n")
+    # print(f"Memory related memories: {mem.related_memories} \n")
+    # print(f"Memory keywords: {mem.keywords} \n")
+    print(f"Memory tags: {mem.tags} \n")
+    print(f"Memory importance score: {mem.importance_score} \n")
+    print(f"Memory sentiment score: {mem.sentiment_score} \n")
+    print(f"Memory emotion classification: {mem.emotion_classification} \n")
+    print(f"Memory last access time: {mem.last_access_time} \n")
+    print(f"Memory recency index: {index} \n")
 
     exit()
     # Save as a graphml file
@@ -5643,9 +5793,13 @@ if __name__ == "__main__":
     # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
-    # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
-    ##print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
-    # print(f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n")
+    print(
+        f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n"
+    )
+    # print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
+    print(
+        f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
+    )
     # time.sleep(2)
     # Write same to file
     with open("results.txt", "a") as file:
@@ -5685,9 +5839,13 @@ if __name__ == "__main__":
     # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
-    # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
-    ##print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
-    # print(f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n")
+    print(
+        f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n"
+    )
+    # print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
+    print(
+        f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
+    )
     # time.sleep(2)
     # Write same to file
     with open("results.txt", "a") as file:
@@ -5730,9 +5888,13 @@ if __name__ == "__main__":
     # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
-    # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
-    ##print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
-    # print(f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n")
+    print(
+        f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n"
+    )
+    # print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
+    print(
+        f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
+    )
     # time.sleep(2)
     # Write same to file
     with open("results.txt", "a") as file:
@@ -5772,9 +5934,13 @@ if __name__ == "__main__":
     # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
-    # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
-    ##print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
-    # print(f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n")
+    print(
+        f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n"
+    )
+    # print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
+    print(
+        f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
+    )
     # time.sleep(2)
     # Write same to file
     with open("results.txt", "a") as file:
@@ -5814,9 +5980,13 @@ if __name__ == "__main__":
     # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
-    # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
-    ##print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
-    # print(f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n")
+    print(
+        f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n"
+    )
+    # print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
+    print(
+        f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
+    )
     # time.sleep(2)
     # Write same to file
     with open("results.txt", "a") as file:
@@ -5854,9 +6024,13 @@ if __name__ == "__main__":
     # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
-    # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
-    ##print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
-    # print(f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n")
+    print(
+        f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n"
+    )
+    # print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
+    print(
+        f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
+    )
     # time.sleep(2)
     # Write same to file
     with open("results.txt", "a") as file:
@@ -5896,9 +6070,13 @@ if __name__ == "__main__":
     # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
-    # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
-    ##print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
-    # print(f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n")
+    print(
+        f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n"
+    )
+    # print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
+    print(
+        f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
+    )
     # time.sleep(2)
     # Write same to file
     with open("results.txt", "a") as file:
@@ -5938,9 +6116,13 @@ if __name__ == "__main__":
     # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
-    # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
-    ##print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
-    # print(f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n")
+    print(
+        f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n"
+    )
+    # print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
+    print(
+        f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
+    )
     # time.sleep(2)
     # Write same to file
     with open("results.txt", "a") as file:
@@ -5980,9 +6162,13 @@ if __name__ == "__main__":
     # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
-    # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
-    ##print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
-    # print(f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n")
+    print(
+        f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n"
+    )
+    # print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
+    print(
+        f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
+    )
     # time.sleep(2)
     # Write same to file
     with open("results.txt", "a") as file:
@@ -6022,9 +6208,13 @@ if __name__ == "__main__":
     # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
-    # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
-    ##print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
-    # print(f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n")
+    print(
+        f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n"
+    )
+    # print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
+    print(
+        f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
+    )
     # time.sleep(2)
     # Write same to file
     with open("results.txt", "a") as file:
@@ -6064,9 +6254,13 @@ if __name__ == "__main__":
     # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
-    # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
-    ##print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
-    # print(f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n")
+    print(
+        f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n"
+    )
+    # print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
+    print(
+        f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
+    )
     # time.sleep(2)
     # Write same to file
     with open("results.txt", "a") as file:
@@ -6106,9 +6300,13 @@ if __name__ == "__main__":
     # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
-    # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
-    ##print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
-    # print(f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n")
+    print(
+        f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n"
+    )
+    # print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
+    print(
+        f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
+    )
     # time.sleep(2)
     # Write same to file
     with open("results.txt", "a") as file:
@@ -6149,9 +6347,13 @@ if __name__ == "__main__":
     # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
-    # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
-    ##print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
-    # print(f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n")
+    print(
+        f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n"
+    )
+    # print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
+    print(
+        f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
+    )
     # time.sleep(2)
     # Write same to file
     with open("results.txt", "a") as file:
@@ -6191,9 +6393,13 @@ if __name__ == "__main__":
     # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
-    # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
-    ##print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
-    # print(f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n")
+    print(
+        f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n"
+    )
+    # print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
+    print(
+        f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
+    )
     # time.sleep(2)
     # Write same to file
     with open("results.txt", "a") as file:
@@ -6234,9 +6440,13 @@ if __name__ == "__main__":
     # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
-    # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
-    ##print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
-    # print(f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n")
+    print(
+        f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n"
+    )
+    # print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
+    print(
+        f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
+    )
     # time.sleep(2)
     # Write same to file
     with open("results.txt", "a") as file:
@@ -6277,9 +6487,13 @@ if __name__ == "__main__":
     # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
-    # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
-    ##print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
-    # print(f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n")
+    print(
+        f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n"
+    )
+    # print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
+    print(
+        f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
+    )
     # time.sleep(2)
     # Write same to file
     with open("results.txt", "a") as file:
@@ -6320,9 +6534,13 @@ if __name__ == "__main__":
     # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
-    # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
-    ##print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
-    # print(f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n")
+    print(
+        f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n"
+    )
+    # print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
+    print(
+        f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
+    )
     # time.sleep(2)
     # Write same to file
     with open("results.txt", "a") as file:
@@ -6363,9 +6581,13 @@ if __name__ == "__main__":
     # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
-    # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
-    ##print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
-    # print(f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n")
+    print(
+        f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n"
+    )
+    # print(f"\n \n \n Hierarchy similiarity results for query '{query}': {hierarchy_results_similarity} \n \n \n")
+    print(
+        f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
+    )
     # time.sleep(2)
     # Write same to file
     with open("results.txt", "a") as file:

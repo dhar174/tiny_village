@@ -1,22 +1,15 @@
 # This file contains the Character class, which is used to represent a character in the game.
 
-from ast import arg
-from calendar import c
 import heapq
 
 # import imp  # Removed - deprecated in Python 3.12
 import importlib
-from math import e
 import random
 import re
 from typing import List
 import uuid
 import attr
-from numpy import rint
 from tiny_types import PromptBuilder, GraphManager
-from pyparsing import Char
-from sympy import im
-from torch import Graph, eq, rand
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
@@ -41,8 +34,11 @@ from tiny_util_funcs import ClampedIntScore, tweener
 
 from tiny_items import ItemInventory, FoodItem, ItemObject, InvestmentPortfolio, Stock
 
+print("About to import Memory Manager")
 # GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
 from tiny_memories import Memory, MemoryManager  # Temporarily commented out for testing
+
+print("Successfully imported Memory Manager!")
 from tiny_time_manager import GameTimeManager
 
 from tiny_locations import Location, LocationManager
@@ -295,7 +291,7 @@ class Goal:
         criteria,  # list of criteria (as dicts) that need to be met for the goal to be completed
         graph_manager,
         goal_type,
-        target_effects,# list of desired results (as dicts of dicts representing State attributes) when the goal is completed
+        target_effects,  # list of desired results (as dicts of dicts representing State attributes) when the goal is completed
     ):
         self.name = name
         self.completion_conditions = completion_conditions
@@ -340,6 +336,9 @@ class Goal:
                 # )
                 # Skip processing if condition.attribute is not a string (e.g., during testing with Mock objects)
                 if not isinstance(condition.attribute, str):
+                    logging.warning(
+                        f"Skipping condition with non-string attribute: {condition.attribute}"
+                    )
                     continue
 
                 if "inventory.check_has_item_by_type" in condition.attribute:
@@ -2237,6 +2236,9 @@ class Character:
             self.gametime_manager = gametime_manager
         else:
             raise ValueError("GameTimeManager instance required.")
+        logging.info(
+            f"About to initialize MemoryManager with GameTimeManager instance\n"
+        )
         self.memory_manager = MemoryManager(
             gametime_manager
         )  # Initialize MemoryManager with GameTimeManager instance

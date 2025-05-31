@@ -15,12 +15,11 @@ This module integrates the GOAP system and the graph manager to formulate compre
 """
 
 from tiny_goap_system import GOAPPlanner
-
-# from tiny_graph_manager import GraphManager # GraphManager might not be needed directly for get_daily_actions if character object is rich
+from tiny_graph_manager import GraphManager
 from tiny_utility_functions import (
     calculate_action_utility,
     Goal,
-)  # evaluate_utility seems to be for plans
+)
 from tiny_characters import Character  # Assuming Character class is imported
 from actions import Action  # Use the modified Action from actions.py
 
@@ -68,6 +67,7 @@ class WanderAction(Action):  # Example generic action
         super().__init__(
             name=name, preconditions={}, effects=effects if effects else [], cost=cost
         )
+
 
 class StrategyManager:
     """
@@ -129,7 +129,6 @@ class StrategyManager:
         potential_actions.append(
             WanderAction(effects=[{"attribute": "energy", "change_value": -0.05}])
         )  # Wandering costs a little energy
-
 
         # 2. Contextual Actions
         # Assumed Character object structure:
@@ -223,19 +222,135 @@ class StrategyManager:
 
         return [action_tuple[0] for action_tuple in sorted_actions]
 
+    def get_affected_characters(self, event):
+        """
+        Determine which characters are affected by a given event.
 
-    # --- Other methods from the original file (potentially needing updates) ---
-    def update_strategy(self, events, subject="Emma"):
-        # This method likely needs significant updates to use Character objects
-        # and the new get_daily_actions with utility.
-        # For now, focusing on get_daily_actions as per subtask.
-        for event in events:
+        Args:
+            event: Event object with properties like type, participants, location, etc.
+
+        Returns:
+            list: List of character names/identifiers affected by the event
+        """
+        affected_characters = []
+
+        # Handle different event types
+        if hasattr(event, "type"):
             if event.type == "new_day":
-                return self.plan_daily_activities("Emma")
-            character_state = self.graph_manager.get_character_state("Emma")
-            actions = self.graph_manager.get_possible_actions("Emma")
-            plan = self.goap_planner.plan_actions(character_state, actions)
-            return plan
+                # New day affects all characters in the game
+                if hasattr(self.graph_manager, "characters"):
+                    affected_characters = list(self.graph_manager.characters.keys())
+                else:
+                    # Fallback to hardcoded character if graph_manager doesn't have characters
+                    affected_characters = ["Emma"]
+
+            elif event.type == "interaction":
+                # Interaction events affect specific participants
+                if hasattr(event, "participants"):
+                    affected_characters = event.participants
+                elif hasattr(event, "initiator") and hasattr(event, "target"):
+                    affected_characters = [event.initiator, event.target]
+
+            elif event.type == "location_event":
+                # Location events affect characters at that location
+                if hasattr(event, "location") and hasattr(
+                    self.graph_manager, "get_characters_at_location"
+                ):
+                    affected_characters = self.graph_manager.get_characters_at_location(
+                        event.location
+                    )
+
+            elif event.type == "global_event":
+                # Global events affect all characters
+                if hasattr(self.graph_manager, "characters"):
+                    affected_characters = list(self.graph_manager.characters.keys())
+                else:
+                    affected_characters = ["Emma"]
+
+            else:
+                # Default: check if event has specific character references
+                if hasattr(event, "character"):
+                    affected_characters = [event.character]
+                elif hasattr(event, "characters"):
+                    affected_characters = event.characters
+                else:
+                    # Fallback: affect all characters
+                    if hasattr(self.graph_manager, "characters"):
+                        affected_characters = list(self.graph_manager.characters.keys())
+                    else:
+                        affected_characters = ["Emma"]
+        else:
+            # Fallback for events without type
+            affected_characters = ["Emma"]
+
+        return affected_characters
+
+    def update_strategy(self, events):
+        """
+        Main strategy update method that handles multiple events and characters dynamically.
+
+        Args:
+            events: List of Event objects to process
+
+        Returns:
+            dict: Plans for all affected characters
+        """
+        all_plans = {}
+
+        # Process each event
+        for event in events:
+            # Determine which characters are affected by this event
+            affected_characters = self.get_affected_characters(event)
+
+            # Generate plans for each affected character
+            for character_name in affected_characters:
+                if character_name not in all_plans:
+                    all_plans[character_name] = []
+
+                try:
+                    # Get character state from GraphManager
+                    character_state = self.graph_manager.get_character_state(
+                        character_name
+                    )
+
+                    # Get possible actions from GraphManager
+                    possible_actions = self.graph_manager.get_possible_actions(
+                        character_name
+                    )
+
+                    # Use GOAP planner to generate action sequence
+                    plan = self.goap_planner.plan_actions(
+                        character_state, possible_actions
+                    )
+
+                    # Add the plan for this character
+                    if plan:
+                        all_plans[character_name].append(
+                            {
+                                "event": event,
+                                "plan": plan,
+                                "character_state": character_state,
+                            }
+                        )
+
+                except Exception as e:
+                    # Handle case where character data isn't available
+                    print(
+                        f"Warning: Could not generate plan for character {character_name}: {e}"
+                    )
+                    # Fallback to basic daily planning if it's a new_day event
+                    if hasattr(event, "type") and event.type == "new_day":
+                        fallback_plan = self.plan_daily_activities(character_name)
+                        if fallback_plan:
+                            all_plans[character_name].append(
+                                {
+                                    "event": event,
+                                    "plan": fallback_plan,
+                                    "character_state": None,
+                                }
+                            )
+
+        return all_plans
 
     def plan_daily_activities(self, character):
         """
@@ -249,13 +364,14 @@ class StrategyManager:
         actions = self.get_daily_actions(character)
 
         # Use the graph to analyze current relationships and preferences
-        current_state = self.graph_analysis(character_graph, character, "daily")
+        # Note: This would need proper graph_manager integration
+        current_state = {}  # Simplified for now
 
         # Plan the career steps using GOAP
-        plan = self.goap_planner(character, goal, current_state, actions)
+        plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
 
-        # Evaluate the utility of each step in the plan
-        final_decision = evaluate_utility(plan, character)
+        # Evaluate the utility of each step in the plan using GOAP's method
+        final_decision = self.goap_planner.evaluate_utility(plan, character)
 
         return final_decision
 
@@ -263,7 +379,6 @@ class StrategyManager:
         """Get daily actions for a character."""
         # This is a placeholder for daily action logic
         return []
-
 
     def get_career_actions(self, character, job_details):
         # This is a placeholder and would need similar utility-based ranking
@@ -280,20 +395,21 @@ class StrategyManager:
                 "cost": 0,
                 "effects": [],
             },
-
             {"name": "Decline Offer", "career_progress": 0, "cost": 0, "effects": []},
         ]
 
     def respond_to_job_offer(self, character, job_details, graph):
-        # FIX: This method also needs significant updates
+        """
+        Respond to a job offer using GOAP planning and utility evaluation.
+        """
         goal = {"career_progress": "max"}
         current_state = {"satisfaction": 100}  # Assuming current job satisfaction
         actions = self.get_career_actions(character, job_details)
 
         # Use GOAP to plan career moves
-        plan = self.goap_planner(character, goal, current_state, actions)
+        plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
 
-        # Evaluate the utility of the plan
-        final_decision = evaluate_utility(plan, character)
+        # Evaluate the utility of the plan using GOAP's method
+        final_decision = self.goap_planner.evaluate_utility(plan, character)
 
         return final_decision
