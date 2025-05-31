@@ -11,7 +11,7 @@ def main():
 
     try:
         with open('requirements.txt', 'r') as f:
-            packages = [line.strip().split('==')[0] for line in f if line.strip() and not line.startswith('#')]
+            packages = [line.strip().split('==')[0] for line in f if (stripped := line.strip()) and not stripped.startswith('#')]
     except FileNotFoundError:
         logging.error("requirements.txt not found.")
         return
