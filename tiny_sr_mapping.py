@@ -1,13 +1,27 @@
 import re
-import spacy
-import os
+import os # Keep os import for HF_HOME
 import json
 import datetime
 
-os.environ["HF_HOME"] = "/mnt/d/transformers_cache"
+os.environ["HF_HOME"] = "/mnt/d/transformers_cache" # This is fine
+
+_SPACY_AVAILABLE_SRM = False
+_NLP_SRM = None # Local nlp instance for this module if needed
+
+try:
+    import spacy
+    _SPACY_AVAILABLE_SRM = True
+    print("Successfully imported spacy in tiny_sr_mapping.")
+    # Attempt to load a model if spacy is available, but don't make it a hard requirement for the module to load.
+    # The main function expects an nlp object to be passed in.
+    # However, if this module were to be used independently, it might need its own nlp instance.
+    # For now, we'll assume the calling module (tiny_memories.py) handles NLP model loading.
+except ImportError:
+    spacy = None # Placeholder
+    print("WARNING: spaCy library not found in tiny_sr_mapping. Semantic role mapping features will be unavailable.")
 
 
-def find_root_verb(self, token):
+def find_root_verb(self, token): # Should this be a method of a class or a standalone function? Assuming standalone for now.
     """Recursively find the root verb related to the current token."""
     if token.dep_ == "ROOT":
         return token
@@ -25,10 +39,23 @@ def find_root_verb(self, token):
     return None
 
 
-def main(docs, nlp: spacy.language.Language):
-    # Initialize structure to hold semantic roles
+def main(docs, nlp_param: 'spacy.language.Language' = None): # Use nlp_param to avoid conflict with global nlp
+    if not (_SPACY_AVAILABLE_SRM and spacy is not None and nlp_param is not None):
+        print("WARNING: spaCy or a valid nlp object not available for tsm.main. Returning empty templates.")
+        return []
+
     # if docs is a list of strings, convert it to a spacy object using the nlp object
-    docs = nlp(docs)
+    # Ensure docs is processed by nlp_param if it's a string
+    if isinstance(docs, str):
+        try:
+            docs = nlp_param(docs)
+        except Exception as e:
+            print(f"Error processing input string with nlp object in tsm.main: {e}")
+            return []
+    elif not isinstance(docs, spacy.tokens.Doc): # Check if docs is already a spaCy Doc
+        print("WARNING: Input 'docs' to tsm.main is not a string or spaCy Doc. Returning empty templates.")
+        return []
+
 
     semantic_rolesb = {
         "who": [],
@@ -1461,7 +1488,7 @@ def main(docs, nlp: spacy.language.Language):
 
 
 if __name__ == "__main__":
-    nlp = spacy.load("en_core_web_trf")
+    # nlp = spacy.load("en_core_web_trf") # This should be handled by the calling module
 
     # Example usage
 
