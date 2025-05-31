@@ -296,6 +296,7 @@ class Goal:
         graph_manager,
         goal_type,
         target_effects,# list of desired results (as dicts of dicts representing State attributes) when the goal is completed
+        urgency: float = 0.5, # Default urgency
     ):
         self.name = name
         self.completion_conditions = completion_conditions
@@ -317,6 +318,7 @@ class Goal:
         self.environment = graph_manager
         self.goal_type = goal_type
         self.target_effects = target_effects
+        self.urgency = urgency
         # self.desired_results = desired_results
 
     def extract_required_items(self):
@@ -535,6 +537,7 @@ class Goal:
             "required_items": self.required_items,
             "environment": self.environment,
             "goal_type": self.goal_type,
+            "urgency": self.urgency,
         }
 
     def check_completion(self):
@@ -1212,6 +1215,7 @@ def motive_to_goals(
                     graph_manager=graph_manager,
                     goal_type="basic",
                     target_effects={"hunger_level": -5},
+                    urgency=0.8 if motive.score > 7 else 0.5, # Higher urgency if motive is strong
                 ),
             )
         )
@@ -1246,6 +1250,7 @@ def motive_to_goals(
                     graph_manager=graph_manager,
                     goal_type="basic",
                     target_effects={"hunger_level": -5},
+                    urgency=0.7 if motive.score > 7 else 0.4,
                 ),
             )
         )
@@ -1290,6 +1295,7 @@ def motive_to_goals(
                     graph_manager=graph_manager,
                     goal_type="basic",
                     target_effects={"hunger_level": -7},
+                    urgency=0.6 if motive.score > 5 else 0.3,
                 ),
             )
         )
@@ -1325,6 +1331,7 @@ def motive_to_goals(
                     graph_manager=graph_manager,
                     goal_type="economic",
                     target_effects={"wealth_level": 10},
+                    urgency=0.7 if motive.score > 6 else 0.4,
                 ),
             )
         )
@@ -1359,6 +1366,7 @@ def motive_to_goals(
                     graph_manager=graph_manager,
                     goal_type="economic",
                     target_effects={"wealth_level": 15},
+                    urgency=0.5 if motive.score > 5 else 0.2,
                 ),
             )
         )
@@ -2260,7 +2268,16 @@ class Character:
         self.investment_portfolio = InvestmentPortfolio([])
 
         self.monogamy = self.calculate_monogamy()
+        self.current_plan: list[Action] | None = None
+        self.current_goal_object: Goal | None = None
+        # self.goals is already initialized by self.evaluate_goals() called during post_init or by direct call.
+        # However, evaluate_goals() itself was refactored to use self.generate_goals() which populates self.goals.
+        # The initial call to self.evaluate_goals() for population will be kept,
+        # and current_goal_object can be set after that if needed, or by decide_next_action_plan.
+        # For now, let's ensure self.goals is populated by the existing call:
         self.goals = self.evaluate_goals()
+        # current_goal_object will be set by decide_next_action_plan or when a goal is actively pursued.
+
         # Check graph_manager to see if character has been added to the graph
         if not self.graph_manager.get_node(node_id=self):
             logging.info(
@@ -3111,19 +3128,78 @@ class Character:
     # def calculate_goals(self):
 
     def evaluate_goals(self):
+        # If self.goals is empty or needs refreshing, call self.generate_goals()
+        if not self.goals:  # Assuming generate_goals() populates self.goals directly
+            self.generate_goals()
 
-        goal_queue = []
-        # if len(self.goals) > 1:
-        if not self.goals or len(self.goals) == 0:
-            goal_generator = GoalGenerator(
-                self.motives, self.graph_manager, self.goap_planner, self.prompt_builder
+        evaluated_goals = []
+        # Iterate through self.goals (which should be a list of Goal objects)
+        # generate_goals currently returns list of (0, goal_obj), so we adapt
+        for initial_score, goal_object in self.goals:
+            # For each goal in self.goals, call self.goap_planner.evaluate_goal_importance(self, goal, self.graph_manager)
+            importance_score = self.goap_planner.evaluate_goal_importance(
+                self, goal_object, self.graph_manager
             )
-            self.goals = goal_generator.generate_goals(self)
-        for _, goal in self.goals:
-            utility = goal.evaluate_utility_function(self, goal, self.graph_manager)
-            goal_queue.append((utility, goal))
-        goal_queue.sort(reverse=True, key=lambda x: x[0])
-        return goal_queue
+            # Store these as tuples: (importance_score, goal_object)
+            evaluated_goals.append((importance_score, goal_object))
+
+        # Sort this list of tuples in descending order by importance_score
+        evaluated_goals.sort(key=lambda x: x[0], reverse=True)
+
+        # Return the sorted list
+        return evaluated_goals
+
+    def decide_next_action_plan(self):
+        """
+        Evaluates goals and generates a GOAP plan for the top goal(s).
+        Sets self.current_goal_object and self.current_plan.
+        """
+        logging.info(f"Character {self.name}: Starting decide_next_action_plan.")
+        sorted_goals_with_scores = self.evaluate_goals()
+
+        if sorted_goals_with_scores:
+            top_goals_log = [f"'{g.name}' (Score: {s:.2f})" for s, g in sorted_goals_with_scores[:3]]
+            logging.debug(f"Character {self.name}: Top 3 evaluated goals: {', '.join(top_goals_log) if top_goals_log else 'None'}.")
+        else:
+            logging.info(f"Character {self.name}: No goals evaluated.")
+            self.current_goal_object = None
+            self.current_plan = None
+            return
+
+        self.current_goal_object = None
+        self.current_plan = None
+
+        MAX_GOAL_ATTEMPTS = min(3, len(sorted_goals_with_scores))
+        plan_found = False
+        for i in range(MAX_GOAL_ATTEMPTS):
+            importance, goal_candidate = sorted_goals_with_scores[i]
+            logging.info(f"Character {self.name}: Attempting to plan for goal '{goal_candidate.name}' (Importance: {importance:.2f}, Attempt: {i+1}/{MAX_GOAL_ATTEMPTS}).")
+
+            current_char_state = self.get_state()
+            num_available_actions = len(self.possible_interactions)
+            logging.debug(f"Character {self.name}: Calling GOAP planner for goal '{goal_candidate.name}' with {num_available_actions} available actions.")
+
+            plan = self.goap_planner.goap_planner(
+                current_char_state,
+                goal_candidate,
+                self.possible_interactions
+            )
+
+            if plan: # Plan is a list of actions, could be empty if goal is already met or requires no steps
+                self.current_goal_object = goal_candidate
+                self.current_plan = plan
+                action_names = [(a.name if hasattr(a, 'name') else str(a)) for a in self.current_plan]
+                logging.info(f"Character {self.name}: Plan found for goal '{self.current_goal_object.name}'. Actions: {action_names if action_names else 'None (goal might be current state or no steps needed)'}.")
+                plan_found = True
+                break
+            else: # Plan is None (no path found)
+                logging.warning(f"Character {self.name}: No plan found by GOAP for goal '{goal_candidate.name}'.")
+
+        if not plan_found:
+            logging.warning(f"Character {self.name}: Could not find a plan for any of the top {MAX_GOAL_ATTEMPTS} goals.")
+            # self.current_goal_object and self.current_plan remain None as per initialization
+
+    # If sorted_goals_with_scores was empty, current_goal_object and current_plan are already None.
 
     def calculate_material_goods(self):
         material_goods = round(

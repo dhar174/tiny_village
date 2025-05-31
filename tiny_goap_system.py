@@ -279,54 +279,144 @@ class Plan:
 class GOAPPlanner:
     def __init__(self, graph_manager: "GraphManager"):
         GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
+class GOAPPlanner:
+    def __init__(self, graph_manager: "GraphManager"):
+        GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
+        Goal = importlib.import_module("tiny_characters").Goal # Add Goal import
+        Condition = importlib.import_module("actions").Condition # Add Condition import
+        # Action import needed for type hinting if used in goap_planner signature strictly
+        # from actions import Action
         self.graph_manager = graph_manager
         self.plans = {}
 
-    def plan_actions(self, state, actions):
-        goal_difficulty = self.calculate_goal_difficulty(character, goal)
-        return sorted(actions, key=lambda x: -x.utility - goal_difficulty["difficulty"])
+    # def plan_actions(self, state, actions): # This seems to be an old or alternative planning method stub
+    #     goal_difficulty = self.calculate_goal_difficulty(character, goal)
+    #     return sorted(actions, key=lambda x: -x.utility - goal_difficulty["difficulty"])
 
-    def goap_planner(character, goal: Goal, char_state: State, actions: list):
+    def _hashable_state(self, state_dict: dict) -> tuple:
+        """Converts a dictionary (including nested ones) to a hashable tuple of sorted items."""
+        if isinstance(state_dict, dict):
+            return tuple(sorted((k, self._hashable_state(v)) for k, v in state_dict.items()))
+        elif isinstance(state_dict, list):
+            return tuple(self._hashable_state(i) for i in state_dict)
+        return state_dict
+
+    def heuristic(self, current_state_dict: dict, target_goal: Goal) -> float:
+        """Estimates the cost to reach the target_goal from current_state_dict."""
+        h_score = 0
+        # Assuming target_goal.completion_conditions is a dict of lists of Condition objects
+        if hasattr(target_goal, 'completion_conditions') and isinstance(target_goal.completion_conditions, dict):
+            for condition_list in target_goal.completion_conditions.values():
+                for condition in condition_list:
+                    if isinstance(condition, importlib.import_module("actions").Condition): # Check type
+                        if not condition.is_met(current_state_dict):
+                            h_score += 1 # Each unmet condition adds 1 to the heuristic
+                    else:
+                        logging.warning(f"Item in completion_conditions is not a Condition object: {condition}")
+        else:
+            logging.warning(f"Goal '{target_goal.name}' has no valid completion_conditions attribute for heuristic calculation.")
+        return h_score
+
+    def _is_goal_achieved(self, current_state_dict: dict, target_goal: Goal) -> bool:
+        """Checks if all completion conditions of the goal are met in the current state."""
+        if hasattr(target_goal, 'completion_conditions') and isinstance(target_goal.completion_conditions, dict):
+            if not target_goal.completion_conditions: # No conditions means goal is trivially achieved
+                return True
+            all_conditions_met = True
+            for condition_list in target_goal.completion_conditions.values():
+                if not condition_list: # Empty list of conditions for a key
+                    continue
+                for condition in condition_list:
+                    if isinstance(condition, importlib.import_module("actions").Condition):
+                        if not condition.is_met(current_state_dict):
+                            all_conditions_met = False
+                            break # One condition not met is enough
+                    else:
+                        # logging.warning(f"Non-Condition object in goal completion_conditions: {condition}")
+                        all_conditions_met = False # Treat non-Condition as problematic / not met
+                        break
+                if not all_conditions_met:
+                    break
+            return all_conditions_met
+        # If using target_effects as primary (or fallback)
+        # elif hasattr(target_goal, 'target_effects') and isinstance(target_goal.target_effects, dict):
+        #     for attr, val in target_goal.target_effects.items():
+        #         if Condition._get_nested_attribute(current_state_dict, attr) != val: # Using static method
+        #             return False
+        #     return True
+        logging.warning(f"Goal '{target_goal.name}' has no completion_conditions or suitable target_effects for achievement check.")
+        return False # Default if no clear conditions
+
+    def goap_planner(self, character_state: State, target_goal: Goal, available_actions: list[Action]) -> list[Action] | None:
         """
-        Generates a plan of actions to achieve a goal from the current state.
-
-        Args:
-            character (str): The character for whom the plan is being generated.
-            goal (dict): The desired state to achieve.
-            state (dict): The current state of the character.
-            actions (list): A list of possible actions.
-
-        Returns:
-            plan (list): A list of actions that form a plan to achieve the goal.
+        Generates a plan of actions to achieve a target_goal from the character_state using A*.
         """
-        Goal = importlib.import_module("tiny_characters").Goal
-        Character = importlib.import_module("tiny_characters").Character
-        State = importlib.import_module("tiny_characters").State
+        character_obj = character_state.dict_or_obj # Get the actual character object from State
+        char_name = getattr(character_obj, 'name', 'UnknownCharacter')
+        goal_name = getattr(target_goal, 'name', 'UnknownGoal')
+        logging.debug(f"GOAPPlanner: Starting planning for {char_name} to achieve goal '{goal_name}'.")
 
-        # Initialize the open list with the initial state
-        open_list = [(char_state, [])]
-        visited_states = set()
+        if not hasattr(character_obj, 'to_dict'):
+            logging.error(f"Character object {char_name} within State does not have a to_dict() method.")
+            return None
+        initial_state_dict = character_obj.to_dict()
 
-        while open_list:
-            current_state, current_plan = open_list.pop(0)
+        open_list = []  # Priority queue (min-heap)
+        # (f_score, g_score, state_dict, plan_actions_list)
 
-            # Check if the current state satisfies the goal
-            if all(goal.check_completion(current_state)):
-                return current_plan
+        initial_h_score = self.heuristic(initial_state_dict, target_goal)
+        initial_g_score = 0
+        initial_f_score = initial_g_score + initial_h_score
 
-            for action in actions:
-                if action["conditions_met"](current_state):
-                    new_state = current_state.copy()
-                    # Apply the effects of the action
-                    for effect, change in action["effects"].items():
-                        new_state[effect] = new_state.get(effect, 0) + change
+        heappush(open_list, (initial_f_score, initial_g_score, initial_state_dict, []))
 
-                    if new_state not in visited_states:
-                        visited_states.add(new_state)
-                        # Add the new state and updated plan to the open list
-                        open_list.append((new_state, current_plan + [action["name"]]))
+        # came_from stores (previous_hashed_state, action_taken_to_reach_current_state)
+        came_from = {self._hashable_state(initial_state_dict): (None, None)}
+        cost_so_far = {self._hashable_state(initial_state_dict): 0} # Stores g_score
 
-        return None  # If no plan is found
+        max_iterations = 1000 # Prevent infinite loops in complex scenarios
+        iterations = 0
+
+        while open_list and iterations < max_iterations:
+            iterations += 1
+            f_score, g_score, current_state_dict, current_plan_actions = heappop(open_list)
+
+            if self._is_goal_achieved(current_state_dict, target_goal):
+                # Reconstruct path
+                plan = []
+                hashed_curr = self._hashable_state(current_state_dict)
+                while hashed_curr in came_from and came_from[hashed_curr][1] is not None:
+                    prev_hashed, action = came_from[hashed_curr]
+                    plan.append(action)
+                    hashed_curr = prev_hashed
+                plan.reverse()
+                logging.info(f"GOAPPlanner: Plan found for {char_name}, goal '{goal_name}'. Plan length: {len(plan)} steps.")
+                return plan
+
+            for action in available_actions:
+                if not isinstance(action, Action):
+                    logging.warning(f"Item in available_actions is not an Action object: {action}")
+                    continue
+
+                if action.are_preconditions_met(current_state_dict):
+                    next_state_dict = action.apply_effects(current_state_dict)
+                    new_g_score = g_score + action.cost
+
+                    hashed_next_state = self._hashable_state(next_state_dict)
+
+                    if hashed_next_state not in cost_so_far or new_g_score < cost_so_far[hashed_next_state]:
+                        cost_so_far[hashed_next_state] = new_g_score
+                        h_val = self.heuristic(next_state_dict, target_goal)
+                        new_f_score = new_g_score + h_val
+
+                        heappush(open_list, (new_f_score, new_g_score, next_state_dict, current_plan_actions + [action]))
+                        came_from[hashed_next_state] = (self._hashable_state(current_state_dict), action)
+
+        if iterations >= max_iterations:
+            logging.warning(f"GOAPPlanner: Reached max iterations ({max_iterations}) for {char_name}, goal '{goal_name}'.")
+
+        logging.info(f"GOAPPlanner: No plan found for {char_name} to achieve goal '{goal_name}'.")
+        return None
 
     def calculate_goal_difficulty(self, character, goal: Goal):
         """
@@ -497,14 +587,14 @@ class GOAPPlanner:
             )
         elif goal_type == "Economic":
             goal_importance = self.calculate_economic_goal_importance(
-                financial_status, goal, graph_manager, motives
+                financial_status, goal, graph_manager, motives, character # Pass character
             )
         elif goal_type == "Health":
             goal_importance = self.calculate_health_goal_importance(
-                health, goal, graph_manager, motives
+                health, goal, graph_manager, motives, character # Pass character
             )
         elif goal_type == "Safety":
-            goal_importance = self.calculate_safety_goal_importance(goal, motives)
+            goal_importance = self.calculate_safety_goal_importance(goal, motives, graph_manager, character)
         elif goal_type == "Long-term Aspiration":
             goal_importance = self.calculate_long_term_goal_importance(
                 character, goal, graph_manager, motives
@@ -528,8 +618,8 @@ class GOAPPlanner:
         return (
             0.3 * health
             + 0.4 * hunger
-            + 0.2 * motives.hunger_motive.value
-            + 0.1 * motives.health_motive.value
+            + 0.2 * motives.get_hunger_motive().get_score()
+            + 0.1 * motives.get_health_motive().get_score()
         )
 
     def calculate_social_goal_importance(self, social_needs, social_factor, motives):
@@ -537,55 +627,98 @@ class GOAPPlanner:
         return (
             0.5 * social_needs
             + 0.3 * social_factor
-            + 0.2 * motives.social_wellbeing_motive.value
+            + 0.2 * motives.get_social_wellbeing_motive().get_score()
         )
 
     def calculate_career_goal_importance(self, character, goal, graph_manager, motives):
         # Calculate the importance of career goals
         job_opportunities = graph_manager.explore_career_opportunities(character.name)
-        career_impact = graph_manager.analyze_career_impact(character.name, goal)
+        # career_impact = graph_manager.analyze_career_impact(character.name, goal) # Ensure this method exists and is used if needed
+        # For now, focusing on motive score
         return (
-            0.4 * character.skills
-            + 0.4 * job_opportunities
-            + 0.2 * motives.job_performance_motive.value
+            0.4 * character.job_performance # Assuming job_performance is a relevant character attribute for career goals
+            + 0.4 * job_opportunities # Assuming this returns a quantifiable metric
+            + 0.2 * motives.get_job_performance_motive().get_score()
         )
 
     def calculate_personal_development_importance(
-        self, character, goal, graph_manager, motives
+        self, character: Character, goal: Goal, graph_manager: GraphManager, motives: PersonalMotives
     ):
         # Calculate the importance of personal development goals
-        current_skill_level = character.skills.get(goal.skill, 0)
-        potential_benefits = graph_manager.calculate_potential_utility_of_plan(
-            character.name, goal
-        )
-        return 0.5 * current_skill_level + 0.5 * motives.happiness_motive.value
+        difficulty_score = 0
+        if callable(goal.difficulty):
+            # Assuming goal.difficulty returns a dict with a 'difficulty' key or just a score
+            difficulty_result = goal.difficulty(character, graph_manager)
+            if isinstance(difficulty_result, dict):
+                difficulty_score = difficulty_result.get('difficulty', 0.5) # Default if key missing
+            elif isinstance(difficulty_result, (int, float)):
+                difficulty_score = difficulty_result
+            else: # Default if unexpected type
+                difficulty_score = 0.5
+        else: # if goal.difficulty is not callable, use a default
+            difficulty_score = getattr(goal, 'difficulty_value', 0.5) # Check for a direct value
+
+        # Inverse of difficulty (lower difficulty = higher importance for development)
+        # Normalize difficulty: assume it's 0-1, if not, it needs scaling.
+        # For simplicity, if difficulty is 0-100, divide by 100. Assuming it's already normalized or a small value.
+        personal_dev_factor = (1 - min(1, max(0, difficulty_score))) * 0.5 # Max contribution of 0.5 from difficulty
+
+        # Consider if the goal has specific skills to improve
+        # related_skill_improvement_factor = 0 # Default
+        # if hasattr(goal, 'target_skills') and goal.target_skills:
+        #    # Logic to see how much this goal helps with target skills based on character's current skills
+        #    pass # Placeholder for more complex skill interaction logic
+
+        return personal_dev_factor + 0.5 * motives.get_success_motive().get_score() # Success motive for personal dev
 
     def calculate_economic_goal_importance(
-        self, financial_status, goal, graph_manager, motives
+        self, financial_status: float, goal: Goal, graph_manager: GraphManager, motives: PersonalMotives, character: Character
     ):
         # Calculate the importance of economic goals
-        trade_opportunities = graph_manager.evaluate_trade_opportunities_for_item(
-            goal.required_resource
-        )
-        return 0.5 * financial_status + 0.5 * motives.wealth_motive.value
+        trade_opportunity_factor = 0.0 # Default
+        if hasattr(goal, 'required_items') and goal.required_items:
+            # This is a list of tuples: (dict of item requirements, quantity needed)
+            # For simplicity, let's consider the first required item if it exists
+            # A more complex version would iterate or check graph_manager for general opportunities
+            first_item_req = goal.required_items[0][0] if goal.required_items else None
+            if first_item_req and graph_manager.evaluate_trade_opportunities_for_item:
+                 # evaluate_trade_opportunities_for_item might need character or just item_name/type
+                 # Assuming it takes item properties dict
+                opportunities = graph_manager.evaluate_trade_opportunities_for_item(character, first_item_req)
+                trade_opportunity_factor = min(1, opportunities * 0.1) # Normalize, e.g. if opportunities is count
 
-    def calculate_health_goal_importance(self, health, goal, graph_manager, motives):
+        return 0.4 * financial_status + 0.4 * trade_opportunity_factor + 0.2 * motives.get_wealth_motive().get_score()
+
+    def calculate_health_goal_importance(self, health: float, goal: Goal, graph_manager: GraphManager, motives: PersonalMotives, character: Character):
         # Calculate the importance of health goals
-        nearest_health_facility = graph_manager.get_nearest_resource(
-            goal.target_location, "health"
-        )
-        return 0.7 * health + 0.3 * motives.health_motive.value
+        health_facility_factor = 0.0 # Default
+        if hasattr(goal, 'target_location_type') and goal.target_location_type == "health_facility":
+            if graph_manager.get_nearest_resource:
+                # Assuming get_nearest_resource needs character's current location and type of resource
+                # And character has a 'location' attribute
+                nearest_facility_info = graph_manager.get_nearest_resource(character.location, "health_facility")
+                if nearest_facility_info and isinstance(nearest_facility_info, dict):
+                    distance = nearest_facility_info.get('distance', float('inf'))
+                    health_facility_factor = max(0, 1 - distance / 100.0) # Closer is better, normalized by 100 units
 
-    def calculate_safety_goal_importance(self, goal, motives):
+        return 0.6 * health + 0.2 * health_facility_factor + 0.2 * motives.get_health_motive().get_score()
+
+    def calculate_safety_goal_importance(self, goal: Goal, motives: PersonalMotives, graph_manager: GraphManager, character: Character):
         # Calculate the importance of safety goals
-        return safety_factor * goal.urgency + motives.stability_motive.value
+        # Assuming safety_factor is derived from graph_manager or environment
+        # Example: graph_manager.get_location_safety(character.location)
+        safety_factor = graph_manager.get_node_attribute(character.location, "safety_score") if character.location else 0.5
+        # Ensure goal has an urgency attribute
+        goal_urgency = getattr(goal, 'urgency', 0.5)
+        return safety_factor * goal_urgency + motives.get_stability_motive().get_score()
 
     def calculate_long_term_goal_importance(
         self, character, goal, graph_manager, motives
     ):
         # Calculate the importance of long-term goals
         progress = graph_manager.calculate_goal_progress(character.name, goal)
-        return progress * goal.urgency + motives.hope_motive.value
+        goal_urgency = getattr(goal, 'urgency', 0.5) # Ensure goal has an urgency attribute
+        return progress * goal_urgency + motives.get_hope_motive().get_score()
 
     def calculate_utility(self, action, character):
         """Calculate action utility based on multiple factors"""

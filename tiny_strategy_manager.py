@@ -75,8 +75,19 @@ class StrategyManager:
     """
 
     def __init__(self):
-        self.goap_planner = GOAPPlanner()
-        self.graph_manager = GraphManager()
+import logging # Add logging import
+
+# ... (other imports)
+
+class StrategyManager:
+    """
+    The StrategyManager class is responsible for managing the strategies used in goal-oriented action planning and utility evaluation.
+    """
+
+    def __init__(self):
+        # self.goap_planner = GOAPPlanner() # GOAPPlanner might not be needed if this class is purely for fallback actions
+        # self.graph_manager = GraphManager() # GraphManager might not be needed directly here
+        pass # Simpler init if only providing fallback
 
     def get_character_state_dict(self, character: Character) -> dict:
         """
@@ -120,7 +131,9 @@ class StrategyManager:
         """
         Generates a list of potential daily actions for a character,
         calculates their utility, and returns them sorted by utility.
+        This method is intended as a fallback if GOAP planning fails.
         """
+        logging.info(f"StrategyManager.get_daily_actions called for {character.name} (used as fallback).")
         potential_actions = []
 
         # --- Action Generation ---

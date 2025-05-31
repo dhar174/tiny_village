@@ -606,6 +606,28 @@ class GameplayController:
                 "rect": pygame.Rect(500, 120, 45, 35),
                 "type": "educational",
             },
+            # Ensure specific buildings for the test scenario
+            {
+                "name": "Alice's Home", # Generic home for Alice
+                "rect": pygame.Rect(50, 50, 50, 50),
+                "type": "Home", # Ensure "Home" type is recognized or handled
+            },
+            {
+                "name": "Bob's Home", # Generic home for Bob
+                "rect": pygame.Rect(150, 50, 50, 50),
+                "type": "Home",
+            },
+            {
+                "name": "Village Market", # Food source
+                "rect": pygame.Rect(250, 250, 60, 40),
+                "type": "Market", # Ensure "Market" type is recognized
+                "inventory": [{"name": "Apples", "type": "food", "quantity": 20, "price": 2}, {"name": "Bread", "type": "food", "quantity": 15, "price": 3}] # Stocked market
+            },
+            {
+                "name": "Old MacDonald's Farm", # Bob's workplace
+                "rect": pygame.Rect(400, 400, 80, 60),
+                "type": "Farm", # Ensure "Farm" type is recognized
+            }
         ]
 
         # Allow custom buildings from config
@@ -915,18 +937,62 @@ class GameplayController:
                     },
                 ]
 
-        # Limit character creation to requested count
-        character_data_list = character_data_list[:character_count]
+            # Test Scenario Specific Setup
+            test_scenario_active = self.config.get("use_test_scenario_characters", True) # Default to true for this test
+            if test_scenario_active:
+                logger.info("Setting up specific test scenario characters: Alice and Bob")
+                character_data_list = [
+                    {
+                        "name": "Alice", "age": 30, "pronouns": "she/her", "job": "unemployed",
+                        "hunger_level": 80, "energy": 30, "wealth_money": 50, # Hunger 0-100, Energy 0-100
+                        "recent_event": "Feeling very hungry", "long_term_goal": "Find food",
+                        "personality": {"openness": 70, "conscientiousness": 50},
+                        "inventory_items": [] # Starts with no food
+                    },
+                    {
+                        "name": "Bob", "age": 35, "pronouns": "he/him", "job": "Farmer",
+                        "hunger_level": 40, "energy": 70, "wealth_money": 100,
+                        "recent_event": "Ready for a day's work", "long_term_goal": "Manage the farm",
+                        "personality": {"openness": 50, "conscientiousness": 80},
+                        "inventory_items": [{"name": "Hoe", "type": "tool", "quantity": 1, "weight": 2, "value": 10, "description":"A trusty hoe."}] # Job tool
+                    },
+                ]
+                # Ensure only these test characters are created if test_scenario_active
+                # The original character_count might be overridden here for the test scenario.
+                # To ensure only Alice and Bob, we directly use this list.
+            else:
+                 # Limit character creation to requested count from general config if not test scenario
+                character_data_list = character_data_list[:character_count]
+
 
         for char_data in character_data_list:
             try:
+                # Adjust hunger_level and energy for _create_single_character if it expects 0-10 scale
+                # The _create_single_character uses defaults like random.randint(80,100) for health,
+                # random.randint(20,50) for hunger, random.randint(60,100) for energy.
+                # The test scenario data for hunger/energy (0-100) needs to be consistent with Character class init.
+                # Character.__init__ takes hunger_level (0-10 default), energy (0-100 default).
+                # Let's assume Character class init handles these values directly.
+                # Alice: hunger_level=8 (0-10 scale), energy=30 (0-100 scale)
+                # Bob: hunger_level=4 (0-10 scale), energy=70 (0-100 scale)
+                if test_scenario_active and 'hunger_level' in char_data: # Convert 0-100 to 0-10 for Character init
+                    char_data['hunger_level_original'] = char_data['hunger_level'] # keep original for logging if needed
+                    char_data['hunger_level'] = int(char_data['hunger_level'] / 10)
+
                 character = self._create_single_character(char_data, imported_modules)
                 if character:
                     characters.append(character)
                     logger.debug(f"Created character: {char_data['name']}")
+                    if test_scenario_active and char_data['name'] == "Alice":
+                        # Ensure Alice's home has some food source, e.g. a fridge item, or market is available
+                        # This might be better handled by ensuring Market exists and has food.
+                        # For now, let's assume Alice will try to find food externally or at home if available.
+                        # If Alice's home is created in _create_single_character, that's where a fridge could be added.
+                        pass
+
             except Exception as e:
                 logger.error(
-                    f"Error creating character {char_data.get('name', 'Unknown')}: {e}"
+                    f"Error creating character {char_data.get('name', 'Unknown')}: {e} - {traceback.format_exc()}"
                 )
                 continue
 
@@ -1793,40 +1859,77 @@ class GameplayController:
         return False
 
     def _execute_character_actions(self, character) -> bool:
-        """Execute character actions with error handling."""
+        """Execute character actions, preferring GOAP plan if available."""
         try:
-            if not self.strategy_manager:
-                return False
+            logger.debug(f"Processing actions for {character.name}...")
+            # Ensure character has a plan if possible
+            if not character.current_plan:
+                logger.info(f"Character {character.name} has no current plan. Attempting to decide next action plan.")
+                character.decide_next_action_plan() # This method now includes comprehensive logging
 
-            # Use strategy manager to plan actions
-            actions = self.strategy_manager.get_daily_actions(character)
+            # If a GOAP plan exists and is not empty, execute the next action from it
+            if character.current_plan: # Check if plan is not None and not empty
+                action_to_execute = character.current_plan[0]
+                goal_name = character.current_goal_object.name if character.current_goal_object else "UnknownGoal"
+                logger.info(f"Character {character.name}: Proceeding with GOAP plan. Next action: '{getattr(action_to_execute, 'name', 'UnknownAction')}' for goal '{goal_name}'.")
+                return self._apply_character_actions(character, [action_to_execute], is_goap_action=True)
+            else:
+                # No GOAP plan available
+                logger.info(f"Character {character.name}: No GOAP plan available. Falling back to StrategyManager.")
+                if not self.strategy_manager:
+                    logger.warning(f"StrategyManager not available for {character.name}. Character cannot act.")
+                    return False
 
-            if actions:
-                # Execute planned actions based on current state
-                success = self._apply_character_actions(character, actions)
-                if success:
-                    self.game_statistics["actions_executed"] += len(actions)
+                actions_from_strategy = self.strategy_manager.get_daily_actions(character)
+                if actions_from_strategy:
+                    logger.info(f"Character {character.name}: Using StrategyManager, received {len(actions_from_strategy)} action(s). Top action: '{actions_from_strategy[0].name if actions_from_strategy else 'None'}'.")
+                    return self._apply_character_actions(character, actions_from_strategy, is_goap_action=False)
                 else:
-                    self.game_statistics["actions_failed"] += 1
-                return success
-            return True  # No actions is not necessarily a failure
+                    logger.info(f"Character {character.name}: StrategyManager provided no actions. Character idles.")
+                    return True
 
         except Exception as e:
-            logger.warning(f"Error executing actions for {character.name}: {e}")
+            logger.error(f"Error in _execute_character_actions for {character.name}: {e} - {traceback.format_exc()}")
             self.game_statistics["actions_failed"] += 1
             return False
 
-    def _apply_character_actions(self, character, actions) -> bool:
-        """Apply a list of actions to a character."""
+    def _apply_character_actions(self, character, actions_to_execute, is_goap_action=False) -> bool:
+        """Apply a list of actions to a character. Manages plan progression if it's a GOAP action."""
+        overall_success = True
         try:
-            for action_data in actions:
-                success = self._execute_single_action(character, action_data)
-                if not success:
-                    logger.warning(f"Action {action_data} failed for {character.name}")
-                    # Continue with other actions even if one fails
-            return True
+            for current_action_data in actions_to_execute:
+                action_name = getattr(current_action_data, 'name', 'UnknownAction')
+                logger.debug(f"Character {character.name}: Attempting to execute action '{action_name}'. Is GOAP: {is_goap_action}.")
+                action_executed_successfully = self._execute_single_action(character, current_action_data)
+
+                if is_goap_action:
+                    if action_executed_successfully:
+                        if character.current_plan:
+                            popped_action = character.current_plan.pop(0)
+                            logger.info(f"Character {character.name}: Action '{getattr(popped_action, 'name', 'UnknownAction')}' from GOAP plan executed successfully. Remaining plan length: {len(character.current_plan)}.")
+                            if not character.current_plan:
+                                goal_name = character.current_goal_object.name if character.current_goal_object else "UnknownGoal"
+                                logger.info(f"Character {character.name}: GOAP plan for goal '{goal_name}' completed successfully.")
+                                character.current_goal_object = None
+                        else:
+                            logger.warning(f"Character {character.name}: GOAP action '{action_name}' executed, but current_plan is unexpectedly empty/None.")
+                    else:
+                        logger.warning(f"Character {character.name}: Action '{action_name}' from GOAP plan FAILED. Clearing plan to trigger replan.")
+                        character.current_plan = None
+                        character.current_goal_object = None
+                        self.game_statistics["actions_failed"] += 1
+                        overall_success = False
+                        break
+                else:
+                    if not action_executed_successfully:
+                        logger.warning(f"Character {character.name}: StrategyManager action '{action_name}' failed.")
+                        overall_success = False
+            return overall_success
         except Exception as e:
-            logger.error(f"Error applying actions to {character.name}: {e}")
+            logger.error(f"Error in _apply_character_actions for {character.name}: {e} - {traceback.format_exc()}")
+            if is_goap_action:
+                character.current_plan = None
+                character.current_goal_object = None
             return False
 
     def _execute_single_action(self, character, action_data) -> bool:
@@ -1862,9 +1965,12 @@ class GameplayController:
             # Execute the action
             if hasattr(action, "execute"):
                 try:
-                    result = action.execute(target=character, initiator=character)
+                    # Ensure graph_manager is passed if Action.execute expects it
+                    result = action.execute(character=character, graph_manager=self.graph_manager)
                     if result:
                         # Update character state after successful action
+                        # This call might be redundant if action.execute already handles all state changes
+                        # and graph_manager updates. For now, keeping it for things like memory/skill updates.
                         self._update_character_state_after_action(character, action)
 
                         # Track successful execution
@@ -2477,9 +2583,28 @@ class GameplayController:
                     except:
                         pass
 
+                # GOAP UI Enhancement
+                if hasattr(char, 'current_goal_object') and char.current_goal_object:
+                    goal_text = f"Goal: {char.current_goal_object.name}"
+                    if hasattr(char.current_goal_object, 'urgency'): # If Goal has urgency
+                         goal_text += f" (Urg: {char.current_goal_object.urgency:.2f})"
+                    char_info.append(goal_text)
+
+                if hasattr(char, 'current_plan') and char.current_plan:
+                    action_text = f"Action: {char.current_plan[0].name}"
+                    if hasattr(char.current_plan[0], 'cost'): # If Action has cost
+                        action_text += f" (Cost: {char.current_plan[0].cost:.1f})"
+                    char_info.append(action_text)
+                    char_info.append(f"Plan Steps: {len(char.current_plan)}")
+                elif hasattr(char, 'current_goal_object') and char.current_goal_object and not char.current_plan:
+                    char_info.append("Action: (No plan or plan ended)")
+
+
                 for i, info in enumerate(char_info):
                     info_text = small_font.render(info, True, (255, 255, 0))
                     self.screen.blit(info_text, (10, y_offset + i * 20))
+                y_offset += len(char_info) * 20 # Adjust y_offset based on number of lines printed for char_info
+
 
             # Render enhanced instructions
             instructions = [
