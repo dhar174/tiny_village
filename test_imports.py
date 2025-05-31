@@ -47,6 +47,7 @@ def main():
         for pkg in failed_imports:
             print(f"  - {pkg}")
     print("--- End of Summary ---")
-
+    return len(failed_imports)
 if __name__ == "__main__":
-    main()
+    exit_code = main()
+    sys.exit(exit_code)
