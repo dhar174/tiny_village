@@ -28,8 +28,8 @@ def main():
         except ImportError:
             logging.error(f"Failed to import package: {package_name}")
             failed_imports.append(package_name)
-        except Exception as e:
-            logging.error(f"An unexpected error occurred while importing {package_name}: {e}")
+        except Exception:
+            logging.exception(f"An unexpected error occurred while importing {package_name}.")
             failed_imports.append(package_name)
 
     print("\n--- Import Test Summary ---")
