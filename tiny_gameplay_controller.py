@@ -5,6 +5,11 @@ import traceback
 import json
 import os
 import datetime # Added for time-based achievement
+WEATHER_ENERGY_EFFECTS = {
+    'rainy': 0.5,
+    # 'snowy': 1.0, # easy to add more
+    # Add other weather types here
+}
 from typing import Dict, List, Any, Union, Optional
 from tiny_strategy_manager import StrategyManager
 from tiny_event_handler import EventHandler, Event
@@ -1765,15 +1770,15 @@ class GameplayController:
             actions_success = self._execute_character_actions(character)
 
             # Apply weather effects
-            if hasattr(self, "weather_system") and self.weather_system:
-                if self.weather_system.get('current_weather') == 'rainy':
-                    if hasattr(character, 'energy'):
-                        original_energy = character.energy
-                        energy_decrease = 0.5 * dt
-                        character.energy -= energy_decrease
-                        character.energy = max(0, character.energy) # Ensure energy doesn't go below 0
-                        if original_energy > character.energy: # Log only if energy actually decreased
-                            logger.debug(f"Rainy weather slightly decreased {character.name}'s energy by {energy_decrease:.2f} to {character.energy:.2f}.")
+            weather = getattr(self, "weather_system", None)
+            if weather:
+                current_weather = weather.get('current_weather')
+                energy_decrease = WEATHER_ENERGY_EFFECTS.get(current_weather, 0) * dt
+                if energy_decrease and hasattr(character, 'energy'):
+                    original_energy = character.energy
+                    character.energy = max(0, character.energy - energy_decrease)
+                    if original_energy > character.energy:
+                        logger.debug(f"{current_weather.title()} weather decreased {character.name}'s energy by {energy_decrease:.2f} to {character.energy:.2f}.")
 
             # Character update is successful if at least one component works
             return memory_success or goals_success or actions_success
