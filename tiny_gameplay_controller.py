@@ -2437,17 +2437,16 @@ class GameplayController:
                     pass
 
             # Render 'First Week Survived' achievement status
-            if hasattr(self, "global_achievements"):
-                try:
-                    survived_week = self.global_achievements.get("village_milestones", {}).get("first_week_survived", False)
-                    status_text = "Yes" if survived_week else "No"
-                    achievement_render = tiny_font.render(
-                        f"First Week Survived: {status_text}", True, (220, 220, 180) # Light yellow/gold color
-                    )
-                    self.screen.blit(achievement_render, (10, y_offset))
-                    y_offset += 15
-                except Exception as e:
-                    logger.warning(f"Could not render 'first_week_survived' achievement: {e}")
+            try:
+                survived_week = self.global_achievements.get("village_milestones", {}).get("first_week_survived", False)
+                status_text = "Yes" if survived_week else "No"
+                achievement_render = tiny_font.render(
+                    f"First Week Survived: {status_text}", True, (220, 220, 180) # Light yellow/gold color
+                )
+                self.screen.blit(achievement_render, (10, y_offset))
+                y_offset += 15
+            except Exception as e:
+                logger.warning(f"Could not render 'first_week_survived' achievement: {e}")
 
 
             # Render selected character info (enhanced)
