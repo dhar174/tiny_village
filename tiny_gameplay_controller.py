@@ -2445,11 +2445,19 @@ class GameplayController:
                     pass
             # Render time scale factor
             try:
-                speed_text_render = small_font.render(
-                    f"Speed: {self.time_scale_factor:.1f}x", True, (255, 255, 255)
-                )
-                self.screen.blit(speed_text_render, (10, y_offset))
-                y_offset += 20
+                if not hasattr(self, "_cached_speed_text") or not hasattr(self, "_last_time_scale_factor"):
+                    self._cached_speed_text = None
+                    self._last_time_scale_factor = None
+
+                if self._last_time_scale_factor != self.time_scale_factor:
+                    self._cached_speed_text = small_font.render(
+                        f"Speed: {self.time_scale_factor:.1f}x", True, (255, 255, 255)
+                    )
+                    self._last_time_scale_factor = self.time_scale_factor
+
+                if self._cached_speed_text:
+                    self.screen.blit(self._cached_speed_text, (10, y_offset))
+                    y_offset += 20
             except (AttributeError, TypeError, ValueError) as e:
                 logger.warning(f"Could not render time_scale_factor: {e}")
             except Exception as e:
