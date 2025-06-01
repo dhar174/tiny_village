@@ -28,10 +28,18 @@ logger = logging.getLogger(__name__)
 
 
 class TestActionResolver(unittest.TestCase):
+from tiny_graph_manager import GraphManager # Added
+from actions import ActionSystem # Added
+from unittest.mock import Mock, MagicMock, patch # Ensure Mock is imported
+
+class TestActionResolver(unittest.TestCase):
     """Test the enhanced ActionResolver class."""
 
     def setUp(self):
-        self.action_resolver = ActionResolver()
+        # Using Mocks as decided in the plan
+        self.mock_action_system = Mock(spec=ActionSystem)
+        self.mock_graph_manager = Mock(spec=GraphManager)
+        self.action_resolver = ActionResolver(action_system=self.mock_action_system, graph_manager=self.mock_graph_manager)
 
     def test_dict_action_resolution(self):
         """Test resolving dictionary-based actions."""

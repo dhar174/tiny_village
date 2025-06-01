@@ -5,9 +5,9 @@ import networkx as nx
 from datetime import datetime
 
 from actions import Action, State, ActionSystem
-
-action_system = ActionSystem()
 from tiny_graph_manager import GraphManager
+graph_mrg_instance_for_tests = GraphManager() # Module-level instance
+action_system = ActionSystem(graph_manager=graph_mrg_instance_for_tests) # Pass graph_manager
 from tiny_types import Character, Location, Event
 from tiny_items import FoodItem, ItemInventory, ItemObject
 from tiny_jobs import Job
@@ -470,6 +470,7 @@ class TestGraphManager(unittest.TestCase):
                 preconditions_dict["Jogging"]
             ),
             effects=effect_dict["Jogging"],
+            graph_manager=self.graph_manager
         )
         self.graph_manager.add_activity_node(act)
         self.assertIn(act.name, self.graph_manager.G.nodes)
@@ -762,6 +763,7 @@ class TestGraphManager(unittest.TestCase):
                 preconditions_dict["Jogging"]
             ),
             effects=effect_dict["Jogging"],
+            graph_manager=self.graph_manager
         )
         self.graph_manager.add_character_node(char)
         self.graph_manager.add_activity_node(act)
@@ -897,6 +899,7 @@ class TestGraphManager(unittest.TestCase):
                 preconditions_dict["Jogging"]
             ),
             effects=effect_dict["Jogging"],
+            graph_manager=self.graph_manager
         )
         self.graph_manager.add_location_node(loc)
         self.graph_manager.add_activity_node(act)
@@ -945,6 +948,7 @@ class TestGraphManager(unittest.TestCase):
                 preconditions_dict["Jogging"]
             ),
             effects=effect_dict["Jogging"],
+            graph_manager=self.graph_manager
         )
         self.graph_manager.add_object_node(obj)
         self.graph_manager.add_activity_node(act)
@@ -980,6 +984,7 @@ class TestGraphManager(unittest.TestCase):
                 preconditions_dict["Jogging"]
             ),
             effects=effect_dict["Jogging"],
+            graph_manager=self.graph_manager
         )
         self.graph_manager.add_event_node(event)
         self.graph_manager.add_activity_node(act)
@@ -1043,6 +1048,7 @@ class TestGraphManager(unittest.TestCase):
                 preconditions_dict["Reading"]
             ),
             effects=effect_dict["Reading"],
+            graph_manager=self.graph_manager
         )
         self.graph_manager.add_activity_node(act1)
         self.graph_manager.add_activity_node(act2)
@@ -1172,6 +1178,7 @@ class TestGraphManager(unittest.TestCase):
                 preconditions_dict["Coding"]
             ),
             effects=effect_dict["Coding"],
+            graph_manager=self.graph_manager
         )
         self.graph_manager.add_job_node(job)
         self.graph_manager.add_activity_node(act)
