@@ -1381,10 +1381,10 @@ class GameplayController:
             # Show analytics information
             self._show_analytics_info()
         elif event.key in key_bindings.get("increase_speed", []):
-            self.time_scale_factor = min(3.0, self.time_scale_factor + 0.5)
+            self.time_scale_factor = min(MAX_SPEED, self.time_scale_factor + SPEED_STEP)
             logger.info(f"Time scale set to: {self.time_scale_factor}x")
         elif event.key in key_bindings.get("decrease_speed", []):
-            self.time_scale_factor = max(0.5, self.time_scale_factor - 0.5)
+            self.time_scale_factor = max(MIN_SPEED, self.time_scale_factor - SPEED_STEP)
             logger.info(f"Time scale set to: {self.time_scale_factor}x")
 
     def _show_help_info(self):
