@@ -467,6 +467,8 @@ class GameplayController:
         self.initialization_errors = []
         self.running = True
         self.paused = False
+        self.time_scale_factor = 1.0 # Added for time scaling
+
 
         # Initialize recovery manager
         self.recovery_manager = SystemRecoveryManager(self)
@@ -1268,8 +1270,7 @@ class GameplayController:
         target_fps = self.config.get("target_fps", 60)
 
         while self.running:
-            dt = self.clock.tick(target_fps) / 1000.0  # Frame time in seconds
-
+            dt = self.clock.tick(target_fps) / 1000.0 * self.time_scale_factor  # Frame time in seconds with time scale factor
             # TODO: Add performance monitoring
             # frame_start_time = time.time()
 
@@ -1330,6 +1331,8 @@ class GameplayController:
                 "feature_status": [pygame.K_f],
                 "system_recovery": [pygame.K_F5],
                 "analytics": [pygame.K_a],
+                "increase_speed": [pygame.K_PAGEUP], # Added for time scaling
+                "decrease_speed": [pygame.K_PAGEDOWN], # Added for time scaling
             },
         )
 
@@ -1377,6 +1380,12 @@ class GameplayController:
         elif event.key in key_bindings.get("analytics", [pygame.K_a]):
             # Show analytics information
             self._show_analytics_info()
+        elif event.key in key_bindings.get("increase_speed", []):
+            self.time_scale_factor = min(MAX_SPEED, self.time_scale_factor + SPEED_STEP)
+            logger.info(f"Time scale set to: {self.time_scale_factor}x")
+        elif event.key in key_bindings.get("decrease_speed", []):
+            self.time_scale_factor = max(MIN_SPEED, self.time_scale_factor - SPEED_STEP)
+            logger.info(f"Time scale set to: {self.time_scale_factor}x")
 
     def _show_help_info(self):
         """Display help information."""
@@ -2434,7 +2443,26 @@ class GameplayController:
                     y_offset += 20
                 except:
                     pass
+            # Render time scale factor
+            try:
+                if not hasattr(self, "_cached_speed_text") or not hasattr(self, "_last_time_scale_factor"):
+                    self._cached_speed_text = None
+                    self._last_time_scale_factor = None
 
+                if self._last_time_scale_factor != self.time_scale_factor:
+                    self._cached_speed_text = small_font.render(
+                        f"Speed: {self.time_scale_factor:.1f}x", True, (255, 255, 255)
+                    )
+                    self._last_time_scale_factor = self.time_scale_factor
+
+                if self._cached_speed_text:
+                    self.screen.blit(self._cached_speed_text, (10, y_offset))
+                    y_offset += 20
+            except (AttributeError, TypeError, ValueError) as e:
+                logger.warning(f"Could not render time_scale_factor: {e}")
+            except Exception as e:
+                logger.error(f"Unexpected error while rendering time_scale_factor: {e}")
+                raise
             # Render weather information
             if hasattr(self, "weather_system"):
                 weather_text = small_font.render(
