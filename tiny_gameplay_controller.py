@@ -1784,6 +1784,14 @@ class GameplayController:
                         character.energy = max(0, character.energy) # Ensure energy doesn't go below 0
                         if original_energy > character.energy: # Log only if energy actually decreased
                             logger.debug(f"Rainy weather slightly decreased {character.name}'s energy by {energy_decrease:.2f} to {character.energy:.2f}.")
+                elif self.weather_system.get('current_weather') == 'sunny':
+                    if hasattr(character, 'current_satisfaction'):
+                        original_satisfaction = character.current_satisfaction
+                        satisfaction_increase = 0.25 * dt
+                        character.current_satisfaction += satisfaction_increase
+                        character.current_satisfaction = min(100, character.current_satisfaction) # Ensure satisfaction doesn't exceed 100
+                        if original_satisfaction < character.current_satisfaction: # Log only if satisfaction actually increased
+                            logger.debug(f"Sunny weather slightly cheered up {character.name}. Satisfaction +{satisfaction_increase:.2f} to {character.current_satisfaction:.2f}.")
 
             # Character update is successful if at least one component works
             return memory_success or goals_success or actions_success
@@ -2439,6 +2447,12 @@ class GameplayController:
                         "Rainfall is tiring the villagers.", True, (180, 180, 220) # Light bluish-grey
                     )
                     self.screen.blit(rain_effect_text, (10, y_offset))
+                    y_offset += 15 # Increment for the new line
+                elif self.weather_system.get('current_weather') == 'sunny':
+                    sunny_effect_text = tiny_font.render(
+                        "The sun is shining, villagers feel a bit happier!", True, (255, 255, 150) # Light yellow
+                    )
+                    self.screen.blit(sunny_effect_text, (10, y_offset))
                     y_offset += 15 # Increment for the new line
 
             # Render time scale factor
