@@ -2,8 +2,8 @@ import html
 import json
 import pickle
 import random
-
-# from locale import normalize
+import tempfile
+import os
 import math
 import re
 import time
@@ -17,14 +17,12 @@ import scipy as sp
 from sklearn import tree
 from sklearn.metrics.pairwise import cosine_similarity
 import networkx as nx
-from sympy import Q, comp, lex, per
 import torch
 from transformers import AutoModel, AutoTokenizer, pipeline
 from rake_nltk import Rake
 import faiss
 import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
-from gensim import corpora, models
 import nltk
 from nltk.tokenize import RegexpTokenizer
 from textblob import TextBlob
@@ -33,14 +31,23 @@ from nltk.corpus import stopwords
 import heapq
 import tiny_brain_io as tbi
 import tiny_time_manager as ttm
-import os
 import sys
 import tiny_sr_mapping as tsm
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 
-os.environ["TRANSFORMERS_CACHE"] = "/mnt/d/transformers_cache"
+from tiny_globals import (
+    tiny_globals_obj,
+    get_globals,
+    get_global,
+    set_global,
+    remove_global,
+    has_global,
+    global_keys,
+    global_values,
+)
+
 remove_list = [r"\)", r"\(", r"–", r'"', r"”", r'"', r"\[.*\]", r".*\|.*", r"—"]
 lda = LatentDirichletAllocation(n_components=3)
 # Try to load the transformer model, fallback to smaller model if not available
@@ -60,6 +67,8 @@ from spacy.tokens import Span
 nltk.download("stopwords")
 if not os.path.exists(nltk.data.find("corpora/stopwords")):
     nltk.download("stopwords")
+nltk.download("punkt")
+
 
 import matplotlib
 
@@ -78,8 +87,24 @@ from nltk import pos_tag
 class_interaction_graph = nx.DiGraph()
 call_flow_diagram = nx.DiGraph()
 from nltk.stem import PorterStemmer
-import gensim
 
+print(
+    f"{os.environ["HF_HOME"]} is set to {os.environ.get('HF_HOME', '/tmp/hf_test_cache')}"
+)
+# Set up cache directory
+cache_dir = os.path.join(tempfile.gettempdir(), "hf_test_cache")
+
+# Create a temporary cache directory with full permissions
+if not os.path.exists(cache_dir):
+    os.makedirs(cache_dir, exist_ok=True)
+os.chmod(cache_dir, 0o777)
+
+print(f"Temporary cache directory created at: {cache_dir}")
+
+# cache_dir = os.environ.get("HF_HOME", "/tmp/hf_test_cache")
+print(f"Using cache directory: {cache_dir}")
+os.environ["HF_HOME"] = cache_dir
+os.environ["TRANSFORMERS_CACHE"] = cache_dir
 # Write a line of code that will identify how many classes are in this module:
 num_classes = 0
 for name, obj in inspect.getmembers(sys.modules[__name__]):
@@ -259,25 +284,40 @@ from sklearn.decomposition import NMF
 # @track_calls
 class EmbeddingModel:
     def __init__(self):
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            "sentence-transformers/all-mpnet-base-v2",
-            trust_remote_code=True,
-            cache_dir="/mnt/d/transformers_cache",
-        )
-        self.model = AutoModel.from_pretrained(
-            "sentence-transformers/all-mpnet-base-v2",
-            trust_remote_code=True,
-            cache_dir="/mnt/d/transformers_cache",
-        )
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model.to(self.device)
-        self.model.eval()
-        self.model.zero_grad()
+
+        try:
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                "sentence-transformers/all-MiniLM-L6-v2",
+                trust_remote_code=True,
+                cache_dir=cache_dir,
+            )
+            self.model = AutoModel.from_pretrained(
+                "sentence-transformers/all-MiniLM-L6-v2",
+                trust_remote_code=True,
+                cache_dir=cache_dir,
+            )
+            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+            self.model.to(self.device)
+            self.model.eval()
+            self.model.zero_grad()
+            self.is_initialized = True
+        except Exception as e:
+            print(f"Error initializing embedding model: {e}")
+            print(f"Cache directory: {cache_dir}")
+            raise RuntimeError(
+                "EmbeddingModel could not be initialized. Please check the model path or network connection."
+            )
 
     def forward(self, input_ids, attention_mask):
-        outputs = self.model(input_ids=input_ids, attention_mask=attention_mask)
-        # print(f"Shape of outputs: {outputs.last_hidden_state.shape}")
-        return outputs
+        if not self.is_initialized:
+            raise RuntimeError("EmbeddingModel is not properly initialized")
+
+        try:
+            outputs = self.model(input_ids=input_ids, attention_mask=attention_mask)
+            # print(f"Shape of outputs: {outputs.last_hidden_state.shape}")
+            return outputs
+        except Exception as e:
+            raise RuntimeError(f"Error during model forward pass: {e}")
 
 
 def get_wordnet_pos(spacy_token):
@@ -365,11 +405,14 @@ class MemoryQuery:
         self.gametime_manager = (
             gametime_manager
             if gametime_manager is not None
-            else Raise("Game time manager is required")
+            else tiny_globals_obj.get("global_time_manager", None)
         )
         self.query_embedding = None
-        self.model = model
-
+        self.model = get_global_model()
+        if self.model is None or not self.model.is_initialized:
+            raise RuntimeError(
+                "Embedding model is not available or not properly initialized"
+            )
         self.query_tags = []
         if query_tags is not None:
             self.query_tags = query_tags
@@ -384,24 +427,31 @@ class MemoryQuery:
         return self.query_embedding
 
     def generate_embedding(self):
-        description = [self.query.strip()]
-        input = model.tokenizer(
-            description,
-            padding=True,
-            truncation=True,
-            add_special_tokens=True,
-            is_split_into_words=True,
-            pad_to_multiple_of=8,
-            return_tensors="pt",
-        ).to(model.device)
-        outputs = model.model(
-            input["input_ids"],
-            attention_mask=input["attention_mask"],
-            output_hidden_states=True,
-            return_dict=True,
-            return_tensors="pt",
-        )
-        return [outputs.last_hidden_state, input["attention_mask"]]
+        model = get_global_model()
+        if model is None or not model.is_initialized:
+            raise RuntimeError(
+                "Embedding model is not available or not properly initialized"
+            )
+        try:
+            description = [self.query.strip()]
+            input = model.tokenizer(
+                description,
+                padding=True,
+                truncation=True,
+                add_special_tokens=True,
+                is_split_into_words=True,
+                pad_to_multiple_of=8,
+                return_tensors="pt",
+            ).to(model.device)
+            outputs = model.model(
+                input["input_ids"],
+                attention_mask=input["attention_mask"],
+                output_hidden_states=True,
+                return_dict=True,
+            )
+            return [outputs.last_hidden_state, input["attention_mask"]]
+        except Exception as e:
+            raise RuntimeError(f"Error generating embedding: {e}")
 
     def add_complex_query(self, attribute, query):
         self.attribute = attribute
@@ -734,10 +784,18 @@ class MemoryBST:
 
 # @track_calls
 class GeneralMemory(Memory):
-    def __init__(self, description, creation_time=datetime.now()):
+    def __init__(self, description, creation_time=datetime.now(), manager=None):
         super().__init__(description, creation_time)
+        if manager is None:
+            if has_global("global_memory_manager"):
+                manager = get_global("global_memory_manager")
+            else:
+                manager = MemoryManager(
+                    tiny_globals_obj.get("global_time_manager", None)
+                )
+                tiny_globals_obj.set("global_memory_manager", manager)
         self.description = description
-
+        self.manager = manager
         self.description_embedding = None
         self.description_embedding = self.generate_embedding()
         # #print(self.description_embedding[0].shape)
@@ -753,7 +811,7 @@ class GeneralMemory(Memory):
         self.key_tree = None
         self.init_trees()
         self.keywords = []
-        self.keywords = manager.extract_keywords(self.description)
+        self.keywords = self.manager.extract_keywords(self.description)
         self.analysis = None
         self.sentiment_score = None
         self.emotion_classification = None
@@ -766,7 +824,7 @@ class GeneralMemory(Memory):
         # self.analyze_description()
 
     # def analyze_description(self):
-    #     self.analysis = manager.analyze_query_context(self.description)
+    #     self.analysis = self.manager.analyze_query_context(self.description)
     #     self.sentiment_score = self.analysis["sentiment_score"]
     #     self.emotion_classification = self.analysis["emotion_classification"]
     #     self.keywords = self.analysis["keywords"]
@@ -789,24 +847,31 @@ class GeneralMemory(Memory):
         return self.description_embedding
 
     def generate_embedding(self):
-        description = [self.description.strip()]
-        input = model.tokenizer(
-            description,
-            padding=True,
-            truncation=True,
-            add_special_tokens=True,
-            is_split_into_words=True,
-            pad_to_multiple_of=8,
-            return_tensors="pt",
-        ).to(model.device)
-        outputs = model.model(
-            input["input_ids"],
-            attention_mask=input["attention_mask"],
-            output_hidden_states=True,
-            return_dict=True,
-            return_tensors="pt",
-        )
-        return [outputs.last_hidden_state, input["attention_mask"]]
+        model = get_global_model()
+        if model is None or not model.is_initialized:
+            raise RuntimeError(
+                "Embedding model is not available or not properly initialized"
+            )
+        try:
+            description = [self.description.strip()]
+            input = model.tokenizer(
+                description,
+                padding=True,
+                truncation=True,
+                add_special_tokens=True,
+                is_split_into_words=True,
+                pad_to_multiple_of=8,
+                return_tensors="pt",
+            ).to(model.device)
+            outputs = model.model(
+                input["input_ids"],
+                attention_mask=input["attention_mask"],
+                output_hidden_states=True,
+                return_dict=True,
+            )
+            return [outputs.last_hidden_state, input["attention_mask"]]
+        except Exception as e:
+            raise RuntimeError(f"Error generating embedding: {e}")
 
     def init_specific_memories(self, specific_memories):
         # self.specific_memories = specific_memories
@@ -868,10 +933,27 @@ class GeneralMemory(Memory):
     def add_specific_memory(self, specific_memory, importance_score=0):
         # Key will be the instance id of the specific memory
         key = id(specific_memory)
+        if self.manager is None:
+            if has_global("global_memory_manager"):
+                self.manager = get_global("global_memory_manager")
+            else:
+                self.manager = MemoryManager(
+                    tiny_globals_obj.get("global_time_manager", None)
+                )
+                tiny_globals_obj.set("global_memory_manager", self.manager)
 
         # Modified to insert into BST
         if not isinstance(specific_memory, SpecificMemory):
-            specific_memory = SpecificMemory(specific_memory, self, importance_score)
+            specific_memory = SpecificMemory(
+                description=(
+                    specific_memory
+                    if isinstance(specific_memory, str)
+                    else specific_memory.description
+                ),
+                parent_memory=self,
+                importance_score=importance_score,
+                manager=self.manager,
+            )
         if (
             self.timestamp_tree is None
             or self.importance_tree is None
@@ -900,21 +982,28 @@ class GeneralMemory(Memory):
                 list(set(specific_memory.keywords).difference(set(self.keywords)))
             )
 
-            # manager.update_embeddings(specific_memory)
+            # self.manager.update_embeddings(specific_memory)
             self.index_memories()
-            manager.update_embeddings(specific_memory)
-            manager.flat_access.faiss_index.add(
-                specific_memory.embedding.cpu().detach().numpy()
-            )
-            manager.flat_access.index_id_to_node_id[
-                manager.flat_access.faiss_index.ntotal - 1
-            ] = specific_memory.description
-
+            self.manager.update_embeddings(specific_memory)
+            print(specific_memory.embedding.shape)
+            try:
+                self.manager.flat_access.faiss_index.add(
+                    specific_memory.embedding.cpu().detach().numpy()
+                )
+                self.manager.flat_access.index_id_to_node_id[
+                    self.manager.flat_access.faiss_index.ntotal - 1
+                ] = specific_memory.description
+            except Exception as e:
+                raise RuntimeError(
+                    f"Error adding specific memory embedding to FAISS index: {e}. Shape: {specific_memory.embedding.shape}"
+                )
             for fact_embed in specific_memory.get_facts_embeddings():
 
-                manager.flat_access.faiss_index.add(fact_embed.cpu().detach().numpy())
-                manager.flat_access.index_id_to_node_id[
-                    manager.flat_access.faiss_index.ntotal - 1
+                self.manager.flat_access.faiss_index.add(
+                    fact_embed.cpu().detach().numpy()
+                )
+                self.manager.flat_access.index_id_to_node_id[
+                    self.manager.flat_access.faiss_index.ntotal - 1
                 ] = specific_memory.description
 
     def index_memories(self):
@@ -942,10 +1031,24 @@ class GeneralMemory(Memory):
 
 
 def is_question(sentence):
+    # Handle empty or whitespace-only sentences
+    if not sentence or not sentence.strip():
+        return False
+
     # Check for question mark
     if sentence.strip().endswith("?"):
         return True
+
+    # Handle case where nlp is None (no spaCy model available)
+    if nlp is None:
+        return False
+
     doc = nlp(sentence)
+
+    # Handle empty document (no tokens)
+    if len(doc) == 0:
+        return False
+
     # Check if the sentence contains a question word and an auxiliary verb
     if doc[0].pos_ == "AUX" and doc[0].tag_ in ["VBZ", "VBP", "VBD", "VBG", "VBN"]:
         return True
@@ -968,8 +1071,18 @@ class SpecificMemory(Memory):
         importance_score,
         subject=None,
         normalized_embeddings=False,
+        manager=None,
     ):
         super().__init__(description)
+        if manager is None:
+            if has_global("global_memory_manager"):
+                manager = get_global("global_memory_manager")
+            else:
+                manager = MemoryManager(
+                    tiny_globals_obj.get("global_time_manager", None)
+                )
+                tiny_globals_obj.set("global_memory_manager", manager)
+        self.manager = manager
         self.normalized_embeddings = normalized_embeddings
         self.subject = None
         if subject is not None:
@@ -1015,7 +1128,43 @@ class SpecificMemory(Memory):
         self.facts_embeddings = None
 
     def analyze_description(self):
-        self.analysis = manager.analyze_query_context(self.description)
+        if self.manager is None:
+            # check tiny_globals_obj for global_memory_manager
+            self.manager = tiny_globals_obj.get("global_memory_manager", None)
+            if self.manager is None:
+                self.manager = MemoryManager(
+                    tiny_globals_obj.get("global_time_manager", None)
+                )
+                tiny_globals_obj.set("global_memory_manager", self.manager)
+
+        if self.manager is None:
+            raise RuntimeError("Manager is not initialized")
+
+        self.analysis = self.manager.analyze_query_context(self.description)
+        if self.analysis is None:
+            raise RuntimeError(
+                f"Failed to analyze description: '{self.description}'. analyze_query_context returned None."
+            )
+
+        # Validate that analysis contains required fields
+        required_fields = [
+            "sentiment_score",
+            "emotion_classification",
+            "keywords",
+            "main_subject",
+            "main_verb",
+            "main_object",
+            "verb_aspects",
+            "facts",
+        ]
+        missing_fields = [
+            field for field in required_fields if field not in self.analysis
+        ]
+        if missing_fields:
+            raise RuntimeError(
+                f"Analysis incomplete. Missing required fields: {missing_fields}"
+            )
+
         self.sentiment_score = self.analysis["sentiment_score"]
         self.emotion_classification = self.analysis["emotion_classification"]
         self.keywords = self.analysis["keywords"]
@@ -1030,12 +1179,15 @@ class SpecificMemory(Memory):
 
     def get_parent_memory_from_string(self, parent_memory):
         try:
+            if self.manager is None:
+                return parent_memory
+
             if parent_memory in [
-                memory.description for memory in manager.hierarchy.general_memories
+                memory.description for memory in self.manager.hierarchy.general_memories
             ]:
                 return [
                     memory
-                    for memory in manager.hierarchy.general_memories
+                    for memory in self.manager.hierarchy.general_memories
                     if memory.description == parent_memory
                 ][0]
             else:
@@ -1080,31 +1232,38 @@ class SpecificMemory(Memory):
         return self.embedding, self.att_mask
 
     def generate_embedding(self, string=None, normalize=None):
-        if string is None:
-            string = self.description
-        description = [string.strip()]
-        input = model.tokenizer(
-            description,
-            padding=True,
-            truncation=True,
-            add_special_tokens=True,
-            is_split_into_words=True,
-            pad_to_multiple_of=8,
-            return_tensors="pt",
-        ).to(model.device)
-        outputs = model.model(
-            input["input_ids"],
-            attention_mask=input["attention_mask"],
-            output_hidden_states=True,
-            return_dict=True,
-            return_tensors="pt",
-        )
-        if normalize is not None:
-            if normalize:
-                outputs.last_hidden_state = faiss.normalize_L2(
-                    outputs.last_hidden_state
-                )
-        return [outputs.last_hidden_state, input["attention_mask"]]
+        model = get_global_model()
+        if model is None or not model.is_initialized:
+            raise RuntimeError(
+                "Embedding model is not available or not properly initialized"
+            )
+        try:
+            if string is None:
+                string = self.description
+            description = [string.strip()]
+            input = model.tokenizer(
+                description,
+                padding=True,
+                truncation=True,
+                add_special_tokens=True,
+                is_split_into_words=True,
+                pad_to_multiple_of=8,
+                return_tensors="pt",
+            ).to(model.device)
+            outputs = model.model(
+                input["input_ids"],
+                attention_mask=input["attention_mask"],
+                output_hidden_states=True,
+                return_dict=True,
+            )
+            if normalize is not None:
+                if normalize:
+                    outputs.last_hidden_state = faiss.normalize_L2(
+                        outputs.last_hidden_state
+                    )
+            return [outputs.last_hidden_state, input["attention_mask"]]
+        except Exception as e:
+            raise RuntimeError(f"Error generating embedding: {e}")
 
     def get_facts_embeddings(self):
         if self.facts_embeddings is None:
@@ -1122,21 +1281,44 @@ class SpecificMemory(Memory):
 
 # @track_calls
 class FlatMemoryAccess:
-    def __init__(self, memory_embeddings={}, json_file=None, index_load_filename=None):
+    def __init__(
+        self,
+        manager,
+        memory_embeddings={},
+        json_file=None,
+        index_load_filename=None,
+    ):
+        if manager is None:
+            raise ValueError(
+                "Memory manager cannot be None. Must be initialized with the MemoryManager instance that this FlatMemoryAccess is an attribute of."
+            )
+        if not isinstance(manager, MemoryManager):
+            raise TypeError(
+                "Memory manager must be an instance of MemoryManager, not {}".format(
+                    type(manager)
+                )
+            )
+
+        self.manager = manager
         self.index_load_filename = index_load_filename
         self.index_is_normalized = False
         self.recent_memories = deque(maxlen=50)
         self.common_memories = {}
         self.repetitive_memories = {}
         self.urgent_query_memories = {}
-        self.most_importance_memories = {}
+        self.most_importance_memories = (
+            []
+        )  # Fixed: should be a list for heap operations
         self.index_id_to_node_id = {}
         self.faiss_index = None
         self.euclidean_threshold = 0.35
         self.index_build_count = 0
         self.memory_embeddings = memory_embeddings
         self.specific_memories = {}
-        self.initialize_faiss_index(768, "ip", index_load_filename=index_load_filename)
+        # self.initialize_faiss_index(768, "ip", index_load_filename=index_load_filename) # 768 was for sentence-transformers/all-mpnet-base-v2
+        self.initialize_faiss_index(
+            384, "ip", index_load_filename=index_load_filename
+        )  # 384 is for sentence-transformers/all-MiniLM-L6-v2
 
         for key, value in vars(self).items():
 
@@ -1385,9 +1567,9 @@ class FlatMemoryAccess:
                 embeddings.append(specific_memory.get_embedding()[0])
                 for fact in specific_memory.get_facts_embeddings():
                     embeddings.append(fact)
-                self.index_id_to_node_id[manager.flat_access.faiss_index.ntotal - 1] = (
-                    specific_memory.description
-                )
+                self.index_id_to_node_id[
+                    self.manager.flat_access.faiss_index.ntotal - 1
+                ] = specific_memory.description
                 index_key += 1
             elif (
                 isinstance(specific_memory, SpecificMemory)
@@ -1397,9 +1579,9 @@ class FlatMemoryAccess:
                 embeddings.append(specific_memory.get_embedding()[0], normalize)
                 for fact in specific_memory.get_facts_embeddings():
                     embeddings.append(fact)
-                self.index_id_to_node_id[manager.flat_access.faiss_index.ntotal - 1] = (
-                    specific_memory.description
-                )
+                self.index_id_to_node_id[
+                    self.manager.flat_access.faiss_index.ntotal - 1
+                ] = specific_memory.description
 
                 index_key += 1
 
@@ -1519,7 +1701,7 @@ class FlatMemoryAccess:
         self.index_is_normalized = normalize
         self.set_all_memory_embeddings_to_normalized(normalize)
         print(
-            f"Loaded index from file. The current index type is: {type(manager.flat_access.faiss_index).__name__} \n \n"
+            f"Loaded index from file. The current index type is: {type(self.manager.flat_access.faiss_index).__name__} \n \n"
         )
 
     def retrieve_cache(json_file):
@@ -1560,6 +1742,14 @@ class FlatMemoryAccess:
         Returns:
         A list of tuples (memory_id, similarity_score).
         """
+        if self.manager is None:
+            if has_global("global_memory_manager"):
+                self.manager = get_global("global_memory_manager")
+            else:
+                self.manager = MemoryManager(
+                    tiny_globals_obj.get("global_time_manager", None)
+                )
+                tiny_globals_obj.set("global_memory_manager", self.manager)
 
         start_time = time.time()
         query_embedding = None
@@ -1569,7 +1759,7 @@ class FlatMemoryAccess:
             else:
                 query_embedding = query.query_embedding
         else:
-            query = MemoryQuery(query, manager.gametime_manager)
+            query = MemoryQuery(query, self.manager.gametime_manager)
             if query.query_embedding is None:
                 query_embedding = query.get_embedding()
             else:
@@ -1603,7 +1793,7 @@ class FlatMemoryAccess:
         # for idx in indices[0]:
         #     if idx != -1:
         # print(f"Memory ID: {self.index_id_to_node_id[idx]}")
-        # print(f"Corresponding graph node: {manager.hierarchy.memory_graph.nodes[self.index_id_to_node_id[idx]]}")
+        # print(f"Corresponding graph node: {self.manager.hierarchy.memory_graph.nodes[self.index_id_to_node_id[idx]]}")
 
         # print(f"Corresponding graph node: {self.get_graph().nodes[self.index_id_to_node_id[idx]]}")
         similar_memories = {
@@ -1829,15 +2019,44 @@ class FlatMemoryAccess:
 
 # Global variable declarations - initialized here to prevent NameError in class definitions
 # These will be properly initialized in the main section or when the module is imported
-manager = None
-model = None
+
+
+# Global model initialization function
+def init_global_model():
+    """Initialize the global embedding model and store it in tiny_globals"""
+    try:
+        global_model = EmbeddingModel()
+        tiny_globals_obj.set("global_embedding_model", global_model)
+        print(
+            f"Global embedding model initialized successfully: {global_model.is_initialized}"
+        )
+        return global_model
+    except Exception as e:
+        print(f"Failed to initialize global embedding model: {e}")
+        tiny_globals_obj.set("global_embedding_model", None)
+        return None
+
+
+def get_global_model():
+    """Get the global embedding model from tiny_globals"""
+    model = tiny_globals_obj.get("global_embedding_model", None)
+    if model is None:
+        print("Global model not found, attempting to initialize...")
+        model = init_global_model()
+    return model
+
+
+# Initialize the global model when the module is imported
+model = get_global_model()
 sentiment_analysis = SentimentAnalysis()
 
 
 # @track_calls
 class MemoryManager:
     def __init__(self, gametime_manager, index_load_filename=None):
-        self.flat_access = FlatMemoryAccess(index_load_filename=index_load_filename)
+        self.flat_access = FlatMemoryAccess(
+            self, index_load_filename=index_load_filename
+        )
         self.index_load_filename = index_load_filename
         self.memory_embeddings = {}
         self.complex_keywords = set()
@@ -1862,6 +2081,24 @@ class MemoryManager:
         )
         self.rake = Rake()
         assert self.gametime_manager is not None, "Game time manager is required"
+
+    def __getstate__(self):
+        """Custom pickling method to exclude non-serializable objects"""
+        state = self.__dict__.copy()
+        # Remove the Rake object as it contains lambda functions that can't be pickled
+        if "rake" in state:
+            del state["rake"]
+        return state
+
+    def __setstate__(self, state):
+        """Custom unpickling method to restore non-serializable objects"""
+        self.__dict__.update(state)
+        # Restore the Rake object
+        from rake_nltk import Rake
+
+        self.rake = Rake()
+
+    # ...existing code...
 
     def init_memories(self, general_memories):
         # self.general_memories = general_memories
@@ -2044,16 +2281,26 @@ class MemoryManager:
         return rake_keywords
 
     def get_query_embedding(self, query):
-        input = model.tokenizer(
-            query, return_tensors="pt", padding=True, truncation=True
-        )
-        input = input.to(model.device)
-        outputs = model.forward(input["input_ids"], input["attention_mask"])
-        # print(f"\n Shape of query embedding: {outputs.last_hidden_state.shape}")
-        query_embedding = mean_pooling(
-            outputs.last_hidden_state, input["attention_mask"]
-        )
-        return query_embedding
+        if model is None or not model.is_initialized:
+            raise RuntimeError(
+                "Embedding model is not available or not properly initialized"
+            )
+        try:
+            input = model.tokenizer(
+                query, return_tensors="pt", padding=True, truncation=True
+            )
+            input = input.to(model.device)
+            outputs = model.forward(input["input_ids"], input["attention_mask"])
+            # print(f"\n Shape of query embedding: {outputs.last_hidden_state.shape}")
+            query_embedding = mean_pooling(
+                outputs.last_hidden_state, input["attention_mask"]
+            )
+            return query_embedding
+        except Exception as e:
+            print(f"Error getting query embedding: {e}")
+            raise RuntimeError(
+                "Failed to get query embedding. Ensure the model is properly initialized."
+            )
 
     def retrieve_memories_bst(self, general_memory, query):
         # print(f"\n Retrieving memories from BST for general memory: {general_memory.description} and query: {query.query}")
@@ -2164,7 +2411,14 @@ class MemoryManager:
 
         return facts
 
-    def analyze_query_context(self, query):
+    def analyze_query_context(self, query: str):
+        """
+        Analyzes the context of a query using NLP techniques and returns various features.
+        Parameters:
+        query (str): The query string to analyze.
+        Returns:
+        A dictionary containing various features extracted from the query.
+        """
         # print(f"\n Analyzing query: {query}")
         # Linguistic Analysis
         docs = nlp(query)
@@ -2199,7 +2453,13 @@ class MemoryManager:
         # #print(f"Perplexity: {perplexity}")
         words = query.split()
         num_words = len(words)
-        avg_word_length = sum(len(word) for word in words) / num_words
+        if num_words <= 0:
+            raise ValueError(
+                f"The query must contain at least one word. Found: {num_words} words in the query '{query}'"
+            )
+        avg_word_length = (
+            sum(len(word) for word in words) / num_words if num_words > 0 else 0
+        )
 
         # Calculate the complexity of the sentence using the Flesch-Kincaid Grade Level
         # https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests
@@ -2225,9 +2485,14 @@ class MemoryManager:
         # 12: 12th grade
         # 16: College
         # 20: College graduate
-        gunning_fog_index = 0.4 * (
-            (num_words / 1)
-            + 100 * (sum([1 for word in words if len(word) > 3]) / num_words)
+        gunning_fog_index = (
+            0.4
+            * (
+                (num_words / 1)
+                + 100 * (sum([1 for word in words if len(word) > 3]) / num_words)
+            )
+            if num_words > 0
+            else 0
         )
         # print(f"Gunning Fog Index: {gunning_fog_index}")
 
@@ -2237,7 +2502,24 @@ class MemoryManager:
         # 1-6: 6th grade
         # 7-8: 7th & 8th grade
         # 9-12: 9th to 12th grade
-        coleman_liau_index = 5.89 * (num_words / 1) - 29.6 * (1 / 1) - 15.8
+        if num_words > 0:
+            # Coleman-Liau Index formula: 0.0588 * L - 0.296 * S - 15.8
+            # where L is the average number of letters per 100 words and S is the average number of sentences per 100 words
+            # Here we assume 1 sentence for simplicity
+            # L = (total letters / total words) * 100
+            total_letters = sum(len(word) for word in words)
+            if total_letters > 0:
+                coleman_liau_index = (
+                    0.0588 * (total_letters / num_words * 100)
+                    - 0.296 * (1 / num_words * 100)
+                    - 15.8
+                )
+            else:
+                # If there are no letters, set index to a default value
+                coleman_liau_index = 0
+        else:
+            # If there are no words, set index to a default value
+            coleman_liau_index = 0
         # print(f"Coleman-Liau Index: {coleman_liau_index}")
 
         # Calculate the complexity of the sentence using the Automated Readability Index
@@ -2708,7 +2990,9 @@ class MemoryManager:
 
         sentence_fragment = False if verbs else True
         if sentence_fragment:
-            print("Sentence is a fragment")
+            print(
+                f"Sentence is a fragment: {sentence_fragment}. Verbs: {verbs}. Full query: {query}. Words: {words}"
+            )
             return None
         print(f"\n Verbs: {verbs}")
         # verb_len = len(verbs)
@@ -3315,38 +3599,64 @@ class MemoryManager:
                                 for tk in root_verb.children
                                 if tk.dep_ == "nsubj" or tk.dep_ == "nsubjpass"
                             ]
-                        for tkk in subj[0].head.children:
-                            if (
-                                tkk.dep_
-                                in [
-                                    "compound",
-                                    "poss",
-                                    "amod",
-                                    "det",
-                                    "aux",
-                                    "acomp",
-                                    "advmod",
-                                    "npadvmod",
-                                ]
-                                and token.i < tkk.i
-                            ):
-                                # print(f"FART2: {tkk}")
-                                # exit(0)
-                                if tkk not in compound:
-                                    if (
-                                        tkk.dep_ != "acomp"
-                                        or (
-                                            tkk.dep_ == "acomp"
-                                            and (
-                                                token.tag_ == "VBP"
-                                                or token.tag_ == "VBZ"
+                        # Check if subj is still empty after trying to populate it
+                        if len(subj) == 0:
+                            # Check if verb/action is the first token in the sentence
+                            if action.i == 0:
+                                subj_text = "I"
+                            else:
+                                subj_text = "Someone"
+                            subj.append(nlp(subj_text)[0])
+                        if len(subj) > 0:
+                            for tkk in subj[0].head.children:
+                                if (
+                                    tkk.dep_
+                                    in [
+                                        "compound",
+                                        "poss",
+                                        "amod",
+                                        "det",
+                                        "aux",
+                                        "acomp",
+                                        "advmod",
+                                        "npadvmod",
+                                    ]
+                                    and token.i < tkk.i
+                                ):
+                                    # print(f"FART2: {tkk}")
+                                    # exit(0)
+                                    if tkk not in compound:
+                                        if (
+                                            tkk.dep_ != "acomp"
+                                            or (
+                                                tkk.dep_ == "acomp"
+                                                and (
+                                                    token.tag_ == "VBP"
+                                                    or token.tag_ == "VBZ"
+                                                )
+                                                and token == tkk.head
                                             )
-                                            and token == tkk.head
-                                        )
-                                        and tkk.dep_ != "npadvmod"
-                                    ):
-                                        # compound.append(tkk)
-                                        # subj_compound.append(tkk)
+                                            and tkk.dep_ != "npadvmod"
+                                        ):
+                                            # compound.append(tkk)
+                                            # subj_compound.append(tkk)
+                                            if tkk not in obj_compound:
+                                                obj_compound.append(tkk)
+                                            for tkki in tkk.children:
+                                                if tkki.dep_ in [
+                                                    "compound",
+                                                    "poss",
+                                                    "amod",
+                                                    "det",
+                                                    "aux",
+                                                    "npadvmod",
+                                                ]:
+                                                    if tkki not in obj_compound:
+                                                        # compound.append(tkki)
+                                                        obj_compound.append(tkki)
+
+                                    if tkk.dep_ == "npadvmod" and token == tkk.head:
+
                                         if tkk not in obj_compound:
                                             obj_compound.append(tkk)
                                         for tkki in tkk.children:
@@ -3359,99 +3669,149 @@ class MemoryManager:
                                                 "npadvmod",
                                             ]:
                                                 if tkki not in obj_compound:
-                                                    # compound.append(tkki)
                                                     obj_compound.append(tkki)
+                                        print(f"obj_compound npadvmod: {obj_compound}")
 
-                                if tkk.dep_ == "npadvmod" and token == tkk.head:
+                                elif tkk.tag_ == "WP" or tkk.tag_ == "WDT":
+                                    if tkk not in subj_compound:
+                                        subj_compound.append(tkk)
+                                    for tki in tkk.children:
 
-                                    if tkk not in obj_compound:
-                                        obj_compound.append(tkk)
-                                    for tkki in tkk.children:
-                                        if tkki.dep_ in [
+                                        if tki not in subj_compound:
+                                            subj_compound.append(tki)
+                                elif "WP" or "WDT" in [
+                                    tki.tag_ for tki in tkk.children
+                                ]:
+                                    for tki in tkk.children:
+                                        if tki.tag_ == "WP" or tki.tag_ == "WDT":
+                                            if (
+                                                tki not in subj_compound
+                                                and tkk.dep_ != "npadvmod"
+                                            ):
+                                                subj_compound.append(tki)
+                                            for tkki in tki.head.children:
+
+                                                if (
+                                                    tkki not in subj_compound
+                                                    and tkk.dep_ != "npadvmod"
+                                                ):
+                                                    subj_compound.append(tkki)
+                            print(f"subj_compound: {subj_compound}")
+
+                    if len(subj) > 0:
+                        subj_text = subj[0].text if subj else ""
+                        print(f"Compound: {compound}")
+                        # if compound and len(compound) > 0:
+                        #     obj_compound.extend(compound)
+
+                        for tk in subj[0].children:
+
+                            if len(compound) > 0:
+                                if len(subj_compound) == 0:
+                                    subj_compound = [subj[0]]
+                                for tkk in tk.head.children:
+                                    if (
+                                        tkk.dep_
+                                        in [
                                             "compound",
                                             "poss",
                                             "amod",
                                             "det",
                                             "aux",
-                                            "npadvmod",
-                                        ]:
-                                            if tkki not in obj_compound:
-                                                obj_compound.append(tkki)
-                                    print(f"obj_compound npadvmod: {obj_compound}")
+                                        ]
+                                        and tkk not in subj_compound
+                                        and tkk not in compound
+                                    ):
+                                        subj_compound.append(tkk)
+                                for tkk in tk.children:
+                                    if (
+                                        tkk.dep_
+                                        in [
+                                            "compound",
+                                            "poss",
+                                            "amod",
+                                            "det",
+                                            "aux",
+                                        ]
+                                        and tkk not in subj_compound
+                                        and tkk not in compound
+                                    ):
+                                        subj_compound.append(tkk)
+                                if tk not in subj_compound:
+                                    subj_compound.append(tk)
+                                subj_compound.extend(compound)
+                                # remove tokens with duplicate indexes from token.i
+                                for sub in subj_compound:
+                                    if subj_compound.count(sub) > 1:
+                                        subj_compound.remove(sub)
 
-                            elif tkk.tag_ == "WP" or tkk.tag_ == "WDT":
-                                if tkk not in subj_compound:
-                                    subj_compound.append(tkk)
-                                for tki in tkk.children:
-
-                                    if tki not in subj_compound:
-                                        subj_compound.append(tki)
-                            elif "WP" or "WDT" in [tki.tag_ for tki in tkk.children]:
-                                for tki in tkk.children:
-                                    if tki.tag_ == "WP" or tki.tag_ == "WDT":
-                                        if (
-                                            tki not in subj_compound
-                                            and tkk.dep_ != "npadvmod"
-                                        ):
-                                            subj_compound.append(tki)
-                                        for tkki in tki.head.children:
-
-                                            if (
-                                                tkki not in subj_compound
-                                                and tkk.dep_ != "npadvmod"
-                                            ):
-                                                subj_compound.append(tkki)
+                                subj_compound = sorted(subj_compound, key=lambda x: x.i)
+                                print(f"subj_compound: {subj_compound}")
+                                # create a string that joins each word in token.sent with a space but only if the word is in subj_compound in order of each word's index
+                                subj_text = " ".join(
+                                    [
+                                        token.text
+                                        for token in token.sent
+                                        if token in subj_compound
+                                    ]
+                                )
+                                print(f"Subject: {subj_text}")
+                                if tk.dep_ == "prep":
+                                    for tkk in tk.children:
+                                        if tkk.dep_ == "pobj":
+                                            if tkk not in subj_compound:
+                                                subj_compound.append(tkk)
+                                            for tkkk in tkk.children:
+                                                if tkkk not in subj_compound:
+                                                    subj_compound.append(tkkk)
+                            else:
+                                if tk.dep_ in [
+                                    "compound",
+                                    "poss",
+                                    "amod",
+                                    "det",
+                                    "aux",
+                                ]:
+                                    subj_compound.append(tk)
+                                subj_compound.append(tk)
+                                subj_compound = sorted(subj_compound, key=lambda x: x.i)
+                                subj_text = " ".join(
+                                    [
+                                        token.text
+                                        for token in token.sent
+                                        if token in subj_compound
+                                    ]
+                                )
+                                print(f"Subject: {subj_text}")
+                                if tk.dep_ == "prep":
+                                    for tkk in tk.children:
+                                        if tkk.dep_ == "pobj":
+                                            if tkk not in subj_compound:
+                                                subj_compound.append(tkk)
+                                            for tkkk in tkk.children:
+                                                if tkkk not in subj_compound:
+                                                    subj_compound.append(tkkk)
+                        subj_compound = sorted(subj_compound, key=lambda x: x.i)
                         print(f"subj_compound: {subj_compound}")
-
-                    subj_text = subj[0].text if subj else ""
-                    print(f"Compound: {compound}")
-                    # if compound and len(compound) > 0:
-                    #     obj_compound.extend(compound)
-
-                    for tk in subj[0].children:
-
-                        if len(compound) > 0:
-                            if len(subj_compound) == 0:
-                                subj_compound = [subj[0]]
-                            for tkk in tk.head.children:
-                                if (
-                                    tkk.dep_
-                                    in [
-                                        "compound",
-                                        "poss",
-                                        "amod",
-                                        "det",
-                                        "aux",
+                        for tk in subj_compound:
+                            if tk.text not in subj_text.split():
+                                print(
+                                    f"Fixing missing subj compound token at token: {tk.text}"
+                                )
+                                temp = subj_compound
+                                temp.append(subj[0])
+                                temp = sorted(temp, key=lambda x: x.i)
+                                subj_text = " ".join(
+                                    [
+                                        token.text
+                                        for token in token.sent
+                                        if token in temp
                                     ]
-                                    and tkk not in subj_compound
-                                    and tkk not in compound
-                                ):
-                                    subj_compound.append(tkk)
-                            for tkk in tk.children:
-                                if (
-                                    tkk.dep_
-                                    in [
-                                        "compound",
-                                        "poss",
-                                        "amod",
-                                        "det",
-                                        "aux",
-                                    ]
-                                    and tkk not in subj_compound
-                                    and tkk not in compound
-                                ):
-                                    subj_compound.append(tkk)
-                            if tk not in subj_compound:
-                                subj_compound.append(tk)
-                            subj_compound.extend(compound)
-                            # remove tokens with duplicate indexes from token.i
-                            for sub in subj_compound:
-                                if subj_compound.count(sub) > 1:
-                                    subj_compound.remove(sub)
-
-                            subj_compound = sorted(subj_compound, key=lambda x: x.i)
-                            print(f"subj_compound: {subj_compound}")
-                            # create a string that joins each word in token.sent with a space but only if the word is in subj_compound in order of each word's index
+                                )
+                        if subj[0].text not in subj_text.split():
+                            print("Adding subject to subj_compound and subj_text")
+                            if subj[0] not in subj_compound:
+                                subj_compound.append(subj[0])
                             subj_text = " ".join(
                                 [
                                     token.text
@@ -3459,71 +3819,12 @@ class MemoryManager:
                                     if token in subj_compound
                                 ]
                             )
-                            print(f"Subject: {subj_text}")
-                            if tk.dep_ == "prep":
-                                for tkk in tk.children:
-                                    if tkk.dep_ == "pobj":
-                                        if tkk not in subj_compound:
-                                            subj_compound.append(tkk)
-                                        for tkkk in tkk.children:
-                                            if tkkk not in subj_compound:
-                                                subj_compound.append(tkkk)
-                        else:
-                            if tk.dep_ in [
-                                "compound",
-                                "poss",
-                                "amod",
-                                "det",
-                                "aux",
-                            ]:
-                                subj_compound.append(tk)
-                            subj_compound.append(tk)
-                            subj_compound = sorted(subj_compound, key=lambda x: x.i)
-                            subj_text = " ".join(
-                                [
-                                    token.text
-                                    for token in token.sent
-                                    if token in subj_compound
-                                ]
-                            )
-                            print(f"Subject: {subj_text}")
-                            if tk.dep_ == "prep":
-                                for tkk in tk.children:
-                                    if tkk.dep_ == "pobj":
-                                        if tkk not in subj_compound:
-                                            subj_compound.append(tkk)
-                                        for tkkk in tkk.children:
-                                            if tkkk not in subj_compound:
-                                                subj_compound.append(tkkk)
-                    subj_compound = sorted(subj_compound, key=lambda x: x.i)
-                    print(f"subj_compound: {subj_compound}")
-                    for tk in subj_compound:
-                        if tk.text not in subj_text.split():
-                            print(
-                                f"Fixing missing subj compound token at token: {tk.text}"
-                            )
-                            temp = subj_compound
-                            temp.append(subj[0])
-                            temp = sorted(temp, key=lambda x: x.i)
-                            subj_text = " ".join(
-                                [token.text for token in token.sent if token in temp]
-                            )
-                    if subj[0].text not in subj_text.split():
-                        print("Adding subject to subj_compound and subj_text")
-                        if subj[0] not in subj_compound:
-                            subj_compound.append(subj[0])
-                        subj_text = " ".join(
-                            [
-                                token.text
-                                for token in token.sent
-                                if token in subj_compound
-                            ]
-                        )
 
-                    if subj_text == "" or subj_text == " ":
-                        subj_text = subj[0].text
+                        if subj_text == "" or subj_text == " ":
+                            subj_text = subj[0].text
+                            print(f"Subject: {subj_text}")
                         print(f"Subject: {subj_text}")
-                    print(f"Subject: {subj_text}")
+
                     print(f"Tokens children: {[tk.text for tk in token.children]}")
 
                     dobj = [
@@ -3557,7 +3858,10 @@ class MemoryManager:
                             tk
                             for tk in token.head.children
                             if tk.dep_ == "attr"
-                            and (subj[0].head == tk.head or token == tk.head)
+                            and (
+                                len(subj) > 0
+                                and (subj[0].head == tk.head or token == tk.head)
+                            )
                         ]
                         print(f"Last resort dobj: {dobj}")
                     else:
@@ -4022,7 +4326,7 @@ class MemoryManager:
                         )
                         break
 
-            if docs[subj[0].i + 1].dep_ == "aux":
+            if len(subj) > 0 and docs[subj[0].i + 1].dep_ == "aux":
                 action_compound.append(docs[subj[0].i + 1])
 
             action_compound = [
@@ -4067,9 +4371,9 @@ class MemoryManager:
             )
             print(f"Action Compound: {action_compound}")
             template = ""
-            if subj[0].i < dobj[0].i:
+            if len(subj) > 0 and len(dobj) > 0 and subj[0].i < dobj[0].i:
                 template = f"{subj_text} {action_text} {dobj_text}"
-            elif subj[0].i > dobj[0].i:
+            elif len(subj) > 0 and len(dobj) > 0 and subj[0].i > dobj[0].i:
                 template = f"{dobj_text} {subj_text} {action_text}"
             print(f"\n \n Template: {template}\n \n")
             templates.append(template)
@@ -4367,12 +4671,14 @@ class MemoryManager:
                         print(f"\n \n Template (C7): {template}\n \n")
                         templates.append(template)
 
-            assert len(subj) > 0 and len(action_compound) > 0
+            assert (
+                len(subj) > 0 and len(action_compound) > 0
+            ), f"Subj: {subj}, Action: {action_compound}, Object: {obj_compound}, Token: {token.text}, Token Dep: {token.dep_}"
 
         fa = tsm.main(docs, nlp)
 
         # assert fa is equivalent to templates
-        assert fa == templates
+        assert fa == templates, f"FA: {fa}\n, Templates: {templates}"
         print(f"\nTemplates: {templates}")
         print(f"FA: {fa}\n")
 
@@ -4800,19 +5106,23 @@ class MemoryManager:
         return sorted_specific_memories
 
     def retrieve_memories(self, query, urgent=False, common=False, key=None):
+        if isinstance(query, str):
+            query = MemoryQuery(query)
         if query.analysis is None:
             # print(f"\n Analyzing query: {query.query}")
             if is_question(query.query):
                 print(f"\n Query is a question: {query.query}")
                 query.query_embedding = self.get_query_embedding(query.query)
             else:
-                print(f"\n Query is not a question: {query.query}")
+                print(f"\n Query is not a question: {query.query}. Full query: {query}")
                 query.analysis = self.analyze_query_context(query.query)
-            if query.query_embedding is None:
-                query.query_embedding = query.analysis["embedding"]
-            # for k, value in query.analysis.items():
-            #     if k != 'embedding' and value is not None and value != {} and value != [] and value != '':
-            # print(f"Key: {k}, Value: {value}")
+        if query.analysis is not None and query.query_embedding is None:
+            query.query_embedding = query.analysis["embedding"]
+        # for k, value in query.analysis.items():
+        #     if k != 'embedding' and value is not None and value != {} and value != [] and value != '':
+        # print(f"Key: {k}, Value: {value}")
+        if query.query_embedding is None:
+            query.query_embedding = self.get_query_embedding(query.query)
         self.recent_queries.append(query)
         if urgent or common:
             # print(f"\n Retrieving urgent memories: {urgent}, common memories: {common}")
@@ -5008,18 +5318,31 @@ class MemoryManager:
 
 
 # Function to manage the index and search
-def manage_index_and_search(index_type, normalization, filename, memory_dict, queries):
+def manage_index_and_search(
+    index_type, normalization, filename, memory_dict, queries, manager
+):
     # Check if the index file exists and initialize accordingly
     matching_type = {
         "ip": "IndexFlatIP",
         "l2": "IndexFlatL2",
     }
+    global_manager = None
+    if manager is None:
+        if has_global("global_memory_manager"):
+            global_manager = get_global("global_memory_manager")
+        else:
+            global_manager = MemoryManager(ttm.GameTimeManager(ttm.GameCalendar()))
+            set_global("global_memory_manager", global_manager)
+    else:
+        global_manager = manager
+        if not has_global("global_memory_manager"):
+            set_global("global_memory_manager", global_manager)
 
     if (
-        manager.flat_access.faiss_index is not None
-        and manager.flat_access.faiss_index.__class__.__name__
+        global_manager.flat_access.faiss_index is not None
+        and global_manager.flat_access.faiss_index.__class__.__name__
         == matching_type[index_type]
-        and manager.flat_access.index_is_normalized == normalization
+        and global_manager.flat_access.index_is_normalized == normalization
     ):
         # do nothing
         print(
@@ -5028,24 +5351,26 @@ def manage_index_and_search(index_type, normalization, filename, memory_dict, qu
         pass
     elif not os.path.exists(filename):
         # Delete index to free up memory
-        manager.flat_access.delete_index()
-        manager.flat_access.initialize_faiss_index(
+        global_manager.flat_access.delete_index()
+        global_manager.flat_access.initialize_faiss_index(
             768, index_type, normalize=normalization, index_load_filename=filename
         )
     else:
         # Delete index to free up memory
-        manager.flat_access.delete_index()
-        manager.flat_access.load_index_from_file(filename, normalize=normalization)
-        manager.flat_access.load_all_specific_memories_embeddings_from_file(
+        global_manager.flat_access.delete_index()
+        global_manager.flat_access.load_index_from_file(
+            filename, normalize=normalization
+        )
+        global_manager.flat_access.load_all_specific_memories_embeddings_from_file(
             "test_specific_memories"
         )
 
     # Perform the search for each query and store results
     for query in queries:
 
-        memory_dict[query] = manager.search_memories(query)
+        memory_dict[query] = self.manager.search_memories(query)
     # Save the index after processing
-    manager.flat_access.save_index_to_file(filename)
+    global_manager.flat_access.save_index_to_file(filename)
 
 
 # def cosine_similarity(vec1, vec2):
@@ -5091,7 +5416,11 @@ if __name__ == "__main__":
     manager = MemoryManager(tiny_time_manager, "ip_no_norm.bin")
     tiny_brain_io = tbi.TinyBrainIO("alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2")
 
-    model = EmbeddingModel()
+    # Initialize or get the global model
+    model = get_global_model()
+    if model is None:
+        print("Warning: Could not initialize embedding model")
+
     sentiment_analysis = SentimentAnalysis()
 
     # Determine whether there is a saved flat_access_memories file
@@ -5116,9 +5445,9 @@ if __name__ == "__main__":
 
     # NOTE: The descriptions should be "Memories about [type of nounn] and [specific topic]" OR "Memories about [type of noun] and [adjectives about the noun]"
 
-    # Assuming GeneralMemory and manager classes are defined elsewhere
+    # Assuming GeneralMemory and self.manager classes are defined elsewhere
 
-    # Loop over the list of memories and add them to the manager
+    # Loop over the list of memories and add them to the self.manager
     from collections import defaultdict
 
     memory_dict = defaultdict(list)
@@ -5165,7 +5494,7 @@ if __name__ == "__main__":
         for category, entries in memory_dict.items():
             if category not in memory_cache:
                 memory_cache[category] = manager.add_general_memory(
-                    GeneralMemory(category)
+                    GeneralMemory(description=category, manager=manager)
                 )
             for specific_memory, priority in entries:
                 try:
@@ -5181,22 +5510,22 @@ if __name__ == "__main__":
             f"\n Test specific memory: {memories[random_index]['memory']} found in flat access memories, so not adding test file memories"
         )
 
-    # print(f"\n \n \n Keywords for each memory: {[(mem.description, mem.keywords) for mem in manager.hierarchy.general_memories]} \n \n \n")
+    # print(f"\n \n \n Keywords for each memory: {[(mem.description, mem.keywords) for mem in self.manager.hierarchy.general_memories]} \n \n \n")
 
     # time.sleep(2)
 
-    # print(f"\n \n \n List of specific memories for each general memory: {[(mem.description, [specific_memory.description for specific_memory in mem.get_specific_memories()]) for mem in manager.hierarchy.general_memories]} \n \n \n")
+    # print(f"\n \n \n List of specific memories for each general memory: {[(mem.description, [specific_memory.description for specific_memory in mem.get_specific_memories()]) for mem in self.manager.hierarchy.general_memories]} \n \n \n")
 
     # time.sleep(2)
 
-    # print(f"\n \n \n General Memories: {[mem.description for mem in manager.hierarchy.general_memories]} \n \n \n")
+    # print(f"\n \n \n General Memories: {[mem.description for mem in self.manager.hierarchy.general_memories]} \n \n \n")
 
     # Display several views of the initial networkx graph in the hierarchy using networkx and matplotlib
     # Create a new graph that contains only the structure of the original graph
     # visualization_graph = nx.Graph()
 
-    # #print(f"Memory graph: {manager.hierarchy.memory_graph.nodes()}")
-    # node_mapping = {node.description: node for node in manager.hierarchy.memory_graph.nodes()}
+    # #print(f"Memory graph: {self.manager.hierarchy.memory_graph.nodes()}")
+    # node_mapping = {node.description: node for node in self.manager.hierarchy.memory_graph.nodes()}
     # #print(f"Node mapping: {node_mapping}")
 
     # edge_colors = []
@@ -5207,7 +5536,7 @@ if __name__ == "__main__":
     # node_sizes = []
     # descriptions = []
     # # Add nodes with integer labels
-    # for node in manager.hierarchy.memory_graph.nodes():
+    # for node in self.manager.hierarchy.memory_graph.nodes():
     #     #print(f"Node: {node}")
     #     #print(f"Node description: {node.description}")
     #     # if node.description in descriptions:
@@ -5228,7 +5557,7 @@ if __name__ == "__main__":
     #     # Add only the edges from the original graph to the new graph
 
     # # Map old nodes to new nodes
-    # for (node1, node2, keys, data) in manager.hierarchy.memory_graph.edges(data = "weight", keys=True, default=0):
+    # for (node1, node2, keys, data) in self.manager.hierarchy.memory_graph.edges(data = "weight", keys=True, default=0):
     #     if node1.description == node2.description:
     #         continue
     #     # if node1.description not in descriptions or node2.description not in descriptions:
@@ -5255,7 +5584,7 @@ if __name__ == "__main__":
     #     edge_list.append(edge)
     #     #find highest attribute value (relative to the edge) and assign a color based on the attribute value that is highest
 
-    #     edge_data = manager.hierarchy.memory_graph.get_edge_data(*edge)
+    #     edge_data = self.manager.hierarchy.memory_graph.get_edge_data(*edge)
     #     weight = edge_data.get('weight', 0) if edge_data else 0
     #     if weight >= 90:
     #         edge_colors.append('red')
@@ -5293,7 +5622,7 @@ if __name__ == "__main__":
     # node_count = 0
     # subgraph = nx.Graph()
     # node_colors = []
-    # for general_memory in manager.hierarchy.general_memories:
+    # for general_memory in self.manager.hierarchy.general_memories:
     #     if node_count == 0:
     #         subgraph.clear()
     #         node_colors = []
@@ -5320,15 +5649,15 @@ if __name__ == "__main__":
     #             except Exception as e:
     #                 #print(f"Error with layout: {layout}, {e} for graph for general memory {general_memory.description}")
 
-    # Create 2 subgraphs that contains only the specific memories that are relevant to a query, one just cosine and the other the score passed from the manager
+    # Create 2 subgraphs that contains only the specific memories that are relevant to a query, one just cosine and the other the score passed from the self.manager
     #
     # query = MemoryQuery(query,query_time=datetime.now(), gametime_manager=tiny_time_manager)
     # query_embedding = query.get_embedding()
-    # relevant_specific_memories = manager.search_memories(query)
+    # relevant_specific_memories = self.manager.search_memories(query)
     # #print(f"\n \n Relevant specific memories for query '{query}': {relevant_specific_memories} \n \n ")
     # query = "Where was the World Cup held in 2018?"
 
-    # relevant_specific_memories = manager.search_memories(query)
+    # relevant_specific_memories = self.manager.search_memories(query)
     # #print(f"\n \n Relevant specific memories for query '{query}': {relevant_specific_memories} \n \n ")
     # subgraph1 = nx.Graph()
     # subgraph2 = nx.Graph()
@@ -5354,25 +5683,25 @@ if __name__ == "__main__":
     #             plt.title(f"Graph for subgraph1 cosine similarity with layout: {lname}")
     #             plt.show()
     #             nx.draw_networkx(subgraph2, with_labels=True, font_weight='bold', pos=layout(subgraph2), node_color=node_colors)
-    #             plt.title(f"Graph for subgraph2 score from manager with layout: {lname}")
+    #             plt.title(f"Graph for subgraph2 score from self.manager with layout: {lname}")
     #             plt.show()
     #         except Exception as e:
-    #             #print(f"Error with layout: {layout}, {e} for subgraph1 cosine query similarity and subgraph2 score from manager")
+    #             #print(f"Error with layout: {layout}, {e} for subgraph1 cosine query similarity and subgraph2 score from self.manager")
 
     # Create a subgraph that splits the specific memories into clusters based on their similarity
     # subgraph1 = nx.Graph()
     # subgraph2 = nx.Graph()
-    # for general_memory in manager.hierarchy.general_memories:
+    # for general_memory in self.manager.hierarchy.general_memories:
     #     for specific_memory in general_memory.get_specific_memories():
     #         subgraph1.add_node(specific_memory.description)
     #         subgraph2.add_node(specific_memory.description )
     #         node_colors.append('yellow')
-    # for general_memory in manager.hierarchy.general_memories:
+    # for general_memory in self.manager.hierarchy.general_memories:
     #     for specific_memory in general_memory.get_specific_memories():
     #         for specific_memory2 in general_memory.get_specific_memories():
     #             if specific_memory != specific_memory2 and not subgraph1.has_edge(specific_memory.description, specific_memory2.description):
     #                 subgraph1.add_edge(specific_memory.description, specific_memory2.description, weight=cosine_similarity(specific_memory.embedding.cpu().detach().numpy(), specific_memory2.embedding.cpu().detach().numpy()))
-    #                 subgraph2.add_edge(specific_memory.description, specific_memory2.description, weight=manager.hierarchy.memory_graph.get_edge_data(specific_memory, specific_memory2).get('weight', 0))
+    #                 subgraph2.add_edge(specific_memory.description, specific_memory2.description, weight=self.manager.hierarchy.memory_graph.get_edge_data(specific_memory, specific_memory2).get('weight', 0))
 
     # if len(subgraph1.nodes()) > 1:
     #     for lname, layout in {"random": nx.random_layout, "spring": nx.spring_layout, "spectral": nx.spectral_layout, "shell": nx.shell_layout, "circular": nx.circular_layout, "kamada_kawai": nx.kamada_kawai_layout, "planar": nx.planar_layout, "fruchterman_reingold": nx.fruchterman_reingold_layout, "spiral": nx.spiral_layout, "bipartite": nx.bipartite_layout, "multipartite": nx.multipartite_layout}.items():
@@ -5382,10 +5711,10 @@ if __name__ == "__main__":
     #             plt.title(f"Graph for subgraph1 cosine similarity with layout: {lname}")
     #             plt.show()
     #             nx.draw_networkx(subgraph2, with_labels=True, font_weight='bold', pos=layout(subgraph2), node_color=node_colors)
-    #             plt.title(f"Graph for subgraph2 weight from manager graph with layout: {lname}")
+    #             plt.title(f"Graph for subgraph2 weight from self.manager graph with layout: {lname}")
     #             plt.show()
     #         except Exception as e:
-    # print(f"Error with layout: {layout}, {e} for subgraph1 cosine similarity and subgraph2 weight from manager graph")
+    # print(f"Error with layout: {layout}, {e} for subgraph1 cosine similarity and subgraph2 weight from self.manager graph")
 
     # Define the queries
     queries = [
@@ -5587,8 +5916,8 @@ if __name__ == "__main__":
     # print(f"Memory description: {mem.description} \n")
     # print(f"Memory parent memory: {mem.parent_memory} \n")
     # if not isinstance(mem.parent_memory, GeneralMemory) and isinstance(mem.parent_memory, str):
-    #     #print(f"Memory parent memory description: {[m.description for m in manager.hierarchy.general_memories if m.description == mem.parent_memory]} \n")
-    #     #print(f"Memory parent general memory keywords: {[m.keywords for m in manager.hierarchy.general_memories if m.description == mem.parent_memory]} \n")
+    #     #print(f"Memory parent memory description: {[m.description for m in self.manager.hierarchy.general_memories if m.description == mem.parent_memory]} \n")
+    #     #print(f"Memory parent general memory keywords: {[m.keywords for m in self.manager.hierarchy.general_memories if m.description == mem.parent_memory]} \n")
     # elif isinstance(mem.parent_memory, GeneralMemory):
     #     #print(f"Memory parent memory description: {mem.parent_memory.description} \n")
     #     #print(f"Memory parent general memory keywords: {mem.parent_memory.keywords} \n")
@@ -5611,7 +5940,7 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Error saving memories to file: {e}")
 
-    # Save the manager to a file
+    # Save the self.manager to a file
     try:
         with open("manager.txt", "w") as file:
             file.write(json.dumps(manager))
@@ -5636,11 +5965,11 @@ if __name__ == "__main__":
     end = time.time()
     time_flat = end - start
     start = time.time()
-    # #hierarchy_results_weight = manager.retrieve_from_hierarchy(query)
+    # #hierarchy_results_weight = self.manager.retrieve_from_hierarchy(query)
     end = time.time()
     time_hier_weight = end - start
     start = time.time()
-    # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
+    # hierarchy_results_similarity = self.manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
     # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
@@ -5678,11 +6007,11 @@ if __name__ == "__main__":
     end = time.time()
     time_flat = end - start
     start = time.time()
-    # hierarchy_results_weight = manager.retrieve_from_hierarchy(query)
+    # hierarchy_results_weight = self.manager.retrieve_from_hierarchy(query)
     end = time.time()
     time_hier_weight = end - start
     start = time.time()
-    # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
+    # hierarchy_results_similarity = self.manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
     # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
@@ -5723,11 +6052,11 @@ if __name__ == "__main__":
     end = time.time()
     time_flat = end - start
     start = time.time()
-    # hierarchy_results_weight = manager.retrieve_from_hierarchy(query)
+    # hierarchy_results_weight = self.manager.retrieve_from_hierarchy(query)
     end = time.time()
     time_hier_weight = end - start
     start = time.time()
-    # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
+    # hierarchy_results_similarity = self.manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
     # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
@@ -5765,11 +6094,11 @@ if __name__ == "__main__":
     end = time.time()
     time_flat = end - start
     start = time.time()
-    # hierarchy_results_weight = manager.retrieve_from_hierarchy(query)
+    # hierarchy_results_weight = self.manager.retrieve_from_hierarchy(query)
     end = time.time()
     time_hier_weight = end - start
     start = time.time()
-    # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
+    # hierarchy_results_similarity = self.manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
     # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
@@ -5807,11 +6136,11 @@ if __name__ == "__main__":
     end = time.time()
     time_flat = end - start
     start = time.time()
-    # hierarchy_results_weight = manager.retrieve_from_hierarchy(query)
+    # hierarchy_results_weight = self.manager.retrieve_from_hierarchy(query)
     end = time.time()
     time_hier_weight = end - start
     start = time.time()
-    # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
+    # hierarchy_results_similarity = self.manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
     # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
@@ -5847,11 +6176,11 @@ if __name__ == "__main__":
     end = time.time()
     time_flat = end - start
     start = time.time()
-    # hierarchy_results_weight = manager.retrieve_from_hierarchy(query)
+    # hierarchy_results_weight = self.manager.retrieve_from_hierarchy(query)
     end = time.time()
     time_hier_weight = end - start
     start = time.time()
-    # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
+    # hierarchy_results_similarity = self.manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
     # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
@@ -5889,11 +6218,11 @@ if __name__ == "__main__":
     end = time.time()
     time_flat = end - start
     start = time.time()
-    # hierarchy_results_weight = manager.retrieve_from_hierarchy(query)
+    # hierarchy_results_weight = self.manager.retrieve_from_hierarchy(query)
     end = time.time()
     time_hier_weight = end - start
     start = time.time()
-    # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
+    # hierarchy_results_similarity = self.manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
     # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
@@ -5931,11 +6260,11 @@ if __name__ == "__main__":
     end = time.time()
     time_flat = end - start
     start = time.time()
-    # hierarchy_results_weight = manager.retrieve_from_hierarchy(query)
+    # hierarchy_results_weight = self.manager.retrieve_from_hierarchy(query)
     end = time.time()
     time_hier_weight = end - start
     start = time.time()
-    # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
+    # hierarchy_results_similarity = self.manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
     # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
@@ -5973,11 +6302,11 @@ if __name__ == "__main__":
     end = time.time()
     time_flat = end - start
     start = time.time()
-    # hierarchy_results_weight = manager.retrieve_from_hierarchy(query)
+    # hierarchy_results_weight = self.manager.retrieve_from_hierarchy(query)
     end = time.time()
     time_hier_weight = end - start
     start = time.time()
-    # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
+    # hierarchy_results_similarity = self.manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
     # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
@@ -6015,11 +6344,11 @@ if __name__ == "__main__":
     end = time.time()
     time_flat = end - start
     start = time.time()
-    # hierarchy_results_weight = manager.retrieve_from_hierarchy(query)
+    # hierarchy_results_weight = self.manager.retrieve_from_hierarchy(query)
     end = time.time()
     time_hier_weight = end - start
     start = time.time()
-    # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
+    # hierarchy_results_similarity = self.manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
     # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
@@ -6057,11 +6386,11 @@ if __name__ == "__main__":
     end = time.time()
     time_flat = end - start
     start = time.time()
-    # hierarchy_results_weight = manager.retrieve_from_hierarchy(query)
+    # hierarchy_results_weight = self.manager.retrieve_from_hierarchy(query)
     end = time.time()
     time_hier_weight = end - start
     start = time.time()
-    # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
+    # hierarchy_results_similarity = self.manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
     # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
@@ -6099,11 +6428,11 @@ if __name__ == "__main__":
     end = time.time()
     time_flat = end - start
     start = time.time()
-    # hierarchy_results_weight = manager.retrieve_from_hierarchy(query)
+    # hierarchy_results_weight = self.manager.retrieve_from_hierarchy(query)
     end = time.time()
     time_hier_weight = end - start
     start = time.time()
-    # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
+    # hierarchy_results_similarity = self.manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
     # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
@@ -6142,11 +6471,11 @@ if __name__ == "__main__":
     end = time.time()
     time_flat = end - start
     start = time.time()
-    # hierarchy_results_weight = manager.retrieve_from_hierarchy(query)
+    # hierarchy_results_weight = self.manager.retrieve_from_hierarchy(query)
     end = time.time()
     time_hier_weight = end - start
     start = time.time()
-    # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
+    # hierarchy_results_similarity = self.manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
     # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
@@ -6184,11 +6513,11 @@ if __name__ == "__main__":
     end = time.time()
     time_flat = end - start
     start = time.time()
-    # hierarchy_results_weight = manager.retrieve_from_hierarchy(query)
+    # hierarchy_results_weight = self.manager.retrieve_from_hierarchy(query)
     end = time.time()
     time_hier_weight = end - start
     start = time.time()
-    # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
+    # hierarchy_results_similarity = self.manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
     # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
@@ -6227,11 +6556,11 @@ if __name__ == "__main__":
     end = time.time()
     time_flat = end - start
     start = time.time()
-    # hierarchy_results_weight = manager.retrieve_from_hierarchy(query)
+    # hierarchy_results_weight = self.manager.retrieve_from_hierarchy(query)
     end = time.time()
     time_hier_weight = end - start
     start = time.time()
-    # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
+    # hierarchy_results_similarity = self.manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
     # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
@@ -6270,11 +6599,11 @@ if __name__ == "__main__":
     end = time.time()
     time_flat = end - start
     start = time.time()
-    # hierarchy_results_weight = manager.retrieve_from_hierarchy(query)
+    # hierarchy_results_weight = self.manager.retrieve_from_hierarchy(query)
     end = time.time()
     time_hier_weight = end - start
     start = time.time()
-    # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
+    # hierarchy_results_similarity = self.manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
     # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
@@ -6313,11 +6642,11 @@ if __name__ == "__main__":
     end = time.time()
     time_flat = end - start
     start = time.time()
-    # hierarchy_results_weight = manager.retrieve_from_hierarchy(query)
+    # hierarchy_results_weight = self.manager.retrieve_from_hierarchy(query)
     end = time.time()
     time_hier_weight = end - start
     start = time.time()
-    # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
+    # hierarchy_results_similarity = self.manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
     # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")
@@ -6356,11 +6685,11 @@ if __name__ == "__main__":
     end = time.time()
     time_flat = end - start
     start = time.time()
-    # hierarchy_results_weight = manager.retrieve_from_hierarchy(query)
+    # hierarchy_results_weight = self.manager.retrieve_from_hierarchy(query)
     end = time.time()
     time_hier_weight = end - start
     start = time.time()
-    # hierarchy_results_similarity = manager.hierarchy.find_nodes_by_similarity(query, 0.5)
+    # hierarchy_results_similarity = self.manager.hierarchy.find_nodes_by_similarity(query, 0.5)
     end = time.time()
     time_hier_sim = end - start
     # print(f"\n \n \n Hierarchy weight results for query '{query}': {hierarchy_results_weight} \n \n \n")

@@ -430,6 +430,12 @@ def main(docs, nlp: spacy.language.Language):
                             for tk in root_verb.children
                             if tk.dep_ == "nsubj" or tk.dep_ == "nsubjpass"
                         ]
+                    if len(subj) == 0:
+                        if action.i == 0:
+                            subj_text = "I"
+                        else:
+                            subj_text = "Someone"
+                        subj.append(nlp(subj_text)[0])
                     for tkk in subj[0].head.children:
                         if (
                             tkk.dep_
