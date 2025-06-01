@@ -4,6 +4,16 @@ import logging
 import traceback
 import json
 import os
+import datetime # Added for time-based achievement
+WEATHER_ENERGY_EFFECTS = {
+    'rainy': 0.5,
+    # 'snowy': 1.0, # easy to add more
+    # Add other weather types here
+}
+WEATHER_UI_MESSAGES = {
+    'rainy': ("Rainfall is tiring the villagers.", (180, 180, 220)),
+    # 'snowy': ("Snow is exhausting the villagers.", (220, 220, 255)),
+}
 from typing import Dict, List, Any, Union, Optional
 from tiny_strategy_manager import StrategyManager
 from tiny_event_handler import EventHandler, Event
@@ -29,8 +39,9 @@ class ActionResolver:
     Provides robust action resolution with validation and fallback mechanisms.
     """
 
-    def __init__(self, action_system=None):
+    def __init__(self, action_system=None, graph_manager=None):
         self.action_system = action_system
+        self.graph_manager = graph_manager
         self.action_cache = {}  # Cache for performance optimization
         self.execution_history = []  # Track action execution for analytics
         self.fallback_actions = {
@@ -247,6 +258,7 @@ class ActionResolver:
                 cost=max(1, abs(energy_cost)),
                 initiator=character,
                 default_target_is_initiator=True,
+                graph_manager=self.graph_manager,
             )
 
             return action
@@ -457,6 +469,10 @@ class GameplayController:
         self.initialization_errors = []
         self.running = True
         self.paused = False
+        self.time_scale_factor = 1.0 # Added for time scaling
+        self._cached_speed_text = None
+        self._last_time_scale_factor = None
+
 
         # Initialize recovery manager
         self.recovery_manager = SystemRecoveryManager(self)
@@ -540,6 +556,25 @@ class GameplayController:
             "actions_failed": 0,
             "characters_created": 0,
             "errors_recovered": 0,
+        }
+        self.global_achievements = {
+            "village_milestones": {
+                "first_character_created": False,
+                "five_characters_active": False,
+                "successful_harvest": False,
+                "trade_established": False,
+                "first_week_survived": False,
+            },
+            "social_achievements": {
+                "first_friendship": False,
+                "community_event": False,
+                "conflict_resolved": False,
+            },
+            "economic_achievements": {
+                "first_transaction": False,
+                "wealthy_villager": False,
+                "market_established": False,
+            },
         }
 
         # Initialize all game systems
@@ -698,20 +733,20 @@ class GameplayController:
             # Initialize core systems with fallbacks
             if "ActionSystem" in imported_modules:
                 try:
-                    self.action_system = imported_modules["ActionSystem"]()
+                    self.action_system = imported_modules["ActionSystem"](graph_manager=self.graph_manager)
                     self.action_system.setup_actions()
-                    self.action_resolver = ActionResolver(self.action_system)
+                    self.action_resolver = ActionResolver(action_system=self.action_system, graph_manager=self.graph_manager)
                     logger.info("Action system initialized successfully")
                 except Exception as e:
                     logger.error(f"ActionSystem initialization failed: {e}")
                     self.action_system = None
                     self.action_resolver = (
-                        ActionResolver()
-                    )  # Fallback without action system
+                        ActionResolver(graph_manager=self.graph_manager)
+                    )  # Fallback without action system but with graph_manager
                     system_init_errors.append("ActionSystem setup failed")
             else:
                 self.action_system = None
-                self.action_resolver = ActionResolver()
+                self.action_resolver = ActionResolver(graph_manager=self.graph_manager)
 
             # Initialize time management with fallback
             if (
@@ -1258,8 +1293,7 @@ class GameplayController:
         target_fps = self.config.get("target_fps", 60)
 
         while self.running:
-            dt = self.clock.tick(target_fps) / 1000.0  # Frame time in seconds
-
+            dt = self.clock.tick(target_fps) / 1000.0 * self.time_scale_factor  # Frame time in seconds with time scale factor
             # TODO: Add performance monitoring
             # frame_start_time = time.time()
 
@@ -1320,6 +1354,8 @@ class GameplayController:
                 "feature_status": [pygame.K_f],
                 "system_recovery": [pygame.K_F5],
                 "analytics": [pygame.K_a],
+                "increase_speed": [pygame.K_PAGEUP], # Added for time scaling
+                "decrease_speed": [pygame.K_PAGEDOWN], # Added for time scaling
             },
         )
 
@@ -1367,6 +1403,12 @@ class GameplayController:
         elif event.key in key_bindings.get("analytics", [pygame.K_a]):
             # Show analytics information
             self._show_analytics_info()
+        elif event.key in key_bindings.get("increase_speed", []):
+            self.time_scale_factor = min(MAX_SPEED, self.time_scale_factor + SPEED_STEP)
+            logger.info(f"Time scale set to: {self.time_scale_factor}x")
+        elif event.key in key_bindings.get("decrease_speed", []):
+            self.time_scale_factor = max(MIN_SPEED, self.time_scale_factor - SPEED_STEP)
+            logger.info(f"Time scale set to: {self.time_scale_factor}x")
 
     def _show_help_info(self):
         """Display help information."""
@@ -1763,6 +1805,17 @@ class GameplayController:
             goals_success = self._update_character_goals(character)
             actions_success = self._execute_character_actions(character)
 
+            # Apply weather effects
+            weather = getattr(self, "weather_system", None)
+            if weather:
+                current_weather = weather.get('current_weather')
+                energy_decrease = WEATHER_ENERGY_EFFECTS.get(current_weather, 0) * dt
+                if energy_decrease and hasattr(character, 'energy'):
+                    original_energy = character.energy
+                    character.energy = max(0, character.energy - energy_decrease)
+                    if original_energy > character.energy:
+                        logger.debug(f"{current_weather.title()} weather decreased {character.name}'s energy by {energy_decrease:.2f} to {character.energy:.2f}.")
+
             # Character update is successful if at least one component works
             return memory_success or goals_success or actions_success
 
@@ -1974,6 +2027,11 @@ class GameplayController:
             # Track state changes for analytics
             final_state = self._capture_character_state(character)
             self._track_state_changes(character, action, initial_state, final_state)
+            # Increment work_action_count if it was a work action
+            if hasattr(action, 'name') and 'work' in action.name.lower():
+                if hasattr(character, 'work_action_count'):Add commentMore actions
+                    character.work_action_count += 1
+                    logger.debug(f"{character.name} completed a work action. Total work actions: {character.work_action_count}")
 
         except Exception as e:
             logger.warning(f"Error updating character state after action: {e}")
@@ -2016,7 +2074,22 @@ class GameplayController:
                     current_value = getattr(character, skill, 0)
                     # Small skill improvement with diminishing returns
                     improvement = max(1, int(5 * (100 - current_value) / 100))
-                    setattr(character, skill, min(100, current_value + improvement))
+                    if improvement > 0: # Only proceed if there's an actual improvement calculated
+                        setattr(character, skill, min(100, current_value + improvement))
+                        new_skill_value = getattr(character, skill)
+
+                        if skill == "job_performance" and new_skill_value > old_skill_value:
+                            if hasattr(character, 'current_satisfaction'):
+                                satisfaction_bonus = 2
+                                character.current_satisfaction += satisfaction_bonus
+                                character.current_satisfaction = min(100, character.current_satisfaction)
+                                logger.debug(
+                                    f"{character.name} feels more satisfied from improving job performance! "
+                                    f"Satisfaction +{satisfaction_bonus} (now {character.current_satisfaction})."
+                                )
+                    else: # If improvement is 0, skill remains unchanged.
+                        pass
+
 
         except Exception as e:
             logger.warning(f"Error updating character skills: {e}")
@@ -2124,6 +2197,10 @@ class GameplayController:
                 "wealthy": (
                     hasattr(character, "wealth_money") and character.wealth_money > 500,
                     "Accumulated significant wealth",
+                ),
+                "diligent_worker": (
+                    hasattr(character, 'work_action_count') and character.work_action_count >= 10,
+                    "Performed 10 work actions",
                 ),
             }
 
@@ -2326,7 +2403,30 @@ class GameplayController:
             pygame.display.flip()
         else:
             pygame.display.update()
+    def _render_achievements(self, y_offset: int) -> int:
+        """
+        Render all village milestone achievements in a dedicated UI section.
+        Returns the updated y_offset after drawing.
+        """
+        milestones = self.global_achievements.get("village_milestones", {})
+        if not milestones:
+            return y_offset
 
+        # Section header (optional)
+        header = tiny_font.render("Achievements:", True, (240, 240, 200))
+        self.screen.blit(header, (10, y_offset))
+        y_offset += ACHIEVEMENT_SPACING
+
+        for key, achieved in milestones.items():
+            # Convert snake_case key to Title Case text
+            title = key.replace("_", " ").title()
+            status = "✓" if achieved else "✗"
+            color = (180, 220, 180) if achieved else (200, 180, 180)
+            text = tiny_font.render(f"{status} {title}", True, color)
+            self.screen.blit(text, (10, y_offset))
+            y_offset += ACHIEVEMENT_LINE_SPACING
+
+        return y_offset
     def _render_ui(self):
         """Render user interface elements with improved layout, new features, and system status."""
 
@@ -2372,7 +2472,23 @@ class GameplayController:
                     y_offset += 20
                 except:
                     pass
+            # Render time scale factor
+            try:
+                if self._last_time_scale_factor != self.time_scale_factor or self._cached_speed_text is None:
+                    self._cached_speed_text = small_font.render(
+                        f"Speed: {self.time_scale_factor:.1f}x", True, (255, 255, 255)
+                    )
+                    self._last_time_scale_factor = self.time_scale_factor
 
+                if self._cached_speed_text:
+                    self.screen.blit(self._cached_speed_text, (10, y_offset))
+                    y_offset += 20
+            except (AttributeError, TypeError, ValueError) as e:
+                logger.warning(f"Could not render time_scale_factor: {e}")
+            except Exception as e:
+                logger.error(f"Unexpected error while rendering time_scale_factor: {e}")
+                # Still raise the error after logging, as it's unexpected.
+                raise
             # Render weather information
             if hasattr(self, "weather_system"):
                 weather_text = small_font.render(
@@ -2383,6 +2499,14 @@ class GameplayController:
                 self.screen.blit(weather_text, (10, y_offset))
                 y_offset += 20
 
+                current_weather = None
+                if isinstance(self.weather_system, dict):
+                    current_weather = self.weather_system.get('current_weather')
+                if current_weather in WEATHER_UI_MESSAGES:
+                    message, color = WEATHER_UI_MESSAGES[current_weather]
+                    weather_effect_text = tiny_font.render(message, True, color)
+                    self.screen.blit(weather_effect_text, (10, y_offset))
+                    y_offset += 15
             # Render game statistics
             stats = self.game_statistics
             stats_text = tiny_font.render(
@@ -2435,6 +2559,20 @@ class GameplayController:
                 except:
                     pass
 
+            # Render 'First Week Survived' achievement status
+            try:
+                survived_week = self.global_achievements.get("village_milestones", {}).get("first_week_survived", False)
+                status_text = "Yes" if survived_week else "No"
+                achievement_render = tiny_font.render(
+                    f"First Week Survived: {status_text}", True, (220, 220, 180) # Light yellow/gold color
+                )
+                self.screen.blit(achievement_render, (10, y_offset))
+                y_offset += 15
+            except Exception as e:
+                logger.warning(f"Could not render 'first_week_survived' achievement: {e}")
+            # Render achievements as a separate section
+            y_offset = self._render_achievements(y_offset)
+
             # Render selected character info (enhanced)
             if (
                 hasattr(self.map_controller, "selected_character")
@@ -2476,6 +2614,25 @@ class GameplayController:
                         )
                     except:
                         pass
+                    self.screen.blit(info_text, (10, y_offset))
+                    y_offset += 20 # Increment y_offset for each line of char_info
+
+                # Display selected character's achievements
+                try:
+                    if hasattr(char, 'achievements') and char.achievements:
+                        ach_header_text = small_font.render("Achievements:", True, (220, 220, 180))
+                        self.screen.blit(ach_header_text, (10, y_offset))
+                        y_offset += 20
+
+                        for achievement_id in char.achievements:
+                            # Simple display of achievement ID, can be made more user-friendly later
+                            display_name = achievement_id.replace("_", " ").title()
+                            ach_text = tiny_font.render(f"- {display_name}", True, (200, 200, 150))
+                            self.screen.blit(ach_text, (15, y_offset)) # Indent slightly
+                            y_offset += 15
+                except Exception as e:
+                    logger.warning(f"Could not render selected character achievements: {e}")
+
 
                 for i, info in enumerate(char_info):
                     info_text = small_font.render(info, True, (255, 255, 0))
@@ -2854,12 +3011,15 @@ class GameplayController:
                 try:
                     from actions import ActionSystem
 
-                    self.action_system = ActionSystem()
+                    self.action_system = ActionSystem(graph_manager=self.graph_manager)
                     self.action_system.setup_actions()
-                    self.action_resolver = ActionResolver(self.action_system)
+                    self.action_resolver = ActionResolver(action_system=self.action_system, graph_manager=self.graph_manager)
                     logger.info("Action system recovery successful")
                 except Exception as e:
                     logger.error(f"Action system recovery failed: {e}")
+                    # Ensure action_resolver still gets graph_manager in case of ActionSystem failure
+                    if not hasattr(self, 'action_resolver') or self.action_resolver.graph_manager is None:
+                        self.action_resolver = ActionResolver(graph_manager=self.graph_manager)
                     recovery_successful = False
 
             # Update recovery statistics
@@ -3059,6 +3219,7 @@ class GameplayController:
                         "five_characters_active": False,
                         "successful_harvest": False,
                         "trade_established": False,
+                        "first_week_survived": False, # New achievement
                     },
                     "social_achievements": {
                         "first_friendship": False,
@@ -3082,6 +3243,21 @@ class GameplayController:
                 self.global_achievements["village_milestones"][
                     "five_characters_active"
                 ] = True
+
+            # Check for time-based achievements
+            if hasattr(self, "gametime_manager") and self.gametime_manager:
+                try:
+                    # GameCalendar defaults: year=2023, month=1, day=1
+                    start_game_dt = self.gametime_manager.get_calendar().get_game_start_time()
+                    current_game_dt = self.gametime_manager.get_calendar().get_game_time()
+
+                    time_passed = current_game_dt - start_game_dt
+
+                    if time_passed.days >= 7:
+                        self.global_achievements["village_milestones"]["first_week_survived"] = True
+
+                except Exception as time_e:
+                    logger.error(f"Error checking time-based achievements: {time_e}")
 
             return True
 

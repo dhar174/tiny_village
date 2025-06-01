@@ -311,14 +311,14 @@ class Action:
         impact_rating_on_target=None,  # number representing the weight of the impact on the target ranging from 0 to 3, with 0 being no impact and 3 being a high impact
         impact_rating_on_initiator=None,  # number representing the weight of the impact on the initiator ranging from 0 to 3
         impact_rating_on_other=None,  # Dict with keys like "proximity" and "relationship" and values ranging from 0 to 3 representing the weight of the impact on other characters as defined by the keys
-        action_id=None,  # Added for consistency with new actions
-        created_at=None,  # Added
-        expires_at=None,  # Added
-        completed_at=None,  # Added
-        priority=None,  # Added
-        related_goal=None,  # Added
+        action_id=None, # Added for consistency with new actions
+        created_at=None, # Added
+        expires_at=None, # Added
+        completed_at=None, # Added
+        priority=None, # Added
+        related_goal=None, # Added
+        graph_manager=None
     ):
-        GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
         # Warning: Name MUST be unique! Check for duplicates before setting.
         self.impact_rating_on_target = impact_rating_on_target
         self.impact_rating_on_initiator = impact_rating_on_initiator
@@ -348,7 +348,13 @@ class Action:
             self.target = target
         self.change_value = 0
         self.target_id = target.uuid if hasattr(target, "uuid") else id(target)
-        self.graph_manager = GraphManager()
+        if graph_manager is not None:
+            self.graph_manager = graph_manager
+        else:
+            # Fallback to the singleton instance if no graph_manager is explicitly passed.
+            # This maintains some backward compatibility but explicit passing is preferred.
+            GraphManager_module = importlib.import_module("tiny_graph_manager")
+            self.graph_manager = GraphManager_module.GraphManager()
         self.related_skills = related_skills
 
     def to_dict(self):
@@ -637,6 +643,7 @@ class Action:
         # This method would apply effects to character.state or graph_manager
         # For now, as graph_manager is None due to workaround, true effects can't be applied here.
         if character and hasattr(character, "get_state"):
+
             char_state_obj = character.get_state()
             # self.apply_effects(char_state_obj) # apply_effects needs a dict-like state
             # To use with State object, State class would need to allow direct item assignment
@@ -788,6 +795,7 @@ class TalkAction(Action):
         )
 
     def execute(self, character=None, graph_manager=None):
+
         initiator_obj = character if character else self.initiator
         target_obj = self.target
 
@@ -836,16 +844,17 @@ class ActionTemplate:
             self.cost,
             parameters["target"],
             parameters["initiator"],
+            graph_manager=parameters.get("graph_manager") # Pass graph_manager
         )
 
     def add_skill(self, skill):
         self.related_skills.append(skill)
 
-    def create_action(self, action_type, initiator, target):
+    def create_action(self, action_type, initiator, target, graph_manager=None):
         if action_type == "talk":
-            return TalkAction(initiator, target)
+            return TalkAction(initiator, target, graph_manager=graph_manager)
         elif action_type == "explore":
-            return ExploreAction(initiator, target)
+            return ExploreAction(initiator, target, graph_manager=graph_manager)
         else:
             raise ValueError("Unknown action type")
 
@@ -861,6 +870,7 @@ action.execute() """
 class CompositeAction(Action):
     def __init__(self):
         super().__init__(name="CompositeAction", preconditions=[], effects=[])
+
         self.actions = []
 
     def add_action(self, action):
@@ -871,6 +881,7 @@ class CompositeAction(Action):
             action.execute(character, graph_manager)  # Pass parameters
 
 
+
 # # Example usage
 # composite_action = CompositeAction()
 # composite_action.add_action(character.talk_to(another_character))
@@ -879,13 +890,17 @@ class CompositeAction(Action):
 
 
 class ActionGenerator:
-    def __init__(self):
+    def __init__(self, graph_manager=None):
         self.templates = []
+        self.graph_manager = graph_manager
 
     def add_template(self, template):
         self.templates.append(template)
 
     def generate_actions(self, parameters):
+        # Ensure graph_manager is in parameters for template.instantiate
+        if "graph_manager" not in parameters and self.graph_manager is not None:
+            parameters["graph_manager"] = self.graph_manager
         return [template.instantiate(parameters) for template in self.templates]
 
 
@@ -925,8 +940,8 @@ class ActionSkill(Skill):
 
 
 class ActionSystem:
-    def __init__(self):
-        self.action_generator = ActionGenerator()
+    def __init__(self, graph_manager=None):
+        self.action_generator = ActionGenerator(graph_manager=graph_manager)
 
     def setup_actions(self):
         # Define action templates

@@ -2069,6 +2069,8 @@ class Character:
         GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
         self._updating = False  # Flag to prevent recursion
         self._initialized = False  # Flag to prevent recursion
+        self.work_action_count = 0 # Added to track work actions
+
 
         ActionSystem = importlib.import_module("actions")
         Action = importlib.import_module("actions").Action
