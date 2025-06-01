@@ -2004,6 +2004,11 @@ class GameplayController:
             # Track state changes for analytics
             final_state = self._capture_character_state(character)
             self._track_state_changes(character, action, initial_state, final_state)
+            # Increment work_action_count if it was a work action
+            if hasattr(action, 'name') and 'work' in action.name.lower():
+                if hasattr(character, 'work_action_count'):Add commentMore actions
+                    character.work_action_count += 1
+                    logger.debug(f"{character.name} completed a work action. Total work actions: {character.work_action_count}")
 
         except Exception as e:
             logger.warning(f"Error updating character state after action: {e}")
@@ -2169,6 +2174,10 @@ class GameplayController:
                 "wealthy": (
                     hasattr(character, "wealth_money") and character.wealth_money > 500,
                     "Accumulated significant wealth",
+                ),
+                "diligent_worker": (
+                    hasattr(character, 'work_action_count') and character.work_action_count >= 10,
+                    "Performed 10 work actions",
                 ),
             }
 
@@ -2589,6 +2598,25 @@ class GameplayController:
                         )
                     except:
                         pass
+                    self.screen.blit(info_text, (10, y_offset))
+                    y_offset += 20 # Increment y_offset for each line of char_info
+
+                # Display selected character's achievements
+                try:
+                    if hasattr(char, 'achievements') and char.achievements:
+                        ach_header_text = small_font.render("Achievements:", True, (220, 220, 180))
+                        self.screen.blit(ach_header_text, (10, y_offset))
+                        y_offset += 20
+
+                        for achievement_id in char.achievements:
+                            # Simple display of achievement ID, can be made more user-friendly later
+                            display_name = achievement_id.replace("_", " ").title()
+                            ach_text = tiny_font.render(f"- {display_name}", True, (200, 200, 150))
+                            self.screen.blit(ach_text, (15, y_offset)) # Indent slightlyAdd commentMore actions
+                            y_offset += 15
+                except Exception as e:
+                    logger.warning(f"Could not render selected character achievements: {e}")
+
 
                 for i, info in enumerate(char_info):
                     info_text = small_font.render(info, True, (255, 255, 0))
