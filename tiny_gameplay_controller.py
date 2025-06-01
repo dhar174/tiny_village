@@ -3212,6 +3212,26 @@ class GameplayController:
         TODO: Add achievement persistence
         """
         try:
+            if not hasattr(self, "global_achievements"):
+                self.global_achievements = {
+                    "village_milestones": {
+                        "first_character_created": False,
+                        "five_characters_active": False,
+                        "successful_harvest": False,
+                        "trade_established": False,
+                        "first_week_survived": False, # New achievement
+                    },
+                    "social_achievements": {
+                        "first_friendship": False,
+                        "community_event": False,
+                        "conflict_resolved": False,
+                    },
+                    "economic_achievements": {
+                        "first_transaction": False,
+                        "wealthy_villager": False,
+                        "market_established": False,
+                    },
+                }
             # Check for milestone achievements
             if len(self.characters) >= 1:
                 self.global_achievements["village_milestones"][
