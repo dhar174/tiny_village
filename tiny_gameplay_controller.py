@@ -2612,7 +2612,7 @@ class GameplayController:
                             # Simple display of achievement ID, can be made more user-friendly later
                             display_name = achievement_id.replace("_", " ").title()
                             ach_text = tiny_font.render(f"- {display_name}", True, (200, 200, 150))
-                            self.screen.blit(ach_text, (15, y_offset)) # Indent slightlyAdd commentMore actions
+                            self.screen.blit(ach_text, (15, y_offset)) # Indent slightly
                             y_offset += 15
                 except Exception as e:
                     logger.warning(f"Could not render selected character achievements: {e}")
