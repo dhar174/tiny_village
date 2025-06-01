@@ -3232,6 +3232,7 @@ class GameplayController:
                         "market_established": False,
                     },
                 }
+
             # Check for milestone achievements
             if len(self.characters) >= 1:
                 self.global_achievements["village_milestones"][
