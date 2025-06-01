@@ -2037,7 +2037,22 @@ class GameplayController:
                     current_value = getattr(character, skill, 0)
                     # Small skill improvement with diminishing returns
                     improvement = max(1, int(5 * (100 - current_value) / 100))
-                    setattr(character, skill, min(100, current_value + improvement))
+                    if improvement > 0: # Only proceed if there's an actual improvement calculated
+                        setattr(character, skill, min(100, current_value + improvement))
+                        new_skill_value = getattr(character, skill)
+
+                        if skill == "job_performance" and new_skill_value > old_skill_value:
+                            if hasattr(character, 'current_satisfaction'):
+                                satisfaction_bonus = 2
+                                character.current_satisfaction += satisfaction_bonus
+                                character.current_satisfaction = min(100, character.current_satisfaction)
+                                logger.debug(
+                                    f"{character.name} feels more satisfied from improving job performance! "
+                                    f"Satisfaction +{satisfaction_bonus} (now {character.current_satisfaction})."
+                                )
+                    else: # If improvement is 0, skill remains unchanged.
+                        pass
+
 
         except Exception as e:
             logger.warning(f"Error updating character skills: {e}")
