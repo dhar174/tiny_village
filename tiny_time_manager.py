@@ -33,7 +33,8 @@ class GameCalendar:
         self.current_hour = start_hours
         self.current_minute = start_minutes
         self.current_second = start_seconds
-        
+        self.game_start_time = self.get_game_time()
+
 
     def set_real_time_begin(self):
         self.real_time_begin = time.time()
@@ -41,7 +42,13 @@ class GameCalendar:
 
     def get_real_time_begin(self):
         return self.real_time_begin
+    def get_game_start_time(self):
+        """Returns the original game start datetime in game units"""
+        return self.game_start_time
     
+    def get_game_start_time_string(self):
+        """Returns the original game start datetime as a formatted string"""
+        return self.game_start_time.strftime("%Y-%m-%d %H:%M:%S")
     def get_game_time(self):
         t = self.accumulated_timer + self.get_session_time()
         self.current_year += int(t / self.unit_conversion_seconds["year"])
