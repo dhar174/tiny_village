@@ -2065,7 +2065,6 @@ class Character:
         romanceable: bool = True,
         physical_appearance: str = "",
         physical_beauty: int = random.randint(0, 100),
-        
     ):
         GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
         self._updating = False  # Flag to prevent recursion
