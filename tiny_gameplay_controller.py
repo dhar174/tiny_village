@@ -3102,7 +3102,7 @@ class GameplayController:
             if hasattr(self, "gametime_manager") and self.gametime_manager:
                 try:
                     # GameCalendar defaults: year=2023, month=1, day=1
-                    start_game_dt = datetime.datetime(2023, 1, 1)
+                    start_game_dt = GAME_START_DATE
                     current_game_dt = self.gametime_manager.get_calendar().get_game_time()
 
                     time_passed = current_game_dt - start_game_dt
