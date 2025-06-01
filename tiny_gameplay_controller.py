@@ -2450,8 +2450,11 @@ class GameplayController:
                 )
                 self.screen.blit(speed_text_render, (10, y_offset))
                 y_offset += 20
-            except Exception as e:
+            except (AttributeError, TypeError, ValueError) as e:
                 logger.warning(f"Could not render time_scale_factor: {e}")
+            except Exception as e:
+                logger.error(f"Unexpected error while rendering time_scale_factor: {e}")
+                raise
             # Render weather information
             if hasattr(self, "weather_system"):
                 weather_text = small_font.render(
