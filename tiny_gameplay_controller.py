@@ -2371,7 +2371,7 @@ class GameplayController:
             color = (180, 220, 180) if achieved else (200, 180, 180)
             text = tiny_font.render(f"{status} {title}", True, color)
             self.screen.blit(text, (10, y_offset))
-            y_offset += 18
+            y_offset += ACHIEVEMENT_LINE_SPACING
 
         return y_offset
     def _render_ui(self):
