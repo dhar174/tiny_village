@@ -1413,7 +1413,6 @@ class GameplayController:
             self._show_analytics_info()
         elif event.key in key_bindings.get("increase_speed", []):
             self.time_scale_factor = min(MAX_SPEED, self.time_scale_factor + SPEED_STEP)
-            self.time_scale_factor = min(MAX_SPEED, self.time_scale_factor + SPEED_STEP)
             logger.info(f"Time scale set to: {self.time_scale_factor:.1f}x")
             self._cached_speed_text = None # Invalidate cache on change
 
