@@ -1,4 +1,3 @@
----
 System File: `tiny_event_handler.py`
 Status from Controller: Placeholder System (explicitly mentioned in `controller_analysis.txt`), `event_driven_storytelling` is `NOT_STARTED`.
 Current Implementation:
