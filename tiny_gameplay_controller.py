@@ -468,6 +468,8 @@ class GameplayController:
         self.running = True
         self.paused = False
         self.time_scale_factor = 1.0 # Added for time scaling
+        self._cached_speed_text = None
+        self._last_time_scale_factor = None
 
 
         # Initialize recovery manager
@@ -552,6 +554,25 @@ class GameplayController:
             "actions_failed": 0,
             "characters_created": 0,
             "errors_recovered": 0,
+        }
+        self.global_achievements = {
+            "village_milestones": {
+                "first_character_created": False,
+                "five_characters_active": False,
+                "successful_harvest": False,
+                "trade_established": False,
+                "first_week_survived": False,
+            },
+            "social_achievements": {
+                "first_friendship": False,
+                "community_event": False,
+                "conflict_resolved": False,
+            },
+            "economic_achievements": {
+                "first_transaction": False,
+                "wealthy_villager": False,
+                "market_established": False,
+            },
         }
 
         # Initialize all game systems
@@ -2385,9 +2406,6 @@ class GameplayController:
         Render all village milestone achievements in a dedicated UI section.
         Returns the updated y_offset after drawing.
         """
-        if not hasattr(self, "global_achievements"):
-            return y_offset
-
         milestones = self.global_achievements.get("village_milestones", {})
         if not milestones:
             return y_offset
@@ -2454,11 +2472,7 @@ class GameplayController:
                     pass
             # Render time scale factor
             try:
-                if not hasattr(self, "_cached_speed_text") or not hasattr(self, "_last_time_scale_factor"):
-                    self._cached_speed_text = None
-                    self._last_time_scale_factor = None
-
-                if self._last_time_scale_factor != self.time_scale_factor:
+                if self._last_time_scale_factor != self.time_scale_factor or self._cached_speed_text is None:
                     self._cached_speed_text = small_font.render(
                         f"Speed: {self.time_scale_factor:.1f}x", True, (255, 255, 255)
                     )
@@ -2471,6 +2485,7 @@ class GameplayController:
                 logger.warning(f"Could not render time_scale_factor: {e}")
             except Exception as e:
                 logger.error(f"Unexpected error while rendering time_scale_factor: {e}")
+                # Still raise the error after logging, as it's unexpected.
                 raise
             # Render weather information
             if hasattr(self, "weather_system"):
@@ -2543,17 +2558,16 @@ class GameplayController:
                     pass
 
             # Render 'First Week Survived' achievement status
-            if hasattr(self, "global_achievements"):
-                try:
-                    survived_week = self.global_achievements.get("village_milestones", {}).get("first_week_survived", False)
-                    status_text = "Yes" if survived_week else "No"
-                    achievement_render = tiny_font.render(
-                        f"First Week Survived: {status_text}", True, (220, 220, 180) # Light yellow/gold color
-                    )
-                    self.screen.blit(achievement_render, (10, y_offset))
-                    y_offset += 15
-                except Exception as e:
-                    logger.warning(f"Could not render 'first_week_survived' achievement: {e}")
+            try:
+                survived_week = self.global_achievements.get("village_milestones", {}).get("first_week_survived", False)
+                status_text = "Yes" if survived_week else "No"
+                achievement_render = tiny_font.render(
+                    f"First Week Survived: {status_text}", True, (220, 220, 180) # Light yellow/gold color
+                )
+                self.screen.blit(achievement_render, (10, y_offset))
+                y_offset += 15
+            except Exception as e:
+                logger.warning(f"Could not render 'first_week_survived' achievement: {e}")
             # Render achievements as a separate section
             y_offset = self._render_achievements(y_offset)
 
@@ -3193,27 +3207,6 @@ class GameplayController:
         TODO: Add achievement persistence
         """
         try:
-            if not hasattr(self, "global_achievements"):
-                self.global_achievements = {
-                    "village_milestones": {
-                        "first_character_created": False,
-                        "five_characters_active": False,
-                        "successful_harvest": False,
-                        "trade_established": False,
-                        "first_week_survived": False, # New achievement
-                    },
-                    "social_achievements": {
-                        "first_friendship": False,
-                        "community_event": False,
-                        "conflict_resolved": False,
-                    },
-                    "economic_achievements": {
-                        "first_transaction": False,
-                        "wealthy_villager": False,
-                        "market_established": False,
-                    },
-                }
-
             # Check for milestone achievements
             if len(self.characters) >= 1:
                 self.global_achievements["village_milestones"][
