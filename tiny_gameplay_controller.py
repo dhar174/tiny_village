@@ -4,6 +4,7 @@ import logging
 import traceback
 import json
 import os
+import datetime # Added for time-based achievement
 from typing import Dict, List, Any, Union, Optional
 from tiny_strategy_manager import StrategyManager
 from tiny_event_handler import EventHandler, Event
@@ -2435,6 +2436,20 @@ class GameplayController:
                 except:
                     pass
 
+            # Render 'First Week Survived' achievement status
+            if hasattr(self, "global_achievements"):
+                try:
+                    survived_week = self.global_achievements.get("village_milestones", {}).get("first_week_survived", False)
+                    status_text = "Yes" if survived_week else "No"
+                    achievement_render = tiny_font.render(
+                        f"First Week Survived: {status_text}", True, (220, 220, 180) # Light yellow/gold color
+                    )
+                    self.screen.blit(achievement_render, (10, y_offset))
+                    y_offset += 15
+                except Exception as e:
+                    logger.warning(f"Could not render 'first_week_survived' achievement: {e}")
+
+
             # Render selected character info (enhanced)
             if (
                 hasattr(self.map_controller, "selected_character")
@@ -3059,6 +3074,7 @@ class GameplayController:
                         "five_characters_active": False,
                         "successful_harvest": False,
                         "trade_established": False,
+                        "first_week_survived": False, # New achievement
                     },
                     "social_achievements": {
                         "first_friendship": False,
@@ -3082,6 +3098,21 @@ class GameplayController:
                 self.global_achievements["village_milestones"][
                     "five_characters_active"
                 ] = True
+
+            # Check for time-based achievements
+            if hasattr(self, "gametime_manager") and self.gametime_manager:
+                try:
+                    # GameCalendar defaults: year=2023, month=1, day=1
+                    start_game_dt = datetime.datetime(2023, 1, 1)
+                    current_game_dt = self.gametime_manager.get_calendar().get_game_time()
+
+                    time_passed = current_game_dt - start_game_dt
+
+                    if time_passed.days >= 7:
+                        self.global_achievements["village_milestones"]["first_week_survived"] = True
+
+                except Exception as time_e:
+                    logger.error(f"Error checking time-based achievements: {time_e}")
 
             return True
 
