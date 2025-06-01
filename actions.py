@@ -1,7 +1,7 @@
-""" Dynamic and Extensible Actions
+"""Dynamic and Extensible Actions
 Action Templates:
 Design actions as templates that can be instantiated with specific parameters. This allows new actions to be defined or modified without hard-coding every possibility.
-Actions should include not just conditions and effects but also metadata that defines how they integrate with the graph (e.g., which nodes or edges they affect). 
+Actions should include not just conditions and effects but also metadata that defines how they integrate with the graph (e.g., which nodes or edges they affect).
 
 Dynamic Action Generation:
 Implement a system where actions can be generated or modified based on game events, player inputs, or character development.
@@ -311,19 +311,19 @@ class Action:
         impact_rating_on_target=None,  # number representing the weight of the impact on the target ranging from 0 to 3, with 0 being no impact and 3 being a high impact
         impact_rating_on_initiator=None,  # number representing the weight of the impact on the initiator ranging from 0 to 3
         impact_rating_on_other=None,  # Dict with keys like "proximity" and "relationship" and values ranging from 0 to 3 representing the weight of the impact on other characters as defined by the keys
-        action_id=None, # Added for consistency with new actions
-        created_at=None, # Added
-        expires_at=None, # Added
-        completed_at=None, # Added
-        priority=None, # Added
-        related_goal=None # Added
+        action_id=None,  # Added for consistency with new actions
+        created_at=None,  # Added
+        expires_at=None,  # Added
+        completed_at=None,  # Added
+        priority=None,  # Added
+        related_goal=None,  # Added
     ):
         GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
         # Warning: Name MUST be unique! Check for duplicates before setting.
         self.impact_rating_on_target = impact_rating_on_target
         self.impact_rating_on_initiator = impact_rating_on_initiator
         self.impact_rating_on_other = impact_rating_on_other
-        self.action_id = action_id if action_id else id(self) # Use unique ID
+        self.action_id = action_id if action_id else id(self)  # Use unique ID
         self.created_at = created_at
         self.expires_at = expires_at
         self.completed_at = completed_at
@@ -361,19 +361,21 @@ class Action:
 
     def preconditions_met(self):
 
-        if not self.preconditions: 
+        if not self.preconditions:
             return True
         # This assumes preconditions is a list of Condition objects
         # If it's a dict from old ActionSystem.create_precondition, this will fail.
         # For new actions, ensure preconditions are Condition objects or adapt this.
         try:
             return all(
-                precondition.check_condition() 
-                for precondition in self.preconditions # Assuming list of Condition objects
+                precondition.check_condition()
+                for precondition in self.preconditions  # Assuming list of Condition objects
             )
-        except AttributeError: # If precondition is not a Condition object
-            print(f"Warning: Precondition for action {self.name} is not a Condition object or check_condition failed.")
-            return False # Or handle differently
+        except AttributeError:  # If precondition is not a Condition object
+            print(
+                f"Warning: Precondition for action {self.name} is not a Condition object or check_condition failed."
+            )
+            return False  # Or handle differently
 
     def apply_single_effect(self, effect, state: State, change_value=None):
         if change_value is None:
@@ -625,12 +627,16 @@ class Action:
 
     #         return True
     #     return False
-    def execute(self, character=None, graph_manager=None): # Changed signature to match new actions
+    def execute(
+        self, character=None, graph_manager=None
+    ):  # Changed signature to match new actions
         # Placeholder execute for base, actual logic in subclasses
-        print(f"Executing generic action: {self.name} by {character.name if character else self.initiator} on target {self.target}")
+        print(
+            f"Executing generic action: {self.name} by {character.name if character else self.initiator} on target {self.target}"
+        )
         # This method would apply effects to character.state or graph_manager
         # For now, as graph_manager is None due to workaround, true effects can't be applied here.
-        if character and hasattr(character, 'get_state'):
+        if character and hasattr(character, "get_state"):
             char_state_obj = character.get_state()
             # self.apply_effects(char_state_obj) # apply_effects needs a dict-like state
             # To use with State object, State class would need to allow direct item assignment
@@ -641,9 +647,12 @@ class Action:
         return True
 
     def __str__(self):
-        preconditions_str = str(self.preconditions) if self.preconditions else "[]" # Changed from {}
+        preconditions_str = (
+            str(self.preconditions) if self.preconditions else "[]"
+        )  # Changed from {}
         effects_str = str(self.effects) if self.effects else "[]"
         return f"{self.name}: Preconditions: {preconditions_str} -> Effects: {effects_str}, Cost: {self.cost}"
+
     def add_effect(self, effect):
         self.effects.append(effect)
 
@@ -694,7 +703,18 @@ class Action:
     #     )
     def __hash__(self):
         # Simplified hash for workaround compatibility
-        return hash((self.name, self.cost, tuple(sorted(self.effects.items()) if isinstance(self.effects, dict) else tuple(self.effects))))
+        return hash(
+            (
+                self.name,
+                self.cost,
+                tuple(
+                    sorted(self.effects.items())
+                    if isinstance(self.effects, dict)
+                    else tuple(self.effects)
+                ),
+            )
+        )
+
     def __eq__(self, other):
         if not isinstance(other, Action):
             return False
@@ -708,40 +728,92 @@ class Action:
             # and self.impact_rating_on_initiator == other.impact_rating_on_initiator
             # and self.impact_rating_on_other == other.impact_rating_on_other
             # and self.change_value == other.change_value
-            self.name == other.name and
-            self.cost == other.cost and
-            self.effects == other.effects and # Simplistic comparison
-            self.preconditions == other.preconditions # Simplistic comparison
+            self.name == other.name
+            and self.cost == other.cost
+            and self.effects == other.effects  # Simplistic comparison
+            and self.preconditions == other.preconditions  # Simplistic comparison
         )
 
+
 class TalkAction(Action):
-    def __init__(self, initiator, target, name="Talk", preconditions=None, effects=None, cost=0.1, **kwargs):
+    def __init__(
+        self,
+        initiator,
+        target,
+        name="Talk",
+        preconditions=None,
+        effects=None,
+        cost=0.1,
+        **kwargs,
+    ):
         # Ensure preconditions and effects are lists if provided, or default to empty lists
         _preconditions = preconditions if preconditions is not None else []
-        _effects = effects if effects is not None else [{"attribute": "social_wellbeing", "target_id": str(target), "change": 1, "operator": "add"}]
-        super().__init__(name, _preconditions, _effects, cost, target=target, initiator=initiator, **kwargs)
+        _effects = (
+            effects
+            if effects is not None
+            else [
+                {
+                    "attribute": "social_wellbeing",
+                    "target_id": str(target),
+                    "change": 1,
+                    "operator": "add",
+                }
+            ]
+        )
 
-    def execute(self, character=None, graph_manager=None): 
+        # Filter kwargs to only include parameters that Action.__init__ accepts
+        base_action_params = {
+            "related_skills",
+            "default_target_is_initiator",
+            "impact_rating_on_target",
+            "impact_rating_on_initiator",
+            "impact_rating_on_other",
+            "action_id",
+            "created_at",
+            "expires_at",
+            "completed_at",
+            "priority",
+            "related_goal",
+        }
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+
+        super().__init__(
+            name,
+            _preconditions,
+            _effects,
+            cost,
+            target=target,
+            initiator=initiator,
+            **filtered_kwargs,
+        )
+
+    def execute(self, character=None, graph_manager=None):
         initiator_obj = character if character else self.initiator
         target_obj = self.target
 
-        initiator_name = getattr(initiator_obj, 'name', str(initiator_obj))
-        target_name = getattr(target_obj, 'name', str(target_obj))
+        initiator_name = getattr(initiator_obj, "name", str(initiator_obj))
+        target_name = getattr(target_obj, "name", str(target_obj))
 
         print(f"{initiator_name} is talking to {target_name}")
-        if hasattr(target_obj, 'respond_to_talk'):
+        if hasattr(target_obj, "respond_to_talk"):
             target_obj.respond_to_talk(initiator_obj)
         return True
 
 
 class ExploreAction(Action):
-    def execute(self): 
-        if hasattr(self.initiator, 'name') and hasattr(self.target, 'location') and hasattr(self.target, 'discover'):
+    def execute(self):
+        if (
+            hasattr(self.initiator, "name")
+            and hasattr(self.target, "location")
+            and hasattr(self.target, "discover")
+        ):
             print(f"{self.initiator.name} is exploring {self.target.location}")
             self.target.discover(self.initiator)
         else:
-            print(f"Warning: ExploreAction executed with incomplete initiator/target for {self.name}")
-        return True # Added return
+            print(
+                f"Warning: ExploreAction executed with incomplete initiator/target for {self.name}"
+            )
+        return True  # Added return
 
 
 class ActionTemplate:
@@ -788,15 +860,15 @@ action.execute() """
 
 class CompositeAction(Action):
     def __init__(self):
-        super().__init__(name="CompositeAction", preconditions=[], effects=[]) 
+        super().__init__(name="CompositeAction", preconditions=[], effects=[])
         self.actions = []
 
     def add_action(self, action):
         self.actions.append(action)
 
-    def execute(self, character=None, graph_manager=None): # Added parameters
+    def execute(self, character=None, graph_manager=None):  # Added parameters
         for action in self.actions:
-            action.execute(character, graph_manager) # Pass parameters
+            action.execute(character, graph_manager)  # Pass parameters
 
 
 # # Example usage
@@ -891,9 +963,33 @@ class ActionSystem:
         #     {"happiness": 10, "energy": -10},
         #     1,
         # )
-        study_template = ActionTemplate("Study", [{"type": "knowledge_lt_10"}], [{"attribute": "knowledge", "change": 5}, {"attribute": "energy", "change": -10}], 1)
-        work_template = ActionTemplate("Work", [{"type": "energy_gt_20"}], [{"attribute": "money", "change": 50}, {"attribute": "energy", "change": -20}], 2)
-        socialize_template = ActionTemplate("Socialize", [{"type": "social_gt_20"}, {"type": "happiness_gt_10"}], [{"attribute": "happiness", "change": 10}, {"attribute": "energy", "change": -10}], 1)
+        study_template = ActionTemplate(
+            "Study",
+            [{"type": "knowledge_lt_10"}],
+            [
+                {"attribute": "knowledge", "change": 5},
+                {"attribute": "energy", "change": -10},
+            ],
+            1,
+        )
+        work_template = ActionTemplate(
+            "Work",
+            [{"type": "energy_gt_20"}],
+            [
+                {"attribute": "money", "change": 50},
+                {"attribute": "energy", "change": -20},
+            ],
+            2,
+        )
+        socialize_template = ActionTemplate(
+            "Socialize",
+            [{"type": "social_gt_20"}, {"type": "happiness_gt_10"}],
+            [
+                {"attribute": "happiness", "change": 10},
+                {"attribute": "energy", "change": -10},
+            ],
+            1,
+        )
         # Add templates to the action generator
         self.action_generator.add_template(study_template)
         self.action_generator.add_template(work_template)
@@ -972,3 +1068,237 @@ class ActionSystem:
             }
         elif type(conditions_list[0]) == Condition:
             return {cond.attribute: cond for cond in conditions_list}
+
+
+class GreetAction(Action):
+    def __init__(
+        self,
+        initiator,
+        target,
+        name="Greet",
+        preconditions=None,
+        effects=None,
+        cost=0.1,
+        **kwargs,
+    ):
+        # Define default preconditions
+        default_preconditions = [
+            {
+                "type": "are_near",
+                "actor_id": str(initiator),
+                "target_id": str(target),
+                "threshold": 5.0,
+            },
+            {
+                "type": "relationship_not_hostile",
+                "actor_id": str(initiator),
+                "target_id": str(target),
+                "threshold": -5,
+            },
+        ]
+
+        # Define default effects
+        default_effects = [
+            {
+                "attribute": "relationship_status",
+                "target_id": str(target),
+                "change": 1,
+                "operator": "add",
+            },
+            {
+                "attribute": "happiness",
+                "target_id": str(initiator),
+                "change": 0.05,
+                "operator": "add",
+            },
+            {
+                "attribute": "happiness",
+                "target_id": str(target),
+                "change": 0.05,
+                "operator": "add",
+            },
+        ]
+
+        _preconditions = (
+            preconditions if preconditions is not None else default_preconditions
+        )
+        _effects = effects if effects is not None else default_effects
+        _cost = cost + 0.05  # Base cost plus greeting overhead
+
+        super().__init__(
+            name,
+            _preconditions,
+            _effects,
+            _cost,
+            target=target,
+            initiator=initiator,
+            **kwargs,
+        )
+
+    def execute(self, character=None, graph_manager=None):
+        initiator_obj = character if character else self.initiator
+        target_obj = self.target
+
+        initiator_name = getattr(initiator_obj, "name", str(initiator_obj))
+        target_name = getattr(target_obj, "name", str(target_obj))
+
+        print(f"{initiator_name} greets {target_name}")
+        return True
+
+
+class ShareNewsAction(Action):
+    def __init__(
+        self,
+        initiator,
+        target,
+        news_item="",
+        name="Share News",
+        preconditions=None,
+        effects=None,
+        cost=0.5,
+        **kwargs,
+    ):
+        # Define default preconditions
+        default_preconditions = [
+            {
+                "type": "are_near",
+                "actor_id": str(initiator),
+                "target_id": str(target),
+                "threshold": 5.0,
+            },
+            {
+                "type": "relationship_neutral_or_positive",
+                "actor_id": str(initiator),
+                "target_id": str(target),
+                "threshold": 0,
+            },
+        ]
+
+        # Define default effects
+        default_effects = [
+            {
+                "attribute": "relationship_status",
+                "target_id": str(target),
+                "change": 2,
+                "operator": "add",
+            },
+            {
+                "attribute": "happiness",
+                "target_id": str(initiator),
+                "change": 0.1,
+                "operator": "add",
+            },
+            {
+                "attribute": "memory",
+                "target_id": str(target),
+                "content": news_item,
+                "type": "information",
+            },
+        ]
+
+        _preconditions = (
+            preconditions if preconditions is not None else default_preconditions
+        )
+        _effects = effects if effects is not None else default_effects
+        _cost = cost + 0.1  # Base cost plus news sharing overhead
+
+        super().__init__(
+            name,
+            _preconditions,
+            _effects,
+            _cost,
+            target=target,
+            initiator=initiator,
+            **kwargs,
+        )
+        self.news_item = news_item
+
+    def execute(self, character=None, graph_manager=None):
+        initiator_obj = character if character else self.initiator
+        target_obj = self.target
+
+        initiator_name = getattr(initiator_obj, "name", str(initiator_obj))
+        target_name = getattr(target_obj, "name", str(target_obj))
+
+        print(f"{initiator_name} shares news with {target_name}: {self.news_item}")
+        return True
+
+
+class OfferComplimentAction(Action):
+    def __init__(
+        self,
+        initiator,
+        target,
+        compliment_topic="",
+        name="Offer Compliment",
+        preconditions=None,
+        effects=None,
+        cost=0.3,
+        **kwargs,
+    ):
+        # Define default preconditions
+        default_preconditions = [
+            {
+                "type": "are_near",
+                "actor_id": str(initiator),
+                "target_id": str(target),
+                "threshold": 5.0,
+            },
+            {
+                "type": "relationship_not_hostile",
+                "actor_id": str(initiator),
+                "target_id": str(target),
+                "threshold": -5,
+            },
+        ]
+
+        # Define default effects
+        default_effects = [
+            {
+                "attribute": "relationship_status",
+                "target_id": str(target),
+                "change": 3,
+                "operator": "add",
+            },
+            {
+                "attribute": "happiness",
+                "target_id": str(target),
+                "change": 0.15,
+                "operator": "add",
+            },
+            {
+                "attribute": "happiness",
+                "target_id": str(initiator),
+                "change": 0.05,
+                "operator": "add",
+            },
+        ]
+
+        _preconditions = (
+            preconditions if preconditions is not None else default_preconditions
+        )
+        _effects = effects if effects is not None else default_effects
+        _cost = cost + 0.1  # Base cost plus compliment overhead
+
+        super().__init__(
+            name,
+            _preconditions,
+            _effects,
+            _cost,
+            target=target,
+            initiator=initiator,
+            **kwargs,
+        )
+        self.compliment_topic = compliment_topic
+
+    def execute(self, character=None, graph_manager=None):
+        initiator_obj = character if character else self.initiator
+        target_obj = self.target
+
+        initiator_name = getattr(initiator_obj, "name", str(initiator_obj))
+        target_name = getattr(target_obj, "name", str(target_obj))
+
+        print(
+            f"{initiator_name} compliments {target_name} about {self.compliment_topic}"
+        )
+        return True
