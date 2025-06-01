@@ -2347,7 +2347,33 @@ class GameplayController:
             pygame.display.flip()
         else:
             pygame.display.update()
+    def _render_achievements(self, y_offset: int) -> int:
+        """
+        Render all village milestone achievements in a dedicated UI section.
+        Returns the updated y_offset after drawing.
+        """
+        if not hasattr(self, "global_achievements"):
+            return y_offset
 
+        milestones = self.global_achievements.get("village_milestones", {})
+        if not milestones:
+            return y_offset
+
+        # Section header (optional)
+        header = tiny_font.render("Achievements:", True, (240, 240, 200))
+        self.screen.blit(header, (10, y_offset))
+        y_offset += 20
+
+        for key, achieved in milestones.items():
+            # Convert snake_case key to Title Case text
+            title = key.replace("_", " ").title()
+            status = "✓" if achieved else "✗"
+            color = (180, 220, 180) if achieved else (200, 180, 180)
+            text = tiny_font.render(f"{status} {title}", True, color)
+            self.screen.blit(text, (10, y_offset))
+            y_offset += 18
+
+        return y_offset
     def _render_ui(self):
         """Render user interface elements with improved layout, new features, and system status."""
 
@@ -2476,7 +2502,8 @@ class GameplayController:
                     y_offset += 15
                 except Exception as e:
                     logger.warning(f"Could not render 'first_week_survived' achievement: {e}")
-
+            # Render achievements as a separate section
+            y_offset = self._render_achievements(y_offset)
 
             # Render selected character info (enhanced)
             if (
