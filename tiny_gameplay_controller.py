@@ -5,15 +5,6 @@ import traceback
 import json
 import os
 import datetime # Added for time-based achievement
-WEATHER_ENERGY_EFFECTS = {
-    'rainy': 0.5,
-    # 'snowy': 1.0, # easy to add more
-    # Add other weather types here
-}
-WEATHER_UI_MESSAGES = {
-    'rainy': ("Rainfall is tiring the villagers.", (180, 180, 220)),
-    # 'snowy': ("Snow is exhausting the villagers.", (220, 220, 255)),
-}
 from typing import Dict, List, Any, Union, Optional
 from tiny_strategy_manager import StrategyManager
 from tiny_event_handler import EventHandler, Event
@@ -1774,15 +1765,15 @@ class GameplayController:
             actions_success = self._execute_character_actions(character)
 
             # Apply weather effects
-            weather = getattr(self, "weather_system", None)
-            if weather:
-                current_weather = weather.get('current_weather')
-                energy_decrease = WEATHER_ENERGY_EFFECTS.get(current_weather, 0) * dt
-                if energy_decrease and hasattr(character, 'energy'):
-                    original_energy = character.energy
-                    character.energy = max(0, character.energy - energy_decrease)
-                    if original_energy > character.energy:
-                        logger.debug(f"{current_weather.title()} weather decreased {character.name}'s energy by {energy_decrease:.2f} to {character.energy:.2f}.")
+            if hasattr(self, "weather_system") and self.weather_system:
+                if self.weather_system.get('current_weather') == 'rainy':
+                    if hasattr(character, 'energy'):
+                        original_energy = character.energy
+                        energy_decrease = 0.5 * dt
+                        character.energy -= energy_decrease
+                        character.energy = max(0, character.energy) # Ensure energy doesn't go below 0
+                        if original_energy > character.energy: # Log only if energy actually decreased
+                            logger.debug(f"Rainy weather slightly decreased {character.name}'s energy by {energy_decrease:.2f} to {character.energy:.2f}.")
 
             # Character update is successful if at least one component works
             return memory_success or goals_success or actions_success
@@ -2035,9 +2026,27 @@ class GameplayController:
             for action_type, skill in skill_mappings.items():
                 if action_type in action_name and hasattr(character, skill):
                     current_value = getattr(character, skill, 0)
+                    old_skill_value = current_value # Store value before potential update
+
                     # Small skill improvement with diminishing returns
                     improvement = max(1, int(5 * (100 - current_value) / 100))
-                    setattr(character, skill, min(100, current_value + improvement))
+
+                    if improvement > 0: # Only proceed if there's an actual improvement calculated
+                        setattr(character, skill, min(100, current_value + improvement))
+                        new_skill_value = getattr(character, skill)
+
+                        if skill == "job_performance" and new_skill_value > old_skill_value:
+                            if hasattr(character, 'current_satisfaction'):
+                                satisfaction_bonus = 2
+                                character.current_satisfaction += satisfaction_bonus
+                                character.current_satisfaction = min(100, character.current_satisfaction)
+                                logger.debug(
+                                    f"{character.name} feels more satisfied from improving job performance! "
+                                    f"Satisfaction +{satisfaction_bonus} (now {character.current_satisfaction})."
+                                )
+                    else: # If improvement is 0, skill remains unchanged.
+                        pass
+
 
         except Exception as e:
             logger.warning(f"Error updating character skills: {e}")
@@ -2404,14 +2413,14 @@ class GameplayController:
                 self.screen.blit(weather_text, (10, y_offset))
                 y_offset += 20
 
-                current_weather = None
-                if isinstance(self.weather_system, dict):
-                    current_weather = self.weather_system.get('current_weather')
-                if current_weather in WEATHER_UI_MESSAGES:
-                    message, color = WEATHER_UI_MESSAGES[current_weather]
-                    weather_effect_text = tiny_font.render(message, True, color)
-                    self.screen.blit(weather_effect_text, (10, y_offset))
-                    y_offset += 15
+                # Add message if raining
+                if self.weather_system.get('current_weather') == 'rainy':
+                    rain_effect_text = tiny_font.render(
+                        "Rainfall is tiring the villagers.", True, (180, 180, 220) # Light bluish-grey
+                    )
+                    self.screen.blit(rain_effect_text, (10, y_offset))
+                    y_offset += 15 # Increment for the new line
+
             # Render game statistics
             stats = self.game_statistics
             stats_text = tiny_font.render(
@@ -3131,7 +3140,7 @@ class GameplayController:
             if hasattr(self, "gametime_manager") and self.gametime_manager:
                 try:
                     # GameCalendar defaults: year=2023, month=1, day=1
-                    start_game_dt = self.gametime_manager.get_calendar().get_game_start_time()
+                    start_game_dt = datetime.datetime(2023, 1, 1)
                     current_game_dt = self.gametime_manager.get_calendar().get_game_time()
 
                     time_passed = current_game_dt - start_game_dt
