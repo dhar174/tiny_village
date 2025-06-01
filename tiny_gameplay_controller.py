@@ -1270,8 +1270,7 @@ class GameplayController:
         target_fps = self.config.get("target_fps", 60)
 
         while self.running:
-            base_dt = self.clock.tick(target_fps) / 1000.0  # Frame time in seconds
-            dt = base_dt * self.time_scale_factor # Apply time scale factor
+            dt = self.clock.tick(target_fps) / 1000.0 * self.time_scale_factor  # Frame time in seconds with time scale factor
             # TODO: Add performance monitoring
             # frame_start_time = time.time()
 
