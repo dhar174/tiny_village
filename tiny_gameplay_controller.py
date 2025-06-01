@@ -1764,6 +1764,17 @@ class GameplayController:
             goals_success = self._update_character_goals(character)
             actions_success = self._execute_character_actions(character)
 
+            # Apply weather effects
+            if hasattr(self, "weather_system") and self.weather_system:
+                if self.weather_system.get('current_weather') == 'rainy':
+                    if hasattr(character, 'energy'):
+                        original_energy = character.energy
+                        energy_decrease = 0.5 * dt
+                        character.energy -= energy_decrease
+                        character.energy = max(0, character.energy) # Ensure energy doesn't go below 0
+                        if original_energy > character.energy: # Log only if energy actually decreased
+                            logger.debug(f"Rainy weather slightly decreased {character.name}'s energy by {energy_decrease:.2f} to {character.energy:.2f}.")
+
             # Character update is successful if at least one component works
             return memory_success or goals_success or actions_success
 
@@ -2384,6 +2395,14 @@ class GameplayController:
                 self.screen.blit(weather_text, (10, y_offset))
                 y_offset += 20
 
+                # Add message if raining
+                if self.weather_system.get('current_weather') == 'rainy':
+                    rain_effect_text = tiny_font.render(
+                        "Rainfall is tiring the villagers.", True, (180, 180, 220) # Light bluish-grey
+                    )
+                    self.screen.blit(rain_effect_text, (10, y_offset))
+                    y_offset += 15 # Increment for the new line
+
             # Render game statistics
             stats = self.game_statistics
             stats_text = tiny_font.render(
@@ -2437,16 +2456,17 @@ class GameplayController:
                     pass
 
             # Render 'First Week Survived' achievement status
-            try:
-                survived_week = self.global_achievements.get("village_milestones", {}).get("first_week_survived", False)
-                status_text = "Yes" if survived_week else "No"
-                achievement_render = tiny_font.render(
-                    f"First Week Survived: {status_text}", True, (220, 220, 180) # Light yellow/gold color
-                )
-                self.screen.blit(achievement_render, (10, y_offset))
-                y_offset += 15
-            except Exception as e:
-                logger.warning(f"Could not render 'first_week_survived' achievement: {e}")
+            if hasattr(self, "global_achievements"):
+                try:
+                    survived_week = self.global_achievements.get("village_milestones", {}).get("first_week_survived", False)
+                    status_text = "Yes" if survived_week else "No"
+                    achievement_render = tiny_font.render(
+                        f"First Week Survived: {status_text}", True, (220, 220, 180) # Light yellow/gold color
+                    )
+                    self.screen.blit(achievement_render, (10, y_offset))
+                    y_offset += 15
+                except Exception as e:
+                    logger.warning(f"Could not render 'first_week_survived' achievement: {e}")
 
 
             # Render selected character info (enhanced)
@@ -3102,7 +3122,7 @@ class GameplayController:
             if hasattr(self, "gametime_manager") and self.gametime_manager:
                 try:
                     # GameCalendar defaults: year=2023, month=1, day=1
-                    start_game_dt = GAME_START_DATE
+                    start_game_dt = datetime.datetime(2023, 1, 1)
                     current_game_dt = self.gametime_manager.get_calendar().get_game_time()
 
                     time_passed = current_game_dt - start_game_dt
