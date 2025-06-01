@@ -2404,7 +2404,9 @@ class GameplayController:
                 self.screen.blit(weather_text, (10, y_offset))
                 y_offset += 20
 
-                current_weather = self.weather_system.get('current_weather')
+                current_weather = None
+                if isinstance(self.weather_system, dict):
+                    current_weather = self.weather_system.get('current_weather')
                 if current_weather in WEATHER_UI_MESSAGES:
                     message, color = WEATHER_UI_MESSAGES[current_weather]
                     weather_effect_text = tiny_font.render(message, True, color)
