@@ -10,6 +10,10 @@ WEATHER_ENERGY_EFFECTS = {
     # 'snowy': 1.0, # easy to add more
     # Add other weather types here
 }
+WEATHER_UI_MESSAGES = {
+    'rainy': ("Rainfall is tiring the villagers.", (180, 180, 220)),
+    # 'snowy': ("Snow is exhausting the villagers.", (220, 220, 255)),
+}
 from typing import Dict, List, Any, Union, Optional
 from tiny_strategy_manager import StrategyManager
 from tiny_event_handler import EventHandler, Event
@@ -2400,14 +2404,12 @@ class GameplayController:
                 self.screen.blit(weather_text, (10, y_offset))
                 y_offset += 20
 
-                # Add message if raining
-                if self.weather_system.get('current_weather') == 'rainy':
-                    rain_effect_text = tiny_font.render(
-                        "Rainfall is tiring the villagers.", True, (180, 180, 220) # Light bluish-grey
-                    )
-                    self.screen.blit(rain_effect_text, (10, y_offset))
-                    y_offset += 15 # Increment for the new line
-
+                current_weather = self.weather_system.get('current_weather')
+                if current_weather in WEATHER_UI_MESSAGES:
+                    message, color = WEATHER_UI_MESSAGES[current_weather]
+                    weather_effect_text = tiny_font.render(message, True, color)
+                    self.screen.blit(weather_effect_text, (10, y_offset))
+                    y_offset += 15
             # Render game statistics
             stats = self.game_statistics
             stats_text = tiny_font.render(
@@ -3127,7 +3129,7 @@ class GameplayController:
             if hasattr(self, "gametime_manager") and self.gametime_manager:
                 try:
                     # GameCalendar defaults: year=2023, month=1, day=1
-                    start_game_dt = datetime.datetime(2023, 1, 1)
+                    start_game_dt = self.gametime_manager.get_calendar().get_game_start_time()
                     current_game_dt = self.gametime_manager.get_calendar().get_game_time()
 
                     time_passed = current_game_dt - start_game_dt
