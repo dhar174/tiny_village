@@ -1,7 +1,6 @@
 # This file contains the Character class, which is used to represent a character in the game.
 
 from ast import arg
-from calendar import c
 import heapq
 
 # import imp  # Removed - deprecated in Python 3.12
