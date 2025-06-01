@@ -458,6 +458,7 @@ class GameplayController:
         self.initialization_errors = []
         self.running = True
         self.paused = False
+        self.time_scale_factor = 1.0 # Added for time scaling
 
         # Initialize recovery manager
         self.recovery_manager = SystemRecoveryManager(self)
@@ -1259,7 +1260,8 @@ class GameplayController:
         target_fps = self.config.get("target_fps", 60)
 
         while self.running:
-            dt = self.clock.tick(target_fps) / 1000.0  # Frame time in seconds
+            base_dt = self.clock.tick(target_fps) / 1000.0  # Frame time in seconds
+            dt = base_dt * self.time_scale_factor # Apply time scale factor
 
             # TODO: Add performance monitoring
             # frame_start_time = time.time()
@@ -1321,6 +1323,8 @@ class GameplayController:
                 "feature_status": [pygame.K_f],
                 "system_recovery": [pygame.K_F5],
                 "analytics": [pygame.K_a],
+                "increase_speed": [pygame.K_PAGEUP], # Added for time scaling
+                "decrease_speed": [pygame.K_PAGEDOWN], # Added for time scaling
             },
         )
 
@@ -1368,6 +1372,12 @@ class GameplayController:
         elif event.key in key_bindings.get("analytics", [pygame.K_a]):
             # Show analytics information
             self._show_analytics_info()
+        elif event.key in key_bindings.get("increase_speed", []):
+            self.time_scale_factor = min(3.0, self.time_scale_factor + 0.5)
+            logger.info(f"Time scale set to: {self.time_scale_factor}x")
+        elif event.key in key_bindings.get("decrease_speed", []):
+            self.time_scale_factor = max(0.5, self.time_scale_factor - 0.5)
+            logger.info(f"Time scale set to: {self.time_scale_factor}x")
 
     def _show_help_info(self):
         """Display help information."""
@@ -2420,6 +2430,16 @@ class GameplayController:
                     )
                     self.screen.blit(rain_effect_text, (10, y_offset))
                     y_offset += 15 # Increment for the new line
+
+            # Render time scale factor
+            try:
+                speed_text_render = small_font.render(
+                    f"Speed: {self.time_scale_factor:.1f}x", True, (255, 255, 255)
+                )
+                self.screen.blit(speed_text_render, (10, y_offset))
+                y_offset += 20
+            except Exception as e:
+                logger.warning(f"Could not render time_scale_factor: {e}")
 
             # Render game statistics
             stats = self.game_statistics
