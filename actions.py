@@ -316,9 +316,9 @@ class Action:
         expires_at=None, # Added
         completed_at=None, # Added
         priority=None, # Added
-        related_goal=None # Added
+        related_goal=None, # Added
+        graph_manager=None
     ):
-        GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
         # Warning: Name MUST be unique! Check for duplicates before setting.
         self.impact_rating_on_target = impact_rating_on_target
         self.impact_rating_on_initiator = impact_rating_on_initiator
@@ -348,7 +348,13 @@ class Action:
             self.target = target
         self.change_value = 0
         self.target_id = target.uuid if hasattr(target, "uuid") else id(target)
-        self.graph_manager = GraphManager()
+        if graph_manager is not None:
+            self.graph_manager = graph_manager
+        else:
+            # Fallback to the singleton instance if no graph_manager is explicitly passed.
+            # This maintains some backward compatibility but explicit passing is preferred.
+            GraphManager_module = importlib.import_module("tiny_graph_manager")
+            self.graph_manager = GraphManager_module.GraphManager()
         self.related_skills = related_skills
 
     def to_dict(self):
@@ -625,11 +631,11 @@ class Action:
 
     #         return True
     #     return False
-    def execute(self, character=None, graph_manager=None): # Changed signature to match new actions
+    def execute(self, character=None): # Changed signature to match new actions
         # Placeholder execute for base, actual logic in subclasses
         print(f"Executing generic action: {self.name} by {character.name if character else self.initiator} on target {self.target}")
-        # This method would apply effects to character.state or graph_manager
-        # For now, as graph_manager is None due to workaround, true effects can't be applied here.
+        # This method would apply effects to character.state or use self.graph_manager for world interactions.
+        # For now, as self.graph_manager might be None due to fallback, true effects can't be applied here reliably without checking.
         if character and hasattr(character, 'get_state'):
             char_state_obj = character.get_state()
             # self.apply_effects(char_state_obj) # apply_effects needs a dict-like state
@@ -715,13 +721,13 @@ class Action:
         )
 
 class TalkAction(Action):
-    def __init__(self, initiator, target, name="Talk", preconditions=None, effects=None, cost=0.1, **kwargs):
+    def __init__(self, initiator, target, name="Talk", preconditions=None, effects=None, cost=0.1, graph_manager=None, **kwargs):
         # Ensure preconditions and effects are lists if provided, or default to empty lists
         _preconditions = preconditions if preconditions is not None else []
         _effects = effects if effects is not None else [{"attribute": "social_wellbeing", "target_id": str(target), "change": 1, "operator": "add"}]
-        super().__init__(name, _preconditions, _effects, cost, target=target, initiator=initiator, **kwargs)
+        super().__init__(name, _preconditions, _effects, cost, target=target, initiator=initiator, graph_manager=graph_manager, **kwargs)
 
-    def execute(self, character=None, graph_manager=None): 
+    def execute(self, character=None):
         initiator_obj = character if character else self.initiator
         target_obj = self.target
 
@@ -735,7 +741,12 @@ class TalkAction(Action):
 
 
 class ExploreAction(Action):
-    def execute(self): 
+    def __init__(self, initiator, target, name="Explore", preconditions=None, effects=None, cost=0.2, graph_manager=None, **kwargs):
+        _preconditions = preconditions if preconditions is not None else []
+        _effects = effects if effects is not None else [] # Default effects for exploration
+        super().__init__(name, _preconditions, _effects, cost, target=target, initiator=initiator, graph_manager=graph_manager, **kwargs)
+
+    def execute(self, character=None):
         if hasattr(self.initiator, 'name') and hasattr(self.target, 'location') and hasattr(self.target, 'discover'):
             print(f"{self.initiator.name} is exploring {self.target.location}")
             self.target.discover(self.initiator)
@@ -764,16 +775,17 @@ class ActionTemplate:
             self.cost,
             parameters["target"],
             parameters["initiator"],
+            graph_manager=parameters.get("graph_manager") # Pass graph_manager
         )
 
     def add_skill(self, skill):
         self.related_skills.append(skill)
 
-    def create_action(self, action_type, initiator, target):
+    def create_action(self, action_type, initiator, target, graph_manager=None):
         if action_type == "talk":
-            return TalkAction(initiator, target)
+            return TalkAction(initiator, target, graph_manager=graph_manager)
         elif action_type == "explore":
-            return ExploreAction(initiator, target)
+            return ExploreAction(initiator, target, graph_manager=graph_manager)
         else:
             raise ValueError("Unknown action type")
 
@@ -787,16 +799,16 @@ action.execute() """
 
 
 class CompositeAction(Action):
-    def __init__(self):
-        super().__init__(name="CompositeAction", preconditions=[], effects=[]) 
+    def __init__(self, graph_manager=None, **kwargs):
+        super().__init__(name="CompositeAction", preconditions=[], effects=[], graph_manager=graph_manager, **kwargs)
         self.actions = []
 
     def add_action(self, action):
         self.actions.append(action)
 
-    def execute(self, character=None, graph_manager=None): # Added parameters
+    def execute(self, character=None):
         for action in self.actions:
-            action.execute(character, graph_manager) # Pass parameters
+            action.execute(character) # Pass character, sub-actions use their own self.graph_manager
 
 
 # # Example usage
@@ -807,13 +819,17 @@ class CompositeAction(Action):
 
 
 class ActionGenerator:
-    def __init__(self):
+    def __init__(self, graph_manager=None):
         self.templates = []
+        self.graph_manager = graph_manager
 
     def add_template(self, template):
         self.templates.append(template)
 
     def generate_actions(self, parameters):
+        # Ensure graph_manager is in parameters for template.instantiate
+        if "graph_manager" not in parameters and self.graph_manager is not None:
+            parameters["graph_manager"] = self.graph_manager
         return [template.instantiate(parameters) for template in self.templates]
 
 
@@ -853,8 +869,8 @@ class ActionSkill(Skill):
 
 
 class ActionSystem:
-    def __init__(self):
-        self.action_generator = ActionGenerator()
+    def __init__(self, graph_manager=None):
+        self.action_generator = ActionGenerator(graph_manager=graph_manager)
 
     def setup_actions(self):
         # Define action templates

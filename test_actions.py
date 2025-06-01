@@ -16,9 +16,12 @@ class TestChar: # Existing class in the file
         self.state = state
 
 
+from tiny_graph_manager import GraphManager # Added import
+
 class TestActionSystem(unittest.TestCase):
     def setUp(self):
-        self.action_system = ActionSystem()
+        self.graph_manager = GraphManager()
+        self.action_system = ActionSystem(graph_manager=self.graph_manager)
         # It seems instantiate_condition and create_precondition in ActionSystem might need a target.
         # For existing tests, let's provide a dummy target if they fail due to target being None.
         self.dummy_target_for_condition = State({"name": "DummyTargetForTestActionSystem"})
@@ -131,11 +134,10 @@ class TestSocialActions(unittest.TestCase):
         self.character_id = "char1"
         self.target_character_id = "char2"
         self.mock_character = MockCharacter(name="Alice")
-        # graph_manager is None due to workaround in Action.__init__
-        self.graph_manager = None 
+        self.graph_manager = GraphManager() # Initialize GraphManager
 
     def test_greet_action_instantiation(self):
-        action = GreetAction(self.character_id, self.target_character_id)
+        action = GreetAction(self.character_id, self.target_character_id, graph_manager=self.graph_manager)
         self.assertEqual(action.name, "Greet")
         self.assertAlmostEqual(action.cost, 0.15) # 0.1 + 0.05
         self.assertEqual(len(action.effects), 3)
@@ -158,13 +160,13 @@ class TestSocialActions(unittest.TestCase):
         self.assertEqual(action.target, self.target_character_id)
 
     def test_greet_action_execute(self):
-        action = GreetAction(self.character_id, self.target_character_id)
+        action = GreetAction(self.character_id, self.target_character_id, graph_manager=self.graph_manager)
         # Redirect stdout to check print can be done here if needed
-        self.assertTrue(action.execute(character=self.mock_character, graph_manager=self.graph_manager))
+        self.assertTrue(action.execute(character=self.mock_character))
 
     def test_share_news_action_instantiation(self):
         news = "Heard about the new festival!"
-        action = ShareNewsAction(self.character_id, self.target_character_id, news_item=news)
+        action = ShareNewsAction(self.character_id, self.target_character_id, news_item=news, graph_manager=self.graph_manager)
         self.assertEqual(action.name, "Share News")
         self.assertAlmostEqual(action.cost, 0.6) # 0.5 + 0.1
         self.assertEqual(action.news_item, news)
@@ -184,12 +186,12 @@ class TestSocialActions(unittest.TestCase):
         self.assertEqual(action.target, self.target_character_id)
 
     def test_share_news_action_execute(self):
-        action = ShareNewsAction(self.character_id, self.target_character_id, news_item="Big news")
-        self.assertTrue(action.execute(character=self.mock_character, graph_manager=self.graph_manager))
+        action = ShareNewsAction(self.character_id, self.target_character_id, news_item="Big news", graph_manager=self.graph_manager)
+        self.assertTrue(action.execute(character=self.mock_character))
 
     def test_offer_compliment_action_instantiation(self):
         topic = "your new haircut"
-        action = OfferComplimentAction(self.character_id, self.target_character_id, compliment_topic=topic)
+        action = OfferComplimentAction(self.character_id, self.target_character_id, compliment_topic=topic, graph_manager=self.graph_manager)
         self.assertEqual(action.name, "Offer Compliment")
         self.assertAlmostEqual(action.cost, 0.4) # 0.3 + 0.1
         self.assertEqual(action.compliment_topic, topic)
@@ -209,8 +211,8 @@ class TestSocialActions(unittest.TestCase):
         self.assertEqual(action.target, self.target_character_id)
 
     def test_offer_compliment_action_execute(self):
-        action = OfferComplimentAction(self.character_id, self.target_character_id, compliment_topic="your hat")
-        self.assertTrue(action.execute(character=self.mock_character, graph_manager=self.graph_manager))
+        action = OfferComplimentAction(self.character_id, self.target_character_id, compliment_topic="your hat", graph_manager=self.graph_manager)
+        self.assertTrue(action.execute(character=self.mock_character))
 
 
 if __name__ == "__main__":

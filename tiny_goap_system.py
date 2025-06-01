@@ -55,10 +55,11 @@ class Plan:
         completed_actions (set): Set of completed actions.
     """
 
-    def __init__(self, name, goals=None, actions=None):
+    def __init__(self, name, goals=None, actions=None, graph_manager=None):
         self.name = name
         self.goals = goals if goals is not None else []
         self.action_queue = []
+        self.graph_manager = graph_manager
         self.current_goal_index = 0
         self.completed_actions = set()
         self.current_action_index = 0
@@ -191,6 +192,7 @@ class Plan:
                 target=getattr(failed_action, "target", None),
                 initiator=getattr(failed_action, "initiator", None),
                 related_skills=getattr(failed_action, "related_skills", []),
+                graph_manager=self.graph_manager,
             )
 
             return {

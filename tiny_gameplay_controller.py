@@ -39,8 +39,9 @@ class ActionResolver:
     Provides robust action resolution with validation and fallback mechanisms.
     """
 
-    def __init__(self, action_system=None):
+    def __init__(self, action_system=None, graph_manager=None):
         self.action_system = action_system
+        self.graph_manager = graph_manager
         self.action_cache = {}  # Cache for performance optimization
         self.execution_history = []  # Track action execution for analytics
         self.fallback_actions = {
@@ -257,6 +258,7 @@ class ActionResolver:
                 cost=max(1, abs(energy_cost)),
                 initiator=character,
                 default_target_is_initiator=True,
+                graph_manager=self.graph_manager,
             )
 
             return action
@@ -731,20 +733,20 @@ class GameplayController:
             # Initialize core systems with fallbacks
             if "ActionSystem" in imported_modules:
                 try:
-                    self.action_system = imported_modules["ActionSystem"]()
+                    self.action_system = imported_modules["ActionSystem"](graph_manager=self.graph_manager)
                     self.action_system.setup_actions()
-                    self.action_resolver = ActionResolver(self.action_system)
+                    self.action_resolver = ActionResolver(action_system=self.action_system, graph_manager=self.graph_manager)
                     logger.info("Action system initialized successfully")
                 except Exception as e:
                     logger.error(f"ActionSystem initialization failed: {e}")
                     self.action_system = None
                     self.action_resolver = (
-                        ActionResolver()
-                    )  # Fallback without action system
+                        ActionResolver(graph_manager=self.graph_manager)
+                    )  # Fallback without action system but with graph_manager
                     system_init_errors.append("ActionSystem setup failed")
             else:
                 self.action_system = None
-                self.action_resolver = ActionResolver()
+                self.action_resolver = ActionResolver(graph_manager=self.graph_manager)
 
             # Initialize time management with fallback
             if (
@@ -3009,12 +3011,15 @@ class GameplayController:
                 try:
                     from actions import ActionSystem
 
-                    self.action_system = ActionSystem()
+                    self.action_system = ActionSystem(graph_manager=self.graph_manager)
                     self.action_system.setup_actions()
-                    self.action_resolver = ActionResolver(self.action_system)
+                    self.action_resolver = ActionResolver(action_system=self.action_system, graph_manager=self.graph_manager)
                     logger.info("Action system recovery successful")
                 except Exception as e:
                     logger.error(f"Action system recovery failed: {e}")
+                    # Ensure action_resolver still gets graph_manager in case of ActionSystem failure
+                    if not hasattr(self, 'action_resolver') or self.action_resolver.graph_manager is None:
+                        self.action_resolver = ActionResolver(graph_manager=self.graph_manager)
                     recovery_successful = False
 
             # Update recovery statistics
@@ -3207,6 +3212,27 @@ class GameplayController:
         TODO: Add achievement persistence
         """
         try:
+            if not hasattr(self, "global_achievements"):
+                self.global_achievements = {
+                    "village_milestones": {
+                        "first_character_created": False,
+                        "five_characters_active": False,
+                        "successful_harvest": False,
+                        "trade_established": False,
+                        "first_week_survived": False, # New achievement
+                    },
+                    "social_achievements": {
+                        "first_friendship": False,
+                        "community_event": False,
+                        "conflict_resolved": False,
+                    },
+                    "economic_achievements": {
+                        "first_transaction": False,
+                        "wealthy_villager": False,
+                        "market_established": False,
+                    },
+                }
+
             # Check for milestone achievements
             if len(self.characters) >= 1:
                 self.global_achievements["village_milestones"][
