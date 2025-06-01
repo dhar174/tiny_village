@@ -2362,7 +2362,7 @@ class GameplayController:
         # Section header (optional)
         header = tiny_font.render("Achievements:", True, (240, 240, 200))
         self.screen.blit(header, (10, y_offset))
-        y_offset += 20
+        y_offset += ACHIEVEMENT_SPACING
 
         for key, achieved in milestones.items():
             # Convert snake_case key to Title Case text
