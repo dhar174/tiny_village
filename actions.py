@@ -220,66 +220,95 @@ class State:
 
 
 class Condition:
-    def __init__(self, name, attribute, target, satisfy_value, op=">=", weight=1):
-        self.ops = {
-            "gt": operator.gt,
-            "lt": operator.lt,
-            "eq": operator.eq,
-            "ge": operator.ge,
-            "le": operator.le,
-            "ne": operator.ne,
+    def __init__(self, name: str, attribute: str, target_value: any, operator: str):
+        self.valid_operators = {
+            "==": operator.eq,
+            "!=": operator.ne,
+            ">": operator.gt,
+            "<": operator.lt,
+            ">=": operator.ge,
+            "<=": operator.le,
+            "has": lambda container, item: item in container if isinstance(container, (list, dict, set)) else False,
+            "lacks": lambda container, item: item not in container if isinstance(container, (list, dict, set)) else True,
         }
-        self.symb_map = {
-            ">": "gt",
-            "<": "lt",
-            "==": "eq",
-            ">=": "ge",
-            "<=": "le",
-            "!=": "ne",
-        }
-        # Check validitiy of operator
-        if op not in self.ops:
-            op = self.symb_map[op]
-        if op not in self.ops:
-            raise ValueError(f"Invalid operator: {op}")
-            # Check type of satisfy_value and ensure correct operator is used
-        if isinstance(satisfy_value, str) and op not in ["eq", "ne"]:
-            raise ValueError(f"Invalid operator: {op} for string type satisfy_value")
-        elif isinstance(satisfy_value, bool) and op not in ["eq", "ne"]:
-            raise ValueError(f"Invalid operator: {op} for boolean type satisfy_value")
+
+        if operator not in self.valid_operators:
+            raise ValueError(f"Invalid operator: {operator}. Must be one of {list(self.valid_operators.keys())}")
 
         self.name = name
-        self.satisfy_value = satisfy_value
-        self.attribute = attribute
-        self.operator = op
-        self.target = target
-        self.target_id = target.uuid if hasattr(target, "uuid") else id(target)
-        self.weight = weight
+        self.attribute = attribute  # Can be nested like 'inventory.food_count'
+        self.target_value = target_value
+        self.operator = operator
+        self.op_func = self.valid_operators[operator]
 
     def __str__(self):
-        return f"{self.name}: {self.attribute} {self.operator} {self.satisfy_value}"
+        return f"{self.name}: {self.attribute} {self.operator} {self.target_value}"
 
-    def check_condition(self, state: State = None):
-        if state is None:
-            state = self.target.get_state()
-        return state.compare_to_condition(self)
+    @staticmethod
+    def _get_nested_attribute(state_dict: dict, attribute_path: str) -> any:
+        keys = attribute_path.split('.')
+        value = state_dict
+        for i, key in enumerate(keys):
+            if isinstance(value, dict):
+                if key not in value:
+                    return None  # Attribute path not fully found
+                value = value[key]
+            elif isinstance(value, list):
+                try:
+                    idx = int(key)
+                    if 0 <= idx < len(value):
+                        value = value[idx]
+                    else:
+                        return None # Index out of bounds
+                except ValueError:
+                    return None # Non-integer index for list
+            else: # Cannot traverse further
+                return None
+        return value
 
-    def __call__(self, state: State = None):
-        if state is None:
-            state = self.target.get_state()
-        return self.check_condition(state)
+    def is_met(self, state_dict: dict) -> bool:
+        current_value = self._get_nested_attribute(state_dict, self.attribute)
+
+        if self.operator == "has":
+            # For 'has', current_value is the container. If path to container is invalid, it's None.
+            if current_value is None:
+                return False
+            return self.op_func(current_value, self.target_value)
+        elif self.operator == "lacks":
+            # For 'lacks', if container is None, it implicitly "lacks" the item.
+            if current_value is None:
+                return True
+            return self.op_func(current_value, self.target_value)
+
+        # For all other comparison operators, if current_value is None, the condition is not met.
+        if current_value is None:
+            return False
+
+        try:
+            return self.op_func(current_value, self.target_value)
+        except TypeError:
+            # Error during comparison (e.g. comparing int with str for '<')
+            return False
+        except Exception:
+            # Other unexpected errors
+            return False
 
     def __hash__(self):
+        # Make target_value hashable for the tuple. If it's a list or dict, convert to tuple of items.
+        hashable_target_value = self.target_value
+        if isinstance(self.target_value, list):
+            hashable_target_value = tuple(self.target_value)
+        elif isinstance(self.target_value, dict):
+            hashable_target_value = tuple(sorted(self.target_value.items()))
+        elif isinstance(self.target_value, set):
+            hashable_target_value = tuple(sorted(list(self.target_value)))
+
         return hash(
-            tuple(
-                [
-                    self.name,
-                    self.attribute,
-                    self.target_id,
-                    self.satisfy_value,
-                    self.operator,
-                    self.weight,
-                ]
+            (
+                self.name,
+                self.attribute,
+                hashable_target_value,
+                self.operator,
             )
         )
 
@@ -289,10 +318,8 @@ class Condition:
         return (
             self.name == other.name
             and self.attribute == other.attribute
-            and self.target_id == other.target_id
-            and self.satisfy_value == other.satisfy_value
+            and self.target_value == other.target_value
             and self.operator == other.operator
-            and self.weight == other.weight
         )
 
 
@@ -348,34 +375,164 @@ class Action:
             self.target = target
         self.change_value = 0
         self.target_id = target.uuid if hasattr(target, "uuid") else id(target)
-        self.graph_manager = GraphManager()
+import copy # Required for deepcopy
+
+class Action:
+    def __init__(
+        self,
+        name,
+        preconditions, # Expected to be a list of Condition objects for GOAP
+        effects,       # Original effects structure
+        cost=0,
+        target=None,
+        initiator=None,
+        related_skills=[],
+        default_target_is_initiator=False,
+        impact_rating_on_target=None,
+        impact_rating_on_initiator=None,
+        impact_rating_on_other=None,
+        action_id=None,
+        created_at=None,
+        expires_at=None,
+        completed_at=None,
+        priority=None,
+        related_goal=None,
+        effects_for_goap=None # GOAP-specific effects: list of {'attribute': str, 'value': any, 'operator': str}
+    ):
+        GraphManager = importlib.import_module("tiny_graph_manager").GraphManager # Potentially problematic if GraphManager needs init
+        self.impact_rating_on_target = impact_rating_on_target
+        self.impact_rating_on_initiator = impact_rating_on_initiator
+        self.impact_rating_on_other = impact_rating_on_other
+        self.action_id = action_id if action_id else id(self)
+        self.created_at = created_at
+        self.expires_at = expires_at
+        self.completed_at = completed_at
+        self.priority = priority
+        self.related_goal = related_goal
+        self.name = name
+        self.preconditions = preconditions # For GOAP, this should be List[Condition]
+        self.effects = effects # Original effects structure
+        self.cost = float(cost)
+        self.target = target
+        self.initiator = initiator
+        self.default_target_is_initiator = default_target_is_initiator
+        if default_target_is_initiator and target is None and initiator is not None:
+            self.target = initiator
+
+        self.target_id = target.uuid if hasattr(target, "uuid") else id(target) if target else None
+        # self.graph_manager = GraphManager()
         self.related_skills = related_skills
+
+        if effects_for_goap is not None:
+            self.effects_for_goap = effects_for_goap
+        else:
+            self.effects_for_goap = []
+            if isinstance(self.effects, list):
+                for effect_data in self.effects:
+                    if isinstance(effect_data, dict) and 'targets' in effect_data and 'initiator' in effect_data['targets']:
+                        attribute = effect_data.get('attribute')
+                        change_value = effect_data.get('change_value')
+                        # Further effect transformation logic might be needed here
+                        # This is a simplified conversion
+                        if attribute and change_value is not None:
+                            op = 'add' # Default to add for numeric, set for others could be a heuristic
+                            if not isinstance(change_value, (int, float)):
+                                op = 'set'
+                            # Special handling for boolean effects if any, or specific attributes
+                            if isinstance(change_value, bool):
+                                op = 'set'
+
+                            self.effects_for_goap.append({
+                                'attribute': attribute,
+                                'value': change_value,
+                                'operator': op
+                            })
 
     def to_dict(self):
         return {
             "name": self.name,
-            "preconditions": self.preconditions,
-            "effects": self.effects,
+            # Omitting preconditions and effects as their string representation might be complex
             "cost": self.cost,
         }
 
-    def preconditions_met(self):
+    def are_preconditions_met(self, state_dict: dict) -> bool:
+        if not self.preconditions:
+            return True
+        # Assuming self.preconditions is a list of Condition objects
+        for condition in self.preconditions:
+            if not isinstance(condition, Condition):
+                # print(f"Warning: Precondition '{condition}' for action '{self.name}' is not a Condition object.")
+                return False # Or raise an error
+            if not condition.is_met(state_dict):
+                return False
+        return True
 
+    def _set_nested_attribute(self, state_dict: dict, attribute_path: str, value_to_set: any):
+        keys = attribute_path.split('.')
+        current_level = state_dict
+        for i, key in enumerate(keys[:-1]): # Iterate to the parent of the target attribute
+            if key not in current_level or not isinstance(current_level[key], dict):
+                # If path doesn't exist or is not a dict, create it.
+                # This might be too aggressive if attributes are strictly defined.
+                # For GOAP state manipulation, this allows creating new state variables.
+                current_level[key] = {}
+            current_level = current_level[key]
+
+        if not isinstance(current_level, dict):
+            # Cannot set attribute on a non-dictionary parent
+            # print(f"Error: Cannot set nested attribute. Parent for '{keys[-1]}' is not a dictionary in path '{attribute_path}'.")
+            return False
+        current_level[keys[-1]] = value_to_set
+        return True
+
+    def apply_effects(self, state_dict: dict) -> dict:
+        new_state = copy.deepcopy(state_dict)
+
+        for effect in self.effects_for_goap: # Use GOAP-specific effects
+            attribute = effect.get("attribute")
+            value = effect.get("value")
+            op = effect.get("operator")
+
+            if not attribute or op is None: # value can be None for some ops, e.g. 'delete' if added
+                # print(f"Warning: Malformed effect in action '{self.name}': {effect}")
+                continue
+
+            # current_val = Condition._get_nested_attribute(None, new_state, attribute) # Incorrect call context
+            current_val = Condition._get_nested_attribute(new_state, attribute)
+
+
+            if op == "set":
+                self._set_nested_attribute(new_state, attribute, value)
+            elif op == "add":
+                # Ensure current_val is numeric, default to 0 if not found or not numeric
+                if not isinstance(current_val, (int, float)): current_val = 0
+                if not isinstance(value, (int, float)): value = 0 # Or raise error
+                self._set_nested_attribute(new_state, attribute, current_val + value)
+            elif op == "subtract":
+                if not isinstance(current_val, (int, float)): current_val = 0
+                if not isinstance(value, (int, float)): value = 0 # Or raise error
+                self._set_nested_attribute(new_state, attribute, current_val - value)
+            # Add other operators like 'append_to_list', 'remove_from_list' etc. as needed
+            else:
+                # print(f"Warning: Unknown operator '{op}' in effect for action '{self.name}': {effect}")
+                pass
+        return new_state
+
+    # --- Existing methods below, may need review/deprecation for GOAP ---
+    def preconditions_met_legacy(self): # Renamed original preconditions_met
         if not self.preconditions: 
             return True
-        # This assumes preconditions is a list of Condition objects
-        # If it's a dict from old ActionSystem.create_precondition, this will fail.
-        # For new actions, ensure preconditions are Condition objects or adapt this.
         try:
             return all(
-                precondition.check_condition() 
-                for precondition in self.preconditions # Assuming list of Condition objects
+                precondition.check_condition() # This uses old Condition.check_condition
+                for precondition in self.preconditions
             )
-        except AttributeError: # If precondition is not a Condition object
-            print(f"Warning: Precondition for action {self.name} is not a Condition object or check_condition failed.")
-            return False # Or handle differently
+        except AttributeError:
+            # print(f"Warning: Precondition for action {self.name} is not a Condition object or check_condition failed.")
+            return False
 
-    def apply_single_effect(self, effect, state: State, change_value=None):
+    def apply_single_effect(self, effect, state: State, change_value=None): # Operates on State object
+        # This is part of the old effect system
         if change_value is None:
             change_value = effect["change_value"]
         if (
