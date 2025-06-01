@@ -235,7 +235,7 @@ class TestCompleteOutputInterpreter(unittest.TestCase):
                 # Should get fallback response
                 self.assertIn("action", parsed)
                 self.assertIn("parameters", parsed)
-            except Exception as e:
+            except (InvalidLLMResponseFormatError, LLMResponseParsingError) as e:
                 # Some error handling is expected, but shouldn't crash
                 self.assertIsInstance(
                     e, (InvalidLLMResponseFormatError, LLMResponseParsingError)
