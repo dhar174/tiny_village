@@ -89,7 +89,7 @@ call_flow_diagram = nx.DiGraph()
 from nltk.stem import PorterStemmer
 
 print(
-    f"{os.environ["HF_HOME"]} is set to {os.environ.get('HF_HOME', '/tmp/hf_test_cache')}"
+    f"{os.environ['HF_HOME']} is set to {os.environ.get('HF_HOME', '/tmp/hf_test_cache')}"
 )
 # Set up cache directory
 cache_dir = os.path.join(tempfile.gettempdir(), "hf_test_cache")

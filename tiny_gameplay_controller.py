@@ -5,6 +5,12 @@ import traceback
 import json
 import os
 import datetime # Added for time-based achievement
+
+# Constants for speed control
+MAX_SPEED = 5.0
+MIN_SPEED = 0.1
+SPEED_STEP = 0.1
+
 WEATHER_ENERGY_EFFECTS = {
     'rainy': 0.5,
     # 'snowy': 1.0, # easy to add more
@@ -557,6 +563,8 @@ class GameplayController:
             "characters_created": 0,
             "errors_recovered": 0,
         }
+        # Instance-level dictionary to track achievements for this game session.
+        # Initialized here during the instantiation of GameplayController.
         self.global_achievements = {
             "village_milestones": {
                 "first_character_created": False,
@@ -1405,10 +1413,14 @@ class GameplayController:
             self._show_analytics_info()
         elif event.key in key_bindings.get("increase_speed", []):
             self.time_scale_factor = min(MAX_SPEED, self.time_scale_factor + SPEED_STEP)
-            logger.info(f"Time scale set to: {self.time_scale_factor}x")
-        elif event.key in key_bindings.get("decrease_speed", []):
+            logger.info(f"Time scale set to: {self.time_scale_factor:.1f}x")
+            self._cached_speed_text = None # Invalidate cache on change
+
+        # For decreasing speed
+        elif event.key in key_bindings.get("decrease_speed", []): # Ensure this key binding exists or add it
             self.time_scale_factor = max(MIN_SPEED, self.time_scale_factor - SPEED_STEP)
-            logger.info(f"Time scale set to: {self.time_scale_factor}x")
+            logger.info(f"Time scale set to: {self.time_scale_factor:.1f}x")
+            self._cached_speed_text = None # Invalidate cache on change
 
     def _show_help_info(self):
         """Display help information."""
@@ -2029,7 +2041,7 @@ class GameplayController:
             self._track_state_changes(character, action, initial_state, final_state)
             # Increment work_action_count if it was a work action
             if hasattr(action, 'name') and 'work' in action.name.lower():
-                if hasattr(character, 'work_action_count'):Add commentMore actions
+                if hasattr(character, 'work_action_count'):
                     character.work_action_count += 1
                     logger.debug(f"{character.name} completed a work action. Total work actions: {character.work_action_count}")
 
