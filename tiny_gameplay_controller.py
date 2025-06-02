@@ -1846,13 +1846,33 @@ class GameplayController:
         return False
 
     def _execute_character_actions(self, character) -> bool:
-        """Execute character actions with error handling."""
+        """Execute character actions with error handling and optional LLM decision-making."""
         try:
             if not self.strategy_manager:
                 return False
 
-            # Use strategy manager to plan actions
-            actions = self.strategy_manager.get_daily_actions(character)
+            # Check if character should use LLM decision-making
+            use_llm_decisions = getattr(character, 'use_llm_decisions', False)
+            
+            if use_llm_decisions and hasattr(self.strategy_manager, 'decide_action_with_llm'):
+                # Use LLM-based decision making
+                try:
+                    # Get current time and weather for context
+                    current_time = getattr(self, 'current_time', 'morning')
+                    current_weather = getattr(self, 'current_weather', 'clear')
+                    
+                    actions = self.strategy_manager.decide_action_with_llm(
+                        character, time=current_time, weather=current_weather
+                    )
+                    logger.info(f"LLM decision for {character.name}: {[a.name for a in actions] if actions else 'None'}")
+                    
+                except Exception as llm_error:
+                    logger.warning(f"LLM decision failed for {character.name}: {llm_error}")
+                    # Fall back to utility-based actions
+                    actions = self.strategy_manager.get_daily_actions(character)
+            else:
+                # Use traditional utility-based planning
+                actions = self.strategy_manager.get_daily_actions(character)
 
             if actions:
                 # Execute planned actions based on current state
