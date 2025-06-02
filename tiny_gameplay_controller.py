@@ -2015,18 +2015,21 @@ class GameplayController:
             # Track state before updates for comparison
             initial_state = self._capture_character_state(character)
 
-            # Update graph manager if available
-            if self.graph_manager and hasattr(
-                self.graph_manager, "update_character_state"
-            ):
-                try:
-                    self.graph_manager.update_character_state(character)
-                except Exception as e:
-                    logger.warning(
-                        f"Error updating graph manager for {character.name}: {e}"
-                    )
+            # The following direct call to graph_manager.update_character_state is removed.
+            # Action.execute() is now responsible for updating the GraphManager based on action effects.
+            # The method update_character_state was also found to not exist in GraphManager.
+            # if self.graph_manager and hasattr(
+            #     self.graph_manager, "update_character_state" # This method did not exist
+            # ):
+            #     try:
+            #         self.graph_manager.update_character_state(character)
+            #     except Exception as e:
+            #         logger.warning(
+            #             f"Error updating graph manager for {character.name}: {e}"
+            #         )
 
             # Update memory system - record the action as a memory
+            # This is controller-level logic, managing how actions translate to memories.
             if hasattr(character, "add_memory"):
                 try:
                     memory_text = (

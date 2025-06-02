@@ -633,25 +633,127 @@ class Action:
 
     #         return True
     #     return False
-    def execute(
-        self, character=None, graph_manager=None
-    ):  # Changed signature to match new actions
-        # Placeholder execute for base, actual logic in subclasses
-        print(
-            f"Executing generic action: {self.name} by {character.name if character else self.initiator} on target {self.target}"
-        )
-        # This method would apply effects to character.state or graph_manager
-        # For now, as graph_manager is None due to workaround, true effects can't be applied here.
-        if character and hasattr(character, "get_state"):
+    def execute(self, character=None, graph_manager=None):
+        """
+        Executes the action, applying its effects to the involved entities
+        and updating the GraphManager.
 
-            char_state_obj = character.get_state()
-            # self.apply_effects(char_state_obj) # apply_effects needs a dict-like state
-            # To use with State object, State class would need to allow direct item assignment
-            # or effects must be translated.
-            # For now, this part is illustrative of where effects would apply.
-            # print(f"State of {character.name} potentially modified by {self.name}.")
-            pass
-        return True
+        Args:
+            character (Character, optional): The character initiating the action.
+                                            Defaults to self.initiator.
+            graph_manager (GraphManager, optional): The graph manager instance.
+                                                 Defaults to self.graph_manager.
+
+        Returns:
+            bool: True if preconditions are met and effects applied, False otherwise.
+        """
+        if character:
+            self.initiator = character # Ensure self.initiator is set if character is provided
+
+        if graph_manager:
+            self.graph_manager = graph_manager # Prefer graph_manager argument if provided
+
+        if not self.graph_manager:
+            GraphManager_module = importlib.import_module("tiny_graph_manager")
+            self.graph_manager = GraphManager_module.GraphManager()
+            # print("Warning: Action.execute called without graph_manager, using fallback.")
+
+
+        if self.preconditions_met():
+            for effect in self.effects:
+                targets_to_update = []
+
+                # Resolve targets
+                if "initiator" in effect.get("targets", []):
+                    if self.initiator:
+                        targets_to_update.append(self.initiator)
+                    else:
+                        print(f"Warning: Effect for action '{self.name}' specifies 'initiator' but action has no initiator.")
+
+                if "target" in effect.get("targets", []):
+                    if self.target:
+                        targets_to_update.append(self.target)
+                    else:
+                        # If default_target_is_initiator is true and target is None, set target to initiator
+                        if self.default_target_is_initiator and self.initiator:
+                            self.target = self.initiator
+                            targets_to_update.append(self.target)
+                        # else:
+                            # print(f"Warning: Effect for action '{self.name}' specifies 'target' but action has no target and default_target_is_initiator is false or initiator is None.")
+
+                # TODO: Add logic for other named targets if effects can specify them (e.g. "target_character_in_location")
+
+                for target_obj in targets_to_update:
+                    if not target_obj: # Skip if a target resolved to None
+                        continue
+
+                    attribute_name = effect['attribute']
+                    change_value = effect['change_value']
+
+                    # 1. Apply effect to Python object
+                    current_value = getattr(target_obj, attribute_name, 0)
+                    new_value = None
+
+                    if isinstance(change_value, (int, float)):
+                        new_value = current_value + change_value
+                    elif isinstance(change_value, str):
+                        if change_value.startswith("add:") and is_numeric(change_value[4:]): # e.g. "add:5"
+                             new_value = current_value + float(change_value[4:])
+                        elif change_value.startswith("set:"): # e.g. "set:new_value_string" or "set:50"
+                            set_val_str = change_value[4:]
+                            if is_numeric(set_val_str):
+                                new_value = float(set_val_str)
+                            else:
+                                new_value = set_val_str # Direct assignment for strings
+                        elif hasattr(target_obj, change_value) and callable(getattr(target_obj, change_value)):
+                            # If change_value is a method name of the target_obj
+                            method_to_call = getattr(target_obj, change_value)
+                            # This assumes methods for effects don't require arguments or handle them internally
+                            # Or, we might need a way to specify arguments in the effect definition
+                            method_to_call()
+                            # After method call, re-fetch the attribute value if it's supposed to change it
+                            new_value = getattr(target_obj, attribute_name, current_value)
+                        else: # Direct assignment if not a special string command
+                            new_value = change_value
+                    elif callable(change_value): # If change_value is a function
+                        new_value = change_value(current_value)
+                    else: # Default to direct assignment if type is not recognized for operation
+                        new_value = change_value
+
+                    if new_value is not None:
+                        setattr(target_obj, attribute_name, new_value)
+
+                    # 2. Propagate to GraphManager
+                    if self.graph_manager:
+                        # Assuming target_obj.uuid or target_obj.name is the graph node ID
+                        # Prefer uuid if available
+                        graph_node_id = getattr(target_obj, 'uuid', None)
+                        if not graph_node_id: # Fallback to name if uuid is not present
+                            graph_node_id = getattr(target_obj, 'name', None)
+
+                        if graph_node_id:
+                            try:
+                                # Ensure the node exists in the graph before updating
+                                # This might be implicitly handled by graph_manager or require a check
+                                # For now, assume update_node_attribute handles non-existent nodes gracefully or node exists
+                                self.graph_manager.update_node_attribute(graph_node_id, attribute_name, new_value)
+                                # print(f"GraphManager: Updated '{attribute_name}' for node '{graph_node_id}' to '{new_value}'")
+
+                                # Example for relationship updates (conceptual, adjust based on actual effect structure)
+                                if attribute_name.startswith("relationship_"): # e.g. "relationship_strength_with_Alice"
+                                    related_char_name = attribute_name.split("_with_")[-1] # Extracts "Alice"
+                                    # We need the ID of the related character. Assume it can be fetched or is known.
+                                    # This part is highly dependent on how relationships are structured and identified.
+                                    # For simplicity, let's assume related_char_name is a valid ID for now.
+                                    # In a real scenario, you'd need to resolve related_char_name to its graph ID.
+                                    # self.graph_manager.update_edge_attribute(graph_node_id, related_char_name, 'strength', new_value)
+
+                            except Exception as e:
+                                print(f"Error updating graph for node '{graph_node_id}', attribute '{attribute_name}': {e}")
+                        # else:
+                            # print(f"Could not determine graph node ID for target object: {target_obj}")
+            return True
+        return False
 
     def __str__(self):
         preconditions_str = (
@@ -760,15 +862,20 @@ class TalkAction(Action):
             if effects is not None
             else [
                 {
+                    "targets": ["target"],
                     "attribute": "social_wellbeing",
-                    "target_id": str(target),
-                    "change": 1,
-                    "operator": "add",
+                    "change_value": 1,
+                },
+                {
+                    "targets": ["initiator"],
+                    "attribute": "social_wellbeing",
+                    "change_value": 0.5, # Example: initiator also gets some effect for talking
                 }
             ]
         )
 
         # Filter kwargs to only include parameters that Action.__init__ accepts
+        # Also ensure graph_manager is passed to super constructor if available in kwargs
         base_action_params = {
             "related_skills",
             "default_target_is_initiator",
@@ -791,37 +898,86 @@ class TalkAction(Action):
             cost,
             target=target,
             initiator=initiator,
-            **filtered_kwargs,
+            **filtered_kwargs, # This should already pass graph_manager if it was in original kwargs
         )
 
     def execute(self, character=None, graph_manager=None):
+        # self.initiator and self.target are resolved by the base execute method
+        # self.graph_manager is also set by the base class __init__ or execute
 
-        initiator_obj = character if character else self.initiator
-        target_obj = self.target
+        # Call the base class execute to apply generic effects and update graph
+        base_execution_successful = super().execute(character=character, graph_manager=graph_manager)
 
-        initiator_name = getattr(initiator_obj, "name", str(initiator_obj))
-        target_name = getattr(target_obj, "name", str(target_obj))
+        if base_execution_successful:
+            # Specific logic for TalkAction after generic effects are applied
+            if self.initiator and self.target:
+                initiator_name = getattr(self.initiator, "name", str(self.initiator))
+                target_name = getattr(self.target, "name", str(self.target))
+                print(f"{initiator_name} is talking to {target_name}")
 
-        print(f"{initiator_name} is talking to {target_name}")
-        if hasattr(target_obj, "respond_to_talk"):
-            target_obj.respond_to_talk(initiator_obj)
-        return True
+                if hasattr(self.target, "respond_to_talk"):
+                    # Assuming respond_to_talk might have its own effects or direct graph interactions
+                    # if it has access to the graph_manager.
+                    # If respond_to_talk purely modifies attributes that are NOT part of self.effects,
+                    # and these need to be in the graph, manual graph updates would be needed here.
+                    self.target.respond_to_talk(self.initiator)
+            # else:
+                # This case should ideally be handled by preconditions or base class logic if initiator/target are mandatory
+                # print(f"Warning: Initiator or target not available for TalkAction {self.name}")
+            return True
+        return False
 
 
 class ExploreAction(Action):
-    def execute(self):
-        if (
-            hasattr(self.initiator, "name")
-            and hasattr(self.target, "location")
-            and hasattr(self.target, "discover")
-        ):
-            print(f"{self.initiator.name} is exploring {self.target.location}")
+    def __init__(self, initiator, target, name="Explore", preconditions=None, effects=None, cost=0.2, **kwargs):
+        _preconditions = preconditions if preconditions is not None else []
+        # Define effects if 'discover' method is expected to change specific attributes
+        _effects = effects if effects is not None else [
+            # Example effects (uncomment and adjust if needed):
+            # {"targets": ["initiator"], "attribute": "energy", "change_value": -5},
+            # {"targets": ["target"], "attribute": "is_explored", "change_value": "set:True"}, # Example for setting a flag
+        ]
+        # Ensure graph_manager is passed to super()__init__
+        # Base Action.__init__ handles assigning self.graph_manager
+        super().__init__(name, _preconditions, _effects, cost, target=target, initiator=initiator, **kwargs)
+
+    def execute(self, character=None, graph_manager=None):
+        # Call base execute first to handle preconditions and generic effects
+        if not super().execute(character=character, graph_manager=graph_manager):
+            return False # Preconditions not met or base effects application failed
+
+        # Specific logic for ExploreAction after generic effects (if any) are applied
+        # self.initiator and self.target should be set by the base class logic
+        if self.initiator and self.target and hasattr(self.target, "discover"):
+            initiator_name = getattr(self.initiator, "name", "Unknown Initiator")
+            target_display_name = getattr(self.target, 'name', str(self.target)) # Use name for display
+
+            print(f"{initiator_name} is exploring {target_display_name}")
+            # The discover method might perform its own state changes and potentially graph updates
+            # if it has access to a graph_manager instance or if its changes are captured by effects.
             self.target.discover(self.initiator)
+
+            # If self.target.discover() changes attributes that are NOT covered by self.effects
+            # and need to be reflected in the graph, manual updates would be needed here.
+            # Example:
+            # if self.graph_manager and hasattr(self.target, 'some_attribute_changed_by_discover'):
+            #    target_node_id = getattr(self.target, 'uuid', getattr(self.target, 'name', None))
+            #    if target_node_id:
+            #        self.graph_manager.update_node_attribute(
+            #            target_node_id,
+            #            'some_attribute_changed_by_discover',
+            #            self.target.some_attribute_changed_by_discover
+            #        )
+            return True
         else:
-            print(
-                f"Warning: ExploreAction executed with incomplete initiator/target for {self.name}"
-            )
-        return True  # Added return
+            missing = []
+            if not self.initiator: missing.append("initiator")
+            if not self.target: missing.append("target")
+            if self.target and not hasattr(self.target, "discover"): missing.append("'discover' method on target")
+
+            action_name = getattr(self, "name", "Unnamed ExploreAction")
+            print(f"Warning: ExploreAction '{action_name}' did not execute fully due to missing parts: {', '.join(missing)}.")
+            return False
 
 
 class ActionTemplate:
@@ -1112,13 +1268,14 @@ class EatAction(Action):
             effects=kwargs.get(
                 "effects",
                 [
-                    {"attribute": "hunger", "change_value": -2, "target": "initiator"},
-                    {"attribute": "energy", "change_value": 1, "target": "initiator"},
+                    {"targets": ["initiator"], "attribute": "hunger", "change_value": -2},
+                    {"targets": ["initiator"], "attribute": "energy", "change_value": 1},
                 ],
             ),
             **filtered_kwargs,
         )
         self.item_name = item_name
+    # No execute override needed if effects are correctly handled by base class
 
 
 class GoToLocationAction(Action):
@@ -1150,14 +1307,16 @@ class GoToLocationAction(Action):
                 [
                     {
                         "attribute": "location",
-                        "change_value": location_name,
-                        "target": "initiator",
+                        "attribute": "location",
+                        "change_value": f"set:{location_name}", # Use "set:" for direct assignment
+                        "targets": ["initiator"],
                     }
                 ],
             ),
             **filtered_kwargs,
         )
         self.location_name = location_name
+    # No execute override needed
 
 
 class NoOpAction(Action):
@@ -1215,17 +1374,18 @@ class BuyFoodAction(Action):
             effects=kwargs.get(
                 "effects",
                 [
-                    {"attribute": "money", "change_value": -5, "target": "initiator"},
+                    {"targets": ["initiator"], "attribute": "money", "change_value": -5},
                     {
+                        "targets": ["initiator"],
                         "attribute": "inventory",
-                        "change_value": f"add:{food_type}",
-                        "target": "initiator",
+                        "change_value": f"add:{food_type}", # Base execute handles "add:"
                     },
                 ],
             ),
             **filtered_kwargs,
         )
         self.food_type = food_type
+    # No execute override needed
 
 
 class WorkAction(Action):
@@ -1255,18 +1415,19 @@ class WorkAction(Action):
             effects=kwargs.get(
                 "effects",
                 [
-                    {"attribute": "money", "change_value": 20, "target": "initiator"},
-                    {"attribute": "energy", "change_value": -2, "target": "initiator"},
+                    {"targets": ["initiator"], "attribute": "money", "change_value": 20},
+                    {"targets": ["initiator"], "attribute": "energy", "change_value": -2},
                     {
+                        "targets": ["initiator"],
                         "attribute": "job_performance",
                         "change_value": 1,
-                        "target": "initiator",
                     },
                 ],
             ),
             **filtered_kwargs,
         )
         self.job_type = job_type
+    # No execute override needed
 
 
 class SleepAction(Action):
@@ -1295,13 +1456,14 @@ class SleepAction(Action):
             effects=kwargs.get(
                 "effects",
                 [
-                    {"attribute": "energy", "change_value": 5, "target": "initiator"},
-                    {"attribute": "health", "change_value": 1, "target": "initiator"},
+                    {"targets": ["initiator"], "attribute": "energy", "change_value": 5},
+                    {"targets": ["initiator"], "attribute": "health", "change_value": 1},
                 ],
             ),
             **filtered_kwargs,
         )
         self.duration = duration
+    # No execute override needed
 
 
 class SocialVisitAction(Action):
@@ -1332,25 +1494,26 @@ class SocialVisitAction(Action):
                 "effects",
                 [
                     {
+                        "targets": ["initiator"],
                         "attribute": "social_wellbeing",
                         "change_value": 2,
-                        "target": "initiator",
                     },
                     {
+                        "targets": ["initiator"],
                         "attribute": "happiness",
                         "change_value": 1,
-                        "target": "initiator",
                     },
                     {
-                        "attribute": "friendship",
+                        "targets": ["target"], # self.target will be target_person object
+                        "attribute": "friendship", # Assuming target Character object has 'friendship'
                         "change_value": 1,
-                        "target": target_person,
                     },
                 ],
             ),
             **filtered_kwargs,
         )
-        self.target_person = target_person
+        self.target_person = target_person # Actual object is passed as target to super()__init__
+    # No execute override needed
 
 
 class ImproveJobPerformanceAction(Action):
@@ -1380,16 +1543,17 @@ class ImproveJobPerformanceAction(Action):
                 "effects",
                 [
                     {
+                        "targets": ["initiator"],
                         "attribute": "job_performance",
                         "change_value": 3,
-                        "target": "initiator",
                     },
-                    {"attribute": "energy", "change_value": -1, "target": "initiator"},
+                    {"targets": ["initiator"], "attribute": "energy", "change_value": -1},
                 ],
             ),
             **filtered_kwargs,
         )
         self.method = method
+    # No execute override needed
 
 
 class PursueHobbyAction(Action):
@@ -1420,20 +1584,21 @@ class PursueHobbyAction(Action):
                 "effects",
                 [
                     {
+                        "targets": ["initiator"],
                         "attribute": "happiness",
                         "change_value": 2,
-                        "target": "initiator",
                     },
                     {
+                        "targets": ["initiator"],
                         "attribute": "mental_health",
                         "change_value": 1,
-                        "target": "initiator",
                     },
                 ],
             ),
             **filtered_kwargs,
         )
         self.hobby_type = hobby_type
+    # No execute override needed
 
 
 class VisitDoctorAction(Action):
@@ -1462,13 +1627,14 @@ class VisitDoctorAction(Action):
             effects=kwargs.get(
                 "effects",
                 [
-                    {"attribute": "health", "change_value": 3, "target": "initiator"},
-                    {"attribute": "money", "change_value": -10, "target": "initiator"},
+                    {"targets": ["initiator"], "attribute": "health", "change_value": 3},
+                    {"targets": ["initiator"], "attribute": "money", "change_value": -10},
                 ],
             ),
             **filtered_kwargs,
         )
         self.reason = reason
+    # No execute override needed
 
 
 class GreetAction(Action):
@@ -1494,13 +1660,14 @@ class GreetAction(Action):
             "effects",
             [
                 {
+                    "targets": ["target"],
                     "attribute": "social_wellbeing",
-                    "target_id": str(target),
-                    "change": 0.5,
-                    "operator": "add",
+                    "change_value": 0.5,
                 }
             ],
         )
+        if "graph_manager" not in filtered_kwargs and "graph_manager" in kwargs: # Pass graph_manager if available
+            filtered_kwargs["graph_manager"] = kwargs["graph_manager"]
 
         super().__init__(
             "Greet",
@@ -1536,19 +1703,19 @@ class ShareNewsAction(Action):
             "effects",
             [
                 {
+                    "targets": ["target"],
                     "attribute": "social_wellbeing",
-                    "target_id": str(target),
-                    "change": 1,
-                    "operator": "add",
+                    "change_value": 1,
                 },
                 {
+                    "targets": ["target"],
                     "attribute": "knowledge",
-                    "target_id": str(target),
-                    "change": news_item,
-                    "operator": "add",
+                    "change_value": f"set:{news_item}", # Assuming news_item is a value to be set
                 },
             ],
         )
+        if "graph_manager" not in filtered_kwargs and "graph_manager" in kwargs: # Pass graph_manager if available
+            filtered_kwargs["graph_manager"] = kwargs["graph_manager"]
 
         super().__init__(
             "ShareNews",
@@ -1585,19 +1752,19 @@ class OfferComplimentAction(Action):
             "effects",
             [
                 {
+                    "targets": ["target"],
                     "attribute": "social_wellbeing",
-                    "target_id": str(target),
-                    "change": 1.5,
-                    "operator": "add",
+                    "change_value": 1.5,
                 },
                 {
+                    "targets": ["target"],
                     "attribute": "relationship_strength",
-                    "target_id": str(target),
-                    "change": 1,
-                    "operator": "add",
+                    "change_value": 1,
                 },
             ],
         )
+        if "graph_manager" not in filtered_kwargs and "graph_manager" in kwargs: # Pass graph_manager if available
+            filtered_kwargs["graph_manager"] = kwargs["graph_manager"]
 
         super().__init__(
             "OfferCompliment",

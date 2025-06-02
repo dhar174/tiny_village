@@ -2,28 +2,34 @@ import unittest
 import pygame # Pygame will be needed for font rendering and potentially other UI elements.
 from tiny_gameplay_controller import GameplayController, MIN_SPEED, MAX_SPEED, SPEED_STEP # Import constants too
 
+from unittest.mock import MagicMock, patch # Ensure MagicMock and patch are imported
+
 # Minimal mock for GraphManager if needed by GameplayController constructor
-class MockGraphManager:
-    pass
+# class MockGraphManager: # Replaced by MagicMock
+#     pass
+
+class MockCharacter: # Simple mock for Character
+    def __init__(self, name="Test Char"):
+        self.name = name
+        self.uuid = f"{name}_uuid"
+        # Add any other attributes needed by the controller or actions during tests
+        self.energy = 100
+
+    def add_memory(self, memory_text): # Mocked method
+        pass
+
 
 class TestGameplayController(unittest.TestCase):
 
     def setUp(self):
-        # Basic Pygame setup needed for font rendering.
-        # This avoids full game initialization if possible.
         pygame.init()
-        # It's good practice to set a display mode, even if it's small and not shown,
-        # as some Pygame modules (like font) might depend on it.
         try:
             pygame.display.set_mode((1, 1))
         except pygame.error as e:
             print(f"Skipping display.set_mode in test setup (possibly headless environment): {e}")
 
+        self.mock_graph_manager = MagicMock() # Use MagicMock for GraphManager
 
-        # Mock GraphManager if GameplayController requires it.
-        # Adjust based on actual GameplayController constructor requirements.
-        self.mock_graph_manager = MockGraphManager()
-        # Provide a minimal config if necessary
         self.config = {
             "screen_width": 800,
             "screen_height": 600,
@@ -42,13 +48,83 @@ class TestGameplayController(unittest.TestCase):
             }
         }
         self.controller = GameplayController(graph_manager=self.mock_graph_manager, config=self.config)
+
+        # Mock ActionResolver and its methods
+        self.mock_action_resolver = MagicMock()
+        self.controller.action_resolver = self.mock_action_resolver # Inject mock
+
+        # Mock Action and Character for relevant tests
+        self.mock_action = MagicMock()
+        self.mock_action.name = "TestAction"
+        self.mock_character = MockCharacter() # Use our simple mock
+
         # Ensure a screen is available for rendering, even if it's a dummy one for tests.
-        if not self.controller.screen:
+        if not self.controller.screen: # Should be set by GameplayController now
             self.controller.screen = pygame.Surface((self.config["screen_width"], self.config["screen_height"]))
 
 
     def tearDown(self):
         pygame.quit()
+
+    @patch('tiny_gameplay_controller.GameplayController._update_character_state_after_action') # Mock this method
+    def test_execute_single_action_calls_action_execute(self, mock_update_state_after_action):
+        # Configure the mock ActionResolver to return our mock_action
+        self.mock_action_resolver.resolve_action.return_value = self.mock_action
+        # Configure the mock_action's execute method to return True (successful execution)
+        self.mock_action.execute = MagicMock(return_value=True)
+
+        # Mock validate_action_preconditions to return True
+        self.mock_action_resolver.validate_action_preconditions = MagicMock(return_value=True)
+        # Mock predict_action_effects
+        self.mock_action_resolver.predict_action_effects = MagicMock(return_value={})
+
+
+        mock_action_data = {"name": "TestActionData"} # Dummy action data
+
+        # Call the method under test
+        result = self.controller._execute_single_action(self.mock_character, mock_action_data)
+
+        self.assertTrue(result) # Action execution should be successful
+
+        # Assert that action_resolver.resolve_action was called
+        self.mock_action_resolver.resolve_action.assert_called_once_with(mock_action_data, self.mock_character)
+
+        # Assert that the action's execute method was called
+        # The action.execute in actions.py now takes character and graph_manager
+        self.mock_action.execute.assert_called_once_with(target=self.mock_character, initiator=self.mock_character)
+
+        # Assert that _update_character_state_after_action was called
+        mock_update_state_after_action.assert_called_once_with(self.mock_character, self.mock_action)
+
+    def test_update_character_state_no_redundant_graph_call(self):
+        # We need a fresh mock for graph_manager to check its calls for this specific test
+        specific_test_graph_manager = MagicMock()
+        self.controller.graph_manager = specific_test_graph_manager # Override controller's GM
+
+        # Mock other methods called by _update_character_state_after_action to isolate the test
+        self.controller._update_character_skills = MagicMock()
+        self.controller._update_social_consequences = MagicMock()
+        self.controller._update_economic_state = MagicMock()
+        self.controller._generate_action_events = MagicMock()
+        self.controller._check_achievements = MagicMock()
+        self.controller._update_reputation = MagicMock()
+        self.controller._track_state_changes = MagicMock()
+        # self.mock_character.add_memory is already a mock method from MockCharacter
+
+        # Call the method under test
+        self.controller._update_character_state_after_action(self.mock_character, self.mock_action)
+
+        # Assert that the (now removed) graph_manager.update_character_state was NOT called.
+        # If update_character_state was a method on the mock, we'd use assert_not_called().
+        # Since it's not expected to exist, we can check that no such attribute was accessed *if* it wasn't a MagicMock.
+        # With MagicMock, it auto-creates methods on access. So, the correct check is:
+        specific_test_graph_manager.update_character_state.assert_not_called()
+
+        # Verify other methods (controller-level logic) are still called
+        self.mock_character.add_memory.assert_called() # Called if character has add_memory
+        self.controller._update_character_skills.assert_called_once_with(self.mock_character, self.mock_action)
+        # ... (add assertions for other helper methods if their call is mandatory)
+
 
     def test_global_achievements_initialization(self):
         """Test that global_achievements is initialized correctly."""

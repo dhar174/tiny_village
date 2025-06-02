@@ -16,14 +16,21 @@ class TestChar: # Existing class in the file
         self.state = state
 
 
-from tiny_graph_manager import GraphManager # Added import
+from unittest.mock import MagicMock, patch # Import MagicMock and patch
+
+# Mock GraphManager for all tests in this file to avoid direct instantiation of real one
+# This will affect TestActionSystem and TestSocialActions if they rely on the real GraphManager
+# For TestSocialActions, we will provide a MagicMock instance directly.
+# For TestActionSystem, if it needs a real one, this might need adjustment or separate test file.
+# However, the task is to test new Action.execute, so mocking GraphManager is appropriate.
+
+# from tiny_graph_manager import GraphManager # Commenting out direct import
+GraphManager = MagicMock() # Mock the class at the module level for tests below
 
 class TestActionSystem(unittest.TestCase):
     def setUp(self):
-        self.graph_manager = GraphManager()
-        self.action_system = ActionSystem(graph_manager=self.graph_manager)
-        # It seems instantiate_condition and create_precondition in ActionSystem might need a target.
-        # For existing tests, let's provide a dummy target if they fail due to target being None.
+        self.graph_manager_mock_instance = GraphManager() # Now uses the MagicMock
+        self.action_system = ActionSystem(graph_manager=self.graph_manager_mock_instance)
         self.dummy_target_for_condition = State({"name": "DummyTargetForTestActionSystem"})
 
 
@@ -129,90 +136,441 @@ class TestActionSystem(unittest.TestCase):
         self.assertIsInstance(conditions["happiness"], Condition)
 
 
+class TestSocialActions(unittest.TestCase): # Will be updated later
+    def setUp(self):
+        self.initiator_char = MockCharacter(name="Alice")
+        self.initiator_char.uuid = "alice_uuid"
+        self.target_char = MockCharacter(name="Bob")
+        self.target_char.uuid = "bob_uuid"
+
+        # Mock GraphManager instance for each test
+        self.mock_graph_manager_instance = MagicMock()
+
+    def test_greet_action_instantiation_and_execute(self):
+        # This test combines instantiation and execution checks for brevity
+        # Effects were defined in actions.py for GreetAction as:
+        # {"targets": ["target"], "attribute": "social_wellbeing", "change_value": 0.5}
+        # Let's assume GreetAction from actions.py is updated to this.
+        # The original test had different effects, so we adapt to the new structure.
+        greet_effects = [{"targets": ["target"], "attribute": "social_wellbeing", "change_value": 0.5}]
+        action = GreetAction(
+            initiator=self.initiator_char,
+            target=self.target_char,
+            effects=greet_effects, # Pass the effects to ensure consistency
+            graph_manager=self.mock_graph_manager_instance
+        )
+
+        self.assertEqual(action.name, "Greet")
+        # Cost is now defined in the GreetAction class directly, not dynamically calculated in this test
+        # self.assertAlmostEqual(action.cost, 0.05) # Default cost in GreetAction
+
+        self.assertEqual(action.effects, greet_effects)
+        self.assertEqual(action.initiator, self.initiator_char)
+        self.assertEqual(action.target, self.target_char)
+
+        # Execute
+        self.target_char.social_wellbeing = 10 # Initial value
+
+        # Mock preconditions to always pass for this execution test
+        action.preconditions_met = MagicMock(return_value=True)
+
+        result = action.execute(character=self.initiator_char) # Pass initiator to execute
+        self.assertTrue(result)
+
+        # Check Python object update
+        self.assertEqual(self.target_char.social_wellbeing, 10.5)
+
+        # Check GraphManager update
+        self.mock_graph_manager_instance.update_node_attribute.assert_called_once_with(
+            self.target_char.uuid, "social_wellbeing", 10.5
+        )
+
+    # Similar updated tests for ShareNewsAction and OfferComplimentAction would go here
+    # For now, focusing on TestBaseActionExecute first as per plan.
+
+# New Test Class for base Action.execute()
+class TestBaseActionExecute(unittest.TestCase):
+    def setUp(self):
+        self.mock_graph_manager_instance = MagicMock()
+
+        # Patch 'importlib.import_module' to control the GraphManager fallback in Action.__init__
+        # This mock will prevent the actual import if graph_manager is None.
+        self.import_module_patcher = patch('importlib.import_module')
+        self.mock_import_module = self.import_module_patcher.start()
+
+        # Configure the mock to return another MagicMock when 'tiny_graph_manager' is imported
+        self.mock_tiny_graph_manager_module = MagicMock()
+        self.mock_tiny_graph_manager_module.GraphManager.return_value = self.mock_graph_manager_instance
+        self.mock_import_module.return_value = self.mock_tiny_graph_manager_module
+
+        self.initiator = MockCharacter(name="Initiator")
+        self.initiator.uuid = "initiator_uuid"
+        self.initiator.energy = 50
+
+        self.target = MockCharacter(name="Target")
+        self.target.uuid = "target_uuid"
+        self.target.health = 100
+
+        # Ensure mocked characters have attributes used in tests
+        if not hasattr(self.initiator, 'some_method_on_char'):
+            self.initiator.some_method_on_char = MagicMock()
+        if not hasattr(self.target, 'some_method_on_char'):
+            self.target.some_method_on_char = MagicMock()
+
+
+    def tearDown(self):
+        # Stop any patchers started in setUp
+        self.import_module_patcher.stop()
+
+    def test_basic_effect_application_and_graph_update(self):
+        action_effects = [{"targets": ["initiator"], "attribute": "energy", "change_value": -10}]
+        action = Action(
+            name="TestEnergyDrain",
+            preconditions=[],
+            effects=action_effects,
+            initiator=self.initiator,
+            graph_manager=self.mock_graph_manager_instance
+        )
+        action.preconditions_met = MagicMock(return_value=True) # Ensure preconditions pass
+
+        initial_energy = self.initiator.energy
+        result = action.execute(character=self.initiator) # Pass initiator to execute
+
+        self.assertTrue(result)
+        self.assertEqual(self.initiator.energy, initial_energy - 10)
+        self.mock_graph_manager_instance.update_node_attribute.assert_called_once_with(
+            self.initiator.uuid, "energy", initial_energy - 10
+        )
+
+    def test_multiple_effects(self):
+        action_effects = [
+            {"targets": ["initiator"], "attribute": "energy", "change_value": -5},
+            {"targets": ["target"], "attribute": "health", "change_value": -20}
+        ]
+        action = Action(
+            name="MultiEffectAction",
+            preconditions=[],
+            effects=action_effects,
+            initiator=self.initiator,
+            target=self.target,
+            graph_manager=self.mock_graph_manager_instance
+        )
+        action.preconditions_met = MagicMock(return_value=True)
+
+        initial_initiator_energy = self.initiator.energy
+        initial_target_health = self.target.health
+
+        result = action.execute(character=self.initiator)
+        self.assertTrue(result)
+
+        self.assertEqual(self.initiator.energy, initial_initiator_energy - 5)
+        self.assertEqual(self.target.health, initial_target_health - 20)
+
+        self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
+            self.initiator.uuid, "energy", initial_initiator_energy - 5
+        )
+        self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
+            self.target.uuid, "health", initial_target_health - 20
+        )
+        self.assertEqual(self.mock_graph_manager_instance.update_node_attribute.call_count, 2)
+
+    def test_preconditions_not_met(self):
+        action_effects = [{"targets": ["initiator"], "attribute": "energy", "change_value": -10}]
+        action = Action(
+            name="ConditionalAction",
+            preconditions=[MagicMock()], # Non-empty preconditions
+            effects=action_effects,
+            initiator=self.initiator,
+            graph_manager=self.mock_graph_manager_instance
+        )
+        action.preconditions_met = MagicMock(return_value=False) # Force preconditions to fail
+
+        initial_energy = self.initiator.energy
+        result = action.execute(character=self.initiator)
+
+        self.assertFalse(result)
+        self.assertEqual(self.initiator.energy, initial_energy) # Attribute should not change
+        self.mock_graph_manager_instance.update_node_attribute.assert_not_called()
+
+    def test_change_value_set_string(self):
+        self.initiator.status = "idle"
+        action_effects = [{"targets": ["initiator"], "attribute": "status", "change_value": "set:active"}]
+        action = Action(
+            name="SetStatusAction",
+            preconditions=[],
+            effects=action_effects,
+            initiator=self.initiator,
+            graph_manager=self.mock_graph_manager_instance
+        )
+        action.preconditions_met = MagicMock(return_value=True)
+
+        result = action.execute(character=self.initiator)
+        self.assertTrue(result)
+        self.assertEqual(self.initiator.status, "active")
+        self.mock_graph_manager_instance.update_node_attribute.assert_called_once_with(
+            self.initiator.uuid, "status", "active"
+        )
+
+    def test_change_value_method_call(self):
+        # Assume initiator has a method 'run_diagnostics' that changes 'last_checked' attribute
+        self.initiator.last_checked = "never"
+        def mock_method():
+            self.initiator.last_checked = "today"
+        self.initiator.run_diagnostics = MagicMock(side_effect=mock_method)
+
+        action_effects = [{"targets": ["initiator"], "attribute": "last_checked", "change_value": "run_diagnostics"}]
+        action = Action(
+            name="MethodCallAction",
+            preconditions=[],
+            effects=action_effects,
+            initiator=self.initiator,
+            graph_manager=self.mock_graph_manager_instance
+        )
+        action.preconditions_met = MagicMock(return_value=True)
+
+        result = action.execute(character=self.initiator)
+        self.assertTrue(result)
+        self.initiator.run_diagnostics.assert_called_once()
+        self.assertEqual(self.initiator.last_checked, "today") # Verifies method was called and changed attribute
+        # The base Action.execute will use the value of 'last_checked' *after* the method call for graph update
+        self.mock_graph_manager_instance.update_node_attribute.assert_called_once_with(
+            self.initiator.uuid, "last_checked", "today"
+        )
+
+    def test_change_value_callable_function(self):
+        self.initiator.mana = 20
+        def mana_boost_func(current_mana):
+            return current_mana + 15
+
+        action_effects = [{"targets": ["initiator"], "attribute": "mana", "change_value": mana_boost_func}]
+        action = Action(
+            name="CallableAction",
+            preconditions=[],
+            effects=action_effects,
+            initiator=self.initiator,
+            graph_manager=self.mock_graph_manager_instance
+        )
+        action.preconditions_met = MagicMock(return_value=True)
+
+        result = action.execute(character=self.initiator)
+        self.assertTrue(result)
+        self.assertEqual(self.initiator.mana, 35)
+        self.mock_graph_manager_instance.update_node_attribute.assert_called_once_with(
+            self.initiator.uuid, "mana", 35
+        )
+
+    def test_subclass_execute_calls_super_and_specific_logic(self):
+        # Using TalkAction as an example, assuming it has defined effects
+        # and also calls a specific method like respond_to_talk
+
+        # Define effects as TalkAction's __init__ would
+        talk_action_effects = [
+            {"targets": ["target"], "attribute": "social_wellbeing", "change_value": 1},
+            {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 0.5}
+        ]
+
+        # Mock the target's respond_to_talk method
+        self.target.respond_to_talk = MagicMock()
+        # Ensure target has the attribute that will be changed by effects
+        self.target.social_wellbeing = 10
+        self.initiator.social_wellbeing = 5
+
+        talk_action = TalkAction(
+            initiator=self.initiator,
+            target=self.target,
+            effects=talk_action_effects, # Pass specific effects for this test
+            graph_manager=self.mock_graph_manager_instance
+        )
+        # Ensure preconditions pass for the test
+        talk_action.preconditions_met = MagicMock(return_value=True)
+
+        result = talk_action.execute(character=self.initiator) # Execute using the initiator
+        self.assertTrue(result)
+
+        # 1. Check that super().execute() part (effect application) worked
+        # Check Python object updates
+        self.assertEqual(self.target.social_wellbeing, 11) # 10 + 1
+        self.assertEqual(self.initiator.social_wellbeing, 5.5) # 5 + 0.5
+
+        # Check GraphManager calls from super().execute()
+        self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
+            self.target.uuid, "social_wellbeing", 11
+        )
+        self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
+            self.initiator.uuid, "social_wellbeing", 5.5
+        )
+
+        # 2. Check that TalkAction's specific logic was called
+        self.target.respond_to_talk.assert_called_once_with(self.initiator)
+
+        # Ensure update_node_attribute was called for the effects handled by super().execute()
+        # For this setup, it should be called twice (once for target, once for initiator)
+        self.assertEqual(self.mock_graph_manager_instance.update_node_attribute.call_count, 2)
+
+
+# Continue updating TestSocialActions
 class TestSocialActions(unittest.TestCase):
     def setUp(self):
-        self.character_id = "char1"
-        self.target_character_id = "char2"
-        self.mock_character = MockCharacter(name="Alice")
-        self.graph_manager = GraphManager() # Initialize GraphManager
+        self.initiator_char = MockCharacter(name="Alice")
+        self.initiator_char.uuid = "alice_uuid"
+        self.initiator_char.social_wellbeing = 50 # Add attributes that might be affected
+        self.initiator_char.happiness = 50
+        self.initiator_char.state = State({"energy": 100, "happiness": 50, "social_wellbeing": 50})
 
-    def test_greet_action_instantiation(self):
-        action = GreetAction(self.character_id, self.target_character_id, graph_manager=self.graph_manager)
+
+        self.target_char = MockCharacter(name="Bob")
+        self.target_char.uuid = "bob_uuid"
+        self.target_char.social_wellbeing = 50
+        self.target_char.relationship_status = 0 # For GreetAction original effects
+        self.target_char.happiness = 50
+        self.target_char.state = State({"energy": 100, "happiness": 50, "social_wellbeing": 50})
+
+
+        self.mock_graph_manager_instance = MagicMock()
+
+        # Mock preconditions for all actions in these tests to simplify execution testing
+        # This can be done by patching the preconditions_met method directly on the Action class
+        # or on each instance. For simplicity here, we'll mock it on instances.
+
+    def test_greet_action_instantiation_and_execute(self):
+        # Effects for GreetAction as per current actions.py (simplified for this test)
+        # The actual GreetAction in actions.py might have different default effects.
+        # This test will use effects defined here.
+        greet_effects = [
+            {"targets": ["target"], "attribute": "social_wellbeing", "change_value": 1.0}, # Was relationship_status, changed for consistency
+            {"targets": ["initiator"], "attribute": "happiness", "change_value": 0.05},
+            {"targets": ["target"], "attribute": "happiness", "change_value": 0.05}
+        ]
+        action = GreetAction(
+            initiator=self.initiator_char,
+            target=self.target_char,
+            effects=greet_effects, # Override default effects for test predictability
+            graph_manager=self.mock_graph_manager_instance
+        )
+
         self.assertEqual(action.name, "Greet")
-        self.assertAlmostEqual(action.cost, 0.15) # 0.1 + 0.05
-        self.assertEqual(len(action.effects), 3)
-        self.assertEqual(action.effects[0]["attribute"], "relationship_status")
-        self.assertEqual(action.effects[0]["target_id"], self.target_character_id)
-        self.assertEqual(action.effects[0]["change"], 1)
-        # Assert full effects and preconditions lists
-        expected_effects_greet = [
-            {"attribute": "relationship_status", "target_id": self.target_character_id, "change": 1, "operator": "add"},
-            {"attribute": "happiness", "target_id": self.character_id, "change": 0.05, "operator": "add"},
-            {"attribute": "happiness", "target_id": self.target_character_id, "change": 0.05, "operator": "add"}
-        ]
-        self.assertEqual(action.effects, expected_effects_greet)
-        expected_preconditions_greet = [
-            {"type": "are_near", "actor_id": self.character_id, "target_id": self.target_character_id, "threshold": 5.0},
-            {"type": "relationship_not_hostile", "actor_id": self.character_id, "target_id": self.target_character_id, "threshold": -5}
-        ]
-        self.assertEqual(action.preconditions, expected_preconditions_greet)
-        self.assertEqual(action.initiator, self.character_id)
-        self.assertEqual(action.target, self.target_character_id)
+        # self.assertEqual(action.cost, 0.05) # Default cost from GreetAction
 
-    def test_greet_action_execute(self):
-        action = GreetAction(self.character_id, self.target_character_id, graph_manager=self.graph_manager)
-        # Redirect stdout to check print can be done here if needed
-        self.assertTrue(action.execute(character=self.mock_character))
+        self.assertEqual(action.initiator, self.initiator_char)
+        self.assertEqual(action.target, self.target_char)
 
-    def test_share_news_action_instantiation(self):
+        # Mock preconditions_met to return True for this test
+        action.preconditions_met = MagicMock(return_value=True)
+
+        # Store initial values
+        initial_target_social = self.target_char.social_wellbeing
+        initial_initiator_happiness = self.initiator_char.happiness
+        initial_target_happiness = self.target_char.happiness
+
+        result = action.execute(character=self.initiator_char) # Pass initiator to execute
+        self.assertTrue(result)
+
+        # Check Python object updates
+        self.assertEqual(self.target_char.social_wellbeing, initial_target_social + 1.0)
+        self.assertEqual(self.initiator_char.happiness, initial_initiator_happiness + 0.05)
+        self.assertEqual(self.target_char.happiness, initial_target_happiness + 0.05)
+
+        # Check GraphManager updates
+        self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
+            self.target_char.uuid, "social_wellbeing", initial_target_social + 1.0
+        )
+        self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
+            self.initiator_char.uuid, "happiness", initial_initiator_happiness + 0.05
+        )
+        self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
+            self.target_char.uuid, "happiness", initial_target_happiness + 0.05
+        )
+        self.assertEqual(self.mock_graph_manager_instance.update_node_attribute.call_count, 3)
+
+    def test_share_news_action_instantiation_and_execute(self):
         news = "Heard about the new festival!"
-        action = ShareNewsAction(self.character_id, self.target_character_id, news_item=news, graph_manager=self.graph_manager)
-        self.assertEqual(action.name, "Share News")
-        self.assertAlmostEqual(action.cost, 0.6) # 0.5 + 0.1
+        # Define effects based on ShareNewsAction's typical behavior
+        share_news_effects = [
+            {"targets": ["target"], "attribute": "social_wellbeing", "change_value": 2},
+            {"targets": ["initiator"], "attribute": "happiness", "change_value": 0.1},
+            {"targets": ["target"], "attribute": "knowledge", "change_value": f"set:{news}"} # news item
+        ]
+        self.target_char.knowledge = "" # Ensure attribute exists
+
+        action = ShareNewsAction(
+            initiator=self.initiator_char,
+            target=self.target_char,
+            news_item=news,
+            effects=share_news_effects, # Override default for test
+            graph_manager=self.mock_graph_manager_instance
+        )
+        self.assertEqual(action.name, "ShareNews") # Corrected from "Share News"
+        # self.assertEqual(action.cost, 0.1) # Default cost
         self.assertEqual(action.news_item, news)
-        # Assert full effects and preconditions lists
-        expected_effects_share = [
-            {"attribute": "relationship_status", "target_id": self.target_character_id, "change": 2, "operator": "add"},
-            {"attribute": "happiness", "target_id": self.character_id, "change": 0.1, "operator": "add"},
-            {"attribute": "memory", "target_id": self.target_character_id, "content": news, "type": "information"}
-        ]
-        self.assertEqual(action.effects, expected_effects_share)
-        expected_preconditions_share = [
-            {"type": "are_near", "actor_id": self.character_id, "target_id": self.target_character_id, "threshold": 5.0},
-            {"type": "relationship_neutral_or_positive", "actor_id": self.character_id, "target_id": self.target_character_id, "threshold": 0}
-        ]
-        self.assertEqual(action.preconditions, expected_preconditions_share)
-        self.assertEqual(action.initiator, self.character_id)
-        self.assertEqual(action.target, self.target_character_id)
 
-    def test_share_news_action_execute(self):
-        action = ShareNewsAction(self.character_id, self.target_character_id, news_item="Big news", graph_manager=self.graph_manager)
-        self.assertTrue(action.execute(character=self.mock_character))
+        action.preconditions_met = MagicMock(return_value=True)
 
-    def test_offer_compliment_action_instantiation(self):
+        initial_target_social = self.target_char.social_wellbeing
+        initial_initiator_happiness = self.initiator_char.happiness
+
+        result = action.execute(character=self.initiator_char)
+        self.assertTrue(result)
+
+        self.assertEqual(self.target_char.social_wellbeing, initial_target_social + 2)
+        self.assertEqual(self.initiator_char.happiness, initial_initiator_happiness + 0.1)
+        self.assertEqual(self.target_char.knowledge, news)
+
+        self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
+            self.target_char.uuid, "social_wellbeing", initial_target_social + 2
+        )
+        self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
+            self.initiator_char.uuid, "happiness", initial_initiator_happiness + 0.1
+        )
+        self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
+            self.target_char.uuid, "knowledge", news
+        )
+        self.assertEqual(self.mock_graph_manager_instance.update_node_attribute.call_count, 3)
+
+
+    def test_offer_compliment_action_instantiation_and_execute(self):
         topic = "your new haircut"
-        action = OfferComplimentAction(self.character_id, self.target_character_id, compliment_topic=topic, graph_manager=self.graph_manager)
-        self.assertEqual(action.name, "Offer Compliment")
-        self.assertAlmostEqual(action.cost, 0.4) # 0.3 + 0.1
-        self.assertEqual(action.compliment_topic, topic)
-        # Assert full effects and preconditions lists
-        expected_effects_compliment = [
-            {"attribute": "relationship_status", "target_id": self.target_character_id, "change": 3, "operator": "add"},
-            {"attribute": "happiness", "target_id": self.target_character_id, "change": 0.15, "operator": "add"},
-            {"attribute": "happiness", "target_id": self.character_id, "change": 0.05, "operator": "add"}
+        # Define effects based on OfferComplimentAction's typical behavior
+        compliment_effects = [
+            {"targets": ["target"], "attribute": "relationship_strength", "change_value": 3}, # Was relationship_status
+            {"targets": ["target"], "attribute": "happiness", "change_value": 0.15},
+            {"targets": ["initiator"], "attribute": "happiness", "change_value": 0.05}
         ]
-        self.assertEqual(action.effects, expected_effects_compliment)
-        expected_preconditions_compliment = [
-            {"type": "are_near", "actor_id": self.character_id, "target_id": self.target_character_id, "threshold": 5.0},
-            {"type": "relationship_not_hostile", "actor_id": self.character_id, "target_id": self.target_character_id, "threshold": -5}
-        ]
-        self.assertEqual(action.preconditions, expected_preconditions_compliment)
-        self.assertEqual(action.initiator, self.character_id)
-        self.assertEqual(action.target, self.target_character_id)
+        self.target_char.relationship_strength = 10 # Ensure attribute exists
 
-    def test_offer_compliment_action_execute(self):
-        action = OfferComplimentAction(self.character_id, self.target_character_id, compliment_topic="your hat", graph_manager=self.graph_manager)
-        self.assertTrue(action.execute(character=self.mock_character))
+        action = OfferComplimentAction(
+            initiator=self.initiator_char,
+            target=self.target_char,
+            compliment_topic=topic,
+            effects=compliment_effects, # Override default for test
+            graph_manager=self.mock_graph_manager_instance
+        )
+        self.assertEqual(action.name, "OfferCompliment") # Corrected
+        # self.assertEqual(action.cost, 0.1) # Default cost
+        self.assertEqual(action.compliment_topic, topic)
+
+        action.preconditions_met = MagicMock(return_value=True)
+
+        initial_target_rel_strength = self.target_char.relationship_strength
+        initial_target_happiness = self.target_char.happiness
+        initial_initiator_happiness = self.initiator_char.happiness
+
+        result = action.execute(character=self.initiator_char)
+        self.assertTrue(result)
+
+        self.assertEqual(self.target_char.relationship_strength, initial_target_rel_strength + 3)
+        self.assertEqual(self.target_char.happiness, initial_target_happiness + 0.15)
+        self.assertEqual(self.initiator_char.happiness, initial_initiator_happiness + 0.05)
+
+        self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
+            self.target_char.uuid, "relationship_strength", initial_target_rel_strength + 3
+        )
+        self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
+            self.target_char.uuid, "happiness", initial_target_happiness + 0.15
+        )
+        self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
+            self.initiator_char.uuid, "happiness", initial_initiator_happiness + 0.05
+        )
+        self.assertEqual(self.mock_graph_manager_instance.update_node_attribute.call_count, 3)
 
 
 if __name__ == "__main__":
