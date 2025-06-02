@@ -78,7 +78,7 @@ class TestLLMIntegration(unittest.TestCase):
 
         # Mock LLM response
         llm_response = "I choose to sleep because Alice needs to restore energy."
-        mock_brain_io.send_request.return_value = llm_response
+        mock_brain_io.input_to_model.return_value = llm_response
 
         # Mock interpreter response
         mock_action = MagicMock()
