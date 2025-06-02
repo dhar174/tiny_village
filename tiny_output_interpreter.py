@@ -2,6 +2,7 @@ import json
 import re
 import json
 import inspect
+import logging
 from typing import Dict, Any, Optional, Union
 from actions import (
     Action,
@@ -21,6 +22,8 @@ from actions import (
     PursueHobbyAction,
     VisitDoctorAction,
 )
+
+logger = logging.getLogger(__name__)
 
 
 # Custom Exceptions
@@ -329,6 +332,98 @@ class OutputInterpreter:
 
         # Fallback: Create a basic action from keywords
         return self._create_fallback_action_dict(cleaned_response)
+
+    def interpret_response(
+        self, llm_response_text: str, character, potential_actions: list
+    ) -> list:
+        """
+        High-level method to interpret LLM response and return action objects.
+        This method coordinates parsing and interpretation for the decision-making loop.
+
+        Args:
+            llm_response_text: Raw text response from LLM
+            character: Character object making the decision
+            potential_actions: List of potential Action objects from StrategyManager
+
+        Returns:
+            List of Action objects to execute
+        """
+        try:
+            # Step 1: Parse the LLM response
+            parsed_response = self.parse_llm_response(llm_response_text)
+
+            # Step 2: Try to match with potential actions first (preferred path)
+            selected_action = self._match_with_potential_actions(
+                parsed_response, potential_actions
+            )
+            if selected_action:
+                return [selected_action]
+
+            # Step 3: Fall back to general interpretation
+            interpreted_action = self.interpret(
+                parsed_response, getattr(character, "id", character.name)
+            )
+            if interpreted_action:
+                return [interpreted_action]
+
+            # Step 4: Ultimate fallback - return the first potential action
+            if potential_actions and len(potential_actions) > 0:
+                return [potential_actions[0]]
+
+            # Step 5: Last resort - create a NoOp action
+            return [NoOpAction(initiator_id=getattr(character, "id", character.name))]
+
+        except Exception as e:
+            logger.error(f"Error interpreting response for {character.name}: {e}")
+            # Return first potential action as safe fallback
+            if potential_actions and len(potential_actions) > 0:
+                return [potential_actions[0]]
+            return [NoOpAction(initiator_id=getattr(character, "id", character.name))]
+
+    def _match_with_potential_actions(
+        self, parsed_response: dict, potential_actions: list
+    ):
+        """
+        Try to match the parsed response with one of the potential actions.
+        This ensures consistency with StrategyManager's utility-based rankings.
+        """
+        action_name = parsed_response.get("action", "").lower()
+
+        # Look for direct name matches
+        for action in potential_actions:
+            potential_name = getattr(action, "name", str(action)).lower()
+            if action_name in potential_name or potential_name in action_name:
+                return action
+
+        # Look for action class type matches
+        for action in potential_actions:
+            action_class_name = action.__class__.__name__.lower()
+            if (
+                action_name in action_class_name
+                or action_class_name.replace("action", "") in action_name
+            ):
+                return action
+
+        # Look for semantic matches based on action type
+        action_keywords_map = {
+            "eat": ["eat", "food", "consume", "meal"],
+            "work": ["work", "job", "employment", "career"],
+            "sleep": ["sleep", "rest", "nap", "tired"],
+            "talk": ["talk", "chat", "speak", "social"],
+            "go": ["go", "move", "travel", "visit"],
+        }
+
+        for action in potential_actions:
+            action_name_lower = getattr(action, "name", str(action)).lower()
+            for keyword_group, keywords in action_keywords_map.items():
+                if any(keyword in action_name_lower for keyword in keywords):
+                    if any(
+                        keyword in parsed_response.get("action", "").lower()
+                        for keyword in keywords
+                    ):
+                        return action
+
+        return None
 
     def _parse_json_response(self, response_str: str) -> dict:
         """Parse strict JSON format response"""

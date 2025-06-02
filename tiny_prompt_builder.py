@@ -1576,6 +1576,27 @@ class PromptBuilder:
         prompt += f"{self.character.name}, I choose "
         return prompt
 
+    def generate_decision_prompt(self, time, weather, action_choices):
+        """
+        Generate a decision prompt with dynamic action choices from StrategyManager.
+        This is the LLM-integrated version of the daily routine prompt.
+        """
+        prompt = f"<|system|>"
+        prompt += f"You are {self.character.name}, a {self.character.job} in a small town. You are a {descriptors.get_job_adjective(self.character.job)} {descriptors.get_job_pronoun(self.character.job)} who enjoys {descriptors.get_job_enjoys_verb(self.character.job)} {descriptors.get_job_verb_acts_on_noun(self.character.job)}. You are currently working on {descriptors.get_job_currently_working_on(self.character.job)} {descriptors.get_job_place(self.character.job)}, and you are excited to see how it turns out. You are also planning to attend a {descriptors.get_job_planning_to_attend(self.character.job)} in the next few weeks, and you are hoping to {descriptors.get_job_hoping_to_there(self.character.job)} there."
+        prompt += f"<|user|>"
+        prompt += f"{self.character.name}, it's {time}, and {descriptors.get_weather_description(weather)}. You're feeling {descriptors.get_feeling_health(self.character.health_status)}, and {descriptors.get_feeling_hunger(self.character.hunger_level)}. "
+        prompt += f"{descriptors.get_event_recent(self.character.recent_event)}, and {descriptors.get_financial_situation(self.character.wealth_money)}. {descriptors.get_motivation} {self.character.goal}. {descriptors.get_routine_question_framing()}"
+
+        # Add dynamic action choices
+        prompt += "Options:\n"
+        for action_choice in action_choices:
+            prompt += f"{action_choice}\n"
+
+        prompt += "</s>"
+        prompt += f"<|assistant|>"
+        prompt += f"{self.character.name}, I choose "
+        return prompt
+
     def generate_crisis_response_prompt(self, crisis):
         prompt = f"<|system|>"
         prompt += f"<|user|>"

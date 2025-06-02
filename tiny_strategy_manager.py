@@ -15,14 +15,19 @@ This module integrates the GOAP system and the graph manager to formulate compre
 """
 
 from tiny_goap_system import GOAPPlanner
-
-# from tiny_graph_manager import GraphManager # GraphManager might not be needed directly for get_daily_actions if character object is rich
+from tiny_graph_manager import GraphManager
 from tiny_utility_functions import (
     calculate_action_utility,
     Goal,
 )  # evaluate_utility seems to be for plans
 from tiny_characters import Character  # Assuming Character class is imported
 from actions import Action  # Use the modified Action from actions.py
+from tiny_prompt_builder import PromptBuilder
+from tiny_brain_io import TinyBrainIO
+from tiny_output_interpreter import OutputInterpreter
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # Define placeholder/simplified Action classes for use within StrategyManager if not using complex ones from actions.py
@@ -69,14 +74,26 @@ class WanderAction(Action):  # Example generic action
             name=name, preconditions={}, effects=effects if effects else [], cost=cost
         )
 
+
 class StrategyManager:
     """
     The StrategyManager class is responsible for managing the strategies used in goal-oriented action planning and utility evaluation.
     """
 
-    def __init__(self):
+    def __init__(self, use_llm=False, model_name=None):
         self.goap_planner = GOAPPlanner()
         self.graph_manager = GraphManager()
+        self.use_llm = use_llm
+
+        # Initialize LLM components if needed
+        if self.use_llm:
+            self.brain_io = TinyBrainIO(
+                model_name or "alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2"
+            )
+            self.output_interpreter = OutputInterpreter()
+        else:
+            self.brain_io = None
+            self.output_interpreter = None
 
     def get_character_state_dict(self, character: Character) -> dict:
         """
@@ -129,7 +146,6 @@ class StrategyManager:
         potential_actions.append(
             WanderAction(effects=[{"attribute": "energy", "change_value": -0.05}])
         )  # Wandering costs a little energy
-
 
         # 2. Contextual Actions
         # Assumed Character object structure:
@@ -223,6 +239,82 @@ class StrategyManager:
 
         return [action_tuple[0] for action_tuple in sorted_actions]
 
+    def decide_action_with_llm(
+        self, character: Character, time="morning", weather="clear"
+    ) -> list[Action]:
+        """
+        Use LLM to make an intelligent decision about character actions.
+        This integrates the full decision-making pipeline:
+        Character Context → PromptBuilder → BrainIO → OutputInterpreter → Actions
+        """
+        if not self.use_llm or not self.brain_io or not self.output_interpreter:
+            logger.warning(
+                "LLM decision-making not available, falling back to utility-based actions"
+            )
+            return self.get_daily_actions(character)
+
+        try:
+            # Step 1: Generate potential actions using utility-based system
+            potential_actions = self.get_daily_actions(character)
+
+            # Step 2: Create PromptBuilder for this character
+            prompt_builder = PromptBuilder(character)
+
+            # Step 3: Generate action choices from potential actions
+            action_choices = []
+            for i, action in enumerate(potential_actions[:5]):  # Limit to top 5 actions
+                action_name = getattr(action, "name", str(action))
+                action_choices.append(f"{i+1}. {action_name}")
+
+            # Step 4: Generate LLM prompt with dynamic action choices
+            prompt = prompt_builder.generate_decision_prompt(
+                time, weather, action_choices
+            )
+
+            # Step 5: Query LLM
+            logger.debug(
+                f"Sending prompt to LLM for {character.name}: {prompt[:100]}..."
+            )
+            llm_responses = self.brain_io.input_to_model([prompt])
+
+            if not llm_responses or len(llm_responses) == 0:
+                logger.warning(f"No LLM response received for {character.name}")
+                return potential_actions[:1]  # Return top utility action as fallback
+
+            llm_response_text = (
+                llm_responses[0][0]
+                if isinstance(llm_responses[0], tuple)
+                else llm_responses[0]
+            )
+            logger.debug(f"LLM response for {character.name}: {llm_response_text}")
+
+            # Step 6: Interpret LLM response
+            try:
+                selected_actions = self.output_interpreter.interpret_response(
+                    llm_response_text, character, potential_actions
+                )
+
+                if selected_actions and len(selected_actions) > 0:
+                    logger.info(
+                        f"LLM selected action for {character.name}: {[a.name for a in selected_actions]}"
+                    )
+                    return selected_actions
+                else:
+                    logger.warning(
+                        f"LLM response could not be interpreted for {character.name}"
+                    )
+                    return potential_actions[:1]  # Fallback to top utility action
+
+            except Exception as interpretation_error:
+                logger.error(
+                    f"Error interpreting LLM response for {character.name}: {interpretation_error}"
+                )
+                return potential_actions[:1]  # Fallback to top utility action
+
+        except Exception as e:
+            logger.error(f"Error in LLM decision-making for {character.name}: {e}")
+            # Always fallback to utility-based decision making
+            return self.get_daily_actions(character)[:1]
 
     # --- Other methods from the original file (potentially needing updates) ---
     def update_strategy(self, events, subject="Emma"):
@@ -264,7 +356,6 @@ class StrategyManager:
         # This is a placeholder for daily action logic
         return []
 
-
     def get_career_actions(self, character, job_details):
         # This is a placeholder and would need similar utility-based ranking
         return [
@@ -280,7 +371,6 @@ class StrategyManager:
                 "cost": 0,
                 "effects": [],
             },
-
             {"name": "Decline Offer", "career_progress": 0, "cost": 0, "effects": []},
         ]
 
