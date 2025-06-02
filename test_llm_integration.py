@@ -119,7 +119,7 @@ class TestLLMIntegration(unittest.TestCase):
             )
 
             # Should return utility-based action
-            self.assertEqual(result, mock_action)
+            self.assertEqual(result, [mock_action])
             mock_get_actions.assert_called_once()
 
     def test_prompt_builder_decision_prompt_generation(self):
