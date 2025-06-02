@@ -1,7 +1,7 @@
-""" Dynamic and Extensible Actions
+"""Dynamic and Extensible Actions
 Action Templates:
 Design actions as templates that can be instantiated with specific parameters. This allows new actions to be defined or modified without hard-coding every possibility.
-Actions should include not just conditions and effects but also metadata that defines how they integrate with the graph (e.g., which nodes or edges they affect). 
+Actions should include not just conditions and effects but also metadata that defines how they integrate with the graph (e.g., which nodes or edges they affect).
 
 Dynamic Action Generation:
 Implement a system where actions can be generated or modified based on game events, player inputs, or character development.
@@ -323,7 +323,7 @@ class Action:
         self.impact_rating_on_target = impact_rating_on_target
         self.impact_rating_on_initiator = impact_rating_on_initiator
         self.impact_rating_on_other = impact_rating_on_other
-        self.action_id = action_id if action_id else id(self) # Use unique ID
+        self.action_id = action_id if action_id else id(self)  # Use unique ID
         self.created_at = created_at
         self.expires_at = expires_at
         self.completed_at = completed_at
@@ -367,19 +367,21 @@ class Action:
 
     def preconditions_met(self):
 
-        if not self.preconditions: 
+        if not self.preconditions:
             return True
         # This assumes preconditions is a list of Condition objects
         # If it's a dict from old ActionSystem.create_precondition, this will fail.
         # For new actions, ensure preconditions are Condition objects or adapt this.
         try:
             return all(
-                precondition.check_condition() 
-                for precondition in self.preconditions # Assuming list of Condition objects
+                precondition.check_condition()
+                for precondition in self.preconditions  # Assuming list of Condition objects
             )
-        except AttributeError: # If precondition is not a Condition object
-            print(f"Warning: Precondition for action {self.name} is not a Condition object or check_condition failed.")
-            return False # Or handle differently
+        except AttributeError:  # If precondition is not a Condition object
+            print(
+                f"Warning: Precondition for action {self.name} is not a Condition object or check_condition failed."
+            )
+            return False  # Or handle differently
 
     def apply_single_effect(self, effect, state: State, change_value=None):
         if change_value is None:
@@ -631,12 +633,17 @@ class Action:
 
     #         return True
     #     return False
-    def execute(self, character=None): # Changed signature to match new actions
+    def execute(
+        self, character=None, graph_manager=None
+    ):  # Changed signature to match new actions
         # Placeholder execute for base, actual logic in subclasses
-        print(f"Executing generic action: {self.name} by {character.name if character else self.initiator} on target {self.target}")
-        # This method would apply effects to character.state or use self.graph_manager for world interactions.
-        # For now, as self.graph_manager might be None due to fallback, true effects can't be applied here reliably without checking.
-        if character and hasattr(character, 'get_state'):
+        print(
+            f"Executing generic action: {self.name} by {character.name if character else self.initiator} on target {self.target}"
+        )
+        # This method would apply effects to character.state or graph_manager
+        # For now, as graph_manager is None due to workaround, true effects can't be applied here.
+        if character and hasattr(character, "get_state"):
+
             char_state_obj = character.get_state()
             # self.apply_effects(char_state_obj) # apply_effects needs a dict-like state
             # To use with State object, State class would need to allow direct item assignment
@@ -647,9 +654,12 @@ class Action:
         return True
 
     def __str__(self):
-        preconditions_str = str(self.preconditions) if self.preconditions else "[]" # Changed from {}
+        preconditions_str = (
+            str(self.preconditions) if self.preconditions else "[]"
+        )  # Changed from {}
         effects_str = str(self.effects) if self.effects else "[]"
         return f"{self.name}: Preconditions: {preconditions_str} -> Effects: {effects_str}, Cost: {self.cost}"
+
     def add_effect(self, effect):
         self.effects.append(effect)
 
@@ -700,7 +710,18 @@ class Action:
     #     )
     def __hash__(self):
         # Simplified hash for workaround compatibility
-        return hash((self.name, self.cost, tuple(sorted(self.effects.items()) if isinstance(self.effects, dict) else tuple(self.effects))))
+        return hash(
+            (
+                self.name,
+                self.cost,
+                tuple(
+                    sorted(self.effects.items())
+                    if isinstance(self.effects, dict)
+                    else tuple(self.effects)
+                ),
+            )
+        )
+
     def __eq__(self, other):
         if not isinstance(other, Action):
             return False
@@ -714,45 +735,93 @@ class Action:
             # and self.impact_rating_on_initiator == other.impact_rating_on_initiator
             # and self.impact_rating_on_other == other.impact_rating_on_other
             # and self.change_value == other.change_value
-            self.name == other.name and
-            self.cost == other.cost and
-            self.effects == other.effects and # Simplistic comparison
-            self.preconditions == other.preconditions # Simplistic comparison
+            self.name == other.name
+            and self.cost == other.cost
+            and self.effects == other.effects  # Simplistic comparison
+            and self.preconditions == other.preconditions  # Simplistic comparison
         )
 
+
 class TalkAction(Action):
-    def __init__(self, initiator, target, name="Talk", preconditions=None, effects=None, cost=0.1, graph_manager=None, **kwargs):
+    def __init__(
+        self,
+        initiator,
+        target,
+        name="Talk",
+        preconditions=None,
+        effects=None,
+        cost=0.1,
+        **kwargs,
+    ):
         # Ensure preconditions and effects are lists if provided, or default to empty lists
         _preconditions = preconditions if preconditions is not None else []
-        _effects = effects if effects is not None else [{"attribute": "social_wellbeing", "target_id": str(target), "change": 1, "operator": "add"}]
-        super().__init__(name, _preconditions, _effects, cost, target=target, initiator=initiator, graph_manager=graph_manager, **kwargs)
+        _effects = (
+            effects
+            if effects is not None
+            else [
+                {
+                    "attribute": "social_wellbeing",
+                    "target_id": str(target),
+                    "change": 1,
+                    "operator": "add",
+                }
+            ]
+        )
 
-    def execute(self, character=None):
+        # Filter kwargs to only include parameters that Action.__init__ accepts
+        base_action_params = {
+            "related_skills",
+            "default_target_is_initiator",
+            "impact_rating_on_target",
+            "impact_rating_on_initiator",
+            "impact_rating_on_other",
+            "action_id",
+            "created_at",
+            "expires_at",
+            "completed_at",
+            "priority",
+            "related_goal",
+        }
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+
+        super().__init__(
+            name,
+            _preconditions,
+            _effects,
+            cost,
+            target=target,
+            initiator=initiator,
+            **filtered_kwargs,
+        )
+
+    def execute(self, character=None, graph_manager=None):
+
         initiator_obj = character if character else self.initiator
         target_obj = self.target
 
-        initiator_name = getattr(initiator_obj, 'name', str(initiator_obj))
-        target_name = getattr(target_obj, 'name', str(target_obj))
+        initiator_name = getattr(initiator_obj, "name", str(initiator_obj))
+        target_name = getattr(target_obj, "name", str(target_obj))
 
         print(f"{initiator_name} is talking to {target_name}")
-        if hasattr(target_obj, 'respond_to_talk'):
+        if hasattr(target_obj, "respond_to_talk"):
             target_obj.respond_to_talk(initiator_obj)
         return True
 
 
 class ExploreAction(Action):
-    def __init__(self, initiator, target, name="Explore", preconditions=None, effects=None, cost=0.2, graph_manager=None, **kwargs):
-        _preconditions = preconditions if preconditions is not None else []
-        _effects = effects if effects is not None else [] # Default effects for exploration
-        super().__init__(name, _preconditions, _effects, cost, target=target, initiator=initiator, graph_manager=graph_manager, **kwargs)
-
-    def execute(self, character=None):
-        if hasattr(self.initiator, 'name') and hasattr(self.target, 'location') and hasattr(self.target, 'discover'):
+    def execute(self):
+        if (
+            hasattr(self.initiator, "name")
+            and hasattr(self.target, "location")
+            and hasattr(self.target, "discover")
+        ):
             print(f"{self.initiator.name} is exploring {self.target.location}")
             self.target.discover(self.initiator)
         else:
-            print(f"Warning: ExploreAction executed with incomplete initiator/target for {self.name}")
-        return True # Added return
+            print(
+                f"Warning: ExploreAction executed with incomplete initiator/target for {self.name}"
+            )
+        return True  # Added return
 
 
 class ActionTemplate:
@@ -799,16 +868,18 @@ action.execute() """
 
 
 class CompositeAction(Action):
-    def __init__(self, graph_manager=None, **kwargs):
-        super().__init__(name="CompositeAction", preconditions=[], effects=[], graph_manager=graph_manager, **kwargs)
+    def __init__(self):
+        super().__init__(name="CompositeAction", preconditions=[], effects=[])
+
         self.actions = []
 
     def add_action(self, action):
         self.actions.append(action)
 
-    def execute(self, character=None):
+    def execute(self, character=None, graph_manager=None):  # Added parameters
         for action in self.actions:
-            action.execute(character) # Pass character, sub-actions use their own self.graph_manager
+            action.execute(character, graph_manager)  # Pass parameters
+
 
 
 # # Example usage
@@ -907,9 +978,33 @@ class ActionSystem:
         #     {"happiness": 10, "energy": -10},
         #     1,
         # )
-        study_template = ActionTemplate("Study", [{"type": "knowledge_lt_10"}], [{"attribute": "knowledge", "change": 5}, {"attribute": "energy", "change": -10}], 1)
-        work_template = ActionTemplate("Work", [{"type": "energy_gt_20"}], [{"attribute": "money", "change": 50}, {"attribute": "energy", "change": -20}], 2)
-        socialize_template = ActionTemplate("Socialize", [{"type": "social_gt_20"}, {"type": "happiness_gt_10"}], [{"attribute": "happiness", "change": 10}, {"attribute": "energy", "change": -10}], 1)
+        study_template = ActionTemplate(
+            "Study",
+            [{"type": "knowledge_lt_10"}],
+            [
+                {"attribute": "knowledge", "change": 5},
+                {"attribute": "energy", "change": -10},
+            ],
+            1,
+        )
+        work_template = ActionTemplate(
+            "Work",
+            [{"type": "energy_gt_20"}],
+            [
+                {"attribute": "money", "change": 50},
+                {"attribute": "energy", "change": -20},
+            ],
+            2,
+        )
+        socialize_template = ActionTemplate(
+            "Socialize",
+            [{"type": "social_gt_20"}, {"type": "happiness_gt_10"}],
+            [
+                {"attribute": "happiness", "change": 10},
+                {"attribute": "energy", "change": -10},
+            ],
+            1,
+        )
         # Add templates to the action generator
         self.action_generator.add_template(study_template)
         self.action_generator.add_template(work_template)
@@ -988,3 +1083,529 @@ class ActionSystem:
             }
         elif type(conditions_list[0]) == Condition:
             return {cond.attribute: cond for cond in conditions_list}
+
+
+class EatAction(Action):
+    def __init__(self, item_name, initiator_id=None, **kwargs):
+        # Filter kwargs to only include parameters that Action.__init__ accepts
+        base_action_params = {
+            "related_skills",
+            "default_target_is_initiator",
+            "impact_rating_on_target",
+            "impact_rating_on_initiator",
+            "impact_rating_on_other",
+            "action_id",
+            "created_at",
+            "expires_at",
+            "completed_at",
+            "priority",
+            "related_goal",
+        }
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+
+        super().__init__(
+            name="Eat",
+            initiator=initiator_id,
+            target=item_name,
+            cost=kwargs.get("cost", 0.1),
+            preconditions=kwargs.get("preconditions", []),
+            effects=kwargs.get(
+                "effects",
+                [
+                    {"attribute": "hunger", "change_value": -2, "target": "initiator"},
+                    {"attribute": "energy", "change_value": 1, "target": "initiator"},
+                ],
+            ),
+            **filtered_kwargs,
+        )
+        self.item_name = item_name
+
+
+class GoToLocationAction(Action):
+    def __init__(self, location_name, initiator_id=None, **kwargs):
+        # Filter kwargs to only include parameters that Action.__init__ accepts
+        base_action_params = {
+            "related_skills",
+            "default_target_is_initiator",
+            "impact_rating_on_target",
+            "impact_rating_on_initiator",
+            "impact_rating_on_other",
+            "action_id",
+            "created_at",
+            "expires_at",
+            "completed_at",
+            "priority",
+            "related_goal",
+        }
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+
+        super().__init__(
+            name="GoToLocation",
+            initiator=initiator_id,
+            target=location_name,
+            cost=kwargs.get("cost", 0.2),
+            preconditions=kwargs.get("preconditions", []),
+            effects=kwargs.get(
+                "effects",
+                [
+                    {
+                        "attribute": "location",
+                        "change_value": location_name,
+                        "target": "initiator",
+                    }
+                ],
+            ),
+            **filtered_kwargs,
+        )
+        self.location_name = location_name
+
+
+class NoOpAction(Action):
+    def __init__(self, initiator_id=None, **kwargs):
+        # Filter kwargs to only include parameters that Action.__init__ accepts
+        base_action_params = {
+            "related_skills",
+            "default_target_is_initiator",
+            "impact_rating_on_target",
+            "impact_rating_on_initiator",
+            "impact_rating_on_other",
+            "action_id",
+            "created_at",
+            "expires_at",
+            "completed_at",
+            "priority",
+            "related_goal",
+        }
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+
+        super().__init__(
+            name="NoOp",
+            initiator=initiator_id,
+            cost=kwargs.get("cost", 0),
+            preconditions=kwargs.get("preconditions", []),
+            effects=kwargs.get("effects", []),
+            **filtered_kwargs,
+        )
+
+
+class BuyFoodAction(Action):
+    def __init__(self, food_type="food", initiator_id=None, **kwargs):
+        # Filter kwargs to only include parameters that Action.__init__ accepts
+        base_action_params = {
+            "related_skills",
+            "default_target_is_initiator",
+            "impact_rating_on_target",
+            "impact_rating_on_initiator",
+            "impact_rating_on_other",
+            "action_id",
+            "created_at",
+            "expires_at",
+            "completed_at",
+            "priority",
+            "related_goal",
+        }
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+
+        super().__init__(
+            name="BuyFood",
+            initiator=initiator_id,
+            target=food_type,
+            cost=kwargs.get("cost", 0.3),
+            preconditions=kwargs.get("preconditions", []),
+            effects=kwargs.get(
+                "effects",
+                [
+                    {"attribute": "money", "change_value": -5, "target": "initiator"},
+                    {
+                        "attribute": "inventory",
+                        "change_value": f"add:{food_type}",
+                        "target": "initiator",
+                    },
+                ],
+            ),
+            **filtered_kwargs,
+        )
+        self.food_type = food_type
+
+
+class WorkAction(Action):
+    def __init__(self, job_type="current_job", initiator_id=None, **kwargs):
+        # Filter kwargs to only include parameters that Action.__init__ accepts
+        base_action_params = {
+            "related_skills",
+            "default_target_is_initiator",
+            "impact_rating_on_target",
+            "impact_rating_on_initiator",
+            "impact_rating_on_other",
+            "action_id",
+            "created_at",
+            "expires_at",
+            "completed_at",
+            "priority",
+            "related_goal",
+        }
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+
+        super().__init__(
+            name="Work",
+            initiator=initiator_id,
+            target=job_type,
+            cost=kwargs.get("cost", 0.4),
+            preconditions=kwargs.get("preconditions", []),
+            effects=kwargs.get(
+                "effects",
+                [
+                    {"attribute": "money", "change_value": 20, "target": "initiator"},
+                    {"attribute": "energy", "change_value": -2, "target": "initiator"},
+                    {
+                        "attribute": "job_performance",
+                        "change_value": 1,
+                        "target": "initiator",
+                    },
+                ],
+            ),
+            **filtered_kwargs,
+        )
+        self.job_type = job_type
+
+
+class SleepAction(Action):
+    def __init__(self, duration=8, initiator_id=None, **kwargs):
+        # Filter kwargs to only include parameters that Action.__init__ accepts
+        base_action_params = {
+            "related_skills",
+            "default_target_is_initiator",
+            "impact_rating_on_target",
+            "impact_rating_on_initiator",
+            "impact_rating_on_other",
+            "action_id",
+            "created_at",
+            "expires_at",
+            "completed_at",
+            "priority",
+            "related_goal",
+        }
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+
+        super().__init__(
+            name="Sleep",
+            initiator=initiator_id,
+            cost=kwargs.get("cost", 0.0),
+            preconditions=kwargs.get("preconditions", []),
+            effects=kwargs.get(
+                "effects",
+                [
+                    {"attribute": "energy", "change_value": 5, "target": "initiator"},
+                    {"attribute": "health", "change_value": 1, "target": "initiator"},
+                ],
+            ),
+            **filtered_kwargs,
+        )
+        self.duration = duration
+
+
+class SocialVisitAction(Action):
+    def __init__(self, target_person, initiator_id=None, **kwargs):
+        # Filter kwargs to only include parameters that Action.__init__ accepts
+        base_action_params = {
+            "related_skills",
+            "default_target_is_initiator",
+            "impact_rating_on_target",
+            "impact_rating_on_initiator",
+            "impact_rating_on_other",
+            "action_id",
+            "created_at",
+            "expires_at",
+            "completed_at",
+            "priority",
+            "related_goal",
+        }
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+
+        super().__init__(
+            name="SocialVisit",
+            initiator=initiator_id,
+            target=target_person,
+            cost=kwargs.get("cost", 0.3),
+            preconditions=kwargs.get("preconditions", []),
+            effects=kwargs.get(
+                "effects",
+                [
+                    {
+                        "attribute": "social_wellbeing",
+                        "change_value": 2,
+                        "target": "initiator",
+                    },
+                    {
+                        "attribute": "happiness",
+                        "change_value": 1,
+                        "target": "initiator",
+                    },
+                    {
+                        "attribute": "friendship",
+                        "change_value": 1,
+                        "target": target_person,
+                    },
+                ],
+            ),
+            **filtered_kwargs,
+        )
+        self.target_person = target_person
+
+
+class ImproveJobPerformanceAction(Action):
+    def __init__(self, method="study", initiator_id=None, **kwargs):
+        # Filter kwargs to only include parameters that Action.__init__ accepts
+        base_action_params = {
+            "related_skills",
+            "default_target_is_initiator",
+            "impact_rating_on_target",
+            "impact_rating_on_initiator",
+            "impact_rating_on_other",
+            "action_id",
+            "created_at",
+            "expires_at",
+            "completed_at",
+            "priority",
+            "related_goal",
+        }
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+
+        super().__init__(
+            name="ImproveJobPerformance",
+            initiator=initiator_id,
+            cost=kwargs.get("cost", 0.5),
+            preconditions=kwargs.get("preconditions", []),
+            effects=kwargs.get(
+                "effects",
+                [
+                    {
+                        "attribute": "job_performance",
+                        "change_value": 3,
+                        "target": "initiator",
+                    },
+                    {"attribute": "energy", "change_value": -1, "target": "initiator"},
+                ],
+            ),
+            **filtered_kwargs,
+        )
+        self.method = method
+
+
+class PursueHobbyAction(Action):
+    def __init__(self, hobby_type="reading", initiator_id=None, **kwargs):
+        # Filter kwargs to only include parameters that Action.__init__ accepts
+        base_action_params = {
+            "related_skills",
+            "default_target_is_initiator",
+            "impact_rating_on_target",
+            "impact_rating_on_initiator",
+            "impact_rating_on_other",
+            "action_id",
+            "created_at",
+            "expires_at",
+            "completed_at",
+            "priority",
+            "related_goal",
+        }
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+
+        super().__init__(
+            name="PursueHobby",
+            initiator=initiator_id,
+            target=hobby_type,
+            cost=kwargs.get("cost", 0.2),
+            preconditions=kwargs.get("preconditions", []),
+            effects=kwargs.get(
+                "effects",
+                [
+                    {
+                        "attribute": "happiness",
+                        "change_value": 2,
+                        "target": "initiator",
+                    },
+                    {
+                        "attribute": "mental_health",
+                        "change_value": 1,
+                        "target": "initiator",
+                    },
+                ],
+            ),
+            **filtered_kwargs,
+        )
+        self.hobby_type = hobby_type
+
+
+class VisitDoctorAction(Action):
+    def __init__(self, reason="checkup", initiator_id=None, **kwargs):
+        # Filter kwargs to only include parameters that Action.__init__ accepts
+        base_action_params = {
+            "related_skills",
+            "default_target_is_initiator",
+            "impact_rating_on_target",
+            "impact_rating_on_initiator",
+            "impact_rating_on_other",
+            "action_id",
+            "created_at",
+            "expires_at",
+            "completed_at",
+            "priority",
+            "related_goal",
+        }
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+
+        super().__init__(
+            name="VisitDoctor",
+            initiator=initiator_id,
+            cost=kwargs.get("cost", 0.6),
+            preconditions=kwargs.get("preconditions", []),
+            effects=kwargs.get(
+                "effects",
+                [
+                    {"attribute": "health", "change_value": 3, "target": "initiator"},
+                    {"attribute": "money", "change_value": -10, "target": "initiator"},
+                ],
+            ),
+            **filtered_kwargs,
+        )
+        self.reason = reason
+
+
+class GreetAction(Action):
+    def __init__(self, initiator, target, **kwargs):
+        # Filter kwargs to only include parameters that Action.__init__ accepts
+        base_action_params = {
+            "related_skills",
+            "default_target_is_initiator",
+            "impact_rating_on_target",
+            "impact_rating_on_initiator",
+            "impact_rating_on_other",
+            "action_id",
+            "created_at",
+            "expires_at",
+            "completed_at",
+            "priority",
+            "related_goal",
+        }
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+
+        _preconditions = kwargs.get("preconditions", [])
+        _effects = kwargs.get(
+            "effects",
+            [
+                {
+                    "attribute": "social_wellbeing",
+                    "target_id": str(target),
+                    "change": 0.5,
+                    "operator": "add",
+                }
+            ],
+        )
+
+        super().__init__(
+            "Greet",
+            _preconditions,
+            _effects,
+            kwargs.get("cost", 0.05),
+            target=target,
+            initiator=initiator,
+            **filtered_kwargs,
+        )
+
+
+class ShareNewsAction(Action):
+    def __init__(self, initiator, target, news_item, **kwargs):
+        # Filter kwargs to only include parameters that Action.__init__ accepts
+        base_action_params = {
+            "related_skills",
+            "default_target_is_initiator",
+            "impact_rating_on_target",
+            "impact_rating_on_initiator",
+            "impact_rating_on_other",
+            "action_id",
+            "created_at",
+            "expires_at",
+            "completed_at",
+            "priority",
+            "related_goal",
+        }
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+
+        _preconditions = kwargs.get("preconditions", [])
+        _effects = kwargs.get(
+            "effects",
+            [
+                {
+                    "attribute": "social_wellbeing",
+                    "target_id": str(target),
+                    "change": 1,
+                    "operator": "add",
+                },
+                {
+                    "attribute": "knowledge",
+                    "target_id": str(target),
+                    "change": news_item,
+                    "operator": "add",
+                },
+            ],
+        )
+
+        super().__init__(
+            "ShareNews",
+            _preconditions,
+            _effects,
+            kwargs.get("cost", 0.1),
+            target=target,
+            initiator=initiator,
+            **filtered_kwargs,
+        )
+        self.news_item = news_item
+
+
+class OfferComplimentAction(Action):
+    def __init__(self, initiator, target, compliment_topic, **kwargs):
+        # Filter kwargs to only include parameters that Action.__init__ accepts
+        base_action_params = {
+            "related_skills",
+            "default_target_is_initiator",
+            "impact_rating_on_target",
+            "impact_rating_on_initiator",
+            "impact_rating_on_other",
+            "action_id",
+            "created_at",
+            "expires_at",
+            "completed_at",
+            "priority",
+            "related_goal",
+        }
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+
+        _preconditions = kwargs.get("preconditions", [])
+        _effects = kwargs.get(
+            "effects",
+            [
+                {
+                    "attribute": "social_wellbeing",
+                    "target_id": str(target),
+                    "change": 1.5,
+                    "operator": "add",
+                },
+                {
+                    "attribute": "relationship_strength",
+                    "target_id": str(target),
+                    "change": 1,
+                    "operator": "add",
+                },
+            ],
+        )
+
+        super().__init__(
+            "OfferCompliment",
+            _preconditions,
+            _effects,
+            kwargs.get("cost", 0.1),
+            target=target,
+            initiator=initiator,
+            **filtered_kwargs,
+        )
+        self.compliment_topic = compliment_topic
