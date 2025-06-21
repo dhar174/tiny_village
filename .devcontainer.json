@@ -12,8 +12,7 @@
     "ghcr.io/joshuanianji/devcontainer-features/github-cli-persistence:1": {}
   },
   "postCreateCommand": [
-    "pip install --no-cache-dir --upgrade pip",
-    "pip install --no-cache-dir pytest black"
+    "pip install --no-cache-dir --upgrade pip pytest==7.4.0 black==23.9.1"
   ],
   "customizations": {
     "vscode": {
