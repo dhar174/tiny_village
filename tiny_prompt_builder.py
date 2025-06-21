@@ -1569,8 +1569,8 @@ class PromptBuilder:
             self.action_utilities[action] = 100 - self.action_utilities[action]
 
     def generate_daily_routine_prompt(self, time, weather):
-        prompt = f"<|system|>"
-        prompt = (
+        prompt = "<|system|>"
+        prompt += (
             f"You are {self.character.name}, a {self.character.job} in a small town. You are a {descriptors.get_job_adjective(self.character.job)} {descriptors.get_job_pronoun(self.character.job)} who enjoys {descriptors.get_job_enjoys_verb(self.character.job)} {descriptors.get_job_verb_acts_on_noun(self.character.job)}. You are currently working on {descriptors.get_job_currently_working_on(self.character.job)} {descriptors.get_job_place(self.character.job)}, and you are excited to see how it turns out. You are also planning to attend a {descriptors.get_job_planning_to_attend(self.character.job)} in the next few weeks, and you are hoping to {descriptors.get_job_hoping_to_there(self.character.job)} there.",
         )
         prompt += f"<|user|>"
@@ -1583,7 +1583,7 @@ class PromptBuilder:
         prompt += "4. Engage in a Leisure_Activity to improve Mental_Health.\n"
         prompt += "5. Work on a personal project to Pursue_Hobby.\n"
         prompt += "</s>"
-        prompt += (f"<|assistant|>",)
+        prompt += "<|assistant|>"
         prompt += f"{self.character.name}, I choose "
         return prompt
 
