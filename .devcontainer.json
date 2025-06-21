@@ -1,6 +1,6 @@
 {
   "name": "tiny-village-py312",
-  "image": "python:3.12.1-alpine",
+  "image": "mcr.microsoft.com/devcontainers/python:0-alpine-3.20",
   "features": {
     "ghcr.io/devcontainers-extra/features/coverage-py:2": {},
     "ghcr.io/devcontainers/features/node:1": {},
@@ -10,10 +10,13 @@
     "ghcr.io/hspaans/devcontainer-features/pytest:2": {},
     "ghcr.io/devcontainers-extra/features/cmake:1": {},
     "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/joshuanianji/devcontainer-features/github-cli-persistence:1": {}
+    "ghcr.io/devcontainers/features/sshd:1": {},
+    "ghcr.io/devcontainers/features/python:1": {"version": "3.12.1", "optimize":"true"}
   },
   "postCreateCommand": [
+    "apk update && apk add --no-cache build-base python3 py3-pip",
     "pip install --no-cache-dir --upgrade pip pytest==7.4.0 black==23.9.1"
+    
   ],
   "customizations": {
     "vscode": {
