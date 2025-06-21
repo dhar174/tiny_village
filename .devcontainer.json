@@ -3,6 +3,7 @@
   "image": "python:3.12.1-alpine",
   "features": {
     "ghcr.io/devcontainers-extra/features/coverage-py:2": {},
+    "ghcr.io/devcontainers/features/node:1": {},
     "ghcr.io/devcontainers-extra/features/pylint:2": {},
     "ghcr.io/devcontainers-extra/features/black:2": {},
     "ghcr.io/cirolosapio/devcontainers-features/alpine-gh-copilot-cli:0": {},
