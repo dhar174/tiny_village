@@ -1,6 +1,3 @@
-from calendar import c
-from numpy import char
-from requests import get
 import random
 import tiny_characters as tc
 
@@ -1493,10 +1490,12 @@ class DescriptorMatrices:
             )
         )
 
-    def get_motivation(self):
-        return random.choice(self.motivation["default"])
+    def get_motivation(self, motivation=None):
+        """Return a motivational phrase.
 
-    def get_motivation(self, motivation):
+        If ``motivation`` is ``None`` or not found in the matrix, a random
+        choice from the ``"default"`` list is returned.
+        """
         return random.choice(
             self.motivation.get(motivation, self.motivation["default"])
         )
@@ -1521,7 +1520,8 @@ class DescriptorMatrices:
             )
         )
 
-    def get_routine_question_framing(self, routine_question_framing):
+    def get_routine_question_framing(self, routine_question_framing=None):
+        """Return a question framing string for routine prompts."""
         return random.choice(
             self.routine_question_framing.get(
                 routine_question_framing, self.routine_question_framing["default"]
@@ -1569,21 +1569,21 @@ class PromptBuilder:
             self.action_utilities[action] = 100 - self.action_utilities[action]
 
     def generate_daily_routine_prompt(self, time, weather):
-        prompt = f"<|system|>"
-        prompt = (
+        prompt = "<|system|>"
+        prompt += (
             f"You are {self.character.name}, a {self.character.job} in a small town. You are a {descriptors.get_job_adjective(self.character.job)} {descriptors.get_job_pronoun(self.character.job)} who enjoys {descriptors.get_job_enjoys_verb(self.character.job)} {descriptors.get_job_verb_acts_on_noun(self.character.job)}. You are currently working on {descriptors.get_job_currently_working_on(self.character.job)} {descriptors.get_job_place(self.character.job)}, and you are excited to see how it turns out. You are also planning to attend a {descriptors.get_job_planning_to_attend(self.character.job)} in the next few weeks, and you are hoping to {descriptors.get_job_hoping_to_there(self.character.job)} there.",
         )
         prompt += f"<|user|>"
         prompt += f"{self.character.name}, it's {time}, and {descriptors.get_weather_description(weather)}. You're feeling {descriptors.get_feeling_health(self.character.health_status)}, and {descriptors.get_feeling_hunger(self.character.hunger_level)}. "
-        prompt += f"{descriptors.get_event_recent(self.character.recent_event)}, and {descriptors.get_financial_situation(self.character.wealth_money)}. {descriptors.get_motivation} {self.long_term_goal}. {descriptors.get_routine_question_framing}"
+        prompt += f"{descriptors.get_event_recent(self.character.recent_event)}, and {descriptors.get_financial_situation(self.character.wealth_money)}. {descriptors.get_motivation()} {self.long_term_goal}. {descriptors.get_routine_question_framing()}"
         prompt += "Options:\n"
         prompt += "1. Go to the market to Buy_Food.\n"
-        prompt += "2. Work at your job to Improve_{self.job_performance}.\n"
+        prompt += f"2. Work at your job to Improve_{self.job_performance}.\n"
         prompt += "3. Visit a friend to Increase_Friendship.\n"
         prompt += "4. Engage in a Leisure_Activity to improve Mental_Health.\n"
         prompt += "5. Work on a personal project to Pursue_Hobby.\n"
         prompt += "</s>"
-        prompt += (f"<|assistant|>",)
+        prompt += "<|assistant|>"
         prompt += f"{self.character.name}, I choose "
         return prompt
 
