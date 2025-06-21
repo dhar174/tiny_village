@@ -104,7 +104,7 @@ class Building:
             f"{self.name} is {self.height} high, {self.width} wide, {self.length} long, "
             f"and is located at {self.address} and has {self.stories} stories. "
             f"It has a building type of {self.building_type} and coordinates {self.x}, {self.y} "
-            f"and total area of  {self.area_val} with {self.calculate_area_per_floor} area per floor. "
+            f"and total area of  {self.area_val} with {self.calculate_area_per_floor()} area per floor. "
             f"It has a current price value of {self.price_value}. It has {self.num_rooms} rooms and {self.stories} "
             f"floors and is owned by {self.owner} \n "
             f"             It has the following possible interactions: {self.possible_interactions}. "
