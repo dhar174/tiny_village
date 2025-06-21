@@ -342,7 +342,7 @@ class ActionOptions:
             or character.get_community() < 5,
             "pursue_hobby": character.get_happiness() < 5 or character.get_beauty() < 5,
             "self_care": character.get_mental_health() < 5,
-            "social_visit": character["friendship_grid"] < 5,
+            "social_visit": character.get_friendship_grid() < 5,
             "volunteer_time": character.get_community() < 5,
             "improve_job_performance": character.get_job_performance() < 5,
             "get_educated": character.get_long_term_goal() == "career_advancement",
