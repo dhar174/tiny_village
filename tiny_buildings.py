@@ -60,14 +60,14 @@ class Building:
         self.width = width
         self.length = length
         self.address = address
-        self.volume = self.volume()
+        self.volume_val = self.volume()
         self.stories = stories
         self.door = door
         self.owner = owner
         self.building_type = building_type
         self.num_rooms = num_rooms
 
-        self.area = self.area()
+        self.area_val = self.area()
         self.uuid = uuid.uuid4()
         self.coordinates_location = (x, y)
         self.possible_interactions = [
@@ -100,12 +100,25 @@ class Building:
         return self.area() / self.stories
 
     def __str__(self):
-        return f"{self.name} is {self.height} high, {self.width} wide, {self.length} long, and is located at {self.address} and has {self.stories} stories. It has a building type of {self.building_type} and coordinates {self.x}, {self.y} and total area of  {self.area()} with {self.calculate_area_per_floor} area per floor. \
-          It has a current price value of {self.price_value}. It has {self.num_rooms} rooms and {self.stories} floors and is owned by {self.owner} \n \
-             It has the following possible interactions: {self.possible_interactions}. It has a door at {self.door}. It has the following coordinates: {self.coordinates_location}. It has the following ID: {self.uuid}. It has the following volume: {self.volume}."
+        return (
+            f"{self.name} is {self.height} high, {self.width} wide, {self.length} long, "
+            f"and is located at {self.address} and has {self.stories} stories. "
+            f"It has a building type of {self.building_type} and coordinates {self.x}, {self.y} "
+            f"and total area of  {self.area_val} with {self.calculate_area_per_floor} area per floor. "
+            f"It has a current price value of {self.price_value}. It has {self.num_rooms} rooms and {self.stories} "
+            f"floors and is owned by {self.owner} \n "
+            f"             It has the following possible interactions: {self.possible_interactions}. "
+            f"It has a door at {self.door}. It has the following coordinates: {self.coordinates_location}. "
+            f"It has the following ID: {self.uuid}. It has the following volume: {self.volume_val}."
+        )
 
     def __repr__(self):
-        return f"Building({self.name}, {self.height}, {self.width}, {self.length}, {self.address}, {self.stories}, {self.coordinates_location}, {self.possible_interactions}, {self.door}, {self.uuid}, {self.volume}, {self.area})"
+        return (
+            f"Building({self.name}, {self.height}, {self.width}, {self.length}, "
+            f"{self.address}, {self.stories}, {self.coordinates_location}, "
+            f"{self.possible_interactions}, {self.door}, {self.uuid}, "
+            f"{self.volume_val}, {self.area_val})"
+        )
 
     def hash_nested_list(self, obj):
         try:
@@ -157,8 +170,8 @@ class Building:
                     self.coordinates_location,
                     self.door,
                     self.uuid,
-                    self.volume,
-                    self.area,
+                    self.volume_val,
+                    self.area_val,
                     self.num_rooms,
                 ]
             )
@@ -179,8 +192,8 @@ class Building:
             and self.coordinates_location == other.coordinates_location
             and self.door == other.door
             and self.uuid == other.uuid
-            and self.volume == other.volume
-            and self.area == other.area
+            and self.volume_val == other.volume_val
+            and self.area_val == other.area_val
             and self.num_rooms == other.num_rooms
         )
 
@@ -237,14 +250,27 @@ class House(Building):
         self.y = y
 
     def __str__(self):
-        return f"{self.name} is {self.height} high, {self.width} wide, {self.length} long, and is located at {self.address}. It has {self.stories} stories, {self.bedrooms} bedrooms, and {self.bathrooms} bathrooms and is worth ${self.price} and has a beauty value of {self.beauty_value}. It has a shelter value of {self.shelter_value} and is {self.area} square feet. It is located at {self.x}, {self.y} on the map. It has the following possible interactions: {self.possible_interactions}. It has a door at {self.door}. It has the following coordinates: {self.coordinates_location}. It has the following ID: {self.uuid}. It has the following volume: {self.volume}."
+        return (
+            f"{self.name} is {self.height} high, {self.width} wide, {self.length} long, "
+            f"and is located at {self.address}. It has {self.stories} stories, {self.bedrooms} bedrooms, "
+            f"and {self.bathrooms} bathrooms and is worth ${self.price} and has a beauty value of {self.beauty_value}. "
+            f"It has a shelter value of {self.shelter_value} and is {self.area_val} square feet. "
+            f"It is located at {self.x}, {self.y} on the map. It has the following possible interactions: {self.possible_interactions}. "
+            f"It has a door at {self.door}. It has the following coordinates: {self.coordinates_location}. "
+            f"It has the following ID: {self.uuid}. It has the following volume: {self.volume_val}."
+        )
 
     def __repr__(self):
-        return f"House({self.name}, {self.height}, {self.width}, {self.length}, {self.address}, {self.stories}, {self.bedrooms}, {self.bathrooms}, {self.beauty_value}, {self.price}, {self.x}, {self.y}, {self.area}, {self.volume}, {self.shelter_value}, {self.coordinates_location}, {self.possible_interactions}, {self.door}, {self.uuid})"
+        return (
+            f"House({self.name}, {self.height}, {self.width}, {self.length}, {self.address}, {self.stories}, "
+            f"{self.bedrooms}, {self.bathrooms}, {self.beauty_value}, {self.price}, {self.x}, {self.y}, "
+            f"{self.area_val}, {self.volume_val}, {self.shelter_value}, {self.coordinates_location}, "
+            f"{self.possible_interactions}, {self.door}, {self.uuid})"
+        )
 
     def calculate_shelter_value(self):
         score = 1
-        score += min(round(self.area / 1000), 5)
+        score += min(round(self.area_val / 1000), 5)
         if self.bedrooms > 1:
             score += 1
         if self.bathrooms > 1:
@@ -271,7 +297,7 @@ class House(Building):
 
     def calculate_price(self, price_value):
         if price_value <= 0:
-            return 10 * (((self.shelter_value * self.beauty_value) / 100) * self.area)
+            return 10 * (((self.shelter_value * self.beauty_value) / 100) * self.area_val)
         else:
             return price_value
 
@@ -294,10 +320,10 @@ class House(Building):
         return self.stories
 
     def get_area(self):
-        return self.area
+        return self.area_val
 
     def get_volume(self):
-        return self.volume
+        return self.volume_val
 
     def get_address(self):
         return self.address
@@ -329,8 +355,8 @@ class House(Building):
             "price": self.price,
             "x": self.x,
             "y": self.y,
-            "area": self.area,
-            "volume": self.volume,
+            "area": self.area_val,
+            "volume": self.volume_val,
             "coordinates_location": self.coordinates_location,
             "possible_interactions": self.possible_interactions,
             "door": self.door,
@@ -381,8 +407,8 @@ class House(Building):
                     self.name,
                     self.uuid,
                     self.coordinates_location,
-                    self.area,
-                    self.volume,
+                    self.area_val,
+                    self.volume_val,
                     self.shelter_value,
                     self.beauty_value,
                     self.price,
@@ -410,8 +436,8 @@ class House(Building):
             self.name == other.name
             and self.uuid == other.uuid
             and self.coordinates_location == other.coordinates_location
-            and self.area == other.area
-            and self.volume == other.volume
+            and self.area_val == other.area_val
+            and self.volume_val == other.volume_val
             and self.shelter_value == other.shelter_value
             and self.beauty_value == other.beauty_value
             and self.price == other.price
