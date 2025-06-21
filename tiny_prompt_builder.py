@@ -1490,10 +1490,12 @@ class DescriptorMatrices:
             )
         )
 
-    def get_motivation(self):
-        return random.choice(self.motivation["default"])
+    def get_motivation(self, motivation=None):
+        """Return a motivational phrase.
 
-    def get_motivation(self, motivation):
+        If ``motivation`` is ``None`` or not found in the matrix, a random
+        choice from the ``"default"`` list is returned.
+        """
         return random.choice(
             self.motivation.get(motivation, self.motivation["default"])
         )
@@ -1518,7 +1520,8 @@ class DescriptorMatrices:
             )
         )
 
-    def get_routine_question_framing(self, routine_question_framing):
+    def get_routine_question_framing(self, routine_question_framing=None):
+        """Return a question framing string for routine prompts."""
         return random.choice(
             self.routine_question_framing.get(
                 routine_question_framing, self.routine_question_framing["default"]
@@ -1572,10 +1575,10 @@ class PromptBuilder:
         )
         prompt += f"<|user|>"
         prompt += f"{self.character.name}, it's {time}, and {descriptors.get_weather_description(weather)}. You're feeling {descriptors.get_feeling_health(self.character.health_status)}, and {descriptors.get_feeling_hunger(self.character.hunger_level)}. "
-        prompt += f"{descriptors.get_event_recent(self.character.recent_event)}, and {descriptors.get_financial_situation(self.character.wealth_money)}. {descriptors.get_motivation} {self.long_term_goal}. {descriptors.get_routine_question_framing}"
+        prompt += f"{descriptors.get_event_recent(self.character.recent_event)}, and {descriptors.get_financial_situation(self.character.wealth_money)}. {descriptors.get_motivation()} {self.long_term_goal}. {descriptors.get_routine_question_framing()}"
         prompt += "Options:\n"
         prompt += "1. Go to the market to Buy_Food.\n"
-        prompt += "2. Work at your job to Improve_{self.job_performance}.\n"
+        prompt += f"2. Work at your job to Improve_{self.job_performance}.\n"
         prompt += "3. Visit a friend to Increase_Friendship.\n"
         prompt += "4. Engage in a Leisure_Activity to improve Mental_Health.\n"
         prompt += "5. Work on a personal project to Pursue_Hobby.\n"
