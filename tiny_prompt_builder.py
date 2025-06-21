@@ -1559,14 +1559,58 @@ class PromptBuilder:
     def generate_failure_message(self, character, action):
         return f"{character.name} has failed to {DescriptorMatrices.get_action_descriptors(action)} {action}."
 
-    def calculate_action_utility(self):
-        self.action_utilities = self.needs_priorities
-        for action in self.prioritized_actions:
-            for need in self.needs_priorities:
-                self.action_utilities[action] += (
-                    self.needs_priorities[need] * self.action_utilities[action]
+    def _get_character_state_dict(self) -> dict:
+        """Return a simplified state dictionary for utility calculations."""
+        state = {
+            "hunger": getattr(self.character, "hunger_level", 5.0) / 10.0,
+            "energy": getattr(self.character, "energy", 5.0) / 10.0,
+            "health": getattr(self.character, "health_status", 5.0) / 10.0,
+            "mental_health": getattr(self.character, "mental_health", 5.0) / 10.0,
+            "social_wellbeing": getattr(self.character, "social_wellbeing", 5.0)
+            / 10.0,
+            "money": float(getattr(self.character, "wealth_money", 0.0)),
+        }
+        return state
+
+    def calculate_action_utility(self, current_goal=None):
+        """Calculate utility values for prioritized actions."""
+        from tiny_utility_functions import UtilityEvaluator, calculate_action_utility
+        from tiny_output_interpreter import OutputInterpreter
+
+        self.action_utilities = {}
+        evaluator = UtilityEvaluator()
+        char_state = self._get_character_state_dict()
+        interpreter = OutputInterpreter()
+
+        for action_name in self.prioritized_actions:
+            try:
+                action_cls = interpreter.action_class_map.get(action_name)
+                action_obj = action_cls() if action_cls else None
+            except Exception as e:
+                print(f"Error creating action {action_name}: {e}")
+                continue
+
+            if not action_obj:
+                print(f"Warning: Unknown action {action_name}")
+                continue
+
+            try:
+                utility = evaluator.evaluate_action_utility(
+                    self.character.name,
+                    char_state,
+                    action_obj,
+                    current_goal,
                 )
-            self.action_utilities[action] = 100 - self.action_utilities[action]
+            except Exception:
+                try:
+                    utility = calculate_action_utility(char_state, action_obj, current_goal)
+                except Exception as e:
+                    print(f"Failed to evaluate utility for {action_name}: {e}")
+                    continue
+
+            self.action_utilities[action_name] = utility
+
+        return self.action_utilities
 
     def generate_daily_routine_prompt(self, time, weather):
         prompt = "<|system|>"
