@@ -1,6 +1,3 @@
-from calendar import c
-from numpy import char
-from requests import get
 import random
 import tiny_characters as tc
 
