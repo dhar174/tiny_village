@@ -1,6 +1,4 @@
-from calendar import c
-from numpy import char
-from requests import get
+import random
 import tiny_characters as tc
 
 
@@ -1420,107 +1418,117 @@ class DescriptorMatrices:
         # self.friendship_grid = ["connected", "disconnected"]
 
     def get_job_adjective(self, job):
-        return self.job_adjective.get(job, self.job_adjective["default"]).random()
+        return random.choice(self.job_adjective.get(job, self.job_adjective["default"]))
 
     def get_job_pronoun(self, job):
-        return self.job_pronoun.get(job, self.job_pronoun["default"]).random()
+        return random.choice(self.job_pronoun.get(job, self.job_pronoun["default"]))
 
     def get_job_enjoys_verb(self, job):
-        return self.job_enjoys_verb.get(job, self.job_enjoys_verb["default"]).random()
+        return random.choice(
+            self.job_enjoys_verb.get(job, self.job_enjoys_verb["default"])
+        )
 
     def get_job_verb_acts_on_noun(self, job):
-        return self.job_verb_acts_on_noun.get(
-            job, self.job_verb_acts_on_noun["default"]
-        ).random()
+        return random.choice(
+            self.job_verb_acts_on_noun.get(job, self.job_verb_acts_on_noun["default"])
+        )
 
     def get_job_currently_working_on(self, job):
-        return self.job_currently_working_on.get(
-            job, self.job_currently_working_on["default"]
-        ).random()
+        return random.choice(
+            self.job_currently_working_on.get(
+                job, self.job_currently_working_on["default"]
+            )
+        )
 
     def get_job_place(self, job):
-        return self.job_place.get(job, self.job_place["default"]).random()
+        return random.choice(self.job_place.get(job, self.job_place["default"]))
 
     def get_job_planning_to_attend(self, job):
-        return self.job_planning_to_attend.get(
-            job, self.job_planning_to_attend["default"]
-        ).random()
+        return random.choice(
+            self.job_planning_to_attend.get(job, self.job_planning_to_attend["default"])
+        )
 
     def get_job_hoping_to_there(self, job):
-        return self.job_hoping_to_there.get(
-            job, self.job_hoping_to_there["default"]
-        ).random()
+        return random.choice(
+            self.job_hoping_to_there.get(job, self.job_hoping_to_there["default"])
+        )
 
     def get_job_hoping_to_learn(self, job):
-        return self.job_hoping_to_learn.get(
-            job, self.job_hoping_to_learn["default"]
-        ).random()
+        return random.choice(
+            self.job_hoping_to_learn.get(job, self.job_hoping_to_learn["default"])
+        )
 
     def get_job_hoping_to_meet(self, job):
-        return self.job_hoping_to_meet.get(
-            job, self.job_hoping_to_meet["default"]
-        ).random()
+        return random.choice(
+            self.job_hoping_to_meet.get(job, self.job_hoping_to_meet["default"])
+        )
 
     def get_job_hoping_to_find(self, job):
-        return self.job_hoping_to_find.get(
-            job, self.job_hoping_to_find["default"]
-        ).random()
+        return random.choice(
+            self.job_hoping_to_find.get(job, self.job_hoping_to_find["default"])
+        )
 
     def get_feeling_health(self, health_status):
-        return self.feeling_health.get(
-            health_status, self.feeling_health["default"]
-        ).random()
+        return random.choice(
+            self.feeling_health.get(health_status, self.feeling_health["default"])
+        )
 
     def get_feeling_hunger(self, hunger_level):
-        return self.feeling_hunger.get(
-            hunger_level, self.feeling_hunger["default"]
-        ).random()
+        return random.choice(
+            self.feeling_hunger.get(hunger_level, self.feeling_hunger["default"])
+        )
 
     def get_event_recent(self, recent_event):
-        return self.event_recent.get(
-            recent_event, self.event_recent["default"]
-        ).random()
+        return random.choice(
+            self.event_recent.get(recent_event, self.event_recent["default"])
+        )
 
     def get_financial_situation(self, wealth_money):
-        return self.financial_situation.get(
-            wealth_money, self.financial_situation["default"]
-        ).random()
+        return random.choice(
+            self.financial_situation.get(
+                wealth_money, self.financial_situation["default"]
+            )
+        )
 
     def get_motivation(self):
-        return self.motivation.get(self.motivation["default"]).random()
+        return random.choice(self.motivation["default"])
 
     def get_motivation(self, motivation):
-        return self.motivation.get(motivation, self.motivation["default"]).random()
+        return random.choice(
+            self.motivation.get(motivation, self.motivation["default"])
+        )
 
     def get_motivation_zero(self, motivation, job):
         return (
-            self.motivation.get(motivation, self.motivation["default"]).random()
-            + self.job_enjoys_verb.get(job, self.job_enjoys_verb["default"]).random()
-            + self.job_verb_acts_on_noun.get(
-                job, self.job_verb_acts_on_noun["default"]
-            ).random()
+            random.choice(self.motivation.get(motivation, self.motivation["default"]))
+            + random.choice(
+                self.job_enjoys_verb.get(job, self.job_enjoys_verb["default"])
+            )
+            + random.choice(
+                self.job_verb_acts_on_noun.get(
+                    job, self.job_verb_acts_on_noun["default"]
+                )
+            )
         )
 
     def get_weather_description(self, weather_description):
-        return self.weather_description.get(
-            weather_description, self.weather_description["default"]
-        ).random()
+        return random.choice(
+            self.weather_description.get(
+                weather_description, self.weather_description["default"]
+            )
+        )
 
     def get_routine_question_framing(self, routine_question_framing):
-        return self.routine_question_framing.get(
-            routine_question_framing, self.routine_question_framing["default"]
-        ).random()
+        return random.choice(
+            self.routine_question_framing.get(
+                routine_question_framing, self.routine_question_framing["default"]
+            )
+        )
 
     def get_action_descriptors(self, action):
-        return self.action_descriptors.get(
-            action, self.action_descriptors["default"]
-        ).random()
-
-    def get_job_adjective(self, job):
-        return descriptors.get_job_adjective(job)
-
-
-# Create a character
+        return random.choice(
+            self.action_descriptors.get(action, self.action_descriptors["default"])
+        )
 
 
 descriptors = DescriptorMatrices()
@@ -1576,26 +1584,136 @@ class PromptBuilder:
         prompt += f"{self.character.name}, I choose "
         return prompt
 
-    def generate_decision_prompt(self, time, weather, action_choices):
+    def generate_decision_prompt(
+        self, time, weather, action_choices, character_state_dict=None
+    ):
         """
-        Generate a decision prompt with dynamic action choices from StrategyManager.
-        This is the LLM-integrated version of the daily routine prompt.
+        Generate a sophisticated decision prompt integrating character goals, needs priorities, and comprehensive stats.
+        This is the enhanced LLM-integrated version that provides rich character context.
         """
-        prompt = f"<|system|>"
-        prompt += f"You are {self.character.name}, a {self.character.job} in a small town. You are a {descriptors.get_job_adjective(self.character.job)} {descriptors.get_job_pronoun(self.character.job)} who enjoys {descriptors.get_job_enjoys_verb(self.character.job)} {descriptors.get_job_verb_acts_on_noun(self.character.job)}. You are currently working on {descriptors.get_job_currently_working_on(self.character.job)} {descriptors.get_job_place(self.character.job)}, and you are excited to see how it turns out. You are also planning to attend a {descriptors.get_job_planning_to_attend(self.character.job)} in the next few weeks, and you are hoping to {descriptors.get_job_hoping_to_there(self.character.job)} there."
-        prompt += f"<|user|>"
-        prompt += f"{self.character.name}, it's {time}, and {descriptors.get_weather_description(weather)}. You're feeling {descriptors.get_feeling_health(self.character.health_status)}, and {descriptors.get_feeling_hunger(self.character.hunger_level)}. "
-        prompt += f"{descriptors.get_event_recent(self.character.recent_event)}, and {descriptors.get_financial_situation(self.character.wealth_money)}. {descriptors.get_motivation} {self.character.goal}. {descriptors.get_routine_question_framing()}"
+        # Calculate needs priorities for character context
+        needs_calculator = NeedsPriorities()
+        needs_priorities = needs_calculator.calculate_needs_priorities(self.character)
 
-        # Add dynamic action choices
-        prompt += "Options:\n"
-        for action_choice in action_choices:
+        # Get character's current goals prioritized by importance
+        try:
+            goal_queue = self.character.evaluate_goals()
+        except Exception as e:
+            print(f"Warning: Could not evaluate goals for {self.character.name}: {e}")
+            goal_queue = []
+
+        # Build enhanced prompt with rich character context
+        prompt = f"<|system|>"
+
+        # Basic character identity and role
+        prompt += (
+            f"You are {self.character.name}, a {self.character.job} in a small town. "
+        )
+        prompt += f"You are a {descriptors.get_job_adjective(self.character.job)} {descriptors.get_job_pronoun(self.character.job)} "
+        prompt += f"who enjoys {descriptors.get_job_enjoys_verb(self.character.job)} {descriptors.get_job_verb_acts_on_noun(self.character.job)}. "
+
+        # Current goals and motivations
+        if goal_queue and len(goal_queue) > 0:
+            prompt += f"\n\nYour current goals (in order of importance):\n"
+            for i, (utility_score, goal) in enumerate(goal_queue[:3]):  # Top 3 goals
+                prompt += f"{i+1}. {goal.name}: {goal.description} (Priority: {utility_score:.1f})\n"
+
+        # Character's pressing needs and motivations
+        top_needs = sorted(needs_priorities.items(), key=lambda x: x[1], reverse=True)[
+            :5
+        ]
+        if top_needs:
+            prompt += f"\nYour most pressing needs:\n"
+            for need_name, priority_score in top_needs:
+                need_desc = self._get_need_description(need_name, priority_score)
+                prompt += f"- {need_desc}\n"
+
+        # Character motives and personality context
+        if hasattr(self.character, "motives") and self.character.motives:
+            prompt += f"\nYour key motivations:\n"
+            top_motives = self._get_top_motives(self.character.motives, 4)
+            for motive_name, motive_score in top_motives:
+                prompt += f"- {motive_name.replace('_', ' ').title()}: {self._get_motive_description(motive_name, motive_score)}\n"
+
+        # Current comprehensive state
+        prompt += f"\n<|user|>"
+        prompt += f"{self.character.name}, it's {time}, and {descriptors.get_weather_description(weather)}. "
+
+        # Enhanced status description
+        prompt += f"Current state: "
+        prompt += f"Health {self.character.health_status}/10, "
+        prompt += f"Hunger {self.character.hunger_level}/10, "
+        prompt += f"Energy {getattr(self.character, 'energy', 5):.1f}/10, "
+        prompt += f"Mental Health {self.character.mental_health}/10, "
+        prompt += f"Social Wellbeing {self.character.social_wellbeing}/10. "
+
+        # Financial and life context
+        prompt += f"{descriptors.get_event_recent(self.character.recent_event)}, and {descriptors.get_financial_situation(self.character.wealth_money)}. "
+
+        # Long-term aspiration context
+        if hasattr(self.character, "long_term_goal") and self.character.long_term_goal:
+            prompt += f"Your long-term aspiration is: {self.character.long_term_goal}. "
+
+        prompt += f"\n{descriptors.get_routine_question_framing()}"
+
+        # Enhanced action choices with better formatting
+        prompt += f"\nAvailable actions:\n"
+        for i, action_choice in enumerate(action_choices):
             prompt += f"{action_choice}\n"
 
-        prompt += "</s>"
+        prompt += f"\nChoose the action that best aligns with your goals, needs, and current situation. "
+        prompt += f"Consider both immediate benefits and long-term progress toward your aspirations."
+
+        prompt += f"\n</s>"
         prompt += f"<|assistant|>"
         prompt += f"{self.character.name}, I choose "
         return prompt
+
+    def _get_need_description(self, need_name, priority_score):
+        """Generate human-readable description for character needs."""
+        need_descriptions = {
+            "health": f"Physical health needs attention (priority: {priority_score:.0f}/100)",
+            "hunger": f"Nutritional needs are pressing (priority: {priority_score:.0f}/100)",
+            "wealth": f"Financial security is important (priority: {priority_score:.0f}/100)",
+            "mental_health": f"Mental wellness requires care (priority: {priority_score:.0f}/100)",
+            "social_wellbeing": f"Social connections need nurturing (priority: {priority_score:.0f}/100)",
+            "happiness": f"Personal happiness and fulfillment (priority: {priority_score:.0f}/100)",
+            "shelter": f"Housing and shelter security (priority: {priority_score:.0f}/100)",
+            "stability": f"Life stability and routine (priority: {priority_score:.0f}/100)",
+            "luxury": f"Comfort and luxury desires (priority: {priority_score:.0f}/100)",
+            "hope": f"Optimism and future outlook (priority: {priority_score:.0f}/100)",
+            "success": f"Achievement and success drive (priority: {priority_score:.0f}/100)",
+            "control": f"Sense of control and agency (priority: {priority_score:.0f}/100)",
+            "job_performance": f"Professional excellence (priority: {priority_score:.0f}/100)",
+            "beauty": f"Aesthetic and beauty appreciation (priority: {priority_score:.0f}/100)",
+            "community": f"Community involvement and belonging (priority: {priority_score:.0f}/100)",
+            "material_goods": f"Material possessions and acquisitions (priority: {priority_score:.0f}/100)",
+        }
+        return need_descriptions.get(
+            need_name,
+            f"{need_name.replace('_', ' ').title()} (priority: {priority_score:.0f}/100)",
+        )
+
+    def _get_top_motives(self, motives, count=4):
+        """Get the top character motives by score."""
+        try:
+            motive_dict = motives.to_dict()
+            motive_scores = [
+                (name, motive.score) for name, motive in motive_dict.items()
+            ]
+            return sorted(motive_scores, key=lambda x: x[1], reverse=True)[:count]
+        except Exception as e:
+            print(f"Warning: Could not extract motives: {e}")
+            return []
+
+    def _get_motive_description(self, motive_name, score):
+        """Generate human-readable description for character motives."""
+        intensity = (
+            "Very High"
+            if score >= 8
+            else "High" if score >= 6 else "Moderate" if score >= 4 else "Low"
+        )
+        return f"{intensity} ({score:.1f}/10)"
 
     def generate_crisis_response_prompt(self, crisis):
         prompt = f"<|system|>"

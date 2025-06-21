@@ -15,11 +15,11 @@ class TestBuilding(unittest.TestCase):
         self.assertEqual(self.building.stories, 2)
         self.assertEqual(self.building.bedrooms, 3)
         self.assertEqual(self.building.bathrooms, 2)
-        self.assertEqual(self.building.area, 3000)
+        self.assertEqual(self.building.area_val, 3000)
 
     def test_calculate_shelter_value(self):
         expected_shelter_value = 1
-        expected_shelter_value += min(round(self.building.area / 1000), 5)
+        expected_shelter_value += min(round(self.building.area_val / 1000), 5)
         if self.building.bedrooms > 1:
             expected_shelter_value += 1
         if self.building.bathrooms > 1:
@@ -52,7 +52,7 @@ class TestBuilding(unittest.TestCase):
     def setUp(self):
         self.building = House("Test Mansion", 100, 100, 100, "123 Mansion St", 4, 8, 8, 20, 0)
         print("\n\n\n")
-        print(f"Name: {self.building.name} \n Area: {self.building.area} \n Width: {self.building.width} \n Length: {self.building.length} \n Address: {self.building.address} \n Stories: {self.building.stories} \n Bedrooms: {self.building.bedrooms} \n Bathrooms: {self.building.bathrooms} \n Initial Beauty Value: {self.building.beauty_value} \n Price Value: {self.building.price}")
+        print(f"Name: {self.building.name} \n Area: {self.building.area_val} \n Width: {self.building.width} \n Length: {self.building.length} \n Address: {self.building.address} \n Stories: {self.building.stories} \n Bedrooms: {self.building.bedrooms} \n Bathrooms: {self.building.bathrooms} \n Initial Beauty Value: {self.building.beauty_value} \n Price Value: {self.building.price}")
 
     def test_init(self):
         self.assertEqual(self.building.name, "Test Mansion")
@@ -63,7 +63,7 @@ class TestBuilding(unittest.TestCase):
         self.assertEqual(self.building.stories, 4)
         self.assertEqual(self.building.bedrooms, 8)
         self.assertEqual(self.building.bathrooms, 8)
-        self.assertEqual(self.building.area, 40000)
+        self.assertEqual(self.building.area_val, 40000)
 
 if __name__ == '__main__':
     unittest.main()

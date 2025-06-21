@@ -260,15 +260,43 @@ class StrategyManager:
             # Step 2: Create PromptBuilder for this character
             prompt_builder = PromptBuilder(character)
 
-            # Step 3: Generate action choices from potential actions
+            # Step 3: Generate action choices with utility scores from potential actions
             action_choices = []
+            character_state_dict = self.get_character_state_dict(character)
+
             for i, action in enumerate(potential_actions[:5]):  # Limit to top 5 actions
                 action_name = getattr(action, "name", str(action))
-                action_choices.append(f"{i+1}. {action_name}")
+                # Calculate utility for this action to show reasoning
+                utility_score = calculate_action_utility(
+                    character_state_dict,
+                    action,
+                    (
+                        character.get_current_goal()
+                        if hasattr(character, "get_current_goal")
+                        else None
+                    ),
+                )
 
-            # Step 4: Generate LLM prompt with dynamic action choices
+                # Create detailed action choice with utility reasoning
+                action_choice = f"{i+1}. {action_name} (Utility: {utility_score:.1f})"
+
+                # Add action effects if available
+                if hasattr(action, "effects") and action.effects:
+                    effects_str = ", ".join(
+                        [
+                            f"{eff.get('attribute', '')}: {eff.get('change_value', 0):+.1f}"
+                            for eff in action.effects
+                            if eff.get("attribute")
+                        ]
+                    )
+                    if effects_str:
+                        action_choice += f" - Effects: {effects_str}"
+
+                action_choices.append(action_choice)
+
+            # Step 4: Generate LLM prompt with enhanced action choices and character context
             prompt = prompt_builder.generate_decision_prompt(
-                time, weather, action_choices
+                time, weather, action_choices, character_state_dict
             )
 
             # Step 5: Query LLM
