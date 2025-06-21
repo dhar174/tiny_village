@@ -1578,7 +1578,7 @@ class PromptBuilder:
         prompt += f"{descriptors.get_event_recent(self.character.recent_event)}, and {descriptors.get_financial_situation(self.character.wealth_money)}. {descriptors.get_motivation()} {self.long_term_goal}. {descriptors.get_routine_question_framing()}"
         prompt += "Options:\n"
         prompt += "1. Go to the market to Buy_Food.\n"
-        prompt += "2. Work at your job to Improve_{self.job_performance}.\n"
+        prompt += f"2. Work at your job to Improve_{self.job_performance}.\n"
         prompt += "3. Visit a friend to Increase_Friendship.\n"
         prompt += "4. Engage in a Leisure_Activity to improve Mental_Health.\n"
         prompt += "5. Work on a personal project to Pursue_Hobby.\n"
