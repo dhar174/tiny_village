@@ -1,6 +1,6 @@
 {
   "name": "tiny-village-py312",
-  "image": "ython:3.12.1-alpine",
+  "image": "python:3.12.1-alpine",
   "features": {
     "ghcr.io/devcontainers-extra/features/coverage-py:2": {},
     "ghcr.io/devcontainers-extra/features/pylint:2": {},
