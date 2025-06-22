@@ -1,8 +1,20 @@
+"""Utilities for constructing LLM prompts for Tiny Village characters.
+
+This module provides the :class:`PromptBuilder` and supporting classes used to
+build rich text prompts that are sent to the language model. The prompts include
+character state, goals and available actions so that the model can choose the
+next behaviour for a character.  The classes here do not perform any network
+calls; they only format information.
+"""
+
 import random
+from typing import Dict, List, Optional
+
 import tiny_characters as tc
 
 
 class NeedsPriorities:
+    """Calculate priority scores for all basic character needs."""
     def __init__(self):
         self.needs = [
             "health",
@@ -277,6 +289,7 @@ class NeedsPriorities:
 
 
 class ActionOptions:
+    """List and prioritize the actions a character can perform."""
     def __init__(self):
         self.actions = [
             "buy_food",
@@ -365,6 +378,7 @@ class ActionOptions:
 
 
 class DescriptorMatrices:
+    """Repository of descriptors used to enrich generated text prompts."""
     def __init__(self):
 
         self.job_adjective = {
@@ -1538,29 +1552,42 @@ descriptors = DescriptorMatrices()
 
 
 class PromptBuilder:
-    def __init__(self, character: tc.Character):
+    """Build detailed prompts for Tiny Village characters."""
+
+    def __init__(self, character: tc.Character) -> None:
+        """Initialize the builder for ``character``."""
+
         self.character = character
         self.action_options = ActionOptions()
         self.needs_priorities_func = NeedsPriorities()
 
-    def calculate_needs_priorities(self):
+    def calculate_needs_priorities(self) -> None:
+        """Compute and store the character's current need priorities."""
+
         self.needs_priorities = self.needs_priorities_func.calculate_needs_priorities(
             self.character
         )
 
-    def prioritize_actions(self):
+    def prioritize_actions(self) -> None:
+        """Determine which actions the character is most likely to take."""
+
         self.prioritized_actions = self.action_options.prioritize_actions(
             self.character
         )
 
-    def generate_completion_message(self, character, action):
+    def generate_completion_message(self, character: tc.Character, action: str) -> str:
+        """Return a short message describing successful completion of ``action``."""
+
         return f"{character.name} has {DescriptorMatrices.get_action_descriptors(action)} {action}."
 
-    def generate_failure_message(self, character, action):
+    def generate_failure_message(self, character: tc.Character, action: str) -> str:
+        """Return a short message describing failure to perform ``action``."""
+
         return f"{character.name} has failed to {DescriptorMatrices.get_action_descriptors(action)} {action}."
 
-    def _get_character_state_dict(self) -> dict:
+    def _get_character_state_dict(self) -> Dict[str, float]:
         """Return a simplified state dictionary for utility calculations."""
+
         state = {
             "hunger": getattr(self.character, "hunger_level", 5.0) / 10.0,
             "energy": getattr(self.character, "energy", 5.0) / 10.0,
@@ -1572,8 +1599,8 @@ class PromptBuilder:
         }
         return state
 
-    def calculate_action_utility(self, current_goal=None):
-        """Calculate utility values for prioritized actions."""
+    def calculate_action_utility(self, current_goal: Optional[object] = None) -> Dict[str, float]:
+        """Calculate and return utility values for the prioritized actions."""
         from tiny_utility_functions import UtilityEvaluator, calculate_action_utility
         from tiny_output_interpreter import OutputInterpreter
 
@@ -1612,7 +1639,8 @@ class PromptBuilder:
 
         return self.action_utilities
 
-    def generate_daily_routine_prompt(self, time, weather):
+    def generate_daily_routine_prompt(self, time: str, weather: str) -> str:
+        """Generate a basic daily routine prompt."""
         prompt = "<|system|>"
         prompt += (
             f"You are {self.character.name}, a {self.character.job} in a small town. You are a {descriptors.get_job_adjective(self.character.job)} {descriptors.get_job_pronoun(self.character.job)} who enjoys {descriptors.get_job_enjoys_verb(self.character.job)} {descriptors.get_job_verb_acts_on_noun(self.character.job)}. You are currently working on {descriptors.get_job_currently_working_on(self.character.job)} {descriptors.get_job_place(self.character.job)}, and you are excited to see how it turns out. You are also planning to attend a {descriptors.get_job_planning_to_attend(self.character.job)} in the next few weeks, and you are hoping to {descriptors.get_job_hoping_to_there(self.character.job)} there.",
@@ -1632,12 +1660,13 @@ class PromptBuilder:
         return prompt
 
     def generate_decision_prompt(
-        self, time, weather, action_choices, character_state_dict=None
-    ):
-        """
-        Generate a sophisticated decision prompt integrating character goals, needs priorities, and comprehensive stats.
-        This is the enhanced LLM-integrated version that provides rich character context.
-        """
+        self,
+        time: str,
+        weather: str,
+        action_choices: List[str],
+        character_state_dict: Optional[Dict[str, float]] = None,
+    ) -> str:
+        """Create a decision prompt incorporating goals, needs and context."""
         # Calculate needs priorities for character context
         needs_calculator = NeedsPriorities()
         needs_priorities = needs_calculator.calculate_needs_priorities(self.character)
@@ -1716,7 +1745,7 @@ class PromptBuilder:
         prompt += f"{self.character.name}, I choose "
         return prompt
 
-    def _get_need_description(self, need_name, priority_score):
+    def _get_need_description(self, need_name: str, priority_score: float) -> str:
         """Generate human-readable description for character needs."""
         need_descriptions = {
             "health": f"Physical health needs attention (priority: {priority_score:.0f}/100)",
@@ -1741,7 +1770,7 @@ class PromptBuilder:
             f"{need_name.replace('_', ' ').title()} (priority: {priority_score:.0f}/100)",
         )
 
-    def _get_top_motives(self, motives, count=4):
+    def _get_top_motives(self, motives: object, count: int = 4) -> List[tuple]:
         """Get the top character motives by score."""
         try:
             motive_dict = motives.to_dict()
@@ -1753,7 +1782,7 @@ class PromptBuilder:
             print(f"Warning: Could not extract motives: {e}")
             return []
 
-    def _get_motive_description(self, motive_name, score):
+    def _get_motive_description(self, motive_name: str, score: float) -> str:
         """Generate human-readable description for character motives."""
         intensity = (
             "Very High"
@@ -1762,7 +1791,9 @@ class PromptBuilder:
         )
         return f"{intensity} ({score:.1f}/10)"
 
-    def generate_crisis_response_prompt(self, crisis):
+    def generate_crisis_response_prompt(self, crisis: str) -> str:
+        """Create a placeholder crisis response prompt."""
+
         prompt = f"<|system|>"
         prompt += f"<|user|>"
         prompt += f"<|assistant|>"
