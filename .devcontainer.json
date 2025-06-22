@@ -9,7 +9,7 @@
     "ghcr.io/devcontainers/features/python:1": {"version": "3.12.1", "optimize":"true"}
   },
   "postCreateCommand": [
-    "apk update && apk add --no-cache build-base",
+    "apt-get update && apt-get install -y build-essential",
     "pip install --no-cache-dir --upgrade pip pytest==7.4.0 black==23.9.1"
     
   ],
