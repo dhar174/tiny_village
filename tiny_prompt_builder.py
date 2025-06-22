@@ -1762,8 +1762,56 @@ class PromptBuilder:
         )
         return f"{intensity} ({score:.1f}/10)"
 
-    def generate_crisis_response_prompt(self, crisis):
-        prompt = f"<|system|>"
-        prompt += f"<|user|>"
-        prompt += f"<|assistant|>"
+    def generate_crisis_response_prompt(self, crisis_description: str, urgency: str = "high"):
+        """Generate a short crisis response prompt for the LLM.
+
+        Parameters
+        ----------
+        crisis_description : str
+            Description of the crisis situation.
+        urgency : str, optional
+            Qualitative urgency indicator (e.g. "low", "medium", "high").
+        """
+
+        prompt = "<|system|>"
+        prompt += (
+            f"You are {self.character.name}, a {descriptors.get_job_adjective(self.character.job)} "
+            f"{descriptors.get_job_pronoun(self.character.job)} prepared for emergencies."
+        )
+
+        prompt += "<|user|>"
+        prompt += (
+            f"A crisis has occurred: {crisis_description}. Urgency: {urgency}. "
+            f"{descriptors.get_event_recent(self.character.recent_event)} "
+            f"{descriptors.get_financial_situation(self.character.wealth_money)}."
+        )
+
+        try:
+            from tiny_utility_functions import UtilityEvaluator
+            from tiny_output_interpreter import OutputInterpreter
+
+            evaluator = UtilityEvaluator()
+            interpreter = OutputInterpreter()
+            actions = ActionOptions().prioritize_actions(self.character)
+            action_objects = []
+            for name in actions[:1]:
+                cls = interpreter.action_class_map.get(name)
+                if cls:
+                    action_objects.append(cls())
+
+            if action_objects:
+                char_state = self._get_character_state_dict()
+                _, analysis = evaluator.evaluate_plan_utility_advanced(
+                    self.character.name, char_state, action_objects
+                )
+                breakdown = analysis.get("action_breakdown")
+                if breakdown:
+                    best_action = breakdown[0].get("action")
+                    if best_action:
+                        prompt += f" Recommended immediate action: {best_action}."
+        except Exception:
+            # Utility evaluation is optional and may not work if dependencies are missing
+            pass
+
+        prompt += "<|assistant|>"
         return prompt
