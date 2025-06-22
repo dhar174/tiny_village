@@ -1809,9 +1809,13 @@ class PromptBuilder:
                     best_action = breakdown[0].get("action")
                     if best_action:
                         prompt += f" Recommended immediate action: {best_action}."
-        except Exception:
+        except ImportError:
             # Utility evaluation is optional and may not work if dependencies are missing
             pass
+        except Exception as e:
+            # Log unexpected exceptions for debugging purposes
+            import logging
+            logging.error(f"An unexpected error occurred during utility evaluation: {e}")
 
         prompt += "<|assistant|>"
         return prompt
