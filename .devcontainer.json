@@ -10,7 +10,7 @@
     "ghcr.io/devcontainers/features/git:1": {}
   },
   "postCreateCommand": [
-    ". ${NVM_DIR}/nvm.sh && nvm install --lts",
+    ". ${NVM_DIR}/nvm.sh",
     "sudo apt-get update && sudo apt-get install -y build-essential",
     "npm install --silent node-pty@1.1.0",
     "npm config set production false",
