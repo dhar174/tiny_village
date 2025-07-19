@@ -510,7 +510,7 @@ class GOAPPlanner:
             # Convert utility to cost (inverse relationship)
             # Add base cost to prevent negative costs
             base_cost = getattr(action, 'cost', 1.0)
-            cost = base_cost - (utility * 0.1)  # Scale utility impact
+            cost = base_cost - (utility * UTILITY_SCALING_FACTOR)  # Scale utility impact
             
             return max(0.1, cost)  # Ensure positive cost
             
