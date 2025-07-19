@@ -62,7 +62,7 @@ class State:
             args = []
 
         keys = key.split(".")
-        val = self
+        val = self.dict_or_obj  # Start with the underlying data, not the State object itself
         for k in keys:
             if isinstance(val, dict):
                 val = val.get(k, 0)
