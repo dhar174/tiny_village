@@ -85,13 +85,15 @@ def test_goap_planner_methods():
 
         # Import the GOAPPlanner class
         from tiny_goap_system import GOAPPlanner
+        from tests.mock_graph_manager import create_mock_graph_manager
 
-        # Create a planner (with None graph_manager for now)
-        planner = GOAPPlanner(None)
+        # Create a planner with minimal mock graph manager for better test coverage
+        character = MockCharacter()
+        mock_graph_manager = create_mock_graph_manager(character)
+        planner = GOAPPlanner(mock_graph_manager)
         print("✓ GOAPPlanner created successfully")
 
         # Test calculate_utility method
-        character = MockCharacter()
         action = MockAction("test_action", satisfaction=30, cost=15, urgency=1.5)
 
         utility = planner.calculate_utility(action, character)

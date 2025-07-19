@@ -18,6 +18,7 @@ def test_unified_goap_planning():
     try:
         from tiny_goap_system import GOAPPlanner
         from actions import Action, State, Condition
+        from tests.mock_graph_manager import create_mock_graph_manager
 
         # Create a mock character and goal for testing
         class MockCharacter:
@@ -81,8 +82,10 @@ def test_unified_goap_planning():
 
         actions = [rest_action, socialize_action, eat_action]
 
-        # Test the instance method
-        planner = GOAPPlanner(None)
+        # Test the instance method with minimal mock graph manager
+        character = MockCharacter("Alice")
+        mock_graph_manager = create_mock_graph_manager(character)
+        planner = GOAPPlanner(mock_graph_manager)
         plan = planner.plan_actions(character, goal, current_state, actions)
         
         if plan:
@@ -124,6 +127,7 @@ def test_goal_already_satisfied():
     try:
         from tiny_goap_system import GOAPPlanner
         from actions import Action, State
+        from tests.mock_graph_manager import create_mock_graph_manager
 
         class MockCharacter:
             def __init__(self):
@@ -148,7 +152,9 @@ def test_goal_already_satisfied():
             cost=1
         )
         
-        planner = GOAPPlanner(None)
+        character = MockCharacter()  # No name parameter needed
+        mock_graph_manager = create_mock_graph_manager(character)
+        planner = GOAPPlanner(mock_graph_manager)
         plan = planner.plan_actions(character, goal, current_state, [dummy_action])
         
         if plan == []:  # Empty plan means goal already satisfied

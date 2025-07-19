@@ -44,6 +44,7 @@ logging.basicConfig(level=logging.DEBUG)
 # Constants for utility calculations
 UTILITY_SCALING_FACTOR = 0.1
 UTILITY_INFLUENCE_FACTOR = 0.05
+HEURISTIC_SCALING_FACTOR = 0.1  # Scaling factor for A* heuristic cost estimation
 
 
 class Plan:
@@ -708,17 +709,6 @@ class GOAPPlanner:
         Returns:
             list: A list of Action objects that form a plan to achieve the goal, or None if no plan found.
         """
- 
-        import heapq
-        
-        # Initialize the open list as a priority queue with (cost, counter, state, plan)
-        # Counter ensures unique comparison for items with same cost
-        open_list = [(0.0, 0, current_state, [])]
-        visited_states = set()
-        counter = 1  # Unique counter for each entry
-        
-        while open_list:
-            current_cost, _, state, current_plan = heapq.heappop(open_list)
 
         # Dynamically retrieve current world state if not provided
         if current_state is None:
@@ -730,15 +720,19 @@ class GOAPPlanner:
             actions = self.get_available_actions(character)
             logging.info(f"Dynamically retrieved {len(actions)} available actions for {getattr(character, 'name', 'character')}")
         
-        # Initialize the open list with the initial state
-        open_list = [(current_state, [])]
+        import heapq
+        
+        # Initialize the open list as a priority queue with (cost, counter, state, plan)
+        # Counter ensures unique comparison for items with same cost
+        open_list = [(0.0, 0, current_state, [])]
         visited_states = set()
+        counter = 1  # Unique counter for each entry
         max_iterations = 1000  # Prevent infinite loops
         iteration_count = 0
 
         while open_list and iteration_count < max_iterations:
             iteration_count += 1
-            state, current_plan = open_list.pop(0)
+            current_cost, _, state, current_plan = heapq.heappop(open_list)
  
 
             # Check if the current state satisfies the goal
@@ -767,11 +761,11 @@ class GOAPPlanner:
                     new_plan = current_plan + [action]
                     
                     # Calculate cost using utility functions
-                    action_cost = self._calculate_action_cost(action, state, character, goal)
+                    action_cost = self._calculate_action_cost(action, character)
                     total_cost = current_cost + action_cost
                     
                     # Add heuristic cost estimate to goal
-                    heuristic_cost = self._estimate_cost_to_goal(new_state, goal, character)
+                    heuristic_cost = self._estimate_cost_to_goal(new_state, goal)
                     priority_cost = total_cost + heuristic_cost
                     
                     heapq.heappush(open_list, (priority_cost, counter, new_state, new_plan))

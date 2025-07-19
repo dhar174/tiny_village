@@ -18,6 +18,7 @@ def test_core_integration():
     try:
         from tiny_goap_system import GOAPPlanner
         from actions import State, Action
+        from tests.mock_graph_manager import create_mock_graph_manager
         
         # Create a realistic test scenario
         class TestCharacter:
@@ -45,9 +46,10 @@ def test_core_integration():
                     return state.get('energy', 0) >= self.target_energy
                 return False
         
-        # Initialize planner without graph manager to avoid networkx
-        planner = GOAPPlanner(None)
+        # Initialize planner with minimal mock graph manager for better test coverage
         character = TestCharacter()
+        mock_graph_manager = create_mock_graph_manager(character)
+        planner = GOAPPlanner(mock_graph_manager)
         goal = TestGoal(50)
         
         print(f"Character initial state: energy={character.energy}, hunger={character.hunger}")

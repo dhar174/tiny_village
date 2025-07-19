@@ -19,6 +19,7 @@ def main():
     
     from actions import Action, State, Condition, TalkAction, ExploreAction
     from tiny_goap_system import GOAPPlanner
+    from tests.mock_graph_manager import create_mock_graph_manager
     
     # Test 1: Verify State class works correctly (the root fix)
     print("✅ Test 1: State class attribute access")
@@ -125,7 +126,8 @@ def main():
     
     actions = [work_action, rest_action]
     
-    planner = GOAPPlanner(None)
+    mock_graph_manager = create_mock_graph_manager(char)
+    planner = GOAPPlanner(mock_graph_manager)
     plan = planner.plan_actions(char, goal, current_state, actions)
     
     assert plan is not None, "GOAP planner should find a plan"
