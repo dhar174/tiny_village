@@ -816,9 +816,9 @@ class GOAPPlanner:
                 if isinstance(target_effects, dict):
                     for attribute, target_value in target_effects.items():
                         current_value = state.get(attribute, 0)
-                        # Check if current value has reached the target
-                        # The goal specifies the desired final value, not a change
-                        if abs(current_value - target_value) > 0.1:  # Allow small tolerance
+                        # Check if current value has reached or exceeded the target
+                        # Goals are satisfied when we reach at least the target value
+                        if current_value < target_value - 0.1:  # Allow small tolerance for floating point
                             return False
                     return True
 
@@ -858,7 +858,11 @@ class GOAPPlanner:
                     if isinstance(effect, dict):
                         attribute = effect.get('attribute')
                         change_value = effect.get('change_value', 0)
+                        targets = effect.get('targets', [])
                         
+                        # Skip effects that don't target the character being planned for
+                        # In GOAP planning, we treat all effects as applying to the current state
+                        # regardless of the "targets" field (which is handled during actual execution)
                         if attribute:
                             current_value = new_state.get(attribute, 0)
                             if isinstance(change_value, (int, float)):

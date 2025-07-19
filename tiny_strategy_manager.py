@@ -47,9 +47,9 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-# Constants for goal targets used in daily planning
-SATISFACTION_TARGET = 70.0
-ENERGY_TARGET = 80.0
+# Constants for goal targets used in daily planning (normalized 0-1 scale)
+SATISFACTION_TARGET = 0.8   # 80% satisfaction
+ENERGY_TARGET = 0.8         # 80% energy
 
 
 # Define placeholder/simplified Action classes for use within StrategyManager if not using complex ones from actions.py
@@ -225,6 +225,42 @@ class StrategyManager:
 
         LOW_ENERGY_THRESHOLD = 0.3  # Assuming energy is normalized 0-1 for this check
         HIGH_HUNGER_THRESHOLD = 0.6  # Assuming hunger is normalized 0-1 for this check
+
+        # Add actions that can improve satisfaction and energy to match common goals (0-1 scale)
+        rest_action = Action(
+            name="Rest",
+            preconditions=[],
+            effects=[
+                {"targets": ["initiator"], "attribute": "energy", "change_value": 0.15},
+                {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 0.08}
+            ],
+            cost=0.1
+        )
+        potential_actions.append(rest_action)
+        
+        # Leisure activity to improve satisfaction
+        leisure_action = Action(
+            name="Leisure Activity", 
+            preconditions=[],
+            effects=[
+                {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 0.12},
+                {"targets": ["initiator"], "attribute": "happiness", "change_value": 0.08}
+            ],
+            cost=0.2
+        )
+        potential_actions.append(leisure_action)
+        
+        # Exercise to improve energy and satisfaction
+        exercise_action = Action(
+            name="Exercise",
+            preconditions=[],
+            effects=[
+                {"targets": ["initiator"], "attribute": "energy", "change_value": 0.10},
+                {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 0.06}
+            ],
+            cost=0.3
+        )
+        potential_actions.append(exercise_action)
 
         # Eat Actions (from inventory) - simplified for now
         if hasattr(character, "inventory") and hasattr(character.inventory, "get_food_items"):
