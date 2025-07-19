@@ -1665,6 +1665,7 @@ class PromptBuilder:
         weather: str,
         action_choices: List[str],
         character_state_dict: Optional[Dict[str, float]] = None,
+        memories: Optional[List] = None,
     ) -> str:
         """Create a decision prompt incorporating goals, needs and context."""
         # Calculate needs priorities for character context
@@ -1729,6 +1730,13 @@ class PromptBuilder:
         # Long-term aspiration context
         if hasattr(self.character, "long_term_goal") and self.character.long_term_goal:
             prompt += f"Your long-term aspiration is: {self.character.long_term_goal}. "
+
+        # Include short memory descriptions if provided
+        if memories:
+            prompt += "\nRecent memories influencing you:\n"
+            for mem in memories[:2]:
+                desc = getattr(mem, "description", str(mem))
+                prompt += f"- {desc}\n"
 
         prompt += f"\n{descriptors.get_routine_question_framing()}"
 
