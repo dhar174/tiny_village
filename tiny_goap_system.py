@@ -146,7 +146,7 @@ class Plan:
             
             # Convert to priority (lower utility = higher priority cost)
             # Combine base cost with utility consideration
-            priority = base_cost - (utility * 0.05)  # Small utility influence
+            priority = base_cost - (utility * self.UTILITY_INFLUENCE_FACTOR)  # Small utility influence
             
             # Adjust priority based on action urgency and current goal progress
             if hasattr(action, "urgency"):
