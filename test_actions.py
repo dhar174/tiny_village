@@ -5,19 +5,55 @@ from actions import GreetAction, ShareNewsAction, OfferComplimentAction, TalkAct
 
 # Mock Character class for action context (if needed by execute signatures)
 class MockCharacter:
+    """
+    Improved MockCharacter that provides realistic behavior for better testing.
+    
+    This mock includes actual implementations of methods that actions call
+    (like respond_to_talk) rather than requiring manual MagicMock setup.
+    This allows tests to verify both that methods are called AND that 
+    they behave correctly, catching more potential bugs.
+    
+    Key improvements over simple mocks:
+    - Implements respond_to_talk() with actual behavior
+    - Provides all attributes commonly used by actions
+    - Tracks method calls for verification in tests
+    - Changes character state in realistic ways
+    """
+    SOCIAL_WELLBEING_INCREMENT = 0.1  # Constant for respond_to_talk behavior
+    
     def __init__(self, name="TestCharacter"):
         self.name = name
         # Add other attributes if action.execute() or preconditions need them
         self.state = State({"energy": 100, "happiness": 50}) # Example state
+ 
+        self.uuid = f"{name}_uuid"
+        self.energy = 100
+        self.social_wellbeing = 50
+        self.happiness = 50
+        self.health = 100
+        self.status = "idle"
+        self.mana = 20
+        self.last_checked = "never"
+        self.knowledge = ""
+        self.relationship_strength = 10
         
+        # Track calls to methods for testing
+        self._respond_to_talk_calls = []
+    
     def respond_to_talk(self, initiator):
         """
-        Real implementation of respond_to_talk for testing.
-        This ensures the test validates actual integration.
+        A real implementation of respond_to_talk that actually does something meaningful.
+        This will allow tests to verify that the method was called AND that it behaves correctly.
         """
-        # Give a small additional boost to social wellbeing when talked to
-        self.social_wellbeing += 0.1
-        return f"{self.name} responds to {initiator.name}"
+        self._respond_to_talk_calls.append(initiator)
+        # Simulate a realistic response - increase social wellbeing when talked to
+        self.social_wellbeing += self.SOCIAL_WELLBEING_INCREMENT
+        return f"{self.name} responds to {getattr(initiator, 'name', str(initiator))}"
+    
+    def get_respond_to_talk_calls(self):
+        """Helper method to check if respond_to_talk was called in tests"""
+        return self._respond_to_talk_calls
+
 
 class TestChar: # Existing class in the file
     def __init__(self, name, state: State):
@@ -213,12 +249,10 @@ class TestBaseActionExecute(unittest.TestCase):
         self.mock_import_module.return_value = self.mock_tiny_graph_manager_module
 
         self.initiator = MockCharacter(name="Initiator")
-        self.initiator.uuid = "initiator_uuid"
-        self.initiator.energy = 50
-
         self.target = MockCharacter(name="Target")
-        self.target.uuid = "target_uuid"
-        self.target.health = 100
+
+        # Override specific values for this test class
+        self.initiator.energy = 50  # Different from default for testing
 
         # Ensure mocked characters have attributes used in tests
         if not hasattr(self.initiator, 'some_method_on_char'):
@@ -393,14 +427,23 @@ class TestBaseActionExecute(unittest.TestCase):
             {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": initiator_effect_value}
         ]
 
+ 
+        # Set initial values for attributes that will be changed by effects
+
+
 
         # Remove the mock - use real respond_to_talk method for proper integration testing
 
         # Store initial values for behavior-based testing
+
         initial_target_social = 10
         initial_initiator_social = 5
         self.target.social_wellbeing = initial_target_social
         self.initiator.social_wellbeing = initial_initiator_social
+ 
+        # Note: target.respond_to_talk is now a real method that we can test
+
+
         
         # Mock the target's respond_to_talk method with realistic behavior
         # This simulates what respond_to_talk should actually do: 
@@ -418,6 +461,7 @@ class TestBaseActionExecute(unittest.TestCase):
                 initiator.social_wellbeing += SOCIAL_WELLBEING_INCREMENT
         
         self.target.respond_to_talk = MagicMock(side_effect=mock_respond_to_talk)
+ 
 
         talk_action = TalkAction(
             initiator=self.initiator,
@@ -432,6 +476,42 @@ class TestBaseActionExecute(unittest.TestCase):
         self.assertTrue(result)
 
         # 1. Check that super().execute() part (effect application) worked
+ 
+        # Check Python object updates
+        # Verify that social_wellbeing increased for both characters
+        # Target should have increased by action effect (1) + respond_to_talk call
+        self.assertGreater(self.target.social_wellbeing, initial_target_social + target_effect_value)
+        # Initiator should have increased by action effect only (0.5)
+        self.assertEqual(self.initiator.social_wellbeing, initial_initiator_social + 0.5)
+
+
+        # Check GraphManager calls from super().execute()
+        # The graph update happens BEFORE respond_to_talk is called,
+        # so it uses the value from just the action effects, not including respond_to_talk
+        expected_target_graph_value = initial_target_social + 1  # Just the action effect
+        self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
+            self.target.uuid, "social_wellbeing", expected_target_graph_value
+        )
+        self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
+            self.initiator.uuid, "social_wellbeing", initial_initiator_social + 0.5
+
+        )
+
+        # 2. Check that TalkAction's specific logic was called
+        # With real respond_to_talk method, we can verify it was actually called
+        self.assertEqual(len(self.target.get_respond_to_talk_calls()), 1)
+        self.assertEqual(self.target.get_respond_to_talk_calls()[0], self.initiator)
+        
+        # Verify that the target's social_wellbeing increased due to both:
+        # 1. The action effect (from effects list)
+        # 2. The respond_to_talk method (implementation detail we don't need to know exactly)
+        # We just check it's greater than the action effect alone
+        self.assertGreater(
+            self.target.social_wellbeing, 
+            initial_target_social + target_effect_value,  # More than just the action effect
+            "Target's social_wellbeing should increase by more than just the action effect due to respond_to_talk"
+        )
+
  
         # Test behavior: verify values increased by expected amounts from our custom effects
         
@@ -474,6 +554,7 @@ class TestBaseActionExecute(unittest.TestCase):
             self.initiator.uuid, "social_wellbeing", expected_initiator_social_from_action
         )
 
+ 
 
         # 2. Check that TalkAction's specific logic was called by testing its actual effects
         # The respond_to_talk method should have added 0.1 to target's social_wellbeing
