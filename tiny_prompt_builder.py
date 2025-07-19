@@ -1210,6 +1210,7 @@ class DescriptorMatrices:
         }
 
         self.event_recent = {
+            "default": ["Recently"],
             "craft fair": ["After your success at the craft fair"],
             "community center": ["After you helped at the community center"],
             "hospital": ["After you were recently in the hospital"],
@@ -1220,6 +1221,7 @@ class DescriptorMatrices:
         }
 
         self.financial_situation = {
+            "default": ["financially, you are doing okay"],
             "rich": [
                 "you are financially well-off",
                 "you are rich",
