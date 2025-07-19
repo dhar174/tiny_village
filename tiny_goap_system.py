@@ -119,7 +119,14 @@ class Plan:
                 if current_goal and hasattr(self.graph_manager, 'plan_actions'):
                     # Try to get new action plan from GOAP planner
                     from actions import State
-                    current_state = State({})  # Simple empty state for now
+                    # Construct a meaningful current state based on game data
+                    current_state_data = {
+                        "character_health": self.graph_manager.character.health,
+                        "character_energy": self.graph_manager.character.energy,
+                        "environment_conditions": self.graph_manager.get_environment_conditions(),
+                        "goal_progress": {goal.name: goal.progress for goal in self.goals}
+                    }
+                    current_state = State(current_state_data)
                     available_actions = [action for _, _, action, _ in old_queue if action.name not in self.completed_actions]
                     
                     new_plan = self.graph_manager.plan_actions(None, current_goal, current_state, available_actions)
