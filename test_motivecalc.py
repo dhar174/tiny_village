@@ -251,7 +251,7 @@ if __name__ == "__main__":
     test = TestMotiveCalc()
     test.test_calculate_motives()
     create_random = CreateRandomizedCharacter()
-    random_characters = [create_random.create_random_character() for _ in range(20)]
+    random_characters = [create_random.create_random_character() for _ in range(100)]
     uuids = []
 
     PersonalMotives = importlib.import_module("tiny_characters").PersonalMotives
