@@ -342,7 +342,7 @@ class ActionOptions:
             and character.get_wealth_money() > 1
             and (
                 character.get_inventory().count_food_items_total() < 5
-                or character.get_inventory().count_food_calories_total
+                or character.get_inventory().count_food_calories_total()
                 < character.get_hunger_level()
             ),
             "eat_food": character.get_hunger_level() > 5
