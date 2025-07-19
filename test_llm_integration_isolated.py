@@ -51,7 +51,14 @@ class MockPromptBuilder:
     def __init__(self, character=None):
         self.character = character
 
-    def generate_decision_prompt(self, time, weather, action_choices):
+    def generate_decision_prompt(
+        self,
+        time,
+        weather,
+        action_choices,
+        character_state_dict=None,
+        memories=None,
+    ):
         """Generate a mock prompt"""
         choices_text = "\n".join(action_choices)
         return f"""Character {self.character.name if self.character else 'Unknown'} needs to make a decision.
