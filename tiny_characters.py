@@ -2643,13 +2643,91 @@ class Character:
         # Give a small additional boost to social wellbeing when talked to
         self.social_wellbeing += 0.1
         
+        # Boost based on personality compatibility
+        if hasattr(initiator, 'personality_traits') and self.personality_traits:
+            # Simple compatibility boost - agreeable characters get along better
+            initiator_agreeable = getattr(initiator.personality_traits, 'agreeableness', 50)
+            self_agreeable = getattr(self.personality_traits, 'agreeableness', 50)
+            
+            if initiator_agreeable > 60 and self_agreeable > 60:
+                self.social_wellbeing += 0.1  # Bonus for agreeable personalities
+                
+        # Update friendship grid if it exists
+        if hasattr(self, 'friendship_grid') and hasattr(initiator, 'name'):
+            if initiator.name not in self.friendship_grid:
+                self.friendship_grid[initiator.name] = 0.1  # New acquaintance
+            else:
+                # Strengthen existing relationship slightly
+                self.friendship_grid[initiator.name] = min(
+                    self.friendship_grid[initiator.name] + 0.05, 
+                    1.0
+                )
+        
         # Return a response based on personality traits
-        if hasattr(self, 'extraversion') and self.extraversion > 65:
-            return f"{self.name} engages enthusiastically in conversation"
-        elif hasattr(self, 'neuroticism') and self.neuroticism > 70:
-            return f"{self.name} responds nervously but appreciates the attention"
+        if hasattr(self.personality_traits, 'extraversion') and self.personality_traits.extraversion > 65:
+            return f"{self.name} engages enthusiastically in conversation with {getattr(initiator, 'name', 'someone')}"
+        elif hasattr(self.personality_traits, 'neuroticism') and self.personality_traits.neuroticism > 70:
+            return f"{self.name} responds nervously but appreciates the attention from {getattr(initiator, 'name', 'someone')}"
+        elif hasattr(self.personality_traits, 'openness') and self.personality_traits.openness > 70:
+            return f"{self.name} shares interesting thoughts with {getattr(initiator, 'name', 'someone')}"
         else:
-            return f"{self.name} listens and responds thoughtfully"
+            return f"{self.name} listens and responds thoughtfully to {getattr(initiator, 'name', 'someone')}"
+
+    def respond_to_greeting(self, initiator):
+        """
+        Respond to a greeting from another character.
+        """
+        # Small boost to social wellbeing from being greeted
+        self.social_wellbeing += 0.05
+        
+        # Update friendship grid if it exists
+        if hasattr(self, 'friendship_grid') and hasattr(initiator, 'name'):
+            if initiator.name not in self.friendship_grid:
+                self.friendship_grid[initiator.name] = 0.05  # New acquaintance greeting
+            else:
+                # Strengthen existing relationship slightly
+                self.friendship_grid[initiator.name] = min(
+                    self.friendship_grid[initiator.name] + 0.02, 
+                    1.0
+                )
+        
+        # Return greeting response based on personality
+        initiator_name = getattr(initiator, 'name', 'someone')
+        if hasattr(self.personality_traits, 'extraversion') and self.personality_traits.extraversion > 65:
+            return f"{self.name} warmly greets {initiator_name} back"
+        elif hasattr(self.personality_traits, 'neuroticism') and self.personality_traits.neuroticism > 70:
+            return f"{self.name} shyly acknowledges {initiator_name}'s greeting"
+        else:
+            return f"{self.name} politely returns {initiator_name}'s greeting"
+
+    def respond_to_compliment(self, initiator, compliment_topic):
+        """
+        Respond to a compliment from another character.
+        """
+        # Significant boost to social wellbeing from compliments
+        self.social_wellbeing += 0.2
+        
+        # Compliments have a stronger effect on friendship
+        if hasattr(self, 'friendship_grid') and hasattr(initiator, 'name'):
+            if initiator.name not in self.friendship_grid:
+                self.friendship_grid[initiator.name] = 0.15  # Strong start for complimenting
+            else:
+                # Strengthen existing relationship more significantly
+                self.friendship_grid[initiator.name] = min(
+                    self.friendship_grid[initiator.name] + 0.1, 
+                    1.0
+                )
+        
+        # Return compliment response based on personality
+        initiator_name = getattr(initiator, 'name', 'someone')
+        if hasattr(self.personality_traits, 'extraversion') and self.personality_traits.extraversion > 65:
+            return f"{self.name} beams with joy at {initiator_name}'s compliment about {compliment_topic}"
+        elif hasattr(self.personality_traits, 'neuroticism') and self.personality_traits.neuroticism > 70:
+            return f"{self.name} blushes and thanks {initiator_name} for the kind words about {compliment_topic}"
+        elif hasattr(self.personality_traits, 'agreeableness') and self.personality_traits.agreeableness > 70:
+            return f"{self.name} graciously accepts {initiator_name}'s compliment about {compliment_topic}"
+        else:
+            return f"{self.name} appreciates {initiator_name}'s compliment about {compliment_topic}"
 
     def define_descriptors(self):
         """
