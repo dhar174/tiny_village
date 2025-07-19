@@ -305,13 +305,20 @@ class GOAPPlanner:
         # Initialize the open list with the initial state
         open_list = [(current_state, [])]
         visited_states = set()
+        max_iterations = 1000  # Prevent infinite loops
+        iteration_count = 0
 
-        while open_list:
+        while open_list and iteration_count < max_iterations:
+            iteration_count += 1
             state, current_plan = open_list.pop(0)
 
             # Check if the current state satisfies the goal
             if self._goal_satisfied(goal, state):
                 return current_plan
+
+            # Limit plan length to prevent overly complex plans
+            if len(current_plan) >= 10:
+                continue
 
             for action in actions:
                 # Check if action preconditions are met
@@ -328,6 +335,10 @@ class GOAPPlanner:
                         new_plan = current_plan + [action]
                         open_list.append((new_state, new_plan))
 
+        # If we exceeded max iterations or couldn't find a plan
+        if iteration_count >= max_iterations:
+            print(f"Warning: GOAP planning exceeded max iterations ({max_iterations})")
+        
         return None  # If no plan is found
 
     def _goal_satisfied(self, goal, state):
@@ -342,6 +353,11 @@ class GOAPPlanner:
                     return all(state.get(k, 0) >= v for k, v in conditions.items())
                 elif isinstance(conditions, list):
                     return all(condition(state) if callable(condition) else True for condition in conditions)
+            elif hasattr(goal, 'target_effects'):
+                # Handle Goal objects with target_effects
+                target_effects = goal.target_effects
+                if isinstance(target_effects, dict):
+                    return all(state.get(k, 0) >= v for k, v in target_effects.items())
             return False
         except Exception as e:
             print(f"Warning: Error checking goal completion: {e}")
