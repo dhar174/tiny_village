@@ -52,20 +52,20 @@ class MockMotives:
         if not self.character:
             return 55  # fallback for standalone testing (not 50)
         # Higher motive when social wellbeing is lower
-        social = getattr(self.character, 'social_wellbeing', 5)
+        social = getattr(self.character, 'social_wellbeing', self.NEUTRAL_VALUE)
         return max(10, min(100, 100 - (social * 10)))
     
     def _calculate_dynamic_motive(self, attribute_name, scale_factor=10, baseline=50):
         """Calculate a motive value based on character attribute with configurable scaling."""
         if not self.character:
             return baseline
-        value = getattr(self.character, attribute_name, 5)
+        value = getattr(self.character, attribute_name, self.NEUTRAL_VALUE)
         # For most attributes, higher values mean lower need (inverse relationship)
         # But for hunger_level, higher value means more hungry, so higher motive
         if attribute_name == 'hunger_level':
-            return max(10, min(100, baseline + (value - 5) * scale_factor))
+            return max(10, min(100, baseline + (value - self.NEUTRAL_VALUE) * scale_factor))
         else:
-            return max(10, min(100, baseline + (5 - value) * scale_factor))
+            return max(10, min(100, baseline + (self.NEUTRAL_VALUE - value) * scale_factor))
     
     # Motive getter methods expected by PromptBuilder
     def get_health_motive(self):
