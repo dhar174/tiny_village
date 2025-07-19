@@ -5,17 +5,26 @@ Test script to verify the completed implementations work correctly.
 
 import sys
 import os
+import unittest
 
 # Add the current directory to the Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 
-def test_building_coordinate_selection():
-    """Test the building coordinate selection functionality."""
-    print("Testing building coordinate selection...")
+class TestCompletedImplementations(unittest.TestCase):
+    """Test suite for completed implementations."""
 
-    try:
-        from tiny_buildings import CreateBuilding
+    def test_building_coordinate_selection(self):
+        """Test the building coordinate selection functionality."""
+        # This test requires numpy and pygame which aren't available in minimal environment
+        # Skip if dependencies are missing, but test the import and basic functionality
+        try:
+            from tiny_buildings import CreateBuilding
+        except ImportError as e:
+            if "numpy" in str(e) or "pygame" in str(e):
+                self.skipTest(f"Skipping due to missing dependency: {e}")
+            else:
+                raise
 
         # Test with a basic map setup
         map_data = {"width": 50, "height": 50, "buildings": []}
@@ -34,8 +43,13 @@ def test_building_coordinate_selection():
             bathrooms=2,
         )
 
-        print(f"✓ House created successfully at coordinates: ({house.x}, {house.y})")
-        print(f"  House details: {house.name}, {house.width}x{house.length}")
+        # Verify house was created with correct properties
+        self.assertIsNotNone(house)
+        self.assertEqual(house.name, "Test House")
+        self.assertEqual(house.width, 15)
+        self.assertEqual(house.length, 15)
+        self.assertTrue(hasattr(house, 'x'))
+        self.assertTrue(hasattr(house, 'y'))
 
         # Test creating multiple houses to verify collision detection
         house2 = builder.create_house(
@@ -49,54 +63,44 @@ def test_building_coordinate_selection():
             bathrooms=1,
         )
 
-        print(f"✓ Second house created at coordinates: ({house2.x}, {house2.y})")
-
-        # Verify they don't overlap
-        if (house.x, house.y) != (house2.x, house2.y):
-            print(
-                "✓ Collision detection working - houses placed at different coordinates"
-            )
-        else:
-            print("⚠ Warning: Houses placed at same coordinates")
-
-        return True
-
-    except Exception as e:
-        print(f"✗ Building coordinate selection test failed: {e}")
-        return False
+        # Verify second house was created
+        self.assertIsNotNone(house2)
+        self.assertEqual(house2.name, "Test House 2")
+        
+        # Verify they don't overlap (collision detection working)
+        self.assertNotEqual((house.x, house.y), (house2.x, house2.y),
+                          "Houses should not be placed at the same coordinates")
 
 
-def test_pause_functionality():
-    """Test that pause functionality was added to gameplay controller."""
-    print("\nTesting pause functionality...")
-
-    try:
-        from tiny_gameplay_controller import GameplayController
+    def test_pause_functionality(self):
+        """Test that pause functionality was added to gameplay controller."""
+        # This test requires pygame which isn't available in minimal environment
+        # Skip if dependencies are missing, but test the import and basic functionality
+        try:
+            from tiny_gameplay_controller import GameplayController
+        except ImportError as e:
+            if "pygame" in str(e):
+                self.skipTest(f"Skipping due to missing dependency: {e}")
+            else:
+                raise
 
         # Create a controller (without actually starting pygame)
         controller = GameplayController.__new__(GameplayController)
 
-        # Test pause state
+        # Test pause state exists
         controller.paused = False
-        pause_state = getattr(controller, "paused", False)
-        print(f"✓ Pause state accessible: {pause_state}")
+        self.assertTrue(hasattr(controller, 'paused'),
+                       "GameplayController should have a 'paused' attribute")
 
         # Test pause toggle logic
-        controller.paused = not getattr(controller, "paused", False)
-        print(f"✓ Pause toggle works: {controller.paused}")
-
-        return True
-
-    except Exception as e:
-        print(f"✗ Pause functionality test failed: {e}")
-        return False
+        initial_state = getattr(controller, "paused", False)
+        controller.paused = not initial_state
+        self.assertNotEqual(controller.paused, initial_state,
+                          "Pause state should toggle correctly")
 
 
-def test_happiness_calculation():
-    """Test the enhanced happiness calculation."""
-    print("\nTesting happiness calculation enhancements...")
-
-    try:
+    def test_happiness_calculation(self):
+        """Test the enhanced happiness calculation."""
         # Read the file to check if the TODOs were replaced
         with open("tiny_characters.py", "r") as f:
             content = f.read()
@@ -114,114 +118,84 @@ def test_happiness_calculation():
             if pattern in content:
                 remaining_todos.append(pattern)
 
-        if not remaining_todos:
-            print("✓ All happiness calculation TODOs have been implemented")
+        self.assertEqual(len(remaining_todos), 0,
+                        f"Found {len(remaining_todos)} unimplemented TODO items: {remaining_todos}")
 
-            # Check for implementation keywords
-            implementation_keywords = [
-                "motive_satisfaction",
-                "social_happiness",
-                "romantic_happiness",
-                "family_happiness",
-            ]
-
-            implemented_features = []
-            for keyword in implementation_keywords:
-                if keyword in content:
-                    implemented_features.append(keyword)
-
-            print(
-                f"✓ Found {len(implemented_features)} happiness calculation features implemented"
-            )
-            return True
-
-        else:
-            print(f"⚠ Warning: {len(remaining_todos)} TODO items still remain:")
-            for todo in remaining_todos:
-                print(f"  - {todo}")
-            return False
-
-    except Exception as e:
-        print(f"✗ Happiness calculation test failed: {e}")
-        return False
-
-
-def test_goap_implementations():
-    """Test that the GOAP system implementations are still working."""
-    print("\nTesting GOAP system implementations...")
-
-    try:
-        from tiny_goap_system import GOAPSystem
-
-        # Test that the methods exist and are implemented
-        methods_to_check = [
-            "replan",
-            "find_alternative_action",
-            "calculate_utility",
-            "evaluate_utility",
-            "evaluate_feasibility_of_goal",
+        # Check for implementation keywords
+        implementation_keywords = [
+            "motive_satisfaction",
+            "social_happiness",
+            "romantic_happiness",
+            "family_happiness",
         ]
 
-        # Create a basic GOAP system instance
-        goap = GOAPSystem.__new__(GOAPSystem)
+        implemented_features = []
+        for keyword in implementation_keywords:
+            if keyword in content:
+                implemented_features.append(keyword)
 
-        implemented_methods = []
-        for method_name in methods_to_check:
-            if hasattr(goap, method_name):
-                method = getattr(goap, method_name)
-                # Check if it's not just "pass"
-                if callable(method):
-                    implemented_methods.append(method_name)
-
-        print(
-            f"✓ Found {len(implemented_methods)}/{len(methods_to_check)} GOAP methods implemented"
-        )
-
-        if len(implemented_methods) == len(methods_to_check):
-            print("✓ All key GOAP methods are present")
-            return True
-        else:
-            missing = set(methods_to_check) - set(implemented_methods)
-            print(f"⚠ Missing methods: {missing}")
-            return False
-
-    except Exception as e:
-        print(f"✗ GOAP system test failed: {e}")
-        return False
+        self.assertGreater(len(implemented_features), 0,
+                          "Should have at least some happiness calculation features implemented")
+        self.assertEqual(len(implemented_features), 4,
+                        f"Expected 4 happiness calculation features, found {len(implemented_features)}: {implemented_features}")
 
 
-def main():
-    """Run all tests."""
-    print("Running tests for completed implementations...\n")
+    def test_goap_implementations(self):
+        """Test that the GOAP system implementations are actually working."""
+        from tiny_goap_system import GOAPPlanner, Plan
 
-    tests = [
-        test_building_coordinate_selection,
-        test_pause_functionality,
-        test_happiness_calculation,
-        test_goap_implementations,
-    ]
+        # Test GOAPPlanner methods
+        planner_methods = [
+            "plan_actions",
+            "_goal_satisfied",
+            "_action_applicable",
+            "_apply_action_effects",
+        ]
 
-    passed = 0
-    total = len(tests)
-
-    for test in tests:
+        # Create a GOAP planner instance - it requires a graph_manager
         try:
-            if test():
-                passed += 1
-        except Exception as e:
-            print(f"Test failed with exception: {e}")
+            planner = GOAPPlanner(graph_manager=None)  # Allow None for testing
+            self.assertIsNotNone(planner)
+        except TypeError:
+            self.fail("GOAPPlanner should accept graph_manager=None for testing")
 
-    print(f"\n{'='*50}")
-    print(f"Test Results: {passed}/{total} tests passed")
+        # Check that planner methods exist
+        for method_name in planner_methods:
+            self.assertTrue(hasattr(planner, method_name),
+                          f"GOAPPlanner should have method '{method_name}'")
+            
+            method = getattr(planner, method_name)
+            self.assertTrue(callable(method),
+                          f"'{method_name}' should be callable")
 
-    if passed == total:
-        print("🎉 All tests passed! Implementations appear to be working correctly.")
-    else:
-        print(f"⚠ {total - passed} test(s) failed. Review the implementations.")
+        # Test Plan class methods (these were the original methods being tested)
+        plan_methods = [
+            "replan",
+            "find_alternative_action",
+            "evaluate",
+            "execute",
+        ]
 
-    return passed == total
+        # Create a Plan instance
+        plan = Plan("test_plan")
+        self.assertIsNotNone(plan)
+
+        # Check that plan methods exist
+        for method_name in plan_methods:
+            self.assertTrue(hasattr(plan, method_name),
+                          f"Plan should have method '{method_name}'")
+            
+            method = getattr(plan, method_name)
+            self.assertTrue(callable(method),
+                          f"'{method_name}' should be callable")
+
+        # Test that we can add goals and actions to a plan
+        self.assertTrue(hasattr(plan, 'add_goal'),
+                       "Plan should have add_goal method")
+        self.assertTrue(hasattr(plan, 'add_action'),
+                       "Plan should have add_action method")
+
 
 
 if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)
+    unittest.main()
