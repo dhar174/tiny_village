@@ -428,8 +428,6 @@ class TestBaseActionExecute(unittest.TestCase):
         expected_target_social = initial_target_social + target_effect_value + 0.1
         expected_initiator_social = initial_initiator_social + initiator_effect_value
 
-        expected_target_social_from_action = initial_target_social + target_effect_value
-        expected_initiator_social_from_action = initial_initiator_social + initiator_effect_value
         
         # 2. Check that TalkAction's specific logic was called
         self.target.respond_to_talk.assert_called_once_with(self.initiator)
