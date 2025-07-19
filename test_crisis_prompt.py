@@ -24,8 +24,6 @@ class CrisisPromptTests(unittest.TestCase):
     def test_prompt_contains_description_and_assistant_cue(self):
         with patch.dict(sys.modules, {"tiny_characters": stub_tc, "attr": stub_attr}):
             import tiny_prompt_builder
-            tiny_prompt_builder.descriptors.event_recent.setdefault("default", [""])
-            tiny_prompt_builder.descriptors.financial_situation.setdefault("default", [""])
             PromptBuilder = tiny_prompt_builder.PromptBuilder
             char = MockCharacter()
             builder = PromptBuilder(char)
