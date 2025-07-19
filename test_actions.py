@@ -391,7 +391,7 @@ class TestBaseActionExecute(unittest.TestCase):
         def mock_respond_to_talk(initiator):
             # Simulate realistic respond_to_talk behavior:
             # 1. Target gets happier when talked to
-            self.target.happiness += 0.2
+            self.target.happiness += HAPPINESS_INCREMENT
             # 2. Target might reciprocate some social benefit to the initiator
             if hasattr(initiator, 'social_wellbeing'):
                 initiator.social_wellbeing += 0.1
