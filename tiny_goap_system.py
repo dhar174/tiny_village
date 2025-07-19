@@ -369,10 +369,11 @@ class GOAPPlanner:
             
             # Try to get actions from strategy manager
             try:
-                StrategyManager = importlib.import_module("tiny_strategy_manager").StrategyManager
-                strategy_manager = StrategyManager(self.graph_manager)
-                strategy_actions = strategy_manager.get_daily_actions(character)
-                available_actions.extend(strategy_actions)
+                if self.strategy_manager:
+                    strategy_actions = self.strategy_manager.get_daily_actions(character)
+                    available_actions.extend(strategy_actions)
+                else:
+                    logging.warning("StrategyManager is not initialized.")
             except Exception as e:
                 logging.warning(f"Could not get actions from strategy manager: {e}")
             
