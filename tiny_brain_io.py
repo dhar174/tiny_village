@@ -4,7 +4,13 @@ from unittest import result
 from numpy import where
 from requests import get
 from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
+# Conditional torch import - skip functionality if not available
+try:
+    import torch
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+    torch = None
 import time
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -32,7 +38,7 @@ class TinyBrainIO:
         self.n_gpu_layers = 0
         self.offload_kqv = False
         self.use_mlock = True
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = "cuda" if (TORCH_AVAILABLE and torch.cuda.is_available()) else "cpu"
         self.load_model()
 
     def load_model(self, model_name="alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2"):
