@@ -1594,8 +1594,9 @@ class PromptBuilder:
         for i, action in enumerate(actions[:5]):
             try:
                 util = calculate_action_utility(char_state, action, current_goal)
-            except Exception:
+            except (ValueError, TypeError):  # Replace with specific exceptions
                 util = 0.0
+                print(f"Error calculating utility for action {action}: {e}")  # Optional logging
 
             effects_str = ""
             if hasattr(action, "effects") and action.effects:
