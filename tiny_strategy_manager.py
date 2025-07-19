@@ -47,6 +47,10 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+# Constants for goal targets used in daily planning
+SATISFACTION_TARGET = 70.0
+ENERGY_TARGET = 80.0
+
 
 # Define placeholder/simplified Action classes for use within StrategyManager if not using complex ones from actions.py
 # These are structured to be compatible with calculate_action_utility
@@ -100,12 +104,14 @@ class StrategyManager:
 
 
     def __init__(self, use_llm=False, model_name=None):
-        self.goap_planner = GOAPPlanner(GraphManager() if GraphManager else None)
         # Initialize graph_manager if available
         if GraphManager:
             self.graph_manager = GraphManager()
         else:
             self.graph_manager = None
+            
+        # Initialize GOAP planner with graph manager
+        self.goap_planner = GOAPPlanner(self.graph_manager)
  
         self.use_llm = use_llm
 
