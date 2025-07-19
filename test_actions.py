@@ -44,7 +44,7 @@ class MockCharacter:
         """
         self._respond_to_talk_calls.append(initiator)
         # Simulate a realistic response - increase social wellbeing when talked to
-        self.social_wellbeing += 0.1
+        self.social_wellbeing += self.SOCIAL_WELLBEING_INCREMENT
         return f"{self.name} responds to {getattr(initiator, 'name', str(initiator))}"
     
     def get_respond_to_talk_calls(self):
