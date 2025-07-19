@@ -17,7 +17,7 @@ This document summarizes the gaps preventing a basic demonstration of the Tiny V
 Without these dependencies, `GraphManager` and other systems cannot initialize, and tests such as `test_graph_operations.py` and `test_entity_attributes.py` fail.
 
 ## Placeholder Features
-- Many systems noted in `get_feature_implementation_status()` within `tiny_gameplay_controller.py` are marked `NOT_STARTED` or `STUB_IMPLEMENTED` (e.g., quest system, social network system, weather system). These stubs do not provide functional gameplay.
+- Many systems noted in `get_feature_implementation_status()` within `tiny_gameplay_controller.py` are marked `NOT_STARTED` or `STUB_IMPLEMENTED`. Examples include the quest system, social network system, and weather system. For a complete list of stubbed systems, refer to the implementation of `get_feature_implementation_status()` in `tiny_gameplay_controller.py`.
 
 ## Test Failures
 - Running the provided test suite results in numerous errors due to the missing dependencies and incomplete implementations.
