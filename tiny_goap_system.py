@@ -1221,7 +1221,7 @@ class GOAPPlanner:
                 if isinstance(target_value, (int, float)):
                     current_value = current_state.get(attribute, 0) if current_state else 0
                     if isinstance(current_value, (int, float)) and current_value < target_value:
-                        total_cost += (target_value - current_value) * 0.1
+                        total_cost += (target_value - current_value) * HEURISTIC_SCALING_FACTOR
             return total_cost
         
         # Default heuristic if goal format is unknown
