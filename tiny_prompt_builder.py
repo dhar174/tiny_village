@@ -1644,7 +1644,7 @@ class DescriptorMatrices:
     def get_job_currently_working_on(self, job):
         return random.choice(
             self.job_currently_working_on.get(
-                job, self.job_currently_working_on["default"]
+                job, self.job_currently_working_on.get("Engineer", ["a new project"])
             )
         )
 
@@ -1653,48 +1653,48 @@ class DescriptorMatrices:
 
     def get_job_planning_to_attend(self, job):
         return random.choice(
-            self.job_planning_to_attend.get(job, self.job_planning_to_attend["default"])
+            self.job_planning_to_attend.get(job, self.job_planning_to_attend.get("Engineer", ["tech conference"]))
         )
 
     def get_job_hoping_to_there(self, job):
         return random.choice(
-            self.job_hoping_to_there.get(job, self.job_hoping_to_there["default"])
+            self.job_hoping_to_there.get(job, self.job_hoping_to_there.get("Engineer", ["meet some colleagues"]))
         )
 
     def get_job_hoping_to_learn(self, job):
         return random.choice(
-            self.job_hoping_to_learn.get(job, self.job_hoping_to_learn["default"])
+            self.job_hoping_to_learn.get(job, self.job_hoping_to_learn.get("Engineer", ["new technologies"]))
         )
 
     def get_job_hoping_to_meet(self, job):
         return random.choice(
-            self.job_hoping_to_meet.get(job, self.job_hoping_to_meet["default"])
+            self.job_hoping_to_meet.get(job, self.job_hoping_to_meet.get("Engineer", ["new people"]))
         )
 
     def get_job_hoping_to_find(self, job):
         return random.choice(
-            self.job_hoping_to_find.get(job, self.job_hoping_to_find["default"])
+            self.job_hoping_to_find.get(job, self.job_hoping_to_find.get("Engineer", ["new opportunities"]))
         )
 
     def get_feeling_health(self, health_status):
         return random.choice(
-            self.feeling_health.get(health_status, self.feeling_health["default"])
+            self.feeling_health.get(health_status, self.feeling_health.get("healthy", ["doing well"]))
         )
 
     def get_feeling_hunger(self, hunger_level):
         return random.choice(
-            self.feeling_hunger.get(hunger_level, self.feeling_hunger["default"])
+            self.feeling_hunger.get(hunger_level, self.feeling_hunger.get("moderate", ["moderately hungry"]))
         )
 
     def get_event_recent(self, recent_event):
         return random.choice(
-            self.event_recent.get(recent_event, self.event_recent["default"])
+            self.event_recent.get(recent_event, ["Recently"])
         )
 
     def get_financial_situation(self, wealth_money):
         return random.choice(
             self.financial_situation.get(
-                wealth_money, self.financial_situation["default"]
+                wealth_money, self.financial_situation.get("stable", ["your financial situation is stable"])
             )
         )
 
@@ -1983,7 +1983,7 @@ class PromptBuilder:
         """Generate a basic daily routine prompt with LLM integration features."""
         prompt = "<|system|>"
         prompt += (
-            f"You are {self.character.name}, a {self.character.job} in a small town. You are a {descriptors.get_job_adjective(self.character.job)} {descriptors.get_job_pronoun(self.character.job)} who enjoys {descriptors.get_job_enjoys_verb(self.character.job)} {descriptors.get_job_verb_acts_on_noun(self.character.job)}. You are currently working on {descriptors.get_job_currently_working_on(self.character.job)} {descriptors.get_job_place(self.character.job)}, and you are excited to see how it turns out. You are also planning to attend a {descriptors.get_job_planning_to_attend(self.character.job)} in the next few weeks, and you are hoping to {descriptors.get_job_hoping_to_there(self.character.job)} there.",
+            f"You are {self.character.name}, a {self.character.job} in a small town. You are a {descriptors.get_job_adjective(self.character.job)} {descriptors.get_job_pronoun(self.character.job)} who enjoys {descriptors.get_job_enjoys_verb(self.character.job)} {descriptors.get_job_verb_acts_on_noun(self.character.job)}. You are currently working on {descriptors.get_job_currently_working_on(self.character.job)} {descriptors.get_job_place(self.character.job)}, and you are excited to see how it turns out. You are also planning to attend a {descriptors.get_job_planning_to_attend(self.character.job)} in the next few weeks, and you are hoping to {descriptors.get_job_hoping_to_there(self.character.job)} there."
         )
         
         # Add conversation context if available and requested
