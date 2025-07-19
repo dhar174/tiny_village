@@ -56,10 +56,10 @@ def test_building_coordinate_selection():
             print(
                 "✓ Collision detection working - houses placed at different coordinates"
             )
+            return True
         else:
-            print("⚠ Warning: Houses placed at same coordinates")
-
-        return True
+            print("✗ Houses placed at same coordinates - collision detection failed")
+            return False
 
     except Exception as e:
         print(f"✗ Building coordinate selection test failed: {e}")
@@ -126,14 +126,23 @@ def test_happiness_calculation():
             ]
 
             implemented_features = []
+            missing_features = []
             for keyword in implementation_keywords:
                 if keyword in content:
                     implemented_features.append(keyword)
+                else:
+                    missing_features.append(keyword)
 
-            print(
-                f"✓ Found {len(implemented_features)} happiness calculation features implemented"
-            )
-            return True
+            if len(implemented_features) == len(implementation_keywords):
+                print(
+                    f"✓ All {len(implemented_features)} happiness calculation features implemented"
+                )
+                return True
+            else:
+                print(
+                    f"✗ Missing {len(missing_features)} required happiness features: {missing_features}"
+                )
+                return False
 
         else:
             print(f"⚠ Warning: {len(remaining_todos)} TODO items still remain:")
