@@ -227,7 +227,7 @@ class TestFlatMemoryAccessIntegration(unittest.TestCase):
                 manager=self.memory_manager,
             )
             # Set a realistic embedding
-            memory.embedding = create_mock_tensor((768))
+            memory.embedding = create_mock_tensor((768,))
             self.test_memories.append(memory)
 
     def tearDown(self):
