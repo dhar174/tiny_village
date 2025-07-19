@@ -419,10 +419,12 @@ class TestEnhancedDecisionPrompt(unittest.TestCase):
             character_state_dict=character_state,
         )
 
-        # The prompt should generate successfully regardless of the character_state_dict
-        # (The current implementation may not use this parameter yet, but it should not break)
         self.assertIsNotNone(prompt)
         self.assertIn("Sarah Chen", prompt)
+        for key, value in character_state.items():
+            formatted_key = key.replace("_", " ").title()
+            expected_line = f"- {formatted_key}: {value}"
+            self.assertIn(expected_line, prompt)
 
         logger.info("Character state dict parameter test completed!")
 
