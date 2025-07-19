@@ -317,7 +317,7 @@ class GOAPPlanner:
                 return current_plan
 
             # Limit plan length to prevent overly complex plans
-            if len(current_plan) >= 10:
+            if len(current_plan) >= self.MAX_PLAN_LENGTH:
                 continue
 
             for action in actions:
