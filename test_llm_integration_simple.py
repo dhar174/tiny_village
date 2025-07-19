@@ -48,6 +48,7 @@ class TestLLMIntegrationSimple(unittest.TestCase):
         """Set up test fixtures"""
         self.character = MockCharacter("Alice")
         self.character.location = MockLocation("Home")
+        self.character.memory_manager = MagicMock()
 
     def test_strategy_manager_llm_initialization(self):
         """Test StrategyManager can be initialized with LLM support"""
@@ -129,6 +130,33 @@ class TestLLMIntegrationSimple(unittest.TestCase):
             self.assertIn("sunny", prompt)
 
             print("✓ PromptBuilder decision prompt test passed")
+
+        except ImportError as e:
+            self.fail(f"Could not import PromptBuilder: {e}")
+
+    def test_prompt_includes_memory_summaries(self):
+        """Prompt should include memory summaries when retrieval succeeds"""
+        try:
+            from tiny_prompt_builder import PromptBuilder
+
+            pb = PromptBuilder(self.character)
+
+            mem1 = MagicMock(description="Met Bob yesterday", importance_score=5)
+            mem2 = MagicMock(description="Worked on project", importance_score=3)
+            self.character.memory_manager.search_memories.return_value = [mem1, mem2]
+
+            action_choices = ["1. Eat", "2. Sleep"]
+            prompt = pb.generate_decision_prompt(
+                time="evening",
+                weather="rainy",
+                action_choices=action_choices,
+                memory_query="test",
+                num_memories=2,
+            )
+
+            self.character.memory_manager.search_memories.assert_called_once_with("test")
+            self.assertIn("Met Bob yesterday", prompt)
+            self.assertIn("Worked on project", prompt)
 
         except ImportError as e:
             self.fail(f"Could not import PromptBuilder: {e}")

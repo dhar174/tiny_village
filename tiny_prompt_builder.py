@@ -1665,8 +1665,27 @@ class PromptBuilder:
         weather: str,
         action_choices: List[str],
         character_state_dict: Optional[Dict[str, float]] = None,
+        memory_query: Optional[str] = None,
+        num_memories: int = 3,
     ) -> str:
-        """Create a decision prompt incorporating goals, needs and context."""
+        """Create a decision prompt incorporating goals, needs, memories and context.
+
+        Parameters
+        ----------
+        time : str
+            Current in-game time.
+        weather : str
+            Simple weather description.
+        action_choices : List[str]
+            The possible actions the character can take.
+        character_state_dict : Optional[Dict[str, float]], optional
+            Precomputed character state information.
+        memory_query : Optional[str], optional
+            Query text used to retrieve relevant memories. If ``None`` memory retrieval
+            is skipped.
+        num_memories : int, optional
+            Number of memories to summarize in the prompt.
+        """
         # Calculate needs priorities for character context
         needs_calculator = NeedsPriorities()
         needs_priorities = needs_calculator.calculate_needs_priorities(self.character)
@@ -1731,6 +1750,27 @@ class PromptBuilder:
             prompt += f"Your long-term aspiration is: {self.character.long_term_goal}. "
 
         prompt += f"\n{descriptors.get_routine_question_framing()}"
+
+        # Include top memories relevant to the current situation
+        memory_summaries: List[str] = []
+        if memory_query and hasattr(self.character, "memory_manager"):
+            try:
+                memories = self.character.memory_manager.search_memories(memory_query)
+                for mem in memories[:num_memories]:
+                    desc = getattr(mem, "description", str(mem))
+                    importance = getattr(mem, "importance_score", None)
+                    if importance is not None:
+                        summary = f"{desc} (importance {importance})"
+                    else:
+                        summary = desc
+                    memory_summaries.append(summary)
+            except Exception as e:
+                print(f"Warning: failed to retrieve memories: {e}")
+
+        if memory_summaries:
+            prompt += "\nRelevant memories:\n"
+            for summary in memory_summaries:
+                prompt += f"- {summary}\n"
 
         # Enhanced action choices with better formatting
         prompt += f"\nAvailable actions:\n"
