@@ -46,6 +46,7 @@ class TestGameplayController(unittest.TestCase):
                 "increase_speed": [pygame.K_PAGEUP],
                 "decrease_speed": [pygame.K_PAGEDOWN],
                 "minimap": [pygame.K_m],
+                "overview": [pygame.K_o],
             }
         }
         self.controller = GameplayController(graph_manager=self.mock_graph_manager, config=self.config)
@@ -238,6 +239,26 @@ class TestGameplayController(unittest.TestCase):
         # Mini-map should now be disabled
         self.assertFalse(getattr(self.controller, "_minimap_mode", False))
 
+    def test_overview_mode_toggle(self):
+        """Test that overview mode can be toggled correctly."""
+        # Initially overview mode should be disabled
+        self.assertFalse(getattr(self.controller, "_overview_mode", False))
+        
+        # Simulate 'O' key press to enable overview mode
+        mock_event = MagicMock()
+        mock_event.key = pygame.K_o
+        
+        self.controller._handle_keydown(mock_event)
+        
+        # Overview mode should now be enabled
+        self.assertTrue(getattr(self.controller, "_overview_mode", False))
+        
+        # Press 'O' again to disable overview mode
+        self.controller._handle_keydown(mock_event)
+        
+        # Overview mode should now be disabled
+        self.assertFalse(getattr(self.controller, "_overview_mode", False))
+
     def test_render_minimap_no_errors(self):
         """Test that mini-map rendering doesn't crash when enabled."""
         # Enable mini-map mode
@@ -256,6 +277,25 @@ class TestGameplayController(unittest.TestCase):
             self.controller._render_minimap()
         except Exception as e:
             self.fail(f"Mini-map rendering failed with error: {e}")
+
+    def test_render_overview_no_errors(self):
+        """Test that overview mode rendering doesn't crash when enabled."""
+        # Enable overview mode
+        self.controller._overview_mode = True
+        
+        # Create a minimal mock map controller
+        mock_map_controller = MagicMock()
+        mock_map_controller.map_image = pygame.Surface((100, 100))
+        mock_map_controller.map_data = {"buildings": []}
+        mock_map_controller.characters = {}
+        mock_map_controller.selected_character = None
+        self.controller.map_controller = mock_map_controller
+        
+        # Should not raise any exceptions
+        try:
+            self.controller._render_overview()
+        except Exception as e:
+            self.fail(f"Overview rendering failed with error: {e}")
 
 if __name__ == '__main__':
     unittest.main()
