@@ -375,8 +375,14 @@ class Plan:
                     return True
                 
                 def execute(self, target=None, initiator=None):
-                    print(f"Mock alternative action {self.name} executing (always succeeds)")
-                    return True
+                    import random
+                    success_probability = 0.8  # 80% chance of success
+                    if random.random() < success_probability:
+                        print(f"Mock alternative action {self.name} executed successfully")
+                        return True
+                    else:
+                        print(f"Mock alternative action {self.name} failed")
+                        return False
 
             alternative_action = MockAlternativeAction(alternative_name, failed_action)
 
