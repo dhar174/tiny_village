@@ -11,6 +11,10 @@ MAX_SPEED = 5.0
 MIN_SPEED = 0.1
 SPEED_STEP = 0.1
 
+# UI Layout Constants
+ACHIEVEMENT_SPACING = 25
+ACHIEVEMENT_LINE_SPACING = 18
+
 WEATHER_ENERGY_EFFECTS = {
     'rainy': 0.5,
     # 'snowy': 1.0, # easy to add more
@@ -25,6 +29,309 @@ from tiny_strategy_manager import StrategyManager
 from tiny_event_handler import EventHandler, Event
 from tiny_types import GraphManager
 from tiny_map_controller import MapController
+
+class UIPanel:
+    """Base class for UI panels in the modular UI system."""
+    
+    def __init__(self, name: str, position: tuple = (0, 0), size: tuple = None, visible: bool = True):
+        self.name = name
+        self.position = position  # (x, y)
+        self.size = size  # (width, height) - None means auto-size
+        self.visible = visible
+        self.background_color = None
+        self.border_color = None
+        self.padding = 5
+        
+    def render(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        """
+        Render the panel to the screen.
+        
+        Args:
+            screen: The pygame surface to render to
+            controller: The GameplayController instance for accessing game data
+            fonts: Dictionary of font objects by size/type
+            
+        Returns:
+            int: The height of the rendered panel
+        """
+        if not self.visible:
+            return 0
+            
+        return self._render_content(screen, controller, fonts)
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        """Override this method in subclasses to implement specific panel rendering."""
+        return 0
+    
+    def toggle_visibility(self):
+        """Toggle panel visibility."""
+        self.visible = not self.visible
+
+
+class CharacterInfoPanel(UIPanel):
+    """Panel for displaying character count and basic info."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        font = fonts.get('normal', pygame.font.Font(None, 24))
+        x, y = self.position
+        
+        # Character count
+        char_count_text = font.render(f"Characters: {len(controller.characters)}", True, (255, 255, 255))
+        screen.blit(char_count_text, (x, y))
+        
+        return char_count_text.get_height() + self.padding
+
+
+class GameStatusPanel(UIPanel):
+    """Panel for displaying game status (pause, time, speed)."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        font = fonts.get('normal', pygame.font.Font(None, 24))
+        small_font = fonts.get('small', pygame.font.Font(None, 18))
+        x, y = self.position
+        current_y = y
+        
+        # Pause status
+        if getattr(controller, "paused", False):
+            pause_text = font.render("PAUSED", True, (255, 255, 0))
+            screen.blit(pause_text, (screen.get_width() - 100, 10))
+        
+        # Game time
+        if hasattr(controller, "gametime_manager") and controller.gametime_manager:
+            try:
+                game_time = controller.gametime_manager.get_calendar().get_game_time_string()
+                time_text = small_font.render(f"Time: {game_time}", True, (255, 255, 255))
+                screen.blit(time_text, (x, current_y))
+                current_y += time_text.get_height() + 2
+            except:
+                pass
+        
+        # Speed indicator with caching
+        try:
+            if controller._last_time_scale_factor != controller.time_scale_factor or controller._cached_speed_text is None:
+                controller._cached_speed_text = small_font.render(
+                    f"Speed: {controller.time_scale_factor:.1f}x", True, (255, 255, 255)
+                )
+                controller._last_time_scale_factor = controller.time_scale_factor
+            
+            if controller._cached_speed_text:
+                screen.blit(controller._cached_speed_text, (x, current_y))
+                current_y += controller._cached_speed_text.get_height() + 2
+        except (AttributeError, TypeError, ValueError) as e:
+            pass  # Skip if speed rendering fails
+        
+        return current_y - y
+
+
+class WeatherPanel(UIPanel):
+    """Panel for displaying weather information."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        small_font = fonts.get('small', pygame.font.Font(None, 18))
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        x, y = self.position
+        current_y = y
+        
+        if hasattr(controller, "weather_system"):
+            weather_text = small_font.render(
+                f"Weather: {controller.weather_system['current_weather']} {controller.weather_system['temperature']}°C",
+                True, (200, 220, 255)
+            )
+            screen.blit(weather_text, (x, current_y))
+            current_y += weather_text.get_height() + 2
+            
+            # Weather effects message
+            current_weather = None
+            if isinstance(controller.weather_system, dict):
+                current_weather = controller.weather_system.get('current_weather')
+            if current_weather in WEATHER_UI_MESSAGES:
+                message, color = WEATHER_UI_MESSAGES[current_weather]
+                weather_effect_text = tiny_font.render(message, True, color)
+                screen.blit(weather_effect_text, (x, current_y))
+                current_y += weather_effect_text.get_height() + 2
+        
+        return current_y - y
+
+
+class StatsPanel(UIPanel):
+    """Panel for displaying game statistics and analytics."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        x, y = self.position
+        current_y = y
+        
+        # Game statistics
+        stats = controller.game_statistics
+        stats_text = tiny_font.render(
+            f"Actions: {stats['actions_executed']} | Failed: {stats['actions_failed']} | Recovered: {stats['errors_recovered']}",
+            True, (180, 180, 180)
+        )
+        screen.blit(stats_text, (x, current_y))
+        current_y += stats_text.get_height() + 2
+        
+        # Action analytics
+        if hasattr(controller, "action_resolver"):
+            try:
+                analytics = controller.action_resolver.get_action_analytics()
+                analytics_text = tiny_font.render(
+                    f"Success Rate: {analytics['success_rate']:.1%} | Cache: {analytics['cache_size']}",
+                    True, (150, 150, 150)
+                )
+                screen.blit(analytics_text, (x, current_y))
+                current_y += analytics_text.get_height() + 2
+            except:
+                pass
+        
+        # System health
+        if hasattr(controller, "recovery_manager"):
+            try:
+                system_status = controller.recovery_manager.get_system_status()
+                healthy_systems = sum(1 for status in system_status.values() if status == "healthy")
+                total_systems = len(system_status)
+                
+                health_color = (
+                    (0, 255, 0) if healthy_systems == total_systems
+                    else (255, 255, 0) if healthy_systems > total_systems // 2
+                    else (255, 0, 0)
+                )
+                health_text = tiny_font.render(
+                    f"Systems: {healthy_systems}/{total_systems} healthy",
+                    True, health_color
+                )
+                screen.blit(health_text, (x, current_y))
+                current_y += health_text.get_height() + 2
+            except:
+                pass
+        
+        return current_y - y
+
+
+class AchievementPanel(UIPanel):
+    """Panel for displaying achievements."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        x, y = self.position
+        current_y = y
+        
+        # First week survived achievement
+        try:
+            survived_week = controller.global_achievements.get("village_milestones", {}).get("first_week_survived", False)
+            status_text = "Yes" if survived_week else "No"
+            achievement_render = tiny_font.render(
+                f"First Week Survived: {status_text}", True, (220, 220, 180)
+            )
+            screen.blit(achievement_render, (x, current_y))
+            current_y += achievement_render.get_height() + 2
+        except Exception:
+            pass
+        
+        # All achievements
+        milestones = controller.global_achievements.get("village_milestones", {})
+        if milestones:
+            header = tiny_font.render("Achievements:", True, (240, 240, 200))
+            screen.blit(header, (x, current_y))
+            current_y += header.get_height() + 5
+            
+            for key, achieved in milestones.items():
+                title = key.replace("_", " ").title()
+                status = "✓" if achieved else "✗"
+                color = (180, 220, 180) if achieved else (200, 180, 180)
+                text = tiny_font.render(f"{status} {title}", True, color)
+                screen.blit(text, (x, current_y))
+                current_y += text.get_height() + 2
+        
+        return current_y - y
+
+
+class SelectedCharacterPanel(UIPanel):
+    """Panel for displaying selected character information."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        small_font = fonts.get('small', pygame.font.Font(None, 18))
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        x, y = self.position
+        current_y = y
+        
+        if (hasattr(controller.map_controller, "selected_character") 
+            and controller.map_controller.selected_character):
+            
+            char = controller.map_controller.selected_character
+            char_info = [
+                f"Selected: {char.name}",
+                f"Job: {getattr(char, 'job', 'Unknown')}",
+                f"Energy: {getattr(char, 'energy', 0)}",
+                f"Health: {getattr(char, 'health_status', 0)}",
+            ]
+            
+            # Add social and quest info
+            if hasattr(char, "uuid") and hasattr(controller, "social_networks"):
+                try:
+                    relationships = controller.social_networks["relationships"].get(char.uuid, {})
+                    avg_relationship = (
+                        sum(relationships.values()) / len(relationships)
+                        if relationships else 50
+                    )
+                    char_info.append(f"Social: {avg_relationship:.0f}")
+                except:
+                    pass
+            
+            if hasattr(char, "uuid") and hasattr(controller, "quest_system"):
+                try:
+                    active_quests = len(controller.quest_system["active_quests"].get(char.uuid, []))
+                    completed_quests = len(controller.quest_system["completed_quests"].get(char.uuid, []))
+                    char_info.append(f"Quests: {active_quests} active, {completed_quests} done")
+                except:
+                    pass
+            
+            # Render character info
+            for info in char_info:
+                info_text = small_font.render(info, True, (255, 255, 0))
+                screen.blit(info_text, (x, current_y))
+                current_y += info_text.get_height() + 2
+            
+            # Character achievements
+            try:
+                if hasattr(char, 'achievements') and char.achievements:
+                    ach_header_text = small_font.render("Achievements:", True, (220, 220, 180))
+                    screen.blit(ach_header_text, (x, current_y))
+                    current_y += ach_header_text.get_height() + 2
+                    
+                    for achievement_id in char.achievements:
+                        display_name = achievement_id.replace("_", " ").title()
+                        ach_text = tiny_font.render(f"- {display_name}", True, (200, 200, 150))
+                        screen.blit(ach_text, (x + 5, current_y))  # Indent slightly
+                        current_y += ach_text.get_height() + 2
+            except Exception:
+                pass
+        
+        return current_y - y
+
+
+class InstructionsPanel(UIPanel):
+    """Panel for displaying game instructions."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        x, y = self.position
+        
+        instructions = [
+            "Click characters to select them",
+            "Click buildings to interact",
+            "SPACE to pause/unpause",
+            "R to reset characters",
+            "S to save game (basic)",
+            "L to load game (basic)",
+            "F to show feature status",
+            "ESC to quit",
+        ]
+        
+        for i, instruction in enumerate(instructions):
+            inst_text = tiny_font.render(instruction, True, (200, 200, 200))
+            screen.blit(inst_text, (x, y + i * 15))
+        
+        return len(instructions) * 15
 
 """ 
 This script integrates with the game loop, applying decisions from the strategy manager to the game state.
@@ -597,6 +904,9 @@ class GameplayController:
         self.implement_social_network_system()
         self.implement_quest_system()
 
+        # Initialize modular UI system
+        self._init_ui_system()
+
         # Log initialization status
         if self.initialization_errors:
             logger.warning(
@@ -604,6 +914,39 @@ class GameplayController:
             )
         else:
             logger.info("GameplayController initialized successfully")
+
+    def _init_ui_system(self):
+        """Initialize the modular UI panel system."""
+        try:
+            # Create UI panels with positions
+            self.ui_panels = {
+                'character_info': CharacterInfoPanel('character_info', position=(10, 10)),
+                'game_status': GameStatusPanel('game_status', position=(10, 35)),
+                'weather': WeatherPanel('weather', position=(10, 120)),
+                'stats': StatsPanel('stats', position=(10, 180)),
+                'achievements': AchievementPanel('achievements', position=(10, 280)),
+                'selected_character': SelectedCharacterPanel('selected_character', position=(10, 400)),
+                'instructions': InstructionsPanel('instructions', position=(10, None))  # Position set dynamically
+            }
+            
+            # Create font dictionary for consistent font usage
+            self.ui_fonts = {
+                'normal': pygame.font.Font(None, 24),
+                'small': pygame.font.Font(None, 18),
+                'tiny': pygame.font.Font(None, 16)
+            }
+            
+            logger.info("Modular UI system initialized")
+            
+        except Exception as e:
+            logger.error(f"Error initializing UI system: {e}")
+            # Fallback to empty panels dict
+            self.ui_panels = {}
+            self.ui_fonts = {
+                'normal': pygame.font.Font(None, 24),
+                'small': pygame.font.Font(None, 18),
+                'tiny': pygame.font.Font(None, 16)
+            }
 
     def _get_default_buildings(self, map_config: Dict) -> List[Dict]:
         """Get buildings configuration with dynamic loading support."""
@@ -2438,45 +2781,53 @@ class GameplayController:
             pygame.display.flip()
         else:
             pygame.display.update()
-    def _render_achievements(self, y_offset: int) -> int:
-        """
-        Render all village milestone achievements in a dedicated UI section.
-        Returns the updated y_offset after drawing.
-        """
-        milestones = self.global_achievements.get("village_milestones", {})
-        if not milestones:
-            return y_offset
-
-        # Section header (optional)
-        header = tiny_font.render("Achievements:", True, (240, 240, 200))
-        self.screen.blit(header, (10, y_offset))
-        y_offset += ACHIEVEMENT_SPACING
-
-        for key, achieved in milestones.items():
-            # Convert snake_case key to Title Case text
-            title = key.replace("_", " ").title()
-            status = "✓" if achieved else "✗"
-            color = (180, 220, 180) if achieved else (200, 180, 180)
-            text = tiny_font.render(f"{status} {title}", True, color)
-            self.screen.blit(text, (10, y_offset))
-            y_offset += ACHIEVEMENT_LINE_SPACING
-
-        return y_offset
     def _render_ui(self):
-        """Render user interface elements with improved layout, new features, and system status."""
-
+        """Render user interface elements using the modular panel system."""
         try:
-            # TODO: Implement modular UI system with panels
-            # TODO: Add character relationship visualization
-            # TODO: Add village statistics dashboard
-            # TODO: Add interactive building information panels
-            # TODO: Add mini-map or overview mode
-            # TODO: Add save/load game functionality UI
-            # TODO: Add settings and configuration panels
-            # TODO: Add help and tutorial overlays
-            # TODO: Add drag-and-drop interaction hints
-            # TODO: Add notification system for important events
-
+            # Use modular UI system if available
+            if hasattr(self, 'ui_panels') and self.ui_panels:
+                self._render_modular_ui()
+            else:
+                # Fallback to legacy rendering
+                self._render_legacy_ui()
+                
+        except Exception as e:
+            # Ultimate fallback to minimal UI
+            self._render_minimal_ui()
+    
+    def _render_modular_ui(self):
+        """Render UI using the modular panel system."""
+        current_y = 10
+        
+        # Render panels in order
+        panel_order = ['character_info', 'game_status', 'weather', 'stats', 'achievements', 'selected_character']
+        
+        for panel_name in panel_order:
+            panel = self.ui_panels.get(panel_name)
+            if panel and panel.visible:
+                # Update panel position if needed
+                if panel.position[1] != current_y and panel_name != 'character_info':
+                    panel.position = (panel.position[0], current_y)
+                
+                # Render panel and update y position
+                height = panel.render(self.screen, self, self.ui_fonts)
+                current_y += height + 10  # Add spacing between panels
+        
+        # Render instructions at bottom
+        instructions_panel = self.ui_panels.get('instructions')
+        if instructions_panel and instructions_panel.visible:
+            # Position instructions at bottom of screen
+            instructions_y = self.screen.get_height() - 140  # Reserve space for instructions
+            instructions_panel.position = (10, instructions_y)
+            instructions_panel.render(self.screen, self, self.ui_fonts)
+        
+        # Show feature status overlay if enabled
+        if getattr(self, "_show_feature_status", False):
+            self._render_feature_status_overlay()
+    
+    def _render_legacy_ui(self):
+        """Legacy UI rendering method for fallback."""
+        try:
             # Create font for UI text
             font = pygame.font.Font(None, 24)
             small_font = pygame.font.Font(None, 18)
@@ -2493,219 +2844,23 @@ class GameplayController:
                 pause_text = font.render("PAUSED", True, (255, 255, 0))
                 self.screen.blit(pause_text, (self.screen.get_width() - 100, 10))
 
-            # Render time if available
-            y_offset = 35
-            if hasattr(self, "gametime_manager") and self.gametime_manager:
-                try:
-                    game_time = (
-                        self.gametime_manager.get_calendar().get_game_time_string()
-                    )
-                    time_text = small_font.render(
-                        f"Time: {game_time}", True, (255, 255, 255)
-                    )
-                    self.screen.blit(time_text, (10, y_offset))
-                    y_offset += 20
-                except:
-                    pass
-            # Render time scale factor
-            try:
-                if self._last_time_scale_factor != self.time_scale_factor or self._cached_speed_text is None:
-                    self._cached_speed_text = small_font.render(
-                        f"Speed: {self.time_scale_factor:.1f}x", True, (255, 255, 255)
-                    )
-                    self._last_time_scale_factor = self.time_scale_factor
-
-                if self._cached_speed_text:
-                    self.screen.blit(self._cached_speed_text, (10, y_offset))
-                    y_offset += 20
-            except (AttributeError, TypeError, ValueError) as e:
-                logger.warning(f"Could not render time_scale_factor: {e}")
-            except Exception as e:
-                logger.error(f"Unexpected error while rendering time_scale_factor: {e}")
-                # Still raise the error after logging, as it's unexpected.
-                raise
-            # Render weather information
-            if hasattr(self, "weather_system"):
-                weather_text = small_font.render(
-                    f"Weather: {self.weather_system['current_weather']} {self.weather_system['temperature']}°C",
-                    True,
-                    (200, 220, 255),
-                )
-                self.screen.blit(weather_text, (10, y_offset))
-                y_offset += 20
-
-                current_weather = None
-                if isinstance(self.weather_system, dict):
-                    current_weather = self.weather_system.get('current_weather')
-                if current_weather in WEATHER_UI_MESSAGES:
-                    message, color = WEATHER_UI_MESSAGES[current_weather]
-                    weather_effect_text = tiny_font.render(message, True, color)
-                    self.screen.blit(weather_effect_text, (10, y_offset))
-                    y_offset += 15
-            # Render game statistics
-            stats = self.game_statistics
-            stats_text = tiny_font.render(
-                f"Actions: {stats['actions_executed']} | Failed: {stats['actions_failed']} | Recovered: {stats['errors_recovered']}",
-                True,
-                (180, 180, 180),
-            )
-            self.screen.blit(stats_text, (10, y_offset))
-            y_offset += 15
-
-            # Render action analytics if available
-            if hasattr(self, "action_resolver"):
-                try:
-                    analytics = self.action_resolver.get_action_analytics()
-                    analytics_text = tiny_font.render(
-                        f"Success Rate: {analytics['success_rate']:.1%} | Cache: {analytics['cache_size']}",
-                        True,
-                        (150, 150, 150),
-                    )
-                    self.screen.blit(analytics_text, (10, y_offset))
-                    y_offset += 15
-                except:
-                    pass
-
-            # Render system health status
-            if hasattr(self, "recovery_manager"):
-                try:
-                    system_status = self.recovery_manager.get_system_status()
-                    healthy_systems = sum(
-                        1 for status in system_status.values() if status == "healthy"
-                    )
-                    total_systems = len(system_status)
-
-                    health_color = (
-                        (0, 255, 0)
-                        if healthy_systems == total_systems
-                        else (
-                            (255, 255, 0)
-                            if healthy_systems > total_systems // 2
-                            else (255, 0, 0)
-                        )
-                    )
-                    health_text = tiny_font.render(
-                        f"Systems: {healthy_systems}/{total_systems} healthy",
-                        True,
-                        health_color,
-                    )
-                    self.screen.blit(health_text, (10, y_offset))
-                    y_offset += 15
-                except:
-                    pass
-
-            # Render 'First Week Survived' achievement status
-            try:
-                survived_week = self.global_achievements.get("village_milestones", {}).get("first_week_survived", False)
-                status_text = "Yes" if survived_week else "No"
-                achievement_render = tiny_font.render(
-                    f"First Week Survived: {status_text}", True, (220, 220, 180) # Light yellow/gold color
-                )
-                self.screen.blit(achievement_render, (10, y_offset))
-                y_offset += 15
-            except Exception as e:
-                logger.warning(f"Could not render 'first_week_survived' achievement: {e}")
-            # Render achievements as a separate section
-            y_offset = self._render_achievements(y_offset)
-
-            # Render selected character info (enhanced)
-            if (
-                hasattr(self.map_controller, "selected_character")
-                and self.map_controller.selected_character
-            ):
-                char = self.map_controller.selected_character
-                char_info = [
-                    f"Selected: {char.name}",
-                    f"Job: {getattr(char, 'job', 'Unknown')}",
-                    f"Energy: {getattr(char, 'energy', 0)}",
-                    f"Health: {getattr(char, 'health_status', 0)}",
-                ]
-
-                # Add social and quest info
-                if hasattr(char, "uuid") and hasattr(self, "social_networks"):
-                    try:
-                        relationships = self.social_networks["relationships"].get(
-                            char.uuid, {}
-                        )
-                        avg_relationship = (
-                            sum(relationships.values()) / len(relationships)
-                            if relationships
-                            else 50
-                        )
-                        char_info.append(f"Social: {avg_relationship:.0f}")
-                    except:
-                        pass
-
-                if hasattr(char, "uuid") and hasattr(self, "quest_system"):
-                    try:
-                        active_quests = len(
-                            self.quest_system["active_quests"].get(char.uuid, [])
-                        )
-                        completed_quests = len(
-                            self.quest_system["completed_quests"].get(char.uuid, [])
-                        )
-                        char_info.append(
-                            f"Quests: {active_quests} active, {completed_quests} done"
-                        )
-                    except:
-                        pass
-                    self.screen.blit(info_text, (10, y_offset))
-                    y_offset += 20 # Increment y_offset for each line of char_info
-
-                # Display selected character's achievements
-                try:
-                    if hasattr(char, 'achievements') and char.achievements:
-                        ach_header_text = small_font.render("Achievements:", True, (220, 220, 180))
-                        self.screen.blit(ach_header_text, (10, y_offset))
-                        y_offset += 20
-
-                        for achievement_id in char.achievements:
-                            # Simple display of achievement ID, can be made more user-friendly later
-                            display_name = achievement_id.replace("_", " ").title()
-                            ach_text = tiny_font.render(f"- {display_name}", True, (200, 200, 150))
-                            self.screen.blit(ach_text, (15, y_offset)) # Indent slightly
-                            y_offset += 15
-                except Exception as e:
-                    logger.warning(f"Could not render selected character achievements: {e}")
-
-
-                for i, info in enumerate(char_info):
-                    info_text = small_font.render(info, True, (255, 255, 0))
-                    self.screen.blit(info_text, (10, y_offset + i * 20))
-
-            # Render enhanced instructions
-            instructions = [
-                "Click characters to select them",
-                "Click buildings to interact",
-                "SPACE to pause/unpause",
-                "R to reset characters",
-                "S to save game (basic)",
-                "L to load game (basic)",
-                "F to show feature status",
-                "ESC to quit",
-            ]
-
-            instruction_start_y = self.screen.get_height() - len(instructions) * 15 - 10
-            for i, instruction in enumerate(instructions):
-                inst_text = tiny_font.render(instruction, True, (200, 200, 200))
-                self.screen.blit(inst_text, (10, instruction_start_y + i * 15))
-
-            # Show feature implementation status on F key press (stored state)
-            if getattr(self, "_show_feature_status", False):
-                self._render_feature_status_overlay()
-
+            # Show basic error message
+            error_text = small_font.render("Using legacy UI (panels unavailable)", True, (255, 200, 0))
+            self.screen.blit(error_text, (10, 40))
+            
         except Exception as e:
-            # Fallback to minimal UI
-            try:
-                font = pygame.font.Font(None, 24)
-                error_text = font.render("UI Error - Fallback Mode", True, (255, 0, 0))
-                self.screen.blit(error_text, (10, 10))
-                char_text = font.render(
-                    f"Characters: {len(self.characters)}", True, (255, 255, 255)
-                )
-                self.screen.blit(char_text, (10, 35))
-            except:
-                pass  # Even fallback failed
+            self._render_minimal_ui()
+    
+    def _render_minimal_ui(self):
+        """Minimal UI rendering for emergency fallback."""
+        try:
+            font = pygame.font.Font(None, 24)
+            error_text = font.render("UI Error - Minimal Mode", True, (255, 0, 0))
+            self.screen.blit(error_text, (10, 10))
+            char_text = font.render(f"Characters: {len(self.characters)}", True, (255, 255, 255))
+            self.screen.blit(char_text, (10, 35))
+        except:
+            pass  # Even minimal fallback failed
 
     def _render_feature_status_overlay(self):
         """Render an overlay showing feature implementation status."""

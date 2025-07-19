@@ -217,5 +217,61 @@ class TestGameplayController(unittest.TestCase):
         self.assertIsNot(new_cached_surface_increase, new_cached_surface_decrease,
                          "Cache should be different after speed decrease.")
 
+    def test_modular_ui_system_initialization(self):
+        """Test that the modular UI system is properly initialized."""
+        self.assertTrue(hasattr(self.controller, 'ui_panels'), "Controller should have ui_panels attribute")
+        self.assertTrue(hasattr(self.controller, 'ui_fonts'), "Controller should have ui_fonts attribute")
+        
+        if self.controller.ui_panels:
+            # Check that expected panels exist
+            expected_panels = ['character_info', 'game_status', 'weather', 'stats', 'achievements', 'selected_character', 'instructions']
+            for panel_name in expected_panels:
+                self.assertIn(panel_name, self.controller.ui_panels, f"Panel {panel_name} should exist")
+                panel = self.controller.ui_panels[panel_name]
+                self.assertTrue(hasattr(panel, 'render'), f"Panel {panel_name} should have render method")
+                self.assertTrue(hasattr(panel, 'visible'), f"Panel {panel_name} should have visible attribute")
+
+    def test_ui_panel_visibility_toggle(self):
+        """Test that UI panels can be toggled on/off."""
+        if not hasattr(self.controller, 'ui_panels') or not self.controller.ui_panels:
+            self.skipTest("Modular UI system not initialized")
+        
+        # Test toggling visibility of a panel
+        char_info_panel = self.controller.ui_panels.get('character_info')
+        if char_info_panel:
+            original_visibility = char_info_panel.visible
+            char_info_panel.toggle_visibility()
+            self.assertNotEqual(original_visibility, char_info_panel.visible, "Panel visibility should change after toggle")
+            
+            # Toggle back
+            char_info_panel.toggle_visibility()
+            self.assertEqual(original_visibility, char_info_panel.visible, "Panel visibility should return to original state")
+
+    def test_render_ui_with_modular_system(self):
+        """Test that _render_ui works with the modular system."""
+        # This test verifies that _render_ui doesn't crash with the new modular system
+        try:
+            self.controller._render_ui()
+            # If we get here without exception, the test passes
+            self.assertTrue(True, "Modular UI rendering completed without errors")
+        except Exception as e:
+            self.fail(f"Modular UI rendering failed with error: {e}")
+
+    def test_render_ui_fallback_modes(self):
+        """Test that UI rendering falls back gracefully when panels are unavailable."""
+        # Test with no ui_panels
+        original_panels = getattr(self.controller, 'ui_panels', None)
+        self.controller.ui_panels = {}
+        
+        try:
+            self.controller._render_ui()  # Should use legacy rendering
+            self.assertTrue(True, "Legacy UI rendering completed without errors")
+        except Exception as e:
+            self.fail(f"Legacy UI rendering failed with error: {e}")
+        finally:
+            # Restore original panels
+            if original_panels is not None:
+                self.controller.ui_panels = original_panels
+
 if __name__ == '__main__':
     unittest.main()
