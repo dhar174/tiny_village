@@ -20,7 +20,7 @@ The `critical_analysis/TODO_report.md` file outlines numerous subsystems that re
 - **Event, Item, Job Systems** – These systems are stubbed and need expanded content, interactions, and connections to the economy and quests【F:critical_analysis/TODO_report.md†L191-L220】.
 
 ## Testing
-Running `python -m unittest discover tests` fails because no `tests/` directory exists, indicating unit test discovery cannot run out-of-the-box【3dc81a†L1-L24】.
+Running `python -m unittest discover tests` fails because the `tests/` directory is missing. Note that if the directory existed but lacked proper structure (e.g., missing `__init__.py` files), `unittest` discovery would fail with the error "Start directory is not importable."
 
 ## Conclusion
 To run a minimal Tiny Village demo, the project requires at least:
