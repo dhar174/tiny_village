@@ -99,7 +99,7 @@ class NeedsPriorities:
     def get_needs_priorities_sorted_list_reverse(self) -> List[str]:
         """Return need names sorted from highest to lowest priority."""
 
-        return [name for name, _ in self.get_needs_priorities_sorted_reverse()]
+        return [name for name in sorted(self.needs_priorities, key=self.needs_priorities.get, reverse=True)]
 
     def get_needs_priorities_sorted_values_reverse(self) -> List[float]:
         """Return priority scores sorted from highest to lowest."""
