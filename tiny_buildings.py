@@ -1,9 +1,17 @@
 import logging
 import uuid
 import random
-from actions import Action, ActionSystem
+try:
+    from actions import Action, ActionSystem
+except ImportError:
+    from tiny_types import Action, ActionSystem
 from tiny_locations import Location, LocationManager
-from tiny_types import Character, GraphManager
+try:
+    from tiny_types import Character, GraphManager
+except ImportError:
+    # Create minimal placeholders if not available
+    class Character: pass
+    class GraphManager: pass
 
 effect_dict = {
     "Enter Building": [
@@ -54,6 +62,7 @@ class Building:
         door=None,
         building_type="building",
         owner=None,
+        location=None,
     ):
         self.name = name
         self.height = height
@@ -70,6 +79,31 @@ class Building:
         self.area_val = self.area()
         self.uuid = uuid.uuid4()
         self.coordinates_location = (x, y)
+        
+        # Create or assign location for this building
+        if location is None:
+            # Create a default location for this building
+            self.location = Location(
+                name=f"{name} Location",
+                x=x,
+                y=y,
+                width=width,
+                height=length,  # Note: using length as height for 2D representation
+                action_system=action_system,
+                security=0,  # Default values - can be customized
+                popularity=0,
+            )
+            # Add building-specific activities
+            self.location.add_activity(f"Visit {name}")
+            if building_type == "shop":
+                self.location.add_activity("Shopping")
+            elif building_type == "restaurant":
+                self.location.add_activity("Dining")
+            elif building_type == "house":
+                self.location.add_activity("Residential")
+        else:
+            self.location = location
+            
         self.possible_interactions = [
             Action(
                 "Enter Building",
@@ -98,6 +132,49 @@ class Building:
 
     def calculate_area_per_floor(self):
         return self.area() / self.stories
+
+    def get_location(self):
+        """Get the location associated with this building"""
+        return self.location
+
+    def set_location_properties(self, security=None, popularity=None, threat_level=None):
+        """Update location properties for this building"""
+        if security is not None:
+            self.location.security = security
+        if popularity is not None:
+            self.location.popularity = popularity
+        if threat_level is not None:
+            self.location.threat_level = threat_level
+
+    def get_entrance_point(self):
+        """Get the entrance point for this building (useful for pathfinding)"""
+        # Return the front-center point of the building
+        return (self.coordinates_location[0] + self.width // 2, self.coordinates_location[1])
+
+    def can_accommodate_visitors(self, visitor_count=1):
+        """Check if building can accommodate additional visitors based on capacity"""
+        current_visitors = len(self.location.current_visitors)
+        # Simple capacity based on area and stories
+        max_capacity = max(1, (self.area_val // 100) * self.stories)
+        return current_visitors + visitor_count <= max_capacity
+
+    def get_building_info(self):
+        """Get comprehensive building information including location data"""
+        return {
+            "name": self.name,
+            "type": self.building_type,
+            "address": self.address,
+            "dimensions": {"width": self.width, "height": self.height, "length": self.length},
+            "stories": self.stories,
+            "area": self.area_val,
+            "location": {
+                "security": self.location.security,
+                "popularity": self.location.popularity,
+                "threat_level": self.location.threat_level,
+                "activities": self.location.activities_available,
+                "current_visitors": len(self.location.current_visitors)
+            }
+        }
 
     def __str__(self):
         return (
