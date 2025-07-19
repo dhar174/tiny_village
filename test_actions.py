@@ -394,7 +394,7 @@ class TestBaseActionExecute(unittest.TestCase):
             self.target.happiness += HAPPINESS_INCREMENT
             # 2. Target might reciprocate some social benefit to the initiator
             if hasattr(initiator, 'social_wellbeing'):
-                initiator.social_wellbeing += 0.1
+                initiator.social_wellbeing += SOCIAL_WELLBEING_INCREMENT
         
         self.target.respond_to_talk = MagicMock(side_effect=mock_respond_to_talk)
 
