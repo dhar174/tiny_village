@@ -128,11 +128,29 @@ def test_enhanced_prompt_with_mock():
             def get_material_goods(self):
                 return 4.5  # Mock material goods value
 
-            def get_friendship_grid_motive(self):
-                return 6.0  # Mock friendship grid motive
+
 
             def get_family_motive_value(self):
                 return 8.0  # Mock family motive value
+
+            def get_friendship_grid(self):
+                # Return mock friendship grid data that varies based on social wellbeing
+                # This makes the test more realistic and avoids hardcoded values
+                base_friendship_score = self.social_wellbeing * 10  # Convert to 0-100 scale
+                return [
+                    {
+                        "character_name": "Bob",
+                        "friendship_score": base_friendship_score + 5,
+                        "emotional_impact": 7,
+                        "trust_level": 6,
+                    },
+                    {
+                        "character_name": "Carol", 
+                        "friendship_score": base_friendship_score - 10,
+                        "emotional_impact": 5,
+                        "trust_level": 4,
+                    },
+                ]
 
         class MockGoal:
             def __init__(self, name, description):
@@ -217,8 +235,7 @@ def test_enhanced_prompt_with_mock():
             def get_family_motive(self):
                 return self.motives_data["family"]
 
-            def get_friendship_grid_motive(self):
-                return 6.0  # Mock friendship grid motive value
+
 
         class MockMotive:
             """Mock individual motive class."""

@@ -17,7 +17,13 @@ import scipy as sp
 from sklearn import tree
 from sklearn.metrics.pairwise import cosine_similarity
 import networkx as nx
-import torch
+# Conditional torch import - skip functionality if not available
+try:
+    import torch
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+    torch = None
 from transformers import AutoModel, AutoTokenizer, pipeline
 from rake_nltk import Rake
 import faiss
@@ -296,7 +302,7 @@ class EmbeddingModel:
                 trust_remote_code=True,
                 cache_dir=cache_dir,
             )
-            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+            self.device = "cuda" if (TORCH_AVAILABLE and torch.cuda.is_available()) else "cpu"
             self.model.to(self.device)
             self.model.eval()
             self.model.zero_grad()
@@ -366,6 +372,10 @@ class SentimentAnalysis:
 
 
 def mean_pooling(model_output, attention_mask):
+    """Mean pooling - ensure torch is available before using torch operations."""
+    if not TORCH_AVAILABLE:
+        raise RuntimeError("torch is required for mean_pooling but is not available")
+    
     # #print(type(model_output))
     # #print(type(attention_mask))
     token_embeddings = (
