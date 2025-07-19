@@ -424,8 +424,8 @@ class TestBaseActionExecute(unittest.TestCase):
 
         # 1. Check that super().execute() part (effect application) worked
         # Test behavior: verify values increased by expected amounts rather than hard-coding final values 
-        # Expected values include both the TalkAction effects AND the respond_to_talk bonus (0.1)
-        expected_target_social = initial_target_social + target_effect_value + 0.1
+        # Expected values include both the TalkAction effects AND the respond_to_talk bonus (SOCIAL_WELLBEING_INCREMENT)
+        expected_target_social = initial_target_social + target_effect_value + SOCIAL_WELLBEING_INCREMENT
         expected_initiator_social = initial_initiator_social + initiator_effect_value
 
         
