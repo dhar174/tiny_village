@@ -1,7 +1,7 @@
 from re import T
 import unittest
 from actions import ActionSystem, State, ActionTemplate, Condition, Action # Import base Action
-from actions import GreetAction, ShareNewsAction, OfferComplimentAction # Import new actions
+from actions import GreetAction, ShareNewsAction, OfferComplimentAction, TalkAction # Import new actions
 
 # Mock Character class for action context (if needed by execute signatures)
 class MockCharacter:
@@ -9,6 +9,33 @@ class MockCharacter:
         self.name = name
         # Add other attributes if action.execute() or preconditions need them
         self.state = State({"energy": 100, "happiness": 50}) # Example state
+        self.uuid = f"{name}_uuid"
+        self.energy = 100
+        self.social_wellbeing = 50
+        self.happiness = 50
+        self.health = 100
+        self.status = "idle"
+        self.mana = 20
+        self.last_checked = "never"
+        self.knowledge = ""
+        self.relationship_strength = 10
+        
+        # Track calls to methods for testing
+        self._respond_to_talk_calls = []
+    
+    def respond_to_talk(self, initiator):
+        """
+        A real implementation of respond_to_talk that actually does something meaningful.
+        This will allow tests to verify that the method was called AND that it behaves correctly.
+        """
+        self._respond_to_talk_calls.append(initiator)
+        # Simulate a realistic response - increase social wellbeing when talked to
+        self.social_wellbeing += 0.1
+        return f"{self.name} responds to {getattr(initiator, 'name', str(initiator))}"
+    
+    def get_respond_to_talk_calls(self):
+        """Helper method to check if respond_to_talk was called in tests"""
+        return self._respond_to_talk_calls
 
 class TestChar: # Existing class in the file
     def __init__(self, name, state: State):
@@ -136,58 +163,6 @@ class TestActionSystem(unittest.TestCase):
         self.assertIsInstance(conditions["happiness"], Condition)
 
 
-class TestSocialActions(unittest.TestCase): # Will be updated later
-    def setUp(self):
-        self.initiator_char = MockCharacter(name="Alice")
-        self.initiator_char.uuid = "alice_uuid"
-        self.target_char = MockCharacter(name="Bob")
-        self.target_char.uuid = "bob_uuid"
-
-        # Mock GraphManager instance for each test
-        self.mock_graph_manager_instance = MagicMock()
-
-    def test_greet_action_instantiation_and_execute(self):
-        # This test combines instantiation and execution checks for brevity
-        # Effects were defined in actions.py for GreetAction as:
-        # {"targets": ["target"], "attribute": "social_wellbeing", "change_value": 0.5}
-        # Let's assume GreetAction from actions.py is updated to this.
-        # The original test had different effects, so we adapt to the new structure.
-        greet_effects = [{"targets": ["target"], "attribute": "social_wellbeing", "change_value": 0.5}]
-        action = GreetAction(
-            initiator=self.initiator_char,
-            target=self.target_char,
-            effects=greet_effects, # Pass the effects to ensure consistency
-            graph_manager=self.mock_graph_manager_instance
-        )
-
-        self.assertEqual(action.name, "Greet")
-        # Cost is now defined in the GreetAction class directly, not dynamically calculated in this test
-        # self.assertAlmostEqual(action.cost, 0.05) # Default cost in GreetAction
-
-        self.assertEqual(action.effects, greet_effects)
-        self.assertEqual(action.initiator, self.initiator_char)
-        self.assertEqual(action.target, self.target_char)
-
-        # Execute
-        self.target_char.social_wellbeing = 10 # Initial value
-
-        # Mock preconditions to always pass for this execution test
-        action.preconditions_met = MagicMock(return_value=True)
-
-        result = action.execute(character=self.initiator_char) # Pass initiator to execute
-        self.assertTrue(result)
-
-        # Check Python object update
-        self.assertEqual(self.target_char.social_wellbeing, 10.5)
-
-        # Check GraphManager update
-        self.mock_graph_manager_instance.update_node_attribute.assert_called_once_with(
-            self.target_char.uuid, "social_wellbeing", 10.5
-        )
-
-    # Similar updated tests for ShareNewsAction and OfferComplimentAction would go here
-    # For now, focusing on TestBaseActionExecute first as per plan.
-
 # New Test Class for base Action.execute()
 class TestBaseActionExecute(unittest.TestCase):
     def setUp(self):
@@ -204,12 +179,10 @@ class TestBaseActionExecute(unittest.TestCase):
         self.mock_import_module.return_value = self.mock_tiny_graph_manager_module
 
         self.initiator = MockCharacter(name="Initiator")
-        self.initiator.uuid = "initiator_uuid"
-        self.initiator.energy = 50
-
         self.target = MockCharacter(name="Target")
-        self.target.uuid = "target_uuid"
-        self.target.health = 100
+
+        # Override specific values for this test class
+        self.initiator.energy = 50  # Different from default for testing
 
         # Ensure mocked characters have attributes used in tests
         if not hasattr(self.initiator, 'some_method_on_char'):
@@ -369,11 +342,10 @@ class TestBaseActionExecute(unittest.TestCase):
             {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 0.5}
         ]
 
-        # Mock the target's respond_to_talk method
-        self.target.respond_to_talk = MagicMock()
-        # Ensure target has the attribute that will be changed by effects
+        # Set initial values for attributes that will be changed by effects
         self.target.social_wellbeing = 10
         self.initiator.social_wellbeing = 5
+        # Note: target.respond_to_talk is now a real method that we can test
 
         talk_action = TalkAction(
             initiator=self.initiator,
@@ -389,19 +361,31 @@ class TestBaseActionExecute(unittest.TestCase):
 
         # 1. Check that super().execute() part (effect application) worked
         # Check Python object updates
-        self.assertEqual(self.target.social_wellbeing, 11) # 10 + 1
+        # Note: target's social_wellbeing is affected by both the action effect AND respond_to_talk method
+        self.assertEqual(self.target.social_wellbeing, 11.1) # 10 + 1 (effect) + 0.1 (respond_to_talk)
         self.assertEqual(self.initiator.social_wellbeing, 5.5) # 5 + 0.5
 
         # Check GraphManager calls from super().execute()
+        # Note: The graph update happens BEFORE respond_to_talk is called,
+        # so it uses the value from just the action effects (11), not the final value (11.1)
+        # This reveals a potential issue where respond_to_talk changes aren't reflected in the graph!
         self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
-            self.target.uuid, "social_wellbeing", 11
+            self.target.uuid, "social_wellbeing", 11  # Just the effect, not including respond_to_talk
         )
         self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
             self.initiator.uuid, "social_wellbeing", 5.5
         )
 
         # 2. Check that TalkAction's specific logic was called
-        self.target.respond_to_talk.assert_called_once_with(self.initiator)
+        # With real respond_to_talk method, we can verify it was actually called
+        self.assertEqual(len(self.target.get_respond_to_talk_calls()), 1)
+        self.assertEqual(self.target.get_respond_to_talk_calls()[0], self.initiator)
+        
+        # The target's social_wellbeing should have been increased by both:
+        # 1. The action effect (+1.0)
+        # 2. The respond_to_talk method (+0.1)
+        # So total should be 10 + 1.0 + 0.1 = 11.1, not just 11
+        self.assertEqual(self.target.social_wellbeing, 11.1)
 
         # Ensure update_node_attribute was called for the effects handled by super().execute()
         # For this setup, it should be called twice (once for target, once for initiator)
@@ -412,19 +396,10 @@ class TestBaseActionExecute(unittest.TestCase):
 class TestSocialActions(unittest.TestCase):
     def setUp(self):
         self.initiator_char = MockCharacter(name="Alice")
-        self.initiator_char.uuid = "alice_uuid"
-        self.initiator_char.social_wellbeing = 50 # Add attributes that might be affected
-        self.initiator_char.happiness = 50
-        self.initiator_char.state = State({"energy": 100, "happiness": 50, "social_wellbeing": 50})
-
-
         self.target_char = MockCharacter(name="Bob")
-        self.target_char.uuid = "bob_uuid"
-        self.target_char.social_wellbeing = 50
+        
+        # Add specific attributes for this test class
         self.target_char.relationship_status = 0 # For GreetAction original effects
-        self.target_char.happiness = 50
-        self.target_char.state = State({"energy": 100, "happiness": 50, "social_wellbeing": 50})
-
 
         self.mock_graph_manager_instance = MagicMock()
 
