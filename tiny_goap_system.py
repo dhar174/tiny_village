@@ -354,13 +354,13 @@ class GOAPPlanner:
                     for action_data in graph_actions:
                         if isinstance(action_data, dict):
                             # Convert dict format to action-like object
-                            action_obj = type('Action', (), {
-                                'name': action_data.get('name', 'Unknown'),
-                                'cost': action_data.get('cost', 1),
-                                'effects': action_data.get('effects', []),
-                                'preconditions': action_data.get('preconditions', {}),
-                                'utility': action_data.get('utility', 0)
-                            })()
+                            action_obj = ActionWrapper(
+                                name=action_data.get('name', 'Unknown'),
+                                cost=action_data.get('cost', 1),
+                                effects=action_data.get('effects', []),
+                                preconditions=action_data.get('preconditions', {}),
+                                utility=action_data.get('utility', 0)
+                            )
                             available_actions.append(action_obj)
                         else:
                             available_actions.append(action_data)
