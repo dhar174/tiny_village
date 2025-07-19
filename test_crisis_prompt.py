@@ -117,9 +117,16 @@ class MockMotives:
         return self._calculate_dynamic_motive('material_goods', scale_factor=7, baseline=40)
     
     def get_friendship_grid_motive(self):
-        # For friendship grid, use a simple calculation
-        return 60  # reasonable default for testing
+        # For friendship grid, calculate motive based on character state
+        return self._calculate_friendship_grid_motive()
 
+    def _calculate_friendship_grid_motive(self):
+        """Calculate friendship grid motive based on character's social wellbeing."""
+        if not self.character:
+            return 60  # fallback for standalone testing
+        # Higher motive when social wellbeing is lower (more urgent need for friendship)
+        social_wellbeing = getattr(self.character, 'social_wellbeing', 5)
+        return max(10, min(100, 100 - (social_wellbeing * 8)))
 
 stub_tc.Character = object
 
