@@ -10,7 +10,11 @@ This document summarizes the gaps preventing a basic demonstration of the Tiny V
 - `README.md` instructs running `python main.py`, but no `main.py` is in the repository. The actual entry point is `tiny_gameplay_controller.py`.
 
 ## Required Dependencies
-- Several tests and modules fail due to missing packages such as `pandas`, `networkx`, and `attrs`. Without these, `GraphManager` and other systems cannot initialize.
+- Several tests and modules fail due to missing packages such as `pandas`, `networkx`, and `attrs`. Specific issues include:
+  - `pandas`: Required by `data_processing.py` for handling tabular data. Missing this package results in the error: `ModuleNotFoundError: No module named 'pandas'`.
+  - `networkx`: Used in `graph_manager.py` for graph operations. Missing this package results in the error: `ModuleNotFoundError: No module named 'networkx'`.
+  - `attrs`: Required by `entity_manager.py` for attribute management. Missing this package results in the error: `ModuleNotFoundError: No module named 'attrs'`.
+Without these dependencies, `GraphManager` and other systems cannot initialize, and tests such as `test_graph_operations.py` and `test_entity_attributes.py` fail.
 
 ## Placeholder Features
 - Many systems noted in `get_feature_implementation_status()` within `tiny_gameplay_controller.py` are marked `NOT_STARTED` or `STUB_IMPLEMENTED` (e.g., quest system, social network system, weather system). These stubs do not provide functional gameplay.
