@@ -15,7 +15,7 @@ import json
 import operator
 
 from pyparsing import Char
-from torch import Graph
+# Removed unused torch import that was causing import errors
 
 
 # from tiny_characters import Character
@@ -353,8 +353,12 @@ class Action:
         else:
             # Fallback to the singleton instance if no graph_manager is explicitly passed.
             # This maintains some backward compatibility but explicit passing is preferred.
-            GraphManager_module = importlib.import_module("tiny_graph_manager")
-            self.graph_manager = GraphManager_module.GraphManager()
+            try:
+                GraphManager_module = importlib.import_module("tiny_graph_manager")
+                self.graph_manager = GraphManager_module.GraphManager()
+            except ImportError:
+                # Graph manager is optional for core Action functionality
+                self.graph_manager = None
         self.related_skills = related_skills
 
     def to_dict(self):
@@ -654,8 +658,12 @@ class Action:
             self.graph_manager = graph_manager # Prefer graph_manager argument if provided
 
         if not self.graph_manager:
-            GraphManager_module = importlib.import_module("tiny_graph_manager")
-            self.graph_manager = GraphManager_module.GraphManager()
+            try:
+                GraphManager_module = importlib.import_module("tiny_graph_manager")
+                self.graph_manager = GraphManager_module.GraphManager()
+            except ImportError:
+                # Graph manager is optional for core Action functionality
+                self.graph_manager = None
             # print("Warning: Action.execute called without graph_manager, using fallback.")
 
 
