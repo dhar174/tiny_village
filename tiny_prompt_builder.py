@@ -251,11 +251,32 @@ class NeedsPriorities:
         return material_goods_priority
 
     def calculate_friendship_grid_priority(self, character: tc.Character):
-        # Friendship grid priority is based on friendship grid
-        # Friendship grid is a value from 1-10
-        # Friendship grid priority is a value from 1-100
-        # Friendship grid priority is calculated by multiplying friendship grid times 10
-        friendship_grid_priority = character.get_motives().get_friendship_grid_motive()
+        # Friendship grid priority is based on social connections and relationships
+        # Use social_wellbeing_motive as the base since friendship relates to social wellbeing
+        # Calculate aggregate friendship score from the character's friendship grid
+        friendship_grid = character.get_friendship_grid()
+        
+        # Calculate average friendship score from the grid
+        if friendship_grid and len(friendship_grid) > 0:
+            # Filter out empty dictionaries and calculate average friendship score
+            valid_friendships = [f for f in friendship_grid if f and 'friendship_score' in f]
+            if valid_friendships:
+                avg_friendship_score = sum(f['friendship_score'] for f in valid_friendships) / len(valid_friendships)
+                # Convert to 0-10 scale for consistency with other priorities
+                # Clamp to reasonable bounds (0-100 friendship score range)
+                avg_friendship_score = max(0, min(100, avg_friendship_score))
+                friendship_state = avg_friendship_score / 10.0
+            else:
+                friendship_state = 0  # No valid friendships
+        else:
+            friendship_state = 0  # No friendship data
+        
+        # Combine with social wellbeing motive (friendship is social)
+        social_motive = character.get_motives().get_social_wellbeing_motive()
+        
+        # Calculate priority: higher motive with lower current state = higher priority
+        # Ensure priority is always non-negative
+        friendship_grid_priority = max(0, social_motive + (10 - friendship_state) * 2)
         return friendship_grid_priority
 
     def calculate_needs_priorities(self, character: tc.Character):
@@ -342,7 +363,7 @@ class ActionOptions:
             and character.get_wealth_money() > 1
             and (
                 character.get_inventory().count_food_items_total() < 5
-                or character.get_inventory().count_food_calories_total
+                or character.get_inventory().count_food_calories_total()
                 < character.get_hunger_level()
             ),
             "eat_food": character.get_hunger_level() > 5
@@ -1189,6 +1210,7 @@ class DescriptorMatrices:
         }
 
         self.event_recent = {
+            "default": ["Recently"],
             "craft fair": ["After your success at the craft fair"],
             "community center": ["After you helped at the community center"],
             "hospital": ["After you were recently in the hospital"],
@@ -1199,6 +1221,7 @@ class DescriptorMatrices:
         }
 
         self.financial_situation = {
+            "default": ["financially, you are doing okay"],
             "rich": [
                 "you are financially well-off",
                 "you are rich",
@@ -1568,12 +1591,51 @@ class PromptBuilder:
             self.character
         )
 
-    def prioritize_actions(self) -> None:
-        """Determine which actions the character is most likely to take."""
+    def prioritize_actions(self) -> List[str]:
+        """Query the planning system for top actions and build choice strings."""
 
-        self.prioritized_actions = self.action_options.prioritize_actions(
-            self.character
+        try:
+            from tiny_strategy_manager import StrategyManager
+            from tiny_utility_functions import calculate_action_utility
+        except ImportError:  # pragma: no cover - gracefully handle missing deps
+            self.prioritized_actions = []
+            self.action_choices = []
+            return []
+
+        manager = StrategyManager(use_llm=False)
+        actions = manager.get_daily_actions(self.character)
+
+        self.prioritized_actions = actions
+        self.action_choices = []
+        char_state = self._get_character_state_dict()
+        current_goal = (
+            self.character.get_current_goal()
+            if hasattr(self.character, "get_current_goal")
+            else None
         )
+
+        for i, action in enumerate(actions[:5]):
+            try:
+                util = calculate_action_utility(char_state, action, current_goal)
+            except (ValueError, TypeError):  # Replace with specific exceptions
+                util = 0.0
+                print(f"Error calculating utility for action {action}: {e}")  # Optional logging
+
+            effects_str = ""
+            if hasattr(action, "effects") and action.effects:
+                parts = [
+                    f"{eff.get('attribute', '')}: {eff.get('change_value', 0):+.1f}"
+                    for eff in action.effects
+                    if eff.get("attribute")
+                ]
+                if parts:
+                    effects_str = f" - Effects: {', '.join(parts)}"
+
+            desc = getattr(action, "description", getattr(action, "name", str(action)))
+            choice = f"{i+1}. {desc} (Utility: {util:.1f}){effects_str}"
+            self.action_choices.append(choice)
+
+        return self.action_choices
 
     def generate_completion_message(self, character: tc.Character, action: str) -> str:
         """Return a short message describing successful completion of ``action``."""
@@ -1665,6 +1727,7 @@ class PromptBuilder:
         weather: str,
         action_choices: List[str],
         character_state_dict: Optional[Dict[str, float]] = None,
+        memories: Optional[List] = None,
     ) -> str:
         """Create a decision prompt incorporating goals, needs and context."""
         # Calculate needs priorities for character context
@@ -1729,6 +1792,24 @@ class PromptBuilder:
         # Long-term aspiration context
         if hasattr(self.character, "long_term_goal") and self.character.long_term_goal:
             prompt += f"Your long-term aspiration is: {self.character.long_term_goal}. "
+
+ 
+        # Include short memory descriptions if provided
+        if memories:
+            prompt += "\nRecent memories influencing you:\n"
+            for mem in memories[:2]:
+                desc = getattr(mem, "description", str(mem))
+                prompt += f"- {desc}\n"
+
+        # Include any additional character state provided
+        if isinstance(character_state_dict, dict):
+            prompt += "\nAdditional state:\n"
+            for key, value in character_state_dict.items():
+                formatted_key = key.replace("_", " ").title()
+                prompt += f"- {formatted_key}: {value}\n"
+        elif character_state_dict is not None:
+            raise TypeError("character_state_dict must be a dictionary.")
+ 
 
         prompt += f"\n{descriptors.get_routine_question_framing()}"
 
