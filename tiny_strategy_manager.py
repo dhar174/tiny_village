@@ -432,7 +432,7 @@ class StrategyManager:
         # Define a proper Goal object for daily activities
         goal = Goal(
             name="daily_wellbeing",
-            target_effects={"satisfaction": 75, "energy": 60},
+            target_effects={"satisfaction": SATISFACTION_TARGET, "energy": ENERGY_TARGET},
             priority=0.8
         )
 
