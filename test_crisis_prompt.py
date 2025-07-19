@@ -36,9 +36,52 @@ class MinimalCharacterMock:
         self.mental_health = 6
         self.social_wellbeing = 6
     
-    # Some parts of PromptBuilder call getter methods instead of accessing attributes directly
+    # Minimal getter methods that are actually called by PromptBuilder components
     def get_hunger_level(self):
         return self.hunger_level
+    
+    def get_health_status(self):
+        return self.health_status
+    
+    def get_mental_health(self):
+        return self.mental_health
+    
+    def get_social_wellbeing(self):
+        return self.social_wellbeing
+    
+    def get_wealth_money(self):
+        return self.wealth_money
+    
+    def get_wealth(self):
+        return self.wealth_money
+    
+    # Mock methods for components that may be called but not essential for the test
+    def get_motives(self):
+        # Return a simple mock that has the basic motive methods
+        class MockMotives:
+            def get_health_motive(self): return 50
+            def get_wealth_motive(self): return 30
+            def get_mental_health_motive(self): return 70
+            def get_social_wellbeing_motive(self): return 50
+        return MockMotives()
+    
+    def get_inventory(self):
+        # Return a simple mock that has the basic inventory methods
+        class MockInventory:
+            def count_food_items_total(self): return 2
+            def count_food_calories_total(self): return 100
+        return MockInventory()
+    
+    # Additional methods that may be called during action prioritization
+    def get_shelter(self): return 8
+    def get_community(self): return 5
+    def get_happiness(self): return 5
+    def get_beauty(self): return 5
+    def get_friendship_grid(self): return 6
+    def get_job_performance(self): return 6
+    def get_long_term_goal(self): return "become successful farmer"
+    def get_hope(self): return 6
+    def get_material_goods(self): return 3
 
 # Set the Character class to our minimal mock
 stub_tc.Character = MinimalCharacterMock
