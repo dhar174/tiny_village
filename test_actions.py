@@ -5,6 +5,20 @@ from actions import GreetAction, ShareNewsAction, OfferComplimentAction, TalkAct
 
 # Mock Character class for action context (if needed by execute signatures)
 class MockCharacter:
+    """
+    Improved MockCharacter that provides realistic behavior for better testing.
+    
+    This mock includes actual implementations of methods that actions call
+    (like respond_to_talk) rather than requiring manual MagicMock setup.
+    This allows tests to verify both that methods are called AND that 
+    they behave correctly, catching more potential bugs.
+    
+    Key improvements over simple mocks:
+    - Implements respond_to_talk() with actual behavior
+    - Provides all attributes commonly used by actions
+    - Tracks method calls for verification in tests
+    - Changes character state in realistic ways
+    """
     def __init__(self, name="TestCharacter"):
         self.name = name
         # Add other attributes if action.execute() or preconditions need them
