@@ -43,11 +43,24 @@ def create_mock_tensor(shape):
 @patch("tiny_memories.model", new_callable=MagicMock)
 class TestImport(unittest.TestCase):
     def test_module_import(self):
+        """Test that we can import tiny_memories and use its sigmoid function."""
         try:
             import tiny_memories
+            # Test the sigmoid function which should work without dependencies
+            result = tiny_memories.sigmoid(0)
+            self.assertEqual(result, 0.5, "sigmoid(0) should return 0.5")
+            
+            # Test sigmoid with positive value - use lower precision to avoid false failures
+            result = tiny_memories.sigmoid(1)
+            self.assertAlmostEqual(result, 0.7310585786300049, places=6, 
+                                 msg="sigmoid(1) should return approximately 0.731")
+            
+            # Test sigmoid with negative value - use lower precision to avoid false failures
+            result = tiny_memories.sigmoid(-1)
+            self.assertAlmostEqual(result, 0.2689414213699951, places=6,
+                                 msg="sigmoid(-1) should return approximately 0.269")
         except ImportError as e:
             self.fail(f"Failed to import tiny_memories module: {e}")
-        self.assertTrue(True, "Successfully imported tiny_memories module")
 
 
 class TestEmbeddingModel(unittest.TestCase):
