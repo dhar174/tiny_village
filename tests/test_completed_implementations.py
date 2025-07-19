@@ -225,8 +225,9 @@ def test_happiness_calculation():
     
     # Create test suite
     suite = unittest.TestLoader().loadTestsFromTestCase(TestHappinessCalculation)
-    runner = unittest.TextTestRunner(verbosity=1, stream=open(os.devnull, 'w'))
-    result = runner.run(suite)
+    with open(os.devnull, 'w') as devnull:
+        runner = unittest.TextTestRunner(verbosity=1, stream=devnull)
+        result = runner.run(suite)
     
     # Return boolean for legacy compatibility
     success = result.wasSuccessful()
