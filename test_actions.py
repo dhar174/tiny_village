@@ -451,9 +451,6 @@ class TestBaseActionExecute(unittest.TestCase):
 
         # Check GraphManager calls from super().execute()
         # Note: The graph manager is called with the value BEFORE respond_to_talk bonus
-        self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
-            self.target.uuid, "social_wellbeing", initial_target_social + target_effect_value
-
         # Check GraphManager calls from super().execute() - these happen BEFORE respond_to_talk
         # So they reflect the state after base effects but before respond_to_talk effects
         self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
