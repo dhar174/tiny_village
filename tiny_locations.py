@@ -4,7 +4,7 @@ from math import cos
 import uu
 import uuid
 
-from numpy import character
+# Removed unused numpy import
 
 # from actions import Action, State, ActionSystem
 from tiny_types import Action, State, ActionSystem
