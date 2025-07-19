@@ -22,11 +22,17 @@ class MockMotives:
     def __init__(self, character=None):
         """Initialize with character reference for state-based calculations."""
         self.character = character
+        self.default_values = {
+            'health_status': 45,
+            'wealth_money': 35,
+            'mental_health': 65,
+            'social_wellbeing': 55,
+        }
         
     def _calculate_health_motive(self):
         """Calculate health motive based on character's health status."""
         if not self.character:
-            return 45  # fallback for standalone testing (not 50)
+            return self._get_default_value('health_status')  # fallback for standalone testing
         # Higher motive when health is lower (more urgent need)
         health = getattr(self.character, 'health_status', 5)
         return max(10, min(100, 100 - (health * 8)))
