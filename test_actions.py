@@ -1,7 +1,7 @@
 from re import T
 import unittest
 from actions import ActionSystem, State, ActionTemplate, Condition, Action # Import base Action
-from actions import GreetAction, ShareNewsAction, OfferComplimentAction # Import new actions
+from actions import GreetAction, ShareNewsAction, OfferComplimentAction, TalkAction # Import new actions
 
 # Mock Character class for action context (if needed by execute signatures)
 class MockCharacter:
