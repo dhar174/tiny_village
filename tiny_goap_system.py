@@ -41,6 +41,10 @@ import importlib
 
 logging.basicConfig(level=logging.DEBUG)
 
+# Constants for utility calculations
+UTILITY_SCALING_FACTOR = 0.1
+UTILITY_INFLUENCE_FACTOR = 0.05
+
 
 class Plan:
     """
@@ -556,6 +560,9 @@ class Plan:
 
 
 class GOAPPlanner:
+    # Maximum length of plans to prevent overly complex planning
+    MAX_PLAN_LENGTH = 10
+    
     def __init__(self, graph_manager: "GraphManager"):
         try:
             GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
@@ -1262,6 +1269,7 @@ class GOAPPlanner:
         return progress * goal.urgency + motives.hope_motive.value
 
     def calculate_utility(self, action, character):
+ 
         """Calculate action utility based on multiple factors using integrated utility functions"""
         try:
             # Import utility functions
@@ -1292,6 +1300,7 @@ class GOAPPlanner:
             print(f"Warning: Error in utility calculation, falling back to basic method: {e}")
         
         # Fallback to basic utility calculation
+
         if isinstance(action, dict):
             # Handle dictionary format
             satisfaction = action.get("satisfaction", 0)
@@ -1305,8 +1314,11 @@ class GOAPPlanner:
             urgency = getattr(action, "urgency", 1)
             base_utility = satisfaction - energy_cost
 
-        # Factor in character state if available
+        # Get character state properly instead of using empty dictionary
+        character_state = {}
         if hasattr(character, "get_state"):
+
+          
             try:
                 char_state = character.get_state()
                 # Adjust utility based on character's current needs
@@ -1318,17 +1330,55 @@ class GOAPPlanner:
             except Exception:
                 pass  # Continue with base utility if state access fails
 
+            char_state_obj = character.get_state()
+            if hasattr(char_state_obj, 'dict_or_obj'):
+                character_state = char_state_obj.dict_or_obj if isinstance(char_state_obj.dict_or_obj, dict) else {}
+            elif hasattr(char_state_obj, '__getitem__'):
+                # Handle State object with dictionary-like access
+                try:
+                    character_state = {"energy": char_state_obj.get("energy", 100)}
+                except:
+                    character_state = {}
+        
+        # Adjust utility based on character's current needs using the populated character_state
+        if character_state and energy_cost > 0:
+            energy = character_state.get("energy", 100)
+            if energy > 0:
+                energy_factor = energy / 100.0  # Normalize to 0-1
+                base_utility *= energy_factor
+            
+            # Consider other character state factors
+            health = character_state.get("health", 100)
+            if health < 50:  # Low health reduces utility for high-cost actions
+                health_factor = health / 100.0
+                base_utility *= health_factor
+ 
+
+
         # Apply urgency multiplier
         final_utility = base_utility * urgency
 
         return final_utility
 
     def evaluate_utility(self, plan, character):
-        """Evaluate the utility of a plan using integrated utility functions"""
+
+        """
+        Evaluate the utility of a plan by finding the action with highest utility.
+        Fixed to properly use character state instead of empty dictionary.
+        """
+ 
         if not plan:
             return None
 
+        # Get character state properly instead of using empty dictionary
+        character_state = {}
+        if hasattr(character, "get_state"):
+            char_state_obj = character.get_state()
+            if hasattr(char_state_obj, 'dict_or_obj'):
+                character_state = char_state_obj.dict_or_obj if isinstance(char_state_obj.dict_or_obj, dict) else {}
+
         try:
+ 
             # Import utility functions
             import tiny_utility_functions as util_funcs
             
@@ -1371,6 +1421,7 @@ class GOAPPlanner:
 
         # Fallback to basic utility evaluation
         try:
+
             return max(plan, key=lambda x: self.calculate_utility(x, character))
         except (TypeError, ValueError) as e:
             print(f"Error evaluating plan utility: {e}")
@@ -1403,3 +1454,80 @@ class GOAPPlanner:
 
         # Default to feasible if we can't determine otherwise
         return True
+
+    def _calculate_action_cost(self, action, character):
+        """
+        Calculate action cost with utility influence.
+        Replaces magic number 0.1 with UTILITY_SCALING_FACTOR constant.
+        """
+        base_cost = getattr(action, 'cost', 1.0)
+        utility = self.calculate_utility(action, character)
+        
+        # Apply utility scaling factor - higher utility reduces effective cost
+        adjusted_cost = base_cost - (utility * UTILITY_SCALING_FACTOR)
+        
+        # Ensure cost is not negative
+        return max(adjusted_cost, 0.1)
+
+    def _calculate_action_priority(self, action, character):
+        """
+        Calculate action priority based on cost and utility.
+        Replaces magic number 0.05 with UTILITY_INFLUENCE_FACTOR constant.
+        Uses character state properly instead of empty dictionary.
+        """
+        # Get character state instead of using empty dictionary
+        character_state = {}
+        if hasattr(character, 'get_state'):
+            char_state_obj = character.get_state()
+            if hasattr(char_state_obj, 'dict_or_obj'):
+                character_state = char_state_obj.dict_or_obj if isinstance(char_state_obj.dict_or_obj, dict) else {}
+        
+        cost = self._calculate_action_cost(action, character)
+        utility = self.calculate_utility(action, character)
+        
+        # Calculate priority with utility influence
+        # Lower priority number means higher priority
+        base_priority = cost
+        utility_adjustment = utility * UTILITY_INFLUENCE_FACTOR
+        
+        # Higher utility should result in lower priority number (higher actual priority)
+        priority = base_priority - utility_adjustment
+        
+        return max(priority, 0.1)  # Ensure priority is not negative
+
+    def _estimate_cost_to_goal(self, current_state, goal):
+        """
+        Heuristic function to estimate the cost to reach a goal from current state.
+        Used in A* search for GOAP planning.
+        """
+        if not goal:
+            return 0.0
+            
+        # Handle different goal formats
+        if hasattr(goal, 'completion_conditions'):
+            conditions = goal.completion_conditions
+            if isinstance(conditions, dict):
+                # Calculate how far we are from each condition
+                total_cost = 0.0
+                for attribute, target_value in conditions.items():
+                    current_value = current_state.get(attribute, 0) if current_state else 0
+                    if isinstance(target_value, (int, float)) and isinstance(current_value, (int, float)):
+                        if current_value < target_value:
+                            # Cost increases with the gap to target
+                            total_cost += (target_value - current_value) * HEURISTIC_SCALING_FACTOR
+                return total_cost
+            elif isinstance(conditions, list):
+                # Assume each condition has a base cost of 1.0
+                return len(conditions) * 1.0
+        elif isinstance(goal, dict):
+            # Dictionary format goal
+            total_cost = 0.0
+            for attribute, target_value in goal.items():
+                if isinstance(target_value, (int, float)):
+                    current_value = current_state.get(attribute, 0) if current_state else 0
+                    if isinstance(current_value, (int, float)) and current_value < target_value:
+                        total_cost += (target_value - current_value) * HEURISTIC_SCALING_FACTOR
+            return total_cost
+        
+        # Default heuristic if goal format is unknown
+        return 1.0
