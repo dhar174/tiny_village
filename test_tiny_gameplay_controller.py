@@ -45,6 +45,7 @@ class TestGameplayController(unittest.TestCase):
             "key_bindings": { # Add if controller accesses this during init for speed keys
                 "increase_speed": [pygame.K_PAGEUP],
                 "decrease_speed": [pygame.K_PAGEDOWN],
+                "minimap": [pygame.K_m],
             }
         }
         self.controller = GameplayController(graph_manager=self.mock_graph_manager, config=self.config)
@@ -216,6 +217,45 @@ class TestGameplayController(unittest.TestCase):
         self.assertIsNotNone(new_cached_surface_decrease)
         self.assertIsNot(new_cached_surface_increase, new_cached_surface_decrease,
                          "Cache should be different after speed decrease.")
+
+    def test_minimap_toggle(self):
+        """Test that mini-map mode can be toggled correctly."""
+        # Initially mini-map should be disabled
+        self.assertFalse(getattr(self.controller, "_minimap_mode", False))
+        
+        # Simulate 'M' key press to enable mini-map
+        mock_event = MagicMock()
+        mock_event.key = pygame.K_m
+        
+        self.controller._handle_keydown(mock_event)
+        
+        # Mini-map should now be enabled
+        self.assertTrue(getattr(self.controller, "_minimap_mode", False))
+        
+        # Press 'M' again to disable mini-map
+        self.controller._handle_keydown(mock_event)
+        
+        # Mini-map should now be disabled
+        self.assertFalse(getattr(self.controller, "_minimap_mode", False))
+
+    def test_render_minimap_no_errors(self):
+        """Test that mini-map rendering doesn't crash when enabled."""
+        # Enable mini-map mode
+        self.controller._minimap_mode = True
+        
+        # Create a minimal mock map controller
+        mock_map_controller = MagicMock()
+        mock_map_controller.map_image = pygame.Surface((100, 100))
+        mock_map_controller.map_data = {"buildings": []}
+        mock_map_controller.characters = {}
+        mock_map_controller.selected_character = None
+        self.controller.map_controller = mock_map_controller
+        
+        # Should not raise any exceptions
+        try:
+            self.controller._render_minimap()
+        except Exception as e:
+            self.fail(f"Mini-map rendering failed with error: {e}")
 
 if __name__ == '__main__':
     unittest.main()

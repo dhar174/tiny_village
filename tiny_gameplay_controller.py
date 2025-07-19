@@ -1364,6 +1364,7 @@ class GameplayController:
                 "analytics": [pygame.K_a],
                 "increase_speed": [pygame.K_PAGEUP], # Added for time scaling
                 "decrease_speed": [pygame.K_PAGEDOWN], # Added for time scaling
+                "minimap": [pygame.K_m], # Added for mini-map toggle
             },
         )
 
@@ -1421,6 +1422,10 @@ class GameplayController:
             self.time_scale_factor = max(MIN_SPEED, self.time_scale_factor - SPEED_STEP)
             logger.info(f"Time scale set to: {self.time_scale_factor:.1f}x")
             self._cached_speed_text = None # Invalidate cache on change
+        elif event.key in key_bindings.get("minimap", [pygame.K_m]):
+            # Toggle mini-map mode
+            self._minimap_mode = not getattr(self, "_minimap_mode", False)
+            logger.info(f"Mini-map mode {'enabled' if self._minimap_mode else 'disabled'}")
 
     def _show_help_info(self):
         """Display help information."""
@@ -1434,6 +1439,7 @@ class GameplayController:
             logger.info("  F - Show feature status")
             logger.info("  F5 - Force system recovery")
             logger.info("  A - Show analytics")
+            logger.info("  M - Toggle mini-map")
             logger.info("  ESC - Quit")
             logger.info("Features:")
             logger.info("  - Character AI with goals and actions")
@@ -2470,7 +2476,7 @@ class GameplayController:
             # TODO: Add character relationship visualization
             # TODO: Add village statistics dashboard
             # TODO: Add interactive building information panels
-            # TODO: Add mini-map or overview mode
+            # TODO: Add mini-map or overview mode - IMPLEMENTED: Toggle with 'M' key
             # TODO: Add save/load game functionality UI
             # TODO: Add settings and configuration panels
             # TODO: Add help and tutorial overlays
@@ -2682,6 +2688,7 @@ class GameplayController:
                 "S to save game (basic)",
                 "L to load game (basic)",
                 "F to show feature status",
+                "M to toggle mini-map",
                 "ESC to quit",
             ]
 
@@ -2693,6 +2700,10 @@ class GameplayController:
             # Show feature implementation status on F key press (stored state)
             if getattr(self, "_show_feature_status", False):
                 self._render_feature_status_overlay()
+
+            # Show mini-map if enabled
+            if getattr(self, "_minimap_mode", False):
+                self._render_minimap()
 
         except Exception as e:
             # Fallback to minimal UI
@@ -2752,6 +2763,93 @@ class GameplayController:
 
         except Exception as e:
             logger.warning(f"Error rendering feature status overlay: {e}")
+
+    def _render_minimap(self):
+        """Render a mini-map or overview of the game world."""
+        try:
+            if not self.map_controller or not hasattr(self.map_controller, 'map_image'):
+                return
+            
+            # Mini-map configuration
+            minimap_size = 200  # Size of the mini-map
+            margin = 10
+            position = (self.screen.get_width() - minimap_size - margin, margin)
+            
+            # Create mini-map surface
+            minimap_surface = pygame.Surface((minimap_size, minimap_size))
+            minimap_surface.fill((0, 0, 0))  # Black background
+            
+            # Get the original map dimensions
+            original_map = self.map_controller.map_image
+            original_width = original_map.get_width()
+            original_height = original_map.get_height()
+            
+            # Calculate scaling factor to fit the map in the mini-map
+            scale_x = minimap_size / original_width
+            scale_y = minimap_size / original_height
+            scale = min(scale_x, scale_y)  # Use smaller scale to maintain aspect ratio
+            
+            # Scale the map image
+            scaled_width = int(original_width * scale)
+            scaled_height = int(original_height * scale)
+            scaled_map = pygame.transform.scale(original_map, (scaled_width, scaled_height))
+            
+            # Center the scaled map in the mini-map surface
+            map_x = (minimap_size - scaled_width) // 2
+            map_y = (minimap_size - scaled_height) // 2
+            minimap_surface.blit(scaled_map, (map_x, map_y))
+            
+            # Draw buildings on mini-map
+            if hasattr(self.map_controller, 'map_data') and 'buildings' in self.map_controller.map_data:
+                for building in self.map_controller.map_data['buildings']:
+                    if 'rect' in building:
+                        # Scale building coordinates
+                        scaled_rect = pygame.Rect(
+                            int(building['rect'].x * scale) + map_x,
+                            int(building['rect'].y * scale) + map_y,
+                            max(2, int(building['rect'].width * scale)),
+                            max(2, int(building['rect'].height * scale))
+                        )
+                        pygame.draw.rect(minimap_surface, (100, 100, 100), scaled_rect)
+            
+            # Draw characters on mini-map
+            if hasattr(self.map_controller, 'characters'):
+                for character in self.map_controller.characters.values():
+                    if hasattr(character, 'position'):
+                        # Scale character position
+                        char_x = int(character.position[0] * scale) + map_x
+                        char_y = int(character.position[1] * scale) + map_y
+                        
+                        # Use different color for selected character
+                        if character == self.map_controller.selected_character:
+                            color = (255, 255, 0)  # Yellow for selected
+                            radius = 3
+                        else:
+                            color = getattr(character, 'color', (255, 255, 255))
+                            radius = 2
+                        
+                        pygame.draw.circle(minimap_surface, color, (char_x, char_y), radius)
+            
+            # Draw border around mini-map
+            pygame.draw.rect(minimap_surface, (128, 128, 128), minimap_surface.get_rect(), 2)
+            
+            # Add semi-transparent background
+            background = pygame.Surface((minimap_size + 4, minimap_size + 4))
+            background.set_alpha(200)
+            background.fill((0, 0, 0))
+            self.screen.blit(background, (position[0] - 2, position[1] - 2))
+            
+            # Blit mini-map to main screen
+            self.screen.blit(minimap_surface, position)
+            
+            # Add mini-map title
+            font = pygame.font.Font(None, 16)
+            title_text = font.render("Mini-Map", True, (255, 255, 255))
+            title_pos = (position[0], position[1] - 20)
+            self.screen.blit(title_text, title_pos)
+            
+        except Exception as e:
+            logger.warning(f"Error rendering mini-map: {e}")
 
     def run(self):
         """Main entry point to start the game loop."""
