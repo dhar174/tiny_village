@@ -2634,6 +2634,23 @@ class Character:
             return "avoids the situation entirely"
         return "confronts the issue directly"
 
+    def respond_to_talk(self, initiator):
+        """
+        Respond to a conversation initiated by another character.
+        This method provides additional social interaction beyond the effects 
+        handled by TalkAction.
+        """
+        # Give a small additional boost to social wellbeing when talked to
+        self.social_wellbeing += 0.1
+        
+        # Return a response based on personality traits
+        if hasattr(self, 'extraversion') and self.extraversion > 65:
+            return f"{self.name} engages enthusiastically in conversation"
+        elif hasattr(self, 'neuroticism') and self.neuroticism > 70:
+            return f"{self.name} responds nervously but appreciates the attention"
+        else:
+            return f"{self.name} listens and responds thoughtfully"
+
     def define_descriptors(self):
         """
         Creates comprehensive descriptors for the character based on their attributes,
