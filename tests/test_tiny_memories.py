@@ -45,9 +45,12 @@ class TestImport(unittest.TestCase):
     def test_module_import(self):
         try:
             import tiny_memories
+            # Verify that the module has expected attributes/classes
+            self.assertTrue(hasattr(tiny_memories, 'MemoryManager'), "Module should have MemoryManager class")
+            self.assertTrue(hasattr(tiny_memories, 'SpecificMemory'), "Module should have SpecificMemory class")
+            self.assertTrue(hasattr(tiny_memories, 'GeneralMemory'), "Module should have GeneralMemory class")
         except ImportError as e:
             self.fail(f"Failed to import tiny_memories module: {e}")
-        self.assertTrue(True, "Successfully imported tiny_memories module")
 
 
 class TestEmbeddingModel(unittest.TestCase):
