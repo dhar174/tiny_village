@@ -1568,12 +1568,50 @@ class PromptBuilder:
             self.character
         )
 
-    def prioritize_actions(self) -> None:
-        """Determine which actions the character is most likely to take."""
+    def prioritize_actions(self) -> List[str]:
+        """Query the planning system for top actions and build choice strings."""
 
-        self.prioritized_actions = self.action_options.prioritize_actions(
-            self.character
+        try:
+            from tiny_strategy_manager import StrategyManager
+            from tiny_utility_functions import calculate_action_utility
+        except Exception:  # pragma: no cover - gracefully handle missing deps
+            self.prioritized_actions = []
+            self.action_choices = []
+            return []
+
+        manager = StrategyManager(use_llm=False)
+        actions = manager.get_daily_actions(self.character)
+
+        self.prioritized_actions = actions
+        self.action_choices = []
+        char_state = self._get_character_state_dict()
+        current_goal = (
+            self.character.get_current_goal()
+            if hasattr(self.character, "get_current_goal")
+            else None
         )
+
+        for i, action in enumerate(actions[:5]):
+            try:
+                util = calculate_action_utility(char_state, action, current_goal)
+            except Exception:
+                util = 0.0
+
+            effects_str = ""
+            if hasattr(action, "effects") and action.effects:
+                parts = [
+                    f"{eff.get('attribute', '')}: {eff.get('change_value', 0):+.1f}"
+                    for eff in action.effects
+                    if eff.get("attribute")
+                ]
+                if parts:
+                    effects_str = f" - Effects: {', '.join(parts)}"
+
+            desc = getattr(action, "description", getattr(action, "name", str(action)))
+            choice = f"{i+1}. {desc} (Utility: {util:.1f}){effects_str}"
+            self.action_choices.append(choice)
+
+        return self.action_choices
 
     def generate_completion_message(self, character: tc.Character, action: str) -> str:
         """Return a short message describing successful completion of ``action``."""

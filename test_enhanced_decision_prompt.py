@@ -7,6 +7,17 @@ integration of goals, needs priorities, and comprehensive character stats.
 
 import unittest
 import logging
+from unittest.mock import MagicMock, patch
+import sys
+import types
+
+if 'torch' not in sys.modules:
+    torch_stub = types.ModuleType('torch')
+    torch_stub.Graph = object
+    torch_stub.eq = lambda *args, **kwargs: None
+    torch_stub.rand = lambda *args, **kwargs: 0
+    sys.modules['torch'] = torch_stub
+
 from tiny_characters import Character, PersonalMotives, Motive
 from tiny_locations import Location
 from tiny_prompt_builder import PromptBuilder
@@ -425,6 +436,31 @@ class TestEnhancedDecisionPrompt(unittest.TestCase):
         self.assertIn("Sarah Chen", prompt)
 
         logger.info("Character state dict parameter test completed!")
+
+    @patch("tiny_prompt_builder.calculate_action_utility")
+    @patch("tiny_prompt_builder.StrategyManager")
+    def test_dynamic_action_choices_included(self, mock_strategy_cls, mock_calc_util):
+        """Prompt includes dynamically generated actions from StrategyManager."""
+        from tiny_strategy_manager import EatAction, SleepAction
+
+        mock_manager = MagicMock()
+        mock_manager.get_daily_actions.return_value = [EatAction(item_name="bread"), SleepAction()]
+        mock_strategy_cls.return_value = mock_manager
+        mock_calc_util.side_effect = [9.0, 5.0]
+
+        choices = self.prompt_builder.prioritize_actions()
+        self.assertEqual(len(choices), 2)
+        self.assertIn("Eat bread", choices[0])
+        self.assertIn("Utility: 9.0", choices[0])
+
+        prompt = self.prompt_builder.generate_decision_prompt(
+            time="morning", weather="clear", action_choices=choices
+        )
+
+        self.assertIn("Eat bread", prompt)
+        self.assertIn("Utility: 9.0", prompt)
+
+        logger.info("Dynamic action choices included in prompt successfully!")
 
 
 def print_sample_prompt():
