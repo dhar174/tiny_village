@@ -2093,13 +2093,11 @@ class PromptBuilder:
         weather: str,
         action_choices: List[str],
         character_state_dict: Optional[Dict[str, float]] = None,
- 
+        memories: Optional[List] = None,
+
         include_conversation_context: bool = True,
         include_few_shot_examples: bool = True,
-        output_format: str = "json"
-
-        memories: Optional[List] = None,
- 
+        output_format: str = "json",
     ) -> str:
         """Create a decision prompt incorporating goals, needs and context."""
         # Calculate needs priorities for character context
