@@ -236,7 +236,7 @@ def test_happiness_calculation():
     else:
         print(f"✗ {len(result.failures + result.errors)} happiness calculation test(s) failed")
         for test, traceback in result.failures + result.errors:
-            print(f"  - {test}: {traceback.split('AssertionError:')[-1].strip() if 'AssertionError:' in traceback else 'Error occurred'}")
+            print(f"  - {test}: {format_traceback(traceback)}")
     
     return success
 
