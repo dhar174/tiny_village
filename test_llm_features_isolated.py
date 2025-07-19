@@ -17,8 +17,8 @@ class ConversationTurn:
     character_name: str
     prompt: str
     response: str
-    action_taken: str = None
-    outcome: str = None
+    action_taken: Optional[str] = None
+    outcome: Optional[str] = None
 
 
 @dataclass
