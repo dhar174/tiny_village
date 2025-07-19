@@ -1574,7 +1574,7 @@ class PromptBuilder:
         try:
             from tiny_strategy_manager import StrategyManager
             from tiny_utility_functions import calculate_action_utility
-        except Exception:  # pragma: no cover - gracefully handle missing deps
+        except ImportError:  # pragma: no cover - gracefully handle missing deps
             self.prioritized_actions = []
             self.action_choices = []
             return []
