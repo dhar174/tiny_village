@@ -99,7 +99,7 @@ class StrategyManager:
     """
 
     def __init__(self, use_llm=False, model_name=None):
-        self.goap_planner = GOAPPlanner(None)  # Initialize with None graph_manager for now
+        self.goap_planner = GOAPPlanner(GraphManager() if GraphManager else None)
         # Initialize graph_manager if available
         if GraphManager:
             self.graph_manager = GraphManager()
