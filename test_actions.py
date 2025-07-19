@@ -1,7 +1,7 @@
 from re import T
 import unittest
 from actions import ActionSystem, State, ActionTemplate, Condition, Action # Import base Action
-from actions import GreetAction, ShareNewsAction, OfferComplimentAction # Import new actions
+from actions import GreetAction, ShareNewsAction, OfferComplimentAction, TalkAction # Import new actions
 
 # Mock Character class for action context (if needed by execute signatures)
 class MockCharacter:
@@ -364,16 +364,20 @@ class TestBaseActionExecute(unittest.TestCase):
         # and also calls a specific method like respond_to_talk
 
         # Define effects as TalkAction's __init__ would
+        target_effect_value = 1
+        initiator_effect_value = 0.5
         talk_action_effects = [
-            {"targets": ["target"], "attribute": "social_wellbeing", "change_value": 1},
-            {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 0.5}
+            {"targets": ["target"], "attribute": "social_wellbeing", "change_value": target_effect_value},
+            {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": initiator_effect_value}
         ]
 
         # Mock the target's respond_to_talk method
         self.target.respond_to_talk = MagicMock()
-        # Ensure target has the attribute that will be changed by effects
-        self.target.social_wellbeing = 10
-        self.initiator.social_wellbeing = 5
+        # Store initial values for behavior-based testing
+        initial_target_social = 10
+        initial_initiator_social = 5
+        self.target.social_wellbeing = initial_target_social
+        self.initiator.social_wellbeing = initial_initiator_social
 
         talk_action = TalkAction(
             initiator=self.initiator,
@@ -388,16 +392,19 @@ class TestBaseActionExecute(unittest.TestCase):
         self.assertTrue(result)
 
         # 1. Check that super().execute() part (effect application) worked
-        # Check Python object updates
-        self.assertEqual(self.target.social_wellbeing, 11) # 10 + 1
-        self.assertEqual(self.initiator.social_wellbeing, 5.5) # 5 + 0.5
+        # Test behavior: verify values increased by expected amounts rather than hard-coding final values
+        expected_target_social = initial_target_social + target_effect_value
+        expected_initiator_social = initial_initiator_social + initiator_effect_value
+        
+        self.assertEqual(self.target.social_wellbeing, expected_target_social)
+        self.assertEqual(self.initiator.social_wellbeing, expected_initiator_social)
 
         # Check GraphManager calls from super().execute()
         self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
-            self.target.uuid, "social_wellbeing", 11
+            self.target.uuid, "social_wellbeing", expected_target_social
         )
         self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
-            self.initiator.uuid, "social_wellbeing", 5.5
+            self.initiator.uuid, "social_wellbeing", expected_initiator_social
         )
 
         # 2. Check that TalkAction's specific logic was called
