@@ -1383,7 +1383,6 @@ class TestSigmoidFunction(unittest.TestCase):
     
     def test_sigmoid_computed_expected(self):
         """Test sigmoid using computed expected values - most robust approach."""
-        import math
         
         # Test sigmoid with positive value - computing expected using same approach
         result = tiny_memories.sigmoid(1)
