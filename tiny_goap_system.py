@@ -280,55 +280,154 @@ class Plan:
 
 class GOAPPlanner:
     def __init__(self, graph_manager: "GraphManager"):
-        GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
+        try:
+            GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
+        except ImportError:
+            # Graph manager is optional for core GOAP functionality
+            GraphManager = None
+            
         self.graph_manager = graph_manager
         self.plans = {}
 
-    def plan_actions(self, state, actions):
-        goal_difficulty = self.calculate_goal_difficulty(character, goal)
-        return sorted(actions, key=lambda x: -x.utility - goal_difficulty["difficulty"])
-
-    def goap_planner(character, goal: Goal, char_state: State, actions: list):
+    def plan_actions(self, character, goal, current_state, actions):
         """
-        Generates a plan of actions to achieve a goal from the current state.
+        Generates a plan of actions to achieve a goal from the current state using GOAP algorithm.
 
         Args:
-            character (str): The character for whom the plan is being generated.
-            goal (dict): The desired state to achieve.
-            state (dict): The current state of the character.
-            actions (list): A list of possible actions.
+            character: The character for whom the plan is being generated.
+            goal (Goal): The goal object with completion conditions.
+            current_state (State): The current state of the character.
+            actions (list): A list of Action objects.
 
         Returns:
-            plan (list): A list of actions that form a plan to achieve the goal.
+            list: A list of Action objects that form a plan to achieve the goal, or None if no plan found.
         """
-        Goal = importlib.import_module("tiny_characters").Goal
-        Character = importlib.import_module("tiny_characters").Character
-        State = importlib.import_module("tiny_characters").State
-
         # Initialize the open list with the initial state
-        open_list = [(char_state, [])]
+        open_list = [(current_state, [])]
         visited_states = set()
 
         while open_list:
-            current_state, current_plan = open_list.pop(0)
+            state, current_plan = open_list.pop(0)
 
             # Check if the current state satisfies the goal
-            if all(goal.check_completion(current_state)):
+            if self._goal_satisfied(goal, state):
                 return current_plan
 
             for action in actions:
-                if action["conditions_met"](current_state):
-                    new_state = current_state.copy()
-                    # Apply the effects of the action
-                    for effect, change in action["effects"].items():
-                        new_state[effect] = new_state.get(effect, 0) + change
-
-                    if new_state not in visited_states:
-                        visited_states.add(new_state)
+                # Check if action preconditions are met
+                if self._action_applicable(action, state):
+                    # Create new state by applying action effects
+                    new_state = self._apply_action_effects(action, state)
+                    
+                    # Convert state to hashable format for visited check
+                    state_hash = self._hash_state(new_state)
+                    
+                    if state_hash not in visited_states:
+                        visited_states.add(state_hash)
                         # Add the new state and updated plan to the open list
-                        open_list.append((new_state, current_plan + [action["name"]]))
+                        new_plan = current_plan + [action]
+                        open_list.append((new_state, new_plan))
 
         return None  # If no plan is found
+
+    def _goal_satisfied(self, goal, state):
+        """Check if the goal is satisfied in the given state."""
+        try:
+            if hasattr(goal, 'check_completion'):
+                return goal.check_completion(state)
+            elif hasattr(goal, 'completion_conditions'):
+                # Handle different types of completion conditions
+                conditions = goal.completion_conditions
+                if isinstance(conditions, dict):
+                    return all(state.get(k, 0) >= v for k, v in conditions.items())
+                elif isinstance(conditions, list):
+                    return all(condition(state) if callable(condition) else True for condition in conditions)
+            return False
+        except Exception as e:
+            print(f"Warning: Error checking goal completion: {e}")
+            return False
+
+    def _action_applicable(self, action, state):
+        """Check if an action's preconditions are met in the given state."""
+        try:
+            if hasattr(action, 'preconditions_met'):
+                return action.preconditions_met()
+            elif hasattr(action, 'preconditions'):
+                # Handle different precondition formats
+                preconditions = action.preconditions
+                if isinstance(preconditions, list):
+                    return all(
+                        precond.check_condition(state) if hasattr(precond, 'check_condition')
+                        else True for precond in preconditions
+                    )
+                elif isinstance(preconditions, dict):
+                    return all(state.get(k, 0) >= v for k, v in preconditions.items())
+            return True  # No preconditions means always applicable
+        except Exception as e:
+            print(f"Warning: Error checking action preconditions for {action.name}: {e}")
+            return False
+
+    def _apply_action_effects(self, action, state):
+        """Apply action effects to create a new state."""
+        try:
+            # Create a copy of the current state
+            new_state = State(state.dict_or_obj.copy() if hasattr(state, 'dict_or_obj') else state.copy())
+            
+            if hasattr(action, 'effects'):
+                for effect in action.effects:
+                    if isinstance(effect, dict):
+                        attribute = effect.get('attribute')
+                        change_value = effect.get('change_value', 0)
+                        
+                        if attribute:
+                            current_value = new_state.get(attribute, 0)
+                            if isinstance(change_value, (int, float)):
+                                new_state[attribute] = current_value + change_value
+                            elif isinstance(change_value, str) and change_value.startswith('set:'):
+                                new_state[attribute] = change_value[4:]  # Remove 'set:' prefix
+                            else:
+                                new_state[attribute] = change_value
+            
+            return new_state
+        except Exception as e:
+            print(f"Warning: Error applying action effects for {action.name}: {e}")
+            return state  # Return original state if effects can't be applied
+
+    def _hash_state(self, state):
+        """Convert state to a hashable format for visited state tracking."""
+        try:
+            if hasattr(state, '__hash__'):
+                return hash(state)
+            elif hasattr(state, 'dict_or_obj'):
+                # For State objects, hash the underlying dict/object
+                state_data = state.dict_or_obj
+                if isinstance(state_data, dict):
+                    return hash(tuple(sorted(state_data.items())))
+                else:
+                    return hash(str(state_data))  # Fallback to string representation
+            else:
+                return hash(str(state))  # Fallback to string representation
+        except Exception as e:
+            print(f"Warning: Error hashing state: {e}")
+            return hash(str(state))  # Ultimate fallback
+
+    @staticmethod
+    def goap_planner(character, goal: Goal, char_state: State, actions: list):
+        """
+        Static method that delegates to instance method for backwards compatibility.
+        
+        Args:
+            character: The character for whom the plan is being generated.
+            goal (Goal): The goal object with completion conditions.
+            char_state (State): The current state of the character.
+            actions (list): A list of Action objects.
+
+        Returns:
+            list: A list of Action objects that form a plan to achieve the goal.
+        """
+        # Create a temporary planner instance with None graph_manager
+        planner = GOAPPlanner(None)
+        return planner.plan_actions(character, goal, char_state, actions)
 
     def calculate_goal_difficulty(self, character, goal: Goal):
         """
