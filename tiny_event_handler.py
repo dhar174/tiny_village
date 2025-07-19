@@ -321,7 +321,8 @@ class EventHandler:
     def add_event(self, event):
         """Add an event to the handler and register it in the graph."""
         self.events.append(event)
-        self.graph_manager.add_event_node(event)
+        if self.graph_manager:
+            self.graph_manager.add_event_node(event)
         logging.info(f"Added event: {event.name}")
 
     def remove_event(self, event_name: str) -> bool:
