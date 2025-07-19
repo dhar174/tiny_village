@@ -184,8 +184,8 @@ class TestEmbeddingModelIntegration(unittest.TestCase):
                         # Create realistic mock outputs
                         mock_output = MagicMock()
                         mock_output.last_hidden_state = create_mock_tensor((
-                            1, len(text.split())) + 2, 768
-                        )
+                            1, len(text.split()) + 2, 768
+                        ))
                         mock_forward.return_value = mock_output
 
                         # Test tokenization and forward pass
