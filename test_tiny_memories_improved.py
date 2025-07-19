@@ -655,7 +655,7 @@ class TestDataTypeCompatibility(unittest.TestCase):
         """Test that embeddings maintain correct data types throughout pipeline"""
         # Test different input types
         test_embeddings = [
-            create_mock_tensor((768)),  # 1D tensor
+            create_mock_tensor((768,)),  # 1D tensor
             create_mock_tensor((1, 768)),  # 2D tensor
             np.random.randn(768).astype(np.float32),  # numpy array
         ]
