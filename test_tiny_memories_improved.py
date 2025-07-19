@@ -189,7 +189,7 @@ class TestEmbeddingModelIntegration(unittest.TestCase):
                         mock_forward.return_value = mock_output
 
                         # Test tokenization and forward pass
-                        input_ids = create_mock_tensor(None)) + 2))
+                        input_ids = create_mock_tensor(None) + 2
                         attention_mask = torch.ones_like(input_ids)
 
                         output = self.embedding_model.forward(input_ids, attention_mask)
