@@ -1209,7 +1209,7 @@ class GOAPPlanner:
                     if isinstance(target_value, (int, float)) and isinstance(current_value, (int, float)):
                         if current_value < target_value:
                             # Cost increases with the gap to target
-                            total_cost += (target_value - current_value) * 0.1
+                            total_cost += (target_value - current_value) * HEURISTIC_SCALING_FACTOR
                 return total_cost
             elif isinstance(conditions, list):
                 # Assume each condition has a base cost of 1.0
