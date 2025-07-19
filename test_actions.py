@@ -437,7 +437,7 @@ class TestBaseActionExecute(unittest.TestCase):
         # Check Python object updates
         # Verify that social_wellbeing increased for both characters
         # Target should have increased by action effect (1) + respond_to_talk call
-        self.assertGreater(self.target.social_wellbeing, initial_target_social + 1.0)
+        self.assertGreater(self.target.social_wellbeing, initial_target_social + target_effect_value)
         # Initiator should have increased by action effect only (0.5)
         self.assertEqual(self.initiator.social_wellbeing, initial_initiator_social + 0.5)
 
