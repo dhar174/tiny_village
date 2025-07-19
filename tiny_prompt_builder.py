@@ -263,6 +263,8 @@ class NeedsPriorities:
             if valid_friendships:
                 avg_friendship_score = sum(f['friendship_score'] for f in valid_friendships) / len(valid_friendships)
                 # Convert to 0-10 scale for consistency with other priorities
+                # Clamp to reasonable bounds (0-100 friendship score range)
+                avg_friendship_score = max(0, min(100, avg_friendship_score))
                 friendship_state = avg_friendship_score / 10.0
             else:
                 friendship_state = 0  # No valid friendships
@@ -273,7 +275,8 @@ class NeedsPriorities:
         social_motive = character.get_motives().get_social_wellbeing_motive()
         
         # Calculate priority: higher motive with lower current state = higher priority
-        friendship_grid_priority = social_motive + (10 - friendship_state) * 2
+        # Ensure priority is always non-negative
+        friendship_grid_priority = max(0, social_motive + (10 - friendship_state) * 2)
         return friendship_grid_priority
 
     def calculate_needs_priorities(self, character: tc.Character):
