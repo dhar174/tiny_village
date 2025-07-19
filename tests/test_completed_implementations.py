@@ -5,6 +5,7 @@ Test script to verify the completed implementations work correctly.
 
 import sys
 import os
+import unittest
 
 # Add the current directory to the Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -92,58 +93,87 @@ def test_pause_functionality():
         return False
 
 
-def test_happiness_calculation():
-    """Test the enhanced happiness calculation."""
-    print("\nTesting happiness calculation enhancements...")
+class TestHappinessCalculation(unittest.TestCase):
+    """Test suite for happiness calculation feature implementation."""
 
-    try:
-        # Read the file to check if the TODOs were replaced
-        with open("tiny_characters.py", "r") as f:
-            content = f.read()
-
-        # Check that TODOs were replaced with actual implementations
-        todo_patterns = [
-            "# TODO: Add happiness calculation based on motives",
-            "# TODO: Add happiness calculation based on social relationships",
-            "# TODO: Add happiness calculation based on romantic relationships",
-            "# TODO: Add happiness calculation based on family relationships",
+    def setUp(self):
+        """Set up test environment."""
+        self.happiness_features = [
+            "motive_satisfaction",
+            "social_happiness", 
+            "romantic_happiness",
+            "family_happiness",
         ]
+        self.minimum_features_threshold = 3  # Require at least 3 out of 4 features
 
-        remaining_todos = []
-        for pattern in todo_patterns:
-            if pattern in content:
-                remaining_todos.append(pattern)
+    def test_happiness_features_implementation(self):
+        """Test that happiness calculation features are implemented with flexible threshold."""
+        try:
+            # Read the file to check if the TODOs were replaced
+            with open("tiny_characters.py", "r") as f:
+                content = f.read()
 
-        if not remaining_todos:
-            print("✓ All happiness calculation TODOs have been implemented")
-
-            # Check for implementation keywords
-            implementation_keywords = [
-                "motive_satisfaction",
-                "social_happiness",
-                "romantic_happiness",
-                "family_happiness",
+            # Check that TODOs were replaced with actual implementations
+            todo_patterns = [
+                "# TODO: Add happiness calculation based on motives",
+                "# TODO: Add happiness calculation based on social relationships", 
+                "# TODO: Add happiness calculation based on romantic relationships",
+                "# TODO: Add happiness calculation based on family relationships",
             ]
 
+            remaining_todos = []
+            for pattern in todo_patterns:
+                if pattern in content:
+                    remaining_todos.append(pattern)
+
+            # Assert that all TODOs have been replaced
+            self.assertEqual(len(remaining_todos), 0, 
+                            f"Found {len(remaining_todos)} unimplemented TODO items: {remaining_todos}")
+
+            # Check for implementation keywords 
             implemented_features = []
-            for keyword in implementation_keywords:
-                if keyword in content:
-                    implemented_features.append(keyword)
+            for feature in self.happiness_features:
+                if feature in content:
+                    implemented_features.append(feature)
 
-            print(
-                f"✓ Found {len(implemented_features)} happiness calculation features implemented"
-            )
-            return True
+            # Use assertGreaterEqual with minimum threshold instead of expecting exactly 4
+            self.assertGreaterEqual(len(implemented_features), self.minimum_features_threshold,
+                                  f"Expected at least {self.minimum_features_threshold} happiness features "
+                                  f"but found only {len(implemented_features)}: {implemented_features}")
 
-        else:
-            print(f"⚠ Warning: {len(remaining_todos)} TODO items still remain:")
-            for todo in remaining_todos:
-                print(f"  - {todo}")
-            return False
+            # Log successful finding of features
+            print(f"✓ Found {len(implemented_features)} happiness calculation features implemented: {implemented_features}")
 
-    except Exception as e:
-        print(f"✗ Happiness calculation test failed: {e}")
-        return False
+        except Exception as e:
+            self.fail(f"Happiness calculation test failed: {e}")
+
+    def test_individual_happiness_features(self):
+        """Test each happiness calculation feature individually for granular feedback."""
+        try:
+            with open("tiny_characters.py", "r") as f:
+                content = f.read()
+
+            feature_results = {}
+            for feature in self.happiness_features:
+                feature_results[feature] = feature in content
+
+            # Test each feature individually
+            self.assertTrue(feature_results.get("motive_satisfaction", False),
+                          "Motive satisfaction happiness calculation not found")
+            
+            # For the other features, we'll be more lenient and just warn if missing
+            for feature in ["social_happiness", "romantic_happiness", "family_happiness"]:
+                if not feature_results.get(feature, False):
+                    print(f"⚠ Warning: {feature} feature not found - this may be acceptable if other features compensate")
+
+            # Ensure at least the core motive satisfaction is implemented
+            core_features = ["motive_satisfaction"]
+            implemented_core = sum(1 for feature in core_features if feature_results.get(feature, False))
+            self.assertGreaterEqual(implemented_core, 1, 
+                                  "At least the core motive_satisfaction feature must be implemented")
+
+        except Exception as e:
+            self.fail(f"Individual happiness features test failed: {e}")
 
 
 def test_goap_implementations():
@@ -194,32 +224,58 @@ def main():
     """Run all tests."""
     print("Running tests for completed implementations...\n")
 
-    tests = [
+    # Run unittest-based happiness tests first
+    print("="*50)
+    print("Running Happiness Calculation Tests (unittest)")
+    print("="*50)
+    
+    # Create test suite for happiness tests
+    happiness_suite = unittest.TestLoader().loadTestsFromTestCase(TestHappinessCalculation)
+    happiness_runner = unittest.TextTestRunner(verbosity=2)
+    happiness_result = happiness_runner.run(happiness_suite)
+    
+    # Count unittest results
+    happiness_tests_passed = happiness_result.wasSuccessful()
+    unittest_passed = 1 if happiness_tests_passed else 0
+    unittest_total = 1
+
+    print(f"\n{'='*50}")
+    print("Running Legacy Implementation Tests")
+    print("="*50)
+
+    # Run legacy tests (excluding happiness which is now in unittest)
+    legacy_tests = [
         test_building_coordinate_selection,
         test_pause_functionality,
-        test_happiness_calculation,
         test_goap_implementations,
     ]
 
-    passed = 0
-    total = len(tests)
+    legacy_passed = 0
+    legacy_total = len(legacy_tests)
 
-    for test in tests:
+    for test in legacy_tests:
         try:
             if test():
-                passed += 1
+                legacy_passed += 1
         except Exception as e:
             print(f"Test failed with exception: {e}")
 
-    print(f"\n{'='*50}")
-    print(f"Test Results: {passed}/{total} tests passed")
+    # Calculate overall results
+    total_passed = unittest_passed + legacy_passed
+    total_tests = unittest_total + legacy_total
 
-    if passed == total:
+    print(f"\n{'='*50}")
+    print(f"Overall Test Results:")
+    print(f"  Happiness tests (unittest): {unittest_passed}/{unittest_total} passed")
+    print(f"  Legacy tests: {legacy_passed}/{legacy_total} passed")
+    print(f"  Total: {total_passed}/{total_tests} tests passed")
+
+    if total_passed == total_tests:
         print("🎉 All tests passed! Implementations appear to be working correctly.")
     else:
-        print(f"⚠ {total - passed} test(s) failed. Review the implementations.")
+        print(f"⚠ {total_tests - total_passed} test(s) failed. Review the implementations.")
 
-    return passed == total
+    return total_passed == total_tests
 
 
 if __name__ == "__main__":
