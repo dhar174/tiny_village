@@ -289,19 +289,148 @@ class GOAPPlanner:
         self.graph_manager = graph_manager
         self.plans = {}
 
-    def plan_actions(self, character, goal, current_state, actions):
+    def get_current_world_state(self, character):
+        """
+        Dynamically retrieves the current world state for a character.
+        
+        Args:
+            character: The character object to get state for
+            
+        Returns:
+            State: Current world state including character state and environment
+        """
+        try:
+            # Get the character's current state
+            character_state = character.get_state() if hasattr(character, 'get_state') else State({})
+            
+            # If we have a graph manager, enrich the state with world information
+            if self.graph_manager:
+                try:
+                    # Get additional world context from graph manager
+                    world_context = self.graph_manager.get_character_state(character.name)
+                    
+                    # Merge character state with world context
+                    if hasattr(character_state, 'dict_or_obj'):
+                        if isinstance(character_state.dict_or_obj, dict):
+                            combined_state = character_state.dict_or_obj.copy()
+                        else:
+                            combined_state = {'character': character_state.dict_or_obj}
+                    else:
+                        combined_state = {'character': character}
+                    
+                    # Add world context
+                    if isinstance(world_context, dict):
+                        combined_state.update(world_context)
+                    
+                    return State(combined_state)
+                except Exception as e:
+                    logging.warning(f"Could not get world context from graph manager: {e}")
+                    
+            return character_state
+            
+        except Exception as e:
+            logging.warning(f"Error getting current world state: {e}")
+            # Return a minimal state as fallback
+            return State({'character': character})
+
+    def get_available_actions(self, character):
+        """
+        Dynamically retrieves available actions for a character based on current state.
+        
+        Args:
+            character: The character object to get actions for
+            
+        Returns:
+            list: List of Action objects available to the character
+        """
+        available_actions = []
+        
+        try:
+            # Try to get actions from graph manager first (most comprehensive)
+            if self.graph_manager and hasattr(self.graph_manager, 'get_possible_actions'):
+                try:
+                    graph_actions = self.graph_manager.get_possible_actions(character.name)
+                    # Convert graph manager action format to Action objects if needed
+                    for action_data in graph_actions:
+                        if isinstance(action_data, dict):
+                            # Convert dict format to action-like object
+                            action_obj = type('Action', (), {
+                                'name': action_data.get('name', 'Unknown'),
+                                'cost': action_data.get('cost', 1),
+                                'effects': action_data.get('effects', []),
+                                'preconditions': action_data.get('preconditions', {}),
+                                'utility': action_data.get('utility', 0)
+                            })()
+                            available_actions.append(action_obj)
+                        else:
+                            available_actions.append(action_data)
+                except Exception as e:
+                    logging.warning(f"Could not get actions from graph manager: {e}")
+            
+            # Try to get actions from strategy manager
+            try:
+                StrategyManager = importlib.import_module("tiny_strategy_manager").StrategyManager
+                strategy_manager = StrategyManager(self.graph_manager)
+                strategy_actions = strategy_manager.get_daily_actions(character)
+                available_actions.extend(strategy_actions)
+            except Exception as e:
+                logging.warning(f"Could not get actions from strategy manager: {e}")
+            
+            # Add basic fallback actions if no actions were found
+            if not available_actions:
+                # Import Action class for fallback actions
+                try:
+                    Action = importlib.import_module("actions").Action
+                    
+                    # Create basic actions that any character can perform
+                    rest_action = Action(
+                        name="Rest",
+                        preconditions={},
+                        effects=[{"attribute": "energy", "change_value": 10}],
+                        cost=0
+                    )
+                    available_actions.append(rest_action)
+                    
+                    idle_action = Action(
+                        name="Idle", 
+                        preconditions={},
+                        effects=[],
+                        cost=1
+                    )
+                    available_actions.append(idle_action)
+                    
+                except Exception as e:
+                    logging.warning(f"Could not create fallback actions: {e}")
+                    
+        except Exception as e:
+            logging.error(f"Error getting available actions: {e}")
+            
+        return available_actions
+
+    def plan_actions(self, character, goal, current_state=None, actions=None):
         """
         Generates a plan of actions to achieve a goal from the current state using GOAP algorithm.
+        Now dynamically retrieves current state and available actions if not provided.
 
         Args:
             character: The character for whom the plan is being generated.
             goal (Goal): The goal object with completion conditions.
-            current_state (State): The current state of the character.
-            actions (list): A list of Action objects.
+            current_state (State, optional): The current state. If None, will be retrieved dynamically.
+            actions (list, optional): A list of Action objects. If None, will be retrieved dynamically.
 
         Returns:
             list: A list of Action objects that form a plan to achieve the goal, or None if no plan found.
         """
+        # Dynamically retrieve current world state if not provided
+        if current_state is None:
+            current_state = self.get_current_world_state(character)
+            logging.info(f"Dynamically retrieved world state for {getattr(character, 'name', 'character')}")
+        
+        # Dynamically retrieve available actions if not provided
+        if actions is None:
+            actions = self.get_available_actions(character)
+            logging.info(f"Dynamically retrieved {len(actions)} available actions for {getattr(character, 'name', 'character')}")
+        
         # Initialize the open list with the initial state
         open_list = [(current_state, [])]
         visited_states = set()
@@ -311,6 +440,7 @@ class GOAPPlanner:
 
             # Check if the current state satisfies the goal
             if self._goal_satisfied(goal, state):
+                logging.info(f"Goal achieved with plan of {len(current_plan)} actions")
                 return current_plan
 
             for action in actions:
@@ -328,6 +458,7 @@ class GOAPPlanner:
                         new_plan = current_plan + [action]
                         open_list.append((new_state, new_plan))
 
+        logging.warning(f"No plan found to achieve goal for {getattr(character, 'name', 'character')}")
         return None  # If no plan is found
 
     def _goal_satisfied(self, goal, state):
@@ -410,6 +541,20 @@ class GOAPPlanner:
         except Exception as e:
             print(f"Warning: Error hashing state: {e}")
             return hash(str(state))  # Ultimate fallback
+
+    def plan_for_character(self, character, goal):
+        """
+        Convenience method that automatically retrieves current world state and available actions
+        for a character and generates a plan to achieve the specified goal.
+        
+        Args:
+            character: The character for whom the plan is being generated.
+            goal (Goal): The goal object with completion conditions.
+            
+        Returns:
+            list: A list of Action objects that form a plan to achieve the goal, or None if no plan found.
+        """
+        return self.plan_actions(character, goal)
 
     @staticmethod
     def goap_planner(character, goal: Goal, char_state: State, actions: list):
