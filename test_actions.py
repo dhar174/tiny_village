@@ -405,17 +405,21 @@ class TestBaseActionExecute(unittest.TestCase):
         # and also calls a specific method like respond_to_talk
 
         # Define effects as TalkAction's __init__ would
+        target_effect_value = 1
+        initiator_effect_value = 0.5
         talk_action_effects = [
-            {"targets": ["target"], "attribute": "social_wellbeing", "change_value": 1},
-            {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 0.5}
+            {"targets": ["target"], "attribute": "social_wellbeing", "change_value": target_effect_value},
+            {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": initiator_effect_value}
         ]
 
         # Set initial values for attributes that will be changed by effects
+
         initial_target_social = 10
         initial_initiator_social = 5
         self.target.social_wellbeing = initial_target_social
         self.initiator.social_wellbeing = initial_initiator_social
         # Note: target.respond_to_talk is now a real method that we can test
+
 
         talk_action = TalkAction(
             initiator=self.initiator,
@@ -437,6 +441,7 @@ class TestBaseActionExecute(unittest.TestCase):
         # Initiator should have increased by action effect only (0.5)
         self.assertEqual(self.initiator.social_wellbeing, initial_initiator_social + 0.5)
 
+
         # Check GraphManager calls from super().execute()
         # The graph update happens BEFORE respond_to_talk is called,
         # so it uses the value from just the action effects, not including respond_to_talk
@@ -446,6 +451,7 @@ class TestBaseActionExecute(unittest.TestCase):
         )
         self.mock_graph_manager_instance.update_node_attribute.assert_any_call(
             self.initiator.uuid, "social_wellbeing", initial_initiator_social + 0.5
+
         )
 
         # 2. Check that TalkAction's specific logic was called
