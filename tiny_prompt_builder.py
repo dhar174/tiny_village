@@ -1730,6 +1730,13 @@ class PromptBuilder:
         if hasattr(self.character, "long_term_goal") and self.character.long_term_goal:
             prompt += f"Your long-term aspiration is: {self.character.long_term_goal}. "
 
+        # Include any additional character state provided
+        if character_state_dict:
+            prompt += "\nAdditional state:\n"
+            for key, value in character_state_dict.items():
+                formatted_key = key.replace("_", " ").title()
+                prompt += f"- {formatted_key}: {value}\n"
+
         prompt += f"\n{descriptors.get_routine_question_framing()}"
 
         # Enhanced action choices with better formatting
