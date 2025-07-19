@@ -98,6 +98,7 @@ class StrategyManager:
     The StrategyManager class is responsible for managing the strategies used in goal-oriented action planning and utility evaluation.
     """
 
+
     def __init__(self, use_llm=False, model_name=None):
         self.goap_planner = GOAPPlanner(GraphManager() if GraphManager else None)
         # Initialize graph_manager if available
@@ -105,6 +106,7 @@ class StrategyManager:
             self.graph_manager = GraphManager()
         else:
             self.graph_manager = None
+ 
         self.use_llm = use_llm
 
         # Initialize LLM components if needed and available
