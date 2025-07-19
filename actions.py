@@ -15,7 +15,7 @@ import json
 import operator
 
 from pyparsing import Char
-from torch import Graph
+# Removed unused torch import that was causing import errors
 
 
 # from tiny_characters import Character
@@ -353,8 +353,12 @@ class Action:
         else:
             # Fallback to the singleton instance if no graph_manager is explicitly passed.
             # This maintains some backward compatibility but explicit passing is preferred.
-            GraphManager_module = importlib.import_module("tiny_graph_manager")
-            self.graph_manager = GraphManager_module.GraphManager()
+            try:
+                GraphManager_module = importlib.import_module("tiny_graph_manager")
+                self.graph_manager = GraphManager_module.GraphManager()
+            except ImportError:
+                # Graph manager is optional for core Action functionality
+                self.graph_manager = None
         self.related_skills = related_skills
 
     def to_dict(self):
@@ -654,8 +658,12 @@ class Action:
             self.graph_manager = graph_manager # Prefer graph_manager argument if provided
 
         if not self.graph_manager:
-            GraphManager_module = importlib.import_module("tiny_graph_manager")
-            self.graph_manager = GraphManager_module.GraphManager()
+            try:
+                GraphManager_module = importlib.import_module("tiny_graph_manager")
+                self.graph_manager = GraphManager_module.GraphManager()
+            except ImportError:
+                # Graph manager is optional for core Action functionality
+                self.graph_manager = None
             # print("Warning: Action.execute called without graph_manager, using fallback.")
 
 
@@ -861,16 +869,8 @@ class TalkAction(Action):
             effects
             if effects is not None
             else [
-                {
-                    "targets": ["target"],
-                    "attribute": "social_wellbeing",
-                    "change_value": 1,
-                },
-                {
-                    "targets": ["initiator"],
-                    "attribute": "social_wellbeing",
-                    "change_value": 0.5, # Example: initiator also gets some effect for talking
-                }
+                # No default social_wellbeing effects - let respond_to_talk method handle this
+                # to avoid coupling between hardcoded values and actual implementation
             ]
         )
 
@@ -888,6 +888,7 @@ class TalkAction(Action):
             "completed_at",
             "priority",
             "related_goal",
+            "graph_manager",  # Add graph_manager to allowed parameters
         }
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
 
