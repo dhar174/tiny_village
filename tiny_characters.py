@@ -11,11 +11,8 @@ import re
 from typing import List
 import uuid
 import attr
-from numpy import rint
 from tiny_types import PromptBuilder, GraphManager
-from pyparsing import Char
-from sympy import im
-from torch import Graph, eq, rand
+# Removed incorrect torch import - Graph, eq, rand not used and Graph is not a torch function
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
