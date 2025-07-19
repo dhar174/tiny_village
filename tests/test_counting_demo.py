@@ -60,8 +60,9 @@ def old_counting_logic():
     
     for test_class in test_classes:
         suite = unittest.TestLoader().loadTestsFromTestCase(test_class)
-        runner = unittest.TextTestRunner(verbosity=0, stream=open(os.devnull, 'w'))
-        result = runner.run(suite)
+        with open(os.devnull, 'w') as devnull:
+            runner = unittest.TextTestRunner(verbosity=0, stream=devnull)
+            result = runner.run(suite)
         
         # Old logic treats entire class as pass/fail regardless of individual methods
         if result.wasSuccessful():
