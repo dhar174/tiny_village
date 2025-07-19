@@ -360,12 +360,12 @@ class TestBaseActionExecute(unittest.TestCase):
         )
 
     def test_subclass_execute_calls_super_and_specific_logic(self):
-        # Using TalkAction as an example, assuming it has defined effects
-        # and also calls a specific method like respond_to_talk
-
-        # Define effects as TalkAction's __init__ would
-        target_effect_value = 1
-        initiator_effect_value = 0.5
+        # Test TalkAction with custom effects - this validates that explicit effects work
+        # and that respond_to_talk is called, without depending on hardcoded defaults
+        
+        # Define custom effects for this specific test
+        target_effect_value = 2
+        initiator_effect_value = 1
         talk_action_effects = [
             {"targets": ["target"], "attribute": "social_wellbeing", "change_value": target_effect_value},
             {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": initiator_effect_value}
@@ -392,7 +392,7 @@ class TestBaseActionExecute(unittest.TestCase):
         self.assertTrue(result)
 
         # 1. Check that super().execute() part (effect application) worked
-        # Test behavior: verify values increased by expected amounts rather than hard-coding final values
+        # Test behavior: verify values increased by expected amounts from our custom effects
         expected_target_social = initial_target_social + target_effect_value
         expected_initiator_social = initial_initiator_social + initiator_effect_value
         
@@ -413,6 +413,41 @@ class TestBaseActionExecute(unittest.TestCase):
         # Ensure update_node_attribute was called for the effects handled by super().execute()
         # For this setup, it should be called twice (once for target, once for initiator)
         self.assertEqual(self.mock_graph_manager_instance.update_node_attribute.call_count, 2)
+
+    def test_talk_action_default_behavior_calls_respond_to_talk_without_hardcoded_effects(self):
+        # Test that TalkAction with default effects (empty) still calls respond_to_talk
+        # This ensures that social_wellbeing changes are handled by respond_to_talk method
+        # rather than hardcoded default effects
+        
+        # Mock the target's respond_to_talk method
+        self.target.respond_to_talk = MagicMock()
+        # Store initial values
+        initial_target_social = 10
+        initial_initiator_social = 5
+        self.target.social_wellbeing = initial_target_social
+        self.initiator.social_wellbeing = initial_initiator_social
+
+        # Create TalkAction with default effects (should be empty now)
+        talk_action = TalkAction(
+            initiator=self.initiator,
+            target=self.target,
+            graph_manager=self.mock_graph_manager_instance
+        )
+        # Ensure preconditions pass for the test
+        talk_action.preconditions_met = MagicMock(return_value=True)
+
+        result = talk_action.execute(character=self.initiator)
+        self.assertTrue(result)
+
+        # Verify that no hardcoded effects were applied (values should remain unchanged)
+        self.assertEqual(self.target.social_wellbeing, initial_target_social)
+        self.assertEqual(self.initiator.social_wellbeing, initial_initiator_social)
+
+        # Verify that respond_to_talk was called - this is where social_wellbeing should be handled
+        self.target.respond_to_talk.assert_called_once_with(self.initiator)
+
+        # No graph updates should have occurred since no effects were applied
+        self.mock_graph_manager_instance.update_node_attribute.assert_not_called()
 
 
 # Continue updating TestSocialActions
