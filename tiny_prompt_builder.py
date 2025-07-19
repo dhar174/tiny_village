@@ -1665,8 +1665,24 @@ class PromptBuilder:
         weather: str,
         action_choices: List[str],
         character_state_dict: Optional[Dict[str, float]] = None,
+        include_memories: bool = False,
     ) -> str:
-        """Create a decision prompt incorporating goals, needs and context."""
+        """Create a decision prompt incorporating goals, needs and context.
+
+        Parameters
+        ----------
+        time : str
+            Current in-game time description.
+        weather : str
+            Current weather description.
+        action_choices : List[str]
+            Available action options for the character.
+        character_state_dict : Optional[Dict[str, float]], optional
+            Additional state data that may influence the prompt.
+        include_memories : bool, optional
+            When True, short summaries of recent memories and relationship
+            statuses will be appended to the prompt.
+        """
         # Calculate needs priorities for character context
         needs_calculator = NeedsPriorities()
         needs_priorities = needs_calculator.calculate_needs_priorities(self.character)
@@ -1729,6 +1745,44 @@ class PromptBuilder:
         # Long-term aspiration context
         if hasattr(self.character, "long_term_goal") and self.character.long_term_goal:
             prompt += f"Your long-term aspiration is: {self.character.long_term_goal}. "
+
+        if include_memories:
+            # Summaries of recent memories
+            try:
+                memories = []
+                mm = getattr(self.character, "memory_manager", None)
+                if mm is not None:
+                    if hasattr(mm, "get_recent_memories"):
+                        memories = mm.get_recent_memories()
+                    elif hasattr(mm, "flat_access") and hasattr(mm.flat_access, "get_recent_memories"):
+                        memories = mm.flat_access.get_recent_memories()
+                if memories:
+                    prompt += "\nRecent memories:\n"
+                    for mem in list(memories)[-3:]:
+                        desc = getattr(mem, "description", str(mem))
+                        short = desc if len(desc) <= 60 else desc[:57] + "..."
+                        prompt += f"- {short}\n"
+            except Exception as e:
+                print(f"Warning: Could not retrieve recent memories: {e}")
+
+            # Relationship summaries
+            try:
+                gm = getattr(self.character, "graph_manager", None)
+                if gm is not None:
+                    relationships = gm.retrieve_characters_relationships(self.character)
+                    if relationships:
+                        prompt += "\nRelationships:\n"
+                        count = 0
+                        for target, data in relationships.items():
+                            if count >= 3:
+                                break
+                            name = getattr(target, "name", str(target))
+                            status = gm.check_friendship_status(self.character, target)
+                            strength = gm.evaluate_relationship_strength(self.character, target)
+                            prompt += f"- {name}: {status} (Strength {strength}/100)\n"
+                            count += 1
+            except Exception as e:
+                print(f"Warning: Could not retrieve relationship info: {e}")
 
         prompt += f"\n{descriptors.get_routine_question_framing()}"
 

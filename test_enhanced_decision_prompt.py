@@ -426,6 +426,47 @@ class TestEnhancedDecisionPrompt(unittest.TestCase):
 
         logger.info("Character state dict parameter test completed!")
 
+    def test_include_memories_option(self):
+        """Ensure recent memories and relationships are included when requested."""
+        from tiny_memories import SpecificMemory
+        from tiny_locations import Location
+
+        # Add a simple memory
+        mem = SpecificMemory(
+            "Won a hackathon", None, 5, manager=self.character.memory_manager
+        )
+        self.character.memory_manager.add_memory(mem)
+
+        # Create another character and relationship
+        other = Character(
+            name="Bob", age=30, pronouns="he/him", job="Artist", health_status=7,
+            hunger_level=5, wealth_money=5, mental_health=7, social_wellbeing=7,
+            job_performance=5, community=5, friendship_grid=[], recent_event="met Sarah",
+            goal="Paint", personality_traits={
+                "extraversion": 50, "openness": 70, "conscientiousness": 60,
+                "agreeableness": 65, "neuroticism": 40,
+            }, action_system=ActionSystem(), gametime_manager=tiny_time_manager,
+            location=Location("Bob's Studio", 0, 0, 1, 1, ActionSystem()),
+            graph_manager=self.graph_manager,
+        )
+        self.graph_manager.add_character_node(self.character)
+        self.graph_manager.add_character_node(other)
+        self.graph_manager.add_character_character_edge(self.character, other)
+
+        prompt = self.prompt_builder.generate_decision_prompt(
+            time="morning",
+            weather="clear",
+            action_choices=self.test_action_choices,
+            include_memories=True,
+        )
+
+        self.assertIn("Recent memories", prompt)
+        self.assertIn("Relationships", prompt)
+        self.assertIn("Bob", prompt)
+        self.assertIn("hackathon", prompt)
+
+        logger.info("Include memories option verified")
+
 
 def print_sample_prompt():
     """Generate and print a sample enhanced prompt for visual inspection."""
