@@ -66,10 +66,10 @@ class NeedsPriorities:
 
         return self.needs_priorities
 
-    def get_needs_priorities_list(self) -> List[str]:
-        """Return a list of names of tracked needs."""
+    def get_needs_priorities_list(self) -> dict_keys:
+        """Return a view of names of tracked needs."""
 
-        return list(self.needs_priorities.keys())
+        return self.needs_priorities.keys()
 
     def get_needs_priorities_values(self) -> List[float]:
         """Return a list of priority scores in their current order."""
