@@ -465,7 +465,7 @@ class TestBaseActionExecute(unittest.TestCase):
         # We just check it's greater than the action effect alone
         self.assertGreater(
             self.target.social_wellbeing, 
-            initial_target_social + 1.0,  # More than just the action effect
+            initial_target_social + target_effect_value,  # More than just the action effect
             "Target's social_wellbeing should increase by more than just the action effect due to respond_to_talk"
         )
 
