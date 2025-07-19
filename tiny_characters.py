@@ -11,11 +11,8 @@ import re
 from typing import List
 import uuid
 import attr
-from numpy import rint
 from tiny_types import PromptBuilder, GraphManager
-from pyparsing import Char
-from sympy import im
-from torch import Graph, eq, rand
+# Removed incorrect torch import - Graph, eq, rand not used and Graph is not a torch function
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
@@ -2636,6 +2633,23 @@ class Character:
         elif self.neuroticism > 70:
             return "avoids the situation entirely"
         return "confronts the issue directly"
+
+    def respond_to_talk(self, initiator):
+        """
+        Respond to a conversation initiated by another character.
+        This method provides additional social interaction beyond the effects 
+        handled by TalkAction.
+        """
+        # Give a small additional boost to social wellbeing when talked to
+        self.social_wellbeing += 0.1
+        
+        # Return a response based on personality traits
+        if hasattr(self, 'extraversion') and self.extraversion > 65:
+            return f"{self.name} engages enthusiastically in conversation"
+        elif hasattr(self, 'neuroticism') and self.neuroticism > 70:
+            return f"{self.name} responds nervously but appreciates the attention"
+        else:
+            return f"{self.name} listens and responds thoughtfully"
 
     def define_descriptors(self):
         """

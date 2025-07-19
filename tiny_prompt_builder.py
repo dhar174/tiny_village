@@ -251,11 +251,32 @@ class NeedsPriorities:
         return material_goods_priority
 
     def calculate_friendship_grid_priority(self, character: tc.Character):
-        # Friendship grid priority is based on friendship grid
-        # Friendship grid is a value from 1-10
-        # Friendship grid priority is a value from 1-100
-        # Friendship grid priority is calculated by multiplying friendship grid times 10
-        friendship_grid_priority = character.get_motives().get_friendship_grid_motive()
+        # Friendship grid priority is based on social connections and relationships
+        # Use social_wellbeing_motive as the base since friendship relates to social wellbeing
+        # Calculate aggregate friendship score from the character's friendship grid
+        friendship_grid = character.get_friendship_grid()
+        
+        # Calculate average friendship score from the grid
+        if friendship_grid and len(friendship_grid) > 0:
+            # Filter out empty dictionaries and calculate average friendship score
+            valid_friendships = [f for f in friendship_grid if f and 'friendship_score' in f]
+            if valid_friendships:
+                avg_friendship_score = sum(f['friendship_score'] for f in valid_friendships) / len(valid_friendships)
+                # Convert to 0-10 scale for consistency with other priorities
+                # Clamp to reasonable bounds (0-100 friendship score range)
+                avg_friendship_score = max(0, min(100, avg_friendship_score))
+                friendship_state = avg_friendship_score / 10.0
+            else:
+                friendship_state = 0  # No valid friendships
+        else:
+            friendship_state = 0  # No friendship data
+        
+        # Combine with social wellbeing motive (friendship is social)
+        social_motive = character.get_motives().get_social_wellbeing_motive()
+        
+        # Calculate priority: higher motive with lower current state = higher priority
+        # Ensure priority is always non-negative
+        friendship_grid_priority = max(0, social_motive + (10 - friendship_state) * 2)
         return friendship_grid_priority
 
     def calculate_needs_priorities(self, character: tc.Character):
@@ -342,7 +363,7 @@ class ActionOptions:
             and character.get_wealth_money() > 1
             and (
                 character.get_inventory().count_food_items_total() < 5
-                or character.get_inventory().count_food_calories_total
+                or character.get_inventory().count_food_calories_total()
                 < character.get_hunger_level()
             ),
             "eat_food": character.get_hunger_level() > 5
@@ -1189,6 +1210,7 @@ class DescriptorMatrices:
         }
 
         self.event_recent = {
+            "default": ["Recently"],
             "craft fair": ["After your success at the craft fair"],
             "community center": ["After you helped at the community center"],
             "hospital": ["After you were recently in the hospital"],
@@ -1199,6 +1221,7 @@ class DescriptorMatrices:
         }
 
         self.financial_situation = {
+            "default": ["financially, you are doing okay"],
             "rich": [
                 "you are financially well-off",
                 "you are rich",
