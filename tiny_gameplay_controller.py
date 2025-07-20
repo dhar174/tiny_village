@@ -2803,14 +2803,36 @@ class GameplayController:
     def apply_decision(self, decision, game_state=None):
         """
         Improved apply_decision method that properly handles action resolution.
+        
+        This method can safely handle None values for game_state and will use the 
+        controller's internal state when game_state is not provided.
 
         Args:
             decision: Can be a single action, list of actions, or decision object
-            game_state: Optional game state (for legacy compatibility)
+            game_state: Optional game state (for legacy compatibility). 
+                        When None, actions will be executed using the controller's 
+                        internal state and character information.
+        
+        Returns:
+            bool: True if all actions were executed successfully, False otherwise
+            
+        Note:
+            Passing None as game_state is explicitly supported and safe. The method
+            will fall back to using available character and controller state information.
         """
         try:
+            # Validate input parameters
+            if decision is None:
+                logger.warning("apply_decision called with None decision - no actions to execute")
+                return True  # No actions to execute is considered successful
+            
+            # Log when game_state is None for transparency
+            if game_state is None:
+                logger.debug("apply_decision called with game_state=None - using controller's internal state")
+            
             # Handle different decision formats
             actions_to_execute = []
+            target_character = None
 
             if isinstance(decision, list):
                 actions_to_execute = decision
@@ -2823,8 +2845,12 @@ class GameplayController:
             else:
                 # Single action
                 actions_to_execute = [decision]
-                target_character = None
 
+            # Validate that we have actions to execute
+            if not actions_to_execute:
+                logger.warning("apply_decision: No actions found in decision")
+                return True  # No actions to execute is considered successful
+            
             # Find target character if not specified
             if not target_character and actions_to_execute:
                 # Try to determine character from first action
@@ -2850,20 +2876,25 @@ class GameplayController:
                     logger.error(f"Error executing decision action {action}: {e}")
                     continue
 
-            # Log decision execution results
+            # Log decision execution results with context about game_state
             total_actions = len(actions_to_execute)
+            game_state_info = "with game_state" if game_state is not None else "using internal state (game_state=None)"
+            
             if successful_actions == total_actions:
                 logger.info(
-                    f"Decision fully executed: {successful_actions}/{total_actions} actions successful"
+                    f"Decision fully executed {game_state_info}: {successful_actions}/{total_actions} actions successful"
                 )
+                return True
             elif successful_actions > 0:
                 logger.warning(
-                    f"Decision partially executed: {successful_actions}/{total_actions} actions successful"
+                    f"Decision partially executed {game_state_info}: {successful_actions}/{total_actions} actions successful"
                 )
+                return False
             else:
                 logger.error(
-                    f"Decision execution failed: 0/{total_actions} actions successful"
+                    f"Decision execution failed {game_state_info}: 0/{total_actions} actions successful"
                 )
+                return False
 
         except Exception as e:
             logger.error(f"Critical error applying decision: {e}")
@@ -2874,14 +2905,22 @@ class GameplayController:
     ) -> bool:
         """
         Execute a single action from a decision with proper error handling.
+        
+        This method safely handles None values for both target_character and game_state,
+        falling back to parameterless action execution when neither is available.
 
         Args:
             action: Action data (dict, object, or string)
-            target_character: Character to execute action on
-            game_state: Optional game state for legacy compatibility
+            target_character: Character to execute action on (optional)
+            game_state: Optional game state for legacy compatibility (can be None)
 
         Returns:
-            bool: True if action executed successfully
+            bool: True if action executed successfully, False otherwise
+            
+        Note:
+            When both target_character and game_state are None, the action will be
+            executed without additional parameters, relying on the action's internal
+            logic and the controller's state.
         """
         try:
             # Use action resolver to convert action to executable format
@@ -2893,17 +2932,21 @@ class GameplayController:
                 logger.warning(f"Could not resolve action: {action}")
                 return False
 
-            # Execute the resolved action
+            # Execute the resolved action with appropriate parameters
             if hasattr(resolved_action, "execute"):
                 try:
-                    # Try different execution signatures
+                    # Choose execution strategy based on available parameters
+                    # Priority: target_character > game_state > no parameters
                     if target_character:
+                        logger.debug(f"Executing action '{getattr(resolved_action, 'name', action)}' with target_character")
                         result = resolved_action.execute(
                             target=target_character, initiator=target_character
                         )
-                    elif game_state:
+                    elif game_state is not None:
+                        logger.debug(f"Executing action '{getattr(resolved_action, 'name', action)}' with game_state")
                         result = resolved_action.execute(game_state)
                     else:
+                        logger.debug(f"Executing action '{getattr(resolved_action, 'name', action)}' with no additional parameters (safe fallback)")
                         result = resolved_action.execute()
 
                     if result:
