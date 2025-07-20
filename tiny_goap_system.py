@@ -860,9 +860,9 @@ class GOAPPlanner:
                         change_value = effect.get('change_value', 0)
                         targets = effect.get('targets', [])
                         
-                        # Skip effects that don't target the character being planned for
-                        # In GOAP planning, we treat all effects as applying to the current state
-                        # regardless of the "targets" field (which is handled during actual execution)
+                        # Apply all effects to the current state during planning
+                        # The "targets" field is ignored during planning and is handled during actual execution
+                        # This ensures that all potential effects are considered for state transitions
                         if attribute:
                             current_value = new_state.get(attribute, 0)
                             if isinstance(change_value, (int, float)):
