@@ -80,12 +80,42 @@ def calculate_goal_difficulty_test(self, goal, character):
 
     print("   ✓ Test function defined")
 
+    # Enhanced MockGoal that matches real Goal interface
     class MockGoal:
-        def __init__(self, criteria):
+        def __init__(self, criteria, name="MinimalTestGoal", priority=0.5):
             self.criteria = criteria
+            self.name = name
+            self.priority = priority
+            self.score = priority
+            self.target_effects = {"completion": 1.0}
+            self.completed = False
+            self.description = "Minimal test goal for difficulty calculation"
+            
+            # Attributes needed for goal difficulty calculation
+            self.character = None
+            self.target = None
+            self.required_items = self._extract_required_items()
+            
+        def _extract_required_items(self):
+            """Extract required items from criteria - matches real Goal interface."""
+            required_items = []
+            for criterion in self.criteria:
+                if "node_attributes" in criterion:
+                    node_attrs = criterion["node_attributes"]
+                    if "item_type" in node_attrs:
+                        required_items.append(({"item_type": node_attrs["item_type"]}, 1))
+            return required_items
+            
+        def check_completion(self, state=None):
+            """Check goal completion - matches real Goal interface."""
+            return self.completed
 
     mgr = MinimalGraphManager()
-    goal = MockGoal([{"node_attributes": {"item_type": "food"}}])
+    goal = MockGoal(
+        criteria=[{"node_attributes": {"item_type": "food"}}],
+        name="FindFood",
+        priority=0.8
+    )
 
     print("4. Running calculate_goal_difficulty test...")
     result = calculate_goal_difficulty_test(mgr, goal, None)
