@@ -57,10 +57,10 @@ def test_building_coordinate_selection():
             print(
                 "✓ Collision detection working - houses placed at different coordinates"
             )
+            return True
         else:
-            print("⚠ Warning: Houses placed at same coordinates")
-
-        return True
+            print("✗ Houses placed at same coordinates - collision detection failed")
+            return False
 
     except Exception as e:
         print(f"✗ Building coordinate selection test failed: {e}")
@@ -186,6 +186,7 @@ class TestHappinessCalculation(unittest.TestCase):
             # Check all features
             implemented_features = []
             missing_features = []
+
             for feature in self.all_features:
                 if feature in content:
                     implemented_features.append(feature)
@@ -214,9 +215,30 @@ class TestHappinessCalculation(unittest.TestCase):
             print(f"  - Total features: {total_implemented}/{len(self.all_features)} implemented")
             print(f"  - Implemented features: {implemented_features}")
             
+            # Define implementation keywords for happiness calculation features
+            implementation_keywords = ["feature1", "feature2", "feature3", "feature4"]
+
+            if implemented_features is None:
+                for keyword in implementation_keywords:
+                    if keyword in content:
+                        implemented_features.append(keyword)
+                    else:
+                        if keyword not in missing_features:
+                            missing_features.append(keyword)
             if missing_features:
                 print(f"  - Missing optional features: {missing_features}")
 
+
+            if len(implemented_features) == len(implementation_keywords):
+                print(
+                    f"✓ All {len(implemented_features)} happiness calculation features implemented"
+                )
+                return True
+            else:
+                print(
+                    f"✗ Missing {len(missing_features)} required happiness features: {missing_features}"
+                )
+                return False
         except Exception as e:
             self.fail(f"Comprehensive happiness validation failed: {e}")
 

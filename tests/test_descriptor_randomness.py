@@ -160,10 +160,12 @@ class TestDescriptorRandomness(unittest.TestCase):
                 # Each function should show some level of variation
                 # (We're being conservative here to avoid false positives)
                 if unique_count == 1:
-                    # All values identical - check if this is expected
-                    # Some functions might legitimately have only one option
-                    print(f"Warning: {func.__name__}('{param}') returned only one unique value: '{values[0]}'")
-                    print(f"This might indicate limited options for this parameter.")
+                    # All values identical - this indicates a problem with the random function
+                    # or the function legitimately has only one option (which should be documented)
+                    self.fail(
+                        f"{func.__name__}('{param}') returned only one unique value: '{values[0]}'. "
+                        f"This suggests either insufficient randomness or limited options that should be documented."
+                    )
                 else:
                     self.assertGreaterEqual(
                         unique_count, 2,
@@ -198,8 +200,9 @@ class TestDescriptorRandomness(unittest.TestCase):
                     f"and suggests non-random behavior."
                 )
             else:
-                # Improbable but not impossible - just warn
-                print(f"Warning: All values identical (p ≈ {prob_all_same:.2e}), but within statistical possibility")
+                # Improbable but not impossible - document this for analysis
+                print(f"Note: All values identical (p ≈ {prob_all_same:.2e}), within statistical possibility but unusual")
+                # This is acceptable for probabilistic testing, but worth noting
         
         # Test always passes unless we see the extremely improbable case
         self.assertGreaterEqual(unique_count, 1)  # Always true, documents expectation

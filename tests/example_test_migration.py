@@ -120,9 +120,8 @@ class RobustTestExample(unittest.TestCase):
                     f"and suggests non-random behavior."
                 )
             else:
-                # Improbable but not impossible - just warn
-                print(f"Warning: All values identical (p ≈ {prob_all_same:.2e}), "
-                      f"but within statistical possibility")
+                # Improbable but not impossible - document this for analysis
+                print(f"Note: All values identical (p ≈ {prob_all_same:.2e}), within statistical possibility but unusual")
         
         # Test passes unless we see the extremely improbable case
         self.assertGreaterEqual(unique_count, 1)
