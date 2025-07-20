@@ -31,7 +31,7 @@ The main GUI functionality is handled by `tiny_map_controller.py` while `tiny_ga
    - The selected character state lives in `MapController` which may complicate UI components that rely on it.
 3. **Rendering Pipeline**
    - Failure of `map_controller.render` is caught but only logs an error; no fallback visuals are used.
-   - Many TODO items in `GameplayController.render` indicate missing features like resolution scaling and post‑processing.
+   - Many TODO items in `GameplayController.render` indicate missing features like resolution scaling and post-processing.
 4. **Path Cache Invalidation**
    - `invalidate_path_cache` is called when dynamic obstacles are added or removed, but there is no explicit mechanism for regular expiration beyond a simple timeout.
 5. **Map Data Dependency**
