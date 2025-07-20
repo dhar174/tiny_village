@@ -382,11 +382,11 @@ class TestMemoryQuery(unittest.TestCase):
         self.assertFalse(self.mq.by_keywords_function(node, ["date", "elderberry"]))
         
         # Test with empty keywords
-        node_empty = TestNode(TestMemory([]))
+        node_empty = self.create_test_node("keywords", [])
         self.assertFalse(self.mq.by_keywords_function(node_empty, ["apple"]))
         
         # Test with None keywords
-        node_none = TestNode(TestMemory(None))
+        node_none = self.create_test_node("keywords", None)
         self.assertFalse(self.mq.by_keywords_function(node_none, ["apple"]))
 
     @patch("tiny_memories.cosine_similarity")
