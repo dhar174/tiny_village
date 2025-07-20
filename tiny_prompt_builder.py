@@ -71,10 +71,10 @@ class NeedsPriorities:
 
         return self.needs_priorities.keys()
 
-    def get_needs_priorities_values(self) -> List[float]:
-        """Return a list of priority scores in their current order."""
+    def get_needs_priorities_values(self) -> dict_values[float]:
+        """Return a view of priority scores in their current order."""
 
-        return list(self.needs_priorities.values())
+        return self.needs_priorities.values()
 
     def get_needs_priorities_sorted(self) -> List[tuple]:
         """Return need/priority pairs sorted from lowest to highest priority."""
