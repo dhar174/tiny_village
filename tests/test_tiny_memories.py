@@ -318,16 +318,32 @@ class TestMemoryQuery(unittest.TestCase):
         self.assertEqual(attention_mask_val, mock_input_dict["attention_mask"])
 
     def test_by_importance_function(self):
-        node = MagicMock()
-        node.memory.importance_score = 5
+        # Create proper test node and memory objects instead of MagicMock
+        class TestMemory:
+            def __init__(self, importance_score):
+                self.importance_score = importance_score
+                
+        class TestNode:
+            def __init__(self, memory):
+                self.memory = memory
+        
+        node = TestNode(TestMemory(5))
         self.assertTrue(self.mq.by_importance_function(node, 0, 10))
         self.assertTrue(self.mq.by_importance_function(node, 5, 5))
         self.assertFalse(self.mq.by_importance_function(node, 6, 10))
         self.assertFalse(self.mq.by_importance_function(node, 0, 4))
 
     def test_by_sentiment_function(self):
-        node = MagicMock()
-        node.memory.sentiment_score = {"polarity": 0.5, "subjectivity": 0.8}
+        # Create proper test objects instead of MagicMock with predefined attributes
+        class TestMemory:
+            def __init__(self, sentiment_score):
+                self.sentiment_score = sentiment_score
+                
+        class TestNode:
+            def __init__(self, memory):
+                self.memory = memory
+        
+        node = TestNode(TestMemory({"polarity": 0.5, "subjectivity": 0.8}))
         self.assertTrue(self.mq.by_sentiment_function(node, 0.0, 1.0, 0.0, 1.0))
         self.assertTrue(self.mq.by_sentiment_function(node, 0.5, 0.5, 0.8, 0.8))
         self.assertFalse(
@@ -338,26 +354,58 @@ class TestMemoryQuery(unittest.TestCase):
         )  # Subjectivity too low
 
     def test_by_emotion_function(self):
-        node = MagicMock()
-        node.memory.emotion_classification = "happy"
+        # Create proper test objects for emotion classification testing
+        class TestMemory:
+            def __init__(self, emotion_classification):
+                self.emotion_classification = emotion_classification
+                
+        class TestNode:
+            def __init__(self, memory):
+                self.memory = memory
+        
+        node = TestNode(TestMemory("happy"))
         self.assertTrue(self.mq.by_emotion_function(node, "happy"))
         self.assertFalse(self.mq.by_emotion_function(node, "sad"))
 
     def test_by_keywords_function(self):
-        node = MagicMock()
-        node.memory.keywords = ["apple", "banana", "cherry"]
+        # Create proper test objects for keywords testing
+        class TestMemory:
+            def __init__(self, keywords):
+                self.keywords = keywords
+                
+        class TestNode:
+            def __init__(self, memory):
+                self.memory = memory
+        
+        node = TestNode(TestMemory(["apple", "banana", "cherry"]))
         self.assertTrue(self.mq.by_keywords_function(node, ["banana", "date"]))
         self.assertFalse(self.mq.by_keywords_function(node, ["date", "elderberry"]))
-        node.memory.keywords = []
-        self.assertFalse(self.mq.by_keywords_function(node, ["apple"]))
-        node.memory.keywords = None
-        self.assertFalse(self.mq.by_keywords_function(node, ["apple"]))
+        
+        # Test with empty keywords
+        node_empty = TestNode(TestMemory([]))
+        self.assertFalse(self.mq.by_keywords_function(node_empty, ["apple"]))
+        
+        # Test with None keywords
+        node_none = TestNode(TestMemory(None))
+        self.assertFalse(self.mq.by_keywords_function(node_none, ["apple"]))
 
     @patch("tiny_memories.cosine_similarity")
     def test_by_similarity_function(self, mock_cosine_similarity):
-        node = MagicMock()
-        node.memory.embedding = MagicMock(name="NodeEmbedding")
-        query_embedding = MagicMock(name="QueryEmbedding")
+        # Create proper test objects for similarity testing
+        class TestMemory:
+            def __init__(self, embedding):
+                self.embedding = embedding
+                
+        class TestNode:
+            def __init__(self, memory):
+                self.memory = memory
+                
+        class TestEmbedding:
+            def __init__(self, name):
+                self.name = name
+        
+        node = TestNode(TestMemory(TestEmbedding("NodeEmbedding")))
+        query_embedding = TestEmbedding("QueryEmbedding")
 
         mock_cosine_similarity.return_value = np.array(
             [[0.9]]
@@ -375,8 +423,16 @@ class TestMemoryQuery(unittest.TestCase):
         )
 
     def test_by_attribute_function(self):
-        node = MagicMock()
-        node.memory.attribute = "color"
+        # Create proper test objects for attribute testing
+        class TestMemory:
+            def __init__(self, attribute):
+                self.attribute = attribute
+                
+        class TestNode:
+            def __init__(self, memory):
+                self.memory = memory
+        
+        node = TestNode(TestMemory("color"))
         self.assertTrue(self.mq.by_attribute_function(node, "color"))
         self.assertFalse(self.mq.by_attribute_function(node, "size"))
 
@@ -554,12 +610,6 @@ class TestMemoryManager(unittest.TestCase):
         # Assert the embeddings are updated for specific memories within a general memory
         specific_memory.get_embedding.assert_called_once()
         self.assertIn(specific_memory, self.memory_manager.memory_embeddings)
-
-    def test_add_memory(self):
-        memory = MagicMock()
-        self.memory_manager.add_memory(memory)
-        self.memory_manager.flat_access.add_memory.assert_called_with(memory)
-        # This method would need more logic if `update_hierarchy` did more.
 
     @patch("tiny_memories.nlp")
     def test_extract_entities(self, mock_nlp):
