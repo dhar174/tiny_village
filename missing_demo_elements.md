@@ -30,6 +30,6 @@ Several systems referenced in documentation are only partly implemented or exist
 To achieve a minimal playable demo, the repository needs at least:
 1. A real `main.py` or startup script that configures and launches `GameplayController`.
 2. Basic assets (map image, building data, initial characters).
-3. Working integrations between `EventHandler`, `StrategyManager`, `GOAPPlanner` and `ActionSystem` for simple goal‑oriented behavior.
+3. Working integrations between `EventHandler`, `StrategyManager`, `GOAPPlanner` and `ActionSystem` for simple goal-oriented behavior.
 4. Implemented execution logic for core actions and minimal economy/quest/weather subsystems.
 5. Passing unit tests with essential dependencies installed.
