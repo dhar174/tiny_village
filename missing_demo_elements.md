@@ -10,11 +10,11 @@ This document summarizes key functionality gaps discovered in the repository whi
 
 ## 3. Incomplete Core Systems
 Several systems referenced in documentation are only partly implemented or exist as stubs:
-- **Event System** – `tiny_event_handler.py` has basic classes but the controller’s `_process_pending_events` method is largely TODOs. Events are not integrated into character decision making.
-- **GOAP Planner Integration** – `tiny_goap_system.py` includes planning logic, yet `StrategyManager` mostly selects single actions by utility rather than producing multi‑step plans. The documented interaction of `StrategyManager → GOAPPlanner → ActionSystem` is incomplete.
-- **Action Execution** – many actions have placeholder `execute()` implementations. `ActionResolver` converts simple dictionaries into actions instead of utilizing richer definitions from `actions.py`.
-- **LLM Interface** – components like `PromptBuilder`, `TinyBrainIO` and `OutputInterpreter` exist, but their orchestration within the strategy loop is inconsistent. Prompt generation relies on hardcoded action lists and the pipeline lacks error handling for unpredictable LLM output.
-- **Weather, Quest and Social systems** – `GameplayController` includes `implement_weather_system`, `implement_quest_system`, and `implement_social_network_system`, yet these return basic stubs with no update methods.
+- **Event System** -- `tiny_event_handler.py` has basic classes but the controller’s `_process_pending_events` method is largely TODOs. Events are not integrated into character decision making.
+- **GOAP Planner Integration** -- `tiny_goap_system.py` includes planning logic, yet `StrategyManager` mostly selects single actions by utility rather than producing multi-step plans. The documented interaction of `StrategyManager → GOAPPlanner → ActionSystem` is incomplete.
+- **Action Execution** -- many actions have placeholder `execute()` implementations. `ActionResolver` converts simple dictionaries into actions instead of utilizing richer definitions from `actions.py`.
+- **LLM Interface** -- components like `PromptBuilder`, `TinyBrainIO` and `OutputInterpreter` exist, but their orchestration within the strategy loop is inconsistent. Prompt generation relies on hardcoded action lists and the pipeline lacks error handling for unpredictable LLM output.
+- **Weather, Quest and Social systems** -- `GameplayController` includes `implement_weather_system`, `implement_quest_system`, and `implement_social_network_system`, yet these return basic stubs with no update methods.
 
 ## 4. World Data & Economy
 - No sample building or character data is bundled (besides minimal defaults in the controller). Files such as `custom_buildings.json` and `job_roles.json` suggest external resources are expected, but they are not referenced during initialization.
