@@ -62,7 +62,7 @@ class State:
             args = []
 
         keys = key.split(".")
-        val = self
+        val = self.dict_or_obj  # Start with the underlying data, not the State object itself
         for k in keys:
             if isinstance(val, dict):
                 val = val.get(k, 0)
@@ -869,16 +869,8 @@ class TalkAction(Action):
             effects
             if effects is not None
             else [
-                {
-                    "targets": ["target"],
-                    "attribute": "social_wellbeing",
-                    "change_value": 1,
-                },
-                {
-                    "targets": ["initiator"],
-                    "attribute": "social_wellbeing",
-                    "change_value": 0.5, # Example: initiator also gets some effect for talking
-                }
+                # No default social_wellbeing effects - let respond_to_talk method handle this
+                # to avoid coupling between hardcoded values and actual implementation
             ]
         )
 
@@ -896,6 +888,7 @@ class TalkAction(Action):
             "completed_at",
             "priority",
             "related_goal",
+            "graph_manager",  # Add graph_manager to allowed parameters
         }
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
 
