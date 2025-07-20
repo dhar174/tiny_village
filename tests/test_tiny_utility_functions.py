@@ -11,13 +11,45 @@ import importlib
 
 # We need mock classes for testing since the real classes have complex dependencies
 class MockGoal:
-    """Simple goal class for testing utility functions."""
+    """Enhanced goal class for testing utility functions that matches real Goal interface."""
 
-    def __init__(self, name, target_effects=None, priority=0.5):
+    def __init__(self, name, target_effects=None, priority=0.5, description=None):
         self.name = name
         self.target_effects = target_effects if target_effects else {}
         self.priority = priority
         self.score = priority  # alias for compatibility
+        self.description = description or f"Test goal: {name}"
+        self.completed = False
+        
+        # Additional attributes to match real Goal interface
+        self.character = None
+        self.target = None
+        self.completion_conditions = {}
+        self.criteria = []
+        self.required_items = []
+        self.goal_type = "test"
+        
+    def check_completion(self, state=None):
+        """Check if goal is completed - matches real Goal interface."""
+        return self.completed
+        
+    def get_name(self):
+        """Getter method found in real Goal class."""
+        return self.name
+        
+    def get_score(self):
+        """Getter method found in real Goal class."""
+        return self.score
+        
+    def to_dict(self):
+        """Serialization method found in real Goal class."""
+        return {
+            "name": self.name,
+            "description": self.description,
+            "score": self.score,
+            "target_effects": self.target_effects,
+            "priority": self.priority
+        }
 
 
 # Alias for test compatibility
@@ -30,11 +62,119 @@ Goal = MockGoal
 
 
 class MockAction:
-    def __init__(self, name, cost, effects=None):
+    """Enhanced MockAction with meaningful precondition checking.
+    
+    This mock implements realistic precondition validation to ensure tests
+    fail when real precondition logic is broken, rather than masking bugs
+    by always returning True.
+    """
+
+    
+    def __init__(self, name, cost, effects=None, preconditions=None, satisfaction=None):
         self.name = name
         self.cost = float(cost)
         # Effects is a list of dictionaries, e.g., [{'attribute': 'hunger', 'change_value': -0.5}]
         self.effects = effects if effects else []
+        self.preconditions = preconditions if preconditions else []
+        
+        # Additional attributes to match real Action interface
+        self.satisfaction = satisfaction if satisfaction is not None else 5.0
+        self.urgency = 1.0
+        self.action_id = id(self)
+        self.target = None
+        self.initiator = None
+        self.priority = 1.0
+        self.related_goal = None
+        
+        # Impact ratings found in real Action class
+        self.impact_rating_on_target = 1
+        self.impact_rating_on_initiator = 1
+        self.impact_rating_on_other = {}
+
+    def preconditions_met(self, state=None):
+        """Check if preconditions are met - matches real Action interface.
+        
+        This implementation provides meaningful precondition checking rather
+        than always returning True, ensuring tests will fail when real
+        precondition logic is broken.
+        
+        Args:
+            state: Optional state object or dict to check preconditions against
+            
+        Returns:
+            bool: True if all preconditions are satisfied, False otherwise
+        """
+        if not self.preconditions:
+            return True
+            
+        # Handle different precondition formats for testing flexibility
+        for precondition in self.preconditions:
+            if isinstance(precondition, dict):
+                # Handle dict-style preconditions: {"attribute": "energy", "operator": ">=", "value": 50}
+                attribute = precondition.get("attribute")
+                operator = precondition.get("operator", ">=")
+                required_value = precondition.get("value", 0)
+                
+                if state is None:
+                    # No state provided - cannot verify preconditions
+                    return False
+                    
+                # Get current value from state
+                if isinstance(state, dict):
+                    current_value = state.get(attribute, 0)
+                else:
+                    current_value = getattr(state, attribute, 0)
+                
+                # Check condition based on operator
+                if operator == ">=":
+                    if current_value < required_value:
+                        return False
+                elif operator == "<=":
+                    if current_value > required_value:
+                        return False
+                elif operator == "==":
+                    if current_value != required_value:
+                        return False
+                elif operator == ">":
+                    if current_value <= required_value:
+                        return False
+                elif operator == "<":
+                    if current_value >= required_value:
+                        return False
+                else:
+                    # Unknown operator - fail safe
+                    return False
+                    
+            elif hasattr(precondition, 'check_condition'):
+                # Handle Condition-like objects
+                try:
+                    if not precondition.check_condition(state):
+                        return False
+                except Exception:
+                    # If condition checking fails, precondition is not met
+                    return False
+            elif callable(precondition):
+                # Handle function-style preconditions
+                try:
+                    if not precondition(state):
+                        return False
+                except Exception:
+                    return False
+            else:
+                # Unknown precondition type - fail safe to catch bugs
+                return False
+                
+        return True
+
+    def to_dict(self):
+        """Serialize action for compatibility with real Action interface."""
+        return {
+            "name": self.name,
+            "preconditions": self.preconditions,
+            "effects": self.effects,
+            "cost": self.cost,
+
+        }
 
     def __repr__(self):
         return (
