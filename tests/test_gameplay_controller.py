@@ -27,10 +27,8 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 
-class TestActionResolver(unittest.TestCase):
 from tiny_graph_manager import GraphManager # Added
-from actions import ActionSystem # Added
-from unittest.mock import Mock, MagicMock, patch # Ensure Mock is imported
+from actions import ActionSystem, Action # Added Action import
 
 class TestActionResolver(unittest.TestCase):
     """Test the enhanced ActionResolver class."""
@@ -72,18 +70,40 @@ class TestActionResolver(unittest.TestCase):
         self.assertTrue(hasattr(fallback_action, "execute"))
 
     def test_action_analytics(self):
-        """Test action execution analytics."""
+        """
+        Test action execution analytics.
+        
+        NOTE: This test demonstrates the CORRECT approach for testing with action objects.
+        Previously, this test used Mock() for the action object, which could lead to 
+        false positives because Mock() objects don't enforce the expected interface.
+        
+        PROBLEMATIC (old approach):
+            mock_action = Mock()
+            mock_action.name = "Test Action"
+            # Mock() returns other Mock() objects for any attribute access,
+            # which may not behave like real action attributes
+        
+        CORRECT (current approach):
+            Use real Action objects or proper test classes that match the expected interface.
+            This ensures tests actually validate the behavior they're supposed to test.
+        """
         # Track some test actions
         mock_character = Mock()
         mock_character.uuid = "test_char"
         mock_character.name = "Test Character"
         mock_character.energy = 100
 
-        mock_action = Mock()
-        mock_action.name = "Test Action"
+        # Create a real Action object instead of using Mock()
+        # This ensures the test actually validates how the system works with real action objects
+        test_action = Action(
+            name="Test Action",
+            preconditions={},
+            effects=[{"attribute": "energy", "change_value": -0.1}],
+            cost=0.1
+        )
 
-        self.action_resolver.track_action_execution(mock_action, mock_character, True)
-        self.action_resolver.track_action_execution(mock_action, mock_character, False)
+        self.action_resolver.track_action_execution(test_action, mock_character, True)
+        self.action_resolver.track_action_execution(test_action, mock_character, False)
 
         analytics = self.action_resolver.get_action_analytics()
         self.assertIn("total_actions", analytics)
