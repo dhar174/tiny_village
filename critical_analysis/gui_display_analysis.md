@@ -55,7 +55,7 @@ def render(self):
 【F:tiny_gameplay_controller.py†L2402-L2440】
 
 ### UI Rendering
-The `_render_ui` method composes various HUD elements such as character count, game time, speed, weather, statistics, and selected character details. Numerous TODO comments show the intent for a more complex interface in the future. Lines 2466‑2708 contain this logic.
+The `_render_ui` method composes various HUD elements such as character count, game time, speed, weather, statistics, and selected character details. Numerous TODO comments show the intent for a more complex interface in the future. Lines 2466-2708 contain this logic.
 
 ### Notable Findings
 - Inside the selected character block, an undefined variable `info_text` is used before it is created when appending quest information. This occurs just before the loop that blits each `info` string and likely causes a crash.
