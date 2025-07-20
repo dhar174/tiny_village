@@ -2065,7 +2065,7 @@ class PromptBuilder:
         for i, action in enumerate(actions[:5], 1):
             try:
                 descriptor = descriptors.get_action_descriptors(action)
-            except Exception:
+            except (KeyError, AttributeError):
                 descriptor = action.replace("_", " ").title()
             action_name = action.replace("_", " ").title().replace(" ", "_")Expand commentComment on lines R1657 to R1658ResolvedCode has comments. Press enter to view.
             prompt += f"{i}. {descriptor} to {action_name}.\n"
