@@ -2061,7 +2061,14 @@ class PromptBuilder:
         prompt += "3. Visit a friend to Increase_Friendship.\n"
         prompt += "4. Engage in a Leisure_Activity to improve Mental_Health.\n"
         prompt += "5. Work on a personal project to Pursue_Hobby.\n"
-        
+        actions = self.action_options.prioritize_actions(self.character)
+        for i, action in enumerate(actions[:5], 1):
+            try:
+                descriptor = descriptors.get_action_descriptors(action)
+            except Exception:
+                descriptor = action.replace("_", " ").title()
+            action_name = action.replace("_", " ").title().replace(" ", "_")Expand commentComment on lines R1657 to R1658ResolvedCode has comments. Press enter to view.
+            prompt += f"{i}. {descriptor} to {action_name}.\n"
         # Add structured output format instructions
         if output_format == "json":
             prompt += f"\n\n{OutputSchema.get_decision_schema()}"
