@@ -396,4 +396,4 @@ if __name__ == "__main__":
     demonstrate_correct_memory_testing_pattern()
     
     # Run the tests
-    unittest.main(verbosity=2, argv=[''])
+    unittest.main(verbosity=2, exit=False)
