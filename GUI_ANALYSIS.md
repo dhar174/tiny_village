@@ -6,7 +6,7 @@ This document summarizes the current state of the Tiny Village graphical user in
 
 - **`tiny_map_controller.py`**
   - Handles drawing of the map, buildings and characters.
-  - Performs path‑finding through `EnhancedAStarPathfinder` with caching for improved performance.
+  - Performs path-finding through `EnhancedAStarPathfinder` with caching for improved performance.
   - Provides basic input handling (`handle_event`, `handle_click`).
 
 - **`tiny_gameplay_controller.py`**
