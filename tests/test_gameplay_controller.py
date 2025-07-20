@@ -21,16 +21,13 @@ from tiny_gameplay_controller import (
     ActionResolver,
     SystemRecoveryManager,
 )
+from tiny_graph_manager import GraphManager
+from actions import ActionSystem
 
 # Set up logging for test output
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-
-class TestActionResolver(unittest.TestCase):
-from tiny_graph_manager import GraphManager # Added
-from actions import ActionSystem # Added
-from unittest.mock import Mock, MagicMock, patch # Ensure Mock is imported
 
 class TestActionResolver(unittest.TestCase):
     """Test the enhanced ActionResolver class."""
