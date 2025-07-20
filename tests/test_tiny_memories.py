@@ -50,14 +50,15 @@ class TestImport(unittest.TestCase):
             result = tiny_memories.sigmoid(0)
             self.assertEqual(result, 0.5, "sigmoid(0) should return 0.5")
             
-            # Test sigmoid with positive value - use lower precision to avoid false failures
+            # Test sigmoid with positive value
             result = tiny_memories.sigmoid(1)
-            self.assertAlmostEqual(result, 0.7310585786300049, places=6, 
+            self.assertAlmostEqual(result, 0.7310585786300049, places=10, 
                                  msg="sigmoid(1) should return approximately 0.731")
             
-            # Test sigmoid with negative value - use lower precision to avoid false failures
+            # Test sigmoid with negative value
             result = tiny_memories.sigmoid(-1)
-            self.assertAlmostEqual(result, 0.2689414213699951, places=6,
+            self.assertAlmostEqual(result, 0.2689414213699951, places=10,
+
                                  msg="sigmoid(-1) should return approximately 0.269")
         except ImportError as e:
             self.fail(f"Failed to import tiny_memories module: {e}")
