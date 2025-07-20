@@ -47,6 +47,10 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+# Constants for goal targets used in daily planning (normalized 0-1 scale)
+SATISFACTION_TARGET = 0.8   # 80% satisfaction
+ENERGY_TARGET = 0.8         # 80% energy
+
 
 # Define placeholder/simplified Action classes for use within StrategyManager if not using complex ones from actions.py
 # These are structured to be compatible with calculate_action_utility
@@ -100,12 +104,18 @@ class StrategyManager:
 
 
     def __init__(self, use_llm=False, model_name=None):
-        self.goap_planner = GOAPPlanner(GraphManager() if GraphManager else None)
         # Initialize graph_manager if available
         if GraphManager:
             self.graph_manager = GraphManager()
         else:
             self.graph_manager = None
+            
+        # Initialize GOAP planner with graph manager
+        try:
+            self.goap_planner = GOAPPlanner(self.graph_manager)
+        except Exception as e:
+            self.goap_planner = None
+            logging.error(f"Failed to initialize GOAPPlanner: {e}")
  
         self.use_llm = use_llm
 
@@ -219,6 +229,42 @@ class StrategyManager:
 
         LOW_ENERGY_THRESHOLD = 0.3  # Assuming energy is normalized 0-1 for this check
         HIGH_HUNGER_THRESHOLD = 0.6  # Assuming hunger is normalized 0-1 for this check
+
+        # Add actions that can improve satisfaction and energy to match common goals (0-1 scale)
+        rest_action = Action(
+            name="Rest",
+            preconditions=[],
+            effects=[
+                {"targets": ["initiator"], "attribute": "energy", "change_value": 0.15},
+                {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 0.08}
+            ],
+            cost=0.1
+        )
+        potential_actions.append(rest_action)
+        
+        # Leisure activity to improve satisfaction
+        leisure_action = Action(
+            name="Leisure Activity", 
+            preconditions=[],
+            effects=[
+                {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 0.12},
+                {"targets": ["initiator"], "attribute": "happiness", "change_value": 0.08}
+            ],
+            cost=0.2
+        )
+        potential_actions.append(leisure_action)
+        
+        # Exercise to improve energy and satisfaction
+        exercise_action = Action(
+            name="Exercise",
+            preconditions=[],
+            effects=[
+                {"targets": ["initiator"], "attribute": "energy", "change_value": 0.10},
+                {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 0.06}
+            ],
+            cost=0.3
+        )
+        potential_actions.append(exercise_action)
 
         # Eat Actions (from inventory) - simplified for now
         if hasattr(character, "inventory") and hasattr(character.inventory, "get_food_items"):
