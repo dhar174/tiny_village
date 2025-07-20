@@ -1673,9 +1673,9 @@ class GameplayController:
 
             # Update strategy based on events if strategy manager exists
             decisions = []
-            if self.strategy_manager and events:
+            if self.strategy_manager:
                 try:
-                    decisions = self.strategy_manager.update_strategy(events)
+                    decisions = self.strategy_manager.update_strategy(events if events else [])
                 except Exception as e:
                     logger.warning(f"Error updating strategy: {e}")
                     update_errors.append("Strategy update failed")
