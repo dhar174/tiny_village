@@ -44,6 +44,25 @@ logging.basicConfig(level=logging.DEBUG)
 # Constants for utility calculations
 UTILITY_SCALING_FACTOR = 0.1
 UTILITY_INFLUENCE_FACTOR = 0.05
+HEURISTIC_SCALING_FACTOR = 0.1
+
+
+class ActionWrapper:
+    """Wrapper class to convert dictionary action data to Action-like objects."""
+    def __init__(self, name, cost=1.0, effects=None, preconditions=None, utility=0.0):
+        self.name = name
+        self.cost = cost
+        self.effects = effects if effects is not None else []
+        self.preconditions = preconditions if preconditions is not None else {}
+        self.utility = utility
+        
+    def preconditions_met(self):
+        """Simple precondition check - can be enhanced based on actual requirements."""
+        return True
+        
+    def execute(self, target=None, initiator=None):
+        """Simple execution - returns True for basic compatibility."""
+        return True
 
 
 class Plan:
@@ -651,13 +670,11 @@ class GOAPPlanner:
                 except Exception as e:
                     logging.warning(f"Could not get actions from graph manager: {e}")
             
-            # Try to get actions from strategy manager
+            # Try to get actions from strategy manager if available via graph manager
             try:
-                if self.strategy_manager:
-                    strategy_actions = self.strategy_manager.get_daily_actions(character)
-                    available_actions.extend(strategy_actions)
-                else:
-                    logging.warning("StrategyManager is not initialized.")
+                # Strategy manager should be accessed externally, not directly from GOAP planner
+                # For now, skip strategy manager actions since GOAP planner should be independent
+                pass
             except Exception as e:
                 logging.warning(f"Could not get actions from strategy manager: {e}")
             
@@ -711,15 +728,6 @@ class GOAPPlanner:
  
         import heapq
         
-        # Initialize the open list as a priority queue with (cost, counter, state, plan)
-        # Counter ensures unique comparison for items with same cost
-        open_list = [(0.0, 0, current_state, [])]
-        visited_states = set()
-        counter = 1  # Unique counter for each entry
-        
-        while open_list:
-            current_cost, _, state, current_plan = heapq.heappop(open_list)
-
         # Dynamically retrieve current world state if not provided
         if current_state is None:
             current_state = self.get_current_world_state(character)
@@ -730,15 +738,17 @@ class GOAPPlanner:
             actions = self.get_available_actions(character)
             logging.info(f"Dynamically retrieved {len(actions)} available actions for {getattr(character, 'name', 'character')}")
         
-        # Initialize the open list with the initial state
-        open_list = [(current_state, [])]
+        # Initialize the open list as a priority queue with (cost, counter, state, plan)
+        # Counter ensures unique comparison for items with same cost
+        open_list = [(0.0, 0, current_state, [])]
         visited_states = set()
+        counter = 1  # Unique counter for each entry
         max_iterations = 1000  # Prevent infinite loops
         iteration_count = 0
 
         while open_list and iteration_count < max_iterations:
             iteration_count += 1
-            state, current_plan = open_list.pop(0)
+            current_cost, _, state, current_plan = heapq.heappop(open_list)
  
 
             # Check if the current state satisfies the goal
@@ -806,9 +816,9 @@ class GOAPPlanner:
                 if isinstance(target_effects, dict):
                     for attribute, target_value in target_effects.items():
                         current_value = state.get(attribute, 0)
-                        # Check if current value has reached the target
-                        # The goal specifies the desired final value, not a change
-                        if abs(current_value - target_value) > 0.1:  # Allow small tolerance
+                        # Check if current value has reached or exceeded the target
+                        # Goals are satisfied when we reach at least the target value
+                        if current_value < target_value - 0.1:  # Allow small tolerance for floating point
                             return False
                     return True
 
@@ -848,7 +858,11 @@ class GOAPPlanner:
                     if isinstance(effect, dict):
                         attribute = effect.get('attribute')
                         change_value = effect.get('change_value', 0)
+                        targets = effect.get('targets', [])
                         
+                        # Apply all effects to the current state during planning
+                        # The "targets" field is ignored during planning and is handled during actual execution
+                        # This ensures that all potential effects are considered for state transitions
                         if attribute:
                             current_value = new_state.get(attribute, 0)
                             if isinstance(change_value, (int, float)):
@@ -1286,10 +1300,9 @@ class GOAPPlanner:
             elif hasattr(character, '__dict__'):
                 character_state = character.__dict__
             
-            # Get current goal if available
+            # Get current goal if available - GOAPPlanner doesn't manage goals directly
             current_goal = None
-            if self.goals and self.current_goal_index < len(self.goals):
-                current_goal = self.goals[self.current_goal_index]
+            # Goals should be passed in as parameters, not stored in planner
                 
             # Use the comprehensive utility calculation
             if character_state:
@@ -1393,10 +1406,9 @@ class GOAPPlanner:
             elif hasattr(character, '__dict__'):
                 character_state = character.__dict__
                 
-            # Get current goal if available
+            # Get current goal if available - should be passed as parameter
             current_goal = None
-            if self.goals and self.current_goal_index < len(self.goals):
-                current_goal = self.goals[self.current_goal_index]
+            # Goals should be passed in as parameters, not stored in planner
             
             # Use comprehensive plan utility calculation if we have character state
             if character_state:
@@ -1455,19 +1467,7 @@ class GOAPPlanner:
         # Default to feasible if we can't determine otherwise
         return True
 
-    def _calculate_action_cost(self, action, character):
-        """
-        Calculate action cost with utility influence.
-        Replaces magic number 0.1 with UTILITY_SCALING_FACTOR constant.
-        """
-        base_cost = getattr(action, 'cost', 1.0)
-        utility = self.calculate_utility(action, character)
-        
-        # Apply utility scaling factor - higher utility reduces effective cost
-        adjusted_cost = base_cost - (utility * UTILITY_SCALING_FACTOR)
-        
-        # Ensure cost is not negative
-        return max(adjusted_cost, 0.1)
+
 
     def _calculate_action_priority(self, action, character):
         """
@@ -1495,39 +1495,4 @@ class GOAPPlanner:
         
         return max(priority, 0.1)  # Ensure priority is not negative
 
-    def _estimate_cost_to_goal(self, current_state, goal):
-        """
-        Heuristic function to estimate the cost to reach a goal from current state.
-        Used in A* search for GOAP planning.
-        """
-        if not goal:
-            return 0.0
-            
-        # Handle different goal formats
-        if hasattr(goal, 'completion_conditions'):
-            conditions = goal.completion_conditions
-            if isinstance(conditions, dict):
-                # Calculate how far we are from each condition
-                total_cost = 0.0
-                for attribute, target_value in conditions.items():
-                    current_value = current_state.get(attribute, 0) if current_state else 0
-                    if isinstance(target_value, (int, float)) and isinstance(current_value, (int, float)):
-                        if current_value < target_value:
-                            # Cost increases with the gap to target
-                            total_cost += (target_value - current_value) * HEURISTIC_SCALING_FACTOR
-                return total_cost
-            elif isinstance(conditions, list):
-                # Assume each condition has a base cost of 1.0
-                return len(conditions) * 1.0
-        elif isinstance(goal, dict):
-            # Dictionary format goal
-            total_cost = 0.0
-            for attribute, target_value in goal.items():
-                if isinstance(target_value, (int, float)):
-                    current_value = current_state.get(attribute, 0) if current_state else 0
-                    if isinstance(current_value, (int, float)) and current_value < target_value:
-                        total_cost += (target_value - current_value) * HEURISTIC_SCALING_FACTOR
-            return total_cost
-        
-        # Default heuristic if goal format is unknown
-        return 1.0
+
