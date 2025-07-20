@@ -12,7 +12,7 @@ import sys
 import os
 
 # Add the project root to the path so we can import modules
-sys.path.insert(0, '/home/runner/work/tiny_village/tiny_village')
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
 class TestMemoryMagicMockIssue(unittest.TestCase):
