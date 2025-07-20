@@ -64,7 +64,7 @@ class MockGoal:
         criteria (list): Criteria for achieving the goal.
         required_items (list): Items required to achieve the goal.
         goal_type (str): Type of the goal, default is "test".
-
+    """
     Methods:
         check_completion(state=None): Checks if the goal is completed.
         get_name(): Returns the name of the goal.
