@@ -5,7 +5,7 @@ This document summarizes the current implementation of Tiny Village's GUI compon
 ## MapController Overview
 - **Initialization**: Loads the map image and sets up a pathfinder and obstacle tracking.
 - **Dynamic Obstacles**: `add_dynamic_obstacle` and `remove_dynamic_obstacle` modify an internal set, invalidate cached paths and update obstacle timestamps.
-- **Path Caching**: `find_path_cached` stores previously calculated paths with a short timeout for re‑use.
+- **Path Caching**: `find_path_cached` stores previously calculated paths with a short timeout for re-use.
 - **Rendering**: Draws the map background, buildings, characters and a selected character outline.
 - **Event Handling**: Handles mouse clicks, selecting a character or entering a building.
 
