@@ -2824,7 +2824,7 @@ class GameplayController:
             # Validate input parameters
             if decision is None:
                 logger.warning("apply_decision called with None decision - no actions to execute")
-                return True  # No actions to execute is considered successful
+                raise ValueError("apply_decision called with None decision - invalid input")
             
             # Log when game_state is None for transparency
             if game_state is None:
