@@ -10,7 +10,7 @@ This repository contains extensive code for the Tiny Village simulation but seve
 - `MapController` expects a map image path when initialized: `pygame.image.load(map_image_path)` ([tiny_map_controller.py, lines 10-13](./tiny_map_controller.py#L10-L13)). The repository lacks an `assets` directory or `default_map.png`, so the controller cannot load the map.
 
 ## 3. Dependencies
-- Attempting to run the game fails immediately because `pygame` is missing:【5d8ed0†L1-L6】. Requirements also include numerous other packages which must be installed for full functionality.
+- Attempting to run the game fails immediately because `pygame` is missing: [See requirements](https://example.com/requirements). Requirements also include numerous other packages which must be installed for full functionality.
 
 ## 4. Feature and System Stubs
 - Many core systems are incomplete or placeholder implementations. `TODO_report.md` lists numerous features marked `NOT_STARTED` or `STUB_IMPLEMENTED` (e.g., `event_driven_storytelling`, `mod_system`, `multiplayer_support`, `advanced_ai_behaviors`).【56e805†L1-L19】【ce5386†L28-L40】 These gaps mean essential gameplay features like event handling, economic simulation, or advanced AI behaviors are missing or minimal.
