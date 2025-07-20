@@ -3,7 +3,7 @@
 This repository contains extensive code for the Tiny Village simulation but several required pieces are absent or stubbed out. The following gaps prevent running a minimal playable demo without additional work.
 
 ## 1. Entry Point
-- **README instructions** mention running `python main.py` but no `main.py` exists in the repository, leaving no clear launch script.【F:README.md†L58-L61】【4db0a2†L1-L3】
+- **README instructions** mention running `python main.py` but no `main.py` exists in the repository, leaving no clear launch script. See [README.md](README.md#L58-L61) and [related file](path/to/file#L1-L3).
 - `tiny_gameplay_controller.py` has an `if __name__ == "__main__"` block but is not referenced in the README.
 
 ## 2. Game Assets
