@@ -62,7 +62,13 @@ Goal = MockGoal
 
 
 class MockAction:
-    """Enhanced action class for testing that matches real Action interface."""
+    """Enhanced MockAction with meaningful precondition checking.
+    
+    This mock implements realistic precondition validation to ensure tests
+    fail when real precondition logic is broken, rather than masking bugs
+    by always returning True.
+    """
+
     
     def __init__(self, name, cost, effects=None, preconditions=None, satisfaction=None):
         self.name = name
@@ -86,19 +92,88 @@ class MockAction:
         self.impact_rating_on_other = {}
 
     def preconditions_met(self, state=None):
-        """Check if action preconditions are met - matches real Action interface."""
+        """Check if preconditions are met - matches real Action interface.
+        
+        This implementation provides meaningful precondition checking rather
+        than always returning True, ensuring tests will fail when real
+        precondition logic is broken.
+        
+        Args:
+            state: Optional state object or dict to check preconditions against
+            
+        Returns:
+            bool: True if all preconditions are satisfied, False otherwise
+        """
         if not self.preconditions:
             return True
-        # Basic implementation for testing
+            
+        # Handle different precondition formats for testing flexibility
+        for precondition in self.preconditions:
+            if isinstance(precondition, dict):
+                # Handle dict-style preconditions: {"attribute": "energy", "operator": ">=", "value": 50}
+                attribute = precondition.get("attribute")
+                operator = precondition.get("operator", ">=")
+                required_value = precondition.get("value", 0)
+                
+                if state is None:
+                    # No state provided - cannot verify preconditions
+                    return False
+                    
+                # Get current value from state
+                if isinstance(state, dict):
+                    current_value = state.get(attribute, 0)
+                else:
+                    current_value = getattr(state, attribute, 0)
+                
+                # Check condition based on operator
+                if operator == ">=":
+                    if current_value < required_value:
+                        return False
+                elif operator == "<=":
+                    if current_value > required_value:
+                        return False
+                elif operator == "==":
+                    if current_value != required_value:
+                        return False
+                elif operator == ">":
+                    if current_value <= required_value:
+                        return False
+                elif operator == "<":
+                    if current_value >= required_value:
+                        return False
+                else:
+                    # Unknown operator - fail safe
+                    return False
+                    
+            elif hasattr(precondition, 'check_condition'):
+                # Handle Condition-like objects
+                try:
+                    if not precondition.check_condition(state):
+                        return False
+                except Exception:
+                    # If condition checking fails, precondition is not met
+                    return False
+            elif callable(precondition):
+                # Handle function-style preconditions
+                try:
+                    if not precondition(state):
+                        return False
+                except Exception:
+                    return False
+            else:
+                # Unknown precondition type - fail safe to catch bugs
+                return False
+                
         return True
-        
+
     def to_dict(self):
-        """Serialization method found in real Action class."""
+        """Serialize action for compatibility with real Action interface."""
         return {
             "name": self.name,
-            "cost": self.cost,
+            "preconditions": self.preconditions,
             "effects": self.effects,
-            "preconditions": self.preconditions
+            "cost": self.cost,
+
         }
 
     def __repr__(self):
