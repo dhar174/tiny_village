@@ -212,6 +212,10 @@ class TestHappinessCalculation(unittest.TestCase):
             print(f"  - Relationship features: {relationship_count}/{len(self.relationship_features)} implemented")
             print(f"  - Total features: {total_implemented}/{len(self.all_features)} implemented")
             print(f"  - Implemented features: {implemented_features}")
+            
+            # Define implementation keywords for happiness calculation features
+            implementation_keywords = ["feature1", "feature2", "feature3", "feature4"]
+            
             for keyword in implementation_keywords:
                 if keyword in content:
                     implemented_features.append(keyword)
