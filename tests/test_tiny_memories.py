@@ -205,29 +205,33 @@ class TestMemoryQuery(unittest.TestCase):
         self.assertEqual(self.mq.query_function, query_function)
 
     def test_by_complex_function(self):
-        node = type(
-            "Node",
-            (object,),
-            {
-                "memory": type(
-                    "Memory", (object,), {"description": "memory description"}
-                )
-            },
-        )()
+        # Use proper Mock instead of type() to create realistic test objects
+        from unittest.mock import Mock
+        
+        memory_mock = Mock(spec_set=['description'])
+        memory_mock.description = "memory description"
+        
+        node_mock = Mock(spec_set=['memory'])
+        node_mock.memory = memory_mock
+        
         self.mq.add_complex_query(
             "attribute", "*attribute* is *memory_description* relevant?"
         )
-        self.mq.by_complex_function(node)
+        self.mq.by_complex_function(node_mock)
         self.assertIn("attribute", self.mq.complex_query)
 
     def test_by_tags_function(self):
-        node = type(
-            "Node",
-            (object,),
-            {"memory": type("Memory", (object,), {"tags": ["tag1", "tag2"]})},
-        )()
+        # Use proper Mock instead of type() to create realistic test objects
+        from unittest.mock import Mock
+        
+        memory_mock = Mock(spec_set=['tags'])
+        memory_mock.tags = ["tag1", "tag2"]
+        
+        node_mock = Mock(spec_set=['memory'])
+        node_mock.memory = memory_mock
+        
         self.mq.query_tags = ["tag1"]
-        self.assertTrue(self.mq.by_tags_function(node))
+        self.assertTrue(self.mq.by_tags_function(node_mock))
 
     def test_by_time_function(self):
         # ...existing code...
@@ -1568,13 +1572,13 @@ class TestMemoryAntipatternDemonstration(unittest.TestCase):
         problematic_memory.importance_score = 5
         problematic_memory.get_embedding.return_value = "fake_embedding"
         
-        # The problem: These assertions ALWAYS pass, even if real logic is broken
-        self.assertEqual(problematic_memory.description, "Test memory")
-        self.assertEqual(problematic_memory.importance_score, 5)
+        # The problem: These assertions would ALWAYS pass, even if real logic is broken
+        # self.assertEqual(problematic_memory.description, "Test memory")      # ❌ Removed: validates MagicMock, not functionality
+        # self.assertEqual(problematic_memory.importance_score, 5)            # ❌ Removed: validates MagicMock, not functionality
         
         # Even worse: MagicMock creates missing attributes silently
         nonexistent_attr = problematic_memory.nonexistent_attribute
-        self.assertIsNotNone(nonexistent_attr)  # This shouldn't pass but does!
+        # self.assertIsNotNone(nonexistent_attr)  # ❌ Removed: validates MagicMock behavior, not real functionality
         
         # This means memory processing logic errors go undetected
         print("❌ MagicMock allows access to non-existent attributes")
