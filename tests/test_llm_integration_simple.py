@@ -282,6 +282,49 @@ class TestLLMIntegrationSimple(unittest.TestCase):
         except ImportError as e:
             self.fail(f"Could not import required modules: {e}")
 
+    def test_memory_mock_antipattern_demonstration(self):
+        """Demonstrate why MagicMock with predefined attributes is problematic for memory testing.
+        
+        This test shows how MagicMock can give false confidence in test validation.
+        Addresses issue #447: Test assertions that validate MagicMock behavior rather than actual functionality.
+        """
+        from unittest.mock import MagicMock
+
+        # PROBLEMATIC PATTERN (what the issue is about):
+        # Creating MagicMock with predefined attributes
+        problematic_mem1 = MagicMock(description="Met Bob yesterday", importance_score=5)
+        problematic_mem2 = MagicMock(description="Worked on project", importance_score=3)
+
+        # The problem: These will ALWAYS return the predefined values
+        # even if the memory processing logic is broken
+        self.assertEqual(problematic_mem1.description, "Met Bob yesterday")
+        self.assertEqual(problematic_mem2.importance_score, 3)
+
+        # Even if we access them incorrectly, MagicMock will create attributes
+        # This means the test won't catch real implementation errors
+        fake_attr = problematic_mem1.nonexistent_attribute
+        # Problem: MagicMock silently creates nonexistent_attribute instead of raising AttributeError
+        # This is why MagicMock provides false confidence - it doesn't catch real errors
+
+        # BETTER PATTERN (demonstrated in previous test):
+        # Use real objects or simple test classes that mimic real behavior
+        class ProperTestMemory:
+            def __init__(self, description, importance_score):
+                self.description = description
+                self.importance_score = importance_score
+
+        proper_mem = ProperTestMemory("Real memory", 4)
+        
+        # This will actually test that the attributes exist and work correctly
+        self.assertEqual(proper_mem.description, "Real memory")
+        self.assertEqual(proper_mem.importance_score, 4)
+        
+        # This will raise AttributeError if attribute doesn't exist (good!)
+        with self.assertRaises(AttributeError):
+            _ = proper_mem.nonexistent_attribute
+
+        print("✓ Memory mock antipattern demonstration test passed")
+
 
 if __name__ == "__main__":
     print("Running Simple LLM Integration Tests...")
