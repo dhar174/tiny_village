@@ -351,10 +351,13 @@ class TestLLMIntegrationSimple(unittest.TestCase):
 
         print("✓ PromptBuilder memory processing validation test passed")
 
+
     def test_memory_mock_antipattern_demonstration(self):
         """Demonstrate why MagicMock with predefined attributes is problematic for memory testing.
         
         This test shows how MagicMock can give false confidence in test validation.
+
+        Addresses issue #447: Test assertions that validate MagicMock behavior rather than actual functionality.
         """
         from unittest.mock import MagicMock
 
@@ -367,11 +370,14 @@ class TestLLMIntegrationSimple(unittest.TestCase):
         # even if the memory processing logic is broken
         self.assertEqual(problematic_mem1.description, "Met Bob yesterday")
         self.assertEqual(problematic_mem2.importance_score, 3)  # Fixed: this should be 3, not 5
+        self.assertEqual(problematic_mem2.importance_score, 3)
 
         # Even if we access them incorrectly, MagicMock will create attributes
         # This means the test won't catch real implementation errors
         fake_attr = problematic_mem1.nonexistent_attribute
         self.assertIsNotNone(fake_attr)  # MagicMock returns another MagicMock
+        # Problem: MagicMock silently creates nonexistent_attribute instead of raising AttributeError
+        # This is why MagicMock provides false confidence - it doesn't catch real errors
 
         # BETTER PATTERN (demonstrated in previous test):
         # Use real objects or simple test classes that mimic real behavior
