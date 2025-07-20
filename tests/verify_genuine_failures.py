@@ -26,7 +26,7 @@ class TestThatCanGenuinelyFail(unittest.TestCase):
         """Test that shows our content validation can genuinely fail."""
         try:
             # Test reading an actual file that exists
-            char_file_path = os.path.join(os.path.dirname(test_dir), 'tiny_characters.py')
+            char_file_path = os.path.join(parent_dir, 'tiny_characters.py')
             with open(char_file_path, "r") as f:
                 content = f.read()
             
