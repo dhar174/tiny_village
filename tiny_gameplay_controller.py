@@ -2849,7 +2849,7 @@ class GameplayController:
             # Validate that we have actions to execute
             if not actions_to_execute:
                 logger.warning("apply_decision: No actions found in decision")
-                return True  # No actions to execute is considered successful
+                return False  # No actions to execute indicates failure
             
             # Find target character if not specified
             if not target_character and actions_to_execute:
