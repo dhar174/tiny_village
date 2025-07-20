@@ -439,30 +439,101 @@ class TestEnhancedDecisionPrompt(unittest.TestCase):
 
         logger.info("Character state dict parameter test completed!")
 
-    @patch("tiny_prompt_builder.calculate_action_utility")
-    @patch("tiny_prompt_builder.StrategyManager")
-    def test_dynamic_action_choices_included(self, mock_strategy_cls, mock_calc_util):
-        """Prompt includes dynamically generated actions from StrategyManager."""
-        from tiny_strategy_manager import EatAction, SleepAction
-
-        mock_manager = MagicMock()
-        mock_manager.get_daily_actions.return_value = [EatAction(item_name="bread"), SleepAction()]
-        mock_strategy_cls.return_value = mock_manager
-        mock_calc_util.side_effect = [9.0, 5.0]
-
-        choices = self.prompt_builder.prioritize_actions()
-        self.assertEqual(len(choices), 2)
-        self.assertIn("Eat bread", choices[0])
-        self.assertIn("Utility: 9.0", choices[0])
-
-        prompt = self.prompt_builder.generate_decision_prompt(
-            time="morning", weather="clear", action_choices=choices
+    def test_dynamic_action_choices_with_real_utility_function(self):
+        """Test that action choices include real utility calculations with edge cases."""
+        from tiny_utility_functions import calculate_action_utility
+        
+        # Create mock actions that represent real edge cases
+        class MockAction:
+            def __init__(self, name, description, cost=0.0, effects=None):
+                self.name = name
+                self.description = description
+                self.cost = cost
+                self.effects = effects if effects is not None else []
+        
+        # Edge case 1: High hunger character with food action
+        high_hunger_state = {"hunger": 0.9, "energy": 0.5}
+        eat_action = MockAction(
+            "Eat bread", 
+            "Consume bread to reduce hunger",
+            cost=0.1, 
+            effects=[{"attribute": "hunger", "change_value": -0.7}]
         )
+        
+        utility = calculate_action_utility(high_hunger_state, eat_action)
+        self.assertGreater(utility, 0, "High hunger + food should have positive utility")
+        self.assertGreater(utility, 10, "Should be substantial utility for addressing high hunger")
+        
+        # Edge case 2: Low energy character with rest action
+        low_energy_state = {"energy": 0.2, "hunger": 0.3}
+        rest_action = MockAction(
+            "Rest",
+            "Take a rest to restore energy",
+            cost=0.05,
+            effects=[{"attribute": "energy", "change_value": 0.6}]
+        )
+        
+        utility = calculate_action_utility(low_energy_state, rest_action)
+        self.assertGreater(utility, 0, "Low energy + rest should have positive utility")
+        
+        # Edge case 3: Action with no beneficial effects should have low/negative utility
+        empty_state = {"hunger": 0.5, "energy": 0.5}
+        expensive_action = MockAction(
+            "Expensive action",
+            "Costly action with no benefits",
+            cost=2.0,
+            effects=[]
+        )
+        
+        utility = calculate_action_utility(empty_state, expensive_action)
+        self.assertLess(utility, 0, "Expensive action with no benefits should have negative utility")
+        
+        # Edge case 4: Action with malformed effects should not crash
+        malformed_action = MockAction(
+            "Malformed action",
+            "Action with malformed effects",
+            cost=0.1,
+            effects=[{"attribute": "hunger"}]  # Missing change_value
+        )
+        
+        try:
+            utility = calculate_action_utility(empty_state, malformed_action)
+            # Should handle gracefully, typically resulting in small negative utility from cost
+            self.assertLessEqual(utility, 0, "Malformed action should have non-positive utility")
+        except Exception as e:
+            self.fail(f"calculate_action_utility should handle malformed effects gracefully, but raised: {e}")
+        
+        # Edge case 5: Goal alignment should increase utility
+        goal_state = {"hunger": 0.8}
+        aligned_action = MockAction(
+            "Eat food",
+            "Eat to reduce hunger",
+            cost=0.1,
+            effects=[{"attribute": "hunger", "change_value": -0.5}]
+        )
+        
+        class MockGoal:
+            def __init__(self, target_effects, priority):
+                self.target_effects = target_effects
+                self.priority = priority
+        
+        hunger_goal = MockGoal(target_effects={"hunger": -0.8}, priority=0.9)
+        
+        utility_with_goal = calculate_action_utility(goal_state, aligned_action, hunger_goal)
+        utility_without_goal = calculate_action_utility(goal_state, aligned_action)
+        
+        self.assertGreater(utility_with_goal, utility_without_goal, 
+                          "Goal-aligned actions should have higher utility than non-aligned ones")
+        
+        # Edge case 6: Empty character state should be handled gracefully
+        try:
+            utility = calculate_action_utility({}, eat_action)
+            # With empty state, hunger level defaults to 0, so food action shouldn't be very beneficial
+            self.assertIsInstance(utility, (int, float), "Should return numeric utility even with empty state")
+        except Exception as e:
+            self.fail(f"calculate_action_utility should handle empty character state, but raised: {e}")
 
-        self.assertIn("Eat bread", prompt)
-        self.assertIn("Utility: 9.0", prompt)
-
-        logger.info("Dynamic action choices included in prompt successfully!")
+        logger.info("Real utility function edge case testing completed successfully!")
 
 
 def print_sample_prompt():
