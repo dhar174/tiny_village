@@ -18,10 +18,56 @@ def test_plan_methods():
     try:
         # Create a mock action class for testing
         class MockAction:
-            def __init__(self, name, cost=10, urgency=1.0):
+            """Enhanced MockAction with meaningful precondition checking."""
+            
+            def __init__(self, name, cost=10, urgency=1.0, preconditions=None):
                 self.name = name
                 self.cost = cost
                 self.urgency = urgency
+                self.preconditions = preconditions if preconditions else []
+                
+                # Additional attributes for real Action compatibility
+                self.effects = []
+                self.satisfaction = 5.0
+                self.action_id = id(self)
+
+            def preconditions_met(self, state=None):
+                """Check if preconditions are met - meaningful implementation."""
+                if not self.preconditions:
+                    return True
+                    
+                for precondition in self.preconditions:
+                    if isinstance(precondition, dict):
+                        attribute = precondition.get("attribute")
+                        operator = precondition.get("operator", ">=")
+                        required_value = precondition.get("value", 0)
+                        
+                        if state is None:
+                            return False
+                            
+                        if isinstance(state, dict):
+                            current_value = state.get(attribute, 0)
+                        else:
+                            current_value = getattr(state, attribute, 0)
+                        
+                        if operator == ">=" and current_value < required_value:
+                            return False
+                        elif operator == "<=" and current_value > required_value:
+                            return False
+                        elif operator == "==" and current_value != required_value:
+                            return False
+                        elif operator == ">" and current_value <= required_value:
+                            return False
+                        elif operator == "<" and current_value >= required_value:
+                            return False
+                    elif callable(precondition):
+                        try:
+                            if not precondition(state):
+                                return False
+                        except Exception:
+                            return False
+                            
+                return True
 
             def __str__(self):
                 return f"MockAction({self.name})"
@@ -77,11 +123,56 @@ def test_goap_planner_methods():
                 return {"energy": self.energy, "mood": self.mood}
 
         class MockAction:
-            def __init__(self, name, satisfaction=20, cost=10, urgency=1.0):
+            """Enhanced MockAction with meaningful precondition checking."""
+            
+            def __init__(self, name, satisfaction=20, cost=10, urgency=1.0, preconditions=None):
                 self.name = name
                 self.satisfaction = satisfaction
                 self.cost = cost
                 self.urgency = urgency
+                self.preconditions = preconditions if preconditions else []
+                
+                # Additional attributes for real Action compatibility
+                self.effects = []
+                self.action_id = id(self)
+
+            def preconditions_met(self, state=None):
+                """Check if preconditions are met - meaningful implementation."""
+                if not self.preconditions:
+                    return True
+                    
+                for precondition in self.preconditions:
+                    if isinstance(precondition, dict):
+                        attribute = precondition.get("attribute")
+                        operator = precondition.get("operator", ">=")
+                        required_value = precondition.get("value", 0)
+                        
+                        if state is None:
+                            return False
+                            
+                        if isinstance(state, dict):
+                            current_value = state.get(attribute, 0)
+                        else:
+                            current_value = getattr(state, attribute, 0)
+                        
+                        if operator == ">=" and current_value < required_value:
+                            return False
+                        elif operator == "<=" and current_value > required_value:
+                            return False
+                        elif operator == "==" and current_value != required_value:
+                            return False
+                        elif operator == ">" and current_value <= required_value:
+                            return False
+                        elif operator == "<" and current_value >= required_value:
+                            return False
+                    elif callable(precondition):
+                        try:
+                            if not precondition(state):
+                                return False
+                        except Exception:
+                            return False
+                            
+                return True
 
         # Import the GOAPPlanner class
         from tiny_goap_system import GOAPPlanner
