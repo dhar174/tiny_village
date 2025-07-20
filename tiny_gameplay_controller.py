@@ -2837,9 +2837,12 @@ class GameplayController:
             # Store the game_state temporarily if provided for legacy compatibility
             legacy_game_state = game_state
             
-            # Use a small default delta time for legacy compatibility
+            # Use a dynamically calculated delta time for legacy compatibility
             # This ensures consistent behavior for external systems that don't provide dt
-            default_dt = 1.0 / 60.0  # Assume 60 FPS default
+            if not hasattr(self, '_clock'):
+                self._clock = pygame.time.Clock()  # Initialize clock if not already done
+            elapsed_time_ms = self._clock.tick()  # Get elapsed time in milliseconds
+            default_dt = elapsed_time_ms / 1000.0  # Convert to seconds
             
             # Delegate to the main update method which now includes all functionality
             self.update_game_state(default_dt)
