@@ -180,9 +180,7 @@ class TestCharacterInvestmentFunctionality(unittest.TestCase):
     def test_stock_validation_with_proper_mock(self):
         """Test that proper mocks can be validated like real Stock objects."""
         # Create a mock that passes isinstance checks by setting the right spec
-        mock_stock = Mock()
-        mock_stock.__class__ = Mock()
-        mock_stock.__class__.__name__ = 'Stock'
+        mock_stock = Mock(spec=['name', 'value', 'quantity', 'get_value', 'get_quantity', 'stock_description'])
         
         # Set up realistic Stock interface
         mock_stock.name = "BTC"
