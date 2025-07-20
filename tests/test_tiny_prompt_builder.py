@@ -207,7 +207,7 @@ class TestPromptBuilder(unittest.TestCase):
 
         self.mock_needs.calculate_needs_priorities.return_value = {"need1": 1}
         self.prompt_builder.calculate_needs_priorities()
-        self.mock_needs_priorities.calculate_needs_priorities.assert_called_once_with(
+        self.mock_needs.calculate_needs_priorities.assert_called_once_with(
             self.character
         )
         self.assertEqual(
