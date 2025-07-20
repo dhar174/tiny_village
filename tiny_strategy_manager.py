@@ -111,7 +111,11 @@ class StrategyManager:
             self.graph_manager = None
             
         # Initialize GOAP planner with graph manager
-        self.goap_planner = GOAPPlanner(self.graph_manager)
+        try:
+            self.goap_planner = GOAPPlanner(self.graph_manager)
+        except Exception as e:
+            self.goap_planner = None
+            logging.error(f"Failed to initialize GOAPPlanner: {e}")
  
         self.use_llm = use_llm
 
