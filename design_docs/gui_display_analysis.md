@@ -14,7 +14,7 @@ The main GUI functionality is handled by `tiny_map_controller.py` while `tiny_ga
   - Characters are drawn as circles and the selected character is highlighted with a red outline.
 - **Input Handling**: Detects mouse clicks and either selects a character or calls `enter_building` when a building is clicked.
 - **Movement**: `update_character_position` moves characters toward the next waypoint using their `speed` value.
-- **Pathfinding**: Provides cached path computation and an enhanced A* implementation with jump‑point search and path smoothing.
+- **Pathfinding**: Provides cached path computation and an enhanced A* implementation with jump-point search and path smoothing.
 
 ## GameplayController Rendering
 
