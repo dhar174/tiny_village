@@ -1,44 +1,24 @@
 """
 Simple test for LLM integration without heavy dependencies.
 Tests the decision-making pipeline components independently.
+
+Updated to use the comprehensive MockCharacter for better interface accuracy.
 """
 
 import unittest
 from unittest.mock import MagicMock, patch
 import logging
+import sys
+import os
+
+# Add the tests directory to Python path to import mock_character
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from mock_character import MockCharacter, MockLocation
 
 # Set up logging for tests
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-
-
-class MockCharacter:
-    def __init__(self, name="TestChar"):
-        self.name = name
-        self.hunger_level = 5.0
-        self.energy = 5.0
-        self.wealth_money = 50.0
-        self.social_wellbeing = 5.0
-        self.mental_health = 5.0
-        self.inventory = MagicMock()
-        self.location = MagicMock()
-        self.job = "unemployed"
-        self.use_llm_decisions = False
-
-        # Mock inventory behavior
-        self.mock_food_items = []
-        self.inventory.get_food_items = MagicMock(return_value=self.mock_food_items)
-
-    def add_food_item(self, name, calories):
-        food_item = MagicMock()
-        food_item.name = name
-        food_item.calories = calories
-        self.mock_food_items.append(food_item)
-
-
-class MockLocation:
-    def __init__(self, name="TestLocation"):
-        self.name = name
 
 
 class TestLLMIntegrationSimple(unittest.TestCase):
@@ -46,7 +26,17 @@ class TestLLMIntegrationSimple(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures"""
-        self.character = MockCharacter("Alice")
+        # Using comprehensive MockCharacter with realistic defaults
+        self.character = MockCharacter(
+            name="Alice",
+            hunger_level=5.0,
+            energy=5.0,
+            wealth_money=50.0,
+            social_wellbeing=5.0,
+            mental_health=5.0,
+            job="unemployed",
+            use_llm_decisions=False
+        )
         self.character.location = MockLocation("Home")
 
     def test_strategy_manager_llm_initialization(self):
@@ -206,9 +196,9 @@ class TestLLMIntegrationSimple(unittest.TestCase):
 
     def test_character_llm_flag(self):
         """Test character LLM decision flag functionality"""
-        # Test default state
+        # Test default state using comprehensive MockCharacter
         character = MockCharacter("Charlie")
-        self.assertFalse(getattr(character, "use_llm_decisions", False))
+        self.assertFalse(character.use_llm_decisions)
 
         # Test enabling LLM decisions
         character.use_llm_decisions = True
