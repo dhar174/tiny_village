@@ -39,7 +39,7 @@ Relevant excerpt:
 ### GameplayController UI
 
 - `_render_ui` creates fonts and draws textual information every frame. There is caching for the speed indicator, but other text surfaces are recreated each time.
-- Numerous TODOs indicate planned features (modular UI panels, mini‑map, settings, etc.).
+- Numerous TODOs indicate planned features (modular UI panels, mini-map, settings, etc.).
 - Error handling falls back to a minimal UI when rendering fails.
 
 Relevant excerpt:
