@@ -100,7 +100,9 @@ class TestHappinessCalculation(unittest.TestCase):
         """Set up test environment."""
         self.core_features = ["motive_satisfaction"]  # Essential features that must be present
         self.relationship_features = ["social_happiness", "romantic_happiness", "family_happiness"]
-        self.all_features = self.core_features + self.relationship_features
+        # Additional implementation features to match validation checks
+        self.additional_features = ["positive_relationships", "romantic_partner", "family_members"]
+        self.all_features = self.core_features + self.relationship_features + self.additional_features
         self.minimum_relationship_features = 2  # Require at least 2 relationship features
 
     def test_core_happiness_features_required(self):
