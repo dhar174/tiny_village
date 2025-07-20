@@ -7,7 +7,7 @@ avoiding the MagicMock antipattern and using realistic memory structures.
 """
 
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 import sys
 import os
 from datetime import datetime
