@@ -44,9 +44,32 @@ class SimplifiedRealGoal:
 
 
 class MockGoal:
+    """
+    MockGoal class for testing utility functions.
 
-    Mock goal class for testing utility functions - ONLY used when SimplifiedRealGoal 
-    cannot be used. This provides minimal interface for backward compatibility.
+    This class is used for testing purposes when the SimplifiedRealGoal class cannot be
+    utilized. It provides a minimal interface for backward compatibility and mimics the
+    behavior of the real Goal class to a limited extent.
+
+    Attributes:
+        name (str): The name of the goal.
+        target_effects (dict): Effects targeted by the goal.
+        priority (float): The priority score of the goal.
+        score (float): Alias for priority, used for compatibility.
+        description (str): A description of the goal.
+        completed (bool): Indicates whether the goal is completed.
+        character (None): Placeholder for character attribute.
+        target (None): Placeholder for target attribute.
+        completion_conditions (dict): Conditions for goal completion.
+        criteria (list): Criteria for achieving the goal.
+        required_items (list): Items required to achieve the goal.
+        goal_type (str): Type of the goal, default is "test".
+
+    Methods:
+        check_completion(state=None): Checks if the goal is completed.
+        get_name(): Returns the name of the goal.
+        get_score(): Returns the score of the goal.
+        to_dict(): Serializes the goal into a dictionary.
     """
 
 
