@@ -102,7 +102,7 @@ class TestMemoryAntipatternFixes(unittest.TestCase):
         
         # Problem: This always "works" even when it shouldn't
         fake_result = problematic_memory.nonexistent_attribute  # No error!
-        self.assertIsNotNone(fake_result)
+        # self.assertIsNotNone(fake_result)  # ❌ Removed: validates MagicMock behavior, not real functionality
         
         print(f"❌ MagicMock allows: memory.nonexistent_attribute = {fake_result}")
         

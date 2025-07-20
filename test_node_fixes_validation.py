@@ -108,7 +108,7 @@ class TestNodeFixesValidation(unittest.TestCase):
         
         # Problem: Can access non-existent attributes without error
         fake_attr = problematic_node.memory.nonexistent_field
-        self.assertIsNotNone(fake_attr)  # This shouldn't work but does
+        # self.assertIsNotNone(fake_attr)  # ❌ Removed: validates MagicMock behavior, not real functionality
         
         print(f"❌ MagicMock node allows: node.memory.nonexistent_field = {fake_attr}")
         
