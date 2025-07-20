@@ -13,7 +13,7 @@ This repository contains extensive code for the Tiny Village simulation but seve
 - Attempting to run the game fails immediately because `pygame` is missing: [See requirements](https://example.com/requirements). Requirements also include numerous other packages which must be installed for full functionality.
 
 ## 4. Feature and System Stubs
-- Many core systems are incomplete or placeholder implementations. `TODO_report.md` lists numerous features marked `NOT_STARTED` or `STUB_IMPLEMENTED` (e.g., `event_driven_storytelling`, `mod_system`, `multiplayer_support`, `advanced_ai_behaviors`).【56e805†L1-L19】【ce5386†L28-L40】 These gaps mean essential gameplay features like event handling, economic simulation, or advanced AI behaviors are missing or minimal.
+- Many core systems are incomplete or placeholder implementations. `TODO_report.md` lists numerous features marked `NOT_STARTED` or `STUB_IMPLEMENTED` (e.g., `event_driven_storytelling`, `mod_system`, `multiplayer_support`, `advanced_ai_behaviors`). [See TODO_report.md lines 1-19](#TODO_report.md) and [lines 28-40](#TODO_report.md). These gaps mean essential gameplay features like event handling, economic simulation, or advanced AI behaviors are missing or minimal.
 
 ## 5. Data Files
 - Example configuration files `custom_buildings.json` and `custom_characters.json` exist, but there are no default character or building lists for automatic creation. Without these or additional code to generate data, the world starts empty.
