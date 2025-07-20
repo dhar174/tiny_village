@@ -43,11 +43,25 @@ def create_mock_tensor(shape):
 @patch("tiny_memories.model", new_callable=MagicMock)
 class TestImport(unittest.TestCase):
     def test_module_import(self):
+        """Test that we can import tiny_memories and use its sigmoid function."""
         try:
             import tiny_memories
+            # Test the sigmoid function which should work without dependencies
+            result = tiny_memories.sigmoid(0)
+            self.assertEqual(result, 0.5, "sigmoid(0) should return 0.5")
+            
+            # Test sigmoid with positive value
+            result = tiny_memories.sigmoid(1)
+            self.assertAlmostEqual(result, 0.7310585786300049, places=10, 
+                                 msg="sigmoid(1) should return approximately 0.731")
+            
+            # Test sigmoid with negative value
+            result = tiny_memories.sigmoid(-1)
+            self.assertAlmostEqual(result, 0.2689414213699951, places=10,
+
+                                 msg="sigmoid(-1) should return approximately 0.269")
         except ImportError as e:
             self.fail(f"Failed to import tiny_memories module: {e}")
-        self.assertTrue(True, "Successfully imported tiny_memories module")
 
 
 class TestEmbeddingModel(unittest.TestCase):
@@ -1367,6 +1381,40 @@ class TestSpecificMemory(unittest.TestCase):
 # ... (Keep TestMemoryManager and TestMemoryManagerIntegration as they are for now) ...
 # ... (Keep TestMemory, TestBSTNode, TestMemoryBST as they are, with prior edits) ...
 # ... (Keep TestGeneralMemory, TestSpecificMemory with prior edits) ...
+
+class TestSigmoidFunction(unittest.TestCase):
+    """Test class for sigmoid function with precision fixes."""
+    
+    def test_sigmoid_with_positive_value(self):
+        """Test sigmoid function with improved precision handling."""
+        # Test sigmoid with positive value
+        result = tiny_memories.sigmoid(1)
+        # Fixed: Use lower precision (places=6) instead of brittle places=10
+        # Original brittle code was:
+        # self.assertAlmostEqual(result, 0.7310585786300049, places=10)
+        self.assertAlmostEqual(result, 0.7310585786300049, places=6,
+                              msg="Sigmoid test with improved precision")
+    
+    def test_sigmoid_computed_expected(self):
+        """Test sigmoid using computed expected values - most robust approach."""
+        
+        # Test sigmoid with positive value - computing expected using same approach
+        result = tiny_memories.sigmoid(1)
+        expected = 1 / (1 + math.exp(-1))
+        self.assertAlmostEqual(result, expected, places=10,
+                              msg="Using computed expected value is most robust")
+        
+        # Test with negative value
+        result = tiny_memories.sigmoid(-2)
+        expected = 1 / (1 + math.exp(2))
+        self.assertAlmostEqual(result, expected, places=6)
+        
+        # Test with zero
+        result = tiny_memories.sigmoid(0)
+        expected = 1 / (1 + math.exp(0))  # Should be 0.5
+        self.assertAlmostEqual(result, expected, places=6)
+        self.assertAlmostEqual(result, 0.5, places=6)
+
 
 if __name__ == "__main__":
     unittest.main()
