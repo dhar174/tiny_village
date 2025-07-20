@@ -60,7 +60,7 @@ The `_render_ui` method composes various HUD elements such as character count, g
 ### Notable Findings
 - Inside the selected character block, an undefined variable `info_text` is used before it is created when appending quest information. This occurs just before the loop that blits each `info` string and likely causes a crash.
 【F:tiny_gameplay_controller.py†L2639-L2653】
-- Many rendering enhancements (anti‑aliasing, lighting effects, modular panels, etc.) are marked as TODOs and not implemented.
+- Many rendering enhancements (anti-aliasing, lighting effects, modular panels, etc.) are marked as TODOs and not implemented.
 
 ## Summary
 The GUI currently provides basic drawing of the map and characters but lacks robust error handling and polish. Key improvements include:
