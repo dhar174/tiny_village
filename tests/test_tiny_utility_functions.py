@@ -11,13 +11,45 @@ import importlib
 
 # We need mock classes for testing since the real classes have complex dependencies
 class MockGoal:
-    """Simple goal class for testing utility functions."""
+    """Enhanced goal class for testing utility functions that matches real Goal interface."""
 
-    def __init__(self, name, target_effects=None, priority=0.5):
+    def __init__(self, name, target_effects=None, priority=0.5, description=None):
         self.name = name
         self.target_effects = target_effects if target_effects else {}
         self.priority = priority
         self.score = priority  # alias for compatibility
+        self.description = description or f"Test goal: {name}"
+        self.completed = False
+        
+        # Additional attributes to match real Goal interface
+        self.character = None
+        self.target = None
+        self.completion_conditions = {}
+        self.criteria = []
+        self.required_items = []
+        self.goal_type = "test"
+        
+    def check_completion(self, state=None):
+        """Check if goal is completed - matches real Goal interface."""
+        return self.completed
+        
+    def get_name(self):
+        """Getter method found in real Goal class."""
+        return self.name
+        
+    def get_score(self):
+        """Getter method found in real Goal class."""
+        return self.score
+        
+    def to_dict(self):
+        """Serialization method found in real Goal class."""
+        return {
+            "name": self.name,
+            "description": self.description,
+            "score": self.score,
+            "target_effects": self.target_effects,
+            "priority": self.priority
+        }
 
 
 # Alias for test compatibility
@@ -30,11 +62,44 @@ Goal = MockGoal
 
 
 class MockAction:
-    def __init__(self, name, cost, effects=None):
+    """Enhanced action class for testing that matches real Action interface."""
+    
+    def __init__(self, name, cost, effects=None, preconditions=None, satisfaction=None):
         self.name = name
         self.cost = float(cost)
         # Effects is a list of dictionaries, e.g., [{'attribute': 'hunger', 'change_value': -0.5}]
         self.effects = effects if effects else []
+        self.preconditions = preconditions if preconditions else []
+        
+        # Additional attributes to match real Action interface
+        self.satisfaction = satisfaction if satisfaction is not None else 5.0
+        self.urgency = 1.0
+        self.action_id = id(self)
+        self.target = None
+        self.initiator = None
+        self.priority = 1.0
+        self.related_goal = None
+        
+        # Impact ratings found in real Action class
+        self.impact_rating_on_target = 1
+        self.impact_rating_on_initiator = 1
+        self.impact_rating_on_other = {}
+
+    def preconditions_met(self, state=None):
+        """Check if action preconditions are met - matches real Action interface."""
+        if not self.preconditions:
+            return True
+        # Basic implementation for testing
+        return True
+        
+    def to_dict(self):
+        """Serialization method found in real Action class."""
+        return {
+            "name": self.name,
+            "cost": self.cost,
+            "effects": self.effects,
+            "preconditions": self.preconditions
+        }
 
     def __repr__(self):
         return (
