@@ -201,11 +201,8 @@ class TestPromptBuilder(unittest.TestCase):
         self.assertFalse(eat_food_condition,
                         "PromptBuilder should NOT prioritize eat_food when character has no food")
         
-    def test_calculate_needs_priorities(self):
-        self.prompt_builder.calculate_needs_priorities()
-        
-
-        self.mock_needs.calculate_needs_priorities.return_value = {"need1": 1}
+    def test_calculate_needs_priorities_without_mock(self):
+        """Test calculate_needs_priorities without mocked return value."""
         self.prompt_builder.calculate_needs_priorities()
         self.mock_needs.calculate_needs_priorities.assert_called_once_with(
             self.character
