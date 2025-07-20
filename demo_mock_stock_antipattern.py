@@ -29,22 +29,22 @@ def demonstrate_type_mock_problems():
     # Show what happens when we try to call methods that should exist on Stock
     print("\n🔍 Testing real Stock interface methods:")
     methods_to_test = [
-        "get_value",
-        "set_value", 
-        "get_quantity",
-        "increase_quantity",
-        "decrease_quantity",
-        "to_dict"
+        ("get_value", []),
+        ("set_value", [175.0]), 
+        ("get_quantity", []),
+        ("increase_quantity", [5]),
+        ("decrease_quantity", [3]),
+        ("to_dict", [])
     ]
     
-    for method in methods_to_test:
+    for method, args in methods_to_test:
         try:
-            getattr(fake_stock, method)()
-            print(f"✅ {method}() - OK")
+            getattr(fake_stock, method)(*args)
+            print(f"✅ {method}({', '.join(map(str, args))}) - OK")
         except AttributeError:
-            print(f"❌ {method}() - MISSING!")
+            print(f"❌ {method}({', '.join(map(str, args))}) - MISSING!")
         except Exception as e:
-            print(f"⚠️  {method}() - ERROR: {e}")
+            print(f"⚠️  {method}({', '.join(map(str, args))}) - ERROR: {e}")
     
     print(f"\n❌ The type() mock is missing {len(methods_to_test)} critical methods!")
     print("❌ Tests using this mock would pass even if the real Stock class is broken!")
