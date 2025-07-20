@@ -2842,6 +2842,11 @@ class GameplayController:
             if not hasattr(self, '_clock'):
                 self._clock = pygame.time.Clock()  # Initialize clock if not already done
             elapsed_time_ms = self._clock.tick()  # Get elapsed time in milliseconds
+            # Use a dynamically calculated delta time for legacy compatibility
+            # This ensures consistent behavior for external systems that don't provide dt
+            if not hasattr(self, '_clock'):
+                self._clock = pygame.time.Clock()  # Initialize clock if not already done
+            elapsed_time_ms = self._clock.tick()  # Get elapsed time in milliseconds
             default_dt = elapsed_time_ms / 1000.0  # Convert to seconds
             
             # Delegate to the main update method which now includes all functionality
