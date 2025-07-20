@@ -7,7 +7,7 @@ This repository contains extensive code for the Tiny Village simulation but seve
 - `tiny_gameplay_controller.py` has an `if __name__ == "__main__"` block but is not referenced in the README.
 
 ## 2. Game Assets
-- `MapController` expects a map image path when initialized: `pygame.image.load(map_image_path)`【F:tiny_map_controller.py†L10-L13】. The repository lacks an `assets` directory or `default_map.png`, so the controller cannot load the map.
+- `MapController` expects a map image path when initialized: `pygame.image.load(map_image_path)` ([tiny_map_controller.py, lines 10-13](./tiny_map_controller.py#L10-L13)). The repository lacks an `assets` directory or `default_map.png`, so the controller cannot load the map.
 
 ## 3. Dependencies
 - Attempting to run the game fails immediately because `pygame` is missing:【5d8ed0†L1-L6】. Requirements also include numerous other packages which must be installed for full functionality.
