@@ -221,6 +221,16 @@ class TestHappinessCalculation(unittest.TestCase):
             self.fail(f"Comprehensive happiness validation failed: {e}")
 
 
+def format_traceback(traceback_str):
+    """Format a traceback string to extract the most relevant error information."""
+    # Extract the last line which usually contains the actual error message
+    lines = traceback_str.strip().split('\n')
+    if lines:
+        # Return the last line, which typically contains the error message
+        return lines[-1].strip()
+    return traceback_str.strip()
+
+
 def test_happiness_calculation():
     """Legacy function wrapper for backward compatibility."""
     print("\nRunning enhanced happiness calculation tests...")
