@@ -2899,6 +2899,7 @@ class GameplayController:
         except Exception as e:
             logger.error(f"Critical error applying decision: {e}")
             logger.error(traceback.format_exc())
+            return False
 
     def _execute_decision_action(
         self, action, target_character=None, game_state=None
