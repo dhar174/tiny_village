@@ -1568,13 +1568,13 @@ class TestMemoryAntipatternDemonstration(unittest.TestCase):
         problematic_memory.importance_score = 5
         problematic_memory.get_embedding.return_value = "fake_embedding"
         
-        # The problem: These assertions ALWAYS pass, even if real logic is broken
-        self.assertEqual(problematic_memory.description, "Test memory")
-        self.assertEqual(problematic_memory.importance_score, 5)
+        # The problem: These assertions would ALWAYS pass, even if real logic is broken
+        # self.assertEqual(problematic_memory.description, "Test memory")      # ❌ Removed: validates MagicMock, not functionality
+        # self.assertEqual(problematic_memory.importance_score, 5)            # ❌ Removed: validates MagicMock, not functionality
         
         # Even worse: MagicMock creates missing attributes silently
         nonexistent_attr = problematic_memory.nonexistent_attribute
-        self.assertIsNotNone(nonexistent_attr)  # This shouldn't pass but does!
+        # self.assertIsNotNone(nonexistent_attr)  # ❌ Removed: validates MagicMock behavior, not real functionality
         
         # This means memory processing logic errors go undetected
         print("❌ MagicMock allows access to non-existent attributes")
