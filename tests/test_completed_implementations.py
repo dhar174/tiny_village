@@ -215,12 +215,14 @@ class TestHappinessCalculation(unittest.TestCase):
             
             # Define implementation keywords for happiness calculation features
             implementation_keywords = ["feature1", "feature2", "feature3", "feature4"]
-            
-            for keyword in implementation_keywords:
-                if keyword in content:
-                    implemented_features.append(keyword)
-                else:
-                    missing_features.append(keyword)
+
+            if implemented_features is None:
+                for keyword in implementation_keywords:
+                    if keyword in content:
+                        implemented_features.append(keyword)
+                    else:
+                        if keyword not in missing_features:
+                            missing_features.append(keyword)
             if missing_features:
                 print(f"  - Missing optional features: {missing_features}")
 
