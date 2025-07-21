@@ -287,7 +287,6 @@ def test_character_location_decisions():
     
     # Show the antipattern example
     demonstrate_testing_antipattern()
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from tiny_buildings import Building, House
 from tiny_locations import Location
