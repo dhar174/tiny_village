@@ -2891,7 +2891,7 @@ class GameplayController:
             panel = self.ui_panels.get(panel_name)
             if panel and panel.visible:
                 # Update panel position if needed
-                if panel.position[1] != current_y and panel_name != 'character_info':
+                if panel.position[1] != current_y and getattr(panel, 'auto_position', True):
                     panel.position = (panel.position[0], current_y)
                 
                 # Render panel and update y position
