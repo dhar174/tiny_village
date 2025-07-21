@@ -1643,13 +1643,67 @@ class GameplayController:
                 self.map_controller.characters = {}
 
     def update_game_state(self, dt):
-        """Update all game systems with delta time, improved error handling, and automatic recovery."""
+        """
+        Update all game systems with delta time, improved error handling, and automatic recovery.
+        
+        This method now includes the integrated event-driven strategy functionality that was
+        previously separated in the legacy update method. This provides a unified update
+        process that handles:
+        
+        1. Event-driven strategy updates (integrated from legacy method)
+           - Event checking via event handler
+           - Strategy updates via strategy manager
+           - Decision application
+        2. Core system updates
+           - Map controller updates
+           - Character AI and decision making
+           - Time management
+           - Animation system
+        3. Event processing and feature system updates
+        4. Automatic system recovery
+        
+        Args:
+            dt (float): Delta time in seconds since last update
+        """
         # Check if game is paused
         if getattr(self, "paused", False):
             return  # Skip all updates when paused
 
         update_errors = []
         systems_to_recover = []
+
+        # Integrated event-driven strategy update (from legacy update method)
+        try:
+            # Check for new events if event handler exists
+            events = []
+            if self.event_handler:
+                try:
+                    events = self.event_handler.check_events()
+                except Exception as e:
+                    logger.warning(f"Error checking events: {e}")
+                    update_errors.append("Event checking failed")
+
+            # Update strategy based on events if strategy manager exists
+            decisions = []
+            if self.strategy_manager:
+                try:
+                    decisions = self.strategy_manager.update_strategy(events if events else [])
+                except Exception as e:
+                    logger.warning(f"Error updating strategy: {e}")
+                    update_errors.append("Strategy update failed")
+
+            # Apply decisions to game state
+            for decision in decisions:
+                try:
+                    # Pass None as game_state since update_game_state doesn't have access to it
+                    # The decision application logic will use the controller's internal state
+                    self.apply_decision(decision, None)
+                except Exception as e:
+                    logger.error(f"Error applying decision: {e}")
+                    update_errors.append(f"Decision application failed")
+        except Exception as e:
+            logger.error(f"Error in event-driven strategy update: {e}")
+            update_errors.append("Event-driven strategy update failed")
 
         # Update the map controller (handles character movement and pathfinding)
         if self.map_controller:
@@ -2992,46 +3046,74 @@ class GameplayController:
     def update(self, game_state=None):
         """
         Legacy update method for compatibility with external systems.
-        TODO: Integrate this with the main update_game_state method.
+        Now integrated with the main update_game_state method.
+        
+        This method exists for backward compatibility and delegates to update_game_state.
+        External systems calling this method will get the full integrated update functionality.
+        
+        Args:
+            game_state: Optional game state parameter (maintained for compatibility)
         """
         try:
-            # Check for new events if event handler exists
-            events = []
-            if self.event_handler:
-                try:
-                    events = self.event_handler.check_events()
-                except Exception as e:
-                    logger.warning(f"Error checking events: {e}")
-
-            # Update strategy based on events if strategy manager exists
-            decisions = []
-            if self.strategy_manager and events:
-                try:
-                    decisions = self.strategy_manager.update_strategy(events)
-                except Exception as e:
-                    logger.warning(f"Error updating strategy: {e}")
-
-            # Apply decisions to game state
-            for decision in decisions:
-                try:
-                    self.apply_decision(decision, game_state)
-                except Exception as e:
-                    logger.error(f"Error applying decision: {e}")
-
+            # Store the game_state temporarily if provided for legacy compatibility
+            legacy_game_state = game_state
+            
+            # Use a dynamically calculated delta time for legacy compatibility
+            # This ensures consistent behavior for external systems that don't provide dt
+            if not hasattr(self, '_clock'):
+                self._clock = pygame.time.Clock()  # Initialize clock if not already done
+            elapsed_time_ms = self._clock.tick()  # Get elapsed time in milliseconds
+            # Use a dynamically calculated delta time for legacy compatibility
+            # This ensures consistent behavior for external systems that don't provide dt
+            if not hasattr(self, '_clock'):
+                self._clock = pygame.time.Clock()  # Initialize clock if not already done
+            elapsed_time_ms = self._clock.tick()  # Get elapsed time in milliseconds
+            default_dt = elapsed_time_ms / 1000.0  # Convert to seconds
+            
+            # Delegate to the main update method which now includes all functionality
+            self.update_game_state(default_dt)
+            
+            # Note: The integrated functionality in update_game_state handles decision application
+            # with the controller's internal state rather than an external game_state parameter
+            
+            logger.debug("Legacy update method successfully delegated to update_game_state")
+            
         except Exception as e:
-            logger.error(f"Error in legacy update method: {e}")
+            logger.error(f"Error in legacy update method delegation: {e}")
 
     def apply_decision(self, decision, game_state=None):
         """
         Improved apply_decision method that properly handles action resolution.
+        
+        This method can safely handle None values for game_state and will use the 
+        controller's internal state when game_state is not provided.
 
         Args:
             decision: Can be a single action, list of actions, or decision object
-            game_state: Optional game state (for legacy compatibility)
+            game_state: Optional game state (for legacy compatibility). 
+                        When None, actions will be executed using the controller's 
+                        internal state and character information.
+        
+        Returns:
+            bool: True if all actions were executed successfully, False otherwise
+            
+        Note:
+            Passing None as game_state is explicitly supported and safe. The method
+            will fall back to using available character and controller state information.
         """
         try:
+            # Validate input parameters
+            if decision is None:
+                logger.warning("apply_decision called with None decision - no actions to execute")
+                raise ValueError("apply_decision called with None decision - invalid input")
+            
+            # Log when game_state is None for transparency
+            if game_state is None:
+                logger.debug("apply_decision called with game_state=None - using controller's internal state")
+            
             # Handle different decision formats
             actions_to_execute = []
+            target_character = None
 
             if isinstance(decision, list):
                 actions_to_execute = decision
@@ -3044,8 +3126,12 @@ class GameplayController:
             else:
                 # Single action
                 actions_to_execute = [decision]
-                target_character = None
 
+            # Validate that we have actions to execute
+            if not actions_to_execute:
+                logger.warning("apply_decision: No actions found in decision")
+                return False  # No actions to execute indicates failure
+            
             # Find target character if not specified
             if not target_character and actions_to_execute:
                 # Try to determine character from first action
@@ -3071,38 +3157,52 @@ class GameplayController:
                     logger.error(f"Error executing decision action {action}: {e}")
                     continue
 
-            # Log decision execution results
+            # Log decision execution results with context about game_state
             total_actions = len(actions_to_execute)
+            game_state_info = "with game_state" if game_state is not None else "using internal state (game_state=None)"
+            
             if successful_actions == total_actions:
                 logger.info(
-                    f"Decision fully executed: {successful_actions}/{total_actions} actions successful"
+                    f"Decision fully executed {game_state_info}: {successful_actions}/{total_actions} actions successful"
                 )
+                return True
             elif successful_actions > 0:
                 logger.warning(
-                    f"Decision partially executed: {successful_actions}/{total_actions} actions successful"
+                    f"Decision partially executed {game_state_info}: {successful_actions}/{total_actions} actions successful"
                 )
+                return False
             else:
                 logger.error(
-                    f"Decision execution failed: 0/{total_actions} actions successful"
+                    f"Decision execution failed {game_state_info}: 0/{total_actions} actions successful"
                 )
+                return False
 
         except Exception as e:
             logger.error(f"Critical error applying decision: {e}")
             logger.error(traceback.format_exc())
+            return False
 
     def _execute_decision_action(
         self, action, target_character=None, game_state=None
     ) -> bool:
         """
         Execute a single action from a decision with proper error handling.
+        
+        This method safely handles None values for both target_character and game_state,
+        falling back to parameterless action execution when neither is available.
 
         Args:
             action: Action data (dict, object, or string)
-            target_character: Character to execute action on
-            game_state: Optional game state for legacy compatibility
+            target_character: Character to execute action on (optional)
+            game_state: Optional game state for legacy compatibility (can be None)
 
         Returns:
-            bool: True if action executed successfully
+            bool: True if action executed successfully, False otherwise
+            
+        Note:
+            When both target_character and game_state are None, the action will be
+            executed without additional parameters, relying on the action's internal
+            logic and the controller's state.
         """
         try:
             # Use action resolver to convert action to executable format
@@ -3114,17 +3214,21 @@ class GameplayController:
                 logger.warning(f"Could not resolve action: {action}")
                 return False
 
-            # Execute the resolved action
+            # Execute the resolved action with appropriate parameters
             if hasattr(resolved_action, "execute"):
                 try:
-                    # Try different execution signatures
+                    # Choose execution strategy based on available parameters
+                    # Priority: target_character > game_state > no parameters
                     if target_character:
+                        logger.debug(f"Executing action '{getattr(resolved_action, 'name', action)}' with target_character")
                         result = resolved_action.execute(
                             target=target_character, initiator=target_character
                         )
-                    elif game_state:
+                    elif game_state is not None:
+                        logger.debug(f"Executing action '{getattr(resolved_action, 'name', action)}' with game_state")
                         result = resolved_action.execute(game_state)
                     else:
+                        logger.debug(f"Executing action '{getattr(resolved_action, 'name', action)}' with no additional parameters (safe fallback)")
                         result = resolved_action.execute()
 
                     if result:

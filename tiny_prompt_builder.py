@@ -1,10 +1,12 @@
-"""Utilities for constructing LLM prompts for Tiny Village characters.
+"""Prompt generation utilities for Tiny Village characters.
 
-This module provides the :class:`PromptBuilder` and supporting classes used to
-build rich text prompts that are sent to the language model. The prompts include
-character state, goals and available actions so that the model can choose the
-next behaviour for a character.  The classes here do not perform any network
-calls; they only format information.
+This module forms the core of the Tiny Village *prompt system*.  It contains
+helper classes for evaluating a character's current needs and available actions
+and, most importantly, the :class:`PromptBuilder`.  ``PromptBuilder`` combines
+character state with world context to create textual prompts which are then
+passed to the language model via :mod:`tiny_brain_io`.  Responses from the LLM
+are interpreted using :mod:`tiny_output_interpreter`.  No networking occurs in
+this module; it purely formats information for those other components.
 """
 
 import random
@@ -208,8 +210,11 @@ class OutputSchema:
 
 
 class NeedsPriorities:
-    """Calculate priority scores for all basic character needs."""
-    def __init__(self):
+    """Utility object for scoring how pressing each of a character's needs is."""
+
+    def __init__(self) -> None:
+        """Initialise the list of tracked needs and their default priority values."""
+
         self.needs = [
             "health",
             "hunger",
@@ -230,7 +235,7 @@ class NeedsPriorities:
             "friendship_grid",
         ]
         # Value represents a character's current need level
-        self.needs_priorities = {
+        self.needs_priorities: Dict[str, float] = {
             "health": 0,
             "hunger": 0,
             "wealth": 0,
@@ -250,199 +255,180 @@ class NeedsPriorities:
             "friendship_grid": 0,
         }
 
-    def get_needs_priorities(self):
+    def get_needs_priorities(self) -> Dict[str, float]:
+        """Return the current mapping of needs to priority scores."""
+
         return self.needs_priorities
 
-    def get_needs_priorities_list(self):
+    def get_needs_priorities_list(self) -> dict_keys:
+        """Return a view of names of tracked needs."""
+
         return self.needs_priorities.keys()
 
-    def get_needs_priorities_values(self):
+    def get_needs_priorities_values(self) -> dict_values[float]:
+        """Return a view of priority scores in their current order."""
+
         return self.needs_priorities.values()
 
-    def get_needs_priorities_sorted(self):
+    def get_needs_priorities_sorted(self) -> List[tuple]:
+        """Return need/priority pairs sorted from lowest to highest priority."""
+
         return sorted(self.needs_priorities.items(), key=lambda x: x[1])
 
-    def get_needs_priorities_sorted_list(self):
-        return [x[0] for x in sorted(self.needs_priorities.items(), key=lambda x: x[1])]
+    def get_needs_priorities_sorted_list(self) -> List[str]:
+        """Return need names sorted from lowest to highest priority."""
 
-    def get_needs_priorities_sorted_values(self):
-        return [x[1] for x in sorted(self.needs_priorities.items(), key=lambda x: x[1])]
+        return [name for name, _ in self.get_needs_priorities_sorted()]
 
-    def get_needs_priorities_sorted_reverse(self):
+    def get_needs_priorities_sorted_values(self) -> List[float]:
+        """Return priority scores sorted from lowest to highest."""
+
+        return [score for _, score in self.get_needs_priorities_sorted()]
+
+    def get_needs_priorities_sorted_reverse(self) -> List[tuple]:
+        """Return need/priority pairs sorted from highest to lowest."""
+
         return sorted(self.needs_priorities.items(), key=lambda x: x[1], reverse=True)
 
-    def get_needs_priorities_sorted_list_reverse(self):
-        return [
-            x[0]
-            for x in sorted(
-                self.needs_priorities.items(), key=lambda x: x[1], reverse=True
-            )
-        ]
+    def get_needs_priorities_sorted_list_reverse(self) -> List[str]:
+        """Return need names sorted from highest to lowest priority."""
 
-    def get_needs_priorities_sorted_values_reverse(self):
-        return [
-            x[1]
-            for x in sorted(
-                self.needs_priorities.items(), key=lambda x: x[1], reverse=True
-            )
-        ]
+        return [name for name in sorted(self.needs_priorities, key=self.needs_priorities.get, reverse=True)]
 
-    def get_needs_priorities_sorted_by_value(self):
-        return sorted(self.needs_priorities.items(), key=lambda x: x[1])
+    def get_needs_priorities_sorted_values_reverse(self) -> List[float]:
+        """Return priority scores sorted from highest to lowest."""
 
-    def set_needs_priorities(self, needs_priorities):
+        return [score for _, score in self.get_needs_priorities_sorted_reverse()]
+
+    def get_needs_priorities_sorted_by_value(self) -> List[tuple]:
+        """Alias for :meth:`get_needs_priorities_sorted` for backward compatibility."""
+
+        return self.get_needs_priorities_sorted()
+
+    def set_needs_priorities(self, needs_priorities: Dict[str, float]) -> None:
+        """Replace the internal priority mapping with ``needs_priorities``."""
 
         self.needs_priorities = needs_priorities
 
-    def calculate_health_priority(self, character: tc.Character):
-        # Health priority is based on health status
-        # Health status is a value from 1-10
-        # Health priority is a value from 1-100
-        # Health priority is calculated by multiplying health status times 10 and subtracting from 100
+    def calculate_health_priority(self, character: tc.Character) -> float:
+        """Return a priority score (0-100) representing how urgently the
+        character needs medical attention."""
+
         health_status = character.get_health_status()
         health_priority = (
             100 - (health_status * 10)
         ) + character.get_motives().get_health_motive()
         return health_priority
 
-    def calculate_hunger_priority(self, character: tc.Character):
-        # Hunger priority is based on hunger level
-        # Hunger level is a value from 1-10
-        # Hunger priority is a value from 1-100
-        # Hunger priority is calculated by multiplying hunger level times 10
+    def calculate_hunger_priority(self, character: tc.Character) -> float:
+        """Return a priority score for the character's hunger level."""
+
         hunger_level = character.get_hunger_level()
         hunger_priority = (
             hunger_level * 10 + character.get_motives().get_hunger_motive()
         )
         return hunger_priority
 
-    def calculate_wealth_priority(self, character: tc.Character):
-        # Wealth priority is based on wealth
-        # Wealth is a value from 1-10
-        # Wealth priority is a value from 1-100
-        # Wealth priority is calculated by multiplying wealth times 10
+    def calculate_wealth_priority(self, character: tc.Character) -> float:
+        """Return a priority score based on the character's financial state."""
+
         wealth = character.get_wealth()
         wealth_priority = character.get_motives().get_wealth_motive()
         return wealth_priority
 
-    def calculate_mental_health_priority(self, character: tc.Character):
-        # Mental health priority is based on mental health
-        # Mental health is a value from 1-10
-        # Mental health priority is a value from 1-100
-        # Mental health priority is calculated by multiplying mental health times 10
+    def calculate_mental_health_priority(self, character: tc.Character) -> float:
+        """Return a priority score for improving mental wellness."""
+
         mental_health = character.get_mental_health()
         mental_health_priority = character.get_motives().get_mental_health_motive()
         return mental_health_priority
 
-    def calculate_social_wellbeing_priority(self, character: tc.Character):
-        # Social wellbeing priority is based on social wellbeing
-        # Social wellbeing is a value from 1-10
-        # Social wellbeing priority is a value from 1-100
-        # Social wellbeing priority is calculated by multiplying social wellbeing times 10
+    def calculate_social_wellbeing_priority(self, character: tc.Character) -> float:
+        """Return a priority score reflecting the need for social interaction."""
+
         social_wellbeing = character.get_social_wellbeing()
         social_wellbeing_priority = (
             character.get_motives().get_social_wellbeing_motive()
         )
         return social_wellbeing_priority
 
-    def calculate_happiness_priority(self, character: tc.Character):
-        # Happiness priority is based on happiness
-        # Happiness is a value from 1-10
-        # Happiness priority is a value from 1-100
-        # Happiness priority is calculated by multiplying happiness times 10
+    def calculate_happiness_priority(self, character: tc.Character) -> float:
+        """Return a priority score indicating how much the character seeks happiness."""
+
         happiness = character.get_happiness()
         happiness_priority = character.get_motives().get_happiness_motive()
         return happiness_priority
 
-    def calculate_shelter_priority(self, character: tc.Character):
-        # Shelter priority is based on shelter
-        # Shelter is a value from 1-10
-        # Shelter priority is a value from 1-100
-        # Shelter priority is calculated by multiplying shelter times 10
+    def calculate_shelter_priority(self, character: tc.Character) -> float:
+        """Return a priority score describing the need for shelter/housing."""
+
         shelter = character.get_shelter()
         shelter_priority = character.get_motives().get_shelter_motive()
         return shelter_priority
 
-    def calculate_stability_priority(self, character: tc.Character):
-        # Stability priority is based on stability
-        # Stability is a value from 1-10
-        # Stability priority is a value from 1-100
-        # Stability priority is calculated by multiplying stability times 10
+    def calculate_stability_priority(self, character: tc.Character) -> float:
+        """Return a priority score representing the desire for routine and stability."""
+
         stability = character.get_stability()
         stability_priority = character.get_motives().get_stability_motive()
         return stability_priority
 
-    def calculate_luxury_priority(self, character: tc.Character):
-        # Luxury priority is based on luxury
-        # Luxury is a value from 1-10
-        # Luxury priority is a value from 1-100
-        # Luxury priority is calculated by multiplying luxury times 10
+    def calculate_luxury_priority(self, character: tc.Character) -> float:
+        """Return a priority score representing the desire for luxury items or comfort."""
+
         luxury = character.get_luxury()
         luxury_priority = character.get_motives().get_luxury_motive()
         return luxury_priority
 
-    def calculate_hope_priority(self, character: tc.Character):
-        # Hope priority is based on hope
-        # Hope is a value from 1-10
-        # Hope priority is a value from 1-100
-        # Hope priority is calculated by multiplying hope times 10
+    def calculate_hope_priority(self, character: tc.Character) -> float:
+        """Return a priority score representing the character's need for optimism."""
+
         hope = character.get_hope()
         hope_priority = character.get_motives().get_hope_motive()
         return hope_priority
 
-    def calculate_success_priority(self, character: tc.Character):
-        # Success priority is based on success
-        # Success is a value from 1-10
-        # Success priority is a value from 1-100
-        # Success priority is calculated by multiplying success times 10
+    def calculate_success_priority(self, character: tc.Character) -> float:
+        """Return a priority score for career or personal success."""
+
         success = character.get_success()
         success_priority = character.get_motives().get_success_motive()
         return success_priority
 
-    def calculate_control_priority(self, character: tc.Character):
-        # Control priority is based on control
-        # Control is a value from 1-10
-        # Control priority is a value from 1-100
-        # Control priority is calculated by multiplying control times 10
+    def calculate_control_priority(self, character: tc.Character) -> float:
+        """Return a priority score for the character's sense of personal control."""
+
         control = character.get_control()
         control_priority = character.get_motives().get_control_motive()
         return control_priority
 
-    def calculate_job_performance_priority(self, character: tc.Character):
-        # Job performance priority is based on job performance
-        # Job performance is a value from 1-10
-        # Job performance priority is a value from 1-100
-        # Job performance priority is calculated by multiplying job performance times 10
+    def calculate_job_performance_priority(self, character: tc.Character) -> float:
+        """Return a priority score for improving job performance."""
+
         job_performance = character.get_job_performance()
         job_performance_priority = character.get_motives().get_job_performance_motive()
         return job_performance_priority
 
-    def calculate_beauty_priority(self, character: tc.Character):
-        # Beauty priority is based on beauty
-        # Beauty is a value from 1-10
-        # Beauty priority is a value from 1-100
-        # Beauty priority is calculated by multiplying beauty times 10
+    def calculate_beauty_priority(self, character: tc.Character) -> float:
+        """Return a priority score describing desire to improve appearance."""
+
         beauty = character.get_beauty()
         beauty_priority = character.get_motives().get_beauty_motive() - beauty
         return beauty_priority
 
-    def calculate_community_priority(self, character: tc.Character):
-        # Community priority is based on community
-        # Community is a value from 1-10
-        # Community priority is a value from 1-100
-        # Community priority is calculated by multiplying community times 10
+    def calculate_community_priority(self, character: tc.Character) -> float:
+        """Return a priority score reflecting the need for community involvement."""
+
         community = character.get_community()
         community_priority = character.get_motives().get_community_motive()
         return community_priority
 
-    def calculate_material_goods_priority(self, character: tc.Character):
-        # Material goods priority is based on material goods
-        # Material goods is a value from 1-10
-        # Material goods priority is a value from 1-100
-        # Material goods priority is calculated by multiplying material goods times 10
+    def calculate_material_goods_priority(self, character: tc.Character) -> float:
+        """Return a priority score for acquiring material possessions."""
+
         material_goods = character.get_material_goods()
         material_goods_priority = character.get_motives().get_material_goods_motive()
         return material_goods_priority
+
 
     def calculate_friendship_grid_priority(self, character: tc.Character):
         # Friendship grid priority is based on social connections and relationships
@@ -473,13 +459,9 @@ class NeedsPriorities:
         friendship_grid_priority = max(0, social_motive + (10 - friendship_state) * 2)
         return friendship_grid_priority
 
-    def calculate_needs_priorities(self, character: tc.Character):
-        # Calculate needs priorities based on character's current situation
-        # Needs priorities are values from 1-100
-        # Needs priorities are calculated by multiplying need level times 10
-        # Needs priorities are calculated by adding motive value
-        # Needs priorities are calculated by adding need level times motive value
-        # Needs priorities are calculated by adding need level times motive value and subtracting from 100
+    def calculate_needs_priorities(self, character: tc.Character) -> Dict[str, float]:
+        """Calculate priority values for all needs for ``character``."""
+
         needs_priorities = {
             "health": self.calculate_health_priority(character),
             "hunger": self.calculate_hunger_priority(character),
@@ -505,7 +487,10 @@ class NeedsPriorities:
 
 class ActionOptions:
     """List and prioritize the actions a character can perform."""
-    def __init__(self):
+
+    def __init__(self) -> None:
+        """Initialise the set of known action strings."""
+
         self.actions = [
             "buy_food",
             "eat_food",
@@ -540,13 +525,12 @@ class ActionOptions:
             "work_current_job",
         ]
 
-    def prioritize_actions(self, character: tc.Character):
-        # Prioritize actions based on character's current situation
-        # Actions that are more likely to be chosen are placed earlier in the list
-        # Actions that are less likely to be chosen are placed later in the list
-        # Actions that are not possible are removed from the list
-        # Actions that are possible are kept in the list
-        # Actions that are possible but not likely are moved to the end
+    def prioritize_actions(self, character: tc.Character) -> List[str]:
+        """Return a list of plausible actions ordered by likelihood.
+
+        The ordering is determined using a few heuristic checks on ``character``
+        state such as hunger level or available money.
+        """
 
         # char_dict = character.to_dict()
         # inv_dict = character.inventory.to_dict()
@@ -1818,7 +1802,13 @@ descriptors = DescriptorMatrices()
 
 
 class PromptBuilder:
-    """Build detailed prompts for Tiny Village characters."""
+    """Construct complex prompts for the Tiny Village language model.
+
+    A ``PromptBuilder`` instance collects information from a :class:`~tiny_characters.Character`
+    and formats it into strings which the LLM can understand.  It does not
+    communicate with the model directly; :mod:`tiny_brain_io` is responsible for
+    that step.
+    """
 
     def __init__(self, character: tc.Character) -> None:
         """Initialize the builder for ``character``."""
@@ -2071,7 +2061,14 @@ class PromptBuilder:
         prompt += "3. Visit a friend to Increase_Friendship.\n"
         prompt += "4. Engage in a Leisure_Activity to improve Mental_Health.\n"
         prompt += "5. Work on a personal project to Pursue_Hobby.\n"
-        
+        actions = self.action_options.prioritize_actions(self.character)
+        for i, action in enumerate(actions[:5], 1):
+            try:
+                descriptor = descriptors.get_action_descriptors(action)
+            except (KeyError, AttributeError):
+                descriptor = action.replace("_", " ").title()
+            action_name = action.replace("_", " ").title().replace(" ", "_")Expand commentComment on lines R1657 to R1658ResolvedCode has comments. Press enter to view.
+            prompt += f"{i}. {descriptor} to {action_name}.\n"
         # Add structured output format instructions
         if output_format == "json":
             prompt += f"\n\n{OutputSchema.get_decision_schema()}"
