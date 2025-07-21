@@ -490,10 +490,16 @@ class SocialModel:
 
         # Return a simplified romance interest calculation
         # This is a basic implementation - could be expanded with more sophisticated logic
-        base_interest = romance_compat * 0.4
-        motive_compatibility = (family_motive + partner_family_motive) / 20 * 0.3
-        wealth_factor = (1 - wealth_differenceab) * 0.2
-        personality_factor = (1 - agreeableness_difference / 10) * 0.1
+        # Weightings for romance interest calculation
+        BASE_INTEREST_WEIGHT = 0.4  # Importance of base romance compatibility
+        MOTIVE_COMPATIBILITY_WEIGHT = 0.3  # Influence of family motive compatibility
+        WEALTH_FACTOR_WEIGHT = 0.2  # Impact of wealth difference
+        PERSONALITY_FACTOR_WEIGHT = 0.1  # Contribution of personality compatibility
+        
+        base_interest = romance_compat * BASE_INTEREST_WEIGHT
+        motive_compatibility = (family_motive + partner_family_motive) / 20 * MOTIVE_COMPATIBILITY_WEIGHT
+        wealth_factor = (1 - wealth_differenceab) * WEALTH_FACTOR_WEIGHT
+        personality_factor = (1 - agreeableness_difference / 10) * PERSONALITY_FACTOR_WEIGHT
         
         romance_interest = base_interest + motive_compatibility + wealth_factor + personality_factor
         return max(0.0, min(1.0, romance_interest))
