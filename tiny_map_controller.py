@@ -81,8 +81,10 @@ class InfoPanel:
                 surface.blit(text_surface, (self.x + 10, y_offset))
                 y_offset += 18
                 
+        except pygame.error as e:
+            logging.warning(f"Pygame error while rendering info panel: {e}")
         except Exception as e:
-            logging.warning(f"Error rendering info panel: {e}")
+            logging.warning(f"Unexpected error rendering info panel: {e}")
 
 
 class ContextMenu:
