@@ -7,7 +7,17 @@ from unittest.mock import MagicMock
 # from tiny_prompt_builder import PromptBuilder
 
 logging.basicConfig(level=logging.DEBUG)
+from unittest.mock import MagicMock, patch
+import sys, types
 
+# Provide a minimal stub for tiny_characters to avoid heavy dependencies
+tc_stub = types.ModuleType('tiny_characters')
+class DummyCharacter:
+    pass
+tc_stub.Character = DummyCharacter
+sys.modules['tiny_characters'] = tc_stub
+
+from tiny_prompt_builder import PromptBuilder, descriptors
 
 class MockInventory:
     """Configurable mock inventory for testing PromptBuilder with different inventory states."""
@@ -39,6 +49,14 @@ class MockCharacter:
         self.hunger_level = hunger_level
         self.wealth_money = wealth_money
         self.inventory = inventory or MockInventory()
+        self.name = "Emily"
+        self.job = "Engineer"
+        self.health_status = 10
+        self.mental_health = 8
+        self.social_wellbeing = 8
+        self.job_performance = "average"
+        self.recent_event = "nothing"
+        self.long_term_goal = "excel at testing"
     
     def get_hunger_level(self):
         return self.hunger_level
@@ -57,6 +75,19 @@ class TestPromptBuilder(unittest.TestCase):
         """Set up test cases with configurable MockInventory."""
         # Create mock character for testing inventory scenarios
         self.character = MockCharacter(hunger_level=2, wealth_money=10)
+        self.mock_needs = MagicMock()
+        self.mock_actions = MagicMock()
+        self.prompt_builder.needs_priorities_func = self.mock_needs
+        self.prompt_builder.action_options = self.mock_actions
+        self.prompt_builder.long_term_goal = "achieve greatness"
+        # Ensure descriptor defaults exist to avoid KeyError
+        descriptors.job_currently_working_on.setdefault("default", ["a project"])
+        descriptors.job_planning_to_attend.setdefault("default", ["an event"])
+        descriptors.job_hoping_to_there.setdefault("default", ["participate"])
+        descriptors.feeling_health.setdefault("default", ["healthy"])
+        descriptors.feeling_hunger.setdefault("default", ["hungry"])
+        descriptors.event_recent.setdefault("default", ["Recently"])
+        descriptors.financial_situation.setdefault("default", ["you have some money"])
         
     def test_mock_inventory_configuration(self):
         """Test that MockInventory can be configured with different values."""
@@ -169,7 +200,46 @@ class TestPromptBuilder(unittest.TestCase):
         # Should NOT prioritize eat_food because: food_items(0) == 0 (no food to eat)
         self.assertFalse(eat_food_condition,
                         "PromptBuilder should NOT prioritize eat_food when character has no food")
+        
+    def test_calculate_needs_priorities_without_mock(self):
+        """Test calculate_needs_priorities without mocked return value."""
+        self.prompt_builder.calculate_needs_priorities()
+        self.mock_needs.calculate_needs_priorities.assert_called_once_with(
+            self.character
+        )
+        self.assertEqual(
+            self.prompt_builder.needs_priorities,
+            {
+                "need1": 10,
+                "need2": 20,
+                "need3": 30,
+            },
+        )
+        self.mock_needs.calculate_needs_priorities.assert_called_once_with(self.character)
+        self.assertEqual(self.prompt_builder.needs_priorities, {"need1": 1})
 
+    def test_generate_daily_routine_prompt(self):
+        self.mock_actions.prioritize_actions.return_value = ["buy_food", "social_visit"]Expand commentComment on line R52ResolvedCode has comments. Press enter to view.
+        with patch('tiny_prompt_builder.descriptors.get_action_descriptors') as mock_desc:Expand commentComment on line R53ResolvedCode has comments. Press enter to view.
+            mock_desc.side_effect = ["Go shopping", "Meet friend"]
+            prompt = self.prompt_builder.generate_daily_routine_prompt("morning", "sunny")
+        self.mock_actions.prioritize_actions.assert_called_once_with(self.character)
+        self.assertIn("1. Go shopping to Buy_Food.", prompt)
+        self.assertIn("2. Meet friend to Social_Visit.", prompt)
+        self.assertIn("Emily, I choose", prompt)
+    def test_generate_prompt(self):
+        # Mock the DescriptorMatrices class
+        mock_descriptor_matrices = MagicMock()
+        mock_descriptor_matrices.generate.return_value = "Generated Prompt"
+        self.prompt_builder.descriptor_matrices = mock_descriptor_matrices
+
+        prompt = self.prompt_builder.generate_prompt()
+        mock_descriptor_matrices.generate.assert_called_once()
+        self.assertEqual(prompt, "Generated Prompt")
+
+    def test_get_action_options(self):
+        self.prompt_builder.get_action_options()
+        self.mock_action_options.get_options.assert_called_once_with(self.character)
     def test_fixed_values_limitation_demonstration(self):
         """Demonstrate why configurable MockInventory is essential vs fixed values."""
         # This test shows the problem with the original fixed-value MockInventory
