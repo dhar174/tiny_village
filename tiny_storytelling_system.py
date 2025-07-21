@@ -97,12 +97,12 @@ class StoryArc:
             
         element_count = len(self.elements)
         
-        # Simple progression logic
-        if self.status == StoryArcStatus.STARTING and element_count >= 2:
+        # Simple progression logic using thresholds
+        if self.status == StoryArcStatus.STARTING and element_count >= self.STARTING_THRESHOLD:
             return True
-        elif self.status == StoryArcStatus.DEVELOPING and element_count >= 5:
+        elif self.status == StoryArcStatus.DEVELOPING and element_count >= self.DEVELOPING_THRESHOLD:
             return True
-        elif self.status == StoryArcStatus.CLIMAX and element_count >= 7:
+        elif self.status == StoryArcStatus.CLIMAX and element_count >= self.CLIMAX_THRESHOLD:
             return True
             
         return False
