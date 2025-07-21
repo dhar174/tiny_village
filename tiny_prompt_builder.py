@@ -17,6 +17,178 @@ from datetime import datetime
 import tiny_characters as tc
 
 
+class ContextManager:
+    """Systematically gathers and organizes relevant context for prompt generation.
+    
+    This class ensures consistent prompt structure and comprehensive information
+    across all prompt types by centralizing context assembly logic.
+    """
+    
+    def __init__(self, character, memory_manager=None):
+        """Initialize context manager for a character.
+        
+        Args:
+            character: The character to gather context for
+            memory_manager: Optional memory manager for retrieving memories
+        """
+        self.character = character
+        self.memory_manager = memory_manager
+        
+    def gather_character_context(self):
+        """Gather comprehensive character context information.
+        
+        Returns:
+            Dictionary containing organized character context
+        """
+        context = {
+            'basic_info': {
+                'name': self.character.name,
+                'job': getattr(self.character, 'job', 'Unknown'),
+                'personality_traits': getattr(self.character, 'personality_traits', {}),
+            },
+            'current_state': {
+                'health_status': getattr(self.character, 'health_status', 5),
+                'hunger_level': getattr(self.character, 'hunger_level', 5),
+                'mental_health': getattr(self.character, 'mental_health', 5),
+                'social_wellbeing': getattr(self.character, 'social_wellbeing', 5),
+                'energy': getattr(self.character, 'energy', 5),
+                'wealth_money': getattr(self.character, 'wealth_money', 0),
+            },
+            'motivations': {
+                'long_term_goal': getattr(self.character, 'long_term_goal', None),
+                'recent_event': getattr(self.character, 'recent_event', 'default'),
+            },
+            'inventory': {
+                'food_items': getattr(self.character, 'inventory', {})
+            }
+        }
+        
+        # Add motives if available
+        if hasattr(self.character, 'motives') and self.character.motives:
+            try:
+                context['motives'] = self._extract_character_motives()
+            except Exception:
+                context['motives'] = {}
+                
+        return context
+        
+    def gather_environmental_context(self, time: str, weather: str):
+        """Gather environmental context for prompts.
+        
+        Args:
+            time: Current time description
+            weather: Current weather description
+            
+        Returns:
+            Dictionary containing environmental context
+        """
+        return {
+            'time': time,
+            'weather': weather,
+            'time_formatted': f"it's {time}",
+            'weather_formatted': descriptors.get_weather_description(weather)
+        }
+        
+    def gather_memory_context(self, query: str, max_memories: int = 3):
+        """Gather relevant memories for the given context query.
+        
+        Args:
+            query: Query string to find relevant memories
+            max_memories: Maximum number of memories to return
+            
+        Returns:
+            List of relevant memory objects
+        """
+        if not self.memory_manager:
+            return []
+            
+        try:
+            # Use the memory manager to search for relevant memories
+            memory_results = self.memory_manager.search_memories(query)
+            
+            # Extract top memories based on relevance score
+            if isinstance(memory_results, dict):
+                sorted_memories = sorted(
+                    memory_results.items(), 
+                    key=lambda x: x[1], 
+                    reverse=True
+                )
+                return [memory for memory, score in sorted_memories[:max_memories]]
+            elif isinstance(memory_results, list):
+                return memory_results[:max_memories]
+            else:
+                return []
+        except Exception:
+            return []
+            
+    def gather_goal_context(self):
+        """Gather character goal and priority context.
+        
+        Returns:
+            Dictionary containing goal information and priorities
+        """
+        context = {
+            'active_goals': [],
+            'goal_priorities': {},
+            'needs_priorities': {}
+        }
+        
+        # Get active goals if character has goal evaluation capability
+        try:
+            if hasattr(self.character, 'evaluate_goals'):
+                goal_queue = self.character.evaluate_goals()
+                context['active_goals'] = goal_queue[:3]  # Top 3 goals
+        except Exception:
+            pass
+            
+        # Calculate needs priorities
+        try:
+            needs_calculator = NeedsPriorities()
+            context['needs_priorities'] = needs_calculator.calculate_needs_priorities(self.character)
+        except Exception:
+            pass
+            
+        return context
+        
+    def assemble_complete_context(self, time: str, weather: str, 
+                                  memory_query=None):
+        """Assemble all context types into a comprehensive context object.
+        
+        Args:
+            time: Current time description
+            weather: Current weather description  
+            memory_query: Optional query for relevant memories
+            
+        Returns:
+            Complete context dictionary for prompt generation
+        """
+        context = {
+            'character': self.gather_character_context(),
+            'environment': self.gather_environmental_context(time, weather),
+            'goals': self.gather_goal_context(),
+            'memories': [],
+            'timestamp': datetime.now().isoformat(),
+        }
+        
+        # Add memory context if query provided
+        if memory_query:
+            context['memories'] = self.gather_memory_context(memory_query)
+            
+        return context
+        
+    def _extract_character_motives(self):
+        """Extract character motives as a dictionary.
+        
+        Returns:
+            Dictionary mapping motive names to scores
+        """
+        try:
+            motives_dict = self.character.motives.to_dict()
+            return {name: motive.score for name, motive in motives_dict.items()}
+        except Exception:
+            return {}
+
+
 @dataclass
 class ConversationTurn:
     """Represents a single turn in a conversation with the LLM."""
@@ -574,6 +746,217 @@ class ActionOptions:
         if len(prioritized_actions) < 5:
             prioritized_actions += other_actions[: 5 - len(prioritized_actions)]
         return prioritized_actions
+
+
+class ParameterizedTemplateEngine:
+    """Dynamic template system that can be modified at runtime based on character personality and game state.
+    
+    This replaces static descriptor matrices with a flexible template system that supports
+    placeholders, template definitions, and runtime parameter substitution.
+    """
+    
+    def __init__(self):
+        """Initialize the template engine with base templates."""
+        self.templates = {}
+        self.parameters = {}
+        self.character_context = {}
+        self._load_base_templates()
+        
+    def _load_base_templates(self):
+        """Load base template definitions with placeholders."""
+        self.templates = {
+            "character_intro": "You are {character_name}, a {character_adjective} {character_role}",
+            "character_activity": "who enjoys {activity_verb} {activity_object}",
+            "current_project": "You are currently working on {current_project} {work_location}",
+            "future_plans": "and you are excited to see how it turns out. You are also planning to attend a {event_type} in the next few weeks",
+            "event_expectations": "and you are hoping to {event_goal} there",
+            "health_status": "You're feeling {health_descriptor}",
+            "hunger_status": "and {hunger_descriptor}",
+            "recent_events": "{recent_event_prefix}",
+            "financial_status": "and {financial_descriptor}",
+            "motivation": "{motivation_prefix} {goal_description}",
+            "weather_context": "it's {time_period}, and {weather_description}",
+            "question_framing": "{question_style}"
+        }
+        
+    def set_character_parameters(self, character, personality_modifier: str = None):
+        """Set character-specific parameters for template substitution.
+        
+        Args:
+            character: Character object to extract parameters from
+            personality_modifier: Optional personality-based template modifier
+        """
+        job = getattr(character, 'job', 'person')
+        
+        # Base character parameters
+        self.parameters.update({
+            'character_name': character.name,
+            'character_role': job.lower(),
+            'current_project': self._get_project_for_job(job),
+            'work_location': self._get_work_location_for_job(job),
+            'event_type': self._get_event_for_job(job),
+            'event_goal': self._get_event_goal_for_job(job),
+        })
+        
+        # Personality-based modifications
+        if personality_modifier:
+            self._apply_personality_modifier(personality_modifier)
+            
+        # Dynamic adjectives based on character state
+        self._set_dynamic_descriptors(character)
+        
+    def _get_project_for_job(self, job: str) -> str:
+        """Get appropriate current project based on job."""
+        project_map = {
+            'Engineer': ['a new software project', 'a new system design', 'debugging a complex issue'],
+            'Farmer': ['a new crop rotation', 'preparing the fields', 'planning the harvest'],
+            'Waitress': ['improving customer service', 'learning new recipes', 'organizing the restaurant']
+        }
+        return random.choice(project_map.get(job, ['a new project']))
+        
+    def _get_work_location_for_job(self, job: str) -> str:
+        """Get work location for job."""
+        location_map = {
+            'Engineer': 'at your desk',
+            'Farmer': 'on the farm', 
+            'Waitress': 'at the restaurant'
+        }
+        return location_map.get(job, 'at work')
+        
+    def _get_event_for_job(self, job: str) -> str:
+        """Get appropriate event type for job."""
+        event_map = {
+            'Engineer': ['tech conference', 'hackathon', 'developer meetup'],
+            'Farmer': ['farmers market', 'agricultural fair', 'farming conference'],
+            'Waitress': ['culinary event', 'service training', 'restaurant expo']
+        }
+        import random
+        return random.choice(event_map.get(job, ['professional event']))
+        
+    def _get_event_goal_for_job(self, job: str) -> str:
+        """Get event goal for job."""
+        goal_map = {
+            'Engineer': ['network with other developers', 'learn new technologies', 'showcase your work'],
+            'Farmer': ['sell your produce', 'learn about new techniques', 'meet other farmers'],
+            'Waitress': ['improve your skills', 'learn new recipes', 'meet other service professionals']
+        }
+        import random
+        return random.choice(goal_map.get(job, ['learn something new']))
+        
+    def _apply_personality_modifier(self, modifier: str):
+        """Apply personality-based template modifications."""
+        personality_modifiers = {
+            'analytical': {
+                'character_adjective': ['methodical', 'precise', 'logical'],
+                'activity_verb': ['analyzing', 'optimizing', 'systematizing'],
+                'question_style': 'What is the most logical next step?'
+            },
+            'creative': {
+                'character_adjective': ['innovative', 'imaginative', 'artistic'],
+                'activity_verb': ['creating', 'designing', 'innovating'],
+                'question_style': 'What creative solution will you pursue?'
+            },
+            'social': {
+                'character_adjective': ['friendly', 'outgoing', 'collaborative'],
+                'activity_verb': ['connecting with', 'helping', 'supporting'],
+                'question_style': 'How will you engage with others?'
+            }
+        }
+        
+        if modifier in personality_modifiers:
+            for key, value in personality_modifiers[modifier].items():
+                if isinstance(value, list):
+                    import random
+                    self.parameters[key] = random.choice(value)
+                else:
+                    self.parameters[key] = value
+                    
+    def _set_dynamic_descriptors(self, character):
+        """Set descriptors based on current character state."""
+        # Health descriptor based on health status
+        health = getattr(character, 'health_status', 5)
+        if health >= 8:
+            self.parameters['health_descriptor'] = 'excellent'
+        elif health >= 6:
+            self.parameters['health_descriptor'] = 'good'
+        elif health >= 4:
+            self.parameters['health_descriptor'] = 'okay'
+        else:
+            self.parameters['health_descriptor'] = 'unwell'
+            
+        # Hunger descriptor
+        hunger = getattr(character, 'hunger_level', 5)
+        if hunger >= 8:
+            self.parameters['hunger_descriptor'] = 'very hungry'
+        elif hunger >= 6:
+            self.parameters['hunger_descriptor'] = 'somewhat hungry'
+        elif hunger >= 3:
+            self.parameters['hunger_descriptor'] = 'satisfied'
+        else:
+            self.parameters['hunger_descriptor'] = 'full'
+            
+        # Financial descriptor
+        wealth = getattr(character, 'wealth_money', 0)
+        if wealth >= 100:
+            self.parameters['financial_descriptor'] = 'you are financially comfortable'
+        elif wealth >= 50:
+            self.parameters['financial_descriptor'] = 'your finances are stable'
+        elif wealth >= 10:
+            self.parameters['financial_descriptor'] = 'you have some money saved'
+        else:
+            self.parameters['financial_descriptor'] = 'money is tight'
+            
+    def set_environmental_parameters(self, time: str, weather: str):
+        """Set environmental parameters for templates."""
+        self.parameters.update({
+            'time_period': time,
+            'weather_description': weather
+        })
+        
+    def generate_text(self, template_key: str, additional_params: Dict[str, str] = None) -> str:
+        """Generate text from a template with parameter substitution.
+        
+        Args:
+            template_key: Key of the template to use
+            additional_params: Additional parameters for substitution
+            
+        Returns:
+            Generated text with parameters substituted
+        """
+        if template_key not in self.templates:
+            return f"[Template '{template_key}' not found]"
+            
+        template = self.templates[template_key]
+        params = self.parameters.copy()
+        
+        if additional_params:
+            params.update(additional_params)
+            
+        try:
+            return template.format(**params)
+        except KeyError as e:
+            return f"[Missing parameter {e} for template '{template_key}']"
+            
+    def add_custom_template(self, key: str, template: str):
+        """Add a custom template definition.
+        
+        Args:
+            key: Template identifier
+            template: Template string with {parameter} placeholders
+        """
+        self.templates[key] = template
+        
+    def modify_template(self, key: str, new_template: str):
+        """Modify an existing template at runtime.
+        
+        Args:
+            key: Template identifier to modify
+            new_template: New template string
+        """
+        if key in self.templates:
+            self.templates[key] = new_template
+        else:
+            self.add_custom_template(key, new_template)
 
 
 class DescriptorMatrices:
@@ -1810,7 +2193,7 @@ class PromptBuilder:
     that step.
     """
 
-    def __init__(self, character: tc.Character) -> None:
+    def __init__(self, character, memory_manager=None) -> None:
         """Initialize the builder for ``character``."""
 
         self.character = character
@@ -1821,6 +2204,19 @@ class PromptBuilder:
         self.conversation_history = ConversationHistory()
         self.few_shot_manager = FewShotExampleManager()
         self.character_voice_traits = self._initialize_character_voice()
+        
+        # Enhanced context management
+        self.context_manager = ContextManager(character, memory_manager)
+        self.memory_manager = memory_manager
+        
+        # Prompt versioning
+        self.prompt_version = "1.0.0"
+        self.prompt_metadata = {
+            "created_at": datetime.now().isoformat(),
+            "version": self.prompt_version,
+            "character_id": getattr(character, 'name', 'unknown'),
+            "performance_metrics": {}
+        }
         
     def _initialize_character_voice(self) -> Dict[str, str]:
         """Initialize character-specific voice and personality traits."""
@@ -1907,6 +2303,89 @@ class PromptBuilder:
         )
         self.few_shot_manager.add_example(example)
 
+    def integrate_relevant_memories(self, context_query: str, max_memories: int = 3):
+        """Integrate relevant memories from MemoryManager into prompts.
+        
+        Args:
+            context_query: Query to find relevant memories
+            max_memories: Maximum number of memories to retrieve
+            
+        Returns:
+            List of relevant memory objects
+        """
+        return self.context_manager.gather_memory_context(context_query, max_memories)
+        
+    def format_memories_for_prompt(self, memories):
+        """Format memories for inclusion in prompts.
+        
+        Args:
+            memories: List of memory objects to format
+            
+        Returns:
+            Formatted string for prompt inclusion
+        """
+        if not memories:
+            return ""
+            
+        lines = ["Relevant memories to consider:"]
+        for i, memory in enumerate(memories, 1):
+            # Handle different memory object types
+            if hasattr(memory, 'description'):
+                desc = memory.description
+            elif hasattr(memory, 'content'):
+                desc = memory.content
+            else:
+                desc = str(memory)
+                
+            lines.append(f"{i}. {desc}")
+            
+        return "\n".join(lines) + "\n"
+        
+    def add_prompt_metadata(self, prompt_type: str, context_info = None):
+        """Add versioning and metadata to prompts.
+        
+        Args:
+            prompt_type: Type of prompt being generated
+            context_info: Additional context information
+            
+        Returns:
+            Metadata dictionary for the prompt
+        """
+        metadata = {
+            "prompt_version": self.prompt_version,
+            "prompt_type": prompt_type,
+            "character_name": self.character.name,
+            "timestamp": datetime.now().isoformat(),
+        }
+        
+        if context_info:
+            metadata.update(context_info)
+            
+        return metadata
+        
+    def collect_performance_feedback(self, prompt_type: str, success_rating: float, 
+                                   response_quality: float = None, user_feedback: str = None):
+        """Collect performance metrics for prompt versions.
+        
+        Args:
+            prompt_type: Type of prompt that was used
+            success_rating: Rating of how successful the prompt was (0-1)
+            response_quality: Optional quality rating of the response
+            user_feedback: Optional user feedback text
+        """
+        if prompt_type not in self.prompt_metadata["performance_metrics"]:
+            self.prompt_metadata["performance_metrics"][prompt_type] = []
+            
+        metrics = {
+            "timestamp": datetime.now().isoformat(),
+            "version": self.prompt_version,
+            "success_rating": success_rating,
+            "response_quality": response_quality,
+            "user_feedback": user_feedback
+        }
+        
+        self.prompt_metadata["performance_metrics"][prompt_type].append(metrics)
+
     def calculate_needs_priorities(self) -> None:
         """Compute and store the character's current need priorities."""
 
@@ -1960,12 +2439,12 @@ class PromptBuilder:
 
         return self.action_choices
 
-    def generate_completion_message(self, character: tc.Character, action: str) -> str:
+    def generate_completion_message(self, character, action: str) -> str:
         """Return a short message describing successful completion of ``action``."""
 
         return f"{character.name} has {DescriptorMatrices.get_action_descriptors(action)} {action}."
 
-    def generate_failure_message(self, character: tc.Character, action: str) -> str:
+    def generate_failure_message(self, character, action: str) -> str:
         """Return a short message describing failure to perform ``action``."""
 
         return f"{character.name} has failed to {DescriptorMatrices.get_action_descriptors(action)} {action}."
@@ -2030,19 +2509,52 @@ class PromptBuilder:
         weather: str, 
         include_conversation_context: bool = True,
         include_few_shot_examples: bool = True,
+        include_memories: bool = True,
         output_format: str = "structured"
     ) -> str:
-        """Generate a basic daily routine prompt with LLM integration features."""
+        """Generate a basic daily routine prompt with enhanced context management and memory integration."""
+        
+        # Use ContextManager to gather comprehensive context
+        context = self.context_manager.assemble_complete_context(
+            time, weather, 
+            memory_query=f"daily routine for {self.character.name}" if include_memories else None
+        )
+        
+        # Add prompt metadata for versioning
+        metadata = self.add_prompt_metadata("daily_routine", {
+            "time": time,
+            "weather": weather,
+            "include_memories": include_memories
+        })
+        
         prompt = "<|system|>"
+        prompt += f"<!-- Prompt Version: {metadata['prompt_version']} -->\n"
+        
+        # Use enhanced character context
+        char_info = context['character']
         prompt += (
-            f"You are {self.character.name}, a {self.character.job} in a small town. You are a {descriptors.get_job_adjective(self.character.job)} {descriptors.get_job_pronoun(self.character.job)} who enjoys {descriptors.get_job_enjoys_verb(self.character.job)} {descriptors.get_job_verb_acts_on_noun(self.character.job)}. You are currently working on {descriptors.get_job_currently_working_on(self.character.job)} {descriptors.get_job_place(self.character.job)}, and you are excited to see how it turns out. You are also planning to attend a {descriptors.get_job_planning_to_attend(self.character.job)} in the next few weeks, and you are hoping to {descriptors.get_job_hoping_to_there(self.character.job)} there."
+            f"You are {char_info['basic_info']['name']}, a {char_info['basic_info']['job']} in a small town. "
+            f"You are a {descriptors.get_job_adjective(char_info['basic_info']['job'])} "
+            f"{descriptors.get_job_pronoun(char_info['basic_info']['job'])} who enjoys "
+            f"{descriptors.get_job_enjoys_verb(char_info['basic_info']['job'])} "
+            f"{descriptors.get_job_verb_acts_on_noun(char_info['basic_info']['job'])}. "
+            f"You are currently working on {descriptors.get_job_currently_working_on(char_info['basic_info']['job'])} "
+            f"{descriptors.get_job_place(char_info['basic_info']['job'])}, and you are excited to see how it turns out. "
+            f"You are also planning to attend a {descriptors.get_job_planning_to_attend(char_info['basic_info']['job'])} "
+            f"in the next few weeks, and you are hoping to {descriptors.get_job_hoping_to_there(char_info['basic_info']['job'])} there."
         )
         
         # Add conversation context if available and requested
         if include_conversation_context:
-            context = self.conversation_history.format_context_for_prompt(self.character.name)
-            if context:
-                prompt += f"\n{context}"
+            context_text = self.conversation_history.format_context_for_prompt(self.character.name)
+            if context_text:
+                prompt += f"\n{context_text}"
+
+        # Add relevant memories
+        if include_memories and context['memories']:
+            memory_text = self.format_memories_for_prompt(context['memories'])
+            if memory_text:
+                prompt += f"\n{memory_text}"
 
         # Add few-shot examples if requested
         if include_few_shot_examples:
@@ -2091,38 +2603,62 @@ class PromptBuilder:
         action_choices: List[str],
         character_state_dict: Optional[Dict[str, float]] = None,
         memories: Optional[List] = None,
-
         include_conversation_context: bool = True,
         include_few_shot_examples: bool = True,
+        include_memory_integration: bool = True,
         output_format: str = "json",
     ) -> str:
-        """Create a decision prompt incorporating goals, needs and context."""
-        # Calculate needs priorities for character context
-        needs_calculator = NeedsPriorities()
-        needs_priorities = needs_calculator.calculate_needs_priorities(self.character)
-
+        """Create a decision prompt with enhanced context management and memory integration."""
+        
+        # Use ContextManager for comprehensive context gathering
+        context = self.context_manager.assemble_complete_context(
+            time, weather,
+            memory_query=f"decision making for {self.character.name}" if include_memory_integration else None
+        )
+        
+        # Add prompt metadata for versioning
+        metadata = self.add_prompt_metadata("decision", {
+            "time": time,
+            "weather": weather,
+            "include_memory_integration": include_memory_integration,
+            "action_choices_count": len(action_choices)
+        })
+        
         # Get character's current goals prioritized by importance
-        try:
-            goal_queue = self.character.evaluate_goals()
-        except Exception as e:
-            print(f"Warning: Could not evaluate goals for {self.character.name}: {e}")
-            goal_queue = []
+        goal_context = context['goals']
+        goal_queue = goal_context.get('active_goals', [])
+        needs_priorities = goal_context.get('needs_priorities', {})
 
         # Build enhanced prompt with rich character context
         prompt = f"<|system|>"
+        prompt += f"<!-- Prompt Version: {metadata['prompt_version']} -->\n"
 
-        # Basic character identity and role
+        # Basic character identity and role using context
+        char_info = context['character']
         prompt += (
-            f"You are {self.character.name}, a {self.character.job} in a small town. "
+            f"You are {char_info['basic_info']['name']}, a {char_info['basic_info']['job']} in a small town. "
         )
-        prompt += f"You are a {descriptors.get_job_adjective(self.character.job)} {descriptors.get_job_pronoun(self.character.job)} "
-        prompt += f"who enjoys {descriptors.get_job_enjoys_verb(self.character.job)} {descriptors.get_job_verb_acts_on_noun(self.character.job)}. "
+        prompt += f"You are a {descriptors.get_job_adjective(char_info['basic_info']['job'])} {descriptors.get_job_pronoun(char_info['basic_info']['job'])} "
+        prompt += f"who enjoys {descriptors.get_job_enjoys_verb(char_info['basic_info']['job'])} {descriptors.get_job_verb_acts_on_noun(char_info['basic_info']['job'])}. "
 
         # Add conversation context if available and requested
         if include_conversation_context:
-            context = self.conversation_history.format_context_for_prompt(self.character.name)
-            if context:
-                prompt += f"\n{context}"
+            context_text = self.conversation_history.format_context_for_prompt(self.character.name)
+            if context_text:
+                prompt += f"\n{context_text}"
+
+        # Add memory integration - prioritize new integration over legacy memories parameter
+        relevant_memories = []
+        if include_memory_integration:
+            # Use new memory integration from context
+            relevant_memories = context.get('memories', [])
+        elif memories:
+            # Fallback to legacy memories parameter
+            relevant_memories = memories
+        if relevant_memories:
+            memory_text = self.format_memories_for_prompt(relevant_memories)
+            if memory_text:
+                prompt += f"\n{memory_text}"
 
         # Add few-shot examples if requested
         if include_few_shot_examples:
