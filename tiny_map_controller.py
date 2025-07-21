@@ -729,7 +729,7 @@ class MapController:
         self.hide_ui_elements()
         
         # Determine what is at the clicked position
-            self.handle_click(event.pos)
+        self.handle_click(position)
 
     def handle_click(self, position):
         # Determine what is at the clicked position (priority order)
@@ -768,7 +768,6 @@ class MapController:
         self.selected_character = None
         self.selected_building = None
         self.selected_location = None
-            return
 
         # Check for POI click
         poi = self.find_poi_at_point(position[0], position[1])

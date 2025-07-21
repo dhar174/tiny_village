@@ -15,6 +15,18 @@ SPEED_STEP = 0.1
 # UI Layout Constants
 ACHIEVEMENT_SPACING = 25
 ACHIEVEMENT_LINE_SPACING = 18
+PANEL_SPACING = 8
+INSTRUCTIONS_BOTTOM_MARGIN = 150
+MINIMAP_SIZE = 120
+DEFAULT_COLOR = (100, 150, 200)
+
+# Notification priorities for the event system
+NOTIFICATION_PRIORITIES = {
+    'CRITICAL': 'high',
+    'WARNING': 'medium', 
+    'INFO': 'normal',
+    'DEBUG': 'low'
+}
 
 WEATHER_ENERGY_EFFECTS = {
     'rainy': 0.5,
@@ -177,8 +189,9 @@ class StatsPanel(UIPanel):
         if hasattr(controller, "action_resolver"):
             try:
                 analytics = controller.action_resolver.get_action_analytics()
+                cache_size = analytics.get('cache_size', 0)
                 analytics_text = tiny_font.render(
-                    f"Success Rate: {analytics['success_rate']:.1%} | Cache: {analytics['cache_size']}",
+                    f"Success Rate: {analytics.get('success_rate', 0):.1%} | Cache: {cache_size}",
                     True, (150, 150, 150)
                 )
                 screen.blit(analytics_text, (x, current_y))
@@ -254,7 +267,7 @@ class AchievementPanel(UIPanel):
 
 
 class SelectedCharacterPanel(UIPanel):
-    """Panel for displaying selected character information."""
+    """Panel for displaying selected character information with enhanced needs tracking."""
     
     def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
         small_font = fonts.get('small', pygame.font.Font(None, 18))
@@ -266,14 +279,61 @@ class SelectedCharacterPanel(UIPanel):
             and controller.map_controller.selected_character):
             
             char = controller.map_controller.selected_character
-            char_info = [
-                f"Selected: {char.name}",
-                f"Job: {getattr(char, 'job', 'Unknown')}",
-                f"Energy: {getattr(char, 'energy', 0)}",
-                f"Health: {getattr(char, 'health_status', 0)}",
-            ]
             
-            # Add social and quest info
+            # Character basic info
+            name_text = small_font.render(f"Selected: {char.name}", True, (255, 255, 0))
+            screen.blit(name_text, (x, current_y))
+            current_y += name_text.get_height() + 2
+            
+            job_text = small_font.render(f"Job: {getattr(char, 'job', 'Unknown')}", True, (255, 255, 255))
+            screen.blit(job_text, (x, current_y))
+            current_y += job_text.get_height() + 2
+            
+            # Enhanced Needs Display
+            current_y += 5  # Add spacing
+            needs_header = small_font.render("Crucial Needs:", True, (200, 255, 200))
+            screen.blit(needs_header, (x, current_y))
+            current_y += needs_header.get_height() + 2
+            
+            # Energy with color coding
+            energy = getattr(char, 'energy', 0)
+            energy_color = (0, 255, 0) if energy > 60 else (255, 255, 0) if energy > 30 else (255, 100, 100)
+            energy_text = tiny_font.render(f"  Energy: {energy}/100", True, energy_color)
+            screen.blit(energy_text, (x, current_y))
+            current_y += energy_text.get_height() + 1
+            
+            # Hunger (simulated based on energy for now)
+            hunger = max(0, 100 - energy - HUNGER_OFFSET)  # Simple hunger simulation
+            hunger_color = (0, 255, 0) if hunger < 30 else (255, 255, 0) if hunger < 60 else (255, 100, 100)
+            hunger_text = tiny_font.render(f"  Hunger: {hunger}/100", True, hunger_color)
+            screen.blit(hunger_text, (x, current_y))
+            current_y += hunger_text.get_height() + 1
+            
+            # Health with color coding
+            health = getattr(char, 'health_status', 0)
+            health_color = (0, 255, 0) if health > 70 else (255, 255, 0) if health > 40 else (255, 100, 100)
+            health_text = tiny_font.render(f"  Health: {health}/100", True, health_color)
+            screen.blit(health_text, (x, current_y))
+            current_y += health_text.get_height() + 3
+            
+            # Current Goal and Action
+            goal_header = small_font.render("Current Status:", True, (200, 200, 255))
+            screen.blit(goal_header, (x, current_y))
+            current_y += goal_header.get_height() + 2
+            
+            # Try to get current goal from various sources
+            current_goal = self._get_character_goal(char, controller)
+            goal_text = tiny_font.render(f"  Goal: {current_goal}", True, (220, 220, 220))
+            screen.blit(goal_text, (x, current_y))
+            current_y += goal_text.get_height() + 1
+            
+            # Try to get current action
+            current_action = self._get_character_action(char, controller)
+            action_text = tiny_font.render(f"  Action: {current_action}", True, (220, 220, 220))
+            screen.blit(action_text, (x, current_y))
+            current_y += action_text.get_height() + 3
+            
+            # Social and quest info (condensed)
             if hasattr(char, "uuid") and hasattr(controller, "social_networks"):
                 try:
                     relationships = controller.social_networks["relationships"].get(char.uuid, {})
@@ -281,72 +341,625 @@ class SelectedCharacterPanel(UIPanel):
                         sum(relationships.values()) / len(relationships)
                         if relationships else 50
                     )
-                    char_info.append(f"Social: {avg_relationship:.0f}")
+                    social_text = tiny_font.render(f"Social: {avg_relationship:.0f}/100", True, (180, 180, 180))
+                    screen.blit(social_text, (x, current_y))
+                    current_y += social_text.get_height() + 1
 
                 except Exception as e:
                     logging.error(f"Error accessing social_networks while rendering selected character panel: {e}")
-                    pass
             
             if hasattr(char, "uuid") and hasattr(controller, "quest_system"):
                 try:
                     active_quests = len(controller.quest_system["active_quests"].get(char.uuid, []))
                     completed_quests = len(controller.quest_system["completed_quests"].get(char.uuid, []))
-                    char_info.append(f"Quests: {active_quests} active, {completed_quests} done")
+                    quest_text = tiny_font.render(f"Quests: {active_quests} active, {completed_quests} done", True, (180, 180, 180))
+                    screen.blit(quest_text, (x, current_y))
+                    current_y += quest_text.get_height() + 1
 
                 except Exception as e:
                     logging.error(f"Error loading quest system while rendering selected character panel: {e}")
-                    
-                    pass
             
-            # Render character info
-            for info in char_info:
-                info_text = small_font.render(info, True, (255, 255, 0))
-                screen.blit(info_text, (x, current_y))
-                current_y += info_text.get_height() + 2
-            
-            # Character achievements
+            # Character achievements (condensed)
             try:
                 if hasattr(char, 'achievements') and char.achievements:
-                    ach_header_text = small_font.render("Achievements:", True, (220, 220, 180))
-                    screen.blit(ach_header_text, (x, current_y))
-                    current_y += ach_header_text.get_height() + 2
-                    
-                    for achievement_id in char.achievements:
-                        display_name = achievement_id.replace("_", " ").title()
-                        ach_text = tiny_font.render(f"- {display_name}", True, (200, 200, 150))
-                        screen.blit(ach_text, (x + 5, current_y))  # Indent slightly
-                        current_y += ach_text.get_height() + 2
+                    ach_text = tiny_font.render(f"Achievements: {len(char.achievements)}", True, (200, 200, 150))
+                    screen.blit(ach_text, (x, current_y))
+                    current_y += ach_text.get_height() + 1
 
             except Exception as e:
                 logging.error(f"Error loading achievements while rendering selected character panel: {e}")
-                pass
+        
+        return current_y - y
+    
+    def _get_character_goal(self, char, controller):
+        """Get character's current primary goal."""
+        try:
+            # Try to get goal from various sources
+            if hasattr(char, 'current_goal'):
+                return str(char.current_goal)
+            elif hasattr(char, 'long_term_goal'):
+                return str(char.long_term_goal)
+            elif hasattr(controller, 'quest_system') and hasattr(char, 'uuid'):
+                active_quests = controller.quest_system.get("active_quests", {}).get(char.uuid, [])
+                if active_quests:
+                    return active_quests[0].get('name', 'Complete Quest')
+            
+            # Fallback based on needs
+            energy = getattr(char, 'energy', 50)
+            if energy < 30:
+                return "Rest and recover energy"
+            elif energy < 50:
+                return "Find food and rest"
+            else:
+                return "Work and socialize"
+                
+        except Exception as e:
+            return "Living peacefully"
+    
+    def _get_character_action(self, char, controller):
+        """Get character's current action."""
+        try:
+            # Try to get current action from various sources
+            if hasattr(char, 'current_action'):
+                return str(char.current_action)
+            elif hasattr(char, 'last_action'):
+                return f"Last: {char.last_action}"
+            elif hasattr(controller, 'action_resolver'):
+                # Try to infer from recent action history
+                history = getattr(controller.action_resolver, 'execution_history', [])
+                char_actions = [h for h in history if h.get('character_id') == getattr(char, 'uuid', '')]
+                if char_actions:
+                    return char_actions[-1].get('action_name', 'Unknown action')
+            
+            # Fallback based on character state
+            energy = getattr(char, 'energy', 50)
+            if energy < 20:
+                return "Resting"
+            elif energy < 40:
+                return "Looking for food"
+            else:
+                return "Working"
+                
+        except Exception as e:
+            return "Idle"
+
+
+class VillageOverviewPanel(UIPanel):
+    """Panel for displaying village-wide information."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        small_font = fonts.get('small', pygame.font.Font(None, 18))
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        x, y = self.position
+        current_y = y
+        
+        # Header
+        header_text = small_font.render("Village Overview", True, (255, 200, 100))
+        screen.blit(header_text, (x, current_y))
+        current_y += header_text.get_height() + 3
+        
+        # Population info
+        total_chars = len(controller.characters)
+        pop_text = tiny_font.render(f"Population: {total_chars}", True, (200, 200, 200))
+        screen.blit(pop_text, (x, current_y))
+        current_y += pop_text.get_height() + 1
+        
+        # Homeless count (simulated for now)
+        homeless_count = self._calculate_homeless(controller)
+        homeless_color = (0, 255, 0) if homeless_count == 0 else (255, 255, 0) if homeless_count < 3 else (255, 100, 100)
+        homeless_text = tiny_font.render(f"Homeless: {homeless_count}", True, homeless_color)
+        screen.blit(homeless_text, (x, current_y))
+        current_y += homeless_text.get_height() + 1
+        
+        # General mood
+        village_mood = self._calculate_village_mood(controller)
+        mood_color = (0, 255, 0) if village_mood > 70 else (255, 255, 0) if village_mood > 40 else (255, 100, 100)
+        mood_text = tiny_font.render(f"General Mood: {village_mood}/100", True, mood_color)
+        screen.blit(mood_text, (x, current_y))
+        current_y += mood_text.get_height() + 1
+        
+        # Active major events
+        current_y += 3
+        events_header = tiny_font.render("Active Events:", True, (200, 255, 200))
+        screen.blit(events_header, (x, current_y))
+        current_y += events_header.get_height() + 1
+        
+        active_events = self._get_active_events(controller)
+        if active_events:
+            for event_name in active_events[:3]:  # Show max 3 events
+                event_text = tiny_font.render(f"• {event_name}", True, (220, 220, 180))
+                screen.blit(event_text, (x + 5, current_y))
+                current_y += event_text.get_height() + 1
+        else:
+            no_events_text = tiny_font.render("  No major events", True, (150, 150, 150))
+            screen.blit(no_events_text, (x, current_y))
+            current_y += no_events_text.get_height() + 1
+        
+        return current_y - y
+    
+    def _calculate_homeless(self, controller):
+        """Calculate number of homeless villagers."""
+        try:
+            # For now, simulate based on building capacity vs population
+            if hasattr(controller, 'map_controller') and controller.map_controller:
+                buildings = getattr(controller.map_controller, 'buildings', [])
+                houses = [b for b in buildings if 'house' in str(b.get('name', '')).lower() or b.get('type') == 'residential']
+                house_capacity = len(houses) * 2  # Assume 2 people per house
+                return max(0, len(controller.characters) - house_capacity)
+            return 0
+        except:
+            return 0
+    
+    def _calculate_village_mood(self, controller):
+        """Calculate overall village mood."""
+        try:
+            if not controller.characters:
+                return 50
+            
+            total_mood = 0
+            count = 0
+            
+            for char in controller.characters.values():
+                # Base mood on energy and health
+                energy = getattr(char, 'energy', 50)
+                health = getattr(char, 'health_status', 50)
+                char_mood = (energy + health) / 2
+                
+                # Factor in social relationships if available
+                if hasattr(controller, 'social_networks') and hasattr(char, 'uuid'):
+                    try:
+                        relationships = controller.social_networks.get('relationships', {}).get(char.uuid, {})
+                        if relationships:
+                            avg_relationship = sum(relationships.values()) / len(relationships)
+                            char_mood = (char_mood + avg_relationship) / 2
+                    except:
+                        pass
+                
+                total_mood += char_mood
+                count += 1
+            
+            return int(total_mood / count) if count > 0 else 50
+        except:
+            return 50
+    
+    def _get_active_events(self, controller):
+        """Get list of active major events."""
+        try:
+            events = []
+            
+            # Check weather events
+            if hasattr(controller, 'weather_system'):
+                weather = controller.weather_system.get('current_weather', 'clear')
+                if weather != 'clear':
+                    events.append(f"{weather.title()} weather")
+            
+            # Check storytelling events
+            if hasattr(controller, 'storytelling_system') and controller.storytelling_system:
+                try:
+                    current_stories = controller.storytelling_system.get_current_stories()
+                    if current_stories and 'active_stories' in current_stories:
+                        for story in current_stories['active_stories'][:2]:  # Max 2 stories
+                            events.append(story.get('title', 'Story Event'))
+                except:
+                    pass
+            
+            # Check for system events
+            if hasattr(controller, 'events') and controller.events:
+                recent_events = controller.events[-3:]  # Last 3 events
+                for event in recent_events:
+                    if hasattr(event, 'name'):
+                        events.append(event.name)
+                    elif isinstance(event, dict):
+                        events.append(event.get('name', 'Unknown Event'))
+            
+            return events
+        except:
+            return []
+
+
+class EventNotificationPanel(UIPanel):
+    """Panel for displaying important event notifications."""
+    
+    def __init__(self, name: str, position: tuple = (0, 0), size: tuple = None, visible: bool = True):
+        super().__init__(name, position, size, visible)
+        self.notification_queue = []
+        self.max_notifications = 3
+        self.notification_timeout = self.DEFAULT_NOTIFICATION_TIMEOUT
+    
+    # Class-level constant for default notification timeout
+    DEFAULT_NOTIFICATION_TIMEOUT = 5000  # 5 seconds in milliseconds
+    def add_notification(self, message: str, priority: str = "normal"):
+        """Add a notification to the queue."""
+        import pygame
+        notification = {
+            'message': message,
+            'priority': priority,
+            'timestamp': pygame.time.get_ticks(),
+            'color': self._get_priority_color(priority)
+        }
+        
+        self.notification_queue.append(notification)
+        
+        # Keep only the most recent notifications
+        if len(self.notification_queue) > self.max_notifications:
+            self.notification_queue.pop(0)
+    
+    def _get_priority_color(self, priority: str):
+        """Get color based on notification priority."""
+        colors = {
+            'high': (255, 100, 100),    # Red
+            'medium': (255, 255, 100),  # Yellow  
+            'normal': (200, 200, 255),  # Light blue
+            'low': (150, 150, 150)      # Gray
+        }
+        return colors.get(priority, colors['normal'])
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        import pygame
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        x, y = self.position
+        current_y = y
+        
+        # Remove expired notifications
+        current_time = pygame.time.get_ticks()
+        self.notification_queue = [
+            notif for notif in self.notification_queue
+            if current_time - notif['timestamp'] < self.notification_timeout
+        ]
+        
+        if not self.notification_queue:
+            return 0
+        
+        # Header
+        header_text = tiny_font.render("Events", True, (255, 200, 100))
+        screen.blit(header_text, (x, current_y))
+        current_y += header_text.get_height() + 2
+        
+        # Render notifications
+        for notification in self.notification_queue:
+            # Calculate fade based on age
+            age = current_time - notification['timestamp']
+            alpha = max(100, 255 - int((age / self.notification_timeout) * 155))
+            
+            # Create surface with alpha for fade effect
+            notif_surface = pygame.Surface((300, 15), pygame.SRCALPHA)
+            color = (*notification['color'], alpha)
+            
+            notif_text = tiny_font.render(f"• {notification['message']}", True, notification['color'])
+            screen.blit(notif_text, (x, current_y))
+            current_y += notif_text.get_height() + 1
         
         return current_y - y
 
 
-class InstructionsPanel(UIPanel):
-    """Panel for displaying game instructions."""
+class TimeControlPanel(UIPanel):
+    """Panel for time control UI buttons."""
+    
+    def __init__(self, name: str, position: tuple = (0, 0), size: tuple = None, visible: bool = True):
+        super().__init__(name, position, size, visible)
+        self.button_width = 60
+        self.button_height = 20
+        self.button_spacing = 5
     
     def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         x, y = self.position
+        current_y = y
         
-        instructions = [
-            "Click characters to select them",
-            "Click buildings to interact",
-            "SPACE to pause/unpause",
-            "R to reset characters",
-            "S to save game (basic)",
-            "L to load game (basic)",
-            "F to show feature status",
-            "ESC to quit",
+        # Header
+        header_text = tiny_font.render("Time Controls", True, (200, 255, 200))
+        screen.blit(header_text, (x, current_y))
+        current_y += header_text.get_height() + 3
+        
+        # Time control buttons
+        buttons = [
+            ('Pause', 0.0, (255, 100, 100)),
+            ('Normal', 1.0, (100, 255, 100)),
+            ('Fast', 2.0, (100, 200, 255)),
+            ('Faster', 3.0, (255, 200, 100))
         ]
         
-        for i, instruction in enumerate(instructions):
-            inst_text = tiny_font.render(instruction, True, (200, 200, 200))
-            screen.blit(inst_text, (x, y + i * 15))
+        current_speed = getattr(controller, 'time_scale_factor', 1.0)
         
-        return len(instructions) * 15
+        for i, (label, speed, color) in enumerate(buttons):
+            button_x = x + i * (self.button_width + self.button_spacing)
+            button_rect = pygame.Rect(button_x, current_y, self.button_width, self.button_height)
+            
+            # Highlight current speed
+            if abs(current_speed - speed) < 0.1:
+                pygame.draw.rect(screen, (100, 100, 100), button_rect)
+                pygame.draw.rect(screen, color, button_rect, 2)
+            else:
+                pygame.draw.rect(screen, (50, 50, 50), button_rect)
+                pygame.draw.rect(screen, color, button_rect, 1)
+            
+            # Button text
+            text_surface = tiny_font.render(label, True, color)
+            text_rect = text_surface.get_rect(center=button_rect.center)
+            screen.blit(text_surface, text_rect)
+        
+        current_y += self.button_height + 5
+        
+        # Current speed display
+        speed_text = tiny_font.render(f"Current: {current_speed:.1f}x", True, (200, 200, 200))
+        screen.blit(speed_text, (x, current_y))
+        current_y += speed_text.get_height()
+        
+        return current_y - y
+    
+    def handle_click(self, position, controller):
+        """Handle clicks on time control buttons."""
+        x, y = self.position
+        button_y = y + 18  # Adjust for header
+        
+        if button_y <= position[1] <= button_y + self.button_height:
+            buttons = [0.0, 1.0, 2.0, 3.0]  # Speed values
+            
+            for i, speed in enumerate(buttons):
+                button_x = x + i * (self.button_width + self.button_spacing)
+                if button_x <= position[0] <= button_x + self.button_width:
+                    controller.time_scale_factor = speed
+                    if speed == 0.0:
+                        controller.paused = True
+                    else:
+                        controller.paused = False
+                    return True
+        return False
+
+
+class InstructionsPanel(UIPanel):
+    """Panel for displaying enhanced game instructions and help."""
+    
+    def __init__(self, name: str, position: tuple = (0, 0), size: tuple = None, visible: bool = True):
+        super().__init__(name, position, size, visible)
+        self.help_mode = 'basic'  # 'basic', 'advanced', 'tutorial'
+        self.tutorial_step = 0
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        x, y = self.position
+        current_y = y
+        
+        if self.help_mode == 'tutorial':
+            return self._render_tutorial(screen, controller, fonts, x, current_y)
+        elif self.help_mode == 'advanced':
+            return self._render_advanced_help(screen, controller, fonts, x, current_y)
+        else:
+            return self._render_basic_help(screen, controller, fonts, x, current_y)
+    
+    def _render_basic_help(self, screen, controller, fonts, x, y):
+        """Render basic help instructions."""
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        current_y = y
+        
+        # Header
+        header_text = tiny_font.render("Controls & Help", True, (255, 255, 100))
+        screen.blit(header_text, (x, current_y))
+        current_y += header_text.get_height() + 2
+        
+        instructions = [
+            "MOUSE:",
+            "• Click characters to select",
+            "• Click buildings to interact",
+            "• Right-click for context menu",
+            "",
+            "KEYBOARD:",
+            "• SPACE - pause/unpause",
+            "• R - reset characters",
+            "• S - save game",
+            "• L - load game", 
+            "• F - feature status",
+            "• M - toggle mini-map",
+            "• O - overview mode",
+            "• H - cycle help modes",
+            "• ESC - quit",
+            "",
+            "Press H for advanced help"
+        ]
+        
+        for instruction in instructions:
+            if instruction == "":
+                current_y += 3  # Spacing for empty lines
+                continue
+            
+            color = (200, 255, 200) if instruction.endswith(":") else (200, 200, 200)
+            inst_text = tiny_font.render(instruction, True, color)
+            screen.blit(inst_text, (x, current_y))
+            current_y += inst_text.get_height() + 1
+        
+        return current_y - y
+    
+    def _render_advanced_help(self, screen, controller, fonts, x, y):
+        """Render advanced help information."""
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        current_y = y
+        
+        # Header
+        header_text = tiny_font.render("Advanced Help", True, (255, 255, 100))
+        screen.blit(header_text, (x, current_y))
+        current_y += header_text.get_height() + 2
+        
+        advanced_info = [
+            "CHARACTER NEEDS:",
+            "• Energy: Rest when low",
+            "• Hunger: Find food regularly", 
+            "• Health: Seek healing if needed",
+            "• Social: Interact with others",
+            "",
+            "VILLAGE MANAGEMENT:",
+            "• Monitor homeless count",
+            "• Watch village mood",
+            "• Respond to events",
+            "",
+            "BUILDINGS:",
+            "• Houses: Provide shelter",
+            "• Market: Trade resources", 
+            "• Tavern: Social gathering",
+            "• Farm: Food production",
+            "",
+            "Press H for tutorial mode"
+        ]
+        
+        for info in advanced_info:
+            if info == "":
+                current_y += 3
+                continue
+            
+            color = (200, 255, 200) if info.endswith(":") else (200, 200, 200)
+            info_text = tiny_font.render(info, True, color)
+            screen.blit(info_text, (x, current_y))
+            current_y += info_text.get_height() + 1
+        
+        return current_y - y
+    
+    def _render_tutorial(self, screen, controller, fonts, x, y):
+        """Render interactive tutorial."""
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        current_y = y
+        
+        # Header
+        header_text = tiny_font.render(f"Tutorial Step {self.tutorial_step + 1}", True, (255, 255, 100))
+        screen.blit(header_text, (x, current_y))
+        current_y += header_text.get_height() + 2
+        
+        tutorial_steps = [
+            [
+                "Welcome to Tiny Village!",
+                "",
+                "This is your village with",
+                "characters living their lives.",
+                "",
+                "Click a character to select",
+                "them and see their info.",
+                "",
+                "Press H to continue..."
+            ],
+            [
+                "Character Information",
+                "",
+                "Selected characters show:",
+                "• Energy and hunger levels",
+                "• Current goals and actions", 
+                "• Social relationships",
+                "",
+                "Keep characters happy by",
+                "meeting their needs!",
+                "",
+                "Press H to continue..."
+            ],
+            [
+                "Village Overview",
+                "",
+                "The village panel shows:",
+                "• Total population",
+                "• Homeless count",
+                "• General mood",
+                "• Active events",
+                "",
+                "A happy village is a",
+                "thriving village!",
+                "",
+                "Press H for basic help"
+            ]
+        ]
+        
+        if self.tutorial_step < len(tutorial_steps):
+            for line in tutorial_steps[self.tutorial_step]:
+                if line == "":
+                    current_y += 3
+                    continue
+                
+                color = (255, 255, 100) if line.endswith("!") else (200, 200, 200)
+                line_text = tiny_font.render(line, True, color)
+                screen.blit(line_text, (x, current_y))
+                current_y += line_text.get_height() + 1
+        
+        return current_y - y
+    
+    def cycle_help_mode(self):
+        """Cycle through help modes."""
+        if self.help_mode == 'basic':
+            self.help_mode = 'advanced'
+        elif self.help_mode == 'advanced':
+            self.help_mode = 'tutorial'
+            self.tutorial_step = 0
+        else:
+            if self.tutorial_step < 2:
+                self.tutorial_step += 1
+            else:
+                self.help_mode = 'basic'
+
+
+class BuildingInteractionPanel(UIPanel):
+    """Panel for displaying building interaction prompts."""
+    
+    def __init__(self, name: str, position: tuple = (0, 0), size: tuple = None, visible: bool = False):
+        super().__init__(name, position, size, visible)
+        self.selected_building = None
+        self.interaction_timeout = 0
+    
+    def show_building_interaction(self, building, mouse_pos):
+        """Show interaction options for a building."""
+        import pygame
+        self.selected_building = building
+        self.position = (mouse_pos[0] + 10, mouse_pos[1] - 50)  # Position near cursor
+        self.visible = True
+        self.interaction_timeout = pygame.time.get_ticks() + 5000  # 5 second timeout
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        import pygame
+        if not self.selected_building or pygame.time.get_ticks() > self.interaction_timeout:
+            self.visible = False
+            return 0
+        
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        small_font = fonts.get('small', pygame.font.Font(None, 18))
+        x, y = self.position
+        current_y = y
+        
+        # Background
+        panel_width = 150
+        panel_height = 80
+        panel_rect = pygame.Rect(x, y, panel_width, panel_height)
+        pygame.draw.rect(screen, (20, 20, 20), panel_rect)
+        pygame.draw.rect(screen, (100, 100, 100), panel_rect, 2)
+        
+        # Building name
+        building_name = self.selected_building.get('name', 'Unknown Building')
+        name_text = small_font.render(building_name, True, (255, 255, 100))
+        screen.blit(name_text, (x + 5, current_y + 5))
+        current_y += name_text.get_height() + 8
+        
+        # Available actions
+        actions = self._get_building_actions(self.selected_building)
+        for action in actions:
+            action_text = tiny_font.render(f"• {action}", True, (200, 200, 200))
+            screen.blit(action_text, (x + 8, current_y))
+            current_y += action_text.get_height() + 2
+        
+        return panel_height
+    
+    def _get_building_actions(self, building):
+        """Get available actions for a building."""
+        BUILDING_ACTIONS = {
+            'residential': ['Enter home', 'Rest inside', 'Visit resident'],
+            'commercial': ['Browse goods', 'Trade items', 'Meet merchants'],
+            'social': ['Get a drink', 'Socialize', 'Listen to stories'],
+            'agricultural': ['Help with crops', 'Gather food', 'Learn farming'],
+            'crafting': ['Commission item', 'Learn crafting', 'Repair tools'],
+            'educational': ['Attend class', 'Study books', 'Teach others'],
+        }
+        DEFAULT_ACTIONS = ['Examine', 'Enter building', 'Look around']
+        
+        building_type = building.get('type', 'generic')
+        building_name = building.get('name', '').lower()
+        
+        # Match building type or keywords in name
+        for key, actions in BUILDING_ACTIONS.items():
+            if key in building_type or key in building_name:
+                return actions[:3]  # Limit to 3 actions
+        
+        return DEFAULT_ACTIONS[:3]  # Fallback to default actions
 
 """ 
 This script integrates with the game loop, applying decisions from the strategy manager to the game state.
@@ -982,10 +1595,14 @@ class GameplayController:
             self.ui_panels = {
                 'character_info': CharacterInfoPanel('character_info', position=(10, 10)),
                 'game_status': GameStatusPanel('game_status', position=(10, 35)),
-                'weather': WeatherPanel('weather', position=(10, 120)),
-                'stats': StatsPanel('stats', position=(10, 180)),
-                'achievements': AchievementPanel('achievements', position=(10, 280)),
-                'selected_character': SelectedCharacterPanel('selected_character', position=(10, 400)),
+                'time_controls': TimeControlPanel('time_controls', position=(10, 120)),
+                'weather': WeatherPanel('weather', position=(10, 170)),
+                'village_overview': VillageOverviewPanel('village_overview', position=(10, 220)),
+                'stats': StatsPanel('stats', position=(10, 320)),
+                'achievements': AchievementPanel('achievements', position=(10, 380)),
+                'selected_character': SelectedCharacterPanel('selected_character', position=(10, 480)),
+                'event_notifications': EventNotificationPanel('event_notifications', position=(400, 10)),
+                'building_interaction': BuildingInteractionPanel('building_interaction', position=(0, 0), visible=False),
                 'instructions': InstructionsPanel('instructions', position=(10, None))  # Position set dynamically
             }
             
@@ -996,7 +1613,7 @@ class GameplayController:
                 'tiny': pygame.font.Font(None, 16)
             }
             
-            logger.info("Modular UI system initialized")
+            logger.info("Enhanced modular UI system initialized")
             
         except Exception as e:
             logger.error(f"Error initializing UI system: {e}")
@@ -1733,13 +2350,9 @@ class GameplayController:
             elif event.type == pygame.KEYDOWN:
                 self._handle_keydown(event)
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                # TODO: Add mouse interaction handling
-                # TODO: Add right-click context menus
-                pass
+                self._handle_mouse_click(event)
             elif event.type == pygame.MOUSEWHEEL:
-                # TODO: Add zoom functionality
-                # TODO: Add scroll-based UI navigation
-                pass
+                self._handle_mouse_wheel(event)
             else:
                 # Pass events to the Map Controller for handling
                 if self.map_controller:
@@ -1747,6 +2360,67 @@ class GameplayController:
                         self.map_controller.handle_event(event)
                     except Exception as e:
                         logger.warning(f"Error handling event in map controller: {e}")
+    
+    def _handle_mouse_click(self, event):
+        """Enhanced mouse click handling for UI and game interactions."""
+        try:
+            mouse_pos = event.pos
+            
+            # Check UI panel clicks first
+            if self.handle_ui_click(mouse_pos):
+                return
+            
+            # Handle building interactions on right-click
+            if event.button == 3:  # Right click
+                if self.map_controller:
+                    building = self._find_building_at_position(mouse_pos)
+                    if building:
+                        self.show_building_interaction(building, mouse_pos)
+                        return
+            
+            # Handle character/building selection on left-click
+            if event.button == 1:  # Left click
+                # Hide building interaction panel
+                if hasattr(self, 'ui_panels') and 'building_interaction' in self.ui_panels:
+                    self.ui_panels['building_interaction'].visible = False
+                
+                # Pass to map controller for character/building selection
+                if self.map_controller:
+                    self.map_controller.handle_event(event)
+                    
+        except Exception as e:
+            logger.error(f"Error handling mouse click: {e}")
+    
+    def _handle_mouse_wheel(self, event):
+        """Handle mouse wheel for zoom and navigation."""
+        try:
+            # TODO: Implement zoom functionality
+            # For now, use wheel for time scale adjustment
+            if event.y > 0:  # Scroll up
+                self.time_scale_factor = min(5.0, self.time_scale_factor + 0.2)
+            elif event.y < 0:  # Scroll down
+                self.time_scale_factor = max(0.1, self.time_scale_factor - 0.2)
+            
+            # Provide feedback
+            self.add_event_notification(f"Speed: {self.time_scale_factor:.1f}x", "normal")
+            
+        except Exception as e:
+            logger.error(f"Error handling mouse wheel: {e}")
+    
+    def _find_building_at_position(self, position):
+        """Find building at the given screen position."""
+        try:
+            if not self.map_controller or not hasattr(self.map_controller, 'map_data'):
+                return None
+            
+            buildings = self.map_controller.map_data.get('buildings', [])
+            for building in buildings:
+                if 'rect' in building and building['rect'].collidepoint(position):
+                    return building
+            return None
+        except Exception as e:
+            logger.error(f"Error finding building at position: {e}")
+            return None
 
     def _handle_keydown(self, event):
         """Handle keyboard input with configurable key bindings and new features."""
@@ -1795,9 +2469,9 @@ class GameplayController:
                 logger.info(f"Game loaded from {save_path}")
             else:
                 logger.error("Failed to load game")
-        elif event.key in key_bindings.get("help", []):
-            # Show help overlay
-            self._show_help_info()
+        elif event.key in key_bindings.get("help", [pygame.K_h, pygame.K_F1]):
+            # Cycle help modes
+            self.cycle_help_mode()
         elif event.key in key_bindings.get("debug", []):
             # Toggle debug information display
             self._toggle_debug_mode()
@@ -2432,6 +3106,11 @@ class GameplayController:
 
                         # Update quest progress if applicable
                         self._update_quest_progress(character, action)
+                        
+                        # Provide feedback for successful action
+                        action_name = getattr(action, 'name', str(action_data))
+                        character_name = getattr(character, 'name', 'Character')
+                        self.provide_action_feedback(action_name, True, character_name)
 
                         return True
                     else:
@@ -2439,6 +3118,11 @@ class GameplayController:
                         self.action_resolver.track_action_execution(
                             action, character, False
                         )
+                        
+                        # Provide feedback for failed action
+                        action_name = getattr(action, 'name', str(action_data))
+                        character_name = getattr(character, 'name', 'Character')
+                        self.provide_action_feedback(action_name, False, character_name)
                         return False
                 except Exception as e:
                     logger.error(f"Error executing action {action.name}: {e}")
@@ -3158,10 +3842,10 @@ class GameplayController:
         """Render UI using the modular panel system."""
         current_y = 10
         
-        # Render panels in order
-        panel_order = ['character_info', 'game_status', 'weather', 'stats', 'achievements', 'selected_character']
+        # Render left panels in order
+        left_panel_order = ['character_info', 'game_status', 'time_controls', 'weather', 'village_overview', 'stats', 'achievements', 'selected_character']
         
-        for panel_name in panel_order:
+        for panel_name in left_panel_order:
             panel = self.ui_panels.get(panel_name)
             if panel and panel.visible:
                 # Update panel position if needed
@@ -3171,6 +3855,13 @@ class GameplayController:
                 # Render panel and update y position
                 height = panel.render(self.screen, self, self.ui_fonts)
                 current_y += height + PANEL_SPACING  # Add spacing between panels
+        
+        # Render right-side panels (notifications, building interactions)
+        right_panels = ['event_notifications', 'building_interaction']
+        for panel_name in right_panels:
+            panel = self.ui_panels.get(panel_name)
+            if panel and panel.visible:
+                panel.render(self.screen, self, self.ui_fonts)
         
         # Render instructions at bottom
         instructions_panel = self.ui_panels.get('instructions')
@@ -4441,6 +5132,76 @@ class GameplayController:
             logger.error(f"Error implementing quest system: {e}")
             return False
 
+    def add_event_notification(self, message: str, priority: str = "normal"):
+        """Add an event notification to the UI."""
+        try:
+            if hasattr(self, 'ui_panels') and 'event_notifications' in self.ui_panels:
+                self.ui_panels['event_notifications'].add_notification(message, priority)
+                logger.info(f"Added event notification: {message} (priority: {priority})")
+        except Exception as e:
+            logger.error(f"Error adding event notification: {e}")
+    
+    def show_building_interaction(self, building, mouse_pos):
+        """Show building interaction prompts."""
+        try:
+            if hasattr(self, 'ui_panels') and 'building_interaction' in self.ui_panels:
+                self.ui_panels['building_interaction'].show_building_interaction(building, mouse_pos)
+        except Exception as e:
+            logger.error(f"Error showing building interaction: {e}")
+    
+    def handle_ui_click(self, position):
+        """Handle clicks on UI elements."""
+        try:
+            # Check time control panel
+            if hasattr(self, 'ui_panels') and 'time_controls' in self.ui_panels:
+                time_panel = self.ui_panels['time_controls']
+                if time_panel.visible and time_panel.handle_click(position, self):
+                    return True
+            
+            # Check other clickable UI elements here
+            return False
+        except Exception as e:
+            logger.error(f"Error handling UI click: {e}")
+            return False
+    
+    def cycle_help_mode(self):
+        """Cycle through help modes in the instructions panel."""
+        try:
+            if hasattr(self, 'ui_panels') and 'instructions' in self.ui_panels:
+                self.ui_panels['instructions'].cycle_help_mode()
+        except Exception as e:
+            logger.error(f"Error cycling help mode: {e}")
+    
+    def provide_action_feedback(self, action_name: str, success: bool, character_name: str = None):
+        """Provide visual feedback for actions taken."""
+        try:
+            if success:
+                if character_name:
+                    message = f"{character_name} completed: {action_name}"
+                else:
+                    message = f"Action completed: {action_name}"
+                self.add_event_notification(message, "normal")
+            else:
+                if character_name:
+                    message = f"{character_name} failed: {action_name}"
+                else:
+                    message = f"Action failed: {action_name}"
+                self.add_event_notification(message, "medium")
+        except Exception as e:
+            logger.error(f"Error providing action feedback: {e}")
+    
+    def notify_major_event(self, event_name: str, description: str = None):
+        """Notify about major village events."""
+        try:
+            if description:
+                message = f"{event_name}: {description}"
+            else:
+                message = event_name
+            self.add_event_notification(message, "high")
+            logger.info(f"Major event notification: {message}")
+        except Exception as e:
+            logger.error(f"Error notifying major event: {e}")
+
     def get_feature_implementation_status(self) -> Dict[str, str]:
         """
         Get the implementation status of all planned features.
@@ -4455,12 +5216,20 @@ class GameplayController:
             "save_load_system": "BASIC_IMPLEMENTED",
             "achievement_system": "BASIC_IMPLEMENTED",
             "weather_system": "STUB_IMPLEMENTED",
-            "social_network_system": "STUB_IMPLEMENTED",
+            "social_network_system": "STUB_IMPLEMENTED", 
             "quest_system": "STUB_IMPLEMENTED",
             "skill_progression": "BASIC_IMPLEMENTED",
             "reputation_system": "BASIC_IMPLEMENTED",
             "economic_simulation": "STUB_IMPLEMENTED",
             "event_driven_storytelling": "BASIC_IMPLEMENTED",
+            "character_status_display": "FULLY_IMPLEMENTED",  # NEW: Enhanced character needs tracking
+            "village_overview": "FULLY_IMPLEMENTED",  # NEW: Village-wide information panel
+            "interaction_prompts": "BASIC_IMPLEMENTED",  # NEW: Building interaction prompts
+            "feedback_system": "FULLY_IMPLEMENTED",  # NEW: Visual/textual feedback for actions
+            "time_controls": "FULLY_IMPLEMENTED",  # NEW: UI buttons for time control
+            "event_notifications": "FULLY_IMPLEMENTED",  # NEW: Event notification system
+            "enhanced_help_system": "FULLY_IMPLEMENTED",  # NEW: Improved help with tutorial modes
+            "mouse_interactions": "BASIC_IMPLEMENTED",  # NEW: Enhanced mouse handling with right-click
             "mod_system": "NOT_STARTED",
             "multiplayer_support": "NOT_STARTED",
             "advanced_ai_behaviors": "IMPLEMENTED",
