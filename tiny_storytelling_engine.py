@@ -476,7 +476,7 @@ class StorytellingEventHandler(EventHandler):
         
         # Check if we have narrative impact context to scale importance
         # NarrativeImpact.MAJOR (4) should map to importance >= 6 for arc creation
-        if hasattr(self, '_current_narrative_context'):
+        if self._current_narrative_context is not None:
             narrative_impact = getattr(self._current_narrative_context, 'narrative_impact', None)
             if narrative_impact:
                 # Scale: MAJOR (4) * 2 = 8, ensuring >= 6 threshold is met
