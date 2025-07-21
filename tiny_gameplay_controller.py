@@ -11,6 +11,10 @@ MAX_SPEED = 5.0
 MIN_SPEED = 0.1
 SPEED_STEP = 0.1
 
+# UI Layout Constants
+ACHIEVEMENT_SPACING = 25
+ACHIEVEMENT_LINE_SPACING = 18
+
 WEATHER_ENERGY_EFFECTS = {
     'rainy': 0.5,
     # 'snowy': 1.0, # easy to add more
@@ -25,6 +29,7 @@ from tiny_strategy_manager import StrategyManager
 from tiny_event_handler import EventHandler, Event
 from tiny_types import GraphManager
 from tiny_map_controller import MapController
+
 class UIPanel:
     """Base class for UI panels in the modular UI system."""
     
@@ -98,6 +103,7 @@ class GameStatusPanel(UIPanel):
                 time_text = small_font.render(f"Time: {game_time}", True, (255, 255, 255))
                 screen.blit(time_text, (x, current_y))
                 current_y += time_text.get_height() + 2
+
             except (AttributeError, TypeError, ValueError) as e:
                 logging.error(f"Error rendering game time: {e}")
                 pass
@@ -176,6 +182,7 @@ class StatsPanel(UIPanel):
                 )
                 screen.blit(analytics_text, (x, current_y))
                 current_y += analytics_text.get_height() + 2
+
             except Exception as e:
                 logging.error(f"Error in action analytics rendering: {e}")
                 logging.error(traceback.format_exc())
@@ -198,6 +205,7 @@ class StatsPanel(UIPanel):
                 )
                 screen.blit(health_text, (x, current_y))
                 current_y += health_text.get_height() + 2
+
             except Exception as e:
                 logging.error(f"Error while rendering system health: {e}")
         
@@ -221,6 +229,7 @@ class AchievementPanel(UIPanel):
             )
             screen.blit(achievement_render, (x, current_y))
             current_y += achievement_render.get_height() + 2
+
         except Exception as e:
             logging.error(f"Error while loading achievement panel: {e}")
             pass
@@ -272,6 +281,7 @@ class SelectedCharacterPanel(UIPanel):
                         if relationships else 50
                     )
                     char_info.append(f"Social: {avg_relationship:.0f}")
+
                 except Exception as e:
                     logging.error(f"Error accessing social_networks while rendering selected character panel: {e}")
                     pass
@@ -281,6 +291,7 @@ class SelectedCharacterPanel(UIPanel):
                     active_quests = len(controller.quest_system["active_quests"].get(char.uuid, []))
                     completed_quests = len(controller.quest_system["completed_quests"].get(char.uuid, []))
                     char_info.append(f"Quests: {active_quests} active, {completed_quests} done")
+
                 except Exception as e:
                     logging.error(f"Error loading quest system while rendering selected character panel: {e}")
                     
@@ -304,6 +315,7 @@ class SelectedCharacterPanel(UIPanel):
                         ach_text = tiny_font.render(f"- {display_name}", True, (200, 200, 150))
                         screen.blit(ach_text, (x + 5, current_y))  # Indent slightly
                         current_y += ach_text.get_height() + 2
+
             except Exception as e:
                 logging.error(f"Error loading achievements while rendering selected character panel: {e}")
                 pass
@@ -334,6 +346,7 @@ class InstructionsPanel(UIPanel):
             screen.blit(inst_text, (x, y + i * 15))
         
         return len(instructions) * 15
+
 """ 
 This script integrates with the game loop, applying decisions from the strategy manager to the game state.
 5. Gameplay Execution
@@ -905,6 +918,9 @@ class GameplayController:
         self.implement_social_network_system()
         self.implement_quest_system()
 
+        # Initialize modular UI system
+        self._init_ui_system()
+
         # Log initialization status
         if self.initialization_errors:
             logger.warning(
@@ -912,6 +928,39 @@ class GameplayController:
             )
         else:
             logger.info("GameplayController initialized successfully")
+
+    def _init_ui_system(self):
+        """Initialize the modular UI panel system."""
+        try:
+            # Create UI panels with positions
+            self.ui_panels = {
+                'character_info': CharacterInfoPanel('character_info', position=(10, 10)),
+                'game_status': GameStatusPanel('game_status', position=(10, 35)),
+                'weather': WeatherPanel('weather', position=(10, 120)),
+                'stats': StatsPanel('stats', position=(10, 180)),
+                'achievements': AchievementPanel('achievements', position=(10, 280)),
+                'selected_character': SelectedCharacterPanel('selected_character', position=(10, 400)),
+                'instructions': InstructionsPanel('instructions', position=(10, None))  # Position set dynamically
+            }
+            
+            # Create font dictionary for consistent font usage
+            self.ui_fonts = {
+                'normal': pygame.font.Font(None, 24),
+                'small': pygame.font.Font(None, 18),
+                'tiny': pygame.font.Font(None, 16)
+            }
+            
+            logger.info("Modular UI system initialized")
+            
+        except Exception as e:
+            logger.error(f"Error initializing UI system: {e}")
+            # Fallback to empty panels dict
+            self.ui_panels = {}
+            self.ui_fonts = {
+                'normal': pygame.font.Font(None, 24),
+                'small': pygame.font.Font(None, 18),
+                'tiny': pygame.font.Font(None, 16)
+            }
 
     def _get_default_buildings(self, map_config: Dict) -> List[Dict]:
         """Get buildings configuration with dynamic loading support."""
@@ -2817,34 +2866,54 @@ class GameplayController:
             pygame.display.flip()
         else:
             pygame.display.update()
-    def _render_achievements(self, y_offset: int) -> int:
-        """
-        Render all village milestone achievements in a dedicated UI section.
-        Returns the updated y_offset after drawing.
-        """
-        milestones = self.global_achievements.get("village_milestones", {})
-        if not milestones:
-            return y_offset
-
-        # Section header (optional)
-        header = tiny_font.render("Achievements:", True, (240, 240, 200))
-        self.screen.blit(header, (10, y_offset))
-        y_offset += ACHIEVEMENT_SPACING
-
-        for key, achieved in milestones.items():
-            # Convert snake_case key to Title Case text
-            title = key.replace("_", " ").title()
-            status = "✓" if achieved else "✗"
-            color = (180, 220, 180) if achieved else (200, 180, 180)
-            text = tiny_font.render(f"{status} {title}", True, color)
-            self.screen.blit(text, (10, y_offset))
-            y_offset += ACHIEVEMENT_LINE_SPACING
-
-        return y_offset
     def _render_ui(self):
-        """Render user interface elements with improved layout, new features, and system status."""
-
+        """Render user interface elements using the modular panel system."""
         try:
+            # Use modular UI system if available
+            if hasattr(self, 'ui_panels') and self.ui_panels:
+                self._render_modular_ui()
+            else:
+                # Fallback to legacy rendering
+                self._render_legacy_ui()
+                
+        except Exception as e:
+            # Ultimate fallback to minimal UI
+            self._render_minimal_ui()
+    
+    def _render_modular_ui(self):
+        """Render UI using the modular panel system."""
+        current_y = 10
+        
+        # Render panels in order
+        panel_order = ['character_info', 'game_status', 'weather', 'stats', 'achievements', 'selected_character']
+        
+        for panel_name in panel_order:
+            panel = self.ui_panels.get(panel_name)
+            if panel and panel.visible:
+                # Update panel position if needed
+                if panel.position[1] != current_y and getattr(panel, 'auto_position', True):
+                    panel.position = (panel.position[0], current_y)
+                
+                # Render panel and update y position
+                height = panel.render(self.screen, self, self.ui_fonts)
+                current_y += height + PANEL_SPACING  # Add spacing between panels
+        
+        # Render instructions at bottom
+        instructions_panel = self.ui_panels.get('instructions')
+        if instructions_panel and instructions_panel.visible:
+            # Position instructions at bottom of screen
+            instructions_y = self.screen.get_height() - INSTRUCTIONS_BOTTOM_MARGIN  # Reserve space for instructions
+            instructions_panel.position = (10, instructions_y)
+            instructions_panel.render(self.screen, self, self.ui_fonts)
+        
+        # Show feature status overlay if enabled
+        if getattr(self, "_show_feature_status", False):
+            self._render_feature_status_overlay()
+    
+    def _render_legacy_ui(self):
+        """Legacy UI rendering method for fallback."""
+        try:
+
             # TODO: Implement modular UI system with panels
             # TODO: Add character relationship visualization
             # TODO: Add village statistics dashboard
@@ -2872,6 +2941,10 @@ class GameplayController:
                 pause_text = font.render("PAUSED", True, (255, 255, 0))
                 self.screen.blit(pause_text, (self.screen.get_width() - 100, 10))
 
+            # Show basic error message
+            error_text = small_font.render("Using legacy UI (panels unavailable)", True, (255, 200, 0))
+            self.screen.blit(error_text, (10, 40))
+            
             # Render view mode status
             if getattr(self, "_minimap_mode", False):
                 mode_text = tiny_font.render("Mini-map: ON", True, (0, 255, 0))
@@ -3085,17 +3158,18 @@ class GameplayController:
                 self._render_minimap()
 
         except Exception as e:
-            # Fallback to minimal UI
-            try:
-                font = pygame.font.Font(None, 24)
-                error_text = font.render("UI Error - Fallback Mode", True, (255, 0, 0))
-                self.screen.blit(error_text, (10, 10))
-                char_text = font.render(
-                    f"Characters: {len(self.characters)}", True, (255, 255, 255)
-                )
-                self.screen.blit(char_text, (10, 35))
-            except:
-                pass  # Even fallback failed
+            self._render_minimal_ui()
+    
+    def _render_minimal_ui(self):
+        """Minimal UI rendering for emergency fallback."""
+        try:
+            font = pygame.font.Font(None, 24)
+            error_text = font.render("UI Error - Minimal Mode", True, (255, 0, 0))
+            self.screen.blit(error_text, (10, 10))
+            char_text = font.render(f"Characters: {len(self.characters)}", True, (255, 255, 255))
+            self.screen.blit(char_text, (10, 35))
+        except:
+            pass  # Even minimal fallback failed
 
     def _render_feature_status_overlay(self):
         """Render an overlay showing feature implementation status."""
