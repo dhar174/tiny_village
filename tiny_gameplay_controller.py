@@ -191,7 +191,7 @@ class StatsPanel(UIPanel):
                 analytics = controller.action_resolver.get_action_analytics()
                 cache_size = analytics.get('cache_size', 0)
                 analytics_text = tiny_font.render(
-                    f"Success Rate: {analytics['success_rate']:.1%} | Cache: {cache_size}",
+                    f"Success Rate: {analytics.get('success_rate', 0):.1%} | Cache: {cache_size}",
                     True, (150, 150, 150)
                 )
                 screen.blit(analytics_text, (x, current_y))
