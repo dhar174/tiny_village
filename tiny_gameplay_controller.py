@@ -941,27 +941,25 @@ class BuildingInteractionPanel(UIPanel):
     
     def _get_building_actions(self, building):
         """Get available actions for a building."""
+        BUILDING_ACTIONS = {
+            'residential': ['Enter home', 'Rest inside', 'Visit resident'],
+            'commercial': ['Browse goods', 'Trade items', 'Meet merchants'],
+            'social': ['Get a drink', 'Socialize', 'Listen to stories'],
+            'agricultural': ['Help with crops', 'Gather food', 'Learn farming'],
+            'crafting': ['Commission item', 'Learn crafting', 'Repair tools'],
+            'educational': ['Attend class', 'Study books', 'Teach others'],
+        }
+        DEFAULT_ACTIONS = ['Examine', 'Enter building', 'Look around']
+        
         building_type = building.get('type', 'generic')
         building_name = building.get('name', '').lower()
         
-        actions = []
+        # Match building type or keywords in name
+        for key, actions in BUILDING_ACTIONS.items():
+            if key in building_type or key in building_name:
+                return actions[:3]  # Limit to 3 actions
         
-        if 'house' in building_name or building_type == 'residential':
-            actions = ['Enter home', 'Rest inside', 'Visit resident']
-        elif 'market' in building_name or building_type == 'commercial':
-            actions = ['Browse goods', 'Trade items', 'Meet merchants']
-        elif 'tavern' in building_name or building_type == 'social':
-            actions = ['Get a drink', 'Socialize', 'Listen to stories']
-        elif 'farm' in building_name or building_type == 'agricultural':
-            actions = ['Help with crops', 'Gather food', 'Learn farming']
-        elif 'blacksmith' in building_name or building_type == 'crafting':
-            actions = ['Commission item', 'Learn crafting', 'Repair tools']
-        elif 'school' in building_name or building_type == 'educational':
-            actions = ['Attend class', 'Study books', 'Teach others']
-        else:
-            actions = ['Examine', 'Enter building', 'Look around']
-        
-        return actions[:3]  # Limit to 3 actions
+        return DEFAULT_ACTIONS[:3]  # Fallback to default actions
 
 """ 
 This script integrates with the game loop, applying decisions from the strategy manager to the game state.
