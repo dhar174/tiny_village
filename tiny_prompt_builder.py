@@ -812,7 +812,6 @@ class ParameterizedTemplateEngine:
             'Farmer': ['a new crop rotation', 'preparing the fields', 'planning the harvest'],
             'Waitress': ['improving customer service', 'learning new recipes', 'organizing the restaurant']
         }
-        import random
         return random.choice(project_map.get(job, ['a new project']))
         
     def _get_work_location_for_job(self, job: str) -> str:
