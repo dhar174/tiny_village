@@ -1251,13 +1251,18 @@ class GeneralMemory(Memory):
                     f"Error adding specific memory embedding to FAISS index: {e}. Shape: {specific_memory.embedding.shape}"
                 )
             for fact_embed in specific_memory.get_facts_embeddings():
-
-                self.manager.flat_access.faiss_index.add(
-                    fact_embed.cpu().detach().numpy()
-                )
-                self.manager.flat_access.index_id_to_node_id[
-                    self.manager.flat_access.faiss_index.ntotal - 1
-                ] = specific_memory.description
+                try:
+                    self.manager.flat_access.faiss_index.add(
+                        fact_embed.cpu().detach().numpy()
+                    )
+                    self.manager.flat_access.index_id_to_node_id[
+                        self.manager.flat_access.faiss_index.ntotal - 1
+                    ] = specific_memory.description
+                except Exception as e:
+                    logging.warning(
+                        f"Error adding fact embedding to FAISS index for memory '{specific_memory.description}': {e}"
+                    )
+                    # Continue with other fact embeddings
 
     def index_memories(self):
         specific_memories = self.get_specific_memories()
@@ -1639,37 +1644,199 @@ class FlatMemoryAccess:
         #                 self.__dict__[key][k] = nlp(v)[0]
 
     def save_all_specific_memories_embeddings_to_file(self, filename):
-        # save all specific memories embeddings to file as a numpy array.
-        # Save them individually, using the description as the key so they can later be loaded and assigned to the correct specific memory object
-        self.set_all_memory_embeddings_to_normalized(self.index_is_normalized)
-        # Create a dictionary with the description as the key and the tuple of the embedding and attention mask as the value
-        memory_dict = {
-            memory.description: memory.get_embedding()
-            for memory in self.get_specific_memories()
-        }
-
-        # separate the embeddings and attention masks into two separate dictionaries
-        embeddings_dict = {key: value[0] for key, value in memory_dict.items()}
-        att_mask_dict = {key: value[1] for key, value in memory_dict.items()}
-        # Save the dictionaries to separate files
-        norm_str = "_normalized" if self.index_is_normalized else ""
-        np.save(f"{filename}_embeddings{norm_str}.npy", embeddings_dict)
-        np.save(f"{filename}_att_mask.npy", att_mask_dict)
+        """
+        Save all specific memories embeddings to file with comprehensive error handling.
+        
+        Args:
+            filename (str): Base filename for saving embeddings
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            if not filename:
+                logging.error("Cannot save embeddings: filename is empty")
+                return False
+            
+            # Set normalization
+            try:
+                self.set_all_memory_embeddings_to_normalized(self.index_is_normalized)
+            except Exception as e:
+                logging.warning(f"Error setting embeddings normalization: {e}")
+                # Continue anyway as this might not be critical
+            
+            # Get specific memories
+            try:
+                specific_memories = self.get_specific_memories()
+                if not specific_memories:
+                    logging.warning("No specific memories to save")
+                    return True  # Not an error, just nothing to save
+            except Exception as e:
+                logging.error(f"Error getting specific memories: {e}")
+                return False
+            
+            # Create a dictionary with the description as the key and the tuple of the embedding and attention mask as the value
+            memory_dict = {}
+            failed_memories = 0
+            
+            for memory in specific_memories:
+                try:
+                    embedding_data = memory.get_embedding()
+                    memory_dict[memory.description] = embedding_data
+                except Exception as e:
+                    logging.warning(f"Failed to get embedding for memory '{memory.description}': {e}")
+                    failed_memories += 1
+                    continue
+            
+            if not memory_dict:
+                logging.error("No memory embeddings could be extracted")
+                return False
+            
+            if failed_memories > 0:
+                logging.warning(f"Failed to extract embeddings for {failed_memories} memories")
+            
+            # Separate the embeddings and attention masks into two separate dictionaries
+            try:
+                embeddings_dict = {key: value[0] for key, value in memory_dict.items()}
+                att_mask_dict = {key: value[1] for key, value in memory_dict.items()}
+            except (IndexError, TypeError) as e:
+                logging.error(f"Error separating embeddings and attention masks: {e}")
+                return False
+            
+            # Create directory if needed
+            directory = os.path.dirname(filename)
+            if directory and not os.path.exists(directory):
+                try:
+                    os.makedirs(directory, exist_ok=True)
+                    logging.info(f"Created directory for embeddings: {directory}")
+                except OSError as e:
+                    logging.error(f"Failed to create directory {directory}: {e}")
+                    return False
+            
+            # Save the dictionaries to separate files
+            norm_str = "_normalized" if self.index_is_normalized else ""
+            embeddings_filename = f"{filename}_embeddings{norm_str}.npy"
+            att_mask_filename = f"{filename}_att_mask.npy"
+            
+            try:
+                np.save(embeddings_filename, embeddings_dict)
+                logging.info(f"Saved embeddings to {embeddings_filename}")
+            except Exception as e:
+                logging.error(f"Error saving embeddings to {embeddings_filename}: {e}")
+                return False
+            
+            try:
+                np.save(att_mask_filename, att_mask_dict)
+                logging.info(f"Saved attention masks to {att_mask_filename}")
+            except Exception as e:
+                logging.error(f"Error saving attention masks to {att_mask_filename}: {e}")
+                # Try to clean up the embeddings file
+                try:
+                    os.remove(embeddings_filename)
+                except:
+                    pass
+                return False
+            
+            logging.info(f"Successfully saved {len(memory_dict)} memory embeddings")
+            return True
+            
+        except Exception as e:
+            logging.error(f"Critical error saving memory embeddings: {e}")
+            return False
 
     def load_all_specific_memories_embeddings_from_file(self, filename):
-        # MUST be called after the specific memories have been created or loaded and before the specific memories are used
-        # Load the embeddings and attention masks from file and assign them to the correct specific memory object
-        norm_str = "_normalized" if self.index_is_normalized else ""
-        embeddings_dict = np.load(
-            f"{filename}_embeddings{norm_str}.npy", allow_pickle=True
-        ).item()
-        att_mask_dict = np.load(f"{filename}_att_mask.npy", allow_pickle=True).item()
-
-        for key, value in embeddings_dict.items():
-            specific_memory = self.get_specific_memory_by_description(key)
-            if specific_memory is not None:
-                specific_memory.embedding = value
-                specific_memory.att_mask = att_mask_dict[key]
+        """
+        Load all specific memories embeddings from file with comprehensive error handling.
+        
+        MUST be called after the specific memories have been created or loaded and before the specific memories are used.
+        
+        Args:
+            filename (str): Base filename for loading embeddings
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            if not filename:
+                logging.error("Cannot load embeddings: filename is empty")
+                return False
+            
+            # Construct filenames
+            norm_str = "_normalized" if self.index_is_normalized else ""
+            embeddings_filename = f"{filename}_embeddings{norm_str}.npy"
+            att_mask_filename = f"{filename}_att_mask.npy"
+            
+            # Check if files exist
+            if not os.path.exists(embeddings_filename):
+                logging.error(f"Embeddings file not found: {embeddings_filename}")
+                return False
+            
+            if not os.path.exists(att_mask_filename):
+                logging.error(f"Attention mask file not found: {att_mask_filename}")
+                return False
+            
+            # Load the embeddings and attention masks from file
+            try:
+                embeddings_dict = np.load(embeddings_filename, allow_pickle=True).item()
+                logging.info(f"Loaded embeddings from {embeddings_filename}")
+            except Exception as e:
+                logging.error(f"Error loading embeddings from {embeddings_filename}: {e}")
+                return False
+            
+            try:
+                att_mask_dict = np.load(att_mask_filename, allow_pickle=True).item()
+                logging.info(f"Loaded attention masks from {att_mask_filename}")
+            except Exception as e:
+                logging.error(f"Error loading attention masks from {att_mask_filename}: {e}")
+                return False
+            
+            # Validate loaded data
+            if not isinstance(embeddings_dict, dict):
+                logging.error("Loaded embeddings data is not a dictionary")
+                return False
+            
+            if not isinstance(att_mask_dict, dict):
+                logging.error("Loaded attention mask data is not a dictionary")
+                return False
+            
+            if len(embeddings_dict) != len(att_mask_dict):
+                logging.warning(f"Mismatch in embeddings ({len(embeddings_dict)}) and attention masks ({len(att_mask_dict)}) count")
+            
+            # Assign embeddings to the correct specific memory objects
+            loaded_count = 0
+            failed_count = 0
+            
+            for key, value in embeddings_dict.items():
+                try:
+                    specific_memory = self.get_specific_memory_by_description(key)
+                    if specific_memory is not None:
+                        if key in att_mask_dict:
+                            specific_memory.embedding = value
+                            specific_memory.att_mask = att_mask_dict[key]
+                            loaded_count += 1
+                        else:
+                            logging.warning(f"No attention mask found for memory: {key}")
+                            failed_count += 1
+                    else:
+                        logging.warning(f"No specific memory found for description: {key}")
+                        failed_count += 1
+                except Exception as e:
+                    logging.warning(f"Error assigning embedding to memory '{key}': {e}")
+                    failed_count += 1
+            
+            if loaded_count == 0:
+                logging.error("No embeddings were successfully loaded")
+                return False
+            
+            if failed_count > 0:
+                logging.warning(f"Failed to load {failed_count} memory embeddings")
+            
+            logging.info(f"Successfully loaded {loaded_count} memory embeddings")
+            return True
+            
+        except Exception as e:
+            logging.error(f"Critical error loading memory embeddings: {e}")
+            return False
 
     def get_specific_memory_by_description(self, description):
         for memory in self.get_specific_memories():
@@ -1737,14 +1904,13 @@ class FlatMemoryAccess:
             self.index_load_filename
         ):
             try:
-                self.faiss_index = faiss.read_index(index_load_filename)
-                print(f"\n Loaded index from file {index_load_filename} \n")
-                # Type
+                self.faiss_index = faiss.read_index(self.index_load_filename)
+                logging.info(f"Loaded FAISS index from file {self.index_load_filename}")
                 return None
-            except:
-                print(f"Could not load FAISS index from {index_load_filename}")
+            except Exception as e:
+                logging.error(f"Could not load FAISS index from {self.index_load_filename}: {e}")
                 self.faiss_index = None
-                raise ValueError("Could not load FAISS index from file")
+                raise ValueError(f"Could not load FAISS index from file {self.index_load_filename}: {e}")
 
         if dimension <= 0 or dimension is None:
             dimension = 768  # Default dimension for BERT embeddings
@@ -1945,14 +2111,95 @@ class FlatMemoryAccess:
         self.index_is_normalized = False
 
     def save_index_to_file(self, filename):
-        faiss.write_index(self.faiss_index, filename)
+        """
+        Save FAISS index to file with comprehensive error handling.
+        
+        Args:
+            filename (str): Path to save the index file
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            if self.faiss_index is None:
+                logging.error("Cannot save FAISS index: index is None")
+                return False
+            
+            if not filename:
+                logging.error("Cannot save FAISS index: filename is empty")
+                return False
+            
+            # Create directory if it doesn't exist
+            directory = os.path.dirname(filename)
+            if directory and not os.path.exists(directory):
+                try:
+                    os.makedirs(directory, exist_ok=True)
+                    logging.info(f"Created directory for FAISS index: {directory}")
+                except OSError as e:
+                    logging.error(f"Failed to create directory {directory}: {e}")
+                    return False
+            
+            # Save the index
+            faiss.write_index(self.faiss_index, filename)
+            logging.info(f"Successfully saved FAISS index to {filename}")
+            return True
+            
+        except Exception as e:
+            logging.error(f"Error saving FAISS index to {filename}: {e}")
+            return False
 
     def load_index_from_file(self, filename, normalize=False):
-        self.faiss_index = faiss.read_index(filename)
-        if normalize != self.index_is_normalized:
-            self.set_all_memory_embeddings_to_normalized(normalize)
-        self.index_is_normalized = normalize
-        self.set_all_memory_embeddings_to_normalized(normalize)
+        """
+        Load FAISS index from file with comprehensive error handling.
+        
+        Args:
+            filename (str): Path to the index file
+            normalize (bool): Whether to normalize embeddings
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            if not filename:
+                logging.error("Cannot load FAISS index: filename is empty")
+                return False
+            
+            if not os.path.exists(filename):
+                logging.error(f"FAISS index file not found: {filename}")
+                return False
+            
+            # Check if file is readable
+            try:
+                with open(filename, 'rb') as f:
+                    # Just check if we can read the first few bytes
+                    f.read(4)
+            except (IOError, OSError) as e:
+                logging.error(f"Cannot read FAISS index file {filename}: {e}")
+                return False
+            
+            # Load the index
+            try:
+                self.faiss_index = faiss.read_index(filename)
+                logging.info(f"Successfully loaded FAISS index from {filename}")
+            except Exception as e:
+                logging.error(f"Error reading FAISS index from {filename}: {e}")
+                return False
+            
+            # Handle normalization settings
+            try:
+                if normalize != self.index_is_normalized:
+                    self.set_all_memory_embeddings_to_normalized(normalize)
+                self.index_is_normalized = normalize
+                self.set_all_memory_embeddings_to_normalized(normalize)
+                return True
+            except Exception as e:
+                logging.error(f"Error setting normalization for loaded index: {e}")
+                # Index was loaded successfully, so this is not a critical error
+                return True
+                
+        except Exception as e:
+            logging.error(f"Critical error loading FAISS index from {filename}: {e}")
+            return False
         print(
             f"Loaded index from file. The current index type is: {type(self.manager.flat_access.faiss_index).__name__} \n \n"
         )
