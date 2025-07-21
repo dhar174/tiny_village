@@ -2144,7 +2144,8 @@ class PromptBuilder:
                 prompt += f"{i+1}. **{goal.name}**: {goal.description}\n"
                 prompt += f"   → Priority Score: {utility_score:.1f}/10 ({urgency})\n"
         else:
-            prompt += f"\n\n🎯 **CURRENT ACTIVE GOALS**: None currently active. Consider establishing new objectives.\n"
+            prompt += f"\n\n🎯 **CURRENT ACTIVE GOALS** (in priority order):\n"
+            prompt += f"   → No active goals currently. 🌱 Consider establishing new objectives to guide your actions.\n"
 
         # Character's pressing needs and motivations - Enhanced priority display
         top_needs = sorted(needs_priorities.items(), key=lambda x: x[1], reverse=True)[
