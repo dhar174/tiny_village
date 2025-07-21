@@ -2896,7 +2896,7 @@ class GameplayController:
                             color = (255, 255, 0)  # Yellow for selected
                             radius = 3
                         else:
-                            color = getattr(character, 'color', (255, 255, 255))
+                            color = getattr(character, 'color', DEFAULT_COLOR)
                             radius = 2
                         
                         pygame.draw.circle(minimap_surface, color, (char_x, char_y), radius)
