@@ -121,6 +121,12 @@ class StoryArc:
         logger.info(f"Story arc '{self.title}' advanced to {self.status.value}")
 
 
+# Define story arc progression thresholds
+StoryArc.STARTING_THRESHOLD = 3
+StoryArc.DEVELOPING_THRESHOLD = 6  
+StoryArc.CLIMAX_THRESHOLD = 9
+
+
 class StoryArcManager:
     """Manages multiple story arcs and their relationships."""
     
@@ -199,6 +205,18 @@ class StoryArcManager:
         """Determine which story arc template to use for an event."""
         event_type = event.type.lower()
         
+        # Check for story events with romance context
+        if event_type == "story":
+            # Look for romance indicators in the event name or context
+            event_name = event.name.lower()
+            if "meet" in event_name and "cute" in event_name:
+                return "village_romance"
+            # Check if event has romance-related effects
+            if hasattr(event, 'effects'):
+                for effect in event.effects:
+                    if effect.get('attribute') == 'romantic_interest':
+                        return "village_romance"
+        
         if event_type in ["social", "celebration", "holiday"]:
             if event.importance >= 8:
                 return "seasonal_celebration"
@@ -208,7 +226,7 @@ class StoryArcManager:
             return "merchant_rivalry"
         elif event_type in ["work", "building"]:
             return "community_project"
-        elif event_type in ["meeting", "gathering"]:
+        elif event_type in ["meeting", "gathering", "romance"]:
             return "village_romance"
         else:
             return "character_development"  # Default
