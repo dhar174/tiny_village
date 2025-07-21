@@ -5,6 +5,7 @@ import time
 import logging
 from typing import Dict, List, Tuple, Optional, Set
 from functools import lru_cache
+from tiny_locations import LocationManager, PointOfInterest
 
 
 class InfoPanel:
@@ -217,6 +218,84 @@ class MapController:
         self.context_menu = ContextMenu()
         self.selected_building = None
         self.selected_location = None
+        # Location and POI management
+        self.location_manager = LocationManager()
+        self.points_of_interest = []  # List of PointOfInterest objects
+        self.selected_location = None  # Currently selected location for info display
+        self.selected_poi = None  # Currently selected POI
+        
+        # UI state for contextual information
+        self.show_location_info = False
+        self.info_display_time = 0
+        self.info_timeout = 5.0  # How long to show info panels
+        # Building management - convert legacy building data to Building objects
+        self.buildings = []  # List of Building objects
+        self.location_manager = None  # Will be set if LocationManager is used
+        self._initialize_buildings()
+    
+    def _initialize_buildings(self):
+        """Initialize Building objects from map_data"""
+        try:
+            from tiny_buildings import Building
+            # Convert legacy building data to Building objects if they exist
+            for building_data in self.map_data.get("buildings", []):
+                if isinstance(building_data, dict) and "rect" in building_data:
+                    rect = building_data["rect"]
+                    building = Building(
+                        name=building_data.get("name", "Unknown Building"),
+                        x=rect.left,
+                        y=rect.top, 
+                        width=rect.width,
+                        height=rect.height,
+                        length=rect.height,  # Use height as length for compatibility
+                        building_type=building_data.get("type", "building")
+                    )
+                    self.buildings.append(building)
+        except ImportError:
+            # Fall back to legacy building handling if imports fail
+            pass
+    
+    def add_building(self, building):
+        """Add a Building object to the map"""
+        self.buildings.append(building)
+        # Also add it to pathfinding obstacles
+        location = building.get_location()
+        self.add_dynamic_obstacle((location.x, location.y, location.width, location.height))
+    
+    def get_buildings_at_position(self, position):
+        """Get all buildings that contain the given position"""
+        x, y = position
+        buildings_at_pos = []
+        for building in self.buildings:
+            if building.is_within_building((x, y)):
+                buildings_at_pos.append(building)
+        return buildings_at_pos
+    
+    def get_building_by_location_properties(self, min_security=None, min_popularity=None, 
+                                          required_activities=None):
+        """Find buildings based on location properties"""
+        matching_buildings = []
+        for building in self.buildings:
+            location = building.get_location()
+            
+            # Check security requirement
+            if min_security is not None and location.security < min_security:
+                continue
+                
+            # Check popularity requirement  
+            if min_popularity is not None and location.popularity < min_popularity:
+                continue
+                
+            # Check activity requirements
+            if required_activities:
+                available_activities = set(location.activities_available)
+                required_set = set(required_activities)
+                if not required_set.issubset(available_activities):
+                    continue
+                    
+            matching_buildings.append(building)
+        
+        return matching_buildings
 
     def add_dynamic_obstacle(self, position: Tuple[int, int]):
         """Add a dynamic obstacle that can be updated in real-time"""
@@ -231,6 +310,80 @@ class MapController:
         self.pathfinder.remove_dynamic_obstacle(position)
         self.invalidate_path_cache()
         self.obstacle_update_time = time.time()
+
+    def add_location(self, location):
+        """Add a location to the map"""
+        self.location_manager.add_location(location)
+    
+    def add_point_of_interest(self, poi):
+        """Add a point of interest to the map"""
+        self.points_of_interest.append(poi)
+    
+    def find_location_at_point(self, x, y):
+        """Find location at a specific point"""
+        return self.location_manager.find_locations_containing_point(x, y)
+    
+    def find_poi_at_point(self, x, y, radius=10):
+        """Find POI near a specific point"""
+        for poi in self.points_of_interest:
+            if poi.distance_to_point(x, y) <= radius:
+                return poi
+        return None
+    
+    def get_terrain_movement_modifier(self, position: Tuple[int, int]) -> float:
+        """Get movement speed modifier based on terrain at position"""
+        x, y = position
+        
+        # Check if position is in any location with special properties
+        locations = self.find_location_at_point(x, y)
+        if locations:
+            location = locations[0]  # Use first location if multiple
+            
+            # Terrain modifiers based on location properties
+            if "road" in location.name.lower():
+                return 1.2  # Faster on roads
+            elif "forest" in location.name.lower() or "woods" in location.name.lower():
+                return 0.8  # Slower in forests
+            elif "water" in location.name.lower():
+                return 0.3  # Much slower in water
+            elif "mountain" in location.name.lower() or "hill" in location.name.lower():
+                return 0.6  # Slower on hills
+            elif "beach" in location.name.lower() or "sand" in location.name.lower():
+                return 0.7  # Slower on sand
+        
+        # Default terrain cost from map data
+        terrain_cost = self.map_data.get("terrain", {}).get(position, 1.0)
+        
+        # Convert terrain cost to movement modifier (higher cost = slower movement)
+        if terrain_cost <= 1.0:
+            return 1.0  # Normal movement
+        elif terrain_cost <= 2.0:
+            return 0.8  # Slightly slower
+        elif terrain_cost <= 5.0:
+            return 0.5  # Much slower
+        else:
+            return 0.1  # Nearly impassable
+    
+    def find_nearest_safe_location(self, character, from_position=None):
+        """Find the nearest safe location for a character"""
+        if from_position is None:
+            from_position = character.location.coordinates_location
+        
+        suitable_locations = []
+        for location in self.location_manager.locations:
+            if location.is_suitable_for_character(character):
+                distance = location.distance_to_point_from_center(*from_position)
+                safety_score = location.get_safety_score()
+                # Combine distance and safety (closer and safer is better)
+                score = safety_score - (distance * 0.01)
+                suitable_locations.append((location, score))
+        
+        if suitable_locations:
+            # Sort by score (higher is better)
+            suitable_locations.sort(key=lambda x: x[1], reverse=True)
+            return suitable_locations[0][0]
+        
+        return None
 
     def invalidate_path_cache(self):
         """Clear the path cache when obstacles change"""
@@ -253,16 +406,156 @@ class MapController:
 
         return path
 
+    def find_path_with_terrain_preference(self, start: Tuple[int, int], goal: Tuple[int, int], 
+                                        character=None) -> List[Tuple[int, int]]:
+        """Find path considering character movement preferences and terrain costs"""
+        # Use terrain-aware pathfinding
+        path = self.pathfinder.find_path(start, goal)
+        
+        # If character is provided, apply character-specific movement preferences
+        if character and path:
+            # Check if character has movement preferences
+            movement_preferences = getattr(character, 'movement_preferences', {})
+            
+            # Avoid dangerous areas if character prefers safety
+            if movement_preferences.get('avoid_danger', False):
+                path = self._filter_path_for_safety(path, character)
+            
+            # Prefer roads if character likes efficiency
+            if movement_preferences.get('prefer_roads', False):
+                path = self._optimize_path_for_roads(path)
+        
+        return path
+    
+    def _filter_path_for_safety(self, path: List[Tuple[int, int]], character) -> List[Tuple[int, int]]:
+        """Filter path to avoid dangerous locations"""
+        safe_path = []
+        safety_threshold = getattr(character, 'safety_threshold', 0)
+        
+        for point in path:
+            locations = self.find_location_at_point(point[0], point[1])
+            is_safe = True
+            
+            for location in locations:
+                if location.get_safety_score() < safety_threshold:
+                    is_safe = False
+                    break
+            
+            if is_safe:
+                safe_path.append(point)
+            else:
+                # Try to find alternative point nearby
+                alternative = self._find_safe_alternative_point(point, character)
+                if alternative:
+                    safe_path.append(alternative)
+                else:
+                    safe_path.append(point)  # Keep original if no alternative
+        
+        return safe_path
+    
+    def _find_safe_alternative_point(self, point: Tuple[int, int], character) -> Optional[Tuple[int, int]]:
+        """Find a safe alternative point near the given point"""
+        x, y = point
+        safety_threshold = getattr(character, 'safety_threshold', 0)
+        
+        # Check nearby points in expanding radius
+        for radius in range(1, 6):
+            for dx in range(-radius, radius + 1):
+                for dy in range(-radius, radius + 1):
+                    if dx*dx + dy*dy <= radius*radius:  # Within circle
+                        alt_point = (x + dx, y + dy)
+                        if self.pathfinder.is_walkable(alt_point):
+                            locations = self.find_location_at_point(alt_point[0], alt_point[1])
+                            is_safe = True
+                            for location in locations:
+                                if location.get_safety_score() < safety_threshold:
+                                    is_safe = False
+                                    break
+                            if is_safe:
+                                return alt_point
+        return None
+    
+    def _optimize_path_for_roads(self, path: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
+        """Optimize path to prefer roads when possible"""
+        # This is a simplified implementation - in a full system you'd use more sophisticated routing
+        optimized_path = []
+        for point in path:
+            locations = self.find_location_at_point(point[0], point[1])
+            on_road = any("road" in loc.name.lower() for loc in locations)
+            
+            if not on_road:
+                # Try to find nearby road
+                road_point = self._find_nearby_road(point)
+                if road_point and self.pathfinder.is_walkable(road_point):
+                    optimized_path.append(road_point)
+                else:
+                    optimized_path.append(point)
+            else:
+                optimized_path.append(point)
+        
+        return optimized_path
+    
+    def _find_nearby_road(self, point: Tuple[int, int], max_radius=3) -> Optional[Tuple[int, int]]:
+        """Find nearby road point"""
+        x, y = point
+        for radius in range(1, max_radius + 1):
+            for dx in range(-radius, radius + 1):
+                for dy in range(-radius, radius + 1):
+                    if dx*dx + dy*dy <= radius*radius:
+                        check_point = (x + dx, y + dy)
+                        locations = self.find_location_at_point(check_point[0], check_point[1])
+                        if any("road" in loc.name.lower() for loc in locations):
+                            return check_point
+        return None
+
     def render(self, surface):
         # Render the map image
         surface.blit(self.map_image, (0, 0))
 
-        # Render buildings on the map
-        for building in self.map_data["buildings"]:
-            color = (150, 150, 150)
-            if building == self.selected_building:
-                color = (100, 200, 100)  # Highlight selected building
-            pygame.draw.rect(surface, color, building["rect"])
+
+        # Render locations (optional - for debugging or special visualization)
+        for location in self.location_manager.locations:
+            # Draw location boundaries with different colors based on properties
+            color = self._get_location_render_color(location)
+            pygame.draw.rect(surface, color, 
+                           pygame.Rect(location.x, location.y, location.width, location.height), 1)
+
+        # Render points of interest
+        for poi in self.points_of_interest:
+            color = self._get_poi_render_color(poi)
+            pygame.draw.circle(surface, color, (poi.x, poi.y), poi.interaction_radius, 2)
+            # Draw POI center
+            pygame.draw.circle(surface, (255, 255, 255), (poi.x, poi.y), 3)
+
+#         # Render buildings on the map
+#         for building in self.map_data["buildings"]:
+#             color = (150, 150, 150)
+#             if building == self.selected_building:
+#                 color = (100, 200, 100)  # Highlight selected building
+#             pygame.draw.rect(surface, color, building["rect"])
+        # Render buildings on the map using Building objects
+        for building in self.buildings:
+            location = building.get_location()
+            # Create a rect from location data
+            rect = pygame.Rect(location.x, location.y, location.width, location.height)
+            
+            # Color based on building type and properties
+            color = self._get_building_color(building)
+            pygame.draw.rect(surface, color, rect)
+            
+            # Optional: Add security/popularity indicators
+            if hasattr(building, 'get_security_level'):
+                security = building.get_security_level()
+                if security > 7:
+                    # Draw a small security indicator
+                    pygame.draw.circle(surface, (0, 255, 0), 
+                                     (rect.centerx, rect.centery), 3)
+        
+        # Fall back to legacy building rendering if no Building objects
+        if not self.buildings:
+            for building in self.map_data.get("buildings", []):
+                if "rect" in building:
+                    pygame.draw.rect(surface, (150, 150, 150), building["rect"])
 
         # Render characters on the map
         for character in self.characters.values():
@@ -277,11 +570,140 @@ class MapController:
         # Render interactive UI components
         self.context_menu.render(surface)
         self.info_panel.render(surface)
+    
+    def _get_building_color(self, building):
+        """Get color for building based on its properties"""
+        # Default building color
+        base_color = (150, 150, 150)
+        
+        try:
+            building_type = getattr(building, 'building_type', 'building')
+            if building_type == 'house':
+                base_color = (139, 69, 19)  # Brown for houses
+            elif building_type == 'commercial':
+                base_color = (70, 130, 180)  # Steel blue for commercial
+            elif building_type == 'office':
+                base_color = (105, 105, 105)  # Dim gray for offices
+                
+            # Modify based on popularity (brighter = more popular)
+            if hasattr(building, 'get_popularity_level'):
+                popularity = building.get_popularity_level()
+                brightness_factor = 1.0 + (popularity / 20.0)  # Up to 50% brighter
+                base_color = tuple(min(255, int(c * brightness_factor)) for c in base_color)
+                
+        except Exception:
+            # Fall back to default color if anything goes wrong
+            pass
+            
+        return base_color
+
+        # Render selected location/POI info
+        if self.show_location_info and (self.selected_location or self.selected_poi):
+            self._render_info_panel(surface)
+
+    def _get_location_render_color(self, location):
+        """Get color for rendering location based on its properties"""
+        # Color coding: Green = safe, Yellow = neutral, Red = dangerous
+        safety_score = location.get_safety_score()
+        if safety_score >= 5:
+            return (0, 255, 0)  # Green - safe
+        elif safety_score >= 2:
+            return (255, 255, 0)  # Yellow - neutral
+        else:
+            return (255, 0, 0)  # Red - dangerous
+
+    def _get_poi_render_color(self, poi):
+        """Get color for rendering POI based on its type and availability"""
+        if len(poi.current_users) >= poi.max_users:
+            return (255, 0, 0)  # Red - full
+        elif poi.poi_type == "bench":
+            return (139, 69, 19)  # Brown
+        elif poi.poi_type == "well":
+            return (0, 0, 255)  # Blue
+        elif poi.poi_type == "garden":
+            return (0, 255, 0)  # Green
+        else:
+            return (128, 128, 128)  # Gray - generic
+
+    def _render_info_panel(self, surface):
+        """Render information panel for selected location or POI"""
+        panel_width = 250
+        panel_height = 150
+        panel_x = surface.get_width() - panel_width - 10
+        panel_y = 10
+
+        # Draw panel background
+        panel_rect = pygame.Rect(panel_x, panel_y, panel_width, panel_height)
+        # Create a new surface with SRCALPHA for transparency
+        panel_surface = pygame.Surface((panel_width, panel_height), pygame.SRCALPHA)
+        pygame.draw.rect(panel_surface, (0, 0, 0, 180), panel_surface.get_rect())  # Semi-transparent black
+        surface.blit(panel_surface, (panel_x, panel_y))  # Blit the transparent panel onto the main surface
+        pygame.draw.rect(surface, (255, 255, 255), panel_rect, 2)  # White border
+
+        # Prepare info text
+        if self.selected_location:
+            info = self._get_location_info_text(self.selected_location)
+        elif self.selected_poi:
+            info = self._get_poi_info_text(self.selected_poi)
+        else:
+            return
+
+        # Render text (this is a simplified version - you'd want better text rendering)
+        font_size = 12
+        line_height = font_size + 2
+        y_offset = panel_y + 10
+
+        font = pygame.font.Font(None, font_size)  # Use default font with specified size
+        for line in info:
+            text_surface = font.render(line, True, (255, 255, 255))  # Render text in white
+            surface.blit(text_surface, (panel_x + 10, y_offset))  # Draw text on the panel
+            y_offset += line_height
+
+    def _get_location_info_text(self, location):
+        """Get formatted text information for a location"""
+        return [
+            f"Location: {location.name}",
+            f"Security: {location.security}",
+            f"Popularity: {location.popularity}",
+            f"Visitors: {len(location.current_visitors)}",
+            f"Activities: {len(location.activities_available)}",
+            f"Safety Score: {location.get_safety_score():.1f}"
+        ]
+
+    def _get_poi_info_text(self, poi):
+        """Get formatted text information for a POI"""
+        return [
+            f"POI: {poi.name}",
+            f"Type: {poi.poi_type}",
+            f"Users: {len(poi.current_users)}/{poi.max_users}",
+            f"Available: {'Yes' if poi.get_info()['available'] else 'No'}",
+            f"Description: {poi.description[:20]}..."
+        ]
 
     def update(self, dt):
         # Update each character's position on the map
         for char_id, character in self.characters.items():
             self.update_character_position(char_id, dt)
+
+        # Update location visitor tracking
+        self._update_location_visitors()
+
+        # Handle info display timeout
+        if self.show_location_info and time.time() - self.info_display_time > self.info_timeout:
+            self.show_location_info = False
+
+    def _update_location_visitors(self):
+        """Update visitor tracking for all locations"""
+        for location in self.location_manager.locations:
+            # Check for missing visitors (characters that left)
+            location.check_for_missing_visitors()
+
+            # Add new visitors
+            for char_id, character in self.characters.items():
+                if hasattr(character, 'location') and hasattr(character.location, 'coordinates_location'):
+                    if location.contains_point(*character.location.coordinates_location):
+                        if character not in location.current_visitors:
+                            location.character_within_location(character)
 
     def handle_event(self, event):
         # Handle events like mouse clicks or key presses
@@ -307,6 +729,10 @@ class MapController:
         self.hide_ui_elements()
         
         # Determine what is at the clicked position
+            self.handle_click(event.pos)
+
+    def handle_click(self, position):
+        # Determine what is at the clicked position (priority order)
         char_id = self.is_character(position)
         building = self.is_building(position)
         
@@ -342,6 +768,82 @@ class MapController:
         self.selected_character = None
         self.selected_building = None
         self.selected_location = None
+            return
+
+        # Check for POI click
+        poi = self.find_poi_at_point(position[0], position[1])
+        if poi:
+            self.select_poi(poi)
+            return
+
+        # Check for location click
+        locations = self.find_location_at_point(position[0], position[1])
+        if locations:
+            self.select_location(locations[0])  # Select first location if multiple
+            return
+
+        # Check for building click
+        if self.is_building(position):
+            self.enter_building(position)
+            return
+
+        # Clear selections if clicking empty space
+        self.clear_selections()
+
+    def select_location(self, location):
+        """Select a location and show its information"""
+        self.selected_location = location
+        self.selected_poi = None
+        self.show_location_info = True
+        self.info_display_time = time.time()
+        print(f"Selected location: {location.name}")
+
+    def select_poi(self, poi):
+        """Select a POI and show its information"""
+        self.selected_poi = poi
+        self.selected_location = None
+        self.show_location_info = True
+        self.info_display_time = time.time()
+        print(f"Selected POI: {poi.name}")
+
+    def clear_selections(self):
+        """Clear all selections"""
+        self.selected_location = None
+        self.selected_poi = None
+        self.show_location_info = False
+
+    def get_contextual_menu_options(self, position):
+        """Get available contextual menu options for a position"""
+        options = []
+
+        # Check what's at this position
+        char_id = self.is_character(position)
+        poi = self.find_poi_at_point(position[0], position[1])
+        locations = self.find_location_at_point(position[0], position[1])
+        building = self.is_building(position)
+
+        if char_id:
+            options.extend(["Select Character", "Follow Character", "Talk to Character"])
+
+        if poi:
+            options.extend([f"Interact with {poi.name}"])
+            if hasattr(self, 'selected_character') and self.selected_character:
+                options.extend([action.name for action in poi.get_possible_interactions(self.selected_character)])
+
+        if locations:
+            location = locations[0]
+            options.extend([f"Visit {location.name}"])
+            if self.selected_character:
+                recommended_activities = location.get_recommended_activities_for_character(self.selected_character)
+                options.extend(recommended_activities)
+
+        if building:
+            options.extend([f"Enter {building['name']}", f"Inspect {building['name']}"])
+
+        if not options:
+            options.append("Move here")
+
+        return options
 
     def update_character_position(self, character_id, dt):
         # Update character positions based on pathfinding
@@ -349,11 +851,17 @@ class MapController:
         if character.path:
             next_node = character.path[0]
             direction = pygame.math.Vector2(next_node) - character.position
-            if direction.length() < character.speed * dt:
+            
+            # Apply terrain movement modifier
+            current_pos = (int(character.position.x), int(character.position.y))
+            movement_modifier = self.get_terrain_movement_modifier(current_pos)
+            modified_speed = character.speed * movement_modifier
+            
+            if direction.length() < modified_speed * dt:
                 character.position = next_node
                 character.path.pop(0)
             else:
-                character.position += direction.normalize() * character.speed * dt
+                character.position += direction.normalize() * modified_speed * dt
 
     def is_character(self, position):
         # Check if a character is at the clicked position
@@ -586,13 +1094,75 @@ class MapController:
             # This would trigger building-specific interactions
 
     def is_building(self, position):
-        # Check if a building is at the clicked position
-        for building in self.map_data["buildings"]:
-            if building["rect"].collidepoint(position):
+        # Check if a building is at the clicked position using Building objects
+        buildings_at_pos = self.get_buildings_at_position(position)
+        if buildings_at_pos:
+            return buildings_at_pos[0]  # Return the first building found
+            
+        # Fall back to legacy building check
+        for building in self.map_data.get("buildings", []):
+            if "rect" in building and building["rect"].collidepoint(position):
                 return building
         return None
 
 
+    def enter_building(self, position):
+        # Enter a building and interact with it
+        building = self.is_building(position)
+        if building:
+            # Handle Building objects vs legacy building data
+            if hasattr(building, 'name'):
+                building_name = building.name
+                print(f"Entering {building_name}")
+                
+                # Show available activities
+                if hasattr(building, 'get_available_activities'):
+                    activities = building.get_available_activities()
+                    if activities:
+                        print(f"Available activities: {', '.join(activities)}")
+                        
+                # Show location properties
+                if hasattr(building, 'get_security_level'):
+                    security = building.get_security_level()
+                    popularity = building.get_popularity_level()
+                    print(f"Security level: {security}, Popularity: {popularity}")
+            else:
+                # Legacy building data
+                building_name = building.get('name', 'Unknown Building')
+                print(f"Entering {building_name}")
+    
+    def find_safe_locations(self, min_security=7):
+        """Find locations with high security for characters seeking safety"""
+        return self.get_building_by_location_properties(min_security=min_security)
+    
+    def find_popular_locations(self, min_popularity=6):
+        """Find popular locations for social characters"""
+        return self.get_building_by_location_properties(min_popularity=min_popularity)
+    
+    def find_locations_with_activity(self, activity):
+        """Find locations that offer a specific activity"""
+        return self.get_building_by_location_properties(required_activities=[activity])
+    
+    def get_location_recommendations_for_character(self, character_traits):
+        """Get location recommendations based on character traits"""
+        recommendations = []
+        
+        # Safety-seeking characters prefer secure locations
+        if character_traits.get('risk_aversion', 5) > 7:
+            safe_locations = self.find_safe_locations(min_security=7)
+            recommendations.extend([(loc, 'safety') for loc in safe_locations])
+        
+        # Social characters prefer popular locations
+        if character_traits.get('sociability', 5) > 7:
+            popular_locations = self.find_popular_locations(min_popularity=6)
+            recommendations.extend([(loc, 'social') for loc in popular_locations])
+        
+        # Rest-seeking characters prefer houses with rest activities
+        if character_traits.get('energy_level', 5) < 3:
+            rest_locations = self.find_locations_with_activity('rest')
+            recommendations.extend([(loc, 'rest') for loc in rest_locations])
+            
+        return recommendations
 
 
 class AStarPathfinder:

@@ -45,6 +45,8 @@ class TestGameplayController(unittest.TestCase):
             "key_bindings": { # Add if controller accesses this during init for speed keys
                 "increase_speed": [pygame.K_PAGEUP],
                 "decrease_speed": [pygame.K_PAGEDOWN],
+                "minimap": [pygame.K_m],
+                "overview": [pygame.K_o],
             }
         }
         self.controller = GameplayController(graph_manager=self.mock_graph_manager, config=self.config)
@@ -177,6 +179,61 @@ class TestGameplayController(unittest.TestCase):
         self.assertIs(third_cached_surface, fourth_cached_surface,
                         "Cached surface should remain the same if time_scale_factor is set to the same value it was just changed to.")
 
+    def test_modular_ui_system_initialization(self):
+        """Test that the modular UI system is properly initialized."""
+        self.assertTrue(hasattr(self.controller, 'ui_panels'), "Controller should have ui_panels attribute")
+        self.assertTrue(hasattr(self.controller, 'ui_fonts'), "Controller should have ui_fonts attribute")
+        
+        if self.controller.ui_panels:
+            # Check that expected panels exist
+            expected_panels = ['character_info', 'game_status', 'weather', 'stats', 'achievements', 'selected_character', 'instructions']
+            for panel_name in expected_panels:
+                self.assertIn(panel_name, self.controller.ui_panels, f"Panel {panel_name} should exist")
+                panel = self.controller.ui_panels[panel_name]
+                self.assertTrue(hasattr(panel, 'render'), f"Panel {panel_name} should have render method")
+                self.assertTrue(hasattr(panel, 'visible'), f"Panel {panel_name} should have visible attribute")
+
+    def test_ui_panel_visibility_toggle(self):
+        """Test that UI panels can be toggled on/off."""
+        if not hasattr(self.controller, 'ui_panels') or not self.controller.ui_panels:
+            self.skipTest("Modular UI system not initialized")
+        
+        # Test toggling visibility of a panel
+        char_info_panel = self.controller.ui_panels.get('character_info')
+        if char_info_panel:
+            original_visibility = char_info_panel.visible
+            char_info_panel.toggle_visibility()
+            self.assertNotEqual(original_visibility, char_info_panel.visible, "Panel visibility should change after toggle")
+            
+            # Toggle back
+            char_info_panel.toggle_visibility()
+            self.assertEqual(original_visibility, char_info_panel.visible, "Panel visibility should return to original state")
+
+    def test_render_ui_with_modular_system(self):
+        """Test that _render_ui works with the modular system."""
+        # This test verifies that _render_ui doesn't crash with the new modular system
+        try:
+            self.controller._render_ui()
+            # If we get here without exception, the test passes
+            self.assertTrue(True, "Modular UI rendering completed without errors")
+        except Exception as e:
+            self.fail(f"Modular UI rendering failed with error: {e}")
+
+    def test_render_ui_fallback_modes(self):
+        """Test that UI rendering falls back gracefully when panels are unavailable."""
+        # Test with no ui_panels
+        original_panels = getattr(self.controller, 'ui_panels', None)
+        self.controller.ui_panels = {}
+        
+        try:
+            self.controller._render_ui()  # Should use legacy rendering
+            self.assertTrue(True, "Legacy UI rendering completed without errors")
+        except Exception as e:
+            self.fail(f"Legacy UI rendering failed with error: {e}")
+        finally:
+            # Restore original panels
+            if original_panels is not None:
+                self.controller.ui_panels = original_panels
 
     def test_speed_text_cache_invalidation_via_handle_keydown(self):
         """Test that cache is invalidated when speed changes via _handle_keydown."""
@@ -216,6 +273,84 @@ class TestGameplayController(unittest.TestCase):
         self.assertIsNotNone(new_cached_surface_decrease)
         self.assertIsNot(new_cached_surface_increase, new_cached_surface_decrease,
                          "Cache should be different after speed decrease.")
+    def test_minimap_toggle(self):
+        """Test that mini-map mode can be toggled correctly."""
+        # Initially mini-map should be disabled
+        self.assertFalse(getattr(self.controller, "_minimap_mode", False))
+        
+        # Simulate 'M' key press to enable mini-map
+        mock_event = MagicMock()
+        mock_event.key = pygame.K_m
+        
+        self.controller._handle_keydown(mock_event)
+        
+        # Mini-map should now be enabled
+        self.assertTrue(getattr(self.controller, "_minimap_mode", False))
+        
+        # Press 'M' again to disable mini-map
+        self.controller._handle_keydown(mock_event)
+        
+        # Mini-map should now be disabled
+        self.assertFalse(getattr(self.controller, "_minimap_mode", False))
+
+    def test_overview_mode_toggle(self):
+        """Test that overview mode can be toggled correctly."""
+        # Initially overview mode should be disabled
+        self.assertFalse(getattr(self.controller, "_overview_mode", False))
+        
+        # Simulate 'O' key press to enable overview mode
+        mock_event = MagicMock()
+        mock_event.key = pygame.K_o
+        
+        self.controller._handle_keydown(mock_event)
+        
+        # Overview mode should now be enabled
+        self.assertTrue(getattr(self.controller, "_overview_mode", False))
+        
+        # Press 'O' again to disable overview mode
+        self.controller._handle_keydown(mock_event)
+        
+        # Overview mode should now be disabled
+        self.assertFalse(getattr(self.controller, "_overview_mode", False))
+
+    def test_render_minimap_no_errors(self):
+        """Test that mini-map rendering doesn't crash when enabled."""
+        # Enable mini-map mode
+        self.controller._minimap_mode = True
+        
+        # Create a minimal mock map controller
+        mock_map_controller = MagicMock()
+        mock_map_controller.map_image = pygame.Surface((100, 100))
+        mock_map_controller.map_data = {"buildings": []}
+        mock_map_controller.characters = {}
+        mock_map_controller.selected_character = None
+        self.controller.map_controller = mock_map_controller
+        
+        # Should not raise any exceptions
+        try:
+            self.controller._render_minimap()
+        except Exception as e:
+            self.fail(f"Mini-map rendering failed with error: {e}")
+
+    def test_render_overview_no_errors(self):
+        """Test that overview mode rendering doesn't crash when enabled."""
+        # Enable overview mode
+        self.controller._overview_mode = True
+        
+        # Create a minimal mock map controller
+        mock_map_controller = MagicMock()
+        mock_map_controller.map_image = pygame.Surface((100, 100))
+        mock_map_controller.map_data = {"buildings": []}
+        mock_map_controller.characters = {}
+        mock_map_controller.selected_character = None
+        self.controller.map_controller = mock_map_controller
+        
+        # Should not raise any exceptions
+        try:
+            self.controller._render_overview()
+        except Exception as e:
+            self.fail(f"Overview rendering failed with error: {e}")
+
 
 if __name__ == '__main__':
     unittest.main()

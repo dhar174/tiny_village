@@ -317,7 +317,7 @@ class NeedsPriorities:
         health_status = character.get_health_status()
         health_priority = (
             100 - (health_status * 10)
-        ) + character.get_motives().get_health_motive()
+        ) + character.get_motives().get_health_motive().get_score()
         return health_priority
 
     def calculate_hunger_priority(self, character: tc.Character) -> float:
@@ -325,7 +325,7 @@ class NeedsPriorities:
 
         hunger_level = character.get_hunger_level()
         hunger_priority = (
-            hunger_level * 10 + character.get_motives().get_hunger_motive()
+            hunger_level * 10 + character.get_motives().get_hunger_motive().get_score()
         )
         return hunger_priority
 
@@ -333,14 +333,14 @@ class NeedsPriorities:
         """Return a priority score based on the character's financial state."""
 
         wealth = character.get_wealth()
-        wealth_priority = character.get_motives().get_wealth_motive()
+        wealth_priority = character.get_motives().get_wealth_motive().get_score()
         return wealth_priority
 
     def calculate_mental_health_priority(self, character: tc.Character) -> float:
         """Return a priority score for improving mental wellness."""
 
         mental_health = character.get_mental_health()
-        mental_health_priority = character.get_motives().get_mental_health_motive()
+        mental_health_priority = character.get_motives().get_mental_health_motive().get_score()
         return mental_health_priority
 
     def calculate_social_wellbeing_priority(self, character: tc.Character) -> float:
@@ -348,7 +348,7 @@ class NeedsPriorities:
 
         social_wellbeing = character.get_social_wellbeing()
         social_wellbeing_priority = (
-            character.get_motives().get_social_wellbeing_motive()
+            character.get_motives().get_social_wellbeing_motive().get_score()
         )
         return social_wellbeing_priority
 
@@ -356,77 +356,77 @@ class NeedsPriorities:
         """Return a priority score indicating how much the character seeks happiness."""
 
         happiness = character.get_happiness()
-        happiness_priority = character.get_motives().get_happiness_motive()
+        happiness_priority = character.get_motives().get_happiness_motive().get_score()
         return happiness_priority
 
     def calculate_shelter_priority(self, character: tc.Character) -> float:
         """Return a priority score describing the need for shelter/housing."""
 
         shelter = character.get_shelter()
-        shelter_priority = character.get_motives().get_shelter_motive()
+        shelter_priority = character.get_motives().get_shelter_motive().get_score()
         return shelter_priority
 
     def calculate_stability_priority(self, character: tc.Character) -> float:
         """Return a priority score representing the desire for routine and stability."""
 
         stability = character.get_stability()
-        stability_priority = character.get_motives().get_stability_motive()
+        stability_priority = character.get_motives().get_stability_motive().get_score()
         return stability_priority
 
     def calculate_luxury_priority(self, character: tc.Character) -> float:
         """Return a priority score representing the desire for luxury items or comfort."""
 
         luxury = character.get_luxury()
-        luxury_priority = character.get_motives().get_luxury_motive()
+        luxury_priority = character.get_motives().get_luxury_motive().get_score()
         return luxury_priority
 
     def calculate_hope_priority(self, character: tc.Character) -> float:
         """Return a priority score representing the character's need for optimism."""
 
         hope = character.get_hope()
-        hope_priority = character.get_motives().get_hope_motive()
+        hope_priority = character.get_motives().get_hope_motive().get_score()
         return hope_priority
 
     def calculate_success_priority(self, character: tc.Character) -> float:
         """Return a priority score for career or personal success."""
 
         success = character.get_success()
-        success_priority = character.get_motives().get_success_motive()
+        success_priority = character.get_motives().get_success_motive().get_score()
         return success_priority
 
     def calculate_control_priority(self, character: tc.Character) -> float:
         """Return a priority score for the character's sense of personal control."""
 
         control = character.get_control()
-        control_priority = character.get_motives().get_control_motive()
+        control_priority = character.get_motives().get_control_motive().get_score()
         return control_priority
 
     def calculate_job_performance_priority(self, character: tc.Character) -> float:
         """Return a priority score for improving job performance."""
 
         job_performance = character.get_job_performance()
-        job_performance_priority = character.get_motives().get_job_performance_motive()
+        job_performance_priority = character.get_motives().get_job_performance_motive().get_score()
         return job_performance_priority
 
     def calculate_beauty_priority(self, character: tc.Character) -> float:
         """Return a priority score describing desire to improve appearance."""
 
         beauty = character.get_beauty()
-        beauty_priority = character.get_motives().get_beauty_motive() - beauty
+        beauty_priority = character.get_motives().get_beauty_motive().get_score() - beauty
         return beauty_priority
 
     def calculate_community_priority(self, character: tc.Character) -> float:
         """Return a priority score reflecting the need for community involvement."""
 
         community = character.get_community()
-        community_priority = character.get_motives().get_community_motive()
+        community_priority = character.get_motives().get_community_motive().get_score()
         return community_priority
 
     def calculate_material_goods_priority(self, character: tc.Character) -> float:
         """Return a priority score for acquiring material possessions."""
 
         material_goods = character.get_material_goods()
-        material_goods_priority = character.get_motives().get_material_goods_motive()
+        material_goods_priority = character.get_motives().get_material_goods_motive().get_score()
         return material_goods_priority
 
 
@@ -452,7 +452,7 @@ class NeedsPriorities:
             friendship_state = 0  # No friendship data
         
         # Combine with social wellbeing motive (friendship is social)
-        social_motive = character.get_motives().get_social_wellbeing_motive()
+        social_motive = character.get_motives().get_social_wellbeing_motive().get_score()
         
         # Calculate priority: higher motive with lower current state = higher priority
         # Ensure priority is always non-negative
@@ -2067,7 +2067,7 @@ class PromptBuilder:
                 descriptor = descriptors.get_action_descriptors(action)
             except (KeyError, AttributeError):
                 descriptor = action.replace("_", " ").title()
-            action_name = action.replace("_", " ").title().replace(" ", "_")Expand commentComment on lines R1657 to R1658ResolvedCode has comments. Press enter to view.
+            action_name = action.replace("_", " ").title().replace(" ", "_")
             prompt += f"{i}. {descriptor} to {action_name}.\n"
         # Add structured output format instructions
         if output_format == "json":
@@ -2132,21 +2132,34 @@ class PromptBuilder:
                 examples_text = self.few_shot_manager.format_examples_for_prompt(relevant_examples)
                 prompt += f"\n{examples_text}"
 
-        # Current goals and motivations
+        # Current goals and motivations - Enhanced for LLM guidance
         if goal_queue and len(goal_queue) > 0:
-            prompt += f"\n\nYour current goals (in order of importance):\n"
+            prompt += f"\n\n🎯 **CURRENT ACTIVE GOALS** (in priority order):\n"
             for i, (utility_score, goal) in enumerate(goal_queue[:3]):  # Top 3 goals
-                prompt += f"{i+1}. {goal.name}: {goal.description} (Priority: {utility_score:.1f})\n"
+                # Enhanced goal description with urgency indicator
+                urgency = "🔥 URGENT" if utility_score > self.URGENCY_THRESHOLD_URGENT else "⚡ HIGH" if utility_score > self.URGENCY_THRESHOLD_HIGH else "📌 MODERATE"
+                prompt += f"{i+1}. **{goal.name}**: {goal.description}\n"
+                prompt += f"   → Priority Score: {utility_score:.1f}/10 ({urgency})\n"
+        else:
+            prompt += f"\n\n🎯 **CURRENT ACTIVE GOALS** (in priority order):\n"
+            prompt += f"   → No active goals currently. 🌱 Consider establishing new objectives to guide your actions.\n"
 
-        # Character's pressing needs and motivations
+        # Character's pressing needs and motivations - Enhanced priority display
         top_needs = sorted(needs_priorities.items(), key=lambda x: x[1], reverse=True)[
             :5
         ]
         if top_needs:
-            prompt += f"\nYour most pressing needs:\n"
+            prompt += f"\n🚨 **MOST PRESSING NEEDS** (requiring immediate attention):\n"
             for need_name, priority_score in top_needs:
                 need_desc = self._get_need_description(need_name, priority_score)
-                prompt += f"- {need_desc}\n"
+                # Add visual urgency indicators
+                if priority_score > self.NEEDS_PRIORITY_CRITICAL_THRESHOLD:
+                    urgency_icon = "🔴 CRITICAL"
+                elif priority_score > self.NEEDS_PRIORITY_HIGH_THRESHOLD:
+                    urgency_icon = "🟡 HIGH"
+                else:
+                    urgency_icon = "🟢 MODERATE"
+                prompt += f"- {urgency_icon} {need_desc}\n"
 
         # Character motives and personality context
         if hasattr(self.character, "motives") and self.character.motives:
@@ -2199,8 +2212,10 @@ class PromptBuilder:
         for i, action_choice in enumerate(action_choices):
             prompt += f"{action_choice}\n"
 
-        prompt += f"\nChoose the action that best aligns with your goals, needs, and current situation. "
-        prompt += f"Consider both immediate benefits and long-term progress toward your aspirations."
+        prompt += f"\nChoose the action that best addresses your ACTIVE GOALS and PRESSING NEEDS listed above. "
+        prompt += f"Prioritize actions that: (1) advance your highest-priority active goals, "
+        prompt += f"(2) address your most critical needs (🔴/🟡), and (3) support your long-term aspirations. "
+        prompt += f"Consider both immediate urgency and strategic value."
 
         # Add structured output format instructions
         if output_format == "json":
