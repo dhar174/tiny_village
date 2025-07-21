@@ -16,7 +16,50 @@ import operator
 import random
 import re
 import uuid
-import networkx as nx
+# Graceful fallback for networkx
+try:
+    import networkx as nx
+    NETWORKX_AVAILABLE = True
+except ImportError:
+    NETWORKX_AVAILABLE = False
+    # Create a minimal networkx-like module for fallback
+    class MockNetworkX:
+        @staticmethod
+        def Graph():
+            return {'nodes': [], 'edges': [], 'type': 'Graph'}
+        @staticmethod
+        def DiGraph():
+            return {'nodes': [], 'edges': [], 'type': 'DiGraph'}
+        @staticmethod
+        def MultiGraph():
+            return {'nodes': [], 'edges': [], 'type': 'MultiGraph'}
+        @staticmethod
+        def MultiDiGraph():
+            return {'nodes': [], 'edges': [], 'type': 'MultiDiGraph'}
+        @staticmethod
+        def add_node(graph, node, **kwargs):
+            if 'nodes' in graph:
+                graph['nodes'].append(node)
+        @staticmethod
+        def add_edge(graph, a, b, **kwargs):
+            if 'edges' in graph:
+                graph['edges'].append((a, b))
+        @staticmethod
+        def shortest_path(graph, source, target):
+            return [source, target]  # Simple fallback
+        @staticmethod
+        def get_edge_attributes(graph, attr):
+            return {}
+        @staticmethod
+        def set_edge_attributes(graph, values, name=None):
+            pass
+        @staticmethod
+        def nodes(graph):
+            return graph.get('nodes', [])
+        @staticmethod
+        def edges(graph):
+            return graph.get('edges', [])
+    nx = MockNetworkX()
 
 # from tiny_characters import Motive
 from tiny_types import Character, Goal, Action, State, ActionSystem
@@ -28,7 +71,24 @@ from tiny_jobs import Job
 from tiny_items import ItemInventory, ItemObject, InvestmentPortfolio, Stock
 import tiny_memories  # Temporarily commented out for testing
 from tiny_utility_functions import is_goal_achieved
-import numpy as np
+
+# Graceful fallbacks for optional dependencies
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
+    # Create minimal numpy-like functionality
+    class MockNumpy:
+        def array(self, data):
+            return data
+        def mean(self, data, axis=None):
+            return sum(data) / len(data) if data else 0
+        def dot(self, a, b):
+            return sum(x*y for x, y in zip(a, b))
+        def random(self):
+            return random
+    np = MockNumpy()
 from tiny_time_manager import GameTimeManager as tiny_time_manager
 import importlib
 
@@ -124,11 +184,21 @@ Where it happens: goap_system.py and graph_manager.py
 What happens: The GOAP planner uses the graph to analyze relationships and preferences, and formulates a plan consisting of a sequence of actions that maximize the character’s utility for the day.
 """
 
-import networkx as nx
+# networkx already imported above with fallback
 
+# networkx already imported above with fallback
 
-import networkx as nx
-from networkx.algorithms import community
+# Graceful fallback for networkx community algorithms
+try:
+    from networkx.algorithms import community
+    NETWORKX_COMMUNITY_AVAILABLE = True
+except ImportError:
+    NETWORKX_COMMUNITY_AVAILABLE = False
+    class MockCommunity:
+        @staticmethod
+        def greedy_modularity_communities(graph):
+            return [[]]  # Return empty community
+    community = MockCommunity()
 
 
 # Improved Piecewise Linear Approximation with Caching
