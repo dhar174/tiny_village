@@ -448,7 +448,8 @@ class MapController:
 
         if poi:
             options.extend([f"Interact with {poi.name}"])
-            options.extend([action.name for action in poi.get_possible_interactions(self.selected_character)])
+            if hasattr(self, 'selected_character') and self.selected_character:
+                options.extend([action.name for action in poi.get_possible_interactions(self.selected_character)])
 
         if locations:
             location = locations[0]
