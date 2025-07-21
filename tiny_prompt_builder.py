@@ -2156,9 +2156,9 @@ class PromptBuilder:
             for need_name, priority_score in top_needs:
                 need_desc = self._get_need_description(need_name, priority_score)
                 # Add visual urgency indicators
-                if priority_score > 70:
+                if priority_score > self.NEEDS_PRIORITY_CRITICAL_THRESHOLD:
                     urgency_icon = "🔴 CRITICAL"
-                elif priority_score > 50:
+                elif priority_score > self.NEEDS_PRIORITY_HIGH_THRESHOLD:
                     urgency_icon = "🟡 HIGH"
                 else:
                     urgency_icon = "🟢 MODERATE"
