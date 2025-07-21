@@ -25,7 +25,315 @@ from tiny_strategy_manager import StrategyManager
 from tiny_event_handler import EventHandler, Event
 from tiny_types import GraphManager
 from tiny_map_controller import MapController
+class UIPanel:
+    """Base class for UI panels in the modular UI system."""
+    
+    def __init__(self, name: str, position: tuple = (0, 0), size: tuple = None, visible: bool = True):
+        self.name = name
+        self.position = position  # (x, y)
+        self.size = size  # (width, height) - None means auto-size
+        self.visible = visible
+        self.background_color = None
+        self.border_color = None
+        self.padding = 5
+        
+    def render(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        """
+        Render the panel to the screen.
+        
+        Args:
+            screen: The pygame surface to render to
+            controller: The GameplayController instance for accessing game data
+            fonts: Dictionary of font objects by size/type
+            
+        Returns:
+            int: The height of the rendered panel
+        """
+        if not self.visible:
+            return 0
+            
+        return self._render_content(screen, controller, fonts)
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        """Override this method in subclasses to implement specific panel rendering."""
+        return 0
+    
+    def toggle_visibility(self):
+        """Toggle panel visibility."""
+        self.visible = not self.visible
 
+
+class CharacterInfoPanel(UIPanel):
+    """Panel for displaying character count and basic info."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        font = fonts.get('normal', pygame.font.Font(None, 24))
+        x, y = self.position
+        
+        # Character count
+        char_count_text = font.render(f"Characters: {len(controller.characters)}", True, (255, 255, 255))
+        screen.blit(char_count_text, (x, y))
+        
+        return char_count_text.get_height() + self.padding
+
+
+class GameStatusPanel(UIPanel):
+    """Panel for displaying game status (pause, time, speed)."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        font = fonts.get('normal', pygame.font.Font(None, 24))
+        small_font = fonts.get('small', pygame.font.Font(None, 18))
+        x, y = self.position
+        current_y = y
+        
+        # Pause status
+        if getattr(controller, "paused", False):
+            pause_text = font.render("PAUSED", True, (255, 255, 0))
+            screen.blit(pause_text, (screen.get_width() - 100, 10))
+        
+        # Game time
+        if hasattr(controller, "gametime_manager") and controller.gametime_manager:
+            try:
+                game_time = controller.gametime_manager.get_calendar().get_game_time_string()
+                time_text = small_font.render(f"Time: {game_time}", True, (255, 255, 255))
+                screen.blit(time_text, (x, current_y))
+                current_y += time_text.get_height() + 2
+            except (AttributeError, TypeError, ValueError) as e:
+                logging.error(f"Error rendering game time: {e}")
+                pass
+        
+        # Speed indicator with caching
+        try:
+            if controller._last_time_scale_factor != controller.time_scale_factor or controller._cached_speed_text is None:
+                controller._cached_speed_text = small_font.render(
+                    f"Speed: {controller.time_scale_factor:.1f}x", True, (255, 255, 255)
+                )
+                controller._last_time_scale_factor = controller.time_scale_factor
+            
+            if controller._cached_speed_text:
+                screen.blit(controller._cached_speed_text, (x, current_y))
+                current_y += controller._cached_speed_text.get_height() + 2
+        except (AttributeError, TypeError, ValueError) as e:
+            pass  # Skip if speed rendering fails
+        
+        return current_y - y
+
+
+class WeatherPanel(UIPanel):
+    """Panel for displaying weather information."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        small_font = fonts.get('small', pygame.font.Font(None, 18))
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        x, y = self.position
+        current_y = y
+        
+        if hasattr(controller, "weather_system"):
+            weather_text = small_font.render(
+                f"Weather: {controller.weather_system['current_weather']} {controller.weather_system['temperature']}°C",
+                True, (200, 220, 255)
+            )
+            screen.blit(weather_text, (x, current_y))
+            current_y += weather_text.get_height() + 2
+            
+            # Weather effects message
+            current_weather = None
+            if isinstance(controller.weather_system, dict):
+                current_weather = controller.weather_system.get('current_weather')
+            if current_weather in WEATHER_UI_MESSAGES:
+                message, color = WEATHER_UI_MESSAGES[current_weather]
+                weather_effect_text = tiny_font.render(message, True, color)
+                screen.blit(weather_effect_text, (x, current_y))
+                current_y += weather_effect_text.get_height() + 2
+        
+        return current_y - y
+
+
+class StatsPanel(UIPanel):
+    """Panel for displaying game statistics and analytics."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        x, y = self.position
+        current_y = y
+        
+        # Game statistics
+        stats = controller.game_statistics
+        stats_text = tiny_font.render(
+            f"Actions: {stats['actions_executed']} | Failed: {stats['actions_failed']} | Recovered: {stats['errors_recovered']}",
+            True, (180, 180, 180)
+        )
+        screen.blit(stats_text, (x, current_y))
+        current_y += stats_text.get_height() + 2
+        
+        # Action analytics
+        if hasattr(controller, "action_resolver"):
+            try:
+                analytics = controller.action_resolver.get_action_analytics()
+                analytics_text = tiny_font.render(
+                    f"Success Rate: {analytics['success_rate']:.1%} | Cache: {analytics['cache_size']}",
+                    True, (150, 150, 150)
+                )
+                screen.blit(analytics_text, (x, current_y))
+                current_y += analytics_text.get_height() + 2
+            except Exception as e:
+                logging.error(f"Error in action analytics rendering: {e}")
+                logging.error(traceback.format_exc())
+        
+        # System health
+        if hasattr(controller, "recovery_manager"):
+            try:
+                system_status = controller.recovery_manager.get_system_status()
+                healthy_systems = sum(1 for status in system_status.values() if status == "healthy")
+                total_systems = len(system_status)
+                
+                health_color = (
+                    (0, 255, 0) if healthy_systems == total_systems
+                    else (255, 255, 0) if healthy_systems > total_systems // 2
+                    else (255, 0, 0)
+                )
+                health_text = tiny_font.render(
+                    f"Systems: {healthy_systems}/{total_systems} healthy",
+                    True, health_color
+                )
+                screen.blit(health_text, (x, current_y))
+                current_y += health_text.get_height() + 2
+            except Exception as e:
+                logging.error(f"Error while rendering system health: {e}")
+        
+        return current_y - y
+
+
+class AchievementPanel(UIPanel):
+    """Panel for displaying achievements."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        x, y = self.position
+        current_y = y
+        
+        # First week survived achievement
+        try:
+            survived_week = controller.global_achievements.get("village_milestones", {}).get("first_week_survived", False)
+            status_text = "Yes" if survived_week else "No"
+            achievement_render = tiny_font.render(
+                f"First Week Survived: {status_text}", True, (220, 220, 180)
+            )
+            screen.blit(achievement_render, (x, current_y))
+            current_y += achievement_render.get_height() + 2
+        except Exception as e:
+            logging.error(f"Error while loading achievement panel: {e}")
+            pass
+        
+        # All achievements
+        milestones = controller.global_achievements.get("village_milestones", {})
+        if milestones:
+            header = tiny_font.render("Achievements:", True, (240, 240, 200))
+            screen.blit(header, (x, current_y))
+            current_y += header.get_height() + 5
+            
+            for key, achieved in milestones.items():
+                title = key.replace("_", " ").title()
+                status = "✓" if achieved else "✗"
+                color = (180, 220, 180) if achieved else (200, 180, 180)
+                text = tiny_font.render(f"{status} {title}", True, color)
+                screen.blit(text, (x, current_y))
+                current_y += text.get_height() + 2
+        
+        return current_y - y
+
+
+class SelectedCharacterPanel(UIPanel):
+    """Panel for displaying selected character information."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        small_font = fonts.get('small', pygame.font.Font(None, 18))
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        x, y = self.position
+        current_y = y
+        
+        if (hasattr(controller.map_controller, "selected_character") 
+            and controller.map_controller.selected_character):
+            
+            char = controller.map_controller.selected_character
+            char_info = [
+                f"Selected: {char.name}",
+                f"Job: {getattr(char, 'job', 'Unknown')}",
+                f"Energy: {getattr(char, 'energy', 0)}",
+                f"Health: {getattr(char, 'health_status', 0)}",
+            ]
+            
+            # Add social and quest info
+            if hasattr(char, "uuid") and hasattr(controller, "social_networks"):
+                try:
+                    relationships = controller.social_networks["relationships"].get(char.uuid, {})
+                    avg_relationship = (
+                        sum(relationships.values()) / len(relationships)
+                        if relationships else 50
+                    )
+                    char_info.append(f"Social: {avg_relationship:.0f}")
+                except Exception as e:
+                    logging.error(f"Error accessing social_networks while rendering selected character panel: {e}")
+                    pass
+            
+            if hasattr(char, "uuid") and hasattr(controller, "quest_system"):
+                try:
+                    active_quests = len(controller.quest_system["active_quests"].get(char.uuid, []))
+                    completed_quests = len(controller.quest_system["completed_quests"].get(char.uuid, []))
+                    char_info.append(f"Quests: {active_quests} active, {completed_quests} done")
+                except Exception as e:
+                    logging.error(f"Error loading quest system while rendering selected character panel: {e}")
+                    
+                    pass
+            
+            # Render character info
+            for info in char_info:
+                info_text = small_font.render(info, True, (255, 255, 0))
+                screen.blit(info_text, (x, current_y))
+                current_y += info_text.get_height() + 2
+            
+            # Character achievements
+            try:
+                if hasattr(char, 'achievements') and char.achievements:
+                    ach_header_text = small_font.render("Achievements:", True, (220, 220, 180))
+                    screen.blit(ach_header_text, (x, current_y))
+                    current_y += ach_header_text.get_height() + 2
+                    
+                    for achievement_id in char.achievements:
+                        display_name = achievement_id.replace("_", " ").title()
+                        ach_text = tiny_font.render(f"- {display_name}", True, (200, 200, 150))
+                        screen.blit(ach_text, (x + 5, current_y))  # Indent slightly
+                        current_y += ach_text.get_height() + 2
+            except Exception as e:
+                logging.error(f"Error loading achievements while rendering selected character panel: {e}")
+                pass
+        
+        return current_y - y
+
+
+class InstructionsPanel(UIPanel):
+    """Panel for displaying game instructions."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        x, y = self.position
+        
+        instructions = [
+            "Click characters to select them",
+            "Click buildings to interact",
+            "SPACE to pause/unpause",
+            "R to reset characters",
+            "S to save game (basic)",
+            "L to load game (basic)",
+            "F to show feature status",
+            "ESC to quit",
+        ]
+        
+        for i, instruction in enumerate(instructions):
+            inst_text = tiny_font.render(instruction, True, (200, 200, 200))
+            screen.blit(inst_text, (x, y + i * 15))
+        
+        return len(instructions) * 15
 """ 
 This script integrates with the game loop, applying decisions from the strategy manager to the game state.
 5. Gameplay Execution
