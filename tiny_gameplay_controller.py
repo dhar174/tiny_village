@@ -2984,7 +2984,7 @@ class GameplayController:
                         char_y = int(character.position[1] * scale) + map_y
                         
                         # Use different appearance for selected character
-                        if character == self.map_controller.selected_character:
+                        if character is self.map_controller.selected_character:
                             # Draw selection ring
                             pygame.draw.circle(self.screen, (255, 255, 0), (char_x, char_y), 8, 2)
                             color = DEFAULT_COLOR
