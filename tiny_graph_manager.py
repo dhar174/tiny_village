@@ -26,11 +26,12 @@ from tiny_jobs import Job
 
 # from actions import Action, State, ActionSystem
 from tiny_items import ItemInventory, ItemObject, InvestmentPortfolio, Stock
-import tiny_memories  # Temporarily commented out for testing
+# import tiny_memories  # Temporarily commented out for testing
 from tiny_utility_functions import is_goal_achieved
 import numpy as np
 from tiny_time_manager import GameTimeManager as tiny_time_manager
 import importlib
+from social_model import SocialModel
 
 """ Graph Construction
 Defining Nodes:
@@ -687,6 +688,10 @@ class GraphManager:
         }
 
         self.G = self.initialize_graph()
+        
+        # Initialize social model with this graph manager as world state
+        self.social_model = SocialModel(world_state=self)
+        
         self.__initialized = True
 
     def initialize_graph(self):
@@ -1102,102 +1107,18 @@ class GraphManager:
             self.G[char1][char2]["interaction_log"] = interaction_log
 
     def calculate_dynamic_weights(self, historical):
-        initial_stage = historical < 20
-        middle_stage = 20 <= historical < 60
-        mature_stage = historical >= 60
-
-        if initial_stage:
-            return {
-                "openness": 0.2,
-                "extraversion": 0.25,
-                "conscientiousness": 0.15,
-                "agreeableness": 0.25,
-                "neuroticism": 0.05,
-                "openness_conscientiousness_interaction": 0.05,
-                "extraversion_agreeableness_interaction": 0.05,
-                "neuroticism_stabilization": 0.1,
-            }
-        elif middle_stage:
-            return {
-                "openness": 0.15,
-                "extraversion": 0.2,
-                "conscientiousness": 0.2,
-                "agreeableness": 0.2,
-                "neuroticism": 0.1,
-                "openness_conscientiousness_interaction": 0.05,
-                "extraversion_agreeableness_interaction": 0.05,
-                "neuroticism_stabilization": 0.05,
-            }
-        elif mature_stage:
-            return {
-                "openness": 0.1,
-                "extraversion": 0.15,
-                "conscientiousness": 0.25,
-                "agreeableness": 0.2,
-                "neuroticism": 0.1,
-                "openness_conscientiousness_interaction": 0.1,
-                "extraversion_agreeableness_interaction": 0.05,
-                "neuroticism_stabilization": 0.05,
-            }
-        return None
+        """
+        Calculate dynamic weights for personality traits.
+        Delegates to SocialModel for calculation.
+        """
+        return self.social_model.calculate_dynamic_weights(historical)
 
     def calculate_romance_compatibility(self, char1, char2, historical):
-        Character = importlib.import_module("tiny_characters").Character
-        # Example compatibility calculation based on traits and other factors
-        # Calculate compatibility components
-        openness = char1.personality_traits.get_openness()
-        extraversion = char1.personality_traits.get_extraversion()
-        conscientiousness = char1.personality_traits.get_conscientiousness()
-        agreeableness = char1.personality_traits.get_agreeableness()
-        neuroticism = char1.personality_traits.get_neuroticism()
-        partner_agreeableness = char2.personality_traits.get_agreeableness()
-        partner_conscientiousness = char2.personality_traits.get_conscientiousness()
-        partner_extraversion = char2.personality_traits.get_extraversion()
-        partner_neuroticism = char2.personality_traits.get_neuroticism()
-        partner_openness = char2.personality_traits.get_openness()
-
-        openness_compat = 1 - abs(openness - partner_openness) / 8
-        extraversion_compat = 1 - abs(extraversion - partner_extraversion) / 8
-        conscientiousness_compat = (
-            1 - abs(conscientiousness - partner_conscientiousness) / 8
-        )
-        agreeableness_compat = 1 - abs(agreeableness - partner_agreeableness) / 8
-        neuroticism_compat = 1 - abs(neuroticism - partner_neuroticism) / 8
-
-        # Interaction terms
-        openness_conscientiousness_interaction = (
-            (openness + partner_openness)
-            / 2
-            * (1 - abs(conscientiousness - partner_conscientiousness) / 8)
-        )
-        extraversion_agreeableness_interaction = (
-            (extraversion + partner_extraversion)
-            / 2
-            * (1 - abs(agreeableness - partner_agreeableness) / 8)
-        )
-        neuroticism_stabilization = (1 - abs(neuroticism - partner_neuroticism) / 8) * (
-            1 - (neuroticism + partner_neuroticism) / 16
-        )
-
-        # Weights for each trait's influence on compatibility
-        assert self.G.has_node(char1) and self.G.has_node(char2)
-        weights = self.calculate_dynamic_weights(historical=historical)
-
-        # Calculate weighted compatibility score
-        compatibility_score = (
-            openness_compat * weights["openness"]
-            + extraversion_compat * weights["extraversion"]
-            + conscientiousness_compat * weights["conscientiousness"]
-            + agreeableness_compat * weights["agreeableness"]
-            + neuroticism_compat * weights["neuroticism"]
-            + openness_conscientiousness_interaction
-            * weights["openness_conscientiousness_interaction"]
-            + extraversion_agreeableness_interaction
-            * weights["extraversion_agreeableness_interaction"]
-            + neuroticism_stabilization * weights["neuroticism_stabilization"]
-        )
-
-        return max(0.0, min(1.0, compatibility_score))
+        """
+        Calculate romantic compatibility between two characters.
+        Delegates to SocialModel for calculation.
+        """
+        return self.social_model.calculate_romance_compatibility(char1, char2, historical)
 
     def calculate_romance_interest(
         self,
@@ -1212,189 +1133,13 @@ class GraphManager:
         interaction_frequency,
         emotional_impact,
     ):
-        Character = importlib.import_module("tiny_characters").Character
-        wealth_motive = char1.get_motives().get_wealth_motive().score
-        wealth_motive = cached_sigmoid_motive_scale_approx_optimized(wealth_motive)
-        partner_wealth_motive = char2.get_motives().get_wealth_motive().score
-        partner_wealth_motive = cached_sigmoid_motive_scale_approx_optimized(
-            partner_wealth_motive
-        )
-
-        family_motive = char1.get_motives().get_family_motive().score
-        family_motive = cached_sigmoid_motive_scale_approx_optimized(family_motive)
-        partner_family_motive = char2.get_motives().get_family_motive().score
-        partner_family_motive = cached_sigmoid_motive_scale_approx_optimized(
-            partner_family_motive
-        )
-
-        wealth_money = char1.wealth_money
-        # wealth money can be very large, so we need to normalize it using a sigmoid function
-        wealth_money = tanh_scaling_raw(
-            wealth_money,
-            data_max=(
-                self.get_maximum_attribute_value("wealth_money")
-                if self.get_maximum_attribute_value("wealth_money")
-                else 100000
-            ),
-            data_min=0,
-            data_avg=(
-                self.get_average_attribute_value("wealth_money")
-                if self.get_average_attribute_value("wealth_money")
-                else 50000
-            ),
-            data_std=(
-                self.get_stddev_attribute_value("wealth_money")
-                if self.get_stddev_attribute_value("wealth_money")
-                else 25000
-            ),
-        )
-
-        partner_wealth_money = char2.wealth_money
-        partner_wealth_money = tanh_scaling_raw(
-            partner_wealth_money,
-            data_max=(
-                self.get_maximum_attribute_value("wealth_money")
-                if self.get_maximum_attribute_value("wealth_money")
-                else 100000
-            ),
-            data_min=0,
-            data_avg=(
-                self.get_average_attribute_value("wealth_money")
-                if self.get_average_attribute_value("wealth_money")
-                else 50000
-            ),
-            data_std=(
-                self.get_stddev_attribute_value("wealth_money")
-                if self.get_stddev_attribute_value("wealth_money")
-                else 25000
-            ),
-        )
-        wealth_differenceab = abs(wealth_money - partner_wealth_money)
-        wealth_differenceba = abs(partner_wealth_money - wealth_money)
-
-        beauty_motive = char1.get_motives().get_beauty_motive().score
-        beauty_motive = cached_sigmoid_motive_scale_approx_optimized(beauty_motive)
-
-        partner_beauty_motive = char2.get_motives().get_beauty_motive().score
-        partner_beauty_motive = cached_sigmoid_motive_scale_approx_optimized(
-            partner_beauty_motive
-        )
-
-        luxury_motive = char1.get_motives().get_luxury_motive().score
-        luxury_motive = cached_sigmoid_motive_scale_approx_optimized(luxury_motive)
-        partner_luxury_motive = char2.get_motives().get_luxury_motive().score
-        partner_luxury_motive = cached_sigmoid_motive_scale_approx_optimized(
-            partner_luxury_motive
-        )
-
-        stability_motive = char1.get_motives().get_stability_motive().score
-        stability_motive = cached_sigmoid_motive_scale_approx_optimized(
-            stability_motive
-        )
-        partner_stability_motive = char2.get_motives().get_stability_motive().score
-        partner_stability_motive = cached_sigmoid_motive_scale_approx_optimized(
-            partner_stability_motive
-        )
-
-        control_motive = char1.get_motives().get_control_motive().score
-        control_motive = cached_sigmoid_motive_scale_approx_optimized(control_motive)
-        partner_control_motive = char2.get_motives().get_control_motive().score
-        partner_control_motive = cached_sigmoid_motive_scale_approx_optimized(
-            partner_control_motive
-        )
-
-        material_goods_motive = char1.get_motives().get_material_goods_motive().score
-        material_goods_motive = cached_sigmoid_motive_scale_approx_optimized(
-            material_goods_motive
-        )
-        partner_material_goods_motive = (
-            char2.get_motives().get_material_goods_motive().score
-        )
-        partner_material_goods_motive = cached_sigmoid_motive_scale_approx_optimized(
-            partner_material_goods_motive
-        )
-
-        shelter_motive = char1.get_motives().get_shelter_motive().score
-        shelter_motive = cached_sigmoid_motive_scale_approx_optimized(shelter_motive)
-        partner_shelter_motive = char2.get_motives().get_shelter_motive().score
-        partner_shelter_motive = cached_sigmoid_motive_scale_approx_optimized(
-            partner_shelter_motive
-        )
-
-        beauty = char1.beauty
-        partner_beauty = char2.beauty
-        beauty_difference = abs(beauty - partner_beauty)
-
-        base_libido = char1.get_base_libido()
-        libido = (
-            base_libido
-            + ((romance_value / 10) * romance_compat)
-            + partner_beauty
-            + char1.energy
-            + char1.get_motives().get_family_motive().score
-        )
-        base_libido = tanh_scaling_raw(
-            base_libido,
-            data_max=(
-                self.get_maximum_attribute_value("base_libido")
-                if self.get_maximum_attribute_value("base_libido")
-                else 100
-            ),
-            data_min=0,
-            data_avg=(
-                self.get_average_attribute_value("base_libido")
-                if self.get_average_attribute_value("base_libido")
-                else 50
-            ),
-            data_std=(
-                self.get_stddev_attribute_value("base_libido")
-                if self.get_stddev_attribute_value("base_libido")
-                else 25
-            ),
-        )
-        partner_base_libido = char2.get_base_libido()
-        libido_difference = abs(base_libido - partner_base_libido)
-
-        age = char1.age
-        partner_age = char2.age
-        age_difference = abs(age - partner_age)
-
-        control = char1.get_control()
-        partner_control = char2.get_control()
-        control_difference = abs(control - partner_control)
-
-        stability = char1.stability
-        partner_stability = char2.stability
-        stability_difference = abs(stability - partner_stability)
-
-        agreeableness = char1.personality_traits.get_agreeableness()
-        partner_agreeableness = char2.personality_traits.get_agreeableness()
-        agreeableness_difference = abs(agreeableness - partner_agreeableness)
-
-        success = char1.success
-        partner_success = char2.success
-        success_difference = abs(success - partner_success)
-
-        shelter = char1.shelter
-        partner_shelter = char2.shelter
-        shelter_difference = abs(shelter - partner_shelter)
-
-        luxury = char1.luxury
-        partner_luxury = char2.luxury
-        luxury_difference = abs(luxury - partner_luxury)
-
-        monogamy = char1.monogamy
-        partner_monogamy = char2.monogamy
-        monogamy_difference = abs(monogamy - partner_monogamy)
-
-        factor_a1 = (control_motive - partner_control) + partner_agreeableness
-        factor_a2 = (partner_control_motive - control) + agreeableness
-
-        factor_b1 = (wealth_motive * partner_wealth_money) - (
-            abs(partner_luxury_motive - luxury_motive) * 0.1
-        )
-        factor_b2 = (partner_wealth_motive * wealth_money) - (
-            abs(luxury_motive - partner_luxury_motive) * 0.1
+        """
+        Calculate romance interest between two characters.
+        Delegates to SocialModel for calculation.
+        """
+        return self.social_model.calculate_romance_interest(
+            char1, char2, romance_compat, romance_value, relationship_type,
+            strength, historical, trust, interaction_frequency, emotional_impact
         )
 
     def calc_distance_cost(self, distance, char1, char2):
@@ -2657,43 +2402,17 @@ class GraphManager:
 
     def retrieve_characters_relationships(self, character):
         """
-        Retrieves all relationships of a given character, showing the type and strength of each.
-
-        Parameters:
-            character (str): The character node identifier.
-
-        Returns:
-            dict: A dictionary with each connected character and details of the relationship.
-
-        Usage example:
-            relationships = graph_manager.retrieve_characters_relationships('char1')
-            print("Character relationships:", relationships)
+        Retrieve all relationships of a given character.
+        Delegates to SocialModel for calculation.
         """
-        relationships = {
-            neighbor: self.G[character][neighbor]
-            for neighbor in self.G.neighbors(character)
-        }
-        return relationships
+        return self.social_model.retrieve_characters_relationships(character)
 
     def update_relationship_status(self, char1, char2, update_info):
         """
-        Updates the relationship status between two characters, modifying attributes like emotional or historical data.
-
-        Parameters:
-            char1 (str): Node identifier for the first character.
-            char2 (str): Node identifier for the second character.
-            update_info (dict): A dictionary with the attributes to update.
-
-        Usage example:
-            update_info = {'emotional': 5, 'historical': 10}
-            graph_manager.update_relationship_status('char1', 'char2', update_info)
+        Update relationship status between two characters.
+        Delegates to SocialModel for calculation.
         """
-        if self.G.has_edge(char1, char2):
-            for key, value in update_info.items():
-                if key in self.G[char1][char2]:
-                    self.G[char1][char2][key] += value
-                else:
-                    self.G[char1][char2][key] = value
+        return self.social_model.update_relationship_status(char1, char2, update_info)
 
     def analyze_location_popularity(self):
         """
@@ -2763,125 +2482,10 @@ class GraphManager:
 
     def analyze_character_relationships(self, character_id):
         """
-        Analyzes the relationships of a specific character based on historical interactions and emotional bonds.
-
-        Parameters:
-            character_id (str): Node identifier for the character.
-
-        Returns:
-            dict: A dictionary containing relationship details with other characters.
-
-        Usage example:
-            relationships = graph_manager.analyze_character_relationships('char1')
-            print("Relationship details:", relationships)
+        Analyze relationships for a specific character.
+        Delegates to SocialModel for calculation.
         """
-        Character = importlib.import_module("tiny_characters").Character
-
-        relationships = {}
-        node = None
-        if isinstance(character_id, str):
-            if self.get_character(character_id) is None:
-                raise ValueError(
-                    "\nCharacter does not exist in the graph: \n\n", character_id
-                )
-
-            node = self.get_character(character_id)
-            logging.info(f"Found node: \n\n{node.name}: \n")
-        elif isinstance(character_id, Character):
-            node = self.get_node(character_id)
-        try:
-            logging.info(f"with attributes:\n {list(self.G.nodes[node])}\n")
-        except Exception as e:
-            logging.info(f"Error: {e} for node {node}\n")
-        if node is None or node == {}:
-            try:
-                if isinstance(character_id, Character):
-                    logging.info(
-                        f"Node: {character_id.name} not found. Trying to find it again.\n"
-                    )
-                else:
-                    logging.info(
-                        f"Node: {character_id} not found. Trying to find it again.\n"
-                    )
-                node = self.G[character_id]
-            except Exception as eb:
-                if isinstance(character_id, Character):
-                    logging.info(f"Error finding node {character_id.name}: {eb}\n")
-                else:
-                    logging.info(f"Error finding node {character_id}: {eb}\n")
-        if node is None or node == {}:
-            if isinstance(character_id, Character):
-                logging.info(
-                    f"Node: {character_id.name} still not found. Graph says {self.G.has_node(node)} \n"
-                )
-                # Search for node with character name
-                for n in self.G.nodes:
-                    if self.G.nodes[n].get("name") == character_id.name:
-                        node = n
-                        break
-                if node is not None and node != {}:  # Found the node
-                    logging.info(
-                        f"Found the node with character name: {character_id.name} as {node}\n"
-                    )
-                    # Compare and find the differences between the searched node and the provided character
-                    for key, value in self.G.nodes[node].items():
-                        if key not in character_id.__dict__:
-                            logging.info(
-                                f"Key: {key} not in character {character_id.name} attributes\n"
-                            )
-                        elif value != character_id.__dict__[key]:
-                            logging.info(
-                                f"Key: {key} has different value in character {character_id.name} attributes\n"
-                            )
-
-            else:
-                logging.info(
-                    f"Node: {character_id} still not found. Graph says {self.G.has_node(node)}\n"
-                )
-                # Search for node with character name
-                for n in self.G.nodes:
-                    if self.G.nodes[n].get("name") == character_id:
-                        node = n
-                        break
-                if node is not None and node != {}:  # Found the node
-                    logging.info(
-                        f"Found the node with character name: {character_id} as {node}\n"
-                    )
-            if node is None or node == {}:
-                logging.info(
-                    f"Node: {character_id} still not found. All nodes: {list(self.G)}\n"
-                )
-                exit(42)
-            return relationships
-
-        try:
-            logging.info(
-                f"\nNode: \n{node.name} \nhas attributes: \n{list(self.G.nodes[node])}\n\n"
-            )
-        except Exception as ee:
-            logging.info(f"Error printing node: {ee}")
-        try:
-            logging.info(f"Node: {node.name} has neighbors: {list(self.G[node])}\n")
-            for neighbor in self.G[node]:
-                relationships[neighbor] = {
-                    "emotional": self.G[node][neighbor].get("emotional", 0),
-                    "historical": self.G[node][neighbor].get("historical", 0),
-                    "trust": self.G[node][neighbor].get("trust", 0),
-                    "strength": self.G[node][neighbor].get("strength", 0),
-                    "interaction_frequency": self.G[node][neighbor].get(
-                        "interaction_frequency", 0
-                    ),
-                }
-        except Exception as eee:
-            if isinstance(character_id, Character):
-                logging.info(
-                    f"Error in relationships for character {character_id.name}: {eee}"
-                )
-            else:
-                logging.info(
-                    f"Error in relationships for character {character_id}: {eee}"
-                )
-        return relationships
+        return self.social_model.analyze_character_relationships(character_id)
 
     def calculate_motives(self, character: Character):
         Character = importlib.import_module("tiny_characters").Character
@@ -3969,117 +3573,13 @@ class GraphManager:
         influence_factors=None,
     ):
         """
-        Calculates the social influence on a character's decisions, considering various edge attributes,
-        and applies multiple decay functions based on interaction characteristics.
-
-        Parameters:
-            character (str): Node identifier for the character.
-            influence_attributes (list of tuples): List of tuples specifying the edge attributes and their weight in the calculation.
-            memory_topic (str): A topic to query from memories that might influence the decision.
-
-        Returns:
-            float: Weighted influence score affecting the character's decisions.
+        Calculate social influence on a character's decisions.
+        Delegates to SocialModel for calculation.
         """
-        total_influence = 0
-        relationships = self.get_neighbors_with_attributes(character, type="character")
-        memory_influence = 0
-        if influence_factors is None:
-            influence_factors = {
-                "friend": {
-                    "weight": 1,
-                    "attributes": {
-                        "trust": 1,
-                        "historical": 1,
-                        "interaction_frequency": 1,
-                        "emotional_impact": 1,
-                    },
-                },
-                "enemy": {
-                    "weight": -1,
-                    "attributes": {
-                        "trust": -1,
-                        "conflict": 1,
-                        "trust": 1,
-                        "historical": 0.4,
-                        "interaction_frequency": 0.4,
-                        "emotional_impact": -1,
-                    },
-                },
-                "neutral": {"weight": 0, "attributes": {"trust": 0}},
-            }
-        if influence_attributes is None:
-            influence_attributes = [("trust", 1)]
-
-        # Query memories if a topic is provided
-
-        # Calculate social influence based on current relationships
-
-        for charnode in relationships:
-            relationship_type = self.G[character][charnode].get("relationship_type")
-            attributes = self.G[character][charnode]
-            if relationship_type in influence_factors:
-                factor = influence_factors[relationship_type]
-                relationship_weight = factor.get("strength", 1)
-                attribute_score = sum(
-                    attributes.get(attr, 0) * factor.get("attributes", {}).get(attr, 1)
-                    for attr in factor.get("attributes", [])
-                )
-                total_influence += relationship_weight * attribute_score
-                relationship_weights += abs(relationship_weight)
-
-        # Normalize social influence if needed
-        if relationship_weights > 0:
-            total_influence /= relationship_weights
-        memories = []
-        # Integrate memories from 'tiny_memories.py'
-        if memory_weight > 0:
-            if memory_topic:
-                memories.extend(self.query_memories(character, memory_topic))
-                memory_influence = sum(
-                    mem["sentiment"] * mem["relevance"] for mem in memories
-                )
-                memory_influence *= memory_weight  # Apply weighting to memory influence
-                total_influence = (
-                    1 - memory_weight
-                ) * total_influence + memory_weight * memory_influence
-            if decision_context:
-                memories.extend(self.query_memories(character, decision_context))
-            memory_influence = sum(
-                mem["sentiment"] * mem["relevance"] for mem in memories
-            )
-            total_influence = (
-                1 - memory_weight
-            ) * total_influence + memory_weight * memory_influence
-
-        # Apply decay functions to influence calculation
-        for _, target, attributes in relationships:
-            distance = nx.shortest_path_length(
-                self.G, character, target
-            )  # Calculates distance between nodes
-            influence = 0
-            for attr, weight in influence_attributes or []:
-                attr_value = attributes.get(attr, 0)
-                # Apply specific decay functions
-                time_decay = self.time_based_decay(
-                    attributes.get("time_since_last_interaction", 0)
-                )
-                frequency_decay = self.frequency_based_decay(
-                    attributes.get("frequency_of_interaction", 0)
-                )
-                advanced_decay = self.advanced_decay(
-                    distance, attributes
-                )  # Applies advanced decay based on distance and other factors
-                influence += (
-                    attr_value * weight * time_decay * frequency_decay * advanced_decay
-                )
-            total_influence += influence
-
-        total_influence += memory_influence
-        # Normalize the total influence score
-        if total_influence > 0:
-            total_influence /= len(relationships) + (1 if memory_topic else 0)
-
-        return total_influence
+        return self.social_model.calculate_social_influence(
+            character, influence_attributes, memory_topic, memory_weight,
+            decision_context, influence_factors
+        )
 
     # Including the provided decay functions here for completeness
     def time_based_decay(self, time_since):
