@@ -768,10 +768,14 @@ class SocialModel:
     # Helper methods to interface with world_state
     def _get_neighbors(self, node):
         """Get neighbors of a node from world_state."""
-        if hasattr(self.world_state, 'neighbors'):
-            return list(self.world_state.neighbors(node))
-        elif hasattr(self.world_state, 'G'):
-            return list(self.world_state.G.neighbors(node))
+        try:
+            if hasattr(self.world_state, 'neighbors'):
+                return list(self.world_state.neighbors(node))
+            elif hasattr(self.world_state, 'G'):
+                return list(self.world_state.G.neighbors(node))
+        except:
+            # Node doesn't exist or has no neighbors
+            pass
         return []
         
     def _get_neighbors_with_attributes(self, node, type=None):
