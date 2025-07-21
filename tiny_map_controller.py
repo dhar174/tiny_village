@@ -30,6 +30,74 @@ class MapController:
         self.show_location_info = False
         self.info_display_time = 0
         self.info_timeout = 5.0  # How long to show info panels
+        # Building management - convert legacy building data to Building objects
+        self.buildings = []  # List of Building objects
+        self.location_manager = None  # Will be set if LocationManager is used
+        self._initialize_buildings()
+    
+    def _initialize_buildings(self):
+        """Initialize Building objects from map_data"""
+        try:
+            from tiny_buildings import Building
+            # Convert legacy building data to Building objects if they exist
+            for building_data in self.map_data.get("buildings", []):
+                if isinstance(building_data, dict) and "rect" in building_data:
+                    rect = building_data["rect"]
+                    building = Building(
+                        name=building_data.get("name", "Unknown Building"),
+                        x=rect.left,
+                        y=rect.top, 
+                        width=rect.width,
+                        height=rect.height,
+                        length=rect.height,  # Use height as length for compatibility
+                        building_type=building_data.get("type", "building")
+                    )
+                    self.buildings.append(building)
+        except ImportError:
+            # Fall back to legacy building handling if imports fail
+            pass
+    
+    def add_building(self, building):
+        """Add a Building object to the map"""
+        self.buildings.append(building)
+        # Also add it to pathfinding obstacles
+        location = building.get_location()
+        self.add_dynamic_obstacle((location.x, location.y, location.width, location.height))
+    
+    def get_buildings_at_position(self, position):
+        """Get all buildings that contain the given position"""
+        x, y = position
+        buildings_at_pos = []
+        for building in self.buildings:
+            if building.is_within_building((x, y)):
+                buildings_at_pos.append(building)
+        return buildings_at_pos
+    
+    def get_building_by_location_properties(self, min_security=None, min_popularity=None, 
+                                          required_activities=None):
+        """Find buildings based on location properties"""
+        matching_buildings = []
+        for building in self.buildings:
+            location = building.get_location()
+            
+            # Check security requirement
+            if min_security is not None and location.security < min_security:
+                continue
+                
+            # Check popularity requirement  
+            if min_popularity is not None and location.popularity < min_popularity:
+                continue
+                
+            # Check activity requirements
+            if required_activities:
+                available_activities = set(location.activities_available)
+                required_set = set(required_activities)
+                if not required_set.issubset(available_activities):
+                    continue
+                    
+            matching_buildings.append(building)
+        
+        return matching_buildings
 
     def add_dynamic_obstacle(self, position: Tuple[int, int]):
         """Add a dynamic obstacle that can be updated in real-time"""
@@ -260,9 +328,32 @@ class MapController:
             # Draw POI center
             pygame.draw.circle(surface, (255, 255, 255), (poi.x, poi.y), 3)
 
-        # Render buildings on the map
-        for building in self.map_data["buildings"]:
-            pygame.draw.rect(surface, (150, 150, 150), building["rect"])
+#         # Render buildings on the map
+#         for building in self.map_data["buildings"]:
+#             pygame.draw.rect(surface, (150, 150, 150), building["rect"])
+        # Render buildings on the map using Building objects
+        for building in self.buildings:
+            location = building.get_location()
+            # Create a rect from location data
+            rect = pygame.Rect(location.x, location.y, location.width, location.height)
+            
+            # Color based on building type and properties
+            color = self._get_building_color(building)
+            pygame.draw.rect(surface, color, rect)
+            
+            # Optional: Add security/popularity indicators
+            if hasattr(building, 'get_security_level'):
+                security = building.get_security_level()
+                if security > 7:
+                    # Draw a small security indicator
+                    pygame.draw.circle(surface, (0, 255, 0), 
+                                     (rect.centerx, rect.centery), 3)
+        
+        # Fall back to legacy building rendering if no Building objects
+        if not self.buildings:
+            for building in self.map_data.get("buildings", []):
+                if "rect" in building:
+                    pygame.draw.rect(surface, (150, 150, 150), building["rect"])
 
         # Render characters on the map
         for character in self.characters.values():
@@ -273,6 +364,32 @@ class MapController:
             pygame.draw.circle(
                 surface, (255, 0, 0), self.selected_character.position, 10, 2
             )
+    
+    def _get_building_color(self, building):
+        """Get color for building based on its properties"""
+        # Default building color
+        base_color = (150, 150, 150)
+        
+        try:
+            building_type = getattr(building, 'building_type', 'building')
+            if building_type == 'house':
+                base_color = (139, 69, 19)  # Brown for houses
+            elif building_type == 'commercial':
+                base_color = (70, 130, 180)  # Steel blue for commercial
+            elif building_type == 'office':
+                base_color = (105, 105, 105)  # Dim gray for offices
+                
+            # Modify based on popularity (brighter = more popular)
+            if hasattr(building, 'get_popularity_level'):
+                popularity = building.get_popularity_level()
+                brightness_factor = 1.0 + (popularity / 20.0)  # Up to 50% brighter
+                base_color = tuple(min(255, int(c * brightness_factor)) for c in base_color)
+                
+        except Exception:
+            # Fall back to default color if anything goes wrong
+            pass
+            
+        return base_color
 
         # Render selected location/POI info
         if self.show_location_info and (self.selected_location or self.selected_poi):
@@ -500,9 +617,14 @@ class MapController:
         print(f"Selected {self.selected_character.name}")
 
     def is_building(self, position):
-        # Check if a building is at the clicked position
-        for building in self.map_data["buildings"]:
-            if building["rect"].collidepoint(position):
+        # Check if a building is at the clicked position using Building objects
+        buildings_at_pos = self.get_buildings_at_position(position)
+        if buildings_at_pos:
+            return buildings_at_pos[0]  # Return the first building found
+            
+        # Fall back to legacy building check
+        for building in self.map_data.get("buildings", []):
+            if "rect" in building and building["rect"].collidepoint(position):
                 return building
         return None
 
@@ -510,7 +632,59 @@ class MapController:
         # Enter a building and interact with it
         building = self.is_building(position)
         if building:
-            print(f"Entering {building['name']}")
+            # Handle Building objects vs legacy building data
+            if hasattr(building, 'name'):
+                building_name = building.name
+                print(f"Entering {building_name}")
+                
+                # Show available activities
+                if hasattr(building, 'get_available_activities'):
+                    activities = building.get_available_activities()
+                    if activities:
+                        print(f"Available activities: {', '.join(activities)}")
+                        
+                # Show location properties
+                if hasattr(building, 'get_security_level'):
+                    security = building.get_security_level()
+                    popularity = building.get_popularity_level()
+                    print(f"Security level: {security}, Popularity: {popularity}")
+            else:
+                # Legacy building data
+                building_name = building.get('name', 'Unknown Building')
+                print(f"Entering {building_name}")
+    
+    def find_safe_locations(self, min_security=7):
+        """Find locations with high security for characters seeking safety"""
+        return self.get_building_by_location_properties(min_security=min_security)
+    
+    def find_popular_locations(self, min_popularity=6):
+        """Find popular locations for social characters"""
+        return self.get_building_by_location_properties(min_popularity=min_popularity)
+    
+    def find_locations_with_activity(self, activity):
+        """Find locations that offer a specific activity"""
+        return self.get_building_by_location_properties(required_activities=[activity])
+    
+    def get_location_recommendations_for_character(self, character_traits):
+        """Get location recommendations based on character traits"""
+        recommendations = []
+        
+        # Safety-seeking characters prefer secure locations
+        if character_traits.get('risk_aversion', 5) > 7:
+            safe_locations = self.find_safe_locations(min_security=7)
+            recommendations.extend([(loc, 'safety') for loc in safe_locations])
+        
+        # Social characters prefer popular locations
+        if character_traits.get('sociability', 5) > 7:
+            popular_locations = self.find_popular_locations(min_popularity=6)
+            recommendations.extend([(loc, 'social') for loc in popular_locations])
+        
+        # Rest-seeking characters prefer houses with rest activities
+        if character_traits.get('energy_level', 5) < 3:
+            rest_locations = self.find_locations_with_activity('rest')
+            recommendations.extend([(loc, 'rest') for loc in rest_locations])
+            
+        return recommendations
 
 
 class AStarPathfinder:

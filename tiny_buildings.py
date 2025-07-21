@@ -82,28 +82,24 @@ class Building:
         
         # Create or assign location for this building
         if location is None:
-            # Create a default location for this building
-            self.location = Location(
-                name=f"{name} Location",
-                x=x,
-                y=y,
-                width=width,
-                height=length,  # Note: using length as height for 2D representation
-                action_system=action_system,
-                security=0,  # Default values - can be customized
-                popularity=0,
-            )
-            # Add building-specific activities
-            self.location.add_activity(f"Visit {name}")
-            if building_type == "shop":
-                self.location.add_activity("Shopping")
-            elif building_type == "restaurant":
-                self.location.add_activity("Dining")
-            elif building_type == "house":
-                self.location.add_activity("Residential")
-        else:
-            self.location = location
+           
+
             
+        # Create Location instance for this building
+        self.location = Location(
+            name=f"{name} Location",
+            x=x,
+            y=y,
+            width=width,
+            height=length,  # Use length as height for location
+            action_system=action_system,
+            security=self._calculate_security(),
+            popularity=self._calculate_popularity(),
+        )
+        
+        # Add building-specific activities to location
+        self._setup_location_activities()
+        
         self.possible_interactions = [
             Action(
                 "Enter Building",
@@ -113,7 +109,8 @@ class Building:
                 effect_dict["Enter Building"],
             )
         ]
-
+        else:
+            self.location = location
     def get_possible_interactions(self, requester):
         return [
             action
@@ -276,6 +273,87 @@ class Building:
 
     def get_coordinates(self):
         return self.coordinates_location
+    
+    def _calculate_security(self):
+        """Calculate security level based on building properties"""
+        # Base security value
+        security = 5
+        
+        # Larger buildings tend to be more secure
+        if self.area_val > 1000:
+            security += 2
+        elif self.area_val > 500:
+            security += 1
+            
+        # Multi-story buildings are more secure
+        if self.stories > 1:
+            security += 1
+            
+        # Building type affects security
+        if self.building_type == "house":
+            security += 2  # Houses are generally safe
+        elif self.building_type == "commercial":
+            security -= 1  # Commercial areas may be less secure
+            
+        return max(0, min(10, security))  # Clamp between 0-10
+    
+    def _calculate_popularity(self):
+        """Calculate popularity based on building properties"""
+        # Base popularity
+        popularity = 3
+        
+        # Larger buildings attract more people
+        if self.area_val > 2000:
+            popularity += 3
+        elif self.area_val > 1000:
+            popularity += 2
+        elif self.area_val > 500:
+            popularity += 1
+            
+        # Building type affects popularity
+        if self.building_type == "commercial":
+            popularity += 3  # Commercial buildings are popular
+        elif self.building_type == "house":
+            popularity -= 1  # Houses are more private
+            
+        return max(0, min(10, popularity))  # Clamp between 0-10
+    
+    def _setup_location_activities(self):
+        """Setup activities available at this building location"""
+        # Add basic building activities
+        self.location.add_activity("enter_building")
+        self.location.add_activity("observe_building")
+        
+        # Add activities based on building type
+        if self.building_type == "house":
+            self.location.add_activity("visit_residents")
+            self.location.add_activity("rest")
+        elif self.building_type == "commercial":
+            self.location.add_activity("shop")
+            self.location.add_activity("conduct_business")
+        elif self.building_type == "office":
+            self.location.add_activity("work")
+            self.location.add_activity("meet")
+    
+    def get_location(self):
+        """Get the Location instance associated with this building"""
+        return self.location
+    
+    def get_security_level(self):
+        """Get the security level of this building's location"""
+        return self.location.security
+    
+    def get_popularity_level(self):
+        """Get the popularity level of this building's location"""
+        return self.location.popularity
+    
+    def get_available_activities(self):
+        """Get list of activities available at this building"""
+        return self.location.activities_available
+    
+    def is_within_building(self, character_location):
+        """Check if a character location is within this building"""
+        return self.location.contains_point(*character_location)
 
 
 class House(Building):
@@ -325,6 +403,9 @@ class House(Building):
         self.price = self.calculate_price(price_value)
         self.x = x
         self.y = y
+        
+        # Override location activities for houses
+        self._setup_house_activities()
 
     def __str__(self):
         return (
@@ -416,6 +497,31 @@ class House(Building):
 
     def get_length(self):
         return self.length
+    
+    def _setup_house_activities(self):
+        """Setup house-specific activities"""
+        # Clear existing activities and add house-specific ones
+        self.location.activities_available.clear()
+        
+        # Basic house activities
+        self.location.add_activity("enter_house")
+        self.location.add_activity("rest")
+        self.location.add_activity("sleep")
+        self.location.add_activity("relax")
+        
+        # Activities based on number of bedrooms and bathrooms
+        if self.bedrooms > 1:
+            self.location.add_activity("visit_family")
+        if self.bathrooms > 0:
+            self.location.add_activity("use_facilities")
+        if self.stories > 1:
+            self.location.add_activity("explore_floors")
+            
+        # Activities based on shelter value and beauty
+        if self.shelter_value > 5:
+            self.location.add_activity("secure_shelter")
+        if self.beauty_value > 10:
+            self.location.add_activity("enjoy_aesthetics")
 
     def to_dict(self):
         return {

@@ -10,6 +10,8 @@ try:
 except ImportError:
     # Fallback to tiny_types if actions module is not available
     from tiny_types import Action, State, ActionSystem
+    logging.warning("Failed to import tiny modules; defaulting to tiny_types. Functions may not work!")
+
 
 effect_dict = {
     "Enter Location Boundary": [
