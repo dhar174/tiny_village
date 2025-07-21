@@ -165,7 +165,7 @@ class StrategyManager:
             
         # Use LLM when character is in crisis (low health, mental health, etc.)
         character_state = self.get_character_state_dict(character)
-        crisis_threshold = 0.3  # Below 30% on critical stats
+        crisis_threshold = self.CRISIS_THRESHOLD  # Below 30% on critical stats
         
         critical_stats = ['health', 'mental_health', 'energy']
         in_crisis = any(character_state.get(stat, 1.0) < crisis_threshold for stat in critical_stats)
