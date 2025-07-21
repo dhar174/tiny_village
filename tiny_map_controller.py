@@ -51,9 +51,7 @@ class MapController:
         self.buildings.append(building)
         # Also add it to pathfinding obstacles
         location = building.get_location()
-        for x in range(int(location.x), int(location.x + location.width)):
-            for y in range(int(location.y), int(location.y + location.height)):
-                self.add_dynamic_obstacle((x, y))
+        self.add_dynamic_obstacle((location.x, location.y, location.width, location.height))
     
     def get_buildings_at_position(self, position):
         """Get all buildings that contain the given position"""
