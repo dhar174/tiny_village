@@ -2648,7 +2648,13 @@ class PromptBuilder:
                 prompt += f"\n{context_text}"
 
         # Add memory integration - prioritize new integration over legacy memories parameter
-        relevant_memories = context['memories'] if include_memory_integration else (memories or [])
+        relevant_memories = []
+        if include_memory_integration:
+            # Use new memory integration from context
+            relevant_memories = context.get('memories', [])
+        elif memories:
+            # Fallback to legacy memories parameter
+            relevant_memories = memories
         if relevant_memories:
             memory_text = self.format_memories_for_prompt(relevant_memories)
             if memory_text:
