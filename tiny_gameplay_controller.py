@@ -11,6 +11,10 @@ MAX_SPEED = 5.0
 MIN_SPEED = 0.1
 SPEED_STEP = 0.1
 
+# UI Layout Constants
+ACHIEVEMENT_SPACING = 25
+ACHIEVEMENT_LINE_SPACING = 18
+
 WEATHER_ENERGY_EFFECTS = {
     'rainy': 0.5,
     # 'snowy': 1.0, # easy to add more
@@ -25,6 +29,323 @@ from tiny_strategy_manager import StrategyManager
 from tiny_event_handler import EventHandler, Event
 from tiny_types import GraphManager
 from tiny_map_controller import MapController
+
+class UIPanel:
+    """Base class for UI panels in the modular UI system."""
+    
+    def __init__(self, name: str, position: tuple = (0, 0), size: tuple = None, visible: bool = True):
+        self.name = name
+        self.position = position  # (x, y)
+        self.size = size  # (width, height) - None means auto-size
+        self.visible = visible
+        self.background_color = None
+        self.border_color = None
+        self.padding = 5
+        
+    def render(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        """
+        Render the panel to the screen.
+        
+        Args:
+            screen: The pygame surface to render to
+            controller: The GameplayController instance for accessing game data
+            fonts: Dictionary of font objects by size/type
+            
+        Returns:
+            int: The height of the rendered panel
+        """
+        if not self.visible:
+            return 0
+            
+        return self._render_content(screen, controller, fonts)
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        """Override this method in subclasses to implement specific panel rendering."""
+        return 0
+    
+    def toggle_visibility(self):
+        """Toggle panel visibility."""
+        self.visible = not self.visible
+
+
+class CharacterInfoPanel(UIPanel):
+    """Panel for displaying character count and basic info."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        font = fonts.get('normal', pygame.font.Font(None, 24))
+        x, y = self.position
+        
+        # Character count
+        char_count_text = font.render(f"Characters: {len(controller.characters)}", True, (255, 255, 255))
+        screen.blit(char_count_text, (x, y))
+        
+        return char_count_text.get_height() + self.padding
+
+
+class GameStatusPanel(UIPanel):
+    """Panel for displaying game status (pause, time, speed)."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        font = fonts.get('normal', pygame.font.Font(None, 24))
+        small_font = fonts.get('small', pygame.font.Font(None, 18))
+        x, y = self.position
+        current_y = y
+        
+        # Pause status
+        if getattr(controller, "paused", False):
+            pause_text = font.render("PAUSED", True, (255, 255, 0))
+            screen.blit(pause_text, (screen.get_width() - 100, 10))
+        
+        # Game time
+        if hasattr(controller, "gametime_manager") and controller.gametime_manager:
+            try:
+                game_time = controller.gametime_manager.get_calendar().get_game_time_string()
+                time_text = small_font.render(f"Time: {game_time}", True, (255, 255, 255))
+                screen.blit(time_text, (x, current_y))
+                current_y += time_text.get_height() + 2
+
+            except (AttributeError, TypeError, ValueError) as e:
+                logging.error(f"Error rendering game time: {e}")
+                pass
+        
+        # Speed indicator with caching
+        try:
+            if controller._last_time_scale_factor != controller.time_scale_factor or controller._cached_speed_text is None:
+                controller._cached_speed_text = small_font.render(
+                    f"Speed: {controller.time_scale_factor:.1f}x", True, (255, 255, 255)
+                )
+                controller._last_time_scale_factor = controller.time_scale_factor
+            
+            if controller._cached_speed_text:
+                screen.blit(controller._cached_speed_text, (x, current_y))
+                current_y += controller._cached_speed_text.get_height() + 2
+        except (AttributeError, TypeError, ValueError) as e:
+            pass  # Skip if speed rendering fails
+        
+        return current_y - y
+
+
+class WeatherPanel(UIPanel):
+    """Panel for displaying weather information."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        small_font = fonts.get('small', pygame.font.Font(None, 18))
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        x, y = self.position
+        current_y = y
+        
+        if hasattr(controller, "weather_system"):
+            weather_text = small_font.render(
+                f"Weather: {controller.weather_system['current_weather']} {controller.weather_system['temperature']}°C",
+                True, (200, 220, 255)
+            )
+            screen.blit(weather_text, (x, current_y))
+            current_y += weather_text.get_height() + 2
+            
+            # Weather effects message
+            current_weather = None
+            if isinstance(controller.weather_system, dict):
+                current_weather = controller.weather_system.get('current_weather')
+            if current_weather in WEATHER_UI_MESSAGES:
+                message, color = WEATHER_UI_MESSAGES[current_weather]
+                weather_effect_text = tiny_font.render(message, True, color)
+                screen.blit(weather_effect_text, (x, current_y))
+                current_y += weather_effect_text.get_height() + 2
+        
+        return current_y - y
+
+
+class StatsPanel(UIPanel):
+    """Panel for displaying game statistics and analytics."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        x, y = self.position
+        current_y = y
+        
+        # Game statistics
+        stats = controller.game_statistics
+        stats_text = tiny_font.render(
+            f"Actions: {stats['actions_executed']} | Failed: {stats['actions_failed']} | Recovered: {stats['errors_recovered']}",
+            True, (180, 180, 180)
+        )
+        screen.blit(stats_text, (x, current_y))
+        current_y += stats_text.get_height() + 2
+        
+        # Action analytics
+        if hasattr(controller, "action_resolver"):
+            try:
+                analytics = controller.action_resolver.get_action_analytics()
+                analytics_text = tiny_font.render(
+                    f"Success Rate: {analytics['success_rate']:.1%} | Cache: {analytics['cache_size']}",
+                    True, (150, 150, 150)
+                )
+                screen.blit(analytics_text, (x, current_y))
+                current_y += analytics_text.get_height() + 2
+
+            except Exception as e:
+                logging.error(f"Error in action analytics rendering: {e}")
+                logging.error(traceback.format_exc())
+        
+        # System health
+        if hasattr(controller, "recovery_manager"):
+            try:
+                system_status = controller.recovery_manager.get_system_status()
+                healthy_systems = sum(1 for status in system_status.values() if status == "healthy")
+                total_systems = len(system_status)
+                
+                health_color = (
+                    (0, 255, 0) if healthy_systems == total_systems
+                    else (255, 255, 0) if healthy_systems > total_systems // 2
+                    else (255, 0, 0)
+                )
+                health_text = tiny_font.render(
+                    f"Systems: {healthy_systems}/{total_systems} healthy",
+                    True, health_color
+                )
+                screen.blit(health_text, (x, current_y))
+                current_y += health_text.get_height() + 2
+
+            except Exception as e:
+                logging.error(f"Error while rendering system health: {e}")
+        
+        return current_y - y
+
+
+class AchievementPanel(UIPanel):
+    """Panel for displaying achievements."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        x, y = self.position
+        current_y = y
+        
+        # First week survived achievement
+        try:
+            survived_week = controller.global_achievements.get("village_milestones", {}).get("first_week_survived", False)
+            status_text = "Yes" if survived_week else "No"
+            achievement_render = tiny_font.render(
+                f"First Week Survived: {status_text}", True, (220, 220, 180)
+            )
+            screen.blit(achievement_render, (x, current_y))
+            current_y += achievement_render.get_height() + 2
+
+        except Exception as e:
+            logging.error(f"Error while loading achievement panel: {e}")
+            pass
+        
+        # All achievements
+        milestones = controller.global_achievements.get("village_milestones", {})
+        if milestones:
+            header = tiny_font.render("Achievements:", True, (240, 240, 200))
+            screen.blit(header, (x, current_y))
+            current_y += header.get_height() + 5
+            
+            for key, achieved in milestones.items():
+                title = key.replace("_", " ").title()
+                status = "✓" if achieved else "✗"
+                color = (180, 220, 180) if achieved else (200, 180, 180)
+                text = tiny_font.render(f"{status} {title}", True, color)
+                screen.blit(text, (x, current_y))
+                current_y += text.get_height() + 2
+        
+        return current_y - y
+
+
+class SelectedCharacterPanel(UIPanel):
+    """Panel for displaying selected character information."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        small_font = fonts.get('small', pygame.font.Font(None, 18))
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        x, y = self.position
+        current_y = y
+        
+        if (hasattr(controller.map_controller, "selected_character") 
+            and controller.map_controller.selected_character):
+            
+            char = controller.map_controller.selected_character
+            char_info = [
+                f"Selected: {char.name}",
+                f"Job: {getattr(char, 'job', 'Unknown')}",
+                f"Energy: {getattr(char, 'energy', 0)}",
+                f"Health: {getattr(char, 'health_status', 0)}",
+            ]
+            
+            # Add social and quest info
+            if hasattr(char, "uuid") and hasattr(controller, "social_networks"):
+                try:
+                    relationships = controller.social_networks["relationships"].get(char.uuid, {})
+                    avg_relationship = (
+                        sum(relationships.values()) / len(relationships)
+                        if relationships else 50
+                    )
+                    char_info.append(f"Social: {avg_relationship:.0f}")
+
+                except Exception as e:
+                    logging.error(f"Error accessing social_networks while rendering selected character panel: {e}")
+                    pass
+            
+            if hasattr(char, "uuid") and hasattr(controller, "quest_system"):
+                try:
+                    active_quests = len(controller.quest_system["active_quests"].get(char.uuid, []))
+                    completed_quests = len(controller.quest_system["completed_quests"].get(char.uuid, []))
+                    char_info.append(f"Quests: {active_quests} active, {completed_quests} done")
+
+                except Exception as e:
+                    logging.error(f"Error loading quest system while rendering selected character panel: {e}")
+                    
+                    pass
+            
+            # Render character info
+            for info in char_info:
+                info_text = small_font.render(info, True, (255, 255, 0))
+                screen.blit(info_text, (x, current_y))
+                current_y += info_text.get_height() + 2
+            
+            # Character achievements
+            try:
+                if hasattr(char, 'achievements') and char.achievements:
+                    ach_header_text = small_font.render("Achievements:", True, (220, 220, 180))
+                    screen.blit(ach_header_text, (x, current_y))
+                    current_y += ach_header_text.get_height() + 2
+                    
+                    for achievement_id in char.achievements:
+                        display_name = achievement_id.replace("_", " ").title()
+                        ach_text = tiny_font.render(f"- {display_name}", True, (200, 200, 150))
+                        screen.blit(ach_text, (x + 5, current_y))  # Indent slightly
+                        current_y += ach_text.get_height() + 2
+
+            except Exception as e:
+                logging.error(f"Error loading achievements while rendering selected character panel: {e}")
+                pass
+        
+        return current_y - y
+
+
+class InstructionsPanel(UIPanel):
+    """Panel for displaying game instructions."""
+    
+    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+        tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
+        x, y = self.position
+        
+        instructions = [
+            "Click characters to select them",
+            "Click buildings to interact",
+            "SPACE to pause/unpause",
+            "R to reset characters",
+            "S to save game (basic)",
+            "L to load game (basic)",
+            "F to show feature status",
+            "ESC to quit",
+        ]
+        
+        for i, instruction in enumerate(instructions):
+            inst_text = tiny_font.render(instruction, True, (200, 200, 200))
+            screen.blit(inst_text, (x, y + i * 15))
+        
+        return len(instructions) * 15
 
 """ 
 This script integrates with the game loop, applying decisions from the strategy manager to the game state.
@@ -597,6 +918,9 @@ class GameplayController:
         self.implement_social_network_system()
         self.implement_quest_system()
 
+        # Initialize modular UI system
+        self._init_ui_system()
+
         # Log initialization status
         if self.initialization_errors:
             logger.warning(
@@ -604,6 +928,39 @@ class GameplayController:
             )
         else:
             logger.info("GameplayController initialized successfully")
+
+    def _init_ui_system(self):
+        """Initialize the modular UI panel system."""
+        try:
+            # Create UI panels with positions
+            self.ui_panels = {
+                'character_info': CharacterInfoPanel('character_info', position=(10, 10)),
+                'game_status': GameStatusPanel('game_status', position=(10, 35)),
+                'weather': WeatherPanel('weather', position=(10, 120)),
+                'stats': StatsPanel('stats', position=(10, 180)),
+                'achievements': AchievementPanel('achievements', position=(10, 280)),
+                'selected_character': SelectedCharacterPanel('selected_character', position=(10, 400)),
+                'instructions': InstructionsPanel('instructions', position=(10, None))  # Position set dynamically
+            }
+            
+            # Create font dictionary for consistent font usage
+            self.ui_fonts = {
+                'normal': pygame.font.Font(None, 24),
+                'small': pygame.font.Font(None, 18),
+                'tiny': pygame.font.Font(None, 16)
+            }
+            
+            logger.info("Modular UI system initialized")
+            
+        except Exception as e:
+            logger.error(f"Error initializing UI system: {e}")
+            # Fallback to empty panels dict
+            self.ui_panels = {}
+            self.ui_fonts = {
+                'normal': pygame.font.Font(None, 24),
+                'small': pygame.font.Font(None, 18),
+                'tiny': pygame.font.Font(None, 16)
+            }
 
     def _get_default_buildings(self, map_config: Dict) -> List[Dict]:
         """Get buildings configuration with dynamic loading support."""
@@ -1364,6 +1721,8 @@ class GameplayController:
                 "analytics": [pygame.K_a],
                 "increase_speed": [pygame.K_PAGEUP], # Added for time scaling
                 "decrease_speed": [pygame.K_PAGEDOWN], # Added for time scaling
+                "minimap": [pygame.K_m], # Added for mini-map toggle
+                "overview": [pygame.K_o], # Added for overview mode toggle
             },
         )
 
@@ -1421,6 +1780,14 @@ class GameplayController:
             self.time_scale_factor = max(MIN_SPEED, self.time_scale_factor - SPEED_STEP)
             logger.info(f"Time scale set to: {self.time_scale_factor:.1f}x")
             self._cached_speed_text = None # Invalidate cache on change
+        elif event.key in key_bindings.get("minimap", [pygame.K_m]):
+            # Toggle mini-map mode
+            self._minimap_mode = not getattr(self, "_minimap_mode", False)
+            logger.info(f"Mini-map mode {'enabled' if self._minimap_mode else 'disabled'}")
+        elif event.key in key_bindings.get("overview", [pygame.K_o]):
+            # Toggle overview mode
+            self._overview_mode = not getattr(self, "_overview_mode", False)
+            logger.info(f"Overview mode {'enabled' if self._overview_mode else 'disabled'}")
 
     def _show_help_info(self):
         """Display help information."""
@@ -1434,6 +1801,8 @@ class GameplayController:
             logger.info("  F - Show feature status")
             logger.info("  F5 - Force system recovery")
             logger.info("  A - Show analytics")
+            logger.info("  M - Toggle mini-map")
+            logger.info("  O - Toggle overview mode")
             logger.info("  ESC - Quit")
             logger.info("Features:")
             logger.info("  - Character AI with goals and actions")
@@ -2474,16 +2843,21 @@ class GameplayController:
         # Clear the screen with configurable background
         self.screen.fill(background_color)
 
-        # Render the map and game world
-        if self.map_controller:
-            try:
-                self.map_controller.render(self.screen)
-            except Exception as e:
-                logger.error(f"Error rendering map: {e}")
-                # TODO: Add fallback rendering for when map fails
+        # Check if overview mode is active
+        if getattr(self, "_overview_mode", False):
+            # Render overview mode instead of normal view
+            self._render_overview()
+        else:
+            # Render the map and game world normally
+            if self.map_controller:
+                try:
+                    self.map_controller.render(self.screen)
+                except Exception as e:
+                    logger.error(f"Error rendering map: {e}")
+                    # TODO: Add fallback rendering for when map fails
 
-        # Render UI elements
-        self._render_ui()
+            # Render UI elements
+            self._render_ui()
 
         # TODO: Add render effect layers (lighting, particles, post-processing)
 
@@ -2492,39 +2866,59 @@ class GameplayController:
             pygame.display.flip()
         else:
             pygame.display.update()
-    def _render_achievements(self, y_offset: int) -> int:
-        """
-        Render all village milestone achievements in a dedicated UI section.
-        Returns the updated y_offset after drawing.
-        """
-        milestones = self.global_achievements.get("village_milestones", {})
-        if not milestones:
-            return y_offset
-
-        # Section header (optional)
-        header = tiny_font.render("Achievements:", True, (240, 240, 200))
-        self.screen.blit(header, (10, y_offset))
-        y_offset += ACHIEVEMENT_SPACING
-
-        for key, achieved in milestones.items():
-            # Convert snake_case key to Title Case text
-            title = key.replace("_", " ").title()
-            status = "✓" if achieved else "✗"
-            color = (180, 220, 180) if achieved else (200, 180, 180)
-            text = tiny_font.render(f"{status} {title}", True, color)
-            self.screen.blit(text, (10, y_offset))
-            y_offset += ACHIEVEMENT_LINE_SPACING
-
-        return y_offset
     def _render_ui(self):
-        """Render user interface elements with improved layout, new features, and system status."""
-
+        """Render user interface elements using the modular panel system."""
         try:
+            # Use modular UI system if available
+            if hasattr(self, 'ui_panels') and self.ui_panels:
+                self._render_modular_ui()
+            else:
+                # Fallback to legacy rendering
+                self._render_legacy_ui()
+                
+        except Exception as e:
+            # Ultimate fallback to minimal UI
+            self._render_minimal_ui()
+    
+    def _render_modular_ui(self):
+        """Render UI using the modular panel system."""
+        current_y = 10
+        
+        # Render panels in order
+        panel_order = ['character_info', 'game_status', 'weather', 'stats', 'achievements', 'selected_character']
+        
+        for panel_name in panel_order:
+            panel = self.ui_panels.get(panel_name)
+            if panel and panel.visible:
+                # Update panel position if needed
+                if panel.position[1] != current_y and getattr(panel, 'auto_position', True):
+                    panel.position = (panel.position[0], current_y)
+                
+                # Render panel and update y position
+                height = panel.render(self.screen, self, self.ui_fonts)
+                current_y += height + PANEL_SPACING  # Add spacing between panels
+        
+        # Render instructions at bottom
+        instructions_panel = self.ui_panels.get('instructions')
+        if instructions_panel and instructions_panel.visible:
+            # Position instructions at bottom of screen
+            instructions_y = self.screen.get_height() - INSTRUCTIONS_BOTTOM_MARGIN  # Reserve space for instructions
+            instructions_panel.position = (10, instructions_y)
+            instructions_panel.render(self.screen, self, self.ui_fonts)
+        
+        # Show feature status overlay if enabled
+        if getattr(self, "_show_feature_status", False):
+            self._render_feature_status_overlay()
+    
+    def _render_legacy_ui(self):
+        """Legacy UI rendering method for fallback."""
+        try:
+
             # TODO: Implement modular UI system with panels
             # TODO: Add character relationship visualization
             # TODO: Add village statistics dashboard
             # TODO: Add interactive building information panels
-            # TODO: Add mini-map or overview mode
+            # TODO: Add mini-map and overview mode - IMPLEMENTED: Toggle mini-map with 'M' key and overview mode with 'O' key
             # TODO: Add save/load game functionality UI
             # TODO: Add settings and configuration panels
             # TODO: Add help and tutorial overlays
@@ -2546,6 +2940,15 @@ class GameplayController:
             if getattr(self, "paused", False):
                 pause_text = font.render("PAUSED", True, (255, 255, 0))
                 self.screen.blit(pause_text, (self.screen.get_width() - 100, 10))
+
+            # Show basic error message
+            error_text = small_font.render("Using legacy UI (panels unavailable)", True, (255, 200, 0))
+            self.screen.blit(error_text, (10, 40))
+            
+            # Render view mode status
+            if getattr(self, "_minimap_mode", False):
+                mode_text = tiny_font.render("Mini-map: ON", True, (0, 255, 0))
+                self.screen.blit(mode_text, (self.screen.get_width() - 100, 35))
 
             # Render time if available
             y_offset = 35
@@ -2736,6 +3139,8 @@ class GameplayController:
                 "S to save game (basic)",
                 "L to load game (basic)",
                 "F to show feature status",
+                "M to toggle mini-map",
+                "O to toggle overview mode",
                 "ESC to quit",
             ]
 
@@ -2748,18 +3153,23 @@ class GameplayController:
             if getattr(self, "_show_feature_status", False):
                 self._render_feature_status_overlay()
 
+            # Show mini-map if enabled
+            if getattr(self, "_minimap_mode", False):
+                self._render_minimap()
+
         except Exception as e:
-            # Fallback to minimal UI
-            try:
-                font = pygame.font.Font(None, 24)
-                error_text = font.render("UI Error - Fallback Mode", True, (255, 0, 0))
-                self.screen.blit(error_text, (10, 10))
-                char_text = font.render(
-                    f"Characters: {len(self.characters)}", True, (255, 255, 255)
-                )
-                self.screen.blit(char_text, (10, 35))
-            except:
-                pass  # Even fallback failed
+            self._render_minimal_ui()
+    
+    def _render_minimal_ui(self):
+        """Minimal UI rendering for emergency fallback."""
+        try:
+            font = pygame.font.Font(None, 24)
+            error_text = font.render("UI Error - Minimal Mode", True, (255, 0, 0))
+            self.screen.blit(error_text, (10, 10))
+            char_text = font.render(f"Characters: {len(self.characters)}", True, (255, 255, 255))
+            self.screen.blit(char_text, (10, 35))
+        except:
+            pass  # Even minimal fallback failed
 
     def _render_feature_status_overlay(self):
         """Render an overlay showing feature implementation status."""
@@ -2806,6 +3216,199 @@ class GameplayController:
 
         except Exception as e:
             logger.warning(f"Error rendering feature status overlay: {e}")
+
+    def _render_minimap(self):
+        """Render a mini-map or overview of the game world."""
+        try:
+            if not self.map_controller or not hasattr(self.map_controller, 'map_image'):
+                return
+            
+            # Mini-map configuration
+            minimap_size = MINIMAP_SIZE  # Size of the mini-map
+            margin = 10
+            position = (self.screen.get_width() - minimap_size - margin, margin)
+            
+            # Create mini-map surface
+            minimap_surface = pygame.Surface((minimap_size, minimap_size))
+            minimap_surface.fill((0, 0, 0))  # Black background
+            
+            # Get the original map dimensions
+            original_map = self.map_controller.map_image
+            original_width = original_map.get_width()
+            original_height = original_map.get_height()
+            
+            # Calculate scaling factor to fit the map in the mini-map
+            scale_x = minimap_size / original_width
+            scale_y = minimap_size / original_height
+            scale = min(scale_x, scale_y)  # Use smaller scale to maintain aspect ratio
+            
+            # Scale the map image
+            scaled_width = int(original_width * scale)
+            scaled_height = int(original_height * scale)
+            scaled_map = pygame.transform.scale(original_map, (scaled_width, scaled_height))
+            
+            # Center the scaled map in the mini-map surface
+            map_x = (minimap_size - scaled_width) // 2
+            map_y = (minimap_size - scaled_height) // 2
+            minimap_surface.blit(scaled_map, (map_x, map_y))
+            
+            # Draw buildings on mini-map
+            if hasattr(self.map_controller, 'map_data') and 'buildings' in self.map_controller.map_data:
+                for building in self.map_controller.map_data['buildings']:
+                    if 'rect' in building:
+                        # Scale building coordinates
+                        scaled_rect = pygame.Rect(
+                            int(building['rect'].x * scale) + map_x,
+                            int(building['rect'].y * scale) + map_y,
+                            max(2, int(building['rect'].width * scale)),
+                            max(2, int(building['rect'].height * scale))
+                        )
+                        pygame.draw.rect(minimap_surface, (100, 100, 100), scaled_rect)
+            
+            # Draw characters on mini-map
+            if hasattr(self.map_controller, 'characters'):
+                for character in self.map_controller.characters.values():
+                    if hasattr(character, 'position'):
+                        # Scale character position
+                        char_x = int(character.position[0] * scale) + map_x
+                        char_y = int(character.position[1] * scale) + map_y
+                        
+                        # Use different color for selected character
+                        if character is self.map_controller.selected_character:
+                            color = (255, 255, 0)  # Yellow for selected
+                            radius = 3
+                        else:
+                            color = getattr(character, 'color', DEFAULT_COLOR)
+                            radius = 2
+                        
+                        pygame.draw.circle(minimap_surface, color, (char_x, char_y), radius)
+            
+            # Draw border around mini-map
+            pygame.draw.rect(minimap_surface, (128, 128, 128), minimap_surface.get_rect(), 2)
+            
+            # Add semi-transparent background
+            background = pygame.Surface((minimap_size + 4, minimap_size + 4))
+            background.set_alpha(200)
+            background.fill((0, 0, 0))
+            self.screen.blit(background, (position[0] - 2, position[1] - 2))
+            
+            # Blit mini-map to main screen
+            self.screen.blit(minimap_surface, position)
+            
+            # Add mini-map title
+            font = pygame.font.Font(None, 16)
+            title_text = font.render("Mini-Map", True, (255, 255, 255))
+            title_pos = (position[0], position[1] - 20)
+            self.screen.blit(title_text, title_pos)
+            
+        except Exception as e:
+            logger.warning(f"Error rendering mini-map: {e}")
+
+    def _render_overview(self):
+        """Render a full-screen overview of the game world with UI overlay."""
+        try:
+            if not self.map_controller or not hasattr(self.map_controller, 'map_image'):
+                return
+            
+            # Get screen dimensions
+            screen_width = self.screen.get_width()
+            screen_height = self.screen.get_height()
+            
+            # Reserve space for UI at the bottom
+            ui_height = 100
+            available_height = screen_height - ui_height
+            
+            # Get the original map dimensions
+            original_map = self.map_controller.map_image
+            original_width = original_map.get_width()
+            original_height = original_map.get_height()
+            
+            # Calculate scaling factor to fit the map in the available space
+            scale_x = screen_width / original_width
+            scale_y = available_height / original_height
+            scale = min(scale_x, scale_y)  # Use smaller scale to maintain aspect ratio
+            
+            # Scale the map image
+            scaled_width = int(original_width * scale)
+            scaled_height = int(original_height * scale)
+            scaled_map = pygame.transform.scale(original_map, (scaled_width, scaled_height))
+            
+            # Center the scaled map on screen
+            map_x = (screen_width - scaled_width) // 2
+            map_y = (available_height - scaled_height) // 2
+            
+            # Clear screen with dark background
+            self.screen.fill((20, 20, 20))
+            
+            # Blit the scaled map
+            self.screen.blit(scaled_map, (map_x, map_y))
+            
+            # Draw buildings on overview
+            if hasattr(self.map_controller, 'map_data') and 'buildings' in self.map_controller.map_data:
+                for building in self.map_controller.map_data['buildings']:
+                    if 'rect' in building:
+                        # Scale building coordinates
+                        scaled_rect = pygame.Rect(
+                            int(building['rect'].x * scale) + map_x,
+                            int(building['rect'].y * scale) + map_y,
+                            max(3, int(building['rect'].width * scale)),
+                            max(3, int(building['rect'].height * scale))
+                        )
+                        pygame.draw.rect(self.screen, (150, 150, 150), scaled_rect)
+                        pygame.draw.rect(self.screen, (200, 200, 200), scaled_rect, 1)
+            
+            # Draw characters on overview
+            if hasattr(self.map_controller, 'characters'):
+                for character in self.map_controller.characters.values():
+                    if hasattr(character, 'position'):
+                        # Scale character position
+                        char_x = int(character.position[0] * scale) + map_x
+                        char_y = int(character.position[1] * scale) + map_y
+                        
+                        # Use different appearance for selected character
+                        if character is self.map_controller.selected_character:
+                            # Draw selection ring
+                            pygame.draw.circle(self.screen, (255, 255, 0), (char_x, char_y), 8, 2)
+                            color = DEFAULT_COLOR
+                            radius = 4
+                        else:
+                            color = getattr(character, 'color', DEFAULT_COLOR)
+                            radius = 3
+                        
+                        pygame.draw.circle(self.screen, color, (char_x, char_y), radius)
+                        
+                        # Add character name if available
+                        if hasattr(character, 'name') and scale > 0.5:  # Only show names when zoomed in enough
+                            font = pygame.font.Font(None, 16)
+                            name_text = font.render(character.name, True, (255, 255, 255))
+                            text_rect = name_text.get_rect()
+                            text_rect.center = (char_x, char_y - 15)
+                            self.screen.blit(name_text, text_rect)
+            
+            # Draw overview mode UI at the bottom
+            ui_surface = pygame.Surface((screen_width, ui_height))
+            ui_surface.set_alpha(220)
+            ui_surface.fill((0, 0, 0))
+            
+            font = pygame.font.Font(None, 24)
+            title_text = font.render("OVERVIEW MODE", True, (255, 255, 255))
+            ui_surface.blit(title_text, (10, 10))
+            
+            small_font = pygame.font.Font(None, 18)
+            instructions = [
+                "Press 'O' to exit overview mode",
+                f"Showing {len(getattr(self.map_controller, 'characters', {}))} characters",
+                f"Scale: {scale:.2f}x"
+            ]
+            
+            for i, instruction in enumerate(instructions):
+                inst_text = small_font.render(instruction, True, (200, 200, 200))
+                ui_surface.blit(inst_text, (10, 35 + i * 20))
+            
+            self.screen.blit(ui_surface, (0, available_height))
+            
+        except Exception as e:
+            logger.warning(f"Error rendering overview: {e}")
 
     def run(self):
         """Main entry point to start the game loop."""
