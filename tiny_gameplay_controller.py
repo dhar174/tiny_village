@@ -2541,7 +2541,7 @@ class GameplayController:
             # TODO: Add character relationship visualization
             # TODO: Add village statistics dashboard
             # TODO: Add interactive building information panels
-            # TODO: Add mini-map or overview mode - IMPLEMENTED: Toggle with 'M' key
+            # TODO: Add mini-map and overview mode - IMPLEMENTED: Toggle mini-map with 'M' key and overview mode with 'O' key
             # TODO: Add save/load game functionality UI
             # TODO: Add settings and configuration panels
             # TODO: Add help and tutorial overlays
