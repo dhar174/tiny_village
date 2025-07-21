@@ -311,7 +311,10 @@ class MapController:
 
         # Draw panel background
         panel_rect = pygame.Rect(panel_x, panel_y, panel_width, panel_height)
-        pygame.draw.rect(surface, (0, 0, 0, 180), panel_rect)  # Semi-transparent black
+        # Create a new surface with SRCALPHA for transparency
+        panel_surface = pygame.Surface((panel_width, panel_height), pygame.SRCALPHA)
+        pygame.draw.rect(panel_surface, (0, 0, 0, 180), panel_surface.get_rect())  # Semi-transparent black
+        surface.blit(panel_surface, (panel_x, panel_y))  # Blit the transparent panel onto the main surface
         pygame.draw.rect(surface, (255, 255, 255), panel_rect, 2)  # White border
 
         # Prepare info text
