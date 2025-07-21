@@ -9,15 +9,17 @@ import re
 import time
 
 from collections import deque
+
 # Graceful fallback for networkx
 try:
     from networkx import node_link_data
+    import networkx as nx
+
     NETWORKX_AVAILABLE = True
 except ImportError:
     NETWORKX_AVAILABLE = False
-    def node_link_data(graph):
-        """Fallback implementation for networkx functionality"""
-        return {"nodes": [], "links": []}
+    node_link_data = None
+    nx = None
 # Graceful fallbacks for optional dependencies
 try:
     import numpy as np
@@ -309,8 +311,15 @@ except ImportError:
     def pos_tag(tokens):
         return [(token, 'NN') for token in tokens]  # Default to noun
 
-class_interaction_graph = nx.DiGraph()
-call_flow_diagram = nx.DiGraph()
+# Initialize networkx graphs only if available
+if NETWORKX_AVAILABLE:
+    class_interaction_graph = nx.DiGraph()
+    call_flow_diagram = nx.DiGraph()
+else:
+    class_interaction_graph = None
+    call_flow_diagram = None
+from nltk.stem import PorterStemmer
+
 
 # Additional nltk imports
 try:
@@ -2137,7 +2146,11 @@ class FlatMemoryAccess:
                 # print(f"Error retrieving embedding for memory {specific_memory_id}: {e}")
                 return []
 
-        pagerank_scores = nx.pagerank(self.memory_graph)
+        if NETWORKX_AVAILABLE and nx:
+            pagerank_scores = nx.pagerank(self.memory_graph)
+        else:
+            # Fallback: uniform scores if networkx not available
+            pagerank_scores = {node: 1.0 for node in self.memory_graph.nodes()}
 
         similarities = {}
         for memory in self.get_graph().nodes:

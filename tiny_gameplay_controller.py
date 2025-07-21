@@ -3013,87 +3013,17 @@ class GameplayController:
             # Check if character should use LLM decision-making
             use_llm_decisions = getattr(character, 'use_llm_decisions', False)
             
-            if use_llm_decisions and hasattr(self.strategy_manager, 'decide_action_with_llm'):
-                # Use LLM-based decision making
-                try:
-                    # Get current time and weather for context
-                    current_time = getattr(self, 'current_time', 'morning')
-                    current_weather = getattr(self, 'current_weather', 'clear')
-                    
-                    actions = self.strategy_manager.decide_action_with_llm(
-                        character, time=current_time, weather=current_weather
-                    )
-                    logger.info(f"LLM decision for {character.name}: {[a.name for a in actions] if actions else 'None'}")
-                    
-                except Exception as llm_error:
-                    logger.warning(f"LLM decision failed for {character.name}: {llm_error}")
-                    # Fall back to utility-based actions
-                    actions = self.strategy_manager.get_daily_actions(character)
+            if use_llm_decisions:
+                # Use comprehensive LLM-based decision making via process_character_turn
+                return self.process_character_turn(character)
             else:
-                # Use traditional utility-based planning
-                actions = self.strategy_manager.get_daily_actions(character)
-
-            if actions:
-                # Execute planned actions based on current state
-                success = self._apply_character_actions(character, actions)
-                if success:
-                    self.game_statistics["actions_executed"] += len(actions)
-                else:
-                    self.game_statistics["actions_failed"] += 1
-                return success
-            return True  # No actions is not necessarily a failure
-
-        except Exception as e:
-            logger.warning(f"Error executing actions for {character.name}: {e}")
-            self.game_statistics["actions_failed"] += 1
-            return False
-
-    def _apply_character_actions(self, character, actions) -> bool:
-        """Apply a list of actions to a character."""
-        try:
-            for action_data in actions:
-                success = self._execute_single_action(character, action_data)
-                if not success:
-                    logger.warning(f"Action {action_data} failed for {character.name}")
-                    # Continue with other actions even if one fails
-            return True
-        except Exception as e:
-            logger.error(f"Error applying actions to {character.name}: {e}")
-            return False
-
-    def _execute_single_action(self, character, action_data) -> bool:
-        """Execute a single action with proper resolution, state updates, and comprehensive tracking."""
-        try:
-            # Resolve action to executable format
-            action = self.action_resolver.resolve_action(action_data, character)
-
-            if not action:
-                logger.warning(f"Could not resolve action: {action_data}")
-                self.action_resolver.track_action_execution(
-                    action_data, character, False
-                )
-                return False
-
-            # Validate action preconditions
-            if not self.action_resolver.validate_action_preconditions(
-                action, character
-            ):
-                logger.warning(f"Action preconditions not met for {action}")
-                fallback_success = self._execute_fallback_action(character)
-                self.action_resolver.track_action_execution(
-                    action, character, fallback_success
-                )
-                return fallback_success
-
-            # Predict action effects for logging
-            predicted_effects = self.action_resolver.predict_action_effects(
-                action, character
-            )
-            logger.debug(f"Predicted effects for {action}: {predicted_effects}")
-
-            # Execute the action
-            if hasattr(action, "execute"):
+                # Use traditional strategy manager approach
                 try:
+                    actions = self.strategy_manager.get_daily_actions(character)
+                    if actions:
+                        # Execute first action (simplified approach)
+                        action = actions[0]
+
                     result = action.execute(target=character, initiator=character)
                     if result:
                         # Update character state after successful action
@@ -3194,537 +3124,87 @@ class GameplayController:
                     )
                     character.add_memory(memory_text)
                 except Exception as e:
-                    logger.warning(
-                        f"Error adding action memory for {character.name}: {e}"
-                    )
-
-            # Update skill progression based on action type
-            self._update_character_skills(character, action)
-
-            # Update social relationships if action affects others
-            self._update_social_consequences(character, action)
-
-            # Update economic effects (resource consumption, production)
-            self._update_economic_state(character, action)
-
-            # Generate secondary events based on action outcomes
-            self._generate_action_events(character, action, initial_state)
-
-            # Update achievement tracking
-            self._check_achievements(character, action)
-
-            # Update reputation system
-            self._update_reputation(character, action)
-
-            # Track state changes for analytics
-            final_state = self._capture_character_state(character)
-            self._track_state_changes(character, action, initial_state, final_state)
-            # Increment work_action_count if it was a work action
-            if hasattr(action, 'name') and 'work' in action.name.lower():
-                if hasattr(character, 'work_action_count'):
-                    character.work_action_count += 1
-                    logger.debug(f"{character.name} completed a work action. Total work actions: {character.work_action_count}")
-
+                    logger.warning(f"Error with traditional action execution for {character.name}: {e}")
+                    return False
+                    
         except Exception as e:
-            logger.warning(f"Error updating character state after action: {e}")
+            logger.warning(f"Error executing actions for {character.name}: {e}")
+        return False
 
-    def _capture_character_state(self, character) -> Dict[str, Any]:
-        """Capture current character state for comparison."""
+    def process_character_turn(self, character) -> bool:
+        """
+        Process a character's turn using LLM-driven decision making.
+        
+        This method integrates:
+        1. PromptBuilder to create contextual decision prompts
+        2. GOAP system for intelligent action planning  
+        3. LLM communication via TinyBrainIO
+        4. OutputInterpreter to parse LLM responses
+        5. Action execution and tracking
+        
+        Args:
+            character: Character object to process turn for
+            
+        Returns:
+            bool: True if turn processed successfully, False otherwise
+        """
         try:
-            return {
-                "energy": getattr(character, "energy", 0),
-                "health_status": getattr(character, "health_status", 0),
-                "hunger_level": getattr(character, "hunger_level", 0),
-                "satisfaction": getattr(character, "current_satisfaction", 0),
-                "social_wellbeing": getattr(character, "social_wellbeing", 0),
-                "wealth": getattr(character, "wealth_money", 0),
-                "job_performance": getattr(character, "job_performance", 0),
-            }
-        except Exception as e:
-            logger.warning(f"Error capturing character state: {e}")
-            return {}
-
-    def _update_character_skills(self, character, action):
-        """Update character skills based on performed action."""
-        try:
-            action_name = getattr(action, "name", str(action)).lower()
-
-            # Map actions to skill improvements
-            skill_mappings = {
-                "work": "job_performance",
-                "craft": "job_performance",
-                "cook": "job_performance",
-                "socialize": "social_wellbeing",
-                "exercise": "health_status",
-                "rest": "mental_health",
-                "study": "intelligence",
-                "trade": "wealth_money",
-            }
-
-            for action_type, skill in skill_mappings.items():
-                if action_type in action_name and hasattr(character, skill):
-                    current_value = getattr(character, skill, 0)
-                    # Small skill improvement with diminishing returns
-                    improvement = max(1, int(5 * (100 - current_value) / 100))
-                    if improvement > 0: # Only proceed if there's an actual improvement calculated
-                        setattr(character, skill, min(100, current_value + improvement))
-                        new_skill_value = getattr(character, skill)
-
-                        if skill == "job_performance" and new_skill_value > old_skill_value:
-                            if hasattr(character, 'current_satisfaction'):
-                                satisfaction_bonus = 2
-                                character.current_satisfaction += satisfaction_bonus
-                                character.current_satisfaction = min(100, character.current_satisfaction)
-                                logger.debug(
-                                    f"{character.name} feels more satisfied from improving job performance! "
-                                    f"Satisfaction +{satisfaction_bonus} (now {character.current_satisfaction})."
-                                )
-                    else: # If improvement is 0, skill remains unchanged.
-                        pass
-
-
-        except Exception as e:
-            logger.warning(f"Error updating character skills: {e}")
-
-    def _update_social_consequences(self, character, action):
-        """Update social relationships based on action."""
-        try:
-            action_name = getattr(action, "name", str(action)).lower()
-
-            # Actions that improve community standing
-            positive_actions = ["help", "share", "give", "assist", "cooperate"]
-            negative_actions = ["steal", "fight", "ignore", "refuse"]
-
-            if any(word in action_name for word in positive_actions):
-                if hasattr(character, "community"):
-                    character.community = min(100, character.community + 2)
-                if hasattr(character, "social_wellbeing"):
-                    character.social_wellbeing = min(
-                        100, character.social_wellbeing + 1
-                    )
-
-            elif any(word in action_name for word in negative_actions):
-                if hasattr(character, "community"):
-                    character.community = max(0, character.community - 3)
-                if hasattr(character, "social_wellbeing"):
-                    character.social_wellbeing = max(0, character.social_wellbeing - 2)
-
-        except Exception as e:
-            logger.warning(f"Error updating social consequences: {e}")
-
-    def _update_economic_state(self, character, action):
-        """Update economic state based on action costs and benefits."""
-        try:
-            action_name = getattr(action, "name", str(action)).lower()
-            # Economic actions and their effects
-            if "work" in action_name or "craft" in action_name:
-                if hasattr(character, "wealth_money"):
-                    earning = random.randint(5, 15)
-                    character.wealth_money += earning
-
-            elif "buy" in action_name or "purchase" in action_name:
-                if hasattr(character, "wealth_money"):
-                    cost = random.randint(3, 10)
-                    character.wealth_money = max(0, character.wealth_money - cost)
-
-            elif "trade" in action_name:
-                if hasattr(character, "wealth_money"):
-                    # Trading can be profitable or costly
-                    change = random.randint(-5, 10)
-                    character.wealth_money = max(0, character.wealth_money + change)
-
-        except Exception as e:
-            logger.warning(f"Error updating economic state: {e}")
-
-    def _generate_action_events(self, character, action, initial_state):
-        """Generate secondary events based on action outcomes."""
-        try:
-            action_name = getattr(action, "name", str(action))
-
-            # Generate events for significant actions
-            significant_actions = ["work", "craft", "major_purchase", "celebration"]
-
-            if any(
-                sig_action in action_name.lower() for sig_action in significant_actions
-            ):
-                event_text = f"{character.name} completed: {action_name}"
-
-                # Add to events list if available
-                if hasattr(self, "events"):
-                    self.events.append(
-                        {
-                            "type": "action_completion",
-                            "character": character.name,
-                            "action": action_name,
-                            "timestamp": pygame.time.get_ticks(),
-                            "description": event_text,
-                        }
-                    )
-
-        except Exception as e:
-            logger.warning(f"Error generating action events: {e}")
-
-    def _check_achievements(self, character, action):
-        """Check and award achievements based on character actions."""
-        try:
-            # Initialize achievements if not present
-            if not hasattr(character, "achievements"):
-                character.achievements = set()
-
-            action_name = getattr(action, "name", str(action)).lower()
-
-            # Define achievement conditions
-            achievements = {
-                "first_work": ("work" in action_name, "Completed first work action"),
-                "social_butterfly": (
-                    hasattr(character, "social_wellbeing")
-                    and character.social_wellbeing > 80,
-                    "High social wellbeing",
-                ),
-                "hard_worker": (
-                    hasattr(character, "job_performance")
-                    and character.job_performance > 90,
-                    "Excellent job performance",
-                ),
-                "wealthy": (
-                    hasattr(character, "wealth_money") and character.wealth_money > 500,
-                    "Accumulated significant wealth",
-                ),
-                "diligent_worker": (
-                    hasattr(character, 'work_action_count') and character.work_action_count >= 10,
-                    "Performed 10 work actions",
-                ),
-            }
-
-            for achievement_id, (condition, description) in achievements.items():
-                if condition and achievement_id not in character.achievements:
-                    character.achievements.add(achievement_id)
-                    logger.info(f"{character.name} earned achievement: {description}")
-
-        except Exception as e:
-            logger.warning(f"Error checking achievements: {e}")
-
-    def _update_reputation(self, character, action):
-        """Update character reputation based on actions."""
-        try:
-            if not hasattr(character, "reputation"):
-                character.reputation = 50  # Neutral starting reputation
-
-            action_name = getattr(action, "name", str(action)).lower()
-
-            # Reputation modifiers based on action type
-            if any(word in action_name for word in ["help", "share", "generous"]):
-                character.reputation = min(100, character.reputation + 2)
-            elif any(word in action_name for word in ["steal", "cheat", "selfish"]):
-                character.reputation = max(0, character.reputation - 5)
-            elif "work" in action_name:
-                character.reputation = min(100, character.reputation + 1)
-
-        except Exception as e:
-            logger.warning(f"Error updating reputation: {e}")
-
-    def _track_state_changes(self, character, action, initial_state, final_state):
-        """Track state changes for analytics and debugging."""
-        try:
-            changes = {}
-            for key in initial_state:
-                if key in final_state:
-                    change = final_state[key] - initial_state[key]
-                    if change != 0:
-                        changes[key] = change
-
-            if changes:
-                logger.debug(
-                    f"State changes for {character.name} after {getattr(action, 'name', action)}: {changes}"
-                )
-
-        except Exception as e:
-            logger.warning(f"Error tracking state changes: {e}")
-
-    def _update_quest_progress(self, character, action):
-        """Update quest progress based on completed action."""
-        try:
-            if not hasattr(self, "quest_system") or not hasattr(character, "uuid"):
-                return
-
-            char_id = character.uuid
-            if char_id not in self.quest_system["active_quests"]:
-                return
-
-            action_name = getattr(action, "name", str(action)).lower()
-
-            # Update progress for relevant quests
-            for quest in self.quest_system["active_quests"][char_id]:
-                quest_type = quest.get("type", "unknown")
-
-                # Simple progress logic based on quest type and action
-                progress_added = 0
-
-                if quest_type == "collection" and any(
-                    word in action_name for word in ["gather", "collect", "harvest"]
-                ):
-                    progress_added = 20
-                elif quest_type == "social" and any(
-                    word in action_name for word in ["help", "talk", "assist"]
-                ):
-                    progress_added = 25
-                elif quest_type == "crafting" and any(
-                    word in action_name for word in ["craft", "make", "build"]
-                ):
-                    progress_added = 30
-                elif "work" in action_name:
-                    progress_added = 10  # Any work contributes to most quests
-
-                if progress_added > 0:
-                    quest["progress"] = min(
-                        quest["target"], quest["progress"] + progress_added
-                    )
-                    logger.debug(
-                        f"Quest progress updated: {quest['name']} - {quest['progress']}/{quest['target']}"
-                    )
-
-                    # Check if quest is completed
-                    if quest["progress"] >= quest["target"]:
-                        self._complete_quest(character, quest)
-
-        except Exception as e:
-            logger.warning(f"Error updating quest progress: {e}")
-
-    def _complete_quest(self, character, quest):
-        """Handle quest completion."""
-        try:
-            char_id = character.uuid
-
-            # Move quest to completed list
-            if char_id not in self.quest_system["completed_quests"]:
-                self.quest_system["completed_quests"][char_id] = []
-
-            self.quest_system["completed_quests"][char_id].append(quest)
-            self.quest_system["active_quests"][char_id].remove(quest)
-
-            # Reward the character
-            if hasattr(character, "wealth_money"):
-                reward = random.randint(10, 30)
-                character.wealth_money += reward
-
-            if hasattr(character, "current_satisfaction"):
-                character.current_satisfaction = min(
-                    100, character.current_satisfaction + 15
-                )
-
-            logger.info(f"{character.name} completed quest: {quest['name']}")
-
-            # Generate completion event
-            if hasattr(self, "events"):
-                self.events.append(
-                    {
-                        "type": "quest_completion",
-                        "character": character.name,
-                        "quest_name": quest["name"],
-                        "timestamp": pygame.time.get_ticks(),
-                        "description": f"{character.name} completed the quest '{quest['name']}'",
-                    }
-                )
-
-        except Exception as e:
-            logger.error(f"Error completing quest: {e}")
-
-    def _process_pending_events(self):
-        """Process any pending events with error handling and storytelling integration."""
-        events_to_remove = []
-
-        for i, event in enumerate(self.events):
+            from tiny_prompt_builder import PromptBuilder
+            from tiny_brain_io import TinyBrainIO
+            from tiny_output_interpreter import OutputInterpreter
+            from tiny_goap_system import GOAPPlanner
+            
+            logger.info(f"Processing LLM-driven turn for {character.name}")
+            
+            # Step 1: Initialize LLM components with error handling
+            prompt_builder = None
+            brain_io = None
+            output_interpreter = None
+            goap_planner = None
+            
             try:
-                # Process event logic here
-                # TODO: Implement proper event processing system
-                # TODO: Add event types (social, economic, environmental, etc.)
-                # TODO: Add event consequences and ripple effects
-                # TODO: Add event prioritization and scheduling
-                # TODO: Add cross-character event interactions
-                # TODO: Add event persistence and memory
+                # Initialize PromptBuilder with memory manager if available
+                memory_manager = getattr(self, 'memory_manager', None)
+                prompt_builder = PromptBuilder(character, memory_manager)
                 
-                # Process event for storytelling (IMPLEMENTED)
-                if self.storytelling_system and hasattr(event, 'name'):
-                    try:
-                        story_results = self.storytelling_system.process_event_for_stories(event)
-                        if story_results.get('narratives'):
-                            logger.info(f"Generated {len(story_results['narratives'])} story narratives from event: {event.name}")
-                    except Exception as e:
-                        logger.warning(f"Storytelling system failed to process event {event}: {e}")
+                # Initialize output interpreter
+                output_interpreter = OutputInterpreter(self.graph_manager)
                 
-                # For now, just mark events as processed
-                events_to_remove.append(i)
+                # Initialize GOAP planner
+                goap_planner = GOAPPlanner(self.graph_manager)
+                
+                # Initialize LLM brain - use fallback if not available
+                try:
+                    brain_io = TinyBrainIO("alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2")
+                except Exception as e:
+                    logger.warning(f"Could not initialize LLM brain: {e}. Using fallback decision making.")
+                    brain_io = None
+                    
+            except ImportError as e:
+                logger.warning(f"LLM components not available: {e}. Falling back to basic actions.")
+                return self._execute_fallback_character_action(character)
+                
+            # Step 2: Get available actions from strategy manager and GOAP
+            potential_actions = []
+            try:
+                if self.strategy_manager:
+                    # Get actions from strategy manager
+                    strategy_actions = self.strategy_manager.get_daily_actions(character)
+                    potential_actions.extend(strategy_actions or [])
+                    
+                # Get additional actions from GOAP planner if available
+                if goap_planner:
+                    goap_actions = goap_planner.get_available_actions(character)
+                    potential_actions.extend(goap_actions or [])
+                    
+                # Ensure we have at least some basic actions
+                if not potential_actions:
+                    potential_actions = self._get_basic_fallback_actions(character)
+                    
             except Exception as e:
-                logger.error(f"Error processing event {event}: {e}")
-                events_to_remove.append(i)  # Remove problematic events
+                logger.warning(f"Error getting potential actions: {e}")
+                potential_actions = self._get_basic_fallback_actions(character)
 
-        # Remove processed/failed events in reverse order to maintain indices
-        for i in reversed(events_to_remove):
-            try:
-                del self.events[i]
-            except IndexError:
-                pass  # Event already removed
-
-    def _process_events_and_update_strategy(self, dt):
-        """
-        Process events using EventHandler and update character strategies based on events.
-        This integrates the event system with the gameplay loop and strategy decisions.
-        """
-        try:
-            # Check and process events from EventHandler
-            current_time = datetime.now() if hasattr(datetime, 'now') else None
-            
-            # Get triggered events
-            triggered_events = self.event_handler.check_events(current_time)
-            
-            if triggered_events:
-                logger.info(f"Processing {len(triggered_events)} triggered events")
-                
-                # Process events and get their effects
-                event_results = self.event_handler.process_events(current_time)
-                
-                # Update character strategies based on events
-                self._update_character_strategies_from_events(triggered_events, event_results)
-                
-                # Apply event consequences to world state
-                self._apply_event_consequences_to_world_state(event_results)
-                
-                # Generate follow-up events if needed
-                self._generate_follow_up_events(event_results)
-                
-                logger.debug(f"Event processing results: {event_results}")
-            
-            # Process any scheduled cascading events
-            if hasattr(self.event_handler, 'process_cascading_queue'):
-                cascading_results = self.event_handler.process_cascading_queue(current_time)
-                if cascading_results:
-                    logger.info(f"Processed {len(cascading_results)} cascading events")
-                    
-            # Check for daily events and special occasions
-            if hasattr(self.event_handler, 'check_daily_events'):
-                daily_results = self.event_handler.check_daily_events(current_time)
-                if daily_results.get('total_events', 0) > 0:
-                    logger.debug(f"Daily events check: {daily_results}")
-                    
-        except Exception as e:
-            logger.error(f"Error in event processing and strategy update: {e}")
-            logger.error(traceback.format_exc())
-
-    def _update_character_strategies_from_events(self, triggered_events, event_results):
-        """Update character strategies based on triggered events."""
-        try:
-            if not self.strategy_manager:
-                return
-                
-            for event in triggered_events:
-                # Get characters affected by this event
-                affected_characters = getattr(event, 'participants', [])
-                
-                # Also check characters at the event location
-                if hasattr(event, 'location') and event.location:
-                    for char in self.characters.values():
-                        if (hasattr(char, 'location') and 
-                            char.location == event.location and 
-                            char not in affected_characters):
-                            affected_characters.append(char)
-                
-                # Update strategies for affected characters
-                for character in affected_characters:
-                    if hasattr(character, 'uuid') and character.uuid in self.characters:
-                        try:
-                            # Generate new strategy based on event
-                            if hasattr(self.strategy_manager, 'update_strategy'):
-                                new_strategy = self.strategy_manager.update_strategy([event], character)
-                                if new_strategy:
-                                    self._apply_strategy_to_character(character, new_strategy)
-                        except Exception as e:
-                            logger.warning(f"Error updating strategy for {character.name}: {e}")
-                            
-        except Exception as e:
-            logger.error(f"Error updating character strategies from events: {e}")
-
-    def _apply_event_consequences_to_world_state(self, event_results):
-        """
-        Apply event consequences to the broader world state.
-        Enhanced to have diverse impacts on character state, world state, and relationships.
-        """
-        try:
-            state_changes = event_results.get('state_changes', {})
-            
-            # Update global achievement tracking based on events
-            for event_name in event_results.get('processed_events', []):
-                self._check_event_achievements(event_name)
-                
-            # Update social networks based on relationship events
-            for event_name in event_results.get('processed_events', []):
-                if 'social' in event_name.lower() or 'community' in event_name.lower():
-                    self._update_social_networks_from_event(event_name)
-                    
-            # Update economic state based on economic events
-            for event_name in event_results.get('processed_events', []):
-                if 'trade' in event_name.lower() or 'market' in event_name.lower() or 'economic' in event_name.lower():
-                    self._update_economic_state_from_event(event_name)
-                    
-        except Exception as e:
-            logger.error(f"Error applying event consequences to world state: {e}")
-
-    def _generate_follow_up_events(self, event_results):
-        """Generate follow-up events based on processed events."""
-        try:
-            processed_events = event_results.get('processed_events', [])
-            
-            for event_name in processed_events:
-                # Generate follow-up events based on event type and outcome
-                if 'festival' in event_name.lower():
-                    # After a festival, generate cleanup and community bonding events
-                    follow_up = self.event_handler.create_work_event(
-                        f"{event_name} Cleanup",
-                        datetime.now() + timedelta(hours=4),
-                        required_items=['cleaning_supplies'],
-                        location=None
-                    )
-                    self.event_handler.add_event(follow_up)
-                    
-                elif 'trade' in event_name.lower() or 'merchant' in event_name.lower():
-                    # After trade events, increase economic activity
-                    if hasattr(self, 'economic_state'):
-                        self.economic_state = getattr(self, 'economic_state', {})
-                        self.economic_state['trade_activity'] = self.economic_state.get('trade_activity', 0) + 10
-                        
-                elif 'disaster' in event_name.lower() or 'crisis' in event_name.lower():
-                    # After disasters, generate recovery and aid events
-                    recovery_event = self.event_handler.create_social_event(
-                        f"Recovery from {event_name}",
-                        datetime.now() + timedelta(hours=12),
-                        participants=[],
-                        location=None
-                    )
-                    self.event_handler.add_event(recovery_event)
-                    
-        except Exception as e:
-            logger.error(f"Error generating follow-up events: {e}")
-
-    def _check_event_achievements(self, event_name):
-        """Check and award achievements based on processed events."""
-        try:
-            # Update global achievements based on events
-            if hasattr(self, 'global_achievements'):
-                village_milestones = self.global_achievements.get('village_milestones', {})
-                
-                if 'trade' in event_name.lower() or 'merchant' in event_name.lower():
-                    village_milestones['trade_established'] = True
-                    
-                if 'harvest' in event_name.lower():
-                    village_milestones['successful_harvest'] = True
-                    
-                # Update social achievements
-                social_achievements = self.global_achievements.get('social_achievements', {})
-                
-                if 'festival' in event_name.lower() or 'celebration' in event_name.lower():
-                    social_achievements['community_event'] = True
-                    
-        except Exception as e:
-            logger.warning(f"Error checking event achievements: {e}")
 
     def _update_social_networks_from_event(self, event_name):
         """Update social networks based on social events."""
@@ -3910,1227 +3390,608 @@ class GameplayController:
             error_text = small_font.render("Using legacy UI (panels unavailable)", True, (255, 200, 0))
             self.screen.blit(error_text, (10, 40))
             
-            # Render view mode status
-            if getattr(self, "_minimap_mode", False):
-                mode_text = tiny_font.render("Mini-map: ON", True, (0, 255, 0))
-                self.screen.blit(mode_text, (self.screen.get_width() - 100, 35))
-
-            # Render time if available
-            y_offset = 35
-            if hasattr(self, "gametime_manager") and self.gametime_manager:
-                try:
-                    game_time = (
-                        self.gametime_manager.get_calendar().get_game_time_string()
-                    )
-                    time_text = small_font.render(
-                        f"Time: {game_time}", True, (255, 255, 255)
-                    )
-                    self.screen.blit(time_text, (10, y_offset))
-                    y_offset += 20
-                except:
-                    pass
-            # Render time scale factor
+            # Step 3: Generate decision prompt
             try:
-                if self._last_time_scale_factor != self.time_scale_factor or self._cached_speed_text is None:
-                    self._cached_speed_text = small_font.render(
-                        f"Speed: {self.time_scale_factor:.1f}x", True, (255, 255, 255)
+                # Get current context
+                current_time = getattr(self, 'current_time', 'morning')
+                weather_system = getattr(self, 'weather_system', {})
+                current_weather = weather_system.get('current_weather', 'clear')
+                
+                # Create action choices for prompt
+                action_choices = []
+                for i, action in enumerate(potential_actions[:5]):  # Limit to top 5
+                    action_name = getattr(action, 'name', str(action))
+                    action_cost = getattr(action, 'cost', 1.0)
+                    action_choices.append(f"{i+1}. {action_name} (Cost: {action_cost:.1f})")
+                
+                # Generate the decision prompt
+                if prompt_builder:
+                    prompt = prompt_builder.generate_decision_prompt(
+                        time=current_time,
+                        weather=current_weather,
+                        action_choices=action_choices,
+                        include_conversation_context=True,
+                        include_few_shot_examples=True,
+                        include_memory_integration=True,
+                        output_format="json"
                     )
-                    self._last_time_scale_factor = self.time_scale_factor
-
-                if self._cached_speed_text:
-                    self.screen.blit(self._cached_speed_text, (10, y_offset))
-                    y_offset += 20
-            except (AttributeError, TypeError, ValueError) as e:
-                logger.warning(f"Could not render time_scale_factor: {e}")
+                else:
+                    # Fallback basic prompt
+                    prompt = self._generate_basic_decision_prompt(character, action_choices, current_time, current_weather)
+                    
             except Exception as e:
-                logger.error(f"Unexpected error while rendering time_scale_factor: {e}")
-                # Still raise the error after logging, as it's unexpected.
-                raise
-            # Render weather information
-            if hasattr(self, "weather_system"):
-                weather_text = small_font.render(
-                    f"Weather: {self.weather_system['current_weather']} {self.weather_system['temperature']}°C",
-                    True,
-                    (200, 220, 255),
-                )
-                self.screen.blit(weather_text, (10, y_offset))
-                y_offset += 20
-
-                current_weather = None
-                if isinstance(self.weather_system, dict):
-                    current_weather = self.weather_system.get('current_weather')
-                if current_weather in WEATHER_UI_MESSAGES:
-                    message, color = WEATHER_UI_MESSAGES[current_weather]
-                    weather_effect_text = tiny_font.render(message, True, color)
-                    self.screen.blit(weather_effect_text, (10, y_offset))
-                    y_offset += 15
-            # Render game statistics
-            stats = self.game_statistics
-            stats_text = tiny_font.render(
-                f"Actions: {stats['actions_executed']} | Failed: {stats['actions_failed']} | Recovered: {stats['errors_recovered']}",
-                True,
-                (180, 180, 180),
-            )
-            self.screen.blit(stats_text, (10, y_offset))
-            y_offset += 15
-
-            # Render action analytics if available
-            if hasattr(self, "action_resolver"):
+                logger.warning(f"Error generating decision prompt: {e}")
+                prompt = self._generate_basic_decision_prompt(character, [], current_time, 'clear')
+            
+            # Step 4: Get LLM response
+            llm_response = None
+            if brain_io and prompt:
                 try:
-                    analytics = self.action_resolver.get_action_analytics()
-                    analytics_text = tiny_font.render(
-                        f"Success Rate: {analytics['success_rate']:.1%} | Cache: {analytics['cache_size']}",
-                        True,
-                        (150, 150, 150),
-                    )
-                    self.screen.blit(analytics_text, (10, y_offset))
-                    y_offset += 15
-                except:
-                    pass
-
-            # Render system health status
-            if hasattr(self, "recovery_manager"):
-                try:
-                    system_status = self.recovery_manager.get_system_status()
-                    healthy_systems = sum(
-                        1 for status in system_status.values() if status == "healthy"
-                    )
-                    total_systems = len(system_status)
-
-                    health_color = (
-                        (0, 255, 0)
-                        if healthy_systems == total_systems
-                        else (
-                            (255, 255, 0)
-                            if healthy_systems > total_systems // 2
-                            else (255, 0, 0)
-                        )
-                    )
-                    health_text = tiny_font.render(
-                        f"Systems: {healthy_systems}/{total_systems} healthy",
-                        True,
-                        health_color,
-                    )
-                    self.screen.blit(health_text, (10, y_offset))
-                    y_offset += 15
-                except:
-                    pass
-
-            # Render 'First Week Survived' achievement status
-            try:
-                survived_week = self.global_achievements.get("village_milestones", {}).get("first_week_survived", False)
-                status_text = "Yes" if survived_week else "No"
-                achievement_render = tiny_font.render(
-                    f"First Week Survived: {status_text}", True, (220, 220, 180) # Light yellow/gold color
-                )
-                self.screen.blit(achievement_render, (10, y_offset))
-                y_offset += 15
-            except Exception as e:
-                logger.warning(f"Could not render 'first_week_survived' achievement: {e}")
-            # Render achievements as a separate section
-            y_offset = self._render_achievements(y_offset)
-
-            # Render selected character info (enhanced)
-            if (
-                hasattr(self.map_controller, "selected_character")
-                and self.map_controller.selected_character
-            ):
-                char = self.map_controller.selected_character
-                char_info = [
-                    f"Selected: {char.name}",
-                    f"Job: {getattr(char, 'job', 'Unknown')}",
-                    f"Energy: {getattr(char, 'energy', 0)}",
-                    f"Health: {getattr(char, 'health_status', 0)}",
-                ]
-
-                # Add social and quest info
-                if hasattr(char, "uuid") and hasattr(self, "social_networks"):
-                    try:
-                        relationships = self.social_networks["relationships"].get(
-                            char.uuid, {}
-                        )
-                        avg_relationship = (
-                            sum(relationships.values()) / len(relationships)
-                            if relationships
-                            else 50
-                        )
-                        char_info.append(f"Social: {avg_relationship:.0f}")
-                    except:
-                        pass
-
-                if hasattr(char, "uuid") and hasattr(self, "quest_system"):
-                    try:
-                        active_quests = len(
-                            self.quest_system["active_quests"].get(char.uuid, [])
-                        )
-                        completed_quests = len(
-                            self.quest_system["completed_quests"].get(char.uuid, [])
-                        )
-                        char_info.append(
-                            f"Quests: {active_quests} active, {completed_quests} done"
-                        )
-                    except:
-                        pass
-                    self.screen.blit(info_text, (10, y_offset))
-                    y_offset += 20 # Increment y_offset for each line of char_info
-
-                # Display selected character's achievements
-                try:
-                    if hasattr(char, 'achievements') and char.achievements:
-                        ach_header_text = small_font.render("Achievements:", True, (220, 220, 180))
-                        self.screen.blit(ach_header_text, (10, y_offset))
-                        y_offset += 20
-
-                        for achievement_id in char.achievements:
-                            # Simple display of achievement ID, can be made more user-friendly later
-                            display_name = achievement_id.replace("_", " ").title()
-                            ach_text = tiny_font.render(f"- {display_name}", True, (200, 200, 150))
-                            self.screen.blit(ach_text, (15, y_offset)) # Indent slightly
-                            y_offset += 15
+                    logger.debug(f"Sending prompt to LLM for {character.name}")
+                    llm_response = brain_io.generate_text(prompt, max_tokens=150, temperature=0.7)
+                    logger.debug(f"LLM response for {character.name}: {llm_response[:100]}...")
                 except Exception as e:
-                    logger.warning(f"Could not render selected character achievements: {e}")
+                    logger.warning(f"Error getting LLM response: {e}")
+                    llm_response = None
+            
+            # Step 5: Parse LLM response and select action
+            selected_actions = []
+            if llm_response and output_interpreter:
+                try:
+                    # Parse the LLM response and get actions
+                    selected_actions = output_interpreter.interpret_response(
+                        llm_response, character, potential_actions
+                    )
+                    logger.info(f"LLM selected {len(selected_actions)} actions for {character.name}")
+                except Exception as e:
+                    logger.warning(f"Error interpreting LLM response: {e}")
+                    selected_actions = []
+            
+            # Step 6: Fallback to GOAP or default if LLM failed
+            if not selected_actions and goap_planner:
+                try:
+                    # Use GOAP to plan actions toward character's goals
+                    character_goals = []
+                    if hasattr(character, 'evaluate_goals'):
+                        goal_queue = character.evaluate_goals()
+                        if goal_queue:
+                            # Convert goal queue to goal objects
+                            for utility_score, goal in goal_queue[:1]:  # Take top goal
+                                character_goals.append(goal)
+                    
+                    if character_goals:
+                        goap_plan = goap_planner.plan_for_character(character, character_goals[0])
+                        if goap_plan:
+                            selected_actions = goap_plan[:1]  # Take first action from plan
+                            logger.info(f"GOAP selected actions for {character.name}")
+                except Exception as e:
+                    logger.warning(f"Error with GOAP planning: {e}")
+            
+            # Step 7: Final fallback to first potential action
+            if not selected_actions and potential_actions:
+                selected_actions = [potential_actions[0]]
+                logger.info(f"Using fallback action for {character.name}")
+            
+            # Step 8: Execute selected actions
+            execution_success = False
+            if selected_actions:
+                for action in selected_actions:
+                    try:
+                        if hasattr(action, 'execute'):
+                            success = action.execute()
+                            if success:
+                                execution_success = True
+                                logger.debug(f"Successfully executed {getattr(action, 'name', 'action')} for {character.name}")
+                                
+                                # Record conversation turn for learning
+                                if prompt_builder and llm_response:
+                                    prompt_builder.record_conversation_turn(
+                                        prompt=prompt,
+                                        response=llm_response,
+                                        action_taken=getattr(action, 'name', 'unknown'),
+                                        outcome="success" if success else "failure"
+                                    )
+                                break
+                            else:
+                                logger.warning(f"Action {getattr(action, 'name', 'action')} failed for {character.name}")
+                        else:
+                            logger.warning(f"Action has no execute method: {action}")
+                    except Exception as e:
+                        logger.warning(f"Error executing action for {character.name}: {e}")
+                        continue
+            
+            # Step 9: Update statistics
+            if execution_success:
+                self.game_statistics["actions_executed"] += 1
+            else:
+                self.game_statistics["actions_failed"] += 1
+                
+            return execution_success
+            
+        except Exception as e:
+            logger.error(f"Critical error in process_character_turn for {getattr(character, 'name', 'Unknown')}: {e}")
+            # Final fallback to basic action
+            return self._execute_fallback_character_action(character)
+    
+    def _execute_fallback_character_action(self, character) -> bool:
+        """Execute a simple fallback action when LLM decision making fails."""
+        try:
+            # Try to get actions from strategy manager
+            if self.strategy_manager:
+                actions = self.strategy_manager.get_daily_actions(character)
+                if actions and len(actions) > 0:
+                    action = actions[0]
+                    if hasattr(action, 'execute'):
+                        return action.execute()
+            
+            # Create a basic rest action as ultimate fallback
+            from actions import Action
+            rest_action = Action(
+                name="Rest",
+                preconditions={},
+                effects=[{"attribute": "energy", "change_value": 5}],
+                cost=0
+            )
+            return rest_action.execute() if hasattr(rest_action, 'execute') else True
+            
+        except Exception as e:
+            logger.warning(f"Even fallback action failed for {character.name}: {e}")
+            return False
+    
+    def _get_basic_fallback_actions(self, character):
+        """Get basic fallback actions when no other actions are available."""
+        try:
+            from actions import Action, NoOpAction, SleepAction
+            
+            actions = []
+            
+            # Create basic actions based on character needs
+            if hasattr(character, 'energy') and character.energy < 50:
+                sleep_action = SleepAction(duration=8, initiator_id=getattr(character, 'id', character.name))
+                actions.append(sleep_action)
+            
+            if hasattr(character, 'hunger_level') and character.hunger_level > 7:
+                from actions import EatAction
+                eat_action = EatAction(item_name="food", initiator_id=getattr(character, 'id', character.name))
+                actions.append(eat_action)
+            
+            # Always add a no-op action as final fallback
+            noop_action = NoOpAction(initiator_id=getattr(character, 'id', character.name))
+            actions.append(noop_action)
+            
+            return actions
+            
+        except Exception as e:
+            logger.warning(f"Error creating fallback actions: {e}")
+            # Return empty list if we can't even create basic actions
+            return []
+    
+    def _generate_basic_decision_prompt(self, character, action_choices, current_time, current_weather):
+        """Generate a basic decision prompt when PromptBuilder is not available."""
+        try:
+            prompt = f"""You are {character.name}. It's {current_time} and the weather is {current_weather}.
+            
+Current status:
+- Energy: {getattr(character, 'energy', 50)}/100
+- Hunger: {getattr(character, 'hunger_level', 5)}/10
+- Health: {getattr(character, 'health_status', 75)}/100
 
+Available actions:
+"""
+            
+            if action_choices:
+                for choice in action_choices:
+                    prompt += f"{choice}\n"
+            else:
+                prompt += "1. Rest (Cost: 0.0)\n2. Look around (Cost: 0.1)\n"
+            
+            prompt += "\nChoose an action by responding with just the number (e.g., '1')."
+            
+            return prompt
+            
+        except Exception as e:
+            logger.warning(f"Error generating basic prompt: {e}")
+            return "Choose an action: 1. Rest"
 
-                for i, info in enumerate(char_info):
-                    info_text = small_font.render(info, True, (255, 255, 0))
-                    self.screen.blit(info_text, (10, y_offset + i * 20))
+    def _process_events_and_update_strategy(self, dt):
+        """Process events via EventHandler and update strategy accordingly."""
+        try:
+            if not self.event_handler:
+                return
 
-            # Render enhanced instructions
-            instructions = [
-                "Click characters to select them",
-                "Click buildings to interact",
-                "SPACE to pause/unpause",
-                "R to reset characters",
-                "S to save game (basic)",
-                "L to load game (basic)",
-                "F to show feature status",
-                "M to toggle mini-map",
-                "O to toggle overview mode",
-                "ESC to quit",
-            ]
+            # Get events from event handler
+            events = self.event_handler.check_events()
+            
+            # Update strategy manager based on events
+            if self.strategy_manager and events:
+                decisions = self.strategy_manager.update_strategy(events)
+                
+                # Apply decisions to game state
+                for decision in decisions:
+                    self.apply_decision(decision, None)
+                    
+        except Exception as e:
+            logger.error(f"Error processing events and updating strategy: {e}")
 
-            instruction_start_y = self.screen.get_height() - len(instructions) * 15 - 10
-            for i, instruction in enumerate(instructions):
-                inst_text = tiny_font.render(instruction, True, (200, 200, 200))
-                self.screen.blit(inst_text, (10, instruction_start_y + i * 15))
+    def _process_pending_events(self):
+        """Process any pending events in the basic events list."""
+        try:
+            events_to_remove = []
+            for event in self.events:
+                try:
+                    # Process event logic here
+                    # This is a basic fallback when EventHandler is not available
+                    logger.debug(f"Processing basic event: {event}")
+                    events_to_remove.append(event)
+                except Exception as e:
+                    logger.warning(f"Error processing event: {e}")
+                    events_to_remove.append(event)  # Remove problematic events
+            
+            # Remove processed events
+            for event in events_to_remove:
+                if event in self.events:
+                    self.events.remove(event)
+                    
+        except Exception as e:
+            logger.error(f"Error processing pending events: {e}")
 
-            # Show feature implementation status on F key press (stored state)
+    def apply_decision(self, decision, game_state):
+        """Apply a strategic decision to the game state."""
+        try:
+            if not decision:
+                return
+
+            # Apply the decision based on its type
+            decision_type = decision.get("type", "unknown")
+            
+            if decision_type == "character_action":
+                character_id = decision.get("character_id")
+                action = decision.get("action")
+                
+                if character_id in self.characters and action:
+                    character = self.characters[character_id]
+                    resolved_action = self.action_resolver.resolve_action(action, character)
+                    
+                    if resolved_action and hasattr(resolved_action, 'execute'):
+                        success = resolved_action.execute()
+                        if success:
+                            self.game_statistics["actions_executed"] += 1
+                        else:
+                            self.game_statistics["actions_failed"] += 1
+                        
+                        # Track the action execution for analytics
+                        self.action_resolver.track_action_execution(resolved_action, character, success)
+                        
+            elif decision_type == "event_response":
+                # Handle event-based decisions
+                event_id = decision.get("event_id")
+                response = decision.get("response")
+                logger.info(f"Responding to event {event_id}: {response}")
+                
+            else:
+                logger.warning(f"Unknown decision type: {decision_type}")
+                
+        except Exception as e:
+            logger.error(f"Error applying decision: {e}")
+
+    def render(self):
+        """Render the game with modular UI system and error handling."""
+        if not self.screen:
+            return
+
+        try:
+            # Get background color from config
+            bg_color = self.config.get("render", {}).get("background_color", [20, 50, 80])
+            self.screen.fill(bg_color)
+
+            # Render map controller (characters, buildings, etc.)
+            if self.map_controller:
+                try:
+                    self.map_controller.render(self.screen)
+                except Exception as e:
+                    logger.warning(f"Error rendering map controller: {e}")
+
+            # Render modular UI panels
+            self._render_ui_panels()
+
+            # Render feature status overlay if enabled
             if getattr(self, "_show_feature_status", False):
                 self._render_feature_status_overlay()
 
-            # Show mini-map if enabled
-            if getattr(self, "_minimap_mode", False):
-                self._render_minimap()
+            pygame.display.flip()
 
         except Exception as e:
-            self._render_minimal_ui()
-    
-    def _render_minimal_ui(self):
-        """Minimal UI rendering for emergency fallback."""
+            logger.error(f"Error during rendering: {e}")
+
+    def _render_ui_panels(self):
+        """Render all visible UI panels using the modular system."""
         try:
-            font = pygame.font.Font(None, 24)
-            error_text = font.render("UI Error - Minimal Mode", True, (255, 0, 0))
-            self.screen.blit(error_text, (10, 10))
-            char_text = font.render(f"Characters: {len(self.characters)}", True, (255, 255, 255))
-            self.screen.blit(char_text, (10, 35))
-        except:
-            pass  # Even minimal fallback failed
+            current_y = 10
+            
+            for panel_name, panel in self.ui_panels.items():
+                if panel.visible:
+                    try:
+                        # Update panel position for stacking
+                        if panel_name == 'instructions':
+                            # Position instructions at bottom
+                            panel.position = (10, self.screen.get_height() - 150)
+                        elif panel.position[1] is None:
+                            panel.position = (panel.position[0], current_y)
+                        
+                        # Render panel and get height
+                        panel_height = panel.render(self.screen, self, self.ui_fonts)
+                        
+                        # Update current_y for next panel (only for left-side panels)
+                        if panel.position[0] <= 20:  # Left-side panels
+                            current_y += panel_height + 10
+                            
+                    except Exception as e:
+                        logger.warning(f"Error rendering UI panel {panel_name}: {e}")
+                        
+        except Exception as e:
+            logger.error(f"Error rendering UI panels: {e}")
 
     def _render_feature_status_overlay(self):
-        """Render an overlay showing feature implementation status."""
+        """Render feature status overlay."""
         try:
-            font = pygame.font.Font(None, 18)
-
-            # Create semi-transparent overlay
-            overlay = pygame.Surface((400, 300))
-            overlay.set_alpha(200)
-            overlay.fill((0, 0, 0))
-
-            # Get feature status
+            font = self.ui_fonts.get('small', pygame.font.Font(None, 18))
             feature_status = self.get_feature_implementation_status()
-
-            # Render title
-            title_text = font.render(
-                "Feature Implementation Status", True, (255, 255, 255)
-            )
-            overlay.blit(title_text, (10, 10))
-
-            y_pos = 35
-            for feature, status in feature_status.items():
-                # Color code based on status
-                if status == "FULLY_IMPLEMENTED":
-                    color = (0, 255, 0)
-                elif status == "BASIC_IMPLEMENTED":
-                    color = (255, 255, 0)
-                elif status == "STUB_IMPLEMENTED":
-                    color = (255, 165, 0)
-                else:  # NOT_STARTED
-                    color = (255, 0, 0)
-
-                # Format feature name
-                display_name = feature.replace("_", " ").title()
-                status_text = font.render(f"{display_name}: {status}", True, color)
-                overlay.blit(status_text, (10, y_pos))
-                y_pos += 18
-
-                if y_pos > 260:  # Prevent overflow
-                    break
-
-            # Blit overlay to main screen
-            self.screen.blit(overlay, (self.screen.get_width() - 420, 50))
-
+            
+            overlay_x = self.screen.get_width() - 300
+            overlay_y = 50
+            
+            # Background for overlay
+            overlay_rect = pygame.Rect(overlay_x - 10, overlay_y - 10, 290, len(feature_status) * 20 + 20)
+            overlay_surface = pygame.Surface((overlay_rect.width, overlay_rect.height))
+            overlay_surface.set_alpha(180)
+            overlay_surface.fill((0, 0, 0))
+            self.screen.blit(overlay_surface, overlay_rect)
+            
+            # Feature status text
+            for i, (feature, status) in enumerate(feature_status.items()):
+                color = {
+                    "NOT_STARTED": (255, 100, 100),
+                    "STUB_IMPLEMENTED": (255, 255, 100),  
+                    "BASIC_IMPLEMENTED": (100, 255, 100),
+                    "FULLY_IMPLEMENTED": (100, 255, 200)
+                }.get(status, (255, 255, 255))
+                
+                text = font.render(f"{feature}: {status}", True, color)
+                self.screen.blit(text, (overlay_x, overlay_y + i * 20))
+                
         except Exception as e:
-            logger.warning(f"Error rendering feature status overlay: {e}")
-
-    def _render_minimap(self):
-        """Render a mini-map or overview of the game world."""
-        try:
-            if not self.map_controller or not hasattr(self.map_controller, 'map_image'):
-                return
-            
-            # Mini-map configuration
-            minimap_size = MINIMAP_SIZE  # Size of the mini-map
-            margin = 10
-            position = (self.screen.get_width() - minimap_size - margin, margin)
-            
-            # Create mini-map surface
-            minimap_surface = pygame.Surface((minimap_size, minimap_size))
-            minimap_surface.fill((0, 0, 0))  # Black background
-            
-            # Get the original map dimensions
-            original_map = self.map_controller.map_image
-            original_width = original_map.get_width()
-            original_height = original_map.get_height()
-            
-            # Calculate scaling factor to fit the map in the mini-map
-            scale_x = minimap_size / original_width
-            scale_y = minimap_size / original_height
-            scale = min(scale_x, scale_y)  # Use smaller scale to maintain aspect ratio
-            
-            # Scale the map image
-            scaled_width = int(original_width * scale)
-            scaled_height = int(original_height * scale)
-            scaled_map = pygame.transform.scale(original_map, (scaled_width, scaled_height))
-            
-            # Center the scaled map in the mini-map surface
-            map_x = (minimap_size - scaled_width) // 2
-            map_y = (minimap_size - scaled_height) // 2
-            minimap_surface.blit(scaled_map, (map_x, map_y))
-            
-            # Draw buildings on mini-map
-            if hasattr(self.map_controller, 'map_data') and 'buildings' in self.map_controller.map_data:
-                for building in self.map_controller.map_data['buildings']:
-                    if 'rect' in building:
-                        # Scale building coordinates
-                        scaled_rect = pygame.Rect(
-                            int(building['rect'].x * scale) + map_x,
-                            int(building['rect'].y * scale) + map_y,
-                            max(2, int(building['rect'].width * scale)),
-                            max(2, int(building['rect'].height * scale))
-                        )
-                        pygame.draw.rect(minimap_surface, (100, 100, 100), scaled_rect)
-            
-            # Draw characters on mini-map
-            if hasattr(self.map_controller, 'characters'):
-                for character in self.map_controller.characters.values():
-                    if hasattr(character, 'position'):
-                        # Scale character position
-                        char_x = int(character.position[0] * scale) + map_x
-                        char_y = int(character.position[1] * scale) + map_y
-                        
-                        # Use different color for selected character
-                        if character is self.map_controller.selected_character:
-                            color = (255, 255, 0)  # Yellow for selected
-                            radius = 3
-                        else:
-                            color = getattr(character, 'color', DEFAULT_COLOR)
-                            radius = 2
-                        
-                        pygame.draw.circle(minimap_surface, color, (char_x, char_y), radius)
-            
-            # Draw border around mini-map
-            pygame.draw.rect(minimap_surface, (128, 128, 128), minimap_surface.get_rect(), 2)
-            
-            # Add semi-transparent background
-            background = pygame.Surface((minimap_size + 4, minimap_size + 4))
-            background.set_alpha(200)
-            background.fill((0, 0, 0))
-            self.screen.blit(background, (position[0] - 2, position[1] - 2))
-            
-            # Blit mini-map to main screen
-            self.screen.blit(minimap_surface, position)
-            
-            # Add mini-map title
-            font = pygame.font.Font(None, 16)
-            title_text = font.render("Mini-Map", True, (255, 255, 255))
-            title_pos = (position[0], position[1] - 20)
-            self.screen.blit(title_text, title_pos)
-            
-        except Exception as e:
-            logger.warning(f"Error rendering mini-map: {e}")
-
-    def _render_overview(self):
-        """Render a full-screen overview of the game world with UI overlay."""
-        try:
-            if not self.map_controller or not hasattr(self.map_controller, 'map_image'):
-                return
-            
-            # Get screen dimensions
-            screen_width = self.screen.get_width()
-            screen_height = self.screen.get_height()
-            
-            # Reserve space for UI at the bottom
-            ui_height = 100
-            available_height = screen_height - ui_height
-            
-            # Get the original map dimensions
-            original_map = self.map_controller.map_image
-            original_width = original_map.get_width()
-            original_height = original_map.get_height()
-            
-            # Calculate scaling factor to fit the map in the available space
-            scale_x = screen_width / original_width
-            scale_y = available_height / original_height
-            scale = min(scale_x, scale_y)  # Use smaller scale to maintain aspect ratio
-            
-            # Scale the map image
-            scaled_width = int(original_width * scale)
-            scaled_height = int(original_height * scale)
-            scaled_map = pygame.transform.scale(original_map, (scaled_width, scaled_height))
-            
-            # Center the scaled map on screen
-            map_x = (screen_width - scaled_width) // 2
-            map_y = (available_height - scaled_height) // 2
-            
-            # Clear screen with dark background
-            self.screen.fill((20, 20, 20))
-            
-            # Blit the scaled map
-            self.screen.blit(scaled_map, (map_x, map_y))
-            
-            # Draw buildings on overview
-            if hasattr(self.map_controller, 'map_data') and 'buildings' in self.map_controller.map_data:
-                for building in self.map_controller.map_data['buildings']:
-                    if 'rect' in building:
-                        # Scale building coordinates
-                        scaled_rect = pygame.Rect(
-                            int(building['rect'].x * scale) + map_x,
-                            int(building['rect'].y * scale) + map_y,
-                            max(3, int(building['rect'].width * scale)),
-                            max(3, int(building['rect'].height * scale))
-                        )
-                        pygame.draw.rect(self.screen, (150, 150, 150), scaled_rect)
-                        pygame.draw.rect(self.screen, (200, 200, 200), scaled_rect, 1)
-            
-            # Draw characters on overview
-            if hasattr(self.map_controller, 'characters'):
-                for character in self.map_controller.characters.values():
-                    if hasattr(character, 'position'):
-                        # Scale character position
-                        char_x = int(character.position[0] * scale) + map_x
-                        char_y = int(character.position[1] * scale) + map_y
-                        
-                        # Use different appearance for selected character
-                        if character is self.map_controller.selected_character:
-                            # Draw selection ring
-                            pygame.draw.circle(self.screen, (255, 255, 0), (char_x, char_y), 8, 2)
-                            color = DEFAULT_COLOR
-                            radius = 4
-                        else:
-                            color = getattr(character, 'color', DEFAULT_COLOR)
-                            radius = 3
-                        
-                        pygame.draw.circle(self.screen, color, (char_x, char_y), radius)
-                        
-                        # Add character name if available
-                        if hasattr(character, 'name') and scale > 0.5:  # Only show names when zoomed in enough
-                            font = pygame.font.Font(None, 16)
-                            name_text = font.render(character.name, True, (255, 255, 255))
-                            text_rect = name_text.get_rect()
-                            text_rect.center = (char_x, char_y - 15)
-                            self.screen.blit(name_text, text_rect)
-            
-            # Draw overview mode UI at the bottom
-            ui_surface = pygame.Surface((screen_width, ui_height))
-            ui_surface.set_alpha(220)
-            ui_surface.fill((0, 0, 0))
-            
-            font = pygame.font.Font(None, 24)
-            title_text = font.render("OVERVIEW MODE", True, (255, 255, 255))
-            ui_surface.blit(title_text, (10, 10))
-            
-            small_font = pygame.font.Font(None, 18)
-            instructions = [
-                "Press 'O' to exit overview mode",
-                f"Showing {len(getattr(self.map_controller, 'characters', {}))} characters",
-                f"Scale: {scale:.2f}x"
-            ]
-            
-            for i, instruction in enumerate(instructions):
-                inst_text = small_font.render(instruction, True, (200, 200, 200))
-                ui_surface.blit(inst_text, (10, 35 + i * 20))
-            
-            self.screen.blit(ui_surface, (0, available_height))
-            
-        except Exception as e:
-            logger.warning(f"Error rendering overview: {e}")
+            logger.error(f"Error rendering feature status overlay: {e}")
 
     def run(self):
-        """Main entry point to start the game loop."""
+        """Main run method to start the game loop."""
         try:
-            logger.info("Starting Tiny Village gameplay...")
+            logger.info("Starting Tiny Village...")
+            logger.info(f"Initialized with {len(self.characters)} characters")
+            
             if self.initialization_errors:
-                logger.warning(
-                    f"Starting with {len(self.initialization_errors)} initialization errors"
-                )
+                logger.warning(f"Started with {len(self.initialization_errors)} initialization errors")
+            
             self.game_loop()
+            
         except Exception as e:
-            logger.error(f"Critical error in main game loop: {e}")
+            logger.error(f"Critical error in main run loop: {e}")
             logger.error(traceback.format_exc())
         finally:
-            logger.info("Gameplay controller shutting down")
+            logger.info("Tiny Village shutting down...")
 
-    def update(self, game_state=None):
-        """
-        Legacy update method for compatibility with external systems.
-        Now integrated with the main update_game_state method.
-        
-        This method exists for backward compatibility and delegates to update_game_state.
-        External systems calling this method will get the full integrated update functionality.
-        
-        Args:
-            game_state: Optional game state parameter (maintained for compatibility)
-        """
-        try:
-            # Store the game_state temporarily if provided for legacy compatibility
-            legacy_game_state = game_state
-            
-            # Use a dynamically calculated delta time for legacy compatibility
-            # This ensures consistent behavior for external systems that don't provide dt
-            if not hasattr(self, '_clock'):
-                self._clock = pygame.time.Clock()  # Initialize clock if not already done
-            elapsed_time_ms = self._clock.tick()  # Get elapsed time in milliseconds
-            # Use a dynamically calculated delta time for legacy compatibility
-            # This ensures consistent behavior for external systems that don't provide dt
-            if not hasattr(self, '_clock'):
-                self._clock = pygame.time.Clock()  # Initialize clock if not already done
-            elapsed_time_ms = self._clock.tick()  # Get elapsed time in milliseconds
-            default_dt = elapsed_time_ms / 1000.0  # Convert to seconds
-            
-            # Delegate to the main update method which now includes all functionality
-            self.update_game_state(default_dt)
-            
-            # Note: The integrated functionality in update_game_state handles decision application
-            # with the controller's internal state rather than an external game_state parameter
-            
-            logger.debug("Legacy update method successfully delegated to update_game_state")
-            
-        except Exception as e:
-            logger.error(f"Error in legacy update method delegation: {e}")
-
-    def apply_decision(self, decision, game_state=None):
-        """
-        Improved apply_decision method that properly handles action resolution.
-        
-        This method can safely handle None values for game_state and will use the 
-        controller's internal state when game_state is not provided.
-
-        Args:
-            decision: Can be a single action, list of actions, or decision object
-            game_state: Optional game state (for legacy compatibility). 
-                        When None, actions will be executed using the controller's 
-                        internal state and character information.
-        
-        Returns:
-            bool: True if all actions were executed successfully, False otherwise
-            
-        Note:
-            Passing None as game_state is explicitly supported and safe. The method
-            will fall back to using available character and controller state information.
-        """
-        try:
-            # Validate input parameters
-            if decision is None:
-                logger.warning("apply_decision called with None decision - no actions to execute")
-                raise ValueError("apply_decision called with None decision - invalid input")
-            
-            # Log when game_state is None for transparency
-            if game_state is None:
-                logger.debug("apply_decision called with game_state=None - using controller's internal state")
-            
-            # Handle different decision formats
-            actions_to_execute = []
-            target_character = None
-
-            if isinstance(decision, list):
-                actions_to_execute = decision
-            elif isinstance(decision, dict) and "actions" in decision:
-                actions_to_execute = decision["actions"]
-                target_character = decision.get("character")
-            elif hasattr(decision, "actions"):
-                actions_to_execute = decision.actions
-                target_character = getattr(decision, "character", None)
-            else:
-                # Single action
-                actions_to_execute = [decision]
-
-            # Validate that we have actions to execute
-            if not actions_to_execute:
-                logger.warning("apply_decision: No actions found in decision")
-                return False  # No actions to execute indicates failure
-            
-            # Find target character if not specified
-            if not target_character and actions_to_execute:
-                # Try to determine character from first action
-                first_action = actions_to_execute[0]
-                if isinstance(first_action, dict) and "character_id" in first_action:
-                    target_character = self.characters.get(first_action["character_id"])
-                elif hasattr(first_action, "initiator"):
-                    target_character = first_action.initiator
-
-            # Execute actions
-            successful_actions = 0
-            for action in actions_to_execute:
-                try:
-                    success = self._execute_decision_action(
-                        action, target_character, game_state
-                    )
-                    if success:
-                        successful_actions += 1
-                        logger.debug(f"Successfully executed action: {action}")
-                    else:
-                        logger.warning(f"Failed to execute action: {action}")
-                except Exception as e:
-                    logger.error(f"Error executing decision action {action}: {e}")
-                    continue
-
-            # Log decision execution results with context about game_state
-            total_actions = len(actions_to_execute)
-            game_state_info = "with game_state" if game_state is not None else "using internal state (game_state=None)"
-            
-            if successful_actions == total_actions:
-                logger.info(
-                    f"Decision fully executed {game_state_info}: {successful_actions}/{total_actions} actions successful"
-                )
-                return True
-            elif successful_actions > 0:
-                logger.warning(
-                    f"Decision partially executed {game_state_info}: {successful_actions}/{total_actions} actions successful"
-                )
-                return False
-            else:
-                logger.error(
-                    f"Decision execution failed {game_state_info}: 0/{total_actions} actions successful"
-                )
-                return False
-
-        except Exception as e:
-            logger.error(f"Critical error applying decision: {e}")
-            logger.error(traceback.format_exc())
-            return False
-
-    def _execute_decision_action(
-        self, action, target_character=None, game_state=None
-    ) -> bool:
-        """
-        Execute a single action from a decision with proper error handling.
-        
-        This method safely handles None values for both target_character and game_state,
-        falling back to parameterless action execution when neither is available.
-
-        Args:
-            action: Action data (dict, object, or string)
-            target_character: Character to execute action on (optional)
-            game_state: Optional game state for legacy compatibility (can be None)
-
-        Returns:
-            bool: True if action executed successfully, False otherwise
-            
-        Note:
-            When both target_character and game_state are None, the action will be
-            executed without additional parameters, relying on the action's internal
-            logic and the controller's state.
-        """
-        try:
-            # Use action resolver to convert action to executable format
-            resolved_action = self.action_resolver.resolve_action(
-                action, target_character
-            )
-
-            if not resolved_action:
-                logger.warning(f"Could not resolve action: {action}")
-                return False
-
-            # Execute the resolved action with appropriate parameters
-            if hasattr(resolved_action, "execute"):
-                try:
-                    # Choose execution strategy based on available parameters
-                    # Priority: target_character > game_state > no parameters
-                    if target_character:
-                        logger.debug(f"Executing action '{getattr(resolved_action, 'name', action)}' with target_character")
-                        result = resolved_action.execute(
-                            target=target_character, initiator=target_character
-                        )
-                    elif game_state is not None:
-                        logger.debug(f"Executing action '{getattr(resolved_action, 'name', action)}' with game_state")
-                        result = resolved_action.execute(game_state)
-                    else:
-                        logger.debug(f"Executing action '{getattr(resolved_action, 'name', action)}' with no additional parameters (safe fallback)")
-                        result = resolved_action.execute()
-
-                    if result:
-                        # Update statistics
-                        self.game_statistics["actions_executed"] += 1
-
-                        # Update character state if needed
-                        if target_character:
-                            self._update_character_state_after_action(
-                                target_character, resolved_action
-                            )
-
-                        return True
-                    else:
-                        logger.warning(
-                            f"Action {resolved_action.name if hasattr(resolved_action, 'name') else resolved_action} execution returned False"
-                        )
-                        self.game_statistics["actions_failed"] += 1
-                        return False
-
-                except Exception as e:
-                    logger.error(f"Error executing resolved action: {e}")
-                    self.game_statistics["actions_failed"] += 1
-                    return False
-            else:
-                logger.error(
-                    f"Resolved action has no execute method: {resolved_action}"
-                )
-                return False
-
-        except Exception as e:
-            logger.error(f"Critical error executing decision action: {e}")
-            self.game_statistics["actions_failed"] += 1
-            return False
-
-    def get_system_health_report(self) -> Dict[str, Any]:
-        """
-        Generate a comprehensive health report of all game systems.
-
-        TODO: Add detailed memory usage monitoring
-        TODO: Add performance metrics collection
-        TODO: Add predictive failure detection
-        TODO: Add automated system recovery recommendations
-
-        Returns:
-            Dict containing health status of all systems
-        """
-        health_report = {
-            "timestamp": pygame.time.get_ticks(),
-            "initialization_errors": self.initialization_errors,
-            "game_statistics": self.game_statistics,
-            "systems": {},
-            "overall_health": "unknown",
-        }
-
-        # Check core systems
-        systems_to_check = [
-            ("strategy_manager", self.strategy_manager),
-            ("graph_manager", self.graph_manager),
-            ("event_handler", self.event_handler),
-            ("map_controller", self.map_controller),
-            ("action_system", getattr(self, "action_system", None)),
-            ("gametime_manager", getattr(self, "gametime_manager", None)),
-            ("animation_system", getattr(self, "animation_system", None)),
-        ]
-
-        healthy_systems = 0
-        for system_name, system_obj in systems_to_check:
-            if system_obj is not None:
-                health_report["systems"][system_name] = "healthy"
-                healthy_systems += 1
-            else:
-                health_report["systems"][system_name] = "failed"
-
-        # Calculate overall health
-        total_systems = len(systems_to_check)
-        health_percentage = (healthy_systems / total_systems) * 100
-
-        if health_percentage >= 90:
-            health_report["overall_health"] = "excellent"
-        elif health_percentage >= 70:
-            health_report["overall_health"] = "good"
-        elif health_percentage >= 50:
-            health_report["overall_health"] = "degraded"
-        else:
-            health_report["overall_health"] = "critical"
-
-        health_report["health_percentage"] = health_percentage
-        health_report["character_count"] = len(self.characters)
-
-        return health_report
-
-    def attempt_system_recovery(self) -> bool:
-        """
-        Attempt to recover failed systems and restore functionality.
-
-        TODO: Add intelligent recovery strategies for different failure types
-        TODO: Add system dependency analysis and recovery ordering
-        TODO: Add partial recovery support (recover what can be recovered)
-        TODO: Add user notification system for recovery attempts
-
-        Returns:
-            bool: True if recovery was successful, False otherwise
-        """
-        try:
-            logger.info("Attempting system recovery...")
-            recovery_successful = True
-
-            # Attempt to recover strategy manager
-            if not self.strategy_manager:
-                try:
-                    self.strategy_manager = StrategyManager()
-                    logger.info("Strategy manager recovery successful")
-                except Exception as e:
-                    logger.error(f"Strategy manager recovery failed: {e}")
-                    recovery_successful = False
-
-            # Attempt to recover graph manager
-            if not self.graph_manager:
-                try:
-                    from tiny_graph_manager import GraphManager as ActualGraphManager
-
-                    self.graph_manager = ActualGraphManager()
-                    logger.info("Graph manager recovery successful")
-                except Exception as e:
-                    logger.error(f"Graph manager recovery failed: {e}")
-                    recovery_successful = False
-
-            # Attempt to recover event handler
-            if not self.event_handler and self.graph_manager:
-                try:
-                    self.event_handler = EventHandler(self.graph_manager)
-                    logger.info("Event handler recovery successful")
-                except Exception as e:
-                    logger.error(f"Event handler recovery failed: {e}")
-                    recovery_successful = False
-
-            # Attempt to recover action system
-            if not getattr(self, "action_system", None):
-                try:
-                    from actions import ActionSystem
-
-                    self.action_system = ActionSystem(graph_manager=self.graph_manager)
-                    self.action_system.setup_actions()
-                    self.action_resolver = ActionResolver(action_system=self.action_system, graph_manager=self.graph_manager)
-                    logger.info("Action system recovery successful")
-                except Exception as e:
-                    logger.error(f"Action system recovery failed: {e}")
-                    # Ensure action_resolver still gets graph_manager in case of ActionSystem failure
-                    if not hasattr(self, 'action_resolver') or self.action_resolver.graph_manager is None:
-                        self.action_resolver = ActionResolver(graph_manager=self.graph_manager)
-                    recovery_successful = False
-
-            # Update recovery statistics
-            if recovery_successful:
-                self.game_statistics["errors_recovered"] += 1
-                logger.info("System recovery completed successfully")
-            else:
-                logger.warning("System recovery partially failed")
-
-            return recovery_successful
-
-        except Exception as e:
-            logger.error(f"Critical error during system recovery: {e}")
-            return False
-
-    def export_configuration(self) -> Dict[str, Any]:
-        """
-        Export current configuration for saving or sharing.
-
-        TODO: Add configuration validation and schema checking
-        TODO: Add configuration versioning and migration support
-        TODO: Add configuration encryption for sensitive data
-        TODO: Add configuration templates and presets
-
-        Returns:
-            Dict containing exportable configuration
-        """
-        try:
-            export_config = {
-                "version": "1.0",  # TODO: Add proper versioning system
-                "timestamp": pygame.time.get_ticks(),
-                "config": self.config.copy(),
-                "game_statistics": self.game_statistics.copy(),
-                "character_count": len(self.characters),
-                "system_health": self.get_system_health_report(),
-            }
-
-            # Remove sensitive or non-serializable data
-            # TODO: Add proper data sanitization
-
-            return export_config
-
-        except Exception as e:
-            logger.error(f"Error exporting configuration: {e}")
-            return {"error": str(e)}
-
-    def import_configuration(self, config_data: Dict[str, Any]) -> bool:
-        """
-        Import configuration from external source.
-
-        TODO: Add configuration validation and safety checks
-        TODO: Add configuration migration for version compatibility
-        TODO: Add backup creation before importing new configuration
-        TODO: Add selective configuration import (only specific sections)
-
-        Args:
-            config_data: Configuration data to import
-
-        Returns:
-            bool: True if import was successful
-        """
-        try:
-            # TODO: Add configuration validation
-            if "config" in config_data:
-                self.config.update(config_data["config"])
-                logger.info("Configuration imported successfully")
-                return True
-            else:
-                logger.error("Invalid configuration data format")
-                return False
-
-        except Exception as e:
-            logger.error(f"Error importing configuration: {e}")
-            return False
-
-    # TODO: Add save/load game state functionality
-    def save_game_state(self, save_path: str) -> bool:
-        """
-        Save complete game state to file with basic implementation.
-        """
+    def save_game_state(self, filepath: str) -> bool:
+        """Save current game state to file."""
         try:
             import json
             import os
-
-            # Create save directory if it doesn't exist
-            save_dir = os.path.dirname(save_path)
+            
+            # Create saves directory if it doesn't exist
+            save_dir = os.path.dirname(filepath)
             if save_dir and not os.path.exists(save_dir):
                 os.makedirs(save_dir)
-
-            save_data = {
-                "version": "1.0",
+            
+            # Collect saveable game state
+            game_state = {
                 "timestamp": pygame.time.get_ticks(),
-                "config": self.config,
-                "game_statistics": self.game_statistics,
-                "character_count": len(self.characters),
-                "paused": getattr(self, "paused", False),
-                "characters": [],
-                "events": getattr(self, "events", []),
+                "characters": {},
+                "achievements": self.global_achievements,
+                "statistics": self.game_statistics,
+                "weather": getattr(self, "weather_system", {}),
+                "quest_system": getattr(self, "quest_system", {}),
+                "social_networks": getattr(self, "social_networks", {})
             }
-
-            # Save basic character data
+            
+            # Save character data
             for char_id, character in self.characters.items():
-                char_data = {
-                    "uuid": char_id,
-                    "name": getattr(character, "name", "Unknown"),
-                    "job": getattr(character, "job", "Villager"),
-                    "age": getattr(character, "age", 25),
-                    "energy": getattr(character, "energy", 50),
-                    "health_status": getattr(character, "health_status", 100),
-                    "position": {
-                        "x": (
-                            character.position.x
-                            if hasattr(character, "position")
-                            else 0
-                        ),
-                        "y": (
-                            character.position.y
-                            if hasattr(character, "position")
-                            else 0
-                        ),
-                    },
-                }
-                save_data["characters"].append(char_data)
-
-            with open(save_path, "w") as f:
-                json.dump(save_data, f, indent=2)
-
-            logger.info(f"Game state saved to {save_path}")
+                try:
+                    char_data = {
+                        "name": getattr(character, "name", "Unknown"),
+                        "energy": getattr(character, "energy", 50),
+                        "health_status": getattr(character, "health_status", 75),
+                        "position": {
+                            "x": character.position.x if hasattr(character, "position") else 0,
+                            "y": character.position.y if hasattr(character, "position") else 0
+                        },
+                        "job": getattr(character, "job", "Villager")
+                    }
+                    game_state["characters"][char_id] = char_data
+                except Exception as e:
+                    logger.warning(f"Error saving character {char_id}: {e}")
+            
+            # Write to file
+            with open(filepath, 'w') as f:
+                json.dump(game_state, f, indent=2)
+            
+            logger.info(f"Game state saved to {filepath}")
             return True
-
+            
         except Exception as e:
             logger.error(f"Error saving game state: {e}")
             return False
 
-    def load_game_state(self, save_path: str) -> bool:
-        """
-        Load complete game state from file with basic implementation.
-        """
+    def load_game_state(self, filepath: str) -> bool:
+        """Load game state from file."""
         try:
             import json
             import os
-
-            if not os.path.exists(save_path):
-                logger.error(f"Save file not found: {save_path}")
+            
+            if not os.path.exists(filepath):
+                logger.warning(f"Save file not found: {filepath}")
                 return False
-
-            with open(save_path, "r") as f:
-                save_data = json.load(f)
-
-            # Validate save file version
-            version = save_data.get("version", "unknown")
-            if version != "1.0":
-                logger.warning(f"Save file version {version} may not be compatible")
-
-            # Restore basic game state
-            if "config" in save_data:
-                self.config.update(save_data["config"])
-
-            if "game_statistics" in save_data:
-                self.game_statistics.update(save_data["game_statistics"])
-
-            if "paused" in save_data:
-                self.paused = save_data["paused"]
-
-            if "events" in save_data:
-                self.events = save_data["events"]
-
-            # TODO: Restore character states (requires more complex character system)
-            # TODO: Restore map state and building conditions
-            # TODO: Restore relationship networks
-            # TODO: Restore economic state
-
-            logger.info(f"Game state loaded from {save_path}")
+            
+            with open(filepath, 'r') as f:
+                game_state = json.load(f)
+            
+            # Restore achievements
+            if "achievements" in game_state:
+                self.global_achievements.update(game_state["achievements"])
+            
+            # Restore statistics  
+            if "statistics" in game_state:
+                self.game_statistics.update(game_state["statistics"])
+                
+            # Restore weather
+            if "weather" in game_state:
+                self.weather_system = game_state["weather"]
+                
+            # Restore quest system
+            if "quest_system" in game_state:
+                self.quest_system = game_state["quest_system"]
+                
+            # Restore social networks
+            if "social_networks" in game_state:
+                self.social_networks = game_state["social_networks"]
+            
+            # Note: Character restoration is more complex and would require
+            # full character recreation, which is beyond basic save/load
+            
+            logger.info(f"Game state loaded from {filepath}")
             return True
-
+            
         except Exception as e:
             logger.error(f"Error loading game state: {e}")
             return False
 
-    def initialize_world_events(self):
-        """Initialize world events for emergent storytelling."""
+    def implement_achievement_system(self):
+        """Implement basic achievement tracking system."""
         try:
-            if self.event_handler:
-                # Get locations from map controller if available
-                locations = []
-                if self.map_controller and hasattr(self.map_controller, 'buildings'):
-                    locations = self.map_controller.buildings
-                
-                # Initialize world events with characters and locations
-                self.event_handler.initialize_world_events(
-                    characters=list(self.characters.values()),
-                    locations=locations
-                )
-                
-                logger.info("World events initialized for emergent storytelling")
-                return True
-            else:
-                logger.warning("Event handler not available - skipping world events initialization")
-                return False
-                
-        except Exception as e:
-            logger.error(f"Error initializing world events: {e}")
-            return False
-
-    # Feature Implementation Stubs with Clear Tracking
-
-    def implement_achievement_system(self) -> bool:
-        """
-        Basic achievement system implementation.
-
-        STATUS: BASIC_IMPLEMENTED
-        TODO: Add achievement notifications
-        TODO: Add achievement rewards
-        TODO: Add complex achievement conditions
-        TODO: Add achievement persistence
-        """
-        try:
-            if not hasattr(self, "global_achievements"):
-                self.global_achievements = {
-                    "village_milestones": {
-                        "first_character_created": False,
-                        "five_characters_active": False,
-                        "successful_harvest": False,
-                        "trade_established": False,
-                        "first_week_survived": False, # New achievement
-                    },
-                    "social_achievements": {
-                        "first_friendship": False,
-                        "community_event": False,
-                        "conflict_resolved": False,
-                    },
-                    "economic_achievements": {
-                        "first_transaction": False,
-                        "wealthy_villager": False,
-                        "market_established": False,
-                    },
-                }
-
-            # Check for milestone achievements
-            if len(self.characters) >= 1:
-                self.global_achievements["village_milestones"][
-                    "first_character_created"
-                ] = True
-
+            # Achievement checking logic
+            current_time = pygame.time.get_ticks()
+            
+            # First character created achievement
+            if len(self.characters) > 0:
+                self.global_achievements["village_milestones"]["first_character_created"] = True
+            
+            # Five characters active achievement
             if len(self.characters) >= 5:
-                self.global_achievements["village_milestones"][
-                    "five_characters_active"
-                ] = True
-
-            # Check for time-based achievements
-            if hasattr(self, "gametime_manager") and self.gametime_manager:
-                try:
-                    # GameCalendar defaults: year=2023, month=1, day=1
-                    start_game_dt = self.gametime_manager.get_calendar().get_game_start_time()
-                    current_game_dt = self.gametime_manager.get_calendar().get_game_time()
-
-                    time_passed = current_game_dt - start_game_dt
-
-                    if time_passed.days >= 7:
-                        self.global_achievements["village_milestones"]["first_week_survived"] = True
-
-                except Exception as time_e:
-                    logger.error(f"Error checking time-based achievements: {time_e}")
-
-            return True
-
+                self.global_achievements["village_milestones"]["five_characters_active"] = True
+            
+            # First week survived (based on game ticks - roughly 7 real minutes)
+            if current_time > 420000:  # 7 minutes in milliseconds
+                self.global_achievements["village_milestones"]["first_week_survived"] = True
+                
         except Exception as e:
-            logger.error(f"Error implementing achievement system: {e}")
-            return False
+            logger.error(f"Error in achievement system: {e}")
 
-    def implement_weather_system(self) -> Dict[str, Any]:
-        """
-        Basic weather system implementation.
-
-        STATUS: STUB_IMPLEMENTED
-        TODO: Add seasonal changes
-        TODO: Add weather effects on characters
-        TODO: Add weather-based events
-        TODO: Add visual weather effects
-        """
+    def implement_weather_system(self):
+        """Implement basic weather simulation."""
         try:
             if not hasattr(self, "weather_system"):
                 self.weather_system = {
                     "current_weather": "clear",
-                    "temperature": 20,  # Celsius
-                    "season": "spring",
-                    "weather_effects_active": False,
+                    "temperature": 20,
+                    "last_change": pygame.time.get_ticks()
                 }
-
-            # Simple weather simulation
-            weather_options = ["clear", "cloudy", "rainy", "sunny"]
-            if random.random() < 0.1:  # 10% chance to change weather
+            
+            current_time = pygame.time.get_ticks()
+            
+            # Change weather every 2 minutes (120,000 ms)
+            if current_time - self.weather_system["last_change"] > 120000:
+                weather_options = ["clear", "cloudy", "rainy"]
                 self.weather_system["current_weather"] = random.choice(weather_options)
-
-            return self.weather_system
-
+                self.weather_system["temperature"] = random.randint(10, 30)
+                self.weather_system["last_change"] = current_time
+                
         except Exception as e:
-            logger.error(f"Error implementing weather system: {e}")
-            return {"error": str(e)}
+            logger.error(f"Error in weather system: {e}")
 
-    def implement_social_network_system(self) -> bool:
-        """
-        Basic social network system implementation.
-
-        STATUS: STUB_IMPLEMENTED
-        TODO: Add relationship strength tracking
-        TODO: Add relationship events
-        TODO: Add social influence on decisions
-        TODO: Add group formation dynamics
-        """
+    def implement_social_network_system(self):
+        """Implement basic social relationship tracking."""
         try:
             if not hasattr(self, "social_networks"):
                 self.social_networks = {
-                    "relationships": {},  # character_id -> {other_id: relationship_strength}
-                    "groups": [],  # List of character groups
-                    "social_events": [],  # List of social events
+                    "relationships": {},
+                    "last_update": pygame.time.get_ticks()
                 }
-
-            # Initialize relationships for existing characters
-            char_ids = list(self.characters.keys())
-            for char_id in char_ids:
+            
+            # Initialize relationships for all characters
+            for char_id in self.characters.keys():
                 if char_id not in self.social_networks["relationships"]:
                     self.social_networks["relationships"][char_id] = {}
-
-                # Create basic relationships with other characters
-                for other_id in char_ids:
-                    if (
-                        other_id != char_id
-                        and other_id
-                        not in self.social_networks["relationships"][char_id]
-                    ):
-                        # Random initial relationship strength (0-100)
-                        self.social_networks["relationships"][char_id][other_id] = (
-                            random.randint(30, 70)
-                        )
-
-            return True
-
+                    
+                    # Create relationships with other characters
+                    for other_id in self.characters.keys():
+                        if other_id != char_id:
+                            # Random initial relationship strength (30-70)
+                            self.social_networks["relationships"][char_id][other_id] = random.randint(30, 70)
+                            
         except Exception as e:
-            logger.error(f"Error implementing social network system: {e}")
-            return False
+            logger.error(f"Error in social network system: {e}")
 
-    def implement_quest_system(self) -> bool:
-        """
-        Basic quest system implementation.
-
-        STATUS: STUB_IMPLEMENTED
-        TODO: Add quest generation algorithms
-        TODO: Add quest rewards and consequences
-        TODO: Add multi-step quests
-        TODO: Add quest sharing between characters
-        """
+    def implement_quest_system(self):
+        """Implement basic quest and goal system."""
         try:
             if not hasattr(self, "quest_system"):
                 self.quest_system = {
-                    "active_quests": {},  # character_id -> [quest_objects]
+                    "active_quests": {},
                     "completed_quests": {},
-                    "available_quests": [],
                     "quest_templates": [
                         {
-                            "name": "Gather Resources",
+                            "name": "Gather Resources", 
                             "description": "Collect materials for the village",
-                            "type": "collection",
-                            "difficulty": "easy",
+                            "type": "collection"
                         },
                         {
-                            "name": "Help Neighbor",
-                            "description": "Assist another villager with their work",
-                            "type": "social",
-                            "difficulty": "medium",
+                            "name": "Social Interaction",
+                            "description": "Talk to other villagers", 
+                            "type": "social"
                         },
                         {
-                            "name": "Craft Special Item",
-                            "description": "Create a unique item for the community",
-                            "type": "crafting",
-                            "difficulty": "hard",
-                        },
-                    ],
+                            "name": "Skill Development",
+                            "description": "Improve your abilities",
+                            "type": "skill"
+                        }
+                    ]
                 }
-
-            # Generate some basic quests for characters
+            
+            # Initialize quest tracking for all characters
             for char_id in self.characters.keys():
                 if char_id not in self.quest_system["active_quests"]:
                     self.quest_system["active_quests"][char_id] = []
-
-                # Assign a random quest if character has none
-                if len(self.quest_system["active_quests"][char_id]) == 0:
-                    template = random.choice(self.quest_system["quest_templates"])
-                    quest = {
-                        "id": f"{char_id}_{pygame.time.get_ticks()}",
-                        "name": template["name"],
-                        "description": template["description"],
-                        "type": template["type"],
-                        "progress": 0,
-                        "target": 100,
-                        "assigned_time": pygame.time.get_ticks(),
-                    }
-                    self.quest_system["active_quests"][char_id].append(quest)
-
-            return True
-
+                if char_id not in self.quest_system["completed_quests"]:
+                    self.quest_system["completed_quests"][char_id] = []
+                    
         except Exception as e:
-            logger.error(f"Error implementing quest system: {e}")
-            return False
+            logger.error(f"Error in quest system: {e}")
+
+    def initialize_world_events(self):
+        """Initialize world events for emergent storytelling."""
+        try:
+            # Initialize basic event system
+            if not hasattr(self, "world_events"):
+                self.world_events = {
+                    "event_queue": [],
+                    "last_event_time": pygame.time.get_ticks(),
+                    "event_templates": [
+                        {"type": "weather_change", "description": "Weather patterns shift"},
+                        {"type": "visitor_arrival", "description": "A stranger visits the village"},
+                        {"type": "resource_discovery", "description": "New resources are discovered"},
+                        {"type": "festival", "description": "The village celebrates a festival"}
+                    ]
+                }
+                
+        except Exception as e:
+            logger.error(f"Error initializing world events: {e}")
 
     def add_event_notification(self, message: str, priority: str = "normal"):
         """Add an event notification to the UI."""
@@ -5204,8 +4065,8 @@ class GameplayController:
 
     def get_feature_implementation_status(self) -> Dict[str, str]:
         """
-        Get the implementation status of all planned features.
-
+        Report the implementation status of all planned features.
+        
         Returns a dictionary with feature names and their implementation status:
         - NOT_STARTED: Feature not yet implemented
         - STUB_IMPLEMENTED: Basic structure in place, core functionality missing
@@ -5286,7 +4147,6 @@ class GameplayController:
                 "error": str(e),
                 "character": character_name
             }
-
 
 
 if __name__ == "__main__":
