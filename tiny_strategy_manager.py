@@ -133,6 +133,89 @@ class StrategyManager:
             self.output_interpreter = None
             if self.use_llm:
                 logging.warning("LLM components not available - disabling LLM functionality")
+                self.use_llm = False  # Actually disable if components not available
+
+    def should_use_llm_for_decision(self, character, situation_context: dict = None) -> bool:
+        """
+        Strategic decision logic for when to invoke LLM vs utility-based planning.
+        
+        LLM is beneficial for:
+        - Complex social situations requiring nuanced understanding
+        - Novel scenarios outside of routine patterns
+        - High-stakes decisions with significant consequences
+        - Situations requiring creative problem-solving
+        
+        Args:
+            character: The character making the decision
+            situation_context: Additional context about the current situation
+            
+        Returns:
+            True if LLM should be used, False for utility-based planning
+        """
+        if not self.use_llm or not self.brain_io or not self.output_interpreter:
+            return False
+            
+        # Always use LLM if explicitly requested
+        if situation_context and situation_context.get('force_llm', False):
+            return True
+            
+        # Use LLM for complex social interactions
+        if situation_context and situation_context.get('social_complexity', 0) > 0.7:
+            return True
+            
+        # Use LLM when character is in crisis (low health, mental health, etc.)
+        character_state = self.get_character_state_dict(character)
+        crisis_threshold = 0.3  # Below 30% on critical stats
+        
+        critical_stats = ['health', 'mental_health', 'energy']
+        in_crisis = any(character_state.get(stat, 1.0) < crisis_threshold for stat in critical_stats)
+        
+        if in_crisis:
+            logger.info(f"Using LLM for crisis decision-making for {getattr(character, 'name', 'character')}")
+            return True
+            
+        # Use LLM for novel situations (detected by unusual action patterns)
+        if situation_context and situation_context.get('novelty_score', 0) > 0.6:
+            return True
+            
+        # Use LLM periodically for variety and emergent behavior (1 in 5 decisions)
+        import random
+        if random.random() < 0.2:  # 20% chance for variety
+            logger.info(f"Using LLM for variety in decision-making for {getattr(character, 'name', 'character')}")
+            return True
+            
+        # Use LLM when character has complex goals requiring planning
+        if hasattr(character, 'get_current_goal'):
+            current_goal = character.get_current_goal()
+            if current_goal and getattr(current_goal, 'complexity', 0) > 0.7:
+                return True
+                
+        # Default to utility-based planning for routine decisions
+        return False
+
+    def get_enhanced_daily_actions(self, character, time="morning", weather="clear", 
+                                 situation_context: dict = None) -> list[Action]:
+        """
+        Enhanced daily action planning that strategically chooses between LLM and utility-based approaches.
+        
+        This method implements the strategic invocation logic to determine the best approach
+        for each decision-making scenario.
+        """
+        # Determine whether to use LLM based on strategic considerations
+        should_use_llm = self.should_use_llm_for_decision(character, situation_context)
+        
+        if should_use_llm:
+            logger.info(f"Strategic decision: Using LLM for {getattr(character, 'name', 'character')}")
+            try:
+                return self.decide_action_with_llm(character, time, weather)
+            except Exception as e:
+                logger.error(f"LLM decision failed, falling back to utility-based: {e}")
+                # Fallback to utility-based if LLM fails
+        else:
+            logger.debug(f"Strategic decision: Using utility-based planning for {getattr(character, 'name', 'character')}")
+            
+        # Use utility-based planning as default or fallback
+        return self.get_daily_actions(character)
 
     def get_character_state_dict(self, character) -> dict:
         """
