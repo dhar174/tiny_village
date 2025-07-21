@@ -98,7 +98,8 @@ class GameStatusPanel(UIPanel):
                 time_text = small_font.render(f"Time: {game_time}", True, (255, 255, 255))
                 screen.blit(time_text, (x, current_y))
                 current_y += time_text.get_height() + 2
-            except:
+            except (AttributeError, TypeError, ValueError) as e:
+                logging.error(f"Error rendering game time: {e}")
                 pass
         
         # Speed indicator with caching
