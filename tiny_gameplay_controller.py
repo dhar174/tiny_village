@@ -2892,7 +2892,7 @@ class GameplayController:
                         char_y = int(character.position[1] * scale) + map_y
                         
                         # Use different color for selected character
-                        if character == self.map_controller.selected_character:
+                        if character is self.map_controller.selected_character:
                             color = (255, 255, 0)  # Yellow for selected
                             radius = 3
                         else:
