@@ -2902,7 +2902,7 @@ class GameplayController:
         instructions_panel = self.ui_panels.get('instructions')
         if instructions_panel and instructions_panel.visible:
             # Position instructions at bottom of screen
-            instructions_y = self.screen.get_height() - 140  # Reserve space for instructions
+            instructions_y = self.screen.get_height() - INSTRUCTIONS_BOTTOM_MARGIN  # Reserve space for instructions
             instructions_panel.position = (10, instructions_y)
             instructions_panel.render(self.screen, self, self.ui_fonts)
         
