@@ -687,7 +687,7 @@ class StrategyManager:
             # Add safety actions
             crisis_actions.append(Action(
                 name="Seek Safety",
-                preconditions=[],
+                preconditions={},
                 effects=[
                     {"targets": ["initiator"], "attribute": "safety", "change_value": 20},
                     {"targets": ["initiator"], "attribute": "energy", "change_value": -10}
