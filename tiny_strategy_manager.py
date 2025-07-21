@@ -133,6 +133,46 @@ class StrategyManager:
             self.output_interpreter = None
             if self.use_llm:
                 logging.warning("LLM components not available - disabling LLM functionality")
+                
+        # Track characters using LLM for strategy decisions
+        self._characters_using_llm = set()
+
+    def enable_llm_for_character(self, character):
+        """Enable LLM decision-making for a specific character."""
+        if hasattr(character, 'name'):
+            char_id = character.name
+        else:
+            char_id = str(character)
+            
+        if hasattr(character, 'use_llm_decisions'):
+            character.use_llm_decisions = True
+            
+        self._characters_using_llm.add(char_id)
+        logger.info(f"Enabled LLM decisions for character: {char_id}")
+
+    def disable_llm_for_character(self, character):
+        """Disable LLM decision-making for a specific character."""
+        if hasattr(character, 'name'):
+            char_id = character.name
+        else:
+            char_id = str(character)
+            
+        if hasattr(character, 'use_llm_decisions'):
+            character.use_llm_decisions = False
+            
+        self._characters_using_llm.discard(char_id)
+        logger.info(f"Disabled LLM decisions for character: {char_id}")
+
+    def enable_llm_for_characters(self, characters, character_names=None):
+        """Enable LLM decision-making for multiple characters.
+        
+        Args:
+            characters: List of character objects
+            character_names: Optional list of character names to enable (enables all if None)
+        """
+        for character in characters:
+            if character_names is None or character.name in character_names:
+                self.enable_llm_for_character(character)
 
     def get_character_state_dict(self, character) -> dict:
         """
@@ -153,30 +193,41 @@ class StrategyManager:
             # Basic needs - assuming direct attribute access or simple getters
             # Normalize hunger/energy to 0-1 range if they aren't already.
             # For utility function: higher hunger = more need; lower energy = more need.
-            state["hunger"] = (
-                getattr(character, "hunger_level", 0.0) / 10.0
-                if hasattr(character, "hunger_level")
-                else 0.5
-            )  # Assuming hunger 0-10
-            state["energy"] = (
-                getattr(character, "energy", 0.0) / 10.0
-                if hasattr(character, "energy")
-                else 0.5
-            )  # Assuming energy 0-10
-            state["money"] = float(getattr(character, "wealth_money", 0))
+            try:
+                state["hunger"] = (
+                    getattr(character, "hunger_level", 0.0) / 10.0
+                    if hasattr(character, "hunger_level")
+                    else 0.5
+                )  # Assuming hunger 0-10
+                state["energy"] = (
+                    getattr(character, "energy", 0.0) / 10.0
+                    if hasattr(character, "energy")
+                    else 0.5
+                )  # Assuming energy 0-10
+                state["money"] = float(getattr(character, "wealth_money", 0))
 
-            # Add other relevant states if needed by utility function's need fulfillment logic
-            # e.g., social_wellbeing, mental_health
-            state["social_wellbeing"] = (
-                getattr(character, "social_wellbeing", 5.0) / 10.0
-                if hasattr(character, "social_wellbeing")
-                else 0.5
-            )
-            state["mental_health"] = (
-                getattr(character, "mental_health", 5.0) / 10.0
-                if hasattr(character, "mental_health")
-                else 0.5
-            )
+                # Add other relevant states if needed by utility function's need fulfillment logic
+                # e.g., social_wellbeing, mental_health
+                state["social_wellbeing"] = (
+                    getattr(character, "social_wellbeing", 5.0) / 10.0
+                    if hasattr(character, "social_wellbeing")
+                    else 0.5
+                )
+                state["mental_health"] = (
+                    getattr(character, "mental_health", 5.0) / 10.0
+                    if hasattr(character, "mental_health")
+                    else 0.5
+                )
+            except (AttributeError, TypeError, ValueError) as e:
+                logger.warning(f"Error extracting character state: {e}, using defaults")
+                # Fallback to default values
+                state = {
+                    "hunger": 0.5,
+                    "energy": 0.5,
+                    "money": 0.0,
+                    "social_wellbeing": 0.5,
+                    "mental_health": 0.5
+                }
         else:
             # Fallback for simple character representation
             state = {
@@ -407,11 +458,17 @@ class StrategyManager:
                 logger.warning(f"No LLM response received for {character_name}")
                 return potential_actions[:1]  # Return top utility action as fallback
 
-            llm_response_text = (
-                llm_responses[0][0]
-                if isinstance(llm_responses[0], tuple)
-                else llm_responses[0]
-            )
+            # Handle different response formats from LLM
+            try:
+                if isinstance(llm_responses[0], tuple):
+                    llm_response_text = llm_responses[0][0]
+                elif isinstance(llm_responses[0], str):
+                    llm_response_text = llm_responses[0]
+                else:
+                    llm_response_text = str(llm_responses[0])
+            except (IndexError, TypeError) as parse_error:
+                logger.warning(f"Error parsing LLM response format: {parse_error}")
+                return potential_actions[:1]
             logger.debug(f"LLM response for {character_name}: {llm_response_text}")
 
             # Step 6: Interpret LLM response
@@ -446,7 +503,7 @@ class StrategyManager:
     # --- Other methods from the original file (potentially needing updates) ---
     def update_strategy(self, events, subject="Emma"):
         """
-        Updates strategy based on events using GOAP planning.
+        Updates strategy based on events using GOAP planning with optional LLM integration.
         Enhanced to handle various event types and respond meaningfully.
         """
         if not events:
@@ -463,9 +520,16 @@ class StrategyManager:
                 
             logger.debug(f"Processing event of type '{event_type}' for {subject}")
             
-            # Route to specific event handlers
+            # Check if character should use LLM decision-making for strategy updates
+            use_llm_for_strategy = False
+            if hasattr(subject, 'use_llm_decisions'):
+                use_llm_for_strategy = subject.use_llm_decisions
+            elif isinstance(subject, str) and hasattr(self, '_characters_using_llm'):
+                use_llm_for_strategy = subject in self._characters_using_llm
+            
+            # Route to specific event handlers with LLM awareness
             if event_type == "new_day":
-                return self.plan_daily_activities(subject)
+                return self._handle_new_day_strategy(subject, use_llm_for_strategy)
             elif event_type in ["social", "celebration", "festival"]:
                 return self._handle_social_event(event, subject)
             elif event_type in ["economic", "trade", "market"]:
@@ -537,9 +601,9 @@ class StrategyManager:
             crisis_actions = []
             
             # Add safety actions
-            crisis_actions.append(self.create_action(
+            crisis_actions.append(Action(
                 name="Seek Safety",
-                preconditions={},
+                preconditions=[],
                 effects=[
                     {"targets": ["initiator"], "attribute": "safety", "change_value": 20},
                     {"targets": ["initiator"], "attribute": "energy", "change_value": -10}
@@ -631,6 +695,31 @@ class StrategyManager:
             
         except Exception as e:
             logger.warning(f"Error handling environmental event: {e}")
+            return self.plan_daily_activities(character)
+
+    def _handle_new_day_strategy(self, character, use_llm=False):
+        """Handle new day events with optional LLM decision-making."""
+        try:
+            if use_llm and self.use_llm and self.brain_io and self.output_interpreter:
+                # Use LLM for strategic new day planning
+                logger.info(f"Using LLM strategy for new day planning for {getattr(character, 'name', character)}")
+                
+                # Get environmental context if available
+                time = "morning"  # Default for new day
+                weather = "clear"  # Default weather
+                
+                try:
+                    return self.decide_action_with_llm(character, time=time, weather=weather)
+                except Exception as llm_error:
+                    logger.warning(f"LLM strategy failed for new day: {llm_error}")
+                    # Fall back to standard planning
+                    return self.plan_daily_activities(character)
+            else:
+                # Use standard utility-based planning
+                return self.plan_daily_activities(character)
+                
+        except Exception as e:
+            logger.warning(f"Error handling new day strategy: {e}")
             return self.plan_daily_activities(character)
 
     def _handle_generic_event(self, event, character):
