@@ -771,9 +771,6 @@ class MapController:
         self.selected_character = None
         self.selected_building = None
         self.selected_location = None
-        return
-
-
         # Check for POI click
         poi = self.find_poi_at_point(position[0], position[1])
         if poi:
