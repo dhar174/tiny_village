@@ -2842,7 +2842,7 @@ class GameplayController:
                 return
             
             # Mini-map configuration
-            minimap_size = 200  # Size of the mini-map
+            minimap_size = MINIMAP_SIZE  # Size of the mini-map
             margin = 10
             position = (self.screen.get_width() - minimap_size - margin, margin)
             
