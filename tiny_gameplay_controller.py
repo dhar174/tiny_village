@@ -564,8 +564,10 @@ class EventNotificationPanel(UIPanel):
         super().__init__(name, position, size, visible)
         self.notification_queue = []
         self.max_notifications = 3
-        self.notification_timeout = 5000  # 5 seconds in milliseconds
+        self.notification_timeout = self.DEFAULT_NOTIFICATION_TIMEOUT
     
+    # Class-level constant for default notification timeout
+    DEFAULT_NOTIFICATION_TIMEOUT = 5000  # 5 seconds in milliseconds
     def add_notification(self, message: str, priority: str = "normal"):
         """Add a notification to the queue."""
         import pygame
