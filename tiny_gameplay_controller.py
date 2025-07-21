@@ -2636,3 +2636,486 @@ Available actions:
         except Exception as e:
             logger.warning(f"Error generating basic prompt: {e}")
             return "Choose an action: 1. Rest"
+
+    def _process_events_and_update_strategy(self, dt):
+        """Process events via EventHandler and update strategy accordingly."""
+        try:
+            if not self.event_handler:
+                return
+
+            # Get events from event handler
+            events = self.event_handler.check_events()
+            
+            # Update strategy manager based on events
+            if self.strategy_manager and events:
+                decisions = self.strategy_manager.update_strategy(events)
+                
+                # Apply decisions to game state
+                for decision in decisions:
+                    self.apply_decision(decision, None)
+                    
+        except Exception as e:
+            logger.error(f"Error processing events and updating strategy: {e}")
+
+    def _process_pending_events(self):
+        """Process any pending events in the basic events list."""
+        try:
+            events_to_remove = []
+            for event in self.events:
+                try:
+                    # Process event logic here
+                    # This is a basic fallback when EventHandler is not available
+                    logger.debug(f"Processing basic event: {event}")
+                    events_to_remove.append(event)
+                except Exception as e:
+                    logger.warning(f"Error processing event: {e}")
+                    events_to_remove.append(event)  # Remove problematic events
+            
+            # Remove processed events
+            for event in events_to_remove:
+                if event in self.events:
+                    self.events.remove(event)
+                    
+        except Exception as e:
+            logger.error(f"Error processing pending events: {e}")
+
+    def apply_decision(self, decision, game_state):
+        """Apply a strategic decision to the game state."""
+        try:
+            if not decision:
+                return
+
+            # Apply the decision based on its type
+            decision_type = decision.get("type", "unknown")
+            
+            if decision_type == "character_action":
+                character_id = decision.get("character_id")
+                action = decision.get("action")
+                
+                if character_id in self.characters and action:
+                    character = self.characters[character_id]
+                    resolved_action = self.action_resolver.resolve_action(action, character)
+                    
+                    if resolved_action and hasattr(resolved_action, 'execute'):
+                        success = resolved_action.execute()
+                        if success:
+                            self.game_statistics["actions_executed"] += 1
+                        else:
+                            self.game_statistics["actions_failed"] += 1
+                        
+                        # Track the action execution for analytics
+                        self.action_resolver.track_action_execution(resolved_action, character, success)
+                        
+            elif decision_type == "event_response":
+                # Handle event-based decisions
+                event_id = decision.get("event_id")
+                response = decision.get("response")
+                logger.info(f"Responding to event {event_id}: {response}")
+                
+            else:
+                logger.warning(f"Unknown decision type: {decision_type}")
+                
+        except Exception as e:
+            logger.error(f"Error applying decision: {e}")
+
+    def render(self):
+        """Render the game with modular UI system and error handling."""
+        if not self.screen:
+            return
+
+        try:
+            # Get background color from config
+            bg_color = self.config.get("render", {}).get("background_color", [20, 50, 80])
+            self.screen.fill(bg_color)
+
+            # Render map controller (characters, buildings, etc.)
+            if self.map_controller:
+                try:
+                    self.map_controller.render(self.screen)
+                except Exception as e:
+                    logger.warning(f"Error rendering map controller: {e}")
+
+            # Render modular UI panels
+            self._render_ui_panels()
+
+            # Render feature status overlay if enabled
+            if getattr(self, "_show_feature_status", False):
+                self._render_feature_status_overlay()
+
+            pygame.display.flip()
+
+        except Exception as e:
+            logger.error(f"Error during rendering: {e}")
+
+    def _render_ui_panels(self):
+        """Render all visible UI panels using the modular system."""
+        try:
+            current_y = 10
+            
+            for panel_name, panel in self.ui_panels.items():
+                if panel.visible:
+                    try:
+                        # Update panel position for stacking
+                        if panel_name == 'instructions':
+                            # Position instructions at bottom
+                            panel.position = (10, self.screen.get_height() - 150)
+                        elif panel.position[1] is None:
+                            panel.position = (panel.position[0], current_y)
+                        
+                        # Render panel and get height
+                        panel_height = panel.render(self.screen, self, self.ui_fonts)
+                        
+                        # Update current_y for next panel (only for left-side panels)
+                        if panel.position[0] <= 20:  # Left-side panels
+                            current_y += panel_height + 10
+                            
+                    except Exception as e:
+                        logger.warning(f"Error rendering UI panel {panel_name}: {e}")
+                        
+        except Exception as e:
+            logger.error(f"Error rendering UI panels: {e}")
+
+    def _render_feature_status_overlay(self):
+        """Render feature status overlay."""
+        try:
+            font = self.ui_fonts.get('small', pygame.font.Font(None, 18))
+            feature_status = self.get_feature_implementation_status()
+            
+            overlay_x = self.screen.get_width() - 300
+            overlay_y = 50
+            
+            # Background for overlay
+            overlay_rect = pygame.Rect(overlay_x - 10, overlay_y - 10, 290, len(feature_status) * 20 + 20)
+            overlay_surface = pygame.Surface((overlay_rect.width, overlay_rect.height))
+            overlay_surface.set_alpha(180)
+            overlay_surface.fill((0, 0, 0))
+            self.screen.blit(overlay_surface, overlay_rect)
+            
+            # Feature status text
+            for i, (feature, status) in enumerate(feature_status.items()):
+                color = {
+                    "NOT_STARTED": (255, 100, 100),
+                    "STUB_IMPLEMENTED": (255, 255, 100),  
+                    "BASIC_IMPLEMENTED": (100, 255, 100),
+                    "FULLY_IMPLEMENTED": (100, 255, 200)
+                }.get(status, (255, 255, 255))
+                
+                text = font.render(f"{feature}: {status}", True, color)
+                self.screen.blit(text, (overlay_x, overlay_y + i * 20))
+                
+        except Exception as e:
+            logger.error(f"Error rendering feature status overlay: {e}")
+
+    def run(self):
+        """Main run method to start the game loop."""
+        try:
+            logger.info("Starting Tiny Village...")
+            logger.info(f"Initialized with {len(self.characters)} characters")
+            
+            if self.initialization_errors:
+                logger.warning(f"Started with {len(self.initialization_errors)} initialization errors")
+            
+            self.game_loop()
+            
+        except Exception as e:
+            logger.error(f"Critical error in main run loop: {e}")
+            logger.error(traceback.format_exc())
+        finally:
+            logger.info("Tiny Village shutting down...")
+
+    def save_game_state(self, filepath: str) -> bool:
+        """Save current game state to file."""
+        try:
+            import json
+            import os
+            
+            # Create saves directory if it doesn't exist
+            save_dir = os.path.dirname(filepath)
+            if save_dir and not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+            
+            # Collect saveable game state
+            game_state = {
+                "timestamp": pygame.time.get_ticks(),
+                "characters": {},
+                "achievements": self.global_achievements,
+                "statistics": self.game_statistics,
+                "weather": getattr(self, "weather_system", {}),
+                "quest_system": getattr(self, "quest_system", {}),
+                "social_networks": getattr(self, "social_networks", {})
+            }
+            
+            # Save character data
+            for char_id, character in self.characters.items():
+                try:
+                    char_data = {
+                        "name": getattr(character, "name", "Unknown"),
+                        "energy": getattr(character, "energy", 50),
+                        "health_status": getattr(character, "health_status", 75),
+                        "position": {
+                            "x": character.position.x if hasattr(character, "position") else 0,
+                            "y": character.position.y if hasattr(character, "position") else 0
+                        },
+                        "job": getattr(character, "job", "Villager")
+                    }
+                    game_state["characters"][char_id] = char_data
+                except Exception as e:
+                    logger.warning(f"Error saving character {char_id}: {e}")
+            
+            # Write to file
+            with open(filepath, 'w') as f:
+                json.dump(game_state, f, indent=2)
+            
+            logger.info(f"Game state saved to {filepath}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error saving game state: {e}")
+            return False
+
+    def load_game_state(self, filepath: str) -> bool:
+        """Load game state from file."""
+        try:
+            import json
+            import os
+            
+            if not os.path.exists(filepath):
+                logger.warning(f"Save file not found: {filepath}")
+                return False
+            
+            with open(filepath, 'r') as f:
+                game_state = json.load(f)
+            
+            # Restore achievements
+            if "achievements" in game_state:
+                self.global_achievements.update(game_state["achievements"])
+            
+            # Restore statistics  
+            if "statistics" in game_state:
+                self.game_statistics.update(game_state["statistics"])
+                
+            # Restore weather
+            if "weather" in game_state:
+                self.weather_system = game_state["weather"]
+                
+            # Restore quest system
+            if "quest_system" in game_state:
+                self.quest_system = game_state["quest_system"]
+                
+            # Restore social networks
+            if "social_networks" in game_state:
+                self.social_networks = game_state["social_networks"]
+            
+            # Note: Character restoration is more complex and would require
+            # full character recreation, which is beyond basic save/load
+            
+            logger.info(f"Game state loaded from {filepath}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error loading game state: {e}")
+            return False
+
+    def implement_achievement_system(self):
+        """Implement basic achievement tracking system."""
+        try:
+            # Achievement checking logic
+            current_time = pygame.time.get_ticks()
+            
+            # First character created achievement
+            if len(self.characters) > 0:
+                self.global_achievements["village_milestones"]["first_character_created"] = True
+            
+            # Five characters active achievement
+            if len(self.characters) >= 5:
+                self.global_achievements["village_milestones"]["five_characters_active"] = True
+            
+            # First week survived (based on game ticks - roughly 7 real minutes)
+            if current_time > 420000:  # 7 minutes in milliseconds
+                self.global_achievements["village_milestones"]["first_week_survived"] = True
+                
+        except Exception as e:
+            logger.error(f"Error in achievement system: {e}")
+
+    def implement_weather_system(self):
+        """Implement basic weather simulation."""
+        try:
+            if not hasattr(self, "weather_system"):
+                self.weather_system = {
+                    "current_weather": "clear",
+                    "temperature": 20,
+                    "last_change": pygame.time.get_ticks()
+                }
+            
+            current_time = pygame.time.get_ticks()
+            
+            # Change weather every 2 minutes (120,000 ms)
+            if current_time - self.weather_system["last_change"] > 120000:
+                weather_options = ["clear", "cloudy", "rainy"]
+                self.weather_system["current_weather"] = random.choice(weather_options)
+                self.weather_system["temperature"] = random.randint(10, 30)
+                self.weather_system["last_change"] = current_time
+                
+        except Exception as e:
+            logger.error(f"Error in weather system: {e}")
+
+    def implement_social_network_system(self):
+        """Implement basic social relationship tracking."""
+        try:
+            if not hasattr(self, "social_networks"):
+                self.social_networks = {
+                    "relationships": {},
+                    "last_update": pygame.time.get_ticks()
+                }
+            
+            # Initialize relationships for all characters
+            for char_id in self.characters.keys():
+                if char_id not in self.social_networks["relationships"]:
+                    self.social_networks["relationships"][char_id] = {}
+                    
+                    # Create relationships with other characters
+                    for other_id in self.characters.keys():
+                        if other_id != char_id:
+                            # Random initial relationship strength (30-70)
+                            self.social_networks["relationships"][char_id][other_id] = random.randint(30, 70)
+                            
+        except Exception as e:
+            logger.error(f"Error in social network system: {e}")
+
+    def implement_quest_system(self):
+        """Implement basic quest and goal system."""
+        try:
+            if not hasattr(self, "quest_system"):
+                self.quest_system = {
+                    "active_quests": {},
+                    "completed_quests": {},
+                    "quest_templates": [
+                        {
+                            "name": "Gather Resources", 
+                            "description": "Collect materials for the village",
+                            "type": "collection"
+                        },
+                        {
+                            "name": "Social Interaction",
+                            "description": "Talk to other villagers", 
+                            "type": "social"
+                        },
+                        {
+                            "name": "Skill Development",
+                            "description": "Improve your abilities",
+                            "type": "skill"
+                        }
+                    ]
+                }
+            
+            # Initialize quest tracking for all characters
+            for char_id in self.characters.keys():
+                if char_id not in self.quest_system["active_quests"]:
+                    self.quest_system["active_quests"][char_id] = []
+                if char_id not in self.quest_system["completed_quests"]:
+                    self.quest_system["completed_quests"][char_id] = []
+                    
+        except Exception as e:
+            logger.error(f"Error in quest system: {e}")
+
+    def initialize_world_events(self):
+        """Initialize world events for emergent storytelling."""
+        try:
+            # Initialize basic event system
+            if not hasattr(self, "world_events"):
+                self.world_events = {
+                    "event_queue": [],
+                    "last_event_time": pygame.time.get_ticks(),
+                    "event_templates": [
+                        {"type": "weather_change", "description": "Weather patterns shift"},
+                        {"type": "visitor_arrival", "description": "A stranger visits the village"},
+                        {"type": "resource_discovery", "description": "New resources are discovered"},
+                        {"type": "festival", "description": "The village celebrates a festival"}
+                    ]
+                }
+                
+        except Exception as e:
+            logger.error(f"Error initializing world events: {e}")
+
+    def get_feature_implementation_status(self) -> Dict[str, str]:
+        """
+        Report the implementation status of all planned features.
+        
+        Returns a dictionary with feature names and their implementation status:
+        - NOT_STARTED: Feature not yet implemented
+        - STUB_IMPLEMENTED: Basic structure in place, core functionality missing
+        - BASIC_IMPLEMENTED: Core functionality working, needs enhancement
+        - FULLY_IMPLEMENTED: Feature complete and polished
+        """
+        return {
+            "save_load_system": "BASIC_IMPLEMENTED",
+            "achievement_system": "BASIC_IMPLEMENTED",
+            "weather_system": "STUB_IMPLEMENTED",
+            "social_network_system": "STUB_IMPLEMENTED",
+            "quest_system": "STUB_IMPLEMENTED",
+            "skill_progression": "BASIC_IMPLEMENTED",
+            "reputation_system": "BASIC_IMPLEMENTED",
+            "economic_simulation": "STUB_IMPLEMENTED",
+            "event_driven_storytelling": "BASIC_IMPLEMENTED",
+            "mod_system": "NOT_STARTED",
+            "multiplayer_support": "NOT_STARTED",
+            "advanced_ai_behaviors": "NOT_STARTED",
+            "procedural_content_generation": "NOT_STARTED",
+            "advanced_graphics_effects": "NOT_STARTED",
+            "sound_and_music_system": "NOT_STARTED",
+            "accessibility_features": "NOT_STARTED",
+            "performance_optimization": "NOT_STARTED",
+            "automated_testing": "NOT_STARTED",
+            "configuration_ui": "NOT_STARTED",
+        }
+
+    def get_current_stories(self) -> Dict[str, Any]:
+        """Get current story state and narratives from the storytelling system."""
+        if not self.storytelling_system:
+            return {
+                "error": "Storytelling system not available",
+                "feature_status": "NOT_AVAILABLE"
+            }
+        
+        try:
+            return self.storytelling_system.get_current_stories()
+        except Exception as e:
+            logger.error(f"Error getting current stories: {e}")
+            return {
+                "error": str(e),
+                "feature_status": "ERROR"
+            }
+
+    def get_story_summary(self, days_back: int = 7) -> str:
+        """Get a summary of recent story developments."""
+        if not self.storytelling_system:
+            return "Storytelling system not available."
+        
+        try:
+            return self.storytelling_system.generate_story_summary(days_back)
+        except Exception as e:
+            logger.error(f"Error generating story summary: {e}")
+            return f"Error generating story summary: {e}"
+
+    def get_character_stories(self, character_name: str) -> Dict[str, Any]:
+        """Get a character's involvement in current stories."""
+        if not self.storytelling_system:
+            return {
+                "error": "Storytelling system not available",
+                "character": character_name
+            }
+        
+        try:
+            return self.storytelling_system.get_character_story_involvement(character_name)
+        except Exception as e:
+            logger.error(f"Error getting character stories for {character_name}: {e}")
+            return {
+                "error": str(e),
+                "character": character_name
+            }
+
+
+if __name__ == "__main__":
+    game_controller = GameplayController()
+    game_controller.run()
+    pygame.quit()
