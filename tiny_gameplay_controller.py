@@ -5,6 +5,7 @@ import traceback
 import json
 import os
 import datetime # Added for time-based achievement
+from datetime import timedelta
 
 # Constants for speed control
 MAX_SPEED = 5.0
@@ -640,6 +641,7 @@ class SystemRecoveryManager:
             "action_system": self._recover_action_system,
             "map_controller": self._recover_map_controller,
             "character_system": self._recover_character_system,
+            "storytelling_system": self._recover_storytelling_system,
         }
 
     def attempt_recovery(self, system_name: str) -> bool:
@@ -709,9 +711,15 @@ class SystemRecoveryManager:
                 not self.gameplay_controller.event_handler
                 and self.gameplay_controller.graph_manager
             ):
-                self.gameplay_controller.event_handler = EventHandler(
+                from tiny_storytelling_engine import StorytellingEventHandler
+                self.gameplay_controller.event_handler = StorytellingEventHandler(
                     self.gameplay_controller.graph_manager
                 )
+                
+                # Wire to storytelling system if available
+                if hasattr(self.gameplay_controller, 'storytelling_system') and self.gameplay_controller.storytelling_system:
+                    self.gameplay_controller.event_handler.storytelling_system = self.gameplay_controller.storytelling_system
+                
                 return True
             return True
         except Exception as e:
@@ -769,6 +777,25 @@ class SystemRecoveryManager:
             logger.error(f"Character system recovery failed: {e}")
             return False
 
+    def _recover_storytelling_system(self) -> bool:
+        """Recover the storytelling system."""
+        try:
+            if not self.gameplay_controller.storytelling_system and self.gameplay_controller.event_handler:
+                from tiny_storytelling_system import StorytellingSystem
+                self.gameplay_controller.storytelling_system = StorytellingSystem(
+                    self.gameplay_controller.event_handler
+                )
+                
+                # Wire the event handler to forward events to storytelling system
+                if hasattr(self.gameplay_controller.event_handler, 'storytelling_system'):
+                    self.gameplay_controller.event_handler.storytelling_system = self.gameplay_controller.storytelling_system
+                
+                return True
+            return True
+        except Exception as e:
+            logger.error(f"Storytelling system recovery failed: {e}")
+            return False
+
     def get_system_status(self) -> Dict[str, str]:
         """Get current status of all systems."""
         status = {}
@@ -782,6 +809,7 @@ class SystemRecoveryManager:
         )
         status["map_controller"] = "healthy" if gc.map_controller else "failed"
         status["characters"] = "healthy" if gc.characters else "failed"
+        status["storytelling_system"] = "healthy" if getattr(gc, "storytelling_system", None) else "failed"
 
         return status
 
@@ -831,16 +859,32 @@ class GameplayController:
         else:
             self.graph_manager = graph_manager
 
-        # Initialize event handler
+        # Initialize event handler (using narrative-aware handler)
         try:
+            from tiny_storytelling_engine import StorytellingEventHandler
             self.event_handler = (
-                EventHandler(self.graph_manager) if self.graph_manager else None
+                StorytellingEventHandler(self.graph_manager) if self.graph_manager else None
             )
         except Exception as e:
-            logger.error(f"Failed to initialize EventHandler: {e}")
+            logger.error(f"Failed to initialize StorytellingEventHandler: {e}")
             self.event_handler = None
-            self.initialization_errors.append("EventHandler initialization failed")
+            self.initialization_errors.append("StorytellingEventHandler initialization failed")
             self.recovery_manager.attempt_recovery("event_handler")
+
+        # Initialize storytelling system and wire to event handler
+        try:
+            from tiny_storytelling_system import StorytellingSystem
+            self.storytelling_system = StorytellingSystem(self.event_handler)
+            
+            # Wire the event handler to forward events to the storytelling system
+            if hasattr(self.event_handler, 'storytelling_system'):
+                self.event_handler.storytelling_system = self.storytelling_system
+            
+            logger.info("Storytelling system initialized and wired to event handler")
+        except Exception as e:
+            logger.error(f"Failed to initialize StorytellingSystem: {e}")
+            self.storytelling_system = None
+            self.initialization_errors.append("StorytellingSystem initialization failed")
 
         # Initialize pygame with error handling
         try:
@@ -918,6 +962,8 @@ class GameplayController:
         self.implement_social_network_system()
         self.implement_quest_system()
 
+        # Initialize world events for emergent storytelling
+        self.initialize_world_events()
         # Initialize modular UI system
         self._init_ui_system()
 
@@ -2112,13 +2158,17 @@ class GameplayController:
                 logger.warning(f"Error updating animation system: {e}")
                 # Animation errors are not critical
 
-        # Process any pending events
-        if hasattr(self, "events") and self.events:
-            try:
+        # Process events using the EventHandler system and drive strategy
+        try:
+            if self.event_handler:
+                self._process_events_and_update_strategy(dt)
+            elif hasattr(self, "events") and self.events:
+                # Fallback to basic event processing if no EventHandler
                 self._process_pending_events()
-            except Exception as e:
-                logger.error(f"Error processing events: {e}")
-                update_errors.append("Event processing failed")
+        except Exception as e:
+            logger.error(f"Error processing events and strategy: {e}")
+            update_errors.append("Event processing failed")
+            systems_to_recover.append("event_handler")
 
         # Update feature systems
         try:
@@ -2796,7 +2846,7 @@ class GameplayController:
             logger.error(f"Error completing quest: {e}")
 
     def _process_pending_events(self):
-        """Process any pending events with error handling."""
+        """Process any pending events with error handling and storytelling integration."""
         events_to_remove = []
 
         for i, event in enumerate(self.events):
@@ -2808,7 +2858,16 @@ class GameplayController:
                 # TODO: Add event prioritization and scheduling
                 # TODO: Add cross-character event interactions
                 # TODO: Add event persistence and memory
-                # TODO: Add event-driven story generation
+                
+                # Process event for storytelling (IMPLEMENTED)
+                if self.storytelling_system and hasattr(event, 'name'):
+                    try:
+                        story_results = self.storytelling_system.process_event_for_stories(event)
+                        if story_results.get('narratives'):
+                            logger.info(f"Generated {len(story_results['narratives'])} story narratives from event: {event.name}")
+                    except Exception as e:
+                        logger.warning(f"Storytelling system failed to process event {event}: {e}")
+                
                 # For now, just mark events as processed
                 events_to_remove.append(i)
             except Exception as e:
@@ -2821,6 +2880,221 @@ class GameplayController:
                 del self.events[i]
             except IndexError:
                 pass  # Event already removed
+
+    def _process_events_and_update_strategy(self, dt):
+        """
+        Process events using EventHandler and update character strategies based on events.
+        This integrates the event system with the gameplay loop and strategy decisions.
+        """
+        try:
+            # Check and process events from EventHandler
+            current_time = datetime.now() if hasattr(datetime, 'now') else None
+            
+            # Get triggered events
+            triggered_events = self.event_handler.check_events(current_time)
+            
+            if triggered_events:
+                logger.info(f"Processing {len(triggered_events)} triggered events")
+                
+                # Process events and get their effects
+                event_results = self.event_handler.process_events(current_time)
+                
+                # Update character strategies based on events
+                self._update_character_strategies_from_events(triggered_events, event_results)
+                
+                # Apply event consequences to world state
+                self._apply_event_consequences_to_world_state(event_results)
+                
+                # Generate follow-up events if needed
+                self._generate_follow_up_events(event_results)
+                
+                logger.debug(f"Event processing results: {event_results}")
+            
+            # Process any scheduled cascading events
+            if hasattr(self.event_handler, 'process_cascading_queue'):
+                cascading_results = self.event_handler.process_cascading_queue(current_time)
+                if cascading_results:
+                    logger.info(f"Processed {len(cascading_results)} cascading events")
+                    
+            # Check for daily events and special occasions
+            if hasattr(self.event_handler, 'check_daily_events'):
+                daily_results = self.event_handler.check_daily_events(current_time)
+                if daily_results.get('total_events', 0) > 0:
+                    logger.debug(f"Daily events check: {daily_results}")
+                    
+        except Exception as e:
+            logger.error(f"Error in event processing and strategy update: {e}")
+            logger.error(traceback.format_exc())
+
+    def _update_character_strategies_from_events(self, triggered_events, event_results):
+        """Update character strategies based on triggered events."""
+        try:
+            if not self.strategy_manager:
+                return
+                
+            for event in triggered_events:
+                # Get characters affected by this event
+                affected_characters = getattr(event, 'participants', [])
+                
+                # Also check characters at the event location
+                if hasattr(event, 'location') and event.location:
+                    for char in self.characters.values():
+                        if (hasattr(char, 'location') and 
+                            char.location == event.location and 
+                            char not in affected_characters):
+                            affected_characters.append(char)
+                
+                # Update strategies for affected characters
+                for character in affected_characters:
+                    if hasattr(character, 'uuid') and character.uuid in self.characters:
+                        try:
+                            # Generate new strategy based on event
+                            if hasattr(self.strategy_manager, 'update_strategy'):
+                                new_strategy = self.strategy_manager.update_strategy([event], character)
+                                if new_strategy:
+                                    self._apply_strategy_to_character(character, new_strategy)
+                        except Exception as e:
+                            logger.warning(f"Error updating strategy for {character.name}: {e}")
+                            
+        except Exception as e:
+            logger.error(f"Error updating character strategies from events: {e}")
+
+    def _apply_event_consequences_to_world_state(self, event_results):
+        """
+        Apply event consequences to the broader world state.
+        Enhanced to have diverse impacts on character state, world state, and relationships.
+        """
+        try:
+            state_changes = event_results.get('state_changes', {})
+            
+            # Update global achievement tracking based on events
+            for event_name in event_results.get('processed_events', []):
+                self._check_event_achievements(event_name)
+                
+            # Update social networks based on relationship events
+            for event_name in event_results.get('processed_events', []):
+                if 'social' in event_name.lower() or 'community' in event_name.lower():
+                    self._update_social_networks_from_event(event_name)
+                    
+            # Update economic state based on economic events
+            for event_name in event_results.get('processed_events', []):
+                if 'trade' in event_name.lower() or 'market' in event_name.lower() or 'economic' in event_name.lower():
+                    self._update_economic_state_from_event(event_name)
+                    
+        except Exception as e:
+            logger.error(f"Error applying event consequences to world state: {e}")
+
+    def _generate_follow_up_events(self, event_results):
+        """Generate follow-up events based on processed events."""
+        try:
+            processed_events = event_results.get('processed_events', [])
+            
+            for event_name in processed_events:
+                # Generate follow-up events based on event type and outcome
+                if 'festival' in event_name.lower():
+                    # After a festival, generate cleanup and community bonding events
+                    follow_up = self.event_handler.create_work_event(
+                        f"{event_name} Cleanup",
+                        datetime.now() + timedelta(hours=4),
+                        required_items=['cleaning_supplies'],
+                        location=None
+                    )
+                    self.event_handler.add_event(follow_up)
+                    
+                elif 'trade' in event_name.lower() or 'merchant' in event_name.lower():
+                    # After trade events, increase economic activity
+                    if hasattr(self, 'economic_state'):
+                        self.economic_state = getattr(self, 'economic_state', {})
+                        self.economic_state['trade_activity'] = self.economic_state.get('trade_activity', 0) + 10
+                        
+                elif 'disaster' in event_name.lower() or 'crisis' in event_name.lower():
+                    # After disasters, generate recovery and aid events
+                    recovery_event = self.event_handler.create_social_event(
+                        f"Recovery from {event_name}",
+                        datetime.now() + timedelta(hours=12),
+                        participants=[],
+                        location=None
+                    )
+                    self.event_handler.add_event(recovery_event)
+                    
+        except Exception as e:
+            logger.error(f"Error generating follow-up events: {e}")
+
+    def _check_event_achievements(self, event_name):
+        """Check and award achievements based on processed events."""
+        try:
+            # Update global achievements based on events
+            if hasattr(self, 'global_achievements'):
+                village_milestones = self.global_achievements.get('village_milestones', {})
+                
+                if 'trade' in event_name.lower() or 'merchant' in event_name.lower():
+                    village_milestones['trade_established'] = True
+                    
+                if 'harvest' in event_name.lower():
+                    village_milestones['successful_harvest'] = True
+                    
+                # Update social achievements
+                social_achievements = self.global_achievements.get('social_achievements', {})
+                
+                if 'festival' in event_name.lower() or 'celebration' in event_name.lower():
+                    social_achievements['community_event'] = True
+                    
+        except Exception as e:
+            logger.warning(f"Error checking event achievements: {e}")
+
+    def _update_social_networks_from_event(self, event_name):
+        """Update social networks based on social events."""
+        try:
+            if hasattr(self, 'social_networks'):
+                # Strengthen relationships for participants in social events
+                for char_id, relationships in self.social_networks.get('relationships', {}).items():
+                    for other_id in relationships:
+                        # Small boost to all relationships after community events
+                        current_strength = relationships[other_id]
+                        relationships[other_id] = min(100, current_strength + 2)
+                        
+        except Exception as e:
+            logger.warning(f"Error updating social networks from event: {e}")
+
+    def _update_economic_state_from_event(self, event_name):
+        """Update economic state based on economic events."""
+        try:
+            # Update character wealth and village economic activity
+            for character in self.characters.values():
+                if hasattr(character, 'wealth_money'):
+                    if 'market' in event_name.lower():
+                        # Market events boost everyone's wealth slightly
+                        character.wealth_money += random.randint(1, 5)
+                    elif 'trade' in event_name.lower():
+                        # Trade events have bigger economic impact
+                        character.wealth_money += random.randint(5, 15)
+                        
+        except Exception as e:
+            logger.warning(f"Error updating economic state from event: {e}")
+
+    def _apply_strategy_to_character(self, character, strategy):
+        """Apply a strategy decision to a character."""
+        try:
+            # If strategy is a single action, execute it
+            if hasattr(strategy, 'execute'):
+                success = self._execute_single_action(character, strategy)
+                logger.debug(f"Applied strategy action {strategy.name} to {character.name}: {'success' if success else 'failed'}")
+                
+            # If strategy is a list of actions, execute them
+            elif isinstance(strategy, list):
+                for action in strategy:
+                    if hasattr(action, 'execute'):
+                        success = self._execute_single_action(character, action)
+                        logger.debug(f"Applied strategy action {action.name} to {character.name}: {'success' if success else 'failed'}")
+                        
+            # If strategy is a decision object with actions
+            elif hasattr(strategy, 'actions'):
+                for action in strategy.actions:
+                    success = self._execute_single_action(character, action)
+                    logger.debug(f"Applied strategy action from decision to {character.name}: {'success' if success else 'failed'}")
+                    
+        except Exception as e:
+            logger.warning(f"Error applying strategy to character {character.name}: {e}")
 
     def render(self):
         """Render all game elements with configurable quality and effects."""
@@ -3941,6 +4215,31 @@ class GameplayController:
             logger.error(f"Error loading game state: {e}")
             return False
 
+    def initialize_world_events(self):
+        """Initialize world events for emergent storytelling."""
+        try:
+            if self.event_handler:
+                # Get locations from map controller if available
+                locations = []
+                if self.map_controller and hasattr(self.map_controller, 'buildings'):
+                    locations = self.map_controller.buildings
+                
+                # Initialize world events with characters and locations
+                self.event_handler.initialize_world_events(
+                    characters=list(self.characters.values()),
+                    locations=locations
+                )
+                
+                logger.info("World events initialized for emergent storytelling")
+                return True
+            else:
+                logger.warning("Event handler not available - skipping world events initialization")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error initializing world events: {e}")
+            return False
+
     # Feature Implementation Stubs with Clear Tracking
 
     def implement_achievement_system(self) -> bool:
@@ -4161,7 +4460,7 @@ class GameplayController:
             "skill_progression": "BASIC_IMPLEMENTED",
             "reputation_system": "BASIC_IMPLEMENTED",
             "economic_simulation": "STUB_IMPLEMENTED",
-            "event_driven_storytelling": "NOT_STARTED",
+            "event_driven_storytelling": "BASIC_IMPLEMENTED",
             "mod_system": "NOT_STARTED",
             "multiplayer_support": "NOT_STARTED",
             "advanced_ai_behaviors": "NOT_STARTED",
@@ -4173,6 +4472,51 @@ class GameplayController:
             "automated_testing": "NOT_STARTED",
             "configuration_ui": "NOT_STARTED",
         }
+
+    def get_current_stories(self) -> Dict[str, Any]:
+        """Get current story state and narratives from the storytelling system."""
+        if not self.storytelling_system:
+            return {
+                "error": "Storytelling system not available",
+                "feature_status": "NOT_AVAILABLE"
+            }
+        
+        try:
+            return self.storytelling_system.get_current_stories()
+        except Exception as e:
+            logger.error(f"Error getting current stories: {e}")
+            return {
+                "error": str(e),
+                "feature_status": "ERROR"
+            }
+
+    def get_story_summary(self, days_back: int = 7) -> str:
+        """Get a summary of recent story developments."""
+        if not self.storytelling_system:
+            return "Storytelling system not available."
+        
+        try:
+            return self.storytelling_system.generate_story_summary(days_back)
+        except Exception as e:
+            logger.error(f"Error generating story summary: {e}")
+            return f"Error generating story summary: {e}"
+
+    def get_character_stories(self, character_name: str) -> Dict[str, Any]:
+        """Get a character's involvement in current stories."""
+        if not self.storytelling_system:
+            return {
+                "error": "Storytelling system not available",
+                "character": character_name
+            }
+        
+        try:
+            return self.storytelling_system.get_character_story_involvement(character_name)
+        except Exception as e:
+            logger.error(f"Error getting character stories for {character_name}: {e}")
+            return {
+                "error": str(e),
+                "character": character_name
+            }
 
 
 
