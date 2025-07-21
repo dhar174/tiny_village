@@ -573,7 +573,7 @@ class StorytellingSystem:
                     "arc_id": arc.arc_id,
                     "title": arc.title,
                     "status": arc.status.value,
-                    "role": "participant"
+                    "role": arc.character_roles.get(character_name, CharacterRole.PARTICIPANT).value
                 })
                 
                 # Count elements involving this character
