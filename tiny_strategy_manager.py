@@ -492,7 +492,7 @@ class StrategyManager:
             crisis_actions = []
             
             # Add safety actions
-            crisis_actions.append(Action(
+            crisis_actions.append(self.create_action(
                 name="Seek Safety",
                 preconditions={},
                 effects=[
