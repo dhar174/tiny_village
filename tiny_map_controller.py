@@ -196,8 +196,8 @@ class ContextMenu:
                 text_y = option_y + (option_height - text_surface.get_height()) // 2
                 surface.blit(text_surface, (text_x, text_y))
                 
-        except Exception as e:
-            logging.warning(f"Error rendering context menu: {e}")
+        except pygame.error as e:
+            logging.warning(f"Pygame rendering error in context menu: {e}")
 
 
 class MapController:
