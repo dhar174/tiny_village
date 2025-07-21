@@ -3,6 +3,7 @@ import pygame
 import heapq
 import time
 import logging
+import os
 from typing import Dict, List, Tuple, Optional, Set
 from functools import lru_cache
 from tiny_locations import LocationManager, PointOfInterest
@@ -203,7 +204,8 @@ class ContextMenu:
 
 class MapController:
     def __init__(self, map_image_path, map_data):
-        self.map_image = pygame.image.load(map_image_path)  # Load map image
+        # Load map image with comprehensive error handling
+        self.map_image = self._load_map_image_safely(map_image_path)
         self.map_data = map_data  # Metadata about map features
         self.characters = {}  # Dictionary of characters currently on the map
         self.selected_character = None  # For user interactions
@@ -232,6 +234,92 @@ class MapController:
         self.buildings = []  # List of Building objects
         self.location_manager = None  # Will be set if LocationManager is used
         self._initialize_buildings()
+    
+    def _load_map_image_safely(self, map_image_path):
+        """
+        Safely load map image with comprehensive error handling and fallback mechanisms.
+        
+        Args:
+            map_image_path (str): Path to the map image file
+            
+        Returns:
+            pygame.Surface: The loaded image or a fallback image
+        """
+        try:
+            if not map_image_path:
+                logging.warning("No map image path provided, creating default map")
+                return self._create_default_map_image()
+            
+            # Check if file exists
+            if not os.path.exists(map_image_path):
+                logging.error(f"Map image file not found: {map_image_path}")
+                return self._create_default_map_image()
+            
+            # Try to load the image
+            try:
+                image = pygame.image.load(map_image_path)
+                logging.info(f"Successfully loaded map image: {map_image_path}")
+                return image
+            except pygame.error as e:
+                logging.error(f"Pygame error loading map image '{map_image_path}': {e}")
+                return self._create_default_map_image()
+            except Exception as e:
+                logging.error(f"Unexpected error loading map image '{map_image_path}': {e}")
+                return self._create_default_map_image()
+                
+        except Exception as e:
+            logging.error(f"Critical error in map image loading: {e}")
+            return self._create_default_map_image()
+    
+    def _create_default_map_image(self, width=800, height=600):
+        """
+        Create a default map image when the original cannot be loaded.
+        
+        Args:
+            width (int): Width of the default map
+            height (int): Height of the default map
+            
+        Returns:
+            pygame.Surface: A simple default map image
+        """
+        try:
+            # Create a simple default map with grass background and some basic features
+            default_map = pygame.Surface((width, height))
+            
+            # Fill with grass green background
+            grass_color = (34, 139, 34)  # Forest green
+            default_map.fill(grass_color)
+            
+            # Add some basic features for visual interest
+            road_color = (139, 69, 19)  # Brown road
+            water_color = (65, 105, 225)  # Royal blue water
+            
+            # Draw a simple road
+            pygame.draw.rect(default_map, road_color, (width//2 - 20, 0, 40, height))
+            pygame.draw.rect(default_map, road_color, (0, height//2 - 20, width, 40))
+            
+            # Draw a small pond
+            pygame.draw.circle(default_map, water_color, (width//4, height//4), 50)
+            
+            # Add a simple border
+            border_color = (101, 67, 33)  # Dark brown
+            pygame.draw.rect(default_map, border_color, (0, 0, width, height), 5)
+            
+            logging.info(f"Created default map image ({width}x{height})")
+            return default_map
+            
+        except Exception as e:
+            logging.error(f"Failed to create default map image: {e}")
+            # Ultimate fallback - just a solid color surface
+            try:
+                fallback = pygame.Surface((width, height))
+                fallback.fill((50, 50, 50))  # Dark gray
+                return fallback
+            except Exception as e2:
+                logging.critical(f"Even fallback map creation failed: {e2}")
+                # This should never happen, but if it does, return None
+                # The calling code will need to handle this case
+                return None
     
     def _initialize_buildings(self):
         """Initialize Building objects from map_data"""
@@ -509,8 +597,20 @@ class MapController:
         return None
 
     def render(self, surface):
-        # Render the map image
-        surface.blit(self.map_image, (0, 0))
+        # Render the map image with error handling
+        try:
+            if self.map_image is not None:
+                surface.blit(self.map_image, (0, 0))
+            else:
+                # Fallback rendering if no map image is available
+                logging.warning("No map image available for rendering")
+                surface.fill((34, 139, 34))  # Fill with grass green as emergency fallback
+        except pygame.error as e:
+            logging.error(f"Pygame error rendering map image: {e}")
+            surface.fill((34, 139, 34))  # Emergency fallback
+        except Exception as e:
+            logging.error(f"Unexpected error rendering map image: {e}")
+            surface.fill((34, 139, 34))  # Emergency fallback
 
 
         # Render locations (optional - for debugging or special visualization)
@@ -1533,9 +1633,16 @@ if __name__ == "__main__":
     clock = pygame.time.Clock()
     running = True
 
-    # Initialize the Map Controller
+    # Initialize the Map Controller with error-safe image path
+    # The MapController will handle missing images gracefully with fallback
+    map_image_path = "assets/map.png"  # Preferred path
+    if not os.path.exists(map_image_path):
+        # Try alternative paths or use None to trigger fallback creation
+        map_image_path = None
+        logging.info("Using fallback map image creation")
+    
     map_controller = MapController(
-        "path_to_map_image.png",
+        map_image_path,
         map_data={
             "width": 100,
             "height": 100,
