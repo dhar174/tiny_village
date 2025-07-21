@@ -221,7 +221,8 @@ class AchievementPanel(UIPanel):
             )
             screen.blit(achievement_render, (x, current_y))
             current_y += achievement_render.get_height() + 2
-        except Exception:
+        except Exception as e:
+            logging.error(f"Error while loading achievement panel: {e}")
             pass
         
         # All achievements
@@ -271,7 +272,8 @@ class SelectedCharacterPanel(UIPanel):
                         if relationships else 50
                     )
                     char_info.append(f"Social: {avg_relationship:.0f}")
-                except Exception:
+                except Exception as e:
+                    logging.error(f"Error accessing social_networks while rendering selected character panel: {e}")
                     pass
             
             if hasattr(char, "uuid") and hasattr(controller, "quest_system"):
@@ -279,7 +281,9 @@ class SelectedCharacterPanel(UIPanel):
                     active_quests = len(controller.quest_system["active_quests"].get(char.uuid, []))
                     completed_quests = len(controller.quest_system["completed_quests"].get(char.uuid, []))
                     char_info.append(f"Quests: {active_quests} active, {completed_quests} done")
-                except Exception:
+                except Exception as e:
+                    logging.error(f"Error loading quest system while rendering selected character panel: {e}")
+                    
                     pass
             
             # Render character info
@@ -300,7 +304,8 @@ class SelectedCharacterPanel(UIPanel):
                         ach_text = tiny_font.render(f"- {display_name}", True, (200, 200, 150))
                         screen.blit(ach_text, (x + 5, current_y))  # Indent slightly
                         current_y += ach_text.get_height() + 2
-            except Exception:
+            except Exception as e:
+                logging.error(f"Error loading achievements while rendering selected character panel: {e}")
                 pass
         
         return current_y - y
