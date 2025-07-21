@@ -731,7 +731,7 @@ class MapController:
         # Determine what is at the clicked position
         try:
           self.handle_click(event.pos)
-        except:
+        except Exception:
           self.handle_click(position)
 
     def handle_click(self, position):
