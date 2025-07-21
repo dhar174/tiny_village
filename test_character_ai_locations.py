@@ -411,5 +411,5 @@ def test_character_location_decisions_mock():
 
 
 if __name__ == '__main__':
-  test_character_location_decisions_mock()
+    test_character_location_decisions_mock()
     test_character_location_decisions()
