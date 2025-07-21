@@ -440,10 +440,11 @@ class NarrativeGenerator:
         base_tone = self.emotional_tone_patterns.get(event_type, "neutral")
         
         # Modify based on event impact
-        if event.impact > 5:
+        event_impact = getattr(event, 'impact', 0)
+        if event_impact > 5:
             if base_tone == "neutral":
                 base_tone = "positive"
-        elif event.impact < -3:
+        elif event_impact < -3:
             base_tone = "negative"
         
         return base_tone
