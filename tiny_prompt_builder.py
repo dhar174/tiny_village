@@ -2140,7 +2140,7 @@ class PromptBuilder:
             prompt += f"\n\n🎯 **CURRENT ACTIVE GOALS** (in priority order):\n"
             for i, (utility_score, goal) in enumerate(goal_queue[:3]):  # Top 3 goals
                 # Enhanced goal description with urgency indicator
-                urgency = "🔥 URGENT" if utility_score > 8.0 else "⚡ HIGH" if utility_score > 6.0 else "📌 MODERATE"
+                urgency = "🔥 URGENT" if utility_score > self.URGENCY_THRESHOLD_URGENT else "⚡ HIGH" if utility_score > self.URGENCY_THRESHOLD_HIGH else "📌 MODERATE"
                 prompt += f"{i+1}. **{goal.name}**: {goal.description}\n"
                 prompt += f"   → Priority Score: {utility_score:.1f}/10 ({urgency})\n"
         else:
