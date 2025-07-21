@@ -1364,6 +1364,8 @@ class GameplayController:
                 "analytics": [pygame.K_a],
                 "increase_speed": [pygame.K_PAGEUP], # Added for time scaling
                 "decrease_speed": [pygame.K_PAGEDOWN], # Added for time scaling
+                "minimap": [pygame.K_m], # Added for mini-map toggle
+                "overview": [pygame.K_o], # Added for overview mode toggle
             },
         )
 
@@ -1421,6 +1423,14 @@ class GameplayController:
             self.time_scale_factor = max(MIN_SPEED, self.time_scale_factor - SPEED_STEP)
             logger.info(f"Time scale set to: {self.time_scale_factor:.1f}x")
             self._cached_speed_text = None # Invalidate cache on change
+        elif event.key in key_bindings.get("minimap", [pygame.K_m]):
+            # Toggle mini-map mode
+            self._minimap_mode = not getattr(self, "_minimap_mode", False)
+            logger.info(f"Mini-map mode {'enabled' if self._minimap_mode else 'disabled'}")
+        elif event.key in key_bindings.get("overview", [pygame.K_o]):
+            # Toggle overview mode
+            self._overview_mode = not getattr(self, "_overview_mode", False)
+            logger.info(f"Overview mode {'enabled' if self._overview_mode else 'disabled'}")
 
     def _show_help_info(self):
         """Display help information."""
@@ -1434,6 +1444,8 @@ class GameplayController:
             logger.info("  F - Show feature status")
             logger.info("  F5 - Force system recovery")
             logger.info("  A - Show analytics")
+            logger.info("  M - Toggle mini-map")
+            logger.info("  O - Toggle overview mode")
             logger.info("  ESC - Quit")
             logger.info("Features:")
             logger.info("  - Character AI with goals and actions")
@@ -2474,16 +2486,21 @@ class GameplayController:
         # Clear the screen with configurable background
         self.screen.fill(background_color)
 
-        # Render the map and game world
-        if self.map_controller:
-            try:
-                self.map_controller.render(self.screen)
-            except Exception as e:
-                logger.error(f"Error rendering map: {e}")
-                # TODO: Add fallback rendering for when map fails
+        # Check if overview mode is active
+        if getattr(self, "_overview_mode", False):
+            # Render overview mode instead of normal view
+            self._render_overview()
+        else:
+            # Render the map and game world normally
+            if self.map_controller:
+                try:
+                    self.map_controller.render(self.screen)
+                except Exception as e:
+                    logger.error(f"Error rendering map: {e}")
+                    # TODO: Add fallback rendering for when map fails
 
-        # Render UI elements
-        self._render_ui()
+            # Render UI elements
+            self._render_ui()
 
         # TODO: Add render effect layers (lighting, particles, post-processing)
 
@@ -2524,7 +2541,7 @@ class GameplayController:
             # TODO: Add character relationship visualization
             # TODO: Add village statistics dashboard
             # TODO: Add interactive building information panels
-            # TODO: Add mini-map or overview mode
+            # TODO: Add mini-map and overview mode - IMPLEMENTED: Toggle mini-map with 'M' key and overview mode with 'O' key
             # TODO: Add save/load game functionality UI
             # TODO: Add settings and configuration panels
             # TODO: Add help and tutorial overlays
@@ -2546,6 +2563,11 @@ class GameplayController:
             if getattr(self, "paused", False):
                 pause_text = font.render("PAUSED", True, (255, 255, 0))
                 self.screen.blit(pause_text, (self.screen.get_width() - 100, 10))
+
+            # Render view mode status
+            if getattr(self, "_minimap_mode", False):
+                mode_text = tiny_font.render("Mini-map: ON", True, (0, 255, 0))
+                self.screen.blit(mode_text, (self.screen.get_width() - 100, 35))
 
             # Render time if available
             y_offset = 35
@@ -2736,6 +2758,8 @@ class GameplayController:
                 "S to save game (basic)",
                 "L to load game (basic)",
                 "F to show feature status",
+                "M to toggle mini-map",
+                "O to toggle overview mode",
                 "ESC to quit",
             ]
 
@@ -2747,6 +2771,10 @@ class GameplayController:
             # Show feature implementation status on F key press (stored state)
             if getattr(self, "_show_feature_status", False):
                 self._render_feature_status_overlay()
+
+            # Show mini-map if enabled
+            if getattr(self, "_minimap_mode", False):
+                self._render_minimap()
 
         except Exception as e:
             # Fallback to minimal UI
@@ -2806,6 +2834,199 @@ class GameplayController:
 
         except Exception as e:
             logger.warning(f"Error rendering feature status overlay: {e}")
+
+    def _render_minimap(self):
+        """Render a mini-map or overview of the game world."""
+        try:
+            if not self.map_controller or not hasattr(self.map_controller, 'map_image'):
+                return
+            
+            # Mini-map configuration
+            minimap_size = MINIMAP_SIZE  # Size of the mini-map
+            margin = 10
+            position = (self.screen.get_width() - minimap_size - margin, margin)
+            
+            # Create mini-map surface
+            minimap_surface = pygame.Surface((minimap_size, minimap_size))
+            minimap_surface.fill((0, 0, 0))  # Black background
+            
+            # Get the original map dimensions
+            original_map = self.map_controller.map_image
+            original_width = original_map.get_width()
+            original_height = original_map.get_height()
+            
+            # Calculate scaling factor to fit the map in the mini-map
+            scale_x = minimap_size / original_width
+            scale_y = minimap_size / original_height
+            scale = min(scale_x, scale_y)  # Use smaller scale to maintain aspect ratio
+            
+            # Scale the map image
+            scaled_width = int(original_width * scale)
+            scaled_height = int(original_height * scale)
+            scaled_map = pygame.transform.scale(original_map, (scaled_width, scaled_height))
+            
+            # Center the scaled map in the mini-map surface
+            map_x = (minimap_size - scaled_width) // 2
+            map_y = (minimap_size - scaled_height) // 2
+            minimap_surface.blit(scaled_map, (map_x, map_y))
+            
+            # Draw buildings on mini-map
+            if hasattr(self.map_controller, 'map_data') and 'buildings' in self.map_controller.map_data:
+                for building in self.map_controller.map_data['buildings']:
+                    if 'rect' in building:
+                        # Scale building coordinates
+                        scaled_rect = pygame.Rect(
+                            int(building['rect'].x * scale) + map_x,
+                            int(building['rect'].y * scale) + map_y,
+                            max(2, int(building['rect'].width * scale)),
+                            max(2, int(building['rect'].height * scale))
+                        )
+                        pygame.draw.rect(minimap_surface, (100, 100, 100), scaled_rect)
+            
+            # Draw characters on mini-map
+            if hasattr(self.map_controller, 'characters'):
+                for character in self.map_controller.characters.values():
+                    if hasattr(character, 'position'):
+                        # Scale character position
+                        char_x = int(character.position[0] * scale) + map_x
+                        char_y = int(character.position[1] * scale) + map_y
+                        
+                        # Use different color for selected character
+                        if character is self.map_controller.selected_character:
+                            color = (255, 255, 0)  # Yellow for selected
+                            radius = 3
+                        else:
+                            color = getattr(character, 'color', DEFAULT_COLOR)
+                            radius = 2
+                        
+                        pygame.draw.circle(minimap_surface, color, (char_x, char_y), radius)
+            
+            # Draw border around mini-map
+            pygame.draw.rect(minimap_surface, (128, 128, 128), minimap_surface.get_rect(), 2)
+            
+            # Add semi-transparent background
+            background = pygame.Surface((minimap_size + 4, minimap_size + 4))
+            background.set_alpha(200)
+            background.fill((0, 0, 0))
+            self.screen.blit(background, (position[0] - 2, position[1] - 2))
+            
+            # Blit mini-map to main screen
+            self.screen.blit(minimap_surface, position)
+            
+            # Add mini-map title
+            font = pygame.font.Font(None, 16)
+            title_text = font.render("Mini-Map", True, (255, 255, 255))
+            title_pos = (position[0], position[1] - 20)
+            self.screen.blit(title_text, title_pos)
+            
+        except Exception as e:
+            logger.warning(f"Error rendering mini-map: {e}")
+
+    def _render_overview(self):
+        """Render a full-screen overview of the game world with UI overlay."""
+        try:
+            if not self.map_controller or not hasattr(self.map_controller, 'map_image'):
+                return
+            
+            # Get screen dimensions
+            screen_width = self.screen.get_width()
+            screen_height = self.screen.get_height()
+            
+            # Reserve space for UI at the bottom
+            ui_height = 100
+            available_height = screen_height - ui_height
+            
+            # Get the original map dimensions
+            original_map = self.map_controller.map_image
+            original_width = original_map.get_width()
+            original_height = original_map.get_height()
+            
+            # Calculate scaling factor to fit the map in the available space
+            scale_x = screen_width / original_width
+            scale_y = available_height / original_height
+            scale = min(scale_x, scale_y)  # Use smaller scale to maintain aspect ratio
+            
+            # Scale the map image
+            scaled_width = int(original_width * scale)
+            scaled_height = int(original_height * scale)
+            scaled_map = pygame.transform.scale(original_map, (scaled_width, scaled_height))
+            
+            # Center the scaled map on screen
+            map_x = (screen_width - scaled_width) // 2
+            map_y = (available_height - scaled_height) // 2
+            
+            # Clear screen with dark background
+            self.screen.fill((20, 20, 20))
+            
+            # Blit the scaled map
+            self.screen.blit(scaled_map, (map_x, map_y))
+            
+            # Draw buildings on overview
+            if hasattr(self.map_controller, 'map_data') and 'buildings' in self.map_controller.map_data:
+                for building in self.map_controller.map_data['buildings']:
+                    if 'rect' in building:
+                        # Scale building coordinates
+                        scaled_rect = pygame.Rect(
+                            int(building['rect'].x * scale) + map_x,
+                            int(building['rect'].y * scale) + map_y,
+                            max(3, int(building['rect'].width * scale)),
+                            max(3, int(building['rect'].height * scale))
+                        )
+                        pygame.draw.rect(self.screen, (150, 150, 150), scaled_rect)
+                        pygame.draw.rect(self.screen, (200, 200, 200), scaled_rect, 1)
+            
+            # Draw characters on overview
+            if hasattr(self.map_controller, 'characters'):
+                for character in self.map_controller.characters.values():
+                    if hasattr(character, 'position'):
+                        # Scale character position
+                        char_x = int(character.position[0] * scale) + map_x
+                        char_y = int(character.position[1] * scale) + map_y
+                        
+                        # Use different appearance for selected character
+                        if character is self.map_controller.selected_character:
+                            # Draw selection ring
+                            pygame.draw.circle(self.screen, (255, 255, 0), (char_x, char_y), 8, 2)
+                            color = DEFAULT_COLOR
+                            radius = 4
+                        else:
+                            color = getattr(character, 'color', DEFAULT_COLOR)
+                            radius = 3
+                        
+                        pygame.draw.circle(self.screen, color, (char_x, char_y), radius)
+                        
+                        # Add character name if available
+                        if hasattr(character, 'name') and scale > 0.5:  # Only show names when zoomed in enough
+                            font = pygame.font.Font(None, 16)
+                            name_text = font.render(character.name, True, (255, 255, 255))
+                            text_rect = name_text.get_rect()
+                            text_rect.center = (char_x, char_y - 15)
+                            self.screen.blit(name_text, text_rect)
+            
+            # Draw overview mode UI at the bottom
+            ui_surface = pygame.Surface((screen_width, ui_height))
+            ui_surface.set_alpha(220)
+            ui_surface.fill((0, 0, 0))
+            
+            font = pygame.font.Font(None, 24)
+            title_text = font.render("OVERVIEW MODE", True, (255, 255, 255))
+            ui_surface.blit(title_text, (10, 10))
+            
+            small_font = pygame.font.Font(None, 18)
+            instructions = [
+                "Press 'O' to exit overview mode",
+                f"Showing {len(getattr(self.map_controller, 'characters', {}))} characters",
+                f"Scale: {scale:.2f}x"
+            ]
+            
+            for i, instruction in enumerate(instructions):
+                inst_text = small_font.render(instruction, True, (200, 200, 200))
+                ui_surface.blit(inst_text, (10, 35 + i * 20))
+            
+            self.screen.blit(ui_surface, (0, available_height))
+            
+        except Exception as e:
+            logger.warning(f"Error rendering overview: {e}")
 
     def run(self):
         """Main entry point to start the game loop."""
