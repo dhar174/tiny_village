@@ -218,7 +218,7 @@ class StoryArcManager:
         arc_type = template["type"]
         
         if arc_type == StoryArcType.PERSONAL_GROWTH:
-            return f"The Journey of {event.participants[0].name if event.participants else 'Unknown'}"
+            return f"The Journey of {event.participants[0].name if event.participants and hasattr(event.participants[0], 'name') else 'Unknown'}"
         elif arc_type == StoryArcType.RELATIONSHIP:
             return f"A Growing Bond"
         elif arc_type == StoryArcType.COMMUNITY:
