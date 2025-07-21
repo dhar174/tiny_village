@@ -152,6 +152,8 @@ def create_llm_test_character(name: str, enable_llm: bool = True):
             self.health_status = 5.0
             self.job = "test_job"
             self.use_llm_decisions = enable_llm
+            self.recent_event = "joined village"  # Add missing attribute
+            self.long_term_goal = "live peacefully"  # Add missing attribute
             
             # Mock location and inventory for compatibility
             self.location = type("Location", (), {"name": "TestLocation"})()
