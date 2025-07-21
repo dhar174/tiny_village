@@ -327,11 +327,10 @@ class MapController:
         line_height = font_size + 2
         y_offset = panel_y + 10
 
+        font = pygame.font.Font(None, font_size)  # Use default font with specified size
         for line in info:
-            # This is a placeholder - in a real implementation you'd use pygame.font
-            # For now, we'll just indicate where text would go
-            text_rect = pygame.Rect(panel_x + 10, y_offset, panel_width - 20, line_height)
-            pygame.draw.rect(surface, (255, 255, 255), text_rect, 1)
+            text_surface = font.render(line, True, (255, 255, 255))  # Render text in white
+            surface.blit(text_surface, (panel_x + 10, y_offset))  # Draw text on the panel
             y_offset += line_height
 
     def _get_location_info_text(self, location):
