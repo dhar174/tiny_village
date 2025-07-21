@@ -5232,7 +5232,7 @@ class GameplayController:
             "mouse_interactions": "BASIC_IMPLEMENTED",  # NEW: Enhanced mouse handling with right-click
             "mod_system": "NOT_STARTED",
             "multiplayer_support": "NOT_STARTED",
-            "advanced_ai_behaviors": "NOT_STARTED",
+            "advanced_ai_behaviors": "IMPLEMENTED",
             "procedural_content_generation": "NOT_STARTED",
             "advanced_graphics_effects": "NOT_STARTED",
             "sound_and_music_system": "NOT_STARTED",
