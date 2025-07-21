@@ -180,7 +180,7 @@ class StrategyManager:
             
         # Use LLM periodically for variety and emergent behavior (1 in 5 decisions)
         import random
-        if random.random() < 0.2:  # 20% chance for variety
+        if random.random() < VARIETY_PROBABILITY:  # 20% chance for variety
             logger.info(f"Using LLM for variety in decision-making for {getattr(character, 'name', 'character')}")
             return True
             
