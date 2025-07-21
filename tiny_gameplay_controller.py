@@ -303,7 +303,7 @@ class SelectedCharacterPanel(UIPanel):
             current_y += energy_text.get_height() + 1
             
             # Hunger (simulated based on energy for now)
-            hunger = max(0, 100 - energy - 20)  # Simple hunger simulation
+            hunger = max(0, 100 - energy - HUNGER_OFFSET)  # Simple hunger simulation
             hunger_color = (0, 255, 0) if hunger < 30 else (255, 255, 0) if hunger < 60 else (255, 100, 100)
             hunger_text = tiny_font.render(f"  Hunger: {hunger}/100", True, hunger_color)
             screen.blit(hunger_text, (x, current_y))
