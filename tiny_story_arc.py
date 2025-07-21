@@ -116,17 +116,19 @@ class StoryArc:
         progression_amount = (event.importance / 10.0) * 0.1
         self.advance_progression(progression_amount)
     
-    def add_character(self, character):
+    def add_character(self, character: Union['Character', str]):
         """
         Add a character as involved in this story arc.
         
         Args:
             character: Character object or character name
         """
-        if hasattr(character, 'name'):
+        if isinstance(character, Character):
             self.characters_involved.add(character.name)
+        elif isinstance(character, str):
+            self.characters_involved.add(character)
         else:
-            self.characters_involved.add(str(character))
+            raise TypeError("Invalid character type. Expected a Character object or string.")
     
     def get_progression_percentage(self) -> int:
         """
