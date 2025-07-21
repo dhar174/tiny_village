@@ -94,19 +94,27 @@ class StoryArc:
             if self.progression >= 1.0:
                 logging.info(f"Story arc '{self.name}' completed")
     
-    def add_event(self, event):
+    class EventProtocol(Protocol):
+        """
+        Protocol for event objects expected by the StoryArc class.
+        """
+        importance: int
+    
+    def add_event(self, event: EventProtocol):
         """
         Add an event to this story arc and potentially advance progression.
         
         Args:
             event: Event object to associate with this arc
         """
+        if not isinstance(event, EventProtocol):
+            raise TypeError(f"Event must conform to EventProtocol with an 'importance' attribute.")
+        
         self.events.append(event)
         
         # Advance progression based on event importance
-        if hasattr(event, 'importance'):
-            progression_amount = (event.importance / 10.0) * 0.1
-            self.advance_progression(progression_amount)
+        progression_amount = (event.importance / 10.0) * 0.1
+        self.advance_progression(progression_amount)
     
     def add_character(self, character):
         """
