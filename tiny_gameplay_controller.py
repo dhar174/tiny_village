@@ -2987,10 +2987,10 @@ class GameplayController:
                         if character == self.map_controller.selected_character:
                             # Draw selection ring
                             pygame.draw.circle(self.screen, (255, 255, 0), (char_x, char_y), 8, 2)
-                            color = (255, 255, 255)
+                            color = DEFAULT_COLOR
                             radius = 4
                         else:
-                            color = getattr(character, 'color', (255, 255, 255))
+                            color = getattr(character, 'color', DEFAULT_COLOR)
                             radius = 3
                         
                         pygame.draw.circle(self.screen, color, (char_x, char_y), radius)
