@@ -2067,7 +2067,7 @@ class PromptBuilder:
                 descriptor = descriptors.get_action_descriptors(action)
             except (KeyError, AttributeError):
                 descriptor = action.replace("_", " ").title()
-            action_name = action.replace("_", " ").title().replace(" ", "_")Expand commentComment on lines R1657 to R1658ResolvedCode has comments. Press enter to view.
+            action_name = action.replace("_", " ").title().replace(" ", "_")
             prompt += f"{i}. {descriptor} to {action_name}.\n"
         # Add structured output format instructions
         if output_format == "json":
