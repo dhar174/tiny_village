@@ -11,6 +11,9 @@ MAX_SPEED = 5.0
 MIN_SPEED = 0.1
 SPEED_STEP = 0.1
 
+# Constants for UI elements
+MINIMAP_SIZE = 150  # Size of the minimap window
+
 WEATHER_ENERGY_EFFECTS = {
     'rainy': 0.5,
     # 'snowy': 1.0, # easy to add more

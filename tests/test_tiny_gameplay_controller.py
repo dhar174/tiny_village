@@ -1,4 +1,5 @@
 import unittest
+import os
 import pygame # Pygame will be needed for font rendering and potentially other UI elements.
 from tiny_gameplay_controller import GameplayController, MIN_SPEED, MAX_SPEED, SPEED_STEP # Import constants too
 
@@ -14,9 +15,8 @@ class MockCharacter: # Simple mock for Character
         self.uuid = f"{name}_uuid"
         # Add any other attributes needed by the controller or actions during tests
         self.energy = 100
-
-    def add_memory(self, memory_text): # Mocked method
-        pass
+        # Make add_memory a proper mock method
+        self.add_memory = MagicMock()
 
 
 class TestGameplayController(unittest.TestCase):
@@ -263,38 +263,206 @@ class TestGameplayController(unittest.TestCase):
         # Enable mini-map mode
         self.controller._minimap_mode = True
         
-        # Create a minimal mock map controller
-        mock_map_controller = MagicMock()
-        mock_map_controller.map_image = pygame.Surface((100, 100))
-        mock_map_controller.map_data = {"buildings": []}
-        mock_map_controller.characters = {}
-        mock_map_controller.selected_character = None
-        self.controller.map_controller = mock_map_controller
+        # Import and create a real MapController for integration testing
+        from tiny_map_controller import MapController
+        
+        # Create test map data
+        test_map_data = {
+            'width': 100,
+            'height': 100,
+            'buildings': [
+                {'name': 'Test Building', 'rect': pygame.Rect(25, 25, 20, 20)}
+            ]
+        }
+        
+        # Create test map image
+        test_map_image_path = 'assets/test_minimap.png'
+        test_surface = pygame.Surface((100, 100))
+        test_surface.fill((0, 128, 0))  # Green background
+        pygame.image.save(test_surface, test_map_image_path)
+        
+        # Use real MapController instead of mock for integration testing
+        real_map_controller = MapController(test_map_image_path, test_map_data)
+        self.controller.map_controller = real_map_controller
         
         # Should not raise any exceptions
         try:
             self.controller._render_minimap()
         except Exception as e:
             self.fail(f"Mini-map rendering failed with error: {e}")
+        
+        # Clean up test image
+        import os
+        if os.path.exists(test_map_image_path):
+            os.remove(test_map_image_path)
 
     def test_render_overview_no_errors(self):
         """Test that overview mode rendering doesn't crash when enabled."""
         # Enable overview mode
         self.controller._overview_mode = True
         
-        # Create a minimal mock map controller
-        mock_map_controller = MagicMock()
-        mock_map_controller.map_image = pygame.Surface((100, 100))
-        mock_map_controller.map_data = {"buildings": []}
-        mock_map_controller.characters = {}
-        mock_map_controller.selected_character = None
-        self.controller.map_controller = mock_map_controller
+        # Import and create a real MapController for integration testing
+        from tiny_map_controller import MapController
+        
+        # Create test map data with more comprehensive data for overview testing
+        test_map_data = {
+            'width': 100,
+            'height': 100,
+            'buildings': [
+                {'name': 'Town Hall', 'rect': pygame.Rect(30, 30, 25, 25)},
+                {'name': 'Market', 'rect': pygame.Rect(60, 60, 15, 15)}
+            ]
+        }
+        
+        # Create test map image
+        test_map_image_path = 'assets/test_overview.png'
+        test_surface = pygame.Surface((100, 100))
+        test_surface.fill((0, 100, 200))  # Blue background
+        pygame.image.save(test_surface, test_map_image_path)
+        
+        # Use real MapController instead of mock for integration testing
+        real_map_controller = MapController(test_map_image_path, test_map_data)
+        self.controller.map_controller = real_map_controller
         
         # Should not raise any exceptions
         try:
             self.controller._render_overview()
         except Exception as e:
             self.fail(f"Overview rendering failed with error: {e}")
+        
+        # Clean up test image
+        import os
+        if os.path.exists(test_map_image_path):
+            os.remove(test_map_image_path)
+
+    def test_map_controller_integration(self):
+        """Test integration with real MapController to ensure actual functionality works."""
+        # Import and create a real MapController for integration testing
+        from tiny_map_controller import MapController
+        
+        # Create comprehensive test map data
+        test_map_data = {
+            'width': 50,
+            'height': 50,
+            'buildings': [
+                {'name': 'Building A', 'rect': pygame.Rect(10, 10, 5, 5)},
+                {'name': 'Building B', 'rect': pygame.Rect(30, 30, 8, 8)}
+            ]
+        }
+        
+        # Create test map image
+        test_map_image_path = 'assets/test_integration.png'
+        test_surface = pygame.Surface((50, 50))
+        test_surface.fill((255, 255, 0))  # Yellow background
+        pygame.image.save(test_surface, test_map_image_path)
+        
+        # Use real MapController for comprehensive integration testing
+        real_map_controller = MapController(test_map_image_path, test_map_data)
+        
+        # Test that real MapController has proper functionality
+        self.assertIsNotNone(real_map_controller.map_image, "Map image should be loaded")
+        self.assertEqual(real_map_controller.map_data['width'], 50, "Map width should be set correctly")
+        self.assertEqual(len(real_map_controller.map_data['buildings']), 2, "Should have 2 buildings")
+        self.assertIsInstance(real_map_controller.characters, dict, "Characters should be a dictionary")
+        self.assertIsNotNone(real_map_controller.pathfinder, "Pathfinder should be initialized")
+        
+        # Test pathfinding functionality (this would fail with a mock)
+        start_pos = (0, 0)
+        goal_pos = (5, 5)
+        path = real_map_controller.find_path_cached(start_pos, goal_pos)
+        self.assertIsInstance(path, list, "Path should be a list")
+        
+        # Test dynamic obstacle management (unique to real implementation)
+        obstacle_pos = (20, 20)
+        real_map_controller.add_dynamic_obstacle(obstacle_pos)
+        self.assertIn(obstacle_pos, real_map_controller.dynamic_obstacles, "Obstacle should be added")
+        
+        real_map_controller.remove_dynamic_obstacle(obstacle_pos)
+        self.assertNotIn(obstacle_pos, real_map_controller.dynamic_obstacles, "Obstacle should be removed")
+        
+        # Test with GameplayController
+        self.controller.map_controller = real_map_controller
+        
+        # Test that minimap and overview work with real data
+        self.controller._minimap_mode = True
+        try:
+            self.controller._render_minimap()
+        except Exception as e:
+            self.fail(f"Minimap rendering with real MapController failed: {e}")
+        
+        self.controller._overview_mode = True
+        try:
+            self.controller._render_overview()
+        except Exception as e:
+            self.fail(f"Overview rendering with real MapController failed: {e}")
+        
+        # Clean up test image
+        import os
+        if os.path.exists(test_map_image_path):
+            os.remove(test_map_image_path)
+
+    def test_map_controller_bug_detection(self):
+        """Test that demonstrates real MapController bugs would be caught (unlike with mocks)."""
+        # Import and create a real MapController for integration testing
+        from tiny_map_controller import MapController
+        
+        # Create test map data that would expose pathfinding issues
+        test_map_data = {
+            'width': 10,
+            'height': 10,
+            'buildings': [
+                {'name': 'Obstacle', 'rect': pygame.Rect(3, 3, 4, 4)},  # Large obstacle
+            ]
+        }
+        
+        # Create test map image
+        test_map_image_path = 'assets/test_bug_detection.png'
+        test_surface = pygame.Surface((10, 10))
+        test_surface.fill((128, 64, 0))  # Brown background
+        pygame.image.save(test_surface, test_map_image_path)
+        
+        # Use real MapController - this will catch actual implementation bugs
+        real_map_controller = MapController(test_map_image_path, test_map_data)
+        
+        # Test pathfinding around obstacles (a mock wouldn't catch pathfinding bugs)
+        start_pos = (0, 0)
+        goal_pos = (9, 9)
+        path = real_map_controller.find_path_cached(start_pos, goal_pos)
+        
+        # Verify path is valid and avoids obstacles
+        self.assertIsInstance(path, list, "Path should be a list")
+        if path:  # If a path exists
+            # Verify path doesn't go through obstacles
+            for step in path:
+                x, y = step
+                for building in test_map_data['buildings']:
+                    rect = building['rect']
+                    self.assertFalse(rect.collidepoint(x, y), 
+                                   f"Path step {step} should not be inside obstacle {building['name']}")
+            
+            # Verify path starts and ends correctly
+            self.assertEqual(path[0], start_pos, "Path should start at start position")
+            self.assertEqual(path[-1], goal_pos, "Path should end at goal position")
+        
+        # Test dynamic obstacle functionality (mocks wouldn't test this)
+        obstacle_pos = (8, 8)
+        real_map_controller.add_dynamic_obstacle(obstacle_pos)
+        
+        # Pathfinding should now avoid the dynamic obstacle
+        new_path = real_map_controller.find_path_cached(start_pos, goal_pos)
+        if new_path:
+            self.assertNotIn(obstacle_pos, new_path, "Path should avoid dynamic obstacles")
+        
+        # Test cache invalidation (complex behavior that mocks wouldn't catch)
+        initial_cache_size = len(real_map_controller.path_cache)
+        real_map_controller.invalidate_path_cache()
+        post_invalidation_cache_size = len(real_map_controller.path_cache)
+        self.assertEqual(post_invalidation_cache_size, 0, "Cache should be empty after invalidation")
+        
+        # Clean up test image
+        import os
+        if os.path.exists(test_map_image_path):
+            os.remove(test_map_image_path)
 
 
 if __name__ == '__main__':
