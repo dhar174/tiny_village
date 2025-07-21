@@ -271,7 +271,7 @@ class SelectedCharacterPanel(UIPanel):
                         if relationships else 50
                     )
                     char_info.append(f"Social: {avg_relationship:.0f}")
-                except:
+                except Exception:
                     pass
             
             if hasattr(char, "uuid") and hasattr(controller, "quest_system"):
