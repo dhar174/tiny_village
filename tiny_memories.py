@@ -9,14 +9,23 @@ import re
 import time
 
 from collections import deque
-from networkx import node_link_data
+try:
+    from networkx import node_link_data
+    import networkx as nx
+    NETWORKX_AVAILABLE = True
+except ImportError:
+    NETWORKX_AVAILABLE = False
+    # Create mock objects for networkx functionality
+    node_link_data = None
+    nx = None
+    
 import numpy as np
 from datetime import datetime, timedelta
+import pandas as pd
 import pandas as pd
 import scipy as sp
 from sklearn import tree
 from sklearn.metrics.pairwise import cosine_similarity
-import networkx as nx
 # Conditional torch import - skip functionality if not available
 try:
     import torch
@@ -90,8 +99,13 @@ from nltk.corpus import wordnet
 from nltk.tokenize import word_tokenize
 from nltk import pos_tag
 
-class_interaction_graph = nx.DiGraph()
-call_flow_diagram = nx.DiGraph()
+# Initialize networkx graphs only if available
+if NETWORKX_AVAILABLE:
+    class_interaction_graph = nx.DiGraph()
+    call_flow_diagram = nx.DiGraph()
+else:
+    class_interaction_graph = None
+    call_flow_diagram = None
 from nltk.stem import PorterStemmer
 
 print(
@@ -1903,7 +1917,11 @@ class FlatMemoryAccess:
                 # print(f"Error retrieving embedding for memory {specific_memory_id}: {e}")
                 return []
 
-        pagerank_scores = nx.pagerank(self.memory_graph)
+        if NETWORKX_AVAILABLE and nx:
+            pagerank_scores = nx.pagerank(self.memory_graph)
+        else:
+            # Fallback: uniform scores if networkx not available
+            pagerank_scores = {node: 1.0 for node in self.memory_graph.nodes()}
 
         similarities = {}
         for memory in self.get_graph().nodes:
