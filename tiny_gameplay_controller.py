@@ -279,7 +279,7 @@ class SelectedCharacterPanel(UIPanel):
                     active_quests = len(controller.quest_system["active_quests"].get(char.uuid, []))
                     completed_quests = len(controller.quest_system["completed_quests"].get(char.uuid, []))
                     char_info.append(f"Quests: {active_quests} active, {completed_quests} done")
-                except:
+                except Exception:
                     pass
             
             # Render character info
