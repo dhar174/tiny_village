@@ -101,10 +101,26 @@ class StorytellingEventHandler(EventHandler):
         self.trigger_cooldowns: Dict[str, datetime] = {}
         self.trigger_counts: Dict[str, int] = {}
         
+        # Storytelling system bridge (set by GameplayController)
+        self.storytelling_system: Optional[Any] = None
+        
         # Initialize story templates
         self._setup_story_templates()
         
         logging.info("StorytellingEventHandler initialized with narrative capabilities")
+    
+    def add_event(self, event):
+        """Add an event and forward it to the storytelling system if available."""
+        # Call parent method to handle standard event processing
+        super().add_event(event)
+        
+        # Forward to storytelling system for narrative processing
+        if hasattr(self, 'storytelling_system') and self.storytelling_system:
+            try:
+                self.storytelling_system.process_event_for_stories(event)
+                logging.debug(f"Forwarded event '{event.name}' to storytelling system for narrative processing")
+            except Exception as e:
+                logging.error(f"Error forwarding event to storytelling system: {e}")
     
     def add_character_action_monitor(self, trigger_id: str, trigger: CharacterActionTrigger):
         """Add a monitor for character actions that can trigger story events."""
@@ -455,11 +471,23 @@ class StorytellingEventHandler(EventHandler):
         template = self.story_templates[template_name].copy()
         template.update(overrides)
         
+        # Calculate importance with scaling for narrative impact
+        importance = template.get("importance", 5)
+        
+        # Check if we have narrative impact context to scale importance
+        # NarrativeImpact.MAJOR (4) should map to importance >= 6 for arc creation
+        if self._current_narrative_context is not None:
+            narrative_impact = getattr(self._current_narrative_context, 'narrative_impact', None)
+            if narrative_impact:
+                # Scale: MAJOR (4) * 2 = 8, ensuring >= 6 threshold is met
+                scaled_importance = narrative_impact.value * 2
+                importance = max(importance, scaled_importance)
+        
         return Event(
             name=event_name,
             date=datetime.now(),
             event_type="story",
-            importance=template.get("importance", 5),
+            importance=importance,
             impact=template.get("impact", 3),
             participants=characters,
             effects=template.get("effects", []),
