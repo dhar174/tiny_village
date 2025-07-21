@@ -26,7 +26,7 @@ from tiny_jobs import Job
 
 # from actions import Action, State, ActionSystem
 from tiny_items import ItemInventory, ItemObject, InvestmentPortfolio, Stock
-# import tiny_memories  # Temporarily commented out for testing
+import tiny_memories  # Temporarily commented out for testing
 from tiny_utility_functions import is_goal_achieved
 import numpy as np
 from tiny_time_manager import GameTimeManager as tiny_time_manager
@@ -3012,26 +3012,10 @@ class GraphManager:
 
     def analyze_relationship_health(self, char1, char2):
         """
-        Analyzes the health of the relationship between two characters based on attributes like emotional and historical values.
-
-        Parameters:
-            char1 (str): Node identifier for the first character.
-            char2 (str): Node identifier for the second character.
-
-        Returns:
-            float: A score representing the relationship health.
-
-        Usage example:
-            health_score = graph_manager.analyze_relationship_health('char1', 'char2')
-            print("Relationship health score:", health_score)
+        Analyze the health of a relationship between two characters.
+        Delegates to SocialModel for calculation.
         """
-        if self.G.has_edge(char1, char2):
-            emotional = self.G[char1][char2].get("emotional", 0)
-            historical = self.G[char1][char2].get("historical", 0)
-            # Combine these attributes to form a health score, example below
-            return emotional * 0.75 + historical * 0.25
-        else:
-            return 0  # No relationship exists
+        return self.social_model.analyze_relationship_health(char1, char2)
 
     def update_edge_attribute(self, node1, node2, attribute, value):
         """
@@ -3053,32 +3037,10 @@ class GraphManager:
 
     def evaluate_relationship_strength(self, char1, char2):
         """
-        Evaluate the strength of the relationship between two characters based on edge attributes.
-
-        Parameters:
-            char1 (str): First character node identifier.
-            char2 (str): Second character node identifier.
-
-        Returns:
-            int: The cumulative strength of the relationship.
-
-        Usage example:
-            strength = graph_manager.evaluate_relationship_strength('char1', 'char2')
-            print("Relationship strength:", strength)
+        Evaluate the overall strength of a relationship.
+        Delegates to SocialModel for calculation.
         """
-        attributes = [
-            "trust",
-            "historical",
-            "interaction_frequency",
-            "emotional_impact",
-        ]
-        strength = sum(self.G[char1][char2].get(attr, 0) for attr in attributes)
-        # Normalize the strength to a 0-100 scale
-        strength = max(0, min(strength, 100))
-        # Update the strength attribute in the graph
-        self.update_edge_attribute(char1, char2, "strength", strength)
-
-        return strength
+        return self.social_model.evaluate_relationship_strength(char1, char2)
 
     def check_friendship_status(self, char1, char2):
         """
