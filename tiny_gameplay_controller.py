@@ -176,8 +176,9 @@ class StatsPanel(UIPanel):
                 )
                 screen.blit(analytics_text, (x, current_y))
                 current_y += analytics_text.get_height() + 2
-            except:
-                pass
+            except Exception as e:
+                logging.error(f"Error in action analytics rendering: {e}")
+                logging.error(traceback.format_exc())
         
         # System health
         if hasattr(controller, "recovery_manager"):
