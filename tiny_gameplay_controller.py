@@ -711,9 +711,15 @@ class SystemRecoveryManager:
                 not self.gameplay_controller.event_handler
                 and self.gameplay_controller.graph_manager
             ):
-                self.gameplay_controller.event_handler = EventHandler(
+                from tiny_storytelling_engine import StorytellingEventHandler
+                self.gameplay_controller.event_handler = StorytellingEventHandler(
                     self.gameplay_controller.graph_manager
                 )
+                
+                # Wire to storytelling system if available
+                if hasattr(self.gameplay_controller, 'storytelling_system') and self.gameplay_controller.storytelling_system:
+                    self.gameplay_controller.event_handler.storytelling_system = self.gameplay_controller.storytelling_system
+                
                 return True
             return True
         except Exception as e:
@@ -779,6 +785,11 @@ class SystemRecoveryManager:
                 self.gameplay_controller.storytelling_system = StorytellingSystem(
                     self.gameplay_controller.event_handler
                 )
+                
+                # Wire the event handler to forward events to storytelling system
+                if hasattr(self.gameplay_controller.event_handler, 'storytelling_system'):
+                    self.gameplay_controller.event_handler.storytelling_system = self.gameplay_controller.storytelling_system
+                
                 return True
             return True
         except Exception as e:
@@ -848,22 +859,28 @@ class GameplayController:
         else:
             self.graph_manager = graph_manager
 
-        # Initialize event handler
+        # Initialize event handler (using narrative-aware handler)
         try:
+            from tiny_storytelling_engine import StorytellingEventHandler
             self.event_handler = (
-                EventHandler(self.graph_manager) if self.graph_manager else None
+                StorytellingEventHandler(self.graph_manager) if self.graph_manager else None
             )
         except Exception as e:
-            logger.error(f"Failed to initialize EventHandler: {e}")
+            logger.error(f"Failed to initialize StorytellingEventHandler: {e}")
             self.event_handler = None
-            self.initialization_errors.append("EventHandler initialization failed")
+            self.initialization_errors.append("StorytellingEventHandler initialization failed")
             self.recovery_manager.attempt_recovery("event_handler")
 
-        # Initialize storytelling system
+        # Initialize storytelling system and wire to event handler
         try:
             from tiny_storytelling_system import StorytellingSystem
             self.storytelling_system = StorytellingSystem(self.event_handler)
-            logger.info("Storytelling system initialized successfully")
+            
+            # Wire the event handler to forward events to the storytelling system
+            if hasattr(self.event_handler, 'storytelling_system'):
+                self.event_handler.storytelling_system = self.storytelling_system
+            
+            logger.info("Storytelling system initialized and wired to event handler")
         except Exception as e:
             logger.error(f"Failed to initialize StorytellingSystem: {e}")
             self.storytelling_system = None
