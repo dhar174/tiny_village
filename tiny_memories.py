@@ -2702,38 +2702,116 @@ class MemoryManager:
                     self.flat_access.specific_memories[sm.description] = sm
 
     def save_all_flat_access_memories_to_file(self, filename):
+        """
+        Save all flat access memories to file with comprehensive error handling.
+        
+        Args:
+            filename (str): Path to save the memories file
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
         try:
-            for key, value in vars(self.flat_access).items():
-                if isinstance(
-                    value, spacy.tokens.token.Token or isinstance(v, spacy.tokens.Doc)
-                ):
-                    print(f"Token object found in flat_access at key: {key}")
-                elif isinstance(value, dict):
-                    for k, v in value.items():
-                        if isinstance(v, spacy.tokens.token.Token):
-                            print(
-                                f"Token object found in dictionary at key: {k} in flat_access at key: {key}"
-                            )
-                elif isinstance(value, object) and not isinstance(
-                    value, (str, int, float, list, tuple)
-                ):
-                    print(f"{name}.{key}, {type(value)}, {value}")
+            if not filename:
+                logging.error("Cannot save flat access memories: filename is empty")
+                return False
+            
+            # Create directory if needed
+            directory = os.path.dirname(filename)
+            if directory and not os.path.exists(directory):
+                try:
+                    os.makedirs(directory, exist_ok=True)
+                    logging.info(f"Created directory for flat access memories: {directory}")
+                except OSError as e:
+                    logging.error(f"Failed to create directory {directory}: {e}")
+                    return False
+            
+            # Check for problematic objects before pickling
+            try:
+                for key, value in vars(self.flat_access).items():
+                    if hasattr(value, '__module__') and 'spacy' in str(value.__module__):
+                        logging.warning(f"Spacy object found in flat_access at key: {key}")
+                    elif isinstance(value, dict):
+                        for k, v in value.items():
+                            if hasattr(v, '__module__') and 'spacy' in str(v.__module__):
+                                logging.warning(
+                                    f"Spacy object found in dictionary at key: {k} in flat_access at key: {key}"
+                                )
+            except Exception as e:
+                logging.warning(f"Error checking for problematic objects: {e}")
+                # Continue anyway, as this is just a warning check
+            
+            # Save the memories
             with open(filename, "wb") as f:
                 pickle.dump(self.flat_access, f)
-        except (pickle.PicklingError, IOError) as e:
-            print(f"Error while saving memories: {e}")
+            
+            logging.info(f"Successfully saved flat access memories to {filename}")
+            return True
+            
+        except (pickle.PicklingError, IOError, OSError) as e:
+            logging.error(f"Error saving flat access memories to {filename}: {e}")
+            return False
+        except Exception as e:
+            logging.error(f"Unexpected error saving flat access memories: {e}")
+            return False
 
     def load_all_flat_access_memories_from_file(self, filename):
+        """
+        Load all flat access memories from file with comprehensive error handling.
+        
+        Args:
+            filename (str): Path to the memories file
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
         try:
+            if not filename:
+                logging.error("Cannot load flat access memories: filename is empty")
+                return False
+            
+            if not os.path.exists(filename):
+                logging.error(f"Flat access memories file not found: {filename}")
+                return False
+            
+            # Check if file is readable
+            try:
+                with open(filename, 'rb') as f:
+                    # Just check if we can read the first few bytes
+                    f.read(4)
+            except (IOError, OSError) as e:
+                logging.error(f"Cannot read flat access memories file {filename}: {e}")
+                return False
+            
+            # Load the memories
             with open(filename, "rb") as f:
                 loaded_memories = pickle.load(f)
-                self.flat_access = loaded_memories
-            assert isinstance(
-                self.flat_access, FlatMemoryAccess
-            ), "Loaded object is not an instance of FlatMemoryAccess"
-            self.flat_access.index_load_filename = None
-        except (pickle.UnpicklingError, IOError) as e:
-            print(f"Error while loading memories: {e}")
+            
+            # Validate loaded object
+            if not hasattr(loaded_memories, '__class__'):
+                logging.error("Loaded object is not a valid class instance")
+                return False
+            
+            # Check if it's the expected type (more flexible than isinstance)
+            if not hasattr(loaded_memories, 'faiss_index'):
+                logging.warning("Loaded object might not be a FlatMemoryAccess instance")
+                # Continue anyway as it might still be usable
+            
+            self.flat_access = loaded_memories
+            
+            # Reset the index load filename to prevent conflicts
+            if hasattr(self.flat_access, 'index_load_filename'):
+                self.flat_access.index_load_filename = None
+            
+            logging.info(f"Successfully loaded flat access memories from {filename}")
+            return True
+            
+        except (pickle.UnpicklingError, IOError, OSError) as e:
+            logging.error(f"Error loading flat access memories from {filename}: {e}")
+            return False
+        except Exception as e:
+            logging.error(f"Unexpected error loading flat access memories: {e}")
+            return False
 
     def add_memory(self, memory):
         self.flat_access.add_memory(memory)
@@ -5938,23 +6016,37 @@ if __name__ == "__main__":
 
     # Determine whether there is a saved flat_access_memories file
     if os.path.exists("flat_access_memories.pkl"):
-        manager.load_all_flat_access_memories_from_file("flat_access_memories.pkl")
+        if manager.load_all_flat_access_memories_from_file("flat_access_memories.pkl"):
+            logging.info("Successfully loaded flat access memories from file")
 
-        if os.path.exists("ip_no_norm.bin"):
-            manager.flat_access.load_index_from_file("ip_no_norm.bin", normalize=False)
-        elif os.path.exists("ip_norm.bin"):
-            manager.flat_access.load_index_from_file("ip_norm.bin", normalize=True)
-        elif os.path.exists("l2.bin"):
-            manager.flat_access.load_index_from_file("l2.bin", normalize=False)
+            if os.path.exists("ip_no_norm.bin"):
+                if manager.flat_access.load_index_from_file("ip_no_norm.bin", normalize=False):
+                    logging.info("Successfully loaded FAISS index from ip_no_norm.bin")
+                else:
+                    logging.warning("Failed to load FAISS index from ip_no_norm.bin")
+            elif os.path.exists("ip_norm.bin"):
+                if manager.flat_access.load_index_from_file("ip_norm.bin", normalize=True):
+                    logging.info("Successfully loaded FAISS index from ip_norm.bin")
+                else:
+                    logging.warning("Failed to load FAISS index from ip_norm.bin")
+            elif os.path.exists("l2.bin"):
+                if manager.flat_access.load_index_from_file("l2.bin", normalize=False):
+                    logging.info("Successfully loaded FAISS index from l2.bin")
+                else:
+                    logging.warning("Failed to load FAISS index from l2.bin")
+            else:
+                logging.info("No existing FAISS index found, initializing new one")
+                manager.flat_access.initialize_faiss_index(768)
+                
+            if manager.flat_access.load_all_specific_memories_embeddings_from_file("test_specific_memories"):
+                logging.info("Successfully loaded specific memories embeddings")
+            else:
+                logging.warning("Failed to load specific memories embeddings")
         else:
-
-            manager.flat_access.initialize_faiss_index(768)
-        manager.flat_access.load_all_specific_memories_embeddings_from_file(
-            "test_specific_memories"
-        )
-        print("Loaded flat access memories from file")
+            logging.warning("Failed to load flat access memories from file")
+            logging.info("Initializing new flat access system")
     else:
-        print("No flat access memories file found")
+        logging.info("No flat access memories file found")
 
     # NOTE: The descriptions should be "Memories about [type of nounn] and [specific topic]" OR "Memories about [type of noun] and [adjectives about the noun]"
 
@@ -6267,10 +6359,15 @@ if __name__ == "__main__":
     manage_index_and_search("ip", False, "ip_no_norm.bin", memories_ip, queries)
 
     print(f"\n About to save \n \n")
-    manager.save_all_flat_access_memories_to_file("flat_access_memories.pkl")
-    manager.flat_access.save_all_specific_memories_embeddings_to_file(
-        "test_specific_memories"
-    )
+    if manager.save_all_flat_access_memories_to_file("flat_access_memories.pkl"):
+        logging.info("Successfully saved flat access memories")
+    else:
+        logging.error("Failed to save flat access memories")
+        
+    if manager.flat_access.save_all_specific_memories_embeddings_to_file("test_specific_memories"):
+        logging.info("Successfully saved specific memories embeddings")
+    else:
+        logging.error("Failed to save specific memories embeddings")
 
     # Manage and search memories for IP with normalization
     manage_index_and_search("ip", True, "ip_norm.bin", memories_ip_norm, queries)

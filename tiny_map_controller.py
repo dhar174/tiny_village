@@ -1633,9 +1633,16 @@ if __name__ == "__main__":
     clock = pygame.time.Clock()
     running = True
 
-    # Initialize the Map Controller
+    # Initialize the Map Controller with error-safe image path
+    # The MapController will handle missing images gracefully with fallback
+    map_image_path = "assets/map.png"  # Preferred path
+    if not os.path.exists(map_image_path):
+        # Try alternative paths or use None to trigger fallback creation
+        map_image_path = None
+        logging.info("Using fallback map image creation")
+    
     map_controller = MapController(
-        "path_to_map_image.png",
+        map_image_path,
         map_data={
             "width": 100,
             "height": 100,
