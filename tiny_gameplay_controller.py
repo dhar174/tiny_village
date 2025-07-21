@@ -198,8 +198,8 @@ class StatsPanel(UIPanel):
                 )
                 screen.blit(health_text, (x, current_y))
                 current_y += health_text.get_height() + 2
-            except:
-                pass
+            except Exception as e:
+                logging.error(f"Error while rendering system health: {e}")
         
         return current_y - y
 
