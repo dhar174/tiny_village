@@ -2896,7 +2896,7 @@ class GameplayController:
                 
                 # Render panel and update y position
                 height = panel.render(self.screen, self, self.ui_fonts)
-                current_y += height + 10  # Add spacing between panels
+                current_y += height + PANEL_SPACING  # Add spacing between panels
         
         # Render instructions at bottom
         instructions_panel = self.ui_panels.get('instructions')
