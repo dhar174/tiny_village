@@ -4,7 +4,7 @@ from math import cos
 import uu
 import uuid
 
-from numpy import character
+# from numpy import character  # This import is incorrect - numpy doesn't have 'character'
 
 # from actions import Action, State, ActionSystem
 from tiny_types import Action, State, ActionSystem
