@@ -641,6 +641,7 @@ class SystemRecoveryManager:
             "action_system": self._recover_action_system,
             "map_controller": self._recover_map_controller,
             "character_system": self._recover_character_system,
+            "storytelling_system": self._recover_storytelling_system,
         }
 
     def attempt_recovery(self, system_name: str) -> bool:
@@ -770,6 +771,20 @@ class SystemRecoveryManager:
             logger.error(f"Character system recovery failed: {e}")
             return False
 
+    def _recover_storytelling_system(self) -> bool:
+        """Recover the storytelling system."""
+        try:
+            if not self.gameplay_controller.storytelling_system and self.gameplay_controller.event_handler:
+                from tiny_storytelling_system import StorytellingSystem
+                self.gameplay_controller.storytelling_system = StorytellingSystem(
+                    self.gameplay_controller.event_handler
+                )
+                return True
+            return True
+        except Exception as e:
+            logger.error(f"Storytelling system recovery failed: {e}")
+            return False
+
     def get_system_status(self) -> Dict[str, str]:
         """Get current status of all systems."""
         status = {}
@@ -783,6 +798,7 @@ class SystemRecoveryManager:
         )
         status["map_controller"] = "healthy" if gc.map_controller else "failed"
         status["characters"] = "healthy" if gc.characters else "failed"
+        status["storytelling_system"] = "healthy" if getattr(gc, "storytelling_system", None) else "failed"
 
         return status
 
@@ -842,6 +858,16 @@ class GameplayController:
             self.event_handler = None
             self.initialization_errors.append("EventHandler initialization failed")
             self.recovery_manager.attempt_recovery("event_handler")
+
+        # Initialize storytelling system
+        try:
+            from tiny_storytelling_system import StorytellingSystem
+            self.storytelling_system = StorytellingSystem(self.event_handler)
+            logger.info("Storytelling system initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize StorytellingSystem: {e}")
+            self.storytelling_system = None
+            self.initialization_errors.append("StorytellingSystem initialization failed")
 
         # Initialize pygame with error handling
         try:
@@ -2803,7 +2829,7 @@ class GameplayController:
             logger.error(f"Error completing quest: {e}")
 
     def _process_pending_events(self):
-        """Process any pending events with error handling."""
+        """Process any pending events with error handling and storytelling integration."""
         events_to_remove = []
 
         for i, event in enumerate(self.events):
@@ -2815,7 +2841,16 @@ class GameplayController:
                 # TODO: Add event prioritization and scheduling
                 # TODO: Add cross-character event interactions
                 # TODO: Add event persistence and memory
-                # TODO: Add event-driven story generation
+                
+                # Process event for storytelling (IMPLEMENTED)
+                if self.storytelling_system and hasattr(event, 'name'):
+                    try:
+                        story_results = self.storytelling_system.process_event_for_stories(event)
+                        if story_results.get('narratives'):
+                            logger.info(f"Generated {len(story_results['narratives'])} story narratives from event: {event.name}")
+                    except Exception as e:
+                        logger.warning(f"Storytelling system failed to process event {event}: {e}")
+                
                 # For now, just mark events as processed
                 events_to_remove.append(i)
             except Exception as e:
@@ -4420,6 +4455,51 @@ class GameplayController:
             "automated_testing": "NOT_STARTED",
             "configuration_ui": "NOT_STARTED",
         }
+
+    def get_current_stories(self) -> Dict[str, Any]:
+        """Get current story state and narratives from the storytelling system."""
+        if not self.storytelling_system:
+            return {
+                "error": "Storytelling system not available",
+                "feature_status": "NOT_AVAILABLE"
+            }
+        
+        try:
+            return self.storytelling_system.get_current_stories()
+        except Exception as e:
+            logger.error(f"Error getting current stories: {e}")
+            return {
+                "error": str(e),
+                "feature_status": "ERROR"
+            }
+
+    def get_story_summary(self, days_back: int = 7) -> str:
+        """Get a summary of recent story developments."""
+        if not self.storytelling_system:
+            return "Storytelling system not available."
+        
+        try:
+            return self.storytelling_system.generate_story_summary(days_back)
+        except Exception as e:
+            logger.error(f"Error generating story summary: {e}")
+            return f"Error generating story summary: {e}"
+
+    def get_character_stories(self, character_name: str) -> Dict[str, Any]:
+        """Get a character's involvement in current stories."""
+        if not self.storytelling_system:
+            return {
+                "error": "Storytelling system not available",
+                "character": character_name
+            }
+        
+        try:
+            return self.storytelling_system.get_character_story_involvement(character_name)
+        except Exception as e:
+            logger.error(f"Error getting character stories for {character_name}: {e}")
+            return {
+                "error": str(e),
+                "character": character_name
+            }
 
 
 
