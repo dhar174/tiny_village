@@ -2603,20 +2603,20 @@ class GameplayController:
         try:
             # If strategy is a single action, execute it
             if hasattr(strategy, 'execute'):
-                success = self._execute_single_action(strategy, character)
+                success = self._execute_single_action(character, strategy)
                 logger.debug(f"Applied strategy action {strategy.name} to {character.name}: {'success' if success else 'failed'}")
                 
             # If strategy is a list of actions, execute them
             elif isinstance(strategy, list):
                 for action in strategy:
                     if hasattr(action, 'execute'):
-                        success = self._execute_single_action(action, character)
+                        success = self._execute_single_action(character, action)
                         logger.debug(f"Applied strategy action {action.name} to {character.name}: {'success' if success else 'failed'}")
                         
             # If strategy is a decision object with actions
             elif hasattr(strategy, 'actions'):
                 for action in strategy.actions:
-                    success = self._execute_single_action(action, character)
+                    success = self._execute_single_action(character, action)
                     logger.debug(f"Applied strategy action from decision to {character.name}: {'success' if success else 'failed'}")
                     
         except Exception as e:
