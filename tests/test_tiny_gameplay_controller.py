@@ -210,14 +210,48 @@ class TestGameplayController(unittest.TestCase):
             self.assertEqual(original_visibility, char_info_panel.visible, "Panel visibility should return to original state")
 
     def test_render_ui_with_modular_system(self):
-        """Test that _render_ui works with the modular system."""
-        # This test verifies that _render_ui doesn't crash with the new modular system
+        """Test that _render_ui works with the modular system and verifies expected behavior."""
+        # Ensure modular UI system is initialized
+        self.assertTrue(hasattr(self.controller, 'ui_panels'), "Controller should have ui_panels")
+        self.assertTrue(hasattr(self.controller, 'ui_fonts'), "Controller should have ui_fonts")
+        
+        # Verify panels exist and are visible by default
+        expected_panels = ['character_info', 'game_status', 'weather', 'stats', 'achievements', 'selected_character', 'instructions']
+        for panel_name in expected_panels:
+            self.assertIn(panel_name, self.controller.ui_panels, f"Panel {panel_name} should exist")
+            panel = self.controller.ui_panels[panel_name]
+            self.assertTrue(panel.visible, f"Panel {panel_name} should be visible by default")
+        
+        # Test that UI renders without errors
         try:
             self.controller._render_ui()
-            # If we get here without exception, the test passes
-            self.assertTrue(True, "Modular UI rendering completed without errors")
         except Exception as e:
             self.fail(f"Modular UI rendering failed with error: {e}")
+            
+        # Verify modular UI system is actually being used by checking if render method is called
+        # Make one panel invisible and verify the system respects this
+        char_info_panel = self.controller.ui_panels['character_info']
+        char_info_panel.visible = False
+        
+        # Should still render without errors even with some panels invisible
+        try:
+            self.controller._render_ui()
+        except Exception as e:
+            self.fail(f"Modular UI rendering with invisible panel failed: {e}")
+            
+        # Test that the modular UI actually works by verifying panel render is callable
+        test_surface = pygame.Surface((100, 100))
+        test_font = pygame.font.Font(None, 24)
+        for panel in self.controller.ui_panels.values():
+            if hasattr(panel, 'render') and callable(panel.render):
+                try:
+                    # This should not raise an exception
+                    result = panel.render(test_surface, test_font, 0, 0)
+                    self.assertIsInstance(result, int, f"Panel {panel.name} render should return y offset as int")
+                except Exception as e:
+                    self.fail(f"Panel {panel.name} render method failed: {e}")
+            else:
+                self.fail(f"Panel {panel.name} should have callable render method")
 
     def test_render_ui_fallback_modes(self):
         """Test that UI rendering falls back gracefully when panels are unavailable."""

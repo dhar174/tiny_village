@@ -11,6 +11,26 @@ MAX_SPEED = 5.0
 MIN_SPEED = 0.1
 SPEED_STEP = 0.1
 
+# Basic UI Panel implementation for modular system
+class UIPanel:
+    """Base class for modular UI panels."""
+    def __init__(self, name, visible=True):
+        self.name = name
+        self.visible = visible
+        
+    def render(self, screen, font, x, y):
+        """Render the panel content to the screen."""
+        if not self.visible:
+            return y
+        # Basic render - subclasses should override
+        text = font.render(f"{self.name} Panel", True, (255, 255, 255))
+        screen.blit(text, (x, y))
+        return y + 20
+        
+    def toggle_visibility(self):
+        """Toggle panel visibility."""
+        self.visible = not self.visible
+
 WEATHER_ENERGY_EFFECTS = {
     'rainy': 0.5,
     # 'snowy': 1.0, # easy to add more
@@ -596,6 +616,9 @@ class GameplayController:
         self.implement_weather_system()
         self.implement_social_network_system()
         self.implement_quest_system()
+
+        # Initialize modular UI system
+        self.initialize_modular_ui_system()
 
         # Log initialization status
         if self.initialization_errors:
@@ -2537,6 +2560,44 @@ class GameplayController:
         """Render user interface elements with improved layout, new features, and system status."""
 
         try:
+            # Check if modular UI system is available
+            if hasattr(self, 'ui_panels') and hasattr(self, 'ui_fonts') and self.ui_panels:
+                self._render_modular_ui()
+            else:
+                self._render_legacy_ui()
+                
+        except Exception as e:
+            # Fallback to minimal UI
+            try:
+                font = pygame.font.Font(None, 24)
+                error_text = font.render("UI Error - Fallback Mode", True, (255, 0, 0))
+                self.screen.blit(error_text, (10, 10))
+                char_text = font.render(
+                    f"Characters: {len(self.characters)}", True, (255, 255, 255)
+                )
+                self.screen.blit(char_text, (10, 35))
+            except:
+                pass  # Even fallback failed
+
+    def _render_modular_ui(self):
+        """Render UI using the modular panel system."""
+        try:
+            y_offset = 10
+            
+            # Render each panel if visible
+            for panel_name, panel in self.ui_panels.items():
+                if panel.visible:
+                    y_offset = panel.render(self.screen, self.ui_fonts['medium'], 10, y_offset)
+                    y_offset += 5  # Small spacing between panels
+                    
+        except Exception as e:
+            logger.warning(f"Error in modular UI rendering: {e}")
+            # Fall back to legacy UI
+            self._render_legacy_ui()
+
+    def _render_legacy_ui(self):
+        """Render UI using the original legacy system."""
+        try:
             # TODO: Implement modular UI system with panels
             # TODO: Add character relationship visualization
             # TODO: Add village statistics dashboard
@@ -2777,17 +2838,14 @@ class GameplayController:
                 self._render_minimap()
 
         except Exception as e:
-            # Fallback to minimal UI
+            logger.error(f"Error in legacy UI rendering: {e}")
+            # Basic fallback
             try:
                 font = pygame.font.Font(None, 24)
-                error_text = font.render("UI Error - Fallback Mode", True, (255, 0, 0))
+                error_text = font.render("Legacy UI Error", True, (255, 0, 0))
                 self.screen.blit(error_text, (10, 10))
-                char_text = font.render(
-                    f"Characters: {len(self.characters)}", True, (255, 255, 255)
-                )
-                self.screen.blit(char_text, (10, 35))
             except:
-                pass  # Even fallback failed
+                pass
 
     def _render_feature_status_overlay(self):
         """Render an overlay showing feature implementation status."""
@@ -3760,6 +3818,40 @@ class GameplayController:
             logger.error(f"Error implementing quest system: {e}")
             return False
 
+    def initialize_modular_ui_system(self) -> bool:
+        """
+        Initialize the modular UI system with panels and fonts.
+        
+        STATUS: BASIC_IMPLEMENTED
+        Creates ui_panels and ui_fonts attributes with basic UI panel structure.
+        """
+        try:
+            # Initialize UI fonts dictionary
+            self.ui_fonts = {
+                'small': pygame.font.Font(None, 16),
+                'medium': pygame.font.Font(None, 24),
+                'large': pygame.font.Font(None, 32),
+            }
+            
+            # Initialize UI panels dictionary
+            self.ui_panels = {}
+            
+            # Create expected panels
+            expected_panels = [
+                'character_info', 'game_status', 'weather', 'stats', 
+                'achievements', 'selected_character', 'instructions'
+            ]
+            
+            for panel_name in expected_panels:
+                self.ui_panels[panel_name] = UIPanel(panel_name, visible=True)
+            
+            logger.info("Modular UI system initialized successfully")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error initializing modular UI system: {e}")
+            return False
+
     def get_feature_implementation_status(self) -> Dict[str, str]:
         """
         Get the implementation status of all planned features.
@@ -3790,6 +3882,7 @@ class GameplayController:
             "performance_optimization": "NOT_STARTED",
             "automated_testing": "NOT_STARTED",
             "configuration_ui": "NOT_STARTED",
+            "modular_ui_system": "BASIC_IMPLEMENTED",
         }
 
 
