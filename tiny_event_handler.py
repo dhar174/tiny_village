@@ -1428,43 +1428,47 @@ class EventHandler:
             # Create some mystery/discovery events for emergent stories
             self._create_mystery_events(current_time)
             
+            # Trigger lazy creation of recurring events
+            self._lazy_create_recurring_events(current_time)
             logging.info(f"Initialized {len(self.events)} world events for emergent storytelling")
             
         except Exception as e:
             logging.error(f"Error initializing world events: {e}")
 
     def _create_recurring_world_events(self, current_time):
-        """Create recurring events that drive ongoing stories."""
-        # Weekly market day
-        market_event = self.create_event_from_template(
-            "merchant_arrival",
-            "Weekly Market Day",
-            current_time + timedelta(days=random.randint(1, 7)),
-            recurrence_pattern={"type": "weekly", "interval": 1}
-        )
-        if market_event:
-            self.add_event(market_event)
-            
-        # Monthly community project
-        project_event = self.create_event_from_template(
-            "community_project",
-            "Village Improvement Project",
-            current_time + timedelta(days=random.randint(10, 30)),
-            recurrence_pattern={"type": "monthly", "interval": 1}
-        )
-        if project_event:
-            self.add_event(project_event)
-            
-        # Seasonal festival
-        festival_event = self.create_event_from_template(
-            "village_festival",
-            "Seasonal Celebration",
-            current_time + timedelta(days=random.randint(30, 90)),
-            recurrence_pattern={"type": "yearly", "interval": 1}
-        )
-        if festival_event:
-            self.add_event(festival_event)
-
+        """Schedule recurring events for lazy creation."""
+        self.recurring_event_templates = [
+            {
+                "template_id": "merchant_arrival",
+                "name": "Weekly Market Day",
+                "timing_offset": random.randint(1, 7),
+                "recurrence_pattern": {"type": "weekly", "interval": 1},
+            },
+            {
+                "template_id": "community_project",
+                "name": "Village Improvement Project",
+                "timing_offset": random.randint(10, 30),
+                "recurrence_pattern": {"type": "monthly", "interval": 1},
+            },
+            {
+                "template_id": "village_festival",
+                "name": "Seasonal Celebration",
+                "timing_offset": random.randint(30, 90),
+                "recurrence_pattern": {"type": "yearly", "interval": 1},
+            },
+        ]
+        logging.info("Recurring event templates scheduled for lazy creation.")
+        """Create recurring events lazily based on templates."""
+        for template in self.recurring_event_templates:
+            event = self.create_event_from_template(
+                template["template_id"],
+                template["name"],
+                current_time + timedelta(days=template["timing_offset"]),
+                recurrence_pattern=template["recurrence_pattern"],
+            )
+            if event:
+                self.add_event(event)
+        logging.info("Lazy creation of recurring events completed.")
     def _create_character_driven_events(self, characters, current_time):
         """Create events based on character interactions and stories."""
         if not characters or len(characters) < 2:
