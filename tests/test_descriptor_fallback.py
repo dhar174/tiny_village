@@ -3,9 +3,13 @@ import unittest
 from unittest.mock import patch
 from types import ModuleType
 
+# Import proper MockCharacter instead of using object
+sys.path.insert(0, '.')
+from mock_character import MockCharacter
+
 # Create stub modules to satisfy imports in tiny_prompt_builder
 stub_tc = ModuleType('tiny_characters')
-stub_tc.Character = object
+stub_tc.Character = MockCharacter
 stub_attr = ModuleType('attr')
 
 class DescriptorFallbackTests(unittest.TestCase):

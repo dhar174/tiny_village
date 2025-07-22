@@ -9,6 +9,10 @@ sys.path.insert(0, '.')
 import types
 import logging
 
+# Import proper MockCharacter instead of using object
+sys.path.insert(0, 'tests')
+from mock_character import MockCharacter, MockMotives, MockMotive, MockInventory
+
 # Create mock modules
 mock_memories = types.ModuleType('tiny_memories')
 mock_memories.Memory = object
@@ -16,9 +20,9 @@ mock_memories.MemoryManager = object
 sys.modules['tiny_memories'] = mock_memories
 
 mock_characters = types.ModuleType('tiny_characters')
-mock_characters.Character = object
-mock_characters.PersonalMotives = object
-mock_characters.Motive = object
+mock_characters.Character = MockCharacter
+mock_characters.PersonalMotives = MockMotives
+mock_characters.Motive = MockMotive
 sys.modules['tiny_characters'] = mock_characters
 
 # Now import the graph manager
