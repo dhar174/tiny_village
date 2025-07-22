@@ -66,7 +66,7 @@ class WorldState:
             'age': getattr(character, 'age', None),
             'job': getattr(character, 'job', None),
             'happiness': getattr(character, 'happiness', None),
-            'energy_level': getattr(character, 'energy', None),
+            'energy': getattr(character, 'energy', None),
             'relationships': {},
             'emotional_state': {},
             'coordinates_location': getattr(character, 'coordinates_location', None),
