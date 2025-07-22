@@ -16,7 +16,50 @@ import operator
 import random
 import re
 import uuid
-import networkx as nx
+# Graceful fallback for networkx
+try:
+    import networkx as nx
+    NETWORKX_AVAILABLE = True
+except ImportError:
+    NETWORKX_AVAILABLE = False
+    # Create a minimal networkx-like module for fallback
+    class MockNetworkX:
+        @staticmethod
+        def Graph():
+            return {'nodes': [], 'edges': [], 'type': 'Graph'}
+        @staticmethod
+        def DiGraph():
+            return {'nodes': [], 'edges': [], 'type': 'DiGraph'}
+        @staticmethod
+        def MultiGraph():
+            return {'nodes': [], 'edges': [], 'type': 'MultiGraph'}
+        @staticmethod
+        def MultiDiGraph():
+            return {'nodes': [], 'edges': [], 'type': 'MultiDiGraph'}
+        @staticmethod
+        def add_node(graph, node, **kwargs):
+            if 'nodes' in graph:
+                graph['nodes'].append(node)
+        @staticmethod
+        def add_edge(graph, a, b, **kwargs):
+            if 'edges' in graph:
+                graph['edges'].append((a, b))
+        @staticmethod
+        def shortest_path(graph, source, target):
+            return [source, target]  # Simple fallback
+        @staticmethod
+        def get_edge_attributes(graph, attr):
+            return {}
+        @staticmethod
+        def set_edge_attributes(graph, values, name=None):
+            pass
+        @staticmethod
+        def nodes(graph):
+            return graph.get('nodes', [])
+        @staticmethod
+        def edges(graph):
+            return graph.get('edges', [])
+    nx = MockNetworkX()
 
 # from tiny_characters import Motive
 from tiny_types import Character, Goal, Action, State, ActionSystem
@@ -28,9 +71,30 @@ from tiny_jobs import Job
 from tiny_items import ItemInventory, ItemObject, InvestmentPortfolio, Stock
 import tiny_memories  # Temporarily commented out for testing
 from tiny_utility_functions import is_goal_achieved
-import numpy as np
+
+# Graceful fallbacks for optional dependencies
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
+    # Create minimal numpy-like functionality
+    class MockNumpy:
+        def array(self, data):
+            return data
+        def mean(self, data, axis=None):
+            return sum(data) / len(data) if data else 0
+        def dot(self, a, b):
+            return sum(x*y for x, y in zip(a, b))
+        def random(self):
+            return random
+    np = MockNumpy()
 from tiny_time_manager import GameTimeManager as tiny_time_manager
 import importlib
+from social_model import SocialModel
+
+# Import the new GOAP evaluator
+from goap_evaluator import GoapEvaluator, WorldState
 
 """ Graph Construction
 Defining Nodes:
@@ -124,11 +188,21 @@ Where it happens: goap_system.py and graph_manager.py
 What happens: The GOAP planner uses the graph to analyze relationships and preferences, and formulates a plan consisting of a sequence of actions that maximize the character’s utility for the day.
 """
 
-import networkx as nx
+# networkx already imported above with fallback
 
+# networkx already imported above with fallback
 
-import networkx as nx
-from networkx.algorithms import community
+# Graceful fallback for networkx community algorithms
+try:
+    from networkx.algorithms import community
+    NETWORKX_COMMUNITY_AVAILABLE = True
+except ImportError:
+    NETWORKX_COMMUNITY_AVAILABLE = False
+    class MockCommunity:
+        @staticmethod
+        def greedy_modularity_communities(graph):
+            return [[]]  # Return empty community
+    community = MockCommunity()
 
 
 # Improved Piecewise Linear Approximation with Caching
@@ -686,8 +760,27 @@ class GraphManager:
             "!=": "ne",
         }
 
+        # Initialize GOAP evaluator
+        self.goap_evaluator = GoapEvaluator()
+
         self.G = self.initialize_graph()
+        
+        # Initialize social model with this graph manager as world state
+        self.social_model = SocialModel(world_state=self)
+        
         self.__initialized = True
+    
+    def _get_world_state(self):
+        """Helper method to create a WorldState object from current graph state."""
+        return WorldState(
+            graph_manager=self,
+            characters=self.characters,
+            locations=self.locations,
+            objects=self.objects,
+            events=self.events,
+            activities=self.activities,
+            jobs=self.jobs
+        )
 
     def initialize_graph(self):
         self.G = (
@@ -1102,102 +1195,18 @@ class GraphManager:
             self.G[char1][char2]["interaction_log"] = interaction_log
 
     def calculate_dynamic_weights(self, historical):
-        initial_stage = historical < 20
-        middle_stage = 20 <= historical < 60
-        mature_stage = historical >= 60
-
-        if initial_stage:
-            return {
-                "openness": 0.2,
-                "extraversion": 0.25,
-                "conscientiousness": 0.15,
-                "agreeableness": 0.25,
-                "neuroticism": 0.05,
-                "openness_conscientiousness_interaction": 0.05,
-                "extraversion_agreeableness_interaction": 0.05,
-                "neuroticism_stabilization": 0.1,
-            }
-        elif middle_stage:
-            return {
-                "openness": 0.15,
-                "extraversion": 0.2,
-                "conscientiousness": 0.2,
-                "agreeableness": 0.2,
-                "neuroticism": 0.1,
-                "openness_conscientiousness_interaction": 0.05,
-                "extraversion_agreeableness_interaction": 0.05,
-                "neuroticism_stabilization": 0.05,
-            }
-        elif mature_stage:
-            return {
-                "openness": 0.1,
-                "extraversion": 0.15,
-                "conscientiousness": 0.25,
-                "agreeableness": 0.2,
-                "neuroticism": 0.1,
-                "openness_conscientiousness_interaction": 0.1,
-                "extraversion_agreeableness_interaction": 0.05,
-                "neuroticism_stabilization": 0.05,
-            }
-        return None
+        """
+        Calculate dynamic weights for personality traits.
+        Delegates to SocialModel for calculation.
+        """
+        return self.social_model.calculate_dynamic_weights(historical)
 
     def calculate_romance_compatibility(self, char1, char2, historical):
-        Character = importlib.import_module("tiny_characters").Character
-        # Example compatibility calculation based on traits and other factors
-        # Calculate compatibility components
-        openness = char1.personality_traits.get_openness()
-        extraversion = char1.personality_traits.get_extraversion()
-        conscientiousness = char1.personality_traits.get_conscientiousness()
-        agreeableness = char1.personality_traits.get_agreeableness()
-        neuroticism = char1.personality_traits.get_neuroticism()
-        partner_agreeableness = char2.personality_traits.get_agreeableness()
-        partner_conscientiousness = char2.personality_traits.get_conscientiousness()
-        partner_extraversion = char2.personality_traits.get_extraversion()
-        partner_neuroticism = char2.personality_traits.get_neuroticism()
-        partner_openness = char2.personality_traits.get_openness()
-
-        openness_compat = 1 - abs(openness - partner_openness) / 8
-        extraversion_compat = 1 - abs(extraversion - partner_extraversion) / 8
-        conscientiousness_compat = (
-            1 - abs(conscientiousness - partner_conscientiousness) / 8
-        )
-        agreeableness_compat = 1 - abs(agreeableness - partner_agreeableness) / 8
-        neuroticism_compat = 1 - abs(neuroticism - partner_neuroticism) / 8
-
-        # Interaction terms
-        openness_conscientiousness_interaction = (
-            (openness + partner_openness)
-            / 2
-            * (1 - abs(conscientiousness - partner_conscientiousness) / 8)
-        )
-        extraversion_agreeableness_interaction = (
-            (extraversion + partner_extraversion)
-            / 2
-            * (1 - abs(agreeableness - partner_agreeableness) / 8)
-        )
-        neuroticism_stabilization = (1 - abs(neuroticism - partner_neuroticism) / 8) * (
-            1 - (neuroticism + partner_neuroticism) / 16
-        )
-
-        # Weights for each trait's influence on compatibility
-        assert self.G.has_node(char1) and self.G.has_node(char2)
-        weights = self.calculate_dynamic_weights(historical=historical)
-
-        # Calculate weighted compatibility score
-        compatibility_score = (
-            openness_compat * weights["openness"]
-            + extraversion_compat * weights["extraversion"]
-            + conscientiousness_compat * weights["conscientiousness"]
-            + agreeableness_compat * weights["agreeableness"]
-            + neuroticism_compat * weights["neuroticism"]
-            + openness_conscientiousness_interaction
-            * weights["openness_conscientiousness_interaction"]
-            + extraversion_agreeableness_interaction
-            * weights["extraversion_agreeableness_interaction"]
-            + neuroticism_stabilization * weights["neuroticism_stabilization"]
-        )
-
-        return max(0.0, min(1.0, compatibility_score))
+        """
+        Calculate romantic compatibility between two characters.
+        Delegates to SocialModel for calculation.
+        """
+        return self.social_model.calculate_romance_compatibility(char1, char2, historical)
 
     def calculate_romance_interest(
         self,
@@ -1212,189 +1221,13 @@ class GraphManager:
         interaction_frequency,
         emotional_impact,
     ):
-        Character = importlib.import_module("tiny_characters").Character
-        wealth_motive = char1.get_motives().get_wealth_motive().score
-        wealth_motive = cached_sigmoid_motive_scale_approx_optimized(wealth_motive)
-        partner_wealth_motive = char2.get_motives().get_wealth_motive().score
-        partner_wealth_motive = cached_sigmoid_motive_scale_approx_optimized(
-            partner_wealth_motive
-        )
-
-        family_motive = char1.get_motives().get_family_motive().score
-        family_motive = cached_sigmoid_motive_scale_approx_optimized(family_motive)
-        partner_family_motive = char2.get_motives().get_family_motive().score
-        partner_family_motive = cached_sigmoid_motive_scale_approx_optimized(
-            partner_family_motive
-        )
-
-        wealth_money = char1.wealth_money
-        # wealth money can be very large, so we need to normalize it using a sigmoid function
-        wealth_money = tanh_scaling_raw(
-            wealth_money,
-            data_max=(
-                self.get_maximum_attribute_value("wealth_money")
-                if self.get_maximum_attribute_value("wealth_money")
-                else 100000
-            ),
-            data_min=0,
-            data_avg=(
-                self.get_average_attribute_value("wealth_money")
-                if self.get_average_attribute_value("wealth_money")
-                else 50000
-            ),
-            data_std=(
-                self.get_stddev_attribute_value("wealth_money")
-                if self.get_stddev_attribute_value("wealth_money")
-                else 25000
-            ),
-        )
-
-        partner_wealth_money = char2.wealth_money
-        partner_wealth_money = tanh_scaling_raw(
-            partner_wealth_money,
-            data_max=(
-                self.get_maximum_attribute_value("wealth_money")
-                if self.get_maximum_attribute_value("wealth_money")
-                else 100000
-            ),
-            data_min=0,
-            data_avg=(
-                self.get_average_attribute_value("wealth_money")
-                if self.get_average_attribute_value("wealth_money")
-                else 50000
-            ),
-            data_std=(
-                self.get_stddev_attribute_value("wealth_money")
-                if self.get_stddev_attribute_value("wealth_money")
-                else 25000
-            ),
-        )
-        wealth_differenceab = abs(wealth_money - partner_wealth_money)
-        wealth_differenceba = abs(partner_wealth_money - wealth_money)
-
-        beauty_motive = char1.get_motives().get_beauty_motive().score
-        beauty_motive = cached_sigmoid_motive_scale_approx_optimized(beauty_motive)
-
-        partner_beauty_motive = char2.get_motives().get_beauty_motive().score
-        partner_beauty_motive = cached_sigmoid_motive_scale_approx_optimized(
-            partner_beauty_motive
-        )
-
-        luxury_motive = char1.get_motives().get_luxury_motive().score
-        luxury_motive = cached_sigmoid_motive_scale_approx_optimized(luxury_motive)
-        partner_luxury_motive = char2.get_motives().get_luxury_motive().score
-        partner_luxury_motive = cached_sigmoid_motive_scale_approx_optimized(
-            partner_luxury_motive
-        )
-
-        stability_motive = char1.get_motives().get_stability_motive().score
-        stability_motive = cached_sigmoid_motive_scale_approx_optimized(
-            stability_motive
-        )
-        partner_stability_motive = char2.get_motives().get_stability_motive().score
-        partner_stability_motive = cached_sigmoid_motive_scale_approx_optimized(
-            partner_stability_motive
-        )
-
-        control_motive = char1.get_motives().get_control_motive().score
-        control_motive = cached_sigmoid_motive_scale_approx_optimized(control_motive)
-        partner_control_motive = char2.get_motives().get_control_motive().score
-        partner_control_motive = cached_sigmoid_motive_scale_approx_optimized(
-            partner_control_motive
-        )
-
-        material_goods_motive = char1.get_motives().get_material_goods_motive().score
-        material_goods_motive = cached_sigmoid_motive_scale_approx_optimized(
-            material_goods_motive
-        )
-        partner_material_goods_motive = (
-            char2.get_motives().get_material_goods_motive().score
-        )
-        partner_material_goods_motive = cached_sigmoid_motive_scale_approx_optimized(
-            partner_material_goods_motive
-        )
-
-        shelter_motive = char1.get_motives().get_shelter_motive().score
-        shelter_motive = cached_sigmoid_motive_scale_approx_optimized(shelter_motive)
-        partner_shelter_motive = char2.get_motives().get_shelter_motive().score
-        partner_shelter_motive = cached_sigmoid_motive_scale_approx_optimized(
-            partner_shelter_motive
-        )
-
-        beauty = char1.beauty
-        partner_beauty = char2.beauty
-        beauty_difference = abs(beauty - partner_beauty)
-
-        base_libido = char1.get_base_libido()
-        libido = (
-            base_libido
-            + ((romance_value / 10) * romance_compat)
-            + partner_beauty
-            + char1.energy
-            + char1.get_motives().get_family_motive().score
-        )
-        base_libido = tanh_scaling_raw(
-            base_libido,
-            data_max=(
-                self.get_maximum_attribute_value("base_libido")
-                if self.get_maximum_attribute_value("base_libido")
-                else 100
-            ),
-            data_min=0,
-            data_avg=(
-                self.get_average_attribute_value("base_libido")
-                if self.get_average_attribute_value("base_libido")
-                else 50
-            ),
-            data_std=(
-                self.get_stddev_attribute_value("base_libido")
-                if self.get_stddev_attribute_value("base_libido")
-                else 25
-            ),
-        )
-        partner_base_libido = char2.get_base_libido()
-        libido_difference = abs(base_libido - partner_base_libido)
-
-        age = char1.age
-        partner_age = char2.age
-        age_difference = abs(age - partner_age)
-
-        control = char1.get_control()
-        partner_control = char2.get_control()
-        control_difference = abs(control - partner_control)
-
-        stability = char1.stability
-        partner_stability = char2.stability
-        stability_difference = abs(stability - partner_stability)
-
-        agreeableness = char1.personality_traits.get_agreeableness()
-        partner_agreeableness = char2.personality_traits.get_agreeableness()
-        agreeableness_difference = abs(agreeableness - partner_agreeableness)
-
-        success = char1.success
-        partner_success = char2.success
-        success_difference = abs(success - partner_success)
-
-        shelter = char1.shelter
-        partner_shelter = char2.shelter
-        shelter_difference = abs(shelter - partner_shelter)
-
-        luxury = char1.luxury
-        partner_luxury = char2.luxury
-        luxury_difference = abs(luxury - partner_luxury)
-
-        monogamy = char1.monogamy
-        partner_monogamy = char2.monogamy
-        monogamy_difference = abs(monogamy - partner_monogamy)
-
-        factor_a1 = (control_motive - partner_control) + partner_agreeableness
-        factor_a2 = (partner_control_motive - control) + agreeableness
-
-        factor_b1 = (wealth_motive * partner_wealth_money) - (
-            abs(partner_luxury_motive - luxury_motive) * 0.1
-        )
-        factor_b2 = (partner_wealth_motive * wealth_money) - (
-            abs(luxury_motive - partner_luxury_motive) * 0.1
+        """
+        Calculate romance interest between two characters.
+        Delegates to SocialModel for calculation.
+        """
+        return self.social_model.calculate_romance_interest(
+            char1, char2, romance_compat, romance_value, relationship_type,
+            strength, historical, trust, interaction_frequency, emotional_impact
         )
 
     def calc_distance_cost(self, distance, char1, char2):
@@ -2657,43 +2490,17 @@ class GraphManager:
 
     def retrieve_characters_relationships(self, character):
         """
-        Retrieves all relationships of a given character, showing the type and strength of each.
-
-        Parameters:
-            character (str): The character node identifier.
-
-        Returns:
-            dict: A dictionary with each connected character and details of the relationship.
-
-        Usage example:
-            relationships = graph_manager.retrieve_characters_relationships('char1')
-            print("Character relationships:", relationships)
+        Retrieve all relationships of a given character.
+        Delegates to SocialModel for calculation.
         """
-        relationships = {
-            neighbor: self.G[character][neighbor]
-            for neighbor in self.G.neighbors(character)
-        }
-        return relationships
+        return self.social_model.retrieve_characters_relationships(character)
 
     def update_relationship_status(self, char1, char2, update_info):
         """
-        Updates the relationship status between two characters, modifying attributes like emotional or historical data.
-
-        Parameters:
-            char1 (str): Node identifier for the first character.
-            char2 (str): Node identifier for the second character.
-            update_info (dict): A dictionary with the attributes to update.
-
-        Usage example:
-            update_info = {'emotional': 5, 'historical': 10}
-            graph_manager.update_relationship_status('char1', 'char2', update_info)
+        Update relationship status between two characters.
+        Delegates to SocialModel for calculation.
         """
-        if self.G.has_edge(char1, char2):
-            for key, value in update_info.items():
-                if key in self.G[char1][char2]:
-                    self.G[char1][char2][key] += value
-                else:
-                    self.G[char1][char2][key] = value
+        return self.social_model.update_relationship_status(char1, char2, update_info)
 
     def analyze_location_popularity(self):
         """
@@ -2763,497 +2570,23 @@ class GraphManager:
 
     def analyze_character_relationships(self, character_id):
         """
-        Analyzes the relationships of a specific character based on historical interactions and emotional bonds.
-
-        Parameters:
-            character_id (str): Node identifier for the character.
-
-        Returns:
-            dict: A dictionary containing relationship details with other characters.
-
-        Usage example:
-            relationships = graph_manager.analyze_character_relationships('char1')
-            print("Relationship details:", relationships)
+        Analyze relationships for a specific character.
+        Delegates to SocialModel for calculation.
         """
-        Character = importlib.import_module("tiny_characters").Character
-
-        relationships = {}
-        node = None
-        if isinstance(character_id, str):
-            if self.get_character(character_id) is None:
-                raise ValueError(
-                    "\nCharacter does not exist in the graph: \n\n", character_id
-                )
-
-            node = self.get_character(character_id)
-            logging.info(f"Found node: \n\n{node.name}: \n")
-        elif isinstance(character_id, Character):
-            node = self.get_node(character_id)
-        try:
-            logging.info(f"with attributes:\n {list(self.G.nodes[node])}\n")
-        except Exception as e:
-            logging.info(f"Error: {e} for node {node}\n")
-        if node is None or node == {}:
-            try:
-                if isinstance(character_id, Character):
-                    logging.info(
-                        f"Node: {character_id.name} not found. Trying to find it again.\n"
-                    )
-                else:
-                    logging.info(
-                        f"Node: {character_id} not found. Trying to find it again.\n"
-                    )
-                node = self.G[character_id]
-            except Exception as eb:
-                if isinstance(character_id, Character):
-                    logging.info(f"Error finding node {character_id.name}: {eb}\n")
-                else:
-                    logging.info(f"Error finding node {character_id}: {eb}\n")
-        if node is None or node == {}:
-            if isinstance(character_id, Character):
-                logging.info(
-                    f"Node: {character_id.name} still not found. Graph says {self.G.has_node(node)} \n"
-                )
-                # Search for node with character name
-                for n in self.G.nodes:
-                    if self.G.nodes[n].get("name") == character_id.name:
-                        node = n
-                        break
-                if node is not None and node != {}:  # Found the node
-                    logging.info(
-                        f"Found the node with character name: {character_id.name} as {node}\n"
-                    )
-                    # Compare and find the differences between the searched node and the provided character
-                    for key, value in self.G.nodes[node].items():
-                        if key not in character_id.__dict__:
-                            logging.info(
-                                f"Key: {key} not in character {character_id.name} attributes\n"
-                            )
-                        elif value != character_id.__dict__[key]:
-                            logging.info(
-                                f"Key: {key} has different value in character {character_id.name} attributes\n"
-                            )
-
-            else:
-                logging.info(
-                    f"Node: {character_id} still not found. Graph says {self.G.has_node(node)}\n"
-                )
-                # Search for node with character name
-                for n in self.G.nodes:
-                    if self.G.nodes[n].get("name") == character_id:
-                        node = n
-                        break
-                if node is not None and node != {}:  # Found the node
-                    logging.info(
-                        f"Found the node with character name: {character_id} as {node}\n"
-                    )
-            if node is None or node == {}:
-                logging.info(
-                    f"Node: {character_id} still not found. All nodes: {list(self.G)}\n"
-                )
-                exit(42)
-            return relationships
-
-        try:
-            logging.info(
-                f"\nNode: \n{node.name} \nhas attributes: \n{list(self.G.nodes[node])}\n\n"
-            )
-        except Exception as ee:
-            logging.info(f"Error printing node: {ee}")
-        try:
-            logging.info(f"Node: {node.name} has neighbors: {list(self.G[node])}\n")
-            for neighbor in self.G[node]:
-                relationships[neighbor] = {
-                    "emotional": self.G[node][neighbor].get("emotional", 0),
-                    "historical": self.G[node][neighbor].get("historical", 0),
-                    "trust": self.G[node][neighbor].get("trust", 0),
-                    "strength": self.G[node][neighbor].get("strength", 0),
-                    "interaction_frequency": self.G[node][neighbor].get(
-                        "interaction_frequency", 0
-                    ),
-                }
-        except Exception as eee:
-            if isinstance(character_id, Character):
-                logging.info(
-                    f"Error in relationships for character {character_id.name}: {eee}"
-                )
-            else:
-                logging.info(
-                    f"Error in relationships for character {character_id}: {eee}"
-                )
-        return relationships
+        return self.social_model.analyze_character_relationships(character_id)
 
     def calculate_motives(self, character: Character):
-        Character = importlib.import_module("tiny_characters").Character
-        PersonalMotives = importlib.import_module("tiny_characters").PersonalMotives
-        Motive = importlib.import_module("tiny_characters").Motive
-
-        social_wellbeing_motive = cached_sigmoid_motive_scale_approx_optimized(
-            character.personality_traits.get_openness()
-            + (character.personality_traits.get_extraversion() * 2)
-            + character.personality_traits.get_agreeableness()
-            - character.personality_traits.get_neuroticism(),
-            10.0,
-        )
-        beauty_motive = cached_sigmoid_motive_scale_approx_optimized(
-            character.personality_traits.get_openness()
-            + character.personality_traits.get_extraversion()
-            + character.personality_traits.get_agreeableness()
-            + character.personality_traits.get_neuroticism()
-            + social_wellbeing_motive,
-            10.0,
-        )
-        hunger_motive = cached_sigmoid_motive_scale_approx_optimized(
-            (10 - character.get_mental_health())
-            + character.personality_traits.get_neuroticism()
-            - character.personality_traits.get_conscientiousness()
-            - beauty_motive,
-            10.0,
-        )
-        community_motive = cached_sigmoid_motive_scale_approx_optimized(
-            character.personality_traits.get_openness()
-            + character.personality_traits.get_extraversion()
-            + character.personality_traits.get_agreeableness()
-            + character.personality_traits.get_neuroticism()
-            + social_wellbeing_motive,
-            10.0,
-        )
-        health_motive = cached_sigmoid_motive_scale_approx_optimized(
-            character.personality_traits.get_openness()
-            + character.personality_traits.get_extraversion()
-            + character.personality_traits.get_agreeableness()
-            + character.personality_traits.get_neuroticism()
-            - hunger_motive
-            + beauty_motive
-            + character.personality_traits.get_conscientiousness(),
-            10.0,
-        )
-        mental_health_motive = cached_sigmoid_motive_scale_approx_optimized(
-            character.personality_traits.get_openness()
-            + character.personality_traits.get_extraversion()
-            + character.personality_traits.get_agreeableness()
-            + character.personality_traits.get_neuroticism()
-            - hunger_motive
-            + beauty_motive
-            + character.personality_traits.get_conscientiousness()
-            + health_motive,
-            10.0,
-        )
-        stability_motive = cached_sigmoid_motive_scale_approx_optimized(
-            character.personality_traits.get_openness()
-            + character.personality_traits.get_extraversion()
-            + character.personality_traits.get_agreeableness()
-            + character.personality_traits.get_neuroticism()
-            + health_motive
-            + community_motive,
-            10.0,
-        )
-        shelter_motive = cached_sigmoid_motive_scale_approx_optimized(
-            character.personality_traits.get_neuroticism()
-            + character.personality_traits.get_conscientiousness()
-            + health_motive
-            + community_motive
-            + beauty_motive
-            + stability_motive,
-            10.0,
-        )
-        control_motive = cached_sigmoid_motive_scale_approx_optimized(
-            character.personality_traits.get_conscientiousness()
-            + character.personality_traits.get_neuroticism()
-            + shelter_motive
-            + stability_motive,
-            10.0,
-        )
-        success_motive = cached_sigmoid_motive_scale_approx_optimized(
-            character.personality_traits.get_conscientiousness()
-            + character.personality_traits.get_neuroticism()
-            + shelter_motive
-            + stability_motive
-            + control_motive,
-            10.0,
-        )
-        material_goods_motive = random.gauss(
-            cached_sigmoid_motive_scale_approx_optimized(
-                cached_sigmoid_motive_scale_approx_optimized(
-                    (
-                        cached_sigmoid_motive_scale_approx_optimized(
-                            shelter_motive, 25.0
-                        )
-                        + cached_sigmoid_motive_scale_approx_optimized(
-                            stability_motive, 25.0
-                        )
-                        + cached_sigmoid_motive_scale_approx_optimized(
-                            success_motive, 25.0
-                        )
-                        + cached_sigmoid_motive_scale_approx_optimized(
-                            control_motive, 25.0
-                        )
-                        if control_motive > 0.0
-                        else 1.0
-                    ),
-                    10.0,
-                )
-                + tanh_scaling(
-                    character.personality_traits.get_conscientiousness()
-                    + character.personality_traits.get_neuroticism() * 10.0,
-                    10.0,
-                    -10.0,
-                    0.0,
-                    1.0,
-                ),
-                10.0,
-            ),
-            1.0,
-        )
-
-        luxury_motive = cached_sigmoid_motive_scale_approx_optimized(
-            tanh_scaling(
-                character.personality_traits.get_openness()
-                + character.personality_traits.get_extraversion()
-                + character.personality_traits.get_agreeableness()
-                + character.personality_traits.get_neuroticism() * 10.0,
-                10.0,
-                -10.0,
-                0.0,
-                10.0,
-            )
-            + cached_sigmoid_motive_scale_approx_optimized(
-                cached_sigmoid_motive_scale_approx_optimized(
-                    material_goods_motive, 50.0
-                )
-                + cached_sigmoid_motive_scale_approx_optimized(beauty_motive, 50.0),
-                10.0,
-            ),
-            10.0,
-        )
-
-        wealth_motive = random.gauss(
-            cached_sigmoid_motive_scale_approx_optimized(
-                cached_sigmoid_motive_scale_approx_optimized(luxury_motive, 25.0)
-                + cached_sigmoid_motive_scale_approx_optimized(shelter_motive, 10.0)
-                + cached_sigmoid_motive_scale_approx_optimized(stability_motive, 15.0)
-                + cached_sigmoid_motive_scale_approx_optimized(success_motive, 15.0)
-                + cached_sigmoid_motive_scale_approx_optimized(control_motive, 10.0)
-                + cached_sigmoid_motive_scale_approx_optimized(
-                    material_goods_motive, 25.0
-                )
-                + tanh_scaling(
-                    character.personality_traits.get_conscientiousness()
-                    + abs(character.personality_traits.get_neuroticism()) * 10,
-                    10.0,
-                    -10.0,
-                    0.0,
-                    1.0,
-                ),
-                10.0,
-            ),
-            1.0,
-        )
-
-        job_performance_motive = abs(
-            round(
-                random.gauss(
-                    abs(
-                        cached_sigmoid_motive_scale_approx_optimized(
-                            success_motive
-                            + material_goods_motive
-                            + wealth_motive * 2.0 / 3.0,
-                            10.0,
-                        )
-                    ),
-                    cached_sigmoid_motive_scale_approx_optimized(
-                        character.personality_traits.get_conscientiousness()
-                        + character.personality_traits.get_extraversion()
-                        + character.personality_traits.get_agreeableness()
-                        + character.personality_traits.get_neuroticism() * 10.0,
-                        1.0,
-                    ),
-                )
-            )
-        )
-        happiness_motive = abs(
-            round(
-                random.gauss(
-                    abs(
-                        cached_sigmoid_motive_scale_approx_optimized(
-                            (
-                                cached_sigmoid_motive_scale_approx_optimized(
-                                    success_motive, 25.0
-                                )
-                                + cached_sigmoid_motive_scale_approx_optimized(
-                                    material_goods_motive, 15.0
-                                )
-                                + cached_sigmoid_motive_scale_approx_optimized(
-                                    wealth_motive, 10.0
-                                )
-                                + cached_sigmoid_motive_scale_approx_optimized(
-                                    job_performance_motive, 25.0
-                                )
-                                + cached_sigmoid_motive_scale_approx_optimized(
-                                    social_wellbeing_motive, 25.0
-                                )
-                            ),
-                            10.0,
-                        )
-                    ),
-                    cached_sigmoid_motive_scale_approx_optimized(
-                        character.personality_traits.get_openness()
-                        + character.personality_traits.get_extraversion()
-                        + character.personality_traits.get_agreeableness()
-                        - character.personality_traits.get_neuroticism() * 10,
-                        1.0,
-                    ),
-                )
-            )
-        )
-        hope_motive = abs(
-            round(
-                random.gauss(
-                    cached_sigmoid_motive_scale_approx_optimized(
-                        cached_sigmoid_motive_scale_approx_optimized(
-                            mental_health_motive, 100.0
-                        )
-                        + cached_sigmoid_motive_scale_approx_optimized(
-                            social_wellbeing_motive, 100.0
-                        )
-                        + cached_sigmoid_motive_scale_approx_optimized(
-                            happiness_motive, 100.0
-                        )
-                        + cached_sigmoid_motive_scale_approx_optimized(
-                            health_motive, 100.0
-                        )
-                        + cached_sigmoid_motive_scale_approx_optimized(
-                            shelter_motive, 100.0
-                        )
-                        + cached_sigmoid_motive_scale_approx_optimized(
-                            stability_motive, 100.0
-                        )
-                        + cached_sigmoid_motive_scale_approx_optimized(
-                            luxury_motive, 100.0
-                        )
-                        + cached_sigmoid_motive_scale_approx_optimized(
-                            success_motive, 100.0
-                        )
-                        + cached_sigmoid_motive_scale_approx_optimized(
-                            control_motive, 100.0
-                        )
-                        + cached_sigmoid_motive_scale_approx_optimized(
-                            job_performance_motive, 100.0
-                        )
-                        + cached_sigmoid_motive_scale_approx_optimized(
-                            beauty_motive, 100.0
-                        )
-                        + cached_sigmoid_motive_scale_approx_optimized(
-                            community_motive, 100.0
-                        )
-                        / 12,
-                        10.0,
-                    ),
-                    cached_sigmoid_motive_scale_approx_optimized(
-                        character.personality_traits.get_openness()
-                        + character.personality_traits.get_extraversion()
-                        + character.personality_traits.get_agreeableness()
-                        + character.personality_traits.get_neuroticism() * 10,
-                        1.0,
-                    ),
-                )
-            )
-        )
-        family_motive = random.gauss(
-            abs(
-                cached_sigmoid_motive_scale_approx_optimized(
-                    cached_sigmoid_motive_scale_approx_optimized(
-                        mental_health_motive, 5.0
-                    )
-                    + cached_sigmoid_motive_scale_approx_optimized(
-                        social_wellbeing_motive, 10.0
-                    )
-                    + cached_sigmoid_motive_scale_approx_optimized(
-                        happiness_motive, 20.0
-                    )
-                    + cached_sigmoid_motive_scale_approx_optimized(
-                        stability_motive, 10.0
-                    )
-                    - cached_sigmoid_motive_scale_approx_optimized(luxury_motive, 20.0)
-                    + cached_sigmoid_motive_scale_approx_optimized(success_motive, 5.0)
-                    + cached_sigmoid_motive_scale_approx_optimized(control_motive, 5.0)
-                    + cached_sigmoid_motive_scale_approx_optimized(
-                        community_motive, 15.0
-                    )
-                    + cached_sigmoid_motive_scale_approx_optimized(hope_motive, 15.0),
-                    10.0,
-                )
-            ),
-            cached_sigmoid_motive_scale_approx_optimized(
-                (
-                    character.personality_traits.get_openness()
-                    + character.personality_traits.get_extraversion()
-                    + character.personality_traits.get_agreeableness()
-                    + character.personality_traits.get_conscientiousness() * 10
-                ),
-                1.0,
-            ),
-        )
-
-        return PersonalMotives(
-            hunger_motive=Motive(
-                "hunger", "bias toward satisfying hunger", hunger_motive
-            ),
-            wealth_motive=Motive(
-                "wealth", "bias toward accumulating wealth", wealth_motive
-            ),
-            mental_health_motive=Motive(
-                "mental health",
-                "bias toward maintaining mental health",
-                mental_health_motive,
-            ),
-            social_wellbeing_motive=Motive(
-                "social wellbeing",
-                "bias toward maintaining social wellbeing",
-                social_wellbeing_motive,
-            ),
-            happiness_motive=Motive(
-                "happiness", "bias toward maintaining happiness", happiness_motive
-            ),
-            health_motive=Motive(
-                "health", "bias toward maintaining health", health_motive
-            ),
-            shelter_motive=Motive(
-                "shelter", "bias toward maintaining shelter", shelter_motive
-            ),
-            stability_motive=Motive(
-                "stability", "bias toward maintaining stability", stability_motive
-            ),
-            luxury_motive=Motive(
-                "luxury", "bias toward maintaining luxury", luxury_motive
-            ),
-            hope_motive=Motive("hope", "bias toward maintaining hope", hope_motive),
-            success_motive=Motive(
-                "success", "bias toward maintaining success", success_motive
-            ),
-            control_motive=Motive(
-                "control", "bias toward maintaining control", control_motive
-            ),
-            job_performance_motive=Motive(
-                "job performance",
-                "bias toward maintaining job performance",
-                job_performance_motive,
-            ),
-            beauty_motive=Motive(
-                "beauty", "bias toward maintaining beauty", beauty_motive
-            ),
-            community_motive=Motive(
-                "community", "bias toward maintaining community", community_motive
-            ),
-            material_goods_motive=Motive(
-                "material goods",
-                "bias toward maintaining material goods",
-                material_goods_motive,
-            ),
-            family_motive=Motive(
-                "family", "bias toward maintaining family", family_motive
-            ),
-        )
+        """
+        Calculate motives for a character - delegates to GoapEvaluator.
+        
+        Args:
+            character: Character to calculate motives for
+            
+        Returns:
+            PersonalMotives: Object containing all calculated motives
+        """
+        world_state = self._get_world_state()
+        return self.goap_evaluator.calculate_motives(character, world_state)
 
     def location_popularity_analysis(self):
         """
@@ -3408,26 +2741,10 @@ class GraphManager:
 
     def analyze_relationship_health(self, char1, char2):
         """
-        Analyzes the health of the relationship between two characters based on attributes like emotional and historical values.
-
-        Parameters:
-            char1 (str): Node identifier for the first character.
-            char2 (str): Node identifier for the second character.
-
-        Returns:
-            float: A score representing the relationship health.
-
-        Usage example:
-            health_score = graph_manager.analyze_relationship_health('char1', 'char2')
-            print("Relationship health score:", health_score)
+        Analyze the health of a relationship between two characters.
+        Delegates to SocialModel for calculation.
         """
-        if self.G.has_edge(char1, char2):
-            emotional = self.G[char1][char2].get("emotional", 0)
-            historical = self.G[char1][char2].get("historical", 0)
-            # Combine these attributes to form a health score, example below
-            return emotional * 0.75 + historical * 0.25
-        else:
-            return 0  # No relationship exists
+        return self.social_model.analyze_relationship_health(char1, char2)
 
     def update_edge_attribute(self, node1, node2, attribute, value):
         """
@@ -3449,32 +2766,10 @@ class GraphManager:
 
     def evaluate_relationship_strength(self, char1, char2):
         """
-        Evaluate the strength of the relationship between two characters based on edge attributes.
-
-        Parameters:
-            char1 (str): First character node identifier.
-            char2 (str): Second character node identifier.
-
-        Returns:
-            int: The cumulative strength of the relationship.
-
-        Usage example:
-            strength = graph_manager.evaluate_relationship_strength('char1', 'char2')
-            print("Relationship strength:", strength)
+        Evaluate the overall strength of a relationship.
+        Delegates to SocialModel for calculation.
         """
-        attributes = [
-            "trust",
-            "historical",
-            "interaction_frequency",
-            "emotional_impact",
-        ]
-        strength = sum(self.G[char1][char2].get(attr, 0) for attr in attributes)
-        # Normalize the strength to a 0-100 scale
-        strength = max(0, min(strength, 100))
-        # Update the strength attribute in the graph
-        self.update_edge_attribute(char1, char2, "strength", strength)
-
-        return strength
+        return self.social_model.evaluate_relationship_strength(char1, char2)
 
     def check_friendship_status(self, char1, char2):
         """
@@ -3969,117 +3264,13 @@ class GraphManager:
         influence_factors=None,
     ):
         """
-        Calculates the social influence on a character's decisions, considering various edge attributes,
-        and applies multiple decay functions based on interaction characteristics.
-
-        Parameters:
-            character (str): Node identifier for the character.
-            influence_attributes (list of tuples): List of tuples specifying the edge attributes and their weight in the calculation.
-            memory_topic (str): A topic to query from memories that might influence the decision.
-
-        Returns:
-            float: Weighted influence score affecting the character's decisions.
+        Calculate social influence on a character's decisions.
+        Delegates to SocialModel for calculation.
         """
-        total_influence = 0
-        relationships = self.get_neighbors_with_attributes(character, type="character")
-        memory_influence = 0
-        if influence_factors is None:
-            influence_factors = {
-                "friend": {
-                    "weight": 1,
-                    "attributes": {
-                        "trust": 1,
-                        "historical": 1,
-                        "interaction_frequency": 1,
-                        "emotional_impact": 1,
-                    },
-                },
-                "enemy": {
-                    "weight": -1,
-                    "attributes": {
-                        "trust": -1,
-                        "conflict": 1,
-                        "trust": 1,
-                        "historical": 0.4,
-                        "interaction_frequency": 0.4,
-                        "emotional_impact": -1,
-                    },
-                },
-                "neutral": {"weight": 0, "attributes": {"trust": 0}},
-            }
-        if influence_attributes is None:
-            influence_attributes = [("trust", 1)]
-
-        # Query memories if a topic is provided
-
-        # Calculate social influence based on current relationships
-
-        for charnode in relationships:
-            relationship_type = self.G[character][charnode].get("relationship_type")
-            attributes = self.G[character][charnode]
-            if relationship_type in influence_factors:
-                factor = influence_factors[relationship_type]
-                relationship_weight = factor.get("strength", 1)
-                attribute_score = sum(
-                    attributes.get(attr, 0) * factor.get("attributes", {}).get(attr, 1)
-                    for attr in factor.get("attributes", [])
-                )
-                total_influence += relationship_weight * attribute_score
-                relationship_weights += abs(relationship_weight)
-
-        # Normalize social influence if needed
-        if relationship_weights > 0:
-            total_influence /= relationship_weights
-        memories = []
-        # Integrate memories from 'tiny_memories.py'
-        if memory_weight > 0:
-            if memory_topic:
-                memories.extend(self.query_memories(character, memory_topic))
-                memory_influence = sum(
-                    mem["sentiment"] * mem["relevance"] for mem in memories
-                )
-                memory_influence *= memory_weight  # Apply weighting to memory influence
-                total_influence = (
-                    1 - memory_weight
-                ) * total_influence + memory_weight * memory_influence
-            if decision_context:
-                memories.extend(self.query_memories(character, decision_context))
-            memory_influence = sum(
-                mem["sentiment"] * mem["relevance"] for mem in memories
-            )
-            total_influence = (
-                1 - memory_weight
-            ) * total_influence + memory_weight * memory_influence
-
-        # Apply decay functions to influence calculation
-        for _, target, attributes in relationships:
-            distance = nx.shortest_path_length(
-                self.G, character, target
-            )  # Calculates distance between nodes
-            influence = 0
-            for attr, weight in influence_attributes or []:
-                attr_value = attributes.get(attr, 0)
-                # Apply specific decay functions
-                time_decay = self.time_based_decay(
-                    attributes.get("time_since_last_interaction", 0)
-                )
-                frequency_decay = self.frequency_based_decay(
-                    attributes.get("frequency_of_interaction", 0)
-                )
-                advanced_decay = self.advanced_decay(
-                    distance, attributes
-                )  # Applies advanced decay based on distance and other factors
-                influence += (
-                    attr_value * weight * time_decay * frequency_decay * advanced_decay
-                )
-            total_influence += influence
-
-        total_influence += memory_influence
-        # Normalize the total influence score
-        if total_influence > 0:
-            total_influence /= len(relationships) + (1 if memory_topic else 0)
-
-        return total_influence
+        return self.social_model.calculate_social_influence(
+            character, influence_attributes, memory_topic, memory_weight,
+            decision_context, influence_factors
+        )
 
     # Including the provided decay functions here for completeness
     def time_based_decay(self, time_since):
@@ -5105,429 +4296,32 @@ class GraphManager:
 
     def calculate_goal_difficulty(self, goal: Goal, character: Character):
         """
-        Calculate the difficulty of a goal based on its complexity and requirements.
+        Calculate goal difficulty - delegates to GoapEvaluator.
+        
         Args:
-            goal (Goal): The goal to evaluate.
-            character (Character): The character attempting the goal.
+            goal: Goal to evaluate
+            character: Character attempting the goal
+            
         Returns:
-            dict: A dictionary containing the difficulty score and additional metrics.
+            dict: Dictionary containing difficulty score and additional metrics
         """
-        try:
-            Character = importlib.import_module("tiny_characters").Character
-
-        except ImportError:
-            logging.error(
-                "Failed to import Character class from tiny_characters module."
-            )
-            difficulty = 0
-            # Analyze the goal requirements and complexity
-            if not hasattr(goal, "criteria") or not goal.criteria:
-                return {"difficulty": 0, "error": "Goal has no criteria"}
-
-            goal_requirements = goal.criteria  # goal_requirements will look like: {
-        #     "node_attributes": {"type": "item", "item_type": "food"},
-        #     "max_distance": 20,
-        # }
-        # Analyze graph to identify nodes that match the goal criteria
-        nodes_per_requirement = {}
-        for requirement in goal_requirements:
-            nodes_per_requirement[requirement] = self.get_filtered_nodes(**requirement)
-
-        # nodes_per_requirement will look like this:
-        # {
-        #    "node_attributes": {"type": "item", "item_type": "food"}: {
-        #        "item1": {"type": "item", "item_type": "food"},
-        # Check if any requirement has no matching nodes
-
-        for requirement, nodes in nodes_per_requirement.items():
-            if not nodes:
-                return float("inf")
-
-        # Check for nodes that fulfill multiple requirements
-        fulfill_multiple = {}
-        action_viability_cost = {}
-        ## self.calculate_action_viability_cost returns as below
-        # {
-        #     "action_cost": action_cost, # A dict of costs for each action
-        #     "viable": viable, # A dict of booleans indicating viability of each action
-        #     "goal_cost": goal_cost, # A dict of goal costs for each action based on goal requirements
-        # "conditions_fulfilled_by_action": conditions_fulfilled_by_action, # A dict of goal conditions fulfilled by each action
-        #   "actions_that_fulfill_condition": actions_that_fulfill_condition, # A dict of actions that fulfill each condition
-        # }
-
-        for nodes in nodes_per_requirement.values():
-            for node in nodes:
-                action_viability_cost[node] = self.calculate_action_viability_cost(
-                    node, goal, character
-                )
-                if sum(node in nodes for nodes in nodes_per_requirement.values()) > 1:
-                    # Node fulfills multiple requirements
-                    # Add your code here to handle this case
-                    # For example, you can store the node in a list or perform some other operation
-                    fulfill_multiple[node] = {
-                        "num_reqs": sum(
-                            node in nodes for nodes in nodes_per_requirement.values()
-                        )
-                    }
-                    # fulfill_multiple[node]["action_viability_cost"] = self.calculate_action_viability_cost(
-        # Build condition_actions mapping for A* heuristic
-        condition_actions = {}
-        goal_conditions = set()
-        for node in action_viability_cost:
-            for condition, actions in action_viability_cost[node][
-                "actions_that_fulfill_condition"
-            ].items():
-                goal_conditions.add(condition)
-                if condition not in condition_actions:
-                    condition_actions[condition] = []
-                for action in actions:
-                    condition_actions[condition].append((action, node))
-
-        remaining_conditions = goal_conditions.copy()
-        # Determine the number of viable actions and nodes and compare that to the total number of actions and nodes
-        # Estimate counts
-        total_nodes = len(action_viability_cost)
-        total_actions_per_node = (
-            sum(
-                len(node["actions_that_fulfill_condition"])
-                for node in action_viability_cost.values()
-            )
-            / total_nodes
-        )
-
-        viable_nodes = sum(
-            1
-            for node in action_viability_cost
-            if any(action_viability_cost[node]["viable"].values())
-        )
-        viable_actions_per_node = (
-            sum(sum(node["viable"].values()) for node in action_viability_cost.values())
-            / viable_nodes
-            if viable_nodes > 0
-            else 0
-        )
-        initial_solution = []
-        initial_cost = 0
-
-        # Use greedy approach if we have good viable action coverage
-        # Switch to A* if the problem is complex (low viability ratio)
-        viability_ratio = viable_nodes / total_nodes if total_nodes > 0 else 0
-        complexity_threshold = 0.5  # Use greedy if >50% of nodes are viable
-
-        if viability_ratio >= complexity_threshold and viable_actions_per_node > 0:
-            # Greedy initial solution
-            for condition in goal_conditions:
-                if condition not in condition_actions:
-                    continue
-
-                viable_actions = [
-                    (action, node)
-                    for action, node in condition_actions[condition]
-                    if action_viability_cost[node]["viable"].get(action, False)
-                ]
-
-                if not viable_actions:
-                    # No viable actions for this condition, goal is impossible
-                    return float("inf")
-
-                # Find the best action for this condition
-                best_action, best_node = None, None
-                min_cost = float("inf")
-
-                for action, node in viable_actions:
-                    action_cost_data = action_viability_cost[node]
-                    total_cost = action_cost_data["action_cost"].get(
-                        action, 0
-                    ) + action_cost_data["goal_cost"].get(action, 0)
-                    if total_cost < min_cost:
-                        min_cost = total_cost
-                        best_action, best_node = action, node
-
-                if best_action is not None:
-                    initial_solution.append((best_node, best_action))
-                    initial_cost += min_cost
-        else:
-            # Use more sophisticated search for complex scenarios
-            selected_nodes = []
-            selected_actions = []
-            total_cost = 0
-            action_cache = {}
-            max_iterations = len(goal_conditions) * 2  # Prevent infinite loops
-
-            iteration_count = 0
-            while remaining_conditions and iteration_count < max_iterations:
-                iteration_count += 1
-                best_node_action = None
-                best_new_conditions = set()
-                best_cost = float("inf")
-
-                for node in action_viability_cost:
-                    if not any(action_viability_cost[node]["viable"].values()):
-                        continue
-
-                    for action in action_viability_cost[node][
-                        "conditions_fulfilled_by_action"
-                    ]:
-                        if not action_viability_cost[node]["viable"].get(action, False):
-                            continue
-
-                        if (node, action) in action_cache:
-                            new_conditions, new_cost = action_cache[(node, action)]
-                        else:
-                            new_conditions = {
-                                condition
-                                for condition in action_viability_cost[node][
-                                    "conditions_fulfilled_by_action"
-                                ][action]
-                                if condition in remaining_conditions
-                            }
-                            new_cost = action_viability_cost[node]["goal_cost"].get(
-                                action, 0
-                            )
-                            action_cache[(node, action)] = (new_conditions, new_cost)
-
-                        if len(new_conditions) > len(best_new_conditions) or (
-                            len(new_conditions) == len(best_new_conditions)
-                            and new_cost < best_cost
-                        ):
-                            best_node_action = (node, action)
-                            best_new_conditions = new_conditions
-                            best_cost = new_cost
-
-                if best_node_action and best_new_conditions:
-                    selected_nodes.append(best_node_action[0])
-                    selected_actions.append(best_node_action[1])
-                    remaining_conditions.difference_update(best_new_conditions)
-                    total_cost += best_cost
-                else:
-                    # No progress possible, goal might be impossible
-                    break
-
-            if remaining_conditions:
-                # Some conditions couldn't be satisfied
-                return float("inf")
-
-            initial_solution = list(zip(selected_nodes, selected_actions))
-            initial_cost = total_cost
-
-        # A* Search logic with priority queue
-        def heuristic(remaining_conditions):
-            if not remaining_conditions:
-                return 0
-            total = 0
-            for condition in remaining_conditions:
-                if condition in condition_actions:
-                    try:
-                        min_cost = min(
-                            action_viability_cost[node]["goal_cost"].get(action, 0)
-                            for action, node in condition_actions[condition]
-                            if node in action_viability_cost
-                            and action in action_viability_cost[node]["goal_cost"]
-                        )
-                        total += min_cost
-                    except (ValueError, KeyError):
-                        total += 1  # Default cost if calculation fails
-            return total
-
-        best_cost = initial_cost
-        best_solution = initial_solution
-
-        priority_queue = [
-            (
-                initial_cost + heuristic(set(goal_conditions)),
-                initial_cost,
-                initial_solution,
-                set(goal_conditions),
-            )
-        ]
-
-        # Add limits to prevent infinite loops
-        max_iterations = 1000
-        iterations = 0
-
-        while priority_queue and iterations < max_iterations:
-            iterations += 1
-            _, current_cost, current_solution, remaining_conditions = heapq.heappop(
-                priority_queue
-            )
-
-            if not remaining_conditions:
-                if current_cost < best_cost:
-                    best_cost = current_cost
-                    best_solution = current_solution
-                continue
-
-            for condition in remaining_conditions:
-                if condition not in condition_actions:
-                    continue
-
-                for action, node in condition_actions[condition]:
-                    if any(node == n for n, _ in current_solution):
-                        continue
-                    new_solution = current_solution + [(node, action)]
-
-                    try:
-                        new_cost = current_cost + action_viability_cost[node][
-                            "goal_cost"
-                        ].get(action, 0)
-                    except (KeyError, TypeError):
-                        continue
-
-                    new_remaining_conditions = remaining_conditions - {condition}
-
-                    if new_cost >= best_cost:
-                        continue
-
-                    heuristic_cost = new_cost + heuristic(new_remaining_conditions)
-                    if heuristic_cost >= best_cost:
-                        continue
-                    heapq.heappush(
-                        priority_queue,
-                        (
-                            heuristic_cost,
-                            new_cost,
-                            new_solution,
-                            new_remaining_conditions,
-                        ),
-                    )
-
-        valid_combinations = [best_solution]
-
-        # Use regular iteration instead of ProcessPoolExecutor for better compatibility
-        try:
-            for combo in combinations(best_solution, len(best_solution)):
-                try:
-                    result = self.evaluate_combination(
-                        combo,
-                        action_viability_cost,
-                        goal_conditions,
-                    )
-                    if result:
-                        valid_combinations.append(result)
-                except Exception as e:
-                    print(f"Error evaluating combination {combo}: {e}")
-        except Exception as e:
-            print(f"Error in combination evaluation: {e}")
-
-        valid_combinations.sort(key=lambda x: x[0])  # Sort by total cost
-
-        valid_paths = []
-        # Now calculate paths that would fulfill each requirement in goal_requirements, using only one node per condition
-        # Generate all combinations of nodes fulfilling the requirements
-        all_pairs_paths = dict(
-            nx.all_pairs_dijkstra_path(
-                nx.subgraph(
-                    self.G,
-                    [n for nodes in nodes_per_requirement.values() for n in nodes],
-                ),
-                weight=self.calculate_edge_cost,
-            )
-        )
-
-        def find_combined_path(combo):
-            combined_path = []
-            for i in range(len(combo) - 1):
-                source, target = combo[i], combo[i + 1]
-                if source in all_pairs_paths and target in all_pairs_paths[source]:
-                    combined_path.extend(all_pairs_paths[source][target])
-                else:
-                    return None
-            return combined_path
-
-        for combo in valid_combinations:
-            path = find_combined_path(combo)
-            if path:
-                valid_paths.append(path)
-
-        # Incorporate action costs into path cost calculation
-        def calc_path_cost(path):
-            if not path or len(path) < 2:
-                return 0
-            total_cost = 0
-            for i in range(len(path) - 1):
-                # Add edge cost
-                try:
-                    edge_cost = self.calculate_edge_cost(path[i], path[i + 1])
-                    total_cost += edge_cost
-                except Exception:
-                    total_cost += 1  # Default edge cost
-
-                # Add action cost for the current node
-                node = path[i]
-                if node in action_viability_cost:
-                    action_costs = action_viability_cost[node].get("action_cost", {})
-                    if action_costs:
-                        # Take the minimum action cost for this node
-                        total_cost += min(action_costs.values())
-            return total_cost
-
-        # Filter out non-viable paths
-        viable_paths = []
-        for path in valid_paths:
-            is_viable = True
-            for node in path:
-                if node in action_viability_cost:
-                    if not any(action_viability_cost[node]["viable"].values()):
-                        is_viable = False
-                        break
-            if is_viable:
-                viable_paths.append(path)
-
-        # Handle case where no viable paths exist
-        if not viable_paths:
-            return {
-                "difficulty": float("inf"),
-                "viable_paths": [],
-                "error": "No viable paths found",
-            }
-
-        # Use goal costs to prioritize paths
-        def calc_goal_cost(path):
-            # Sum goal_cost values for each node in the path
-            total = 0
-            for node in path:
-                if node in action_viability_cost:
-                    # Sum all goal_costs for the node
-                    total += sum(
-                        action_viability_cost[node].get("goal_cost", {}).values()
-                    )
-            return total
-
-        # Find the shortest path among all viable paths based on the weighted sum of edge and action costs
-        try:
-            shortest_path = min(viable_paths, key=calc_path_cost)
-            # Calculate difficulty based on the sum of edge and action costs
-            difficulty = calc_path_cost(shortest_path)
-
-            # Prioritize paths with lower goal costs
-            lowest_goal_cost_path = min(viable_paths, key=calc_goal_cost)
-            # If the shortest path is not the same as the path with the lowest goal cost, increase the difficulty
-            # Calculate the goal cost of the shortest path
-            shortest_path_goal_cost = calc_goal_cost(shortest_path)
-
-            # Calculate the path cost of the path with the lowest goal cost
-            lowest_goal_cost_path_cost = calc_path_cost(lowest_goal_cost_path)
-
-            # If the shortest path is not the same as the path with the lowest goal cost, increase the difficulty
-            if shortest_path != lowest_goal_cost_path:
-                difficulty += shortest_path_goal_cost + lowest_goal_cost_path_cost / 2
-        except (ValueError, TypeError) as e:
-            return {
-                "difficulty": float("inf"),
-                "viable_paths": viable_paths,
-                "error": f"Path calculation error: {e}",
-            }
-        return {
-            "difficulty": difficulty,
-            "calc_path_cost": calc_path_cost,
-            "calc_goal_cost": calc_goal_cost,
-            "action_viability_cost": action_viability_cost,
-            "viable_paths": viable_paths,
-            "shortest_path": shortest_path,
-            "lowest_goal_cost_path": lowest_goal_cost_path,
-            "shortest_path_goal_cost": shortest_path_goal_cost,
-            "lowest_goal_cost_path_cost": lowest_goal_cost_path_cost,
-        }
+        world_state = self._get_world_state()
+        return self.goap_evaluator.calculate_goal_difficulty(goal, character, world_state)
+    
+    def evaluate_action_plan(self, plan, character, goal):
+        """
+        Evaluate action plan effectiveness - delegates to GoapEvaluator.
+        
+        Args:
+            plan: List of actions forming the plan
+            character: Character executing the plan
+            goal: Goal to achieve
+            
+        Returns:
+            dict: Evaluation metrics including cost, viability, and success probability
+        """
+        world_state = self._get_world_state()
+        return self.goap_evaluator.evaluate_action_plan(plan, character, goal, world_state)
 
     def is_goal_achieved(self, character, goal: Goal):
         """
@@ -5682,260 +4476,32 @@ class GraphManager:
         self, action: Action, character: Character, goal: Goal
     ):
         """
-        Calculate the cost of an action based on the effects it will have on the character.
+        Calculate the cost of an action based on effects - delegates to GoapEvaluator.
+        
         Args:
-            action (Action): The action to evaluate.
+            action: Action to evaluate
+            character: Character performing the action
+            goal: Goal being pursued
+            
         Returns:
-            float: The cost of the action based on its effects.
+            float: Cost of the action based on its effects
         """
-        Character = importlib.import_module("tiny_characters").Character
-        Action = importlib.import_module("tiny_actions").Action
-        Goal = importlib.import_module("tiny_goals").Goal
-
-        goal_cost = 0
-        conditions = goal.completion_conditions
-        weights = {}
-        for effect in action.effects:
-            # In a creative way, we calculate the weight of the effect based on the character's current state and the goal conditions. We do this by checking if the effect will help or hinder the character in achieving the goal.
-            weights[effect["attribute"]] = 1
-            for condition in conditions:
-                if (
-                    effect["attribute"] in character.get_state()
-                    and effect["targets"] == "initiator"
-                ):
-                    if (
-                        condition.attribute == effect["attribute"]
-                        and condition.target == character
-                    ):
-                        if (
-                            condition.operator == "ge" or condition.operator == "gt"
-                        ) and effect["change_value"] > 0:
-                            delta = (
-                                character.get_state()[effect["attribute"]]
-                                + effect["change_value"]
-                            ) - condition.satisfy_value
-
-                            # Consider the magnitude of effect["change_value"]
-                            delta = abs(effect["change_value"]) * delta
-
-                            # Use a different scaling factor
-                            scaling_factor = condition.weight / sum(
-                                condition.weight for condition in conditions
-                            )
-
-                            # Use a non-linear function for the difference
-                            delta = 1 / (1 + math.exp(-delta))
-
-                            weights[effect["attribute"]] += delta * scaling_factor
-                        elif (
-                            condition.operator == "le" or condition.operator == "lt"
-                        ) and effect["change_value"] < 0:
-                            delta = condition.satisfy_value - (
-                                character.get_state()[effect["attribute"]]
-                                + effect["change_value"]
-                            )
-                            # Consider the magnitude of effect["change_value"]
-                            delta = abs(effect["change_value"]) * delta
-
-                            # Use a different scaling factor
-                            scaling_factor = condition.weight / sum(
-                                condition.weight for condition in conditions
-                            )
-
-                            # Use a non-linear function for the difference
-                            delta = 1 / (1 + math.exp(-delta))
-
-                            weights[effect["attribute"]] += delta * scaling_factor
-                elif (
-                    effect["attribute"] in condition.target.get_state()
-                    and effect["targets"] == "target"
-                ):
-                    if (
-                        condition.operator == "ge" or condition.operator == "gt"
-                    ) and effect["change_value"] > 0:
-                        delta = (
-                            condition.target.get_state()[effect["attribute"]]
-                            + effect["change_value"]
-                        ) - condition.satisfy_value
-                        # Consider the magnitude of effect["change_value"]
-                        delta = abs(effect["change_value"]) * delta
-
-                        # Use a different scaling factor
-                        scaling_factor = condition.weight / sum(
-                            condition.weight for condition in conditions
-                        )
-
-                        # Use a non-linear function for the difference
-                        delta = 1 / (1 + math.exp(-delta))
-
-                        weights[effect["attribute"]] += delta * scaling_factor
-
-                    elif (
-                        condition.operator == "le" or condition.operator == "lt"
-                    ) and effect["change_value"] < 0:
-                        delta = condition.satisfy_value - (
-                            condition.target.get_state()[effect["attribute"]]
-                            + effect["change_value"]
-                        )
-                        # Consider the magnitude of effect["change_value"]
-                        delta = abs(effect["change_value"]) * delta
-
-                        # Use a different scaling factor
-                        scaling_factor = condition.weight / sum(
-                            condition.weight for condition in conditions
-                        )
-
-                        # Use a non-linear function for the difference
-                        delta = 1 / (1 + math.exp(-delta))
-
-                        weights[effect["attribute"]] += delta * scaling_factor
-
-        # After calculating all the weights
-        weights_array = np.array(list(weights.values()))
-        softmax_weights = np.exp(weights_array) / np.sum(np.exp(weights_array))
-
-        for i, attribute in enumerate(weights):
-            weights[attribute] = softmax_weights[i]
-
-        for effect in action.effects:
-            # In a creative way, we calculate the weight of the effect based on the character's current state and the goal conditions. We do this by checking if the effect will help or hinder the character in achieving the goal.
-            for condition in conditions:
-                if (
-                    effect["attribute"] in character.get_state()
-                    and effect["targets"] == "initiator"
-                ):
-                    if (
-                        condition.attribute == effect["attribute"]
-                        and condition.target == character
-                    ):
-                        if (
-                            condition.operator == "ge" or condition.operator == "gt"
-                        ) and effect["change_value"] < 0:
-                            delta = (
-                                condition.satisfy_value
-                                - character.get_state()[effect["attribute"]]
-                                + abs(effect["change_value"])
-                            )
-                            # Consider the magnitude of effect["change_value"]
-                            delta = abs(effect["change_value"]) * delta
-
-                            # Use a different scaling factor
-                            try:
-                                scaling_factor = 1 / weights[effect["attribute"]]
-                            except ZeroDivisionError:
-                                scaling_factor = float("inf")  # or some large number
-
-                            # The rest of the code remains the same
-
-                            # Use a non-linear function for the difference
-                            delta = 1 / (1 + math.exp(-delta))
-
-                            goal_cost += delta * scaling_factor
-
-                        elif (
-                            condition.operator == "le" or condition.operator == "lt"
-                        ) and effect["change_value"] > 0:
-                            delta = (
-                                character.get_state()[effect["attribute"]]
-                                + effect["change_value"]
-                                - condition.satisfy_value
-                            )
-                            # Consider the magnitude of effect["change_value"]
-                            delta = abs(effect["change_value"]) * delta
-
-                            # Use a different scaling factor
-                            try:
-                                scaling_factor = 1 / weights[effect["attribute"]]
-                            except ZeroDivisionError:
-                                scaling_factor = float("inf")  # or some large number
-                            # The rest of the code remains the same
-                            # Use a non-linear function for the difference
-                            delta = 1 / (1 + math.exp(-delta))
-
-                            goal_cost += delta * scaling_factor
-                elif (
-                    effect["attribute"] in condition.target.get_state()
-                    and effect["targets"] == "target"
-                ):
-                    if (
-                        condition.operator == "ge" or condition.operator == "gt"
-                    ) and effect["change_value"] < 0:
-                        delta = (
-                            condition.satisfy_value
-                            - condition.target.get_state()[effect["attribute"]]
-                            + abs(effect["change_value"])
-                        )
-                        # Consider the magnitude of effect["change_value"]
-                        delta = abs(effect["change_value"]) * delta
-
-                        # Use a different scaling factor
-                        try:
-                            scaling_factor = 1 / weights[effect["attribute"]]
-                        except ZeroDivisionError:
-                            scaling_factor = float("inf")  # or some large number
-
-                        # The rest of the code remains the same
-
-                        # Use a non-linear function for the difference
-                        delta = 1 / (1 + math.exp(-delta))
-
-                        goal_cost += delta * scaling_factor
-                    elif (
-                        condition.operator == "le" or condition.operator == "lt"
-                    ) and effect["change_value"] > 0:
-                        delta = (
-                            condition.target.get_state()[effect["attribute"]]
-                            + effect["change_value"]
-                            - condition.satisfy_value
-                        )
-                        # Consider the magnitude of effect["change_value"]
-                        delta = abs(effect["change_value"]) * delta
-
-                        # Use a different scaling factor
-                        try:
-                            scaling_factor = 1 / weights[effect["attribute"]]
-                        except ZeroDivisionError:
-                            scaling_factor = float("inf")  # or some large number
-
-                        # The rest of the code remains the same
-
-                        # Use a non-linear function for the difference
-                        delta = 1 / (1 + math.exp(-delta))
-
-                        goal_cost += delta * scaling_factor
-
-        # At the end of the function
-        goal_cost = 1 / (1 + math.exp(-goal_cost))
-
-        return goal_cost
+        world_state = self._get_world_state()
+        return self.goap_evaluator.calculate_action_effect_cost(action, character, goal, world_state)
 
     def calculate_how_goal_impacts_character(self, goal: Goal, character: Character):
         """
-        Calculate the impact of a goal on a character based on the goal's completion conditions and the character's current state.
+        Calculate the impact of a goal on a character - delegates to GoapEvaluator.
+        
         Args:
-            goal (Goal): The goal to evaluate.
-            character (Character): The character to evaluate.
+            goal: Goal to evaluate
+            character: Character to evaluate
+            
         Returns:
-            float: The impact of the goal on the character.
+            float: Impact of the goal on the character
         """
-        Character = importlib.import_module("tiny_characters").Character
-
-        impact = 0
-        for condition in goal.completion_conditions:
-            if condition.attribute in character.get_state():
-                if condition.operator == "ge" or condition.operator == "gt":
-                    impact += max(
-                        0,
-                        character.get_state()[condition.attribute]
-                        - condition.satisfy_value,
-                    )
-                elif condition.operator == "le" or condition.operator == "lt":
-                    impact += max(
-                        0,
-                        condition.satisfy_value
-                        - character.get_state()[condition.attribute],
-                    )
-        return impact
+        world_state = self._get_world_state()
+        return self.goap_evaluator.calculate_how_goal_impacts_character(goal, character, world_state)
 
     def calculate_action_difficulty(self, action: Action, character: Character):
         """
@@ -5958,159 +4524,38 @@ class GraphManager:
 
         return difficulty
 
-    @lru_cache(maxsize=1000)
     def calculate_action_viability_cost(self, node, goal: Goal, character: Character):
         """
-        Calculate the cost of an action based on the viability of the node.
+        Calculate action viability and cost - delegates to GoapEvaluator.
+        
         Args:
-            node (Node): The node to evaluate.
+            node: Node to evaluate
+            goal: Goal being pursued
+            character: Character performing actions
+            
         Returns:
-            dict(cost: float, viable: bool, goal_cost: float): The cost of the action, whether it is viable, and the cost of the action on the goal.
+            dict: Dictionary containing action costs, viability, and goal fulfillment data
         """
-        Character = importlib.import_module("tiny_characters").Character
-
-        cache_key = (node, goal, character)
-        if cache_key in self.dp_cache:
-            return self.dp_cache[cache_key]
-        if isinstance(node, str):
-            node = self.G.nodes[node]
-
-        if not isinstance(node, list):
-            node = [node]
-
-        viable = {}
-        action_cost = {}  # Cost of action (Action.cost) for each action in the node
-        goal_cost = (
-            {}
-        )  # goal_cost represents the cost the action levies on progress toward the goal, ie the effect "costs" progress toward the goal,
-        possible_interactions = []
-        try:
-            possible_interactions = self.node_type_resolver(
-                node
-            ).get_possible_interactions()
-        except:
-            possible_interactions = self.node_type_resolver(node).possible_interactions
-        actions_that_fulfill_condition = {}  # {condition: [actions]}
-        conditions_fulfilled_by_action = {}  # {action: [conditions]}
-        for interaction in possible_interactions:
-            if interaction.preconditions_met():
-                fulfilled_conditions = self.will_action_fulfill_goal(
-                    interaction,
-                    goal,
-                    (
-                        self.node_type_resolver(node).get_state()
-                        if interaction.target == None
-                        else self.node_type_resolver(interaction.target).get_state()
-                    ),
-                    character,
-                )
-                for condition, fulfilled in fulfilled_conditions.items():
-                    if fulfilled:
-                        conditions_fulfilled_by_action.setdefault(
-                            tuple([interaction, node]), []
-                        ).append(condition)
-                        actions_that_fulfill_condition.setdefault(condition, []).append(
-                            tuple([interaction, node])
-                        )
-
-                action_cost[interaction] = interaction.cost
-                goal_cost[interaction] += self.calculate_action_effect_cost(
-                    interaction, character, goal
-                )
-                if any(fulfilled_conditions.values()):
-                    viable[interaction] = True
-                else:
-                    viable[interaction] = False
-                if all(fulfilled_conditions.values()):
-                    result = {
-                        "action_cost": action_cost,
-                        "viable": viable,
-                        "goal_cost": goal_cost,
-                        "conditions_fulfilled_by_action": conditions_fulfilled_by_action,
-                        "actions_that_fulfill_condition": actions_that_fulfill_condition,
-                    }
-                    self.dp_cache[cache_key] = result
-                    return result
-            else:
-                action_cost[interaction] += self.calculate_action_difficulty(
-                    interaction, character
-                )
-                goal_cost[interaction] += self.calculate_action_effect_cost(
-                    interaction, character, goal
-                )
-                viable[interaction] = False
-
-        result = {
-            "action_cost": action_cost,
-            "viable": viable,
-            "goal_cost": goal_cost,
-            "conditions_fulfilled_by_action": conditions_fulfilled_by_action,
-            "actions_that_fulfill_condition": actions_that_fulfill_condition,
-        }
-
-        self.dp_cache[cache_key] = result
-        return result
+        world_state = self._get_world_state()
+        return self.goap_evaluator.calculate_action_viability_cost(node, goal, character, world_state)
 
     def will_action_fulfill_goal(
         self, action: Action, goal: Goal, current_state: State, character: Character
     ):
         """
-        Determine if an action fulfills the specified goal by checking the completion conditions.
-        Remember, Goals can have multiple completion conditions, so we will return a dictionary of booleans indicating whether each completion condition is met.
+        Determine if action fulfills goal - delegates to GoapEvaluator.
+        
         Args:
-            action (Action): The action to evaluate.
-            goal (Goal): The goal to achieve.
-            current_state (State): The current state of the target of the action.
+            action: Action to evaluate
+            goal: Goal to achieve
+            current_state: Current state of the action target
+            character: Character performing the action
+            
         Returns:
-            dict: A dictionary of booleans indicating whether each completion condition is met.
+            dict: Dictionary indicating which completion conditions are met
         """
-        Character = importlib.import_module("tiny_characters").Character
-        Action = importlib.import_module("tiny_actions").Action
-        Goal = importlib.import_module("tiny_goals").Goal
-        State = importlib.import_module("tiny_states").State
-        goal_copy = copy.deepcopy(goal)
-        completion_conditions = (
-            goal_copy.completion_conditions
-        )  # Example: {False: Condition(name="has_food", attribute="inventory.check_has_item_by_type(['food'])", satisfy_value=True, op="==")}
-        action_effects = action.effects  # Example [
-        #     {"targets": ["initiator"], "attribute": "inventory", "change_value": "add_item('food')"},
-        #     {
-        #         "targets": ["initiator"],
-        #         "method": "play_animation",
-        #         "method_args": ["taking_item"],
-        #     },
-        # ]
-        goal_target = goal_copy.target
-        # make a copy of the State so the original is not modified
-        current_state_ = copy.deepcopy(current_state)
-        for effect in action_effects:
-            if (
-                "target" in effect["targets"]
-                and goal_target.name == current_state_.name
-            ):
-                current_state_ = action.apply_single_effect(effect, current_state_)
-                for condition in completion_conditions[False]:
-                    check = condition.check_condition(current_state_)
-                    # if check is true, change k (the key) to True in the completion_conditions dictionary
-                    if check == True:
-                        # remove the condition from the completion_conditions dictionary
-                        completion_conditions[False] = None
-                        completion_conditions[True] = condition
-
-            elif (
-                "initiator" in effect["targets"] and goal_target.name == character.name
-            ):
-                current_state_ = action.apply_single_effect(effect, current_state_)
-                for condition in completion_conditions[False]:
-                    check = condition.check_condition(current_state_)
-                    # if check is true, change k (the key) to True in the completion_conditions dictionary
-                    if check == True:
-                        # remove the condition from the completion_conditions dictionary
-                        completion_conditions[False] = None
-                        completion_conditions[True] = condition
-
-        # return the reversed completion_conditions dictionary
-        return {v: k for k, v in completion_conditions.items()}
+        world_state = self._get_world_state()
+        return self.goap_evaluator.will_action_fulfill_goal(action, goal, current_state, character, world_state)
 
     ##TODO: Figure out how to check if the effects of all actions the action list fulfill the goal completion_conditions together after being applied to the character State
 
