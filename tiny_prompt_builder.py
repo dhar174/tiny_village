@@ -2814,6 +2814,34 @@ class PromptBuilder:
         )
         return f"{intensity} ({score:.1f}/10)"
 
+    def _build_scenario_prompt(self, scenario: str, actions: List[str]) -> str:
+        """Return a simple prompt for a given scenario and actions."""
+        prompt = "<|system|>"
+        prompt += f"You are {self.character.name}, a {self.character.job}."
+        prompt += "<|user|>"
+        prompt += scenario
+        prompt += (
+            f" Current state: Health {self.character.health_status}/10,"
+            f" Hunger {self.character.hunger_level}/10,"
+            f" Energy {getattr(self.character, 'energy', 5):.1f}/10."
+        )
+        prompt += "\nAvailable actions:\n"
+        for action in actions:
+            prompt += f"{action}\n"
+        prompt += "</s><|assistant|>"
+        prompt += f"{self.character.name}, I choose "
+        return prompt
+
+    def generate_social_interaction_prompt(self, actions: List[str]) -> str:
+        """Generate a prompt for a social interaction scenario."""
+        scenario = "You are about to interact with another villager."
+        return self._build_scenario_prompt(scenario, actions)
+
+    def generate_travel_prompt(self, destination: str, actions: List[str]) -> str:
+        """Generate a prompt for planning travel to ``destination``."""
+        scenario = f"You are considering travelling to {destination}."
+        return self._build_scenario_prompt(scenario, actions)
+
 
     def generate_crisis_response_prompt(
         self, 
