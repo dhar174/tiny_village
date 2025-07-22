@@ -12,6 +12,9 @@ MAX_SPEED = 5.0
 MIN_SPEED = 0.1
 SPEED_STEP = 0.1
 
+# Constants for UI elements
+# MINIMAP_SIZE = 150  # Size of the minimap window
+
 # UI Layout Constants
 ACHIEVEMENT_SPACING = 25
 ACHIEVEMENT_LINE_SPACING = 18
