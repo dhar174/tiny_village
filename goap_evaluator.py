@@ -16,7 +16,6 @@ making it easier to test, maintain, and improve the AI's decision-making process
 """
 
 from ast import Not
-from calendar import c
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import copy
