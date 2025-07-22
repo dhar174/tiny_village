@@ -125,6 +125,9 @@ tiny_globals_obj = TinyGlobals()
 tiny_globals_obj.set("global_calendar", global_calendar)
 tiny_globals_obj.set("global_time_manager", global_time_manager)
 
+# Initialize global GraphManager instance
+_global_graph_manager = None
+
 
 # Add a convenience function to access the global instance
 def get_globals():
@@ -172,3 +175,38 @@ def global_keys():
 def global_values():
     """Get all global variable values."""
     return tiny_globals_obj.values()
+
+
+# GraphManager global instance management
+def initialize_global_graph_manager():
+    """Initialize the global GraphManager instance. Should be called on game start."""
+    global _global_graph_manager
+    if _global_graph_manager is None:
+        try:
+            from tiny_graph_manager import GraphManager
+            _global_graph_manager = GraphManager()
+            tiny_globals_obj.set("global_graph_manager", _global_graph_manager)
+            return _global_graph_manager
+        except ImportError as e:
+            raise ImportError(f"Failed to import GraphManager: {e}")
+    return _global_graph_manager
+
+
+def get_global_graph_manager():
+    """Get the global GraphManager instance. Initializes it if not already done."""
+    global _global_graph_manager
+    if _global_graph_manager is None:
+        return initialize_global_graph_manager()
+    return _global_graph_manager
+
+
+def set_global_graph_manager(graph_manager):
+    """Set the global GraphManager instance. Use with caution."""
+    global _global_graph_manager
+    _global_graph_manager = graph_manager
+    tiny_globals_obj.set("global_graph_manager", graph_manager)
+
+
+def has_global_graph_manager():
+    """Check if the global GraphManager instance is initialized."""
+    return _global_graph_manager is not None

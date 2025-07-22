@@ -1366,14 +1366,22 @@ class GoalGenerator:
     def __init__(
         self,
         personal_motives,
-        graph_manager: GraphManager,
-        goap_planner: GOAPPlanner,
-        prompt_builder: PromptBuilder,
+        graph_manager: GraphManager = None,
+        goap_planner: GOAPPlanner = None,
+        prompt_builder: PromptBuilder = None,
     ):
         GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
 
         self.personal_motives = personal_motives
-        self.graph_manager = graph_manager
+        if graph_manager is None:
+            # Use the global GraphManager instance from tiny_globals
+            try:
+                from tiny_globals import get_global_graph_manager
+                self.graph_manager = get_global_graph_manager()
+            except ImportError:
+                raise ValueError("GraphManager instance required and could not import global instance.")
+        else:
+            self.graph_manager = graph_manager
         self.goap_planner = goap_planner
         self.prompt_builder = prompt_builder
 
@@ -2082,8 +2090,14 @@ class Character:
         self.path = []
         self.speed = 1.0  # Units per tick
         if graph_manager is None:
-            raise ValueError("GraphManager instance required.")
-        self.graph_manager = graph_manager
+            # Use the global GraphManager instance from tiny_globals
+            try:
+                from tiny_globals import get_global_graph_manager
+                self.graph_manager = get_global_graph_manager()
+            except ImportError:
+                raise ValueError("GraphManager instance required and could not import global instance.")
+        else:
+            self.graph_manager = graph_manager
         self.energy = energy
         self.character_actions = [
             Action(

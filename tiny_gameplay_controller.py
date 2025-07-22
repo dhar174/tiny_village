@@ -1311,9 +1311,8 @@ class SystemRecoveryManager:
         """Recover the graph manager system."""
         try:
             if not self.gameplay_controller.graph_manager:
-                from tiny_graph_manager import GraphManager as ActualGraphManager
-
-                self.gameplay_controller.graph_manager = ActualGraphManager()
+                from tiny_globals import get_global_graph_manager
+                self.gameplay_controller.graph_manager = get_global_graph_manager()
                 return True
             return True
         except Exception as e:
@@ -1463,9 +1462,8 @@ class GameplayController:
         # Initialize graph manager if not provided
         if graph_manager is None:
             try:
-                from tiny_graph_manager import GraphManager as ActualGraphManager
-
-                self.graph_manager = ActualGraphManager()
+                from tiny_globals import get_global_graph_manager
+                self.graph_manager = get_global_graph_manager()
             except Exception as e:
                 logger.error(f"Failed to initialize GraphManager: {e}")
                 self.graph_manager = None
