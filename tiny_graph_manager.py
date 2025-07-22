@@ -69,7 +69,7 @@ from tiny_jobs import Job
 
 # from actions import Action, State, ActionSystem
 from tiny_items import ItemInventory, ItemObject, InvestmentPortfolio, Stock
-import tiny_memories  # Temporarily commented out for testing
+# import tiny_memories  # Temporarily commented out for testing
 from tiny_utility_functions import is_goal_achieved
 
 # Graceful fallbacks for optional dependencies
@@ -95,6 +95,9 @@ from social_model import SocialModel
 
 # Import the new GOAP evaluator
 from goap_evaluator import GoapEvaluator, WorldState
+
+# Import the new WorldState class
+from world_state import WorldState
 
 """ Graph Construction
 Defining Nodes:
@@ -723,20 +726,21 @@ class GraphManager:
         self.unique_graph_id = uuid.uuid4()
 
         self.dp_cache = {}
-        self.characters = {}
-        self.locations = {}
-        self.objects = {}
-        self.events = {}
-        self.activities = {}
-        self.jobs = {}
-        self.type_to_dict_map = {
-            "character": self.characters,
-            "location": self.locations,
-            "object": self.objects,
-            "event": self.events,
-            "activity": self.activities,
-            "job": self.jobs,
-        }
+        
+        # Initialize WorldState for graph management
+        self.world_state = WorldState()
+        
+        # Delegate to WorldState for these dictionaries
+        self.characters = self.world_state.characters
+        self.locations = self.world_state.locations
+        self.objects = self.world_state.objects
+        self.events = self.world_state.events
+        self.activities = self.world_state.activities
+        self.jobs = self.world_state.jobs
+        self.stocks = self.world_state.stocks
+        
+        self.type_to_dict_map = self.world_state.type_to_dict_map
+        
         self.character_attributes = None
         self.location_attributes = None
         self.event_attributes = None
@@ -760,10 +764,13 @@ class GraphManager:
             "!=": "ne",
         }
 
+        # Delegate graph access to WorldState
+        self.G = self.world_state.graph
+
         # Initialize GOAP evaluator
         self.goap_evaluator = GoapEvaluator()
 
-        self.G = self.initialize_graph()
+#         self.G = self.initialize_graph()
         
         # Initialize social model with this graph manager as world state
         self.social_model = SocialModel(world_state=self)
@@ -783,10 +790,8 @@ class GraphManager:
         )
 
     def initialize_graph(self):
-        self.G = (
-            nx.MultiDiGraph()
-        )  # Using MultiDiGraph for directional and multiple edges
-        return self.G
+        # Graph is now initialized by WorldState
+        return self.world_state.graph
 
     def get_location(self, name):
         return self.locations.get(name, (0, 0))
@@ -840,173 +845,96 @@ class GraphManager:
                 return self.jobs[node["name"]]
         return None
 
-    # Node Addition Methods
-    def add_character_node(self, char: Character):
-        Character = importlib.import_module("tiny_characters").Character
-
-        if len(self.characters) == 0:
-            self.character_attributes = char.to_dict().keys()
-        self.characters[char.name] = char
-        wealth_money = char.get_wealth_money()
-        has_investment = char.has_investment()
-        self.G.add_node(
-            char,
-            type="character",
-            age=char.age,
-            job=char.job,
-            happiness=char.happiness,
-            energy_level=char.energy,
-            relationships={},  # Stores additional details about relationships
-            emotional_state={},
-            coordinates_location=char.coordinates_location,
-            resources=char.inventory,
-            needed_resources=char.needed_items,  # This is a list of tuples, each tuple is (dict of item requirements, quantity needed).
-            # The dict of item requirements is composed of various keys like item_type, value, usability, sentimental_value, trade_value, scarcity, coordinates_location, name, etc. from either the node or the root class instance.
-            name=char.name,
-            mood=char.current_mood,
-            wealth_money=wealth_money,
-            health_status=char.health_status,
-            hunger_level=char.hunger_level,
-            mental_health=char.mental_health,
-            social_wellbeing=char.social_wellbeing,
-            shelter=char.shelter,
-            has_investment=has_investment,
-        )
+    # Node Addition Methods - Delegate to WorldState
+    def add_character_node(self, char):
+        # Try to get character attributes if available, otherwise use defaults
+        try:
+            Character = importlib.import_module("tiny_characters").Character
+            if len(self.characters) == 0:
+                self.character_attributes = char.to_dict().keys()
+        except (ImportError, ModuleNotFoundError, AttributeError):
+            # If imports fail, skip the attributes setting
+            pass
+        
+        # Delegate to WorldState
+        self.world_state.add_character_node(char)
+        
         logging.debug(
             f"Added character node: \n {char} \n\n with attributes:\n {self.G.nodes[char]}\n"
         )
 
-    def add_location_node(self, loc: Location):
-        from tiny_locations import Location
+    def add_location_node(self, loc):
+        try:
+            from tiny_locations import Location
+            if len(self.locations) == 0:
+                self.location_attributes = loc.to_dict().keys()
+        except (ImportError, ModuleNotFoundError, AttributeError):
+            # If imports fail, skip the attributes setting
+            pass
+        
+        # Delegate to WorldState
+        self.world_state.add_location_node(loc)
 
-        if len(self.locations) == 0:
-            self.location_attributes = loc.to_dict().keys()
-        self.locations[loc.name] = loc
-        self.G.add_node(
-            loc,
-            type="location",
-            popularity=loc.popularity,
-            activities_available=loc.activities_available,
-            accessible=loc.accessible,
-            security=loc.security,
-            coordinates_location=loc.coordinates_location,
-            name=loc.name,
-            threat_level=loc.threat_level,
-            visit_count=loc.visit_count,
-        )
+    def add_event_node(self, event):
+        try:
+            from tiny_event_handler import Event
+            if len(self.events) == 0:
+                self.event_attributes = event.to_dict().keys()
+        except (ImportError, ModuleNotFoundError, AttributeError):
+            # If imports fail, skip the attributes setting
+            pass
+        
+        # Delegate to WorldState
+        self.world_state.add_event_node(event)
 
-    def add_event_node(self, event: Event):
-        from tiny_event_handler import Event
+    def add_object_node(self, obj):
+        try:
+            if len(self.objects) == 0:
+                self.object_attributes = obj.to_dict().keys()
+        except (AttributeError):
+            # If to_dict method doesn't exist, skip the attributes setting
+            pass
+        
+        # Delegate to WorldState
+        self.world_state.add_object_node(obj)
 
-        if len(self.events) == 0:
-            self.event_attributes = event.to_dict().keys()
-        self.events[event.name] = event
-        self.G.add_node(
-            event,
-            type="event",
-            event_type=event.type,
-            date=event.date,
-            importance=event.importance,
-            impact=event.impact,
-            required_items=event.required_items,
-            coordinates_location=event.coordinates_location,
-            name=event.name,
-        )
+    def add_stock_node(self, stock):
+        try:
+            if len(self.stocks) == 0:
+                self.stock_attributes = stock.to_dict().keys()
+        except (AttributeError):
+            # If to_dict method doesn't exist, skip the attributes setting
+            pass
+        
+        # Delegate to WorldState
+        self.world_state.add_stock_node(stock)
 
-    def add_object_node(self, obj: ItemObject):
-        if len(self.objects) == 0:
-            self.object_attributes = obj.to_dict().keys()
-        self.objects[obj.name] = obj
-        self.G.add_node(
-            obj,
-            type="object",
-            item_type=obj.item_type,
-            item_subtype=obj.item_subtype,
-            value=obj.value,
-            usability=obj.usability,
-            # scarcity=obj.scarcity,
-            coordinates_location=obj.coordinates_location,
-            name=obj.name,
-            ownership_history=obj.ownership_history,
-            type_specific_attributes=(
-                obj.get_type_specific_attributes()
-                if obj.type_specific_attributes
-                else {}
-            ),
-        )
+    def add_activity_node(self, act):
+        try:
+            Action = importlib.import_module("actions").Action
+            if len(self.activities) == 0:
+                self.activity_attributes = act.to_dict().keys()
+        except (ImportError, ModuleNotFoundError, AttributeError):
+            # If imports fail, skip the attributes setting
+            pass
+        
+        # Delegate to WorldState
+        self.world_state.add_activity_node(act)
 
-    def add_stock_node(self, stock: Stock):
-
-        if len(self.stocks) == 0:
-            self.stock_attributes = stock.to_dict().keys()
-        self.stocks[stock.name] = stock
-        self.G.add_node(
-            stock,
-            type="stock",
-            stock_type=stock.stock_type,
-            stock_description=stock.stock_description,
-            value=stock.value,
-            scarcity=stock.scarcity,
-            name=stock.name,
-            ownership_history=stock.ownership_history,
-            type_specific_attributes=(
-                stock.get_type_specific_attributes()
-                if stock.type_specific_attributes
-                else {}
-            ),
-        )
-
-    def add_activity_node(self, act: Action):
-        Action = importlib.import_module("actions").Action
-
-        if len(self.activities) == 0:
-            self.activity_attributes = act.to_dict().keys()
-        self.activities[act.name] = act
-        self.G.add_node(
-            act,
-            type="activity",
-            related_skills=act.related_skills,
-            name=act.name,
-            required_items=act.required_items,
-            preconditions=act.preconditions,
-            effects=act.effects,
-        )
-
-    def add_job_node(self, job: Job):
-        if len(self.jobs) == 0:
-            self.job_attributes = job.to_dict().keys()
-        self.jobs[job.job_name] = job
-        self.G.add_node(
-            job,
-            type="job",
-            required_skills=job.job_skills,
-            location=job.location,
-            salary=job.job_salary,
-            job_title=job.job_title,
-            available=job.available,
-            name=job.job_name,
-        )
+    def add_job_node(self, job):
+        try:
+            if len(self.jobs) == 0:
+                self.job_attributes = job.to_dict().keys()
+        except (AttributeError):
+            # If to_dict method doesn't exist, skip the attributes setting
+            pass
+        
+        # Delegate to WorldState
+        self.world_state.add_job_node(job)
 
     def add_dict_of_nodes(self, nodes_dict):
-        for node_type, nodes in nodes_dict.items():
-            if node_type == "characters":
-                for char in nodes:
-                    self.add_character_node(char)
-            elif node_type == "locations":
-                for loc in nodes:
-                    self.add_location_node(loc)
-            elif node_type == "events":
-                for event in nodes:
-                    self.add_event_node(event)
-            elif node_type == "objects":
-                for obj in nodes:
-                    self.add_object_node(obj)
-            elif node_type == "activities":
-                for act in nodes:
-                    self.add_activity_node(act)
-            elif node_type == "jobs":
-                for job in nodes:
-                    self.add_job_node(job)
+        # Delegate to WorldState
+        self.world_state.add_dict_of_nodes(nodes_dict)
 
     # Edge Addition Methods with Detailed Attributes
     # Character-Character
@@ -2686,10 +2614,8 @@ class GraphManager:
         Usage example:
             graph_manager.update_node_attribute('char1', 'mood', 'happy')
         """
-        if node in self.G:
-            self.G.nodes[node][attribute] = value
-        else:
-            raise ValueError("Node does not exist in the graph.")
+        # Delegate to WorldState
+        self.world_state.update_node_attribute(node, attribute, value)
 
     def find_all_paths(self, source, target, max_length=None):
         """
@@ -2759,10 +2685,8 @@ class GraphManager:
         Usage example:
             graph_manager.update_edge_attribute('char1', 'char2', 'trust', 75)
         """
-        # Access the mutable dictionary of the edge attributes
-        edge_data = self.G.edges[node1, node2]
-        # Update the attribute
-        edge_data[attribute] = value
+        # Delegate to WorldState
+        self.world_state.update_edge_attribute(node1, node2, attribute, value)
 
     def evaluate_relationship_strength(self, char1, char2):
         """
