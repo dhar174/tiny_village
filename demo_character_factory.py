@@ -31,8 +31,10 @@ try:
     # For now, let's work with a simplified approach that demonstrates the concept
     # while avoiding the heavy ML dependencies during development
     
-    print("Note: Using simplified demo approach to avoid ML dependencies.")
-    print("In full deployment, this would use the complete Character class.")
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    logging.info("Note: Using simplified demo approach to avoid ML dependencies.")
+    logging.info("In full deployment, this would use the complete Character class.")
     
     # Create a realistic Character interface for demo purposes
     # This maintains the real interface while avoiding heavy dependencies
