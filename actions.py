@@ -351,11 +351,10 @@ class Action:
         if graph_manager is not None:
             self.graph_manager = graph_manager
         else:
-            # Fallback to the singleton instance if no graph_manager is explicitly passed.
-            # This maintains some backward compatibility but explicit passing is preferred.
+            # Use the global GraphManager instance from tiny_globals
             try:
-                GraphManager_module = importlib.import_module("tiny_graph_manager")
-                self.graph_manager = GraphManager_module.GraphManager()
+                from tiny_globals import get_global_graph_manager
+                self.graph_manager = get_global_graph_manager()
             except ImportError:
                 # Graph manager is optional for core Action functionality
                 self.graph_manager = None
@@ -659,8 +658,8 @@ class Action:
 
         if not self.graph_manager:
             try:
-                GraphManager_module = importlib.import_module("tiny_graph_manager")
-                self.graph_manager = GraphManager_module.GraphManager()
+                from tiny_globals import get_global_graph_manager
+                self.graph_manager = get_global_graph_manager()
             except ImportError:
                 # Graph manager is optional for core Action functionality
                 self.graph_manager = None
@@ -1116,7 +1115,15 @@ class CompositeAction(Action):
 class ActionGenerator:
     def __init__(self, graph_manager=None):
         self.templates = []
-        self.graph_manager = graph_manager
+        if graph_manager is not None:
+            self.graph_manager = graph_manager
+        else:
+            # Use global GraphManager instance
+            try:
+                from tiny_globals import get_global_graph_manager
+                self.graph_manager = get_global_graph_manager()
+            except ImportError:
+                self.graph_manager = None
 
     def add_template(self, template):
         self.templates.append(template)
