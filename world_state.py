@@ -19,7 +19,7 @@ class WorldState:
     """
     WorldState manages the core graph data structure for the tiny_village simulation.
     
-    This class encapsulates the networkx.DiGraph and provides basic CRUD operations
+    This class encapsulates the networkx.MultiDiGraph and provides basic CRUD operations
     for nodes and edges without implementing business logic or complex analysis.
     """
     
