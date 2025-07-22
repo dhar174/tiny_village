@@ -3781,7 +3781,7 @@ class GraphManager:
             return self.graph_analytics.get_filtered_nodes(**kwargs)
         
         # For complex GraphManager-specific filters, keep the original logic
-        filtered_nodes = set(self.graph.nodes)
+        filtered_nodes = set(self.G.nodes)
 
         action_effects = kwargs.get("action_effects")
         if action_effects:
@@ -3873,7 +3873,7 @@ class GraphManager:
         # (Additional complex filtering logic would go here)
 
         return {
-            n: self.graph.nodes[n] for n in filtered_nodes
+            n: self.G.nodes[n] for n in filtered_nodes
         }
 
     def get_available_jobs(self):
