@@ -2752,35 +2752,9 @@ class GameplayController:
         update_errors = []
         systems_to_recover = []
 
-        # Integrated event-driven strategy update (from legacy update method)
+        # Robust event-driven strategy update using EventHandler
         try:
-            # Check for new events if event handler exists
-            events = []
-            if self.event_handler:
-                try:
-                    events = self.event_handler.check_events()
-                except Exception as e:
-                    logger.warning(f"Error checking events: {e}")
-                    update_errors.append("Event checking failed")
-
-            # Update strategy based on events if strategy manager exists
-            decisions = []
-            if self.strategy_manager:
-                try:
-                    decisions = self.strategy_manager.update_strategy(events if events else [])
-                except Exception as e:
-                    logger.warning(f"Error updating strategy: {e}")
-                    update_errors.append("Strategy update failed")
-
-            # Apply decisions to game state
-            for decision in decisions:
-                try:
-                    # Pass None as game_state since update_game_state doesn't have access to it
-                    # The decision application logic will use the controller's internal state
-                    self.apply_decision(decision, None)
-                except Exception as e:
-                    logger.error(f"Error applying decision: {e}")
-                    update_errors.append(f"Decision application failed")
+            self._process_events_and_drive_strategy(update_errors)
         except Exception as e:
             logger.error(f"Error in event-driven strategy update: {e}")
             update_errors.append("Event-driven strategy update failed")
@@ -2835,17 +2809,8 @@ class GameplayController:
                 logger.warning(f"Error updating animation system: {e}")
                 # Animation errors are not critical
 
-        # Process events using the EventHandler system and drive strategy
-        try:
-            if self.event_handler:
-                self._process_events_and_update_strategy(dt)
-            elif hasattr(self, "events") and self.events:
-                # Fallback to basic event processing if no EventHandler
-                self._process_pending_events()
-        except Exception as e:
-            logger.error(f"Error processing events and strategy: {e}")
-            update_errors.append("Event processing failed")
-            systems_to_recover.append("event_handler")
+        # Note: Event processing and strategy update is now handled above in _process_events_and_drive_strategy
+        # No need for separate event processing calls
 
         # Update feature systems
         try:
@@ -3498,38 +3463,225 @@ class GameplayController:
             # Return empty list if we can't even create basic actions
             return []
 
-    def _process_events_and_update_strategy(self, dt):
-        """Process events via EventHandler and update strategy accordingly."""
+    def _process_events_and_drive_strategy(self, update_errors):
+        """
+        Robust event processing and strategy driving using EventHandler.check_events().
+        
+        This method replaces the previous insufficient _process_pending_events and
+        consolidates all event-driven strategy logic into a single, comprehensive approach.
+        
+        Args:
+            update_errors (list): List to append any errors encountered during processing
+        """
+        if not self.event_handler:
+            # Fallback to basic event processing for legacy compatibility
+            self._process_basic_events_fallback(update_errors)
+            return
+
         try:
-            if not self.event_handler:
+            # Step 1: Check for events using EventHandler - this is the primary driver
+            events = []
+            try:
+                events = self.event_handler.check_events()
+                logger.debug(f"EventHandler found {len(events)} events to process")
+            except Exception as e:
+                logger.warning(f"Error checking events via EventHandler: {e}")
+                update_errors.append("Event checking failed")
                 return
 
-            # Get events from event handler
-            events = self.event_handler.check_events()
+            # Step 2: Process events if any were found
+            if events:
+                try:
+                    # Let EventHandler process the events and their effects
+                    event_results = self.event_handler.process_events()
+                    logger.debug(f"EventHandler processed events: {len(event_results.get('processed_events', []))} successful")
+                    
+                    # Handle event processing results
+                    if event_results.get('failed_events'):
+                        logger.warning(f"Some events failed processing: {event_results['failed_events']}")
+                        update_errors.append(f"Event processing failures: {len(event_results['failed_events'])}")
+                        
+                except Exception as e:
+                    logger.warning(f"Error processing events: {e}")
+                    update_errors.append("Event processing failed")
+
+            # Step 3: Update strategy based on events (whether processed or not)
+            strategy_result = None
+            if self.strategy_manager:
+                try:
+                    # Strategy manager should receive all events to make informed decisions
+                    strategy_result = self.strategy_manager.update_strategy(events)
+                    logger.debug(f"StrategyManager generated strategy result: {type(strategy_result)}")
+                except Exception as e:
+                    logger.warning(f"Error updating strategy based on events: {e}")
+                    update_errors.append("Strategy update failed")
+
+            # Step 4: Apply strategic result to game state
+            self._apply_strategy_result(strategy_result, update_errors)
             
-            # Update strategy manager based on events
-            if self.strategy_manager and events:
-                decisions = self.strategy_manager.update_strategy(events)
+            # Step 5: Handle cascading events and dynamic event generation
+            self._handle_cascading_and_dynamic_events(events, update_errors)
+            
+        except Exception as e:
+            logger.error(f"Critical error in event-driven strategy processing: {e}")
+            update_errors.append("Event-driven strategy system failure")
+
+    def _apply_strategy_result(self, strategy_result, update_errors):
+        """Apply strategy result from the strategy manager, handling different return types."""
+        if strategy_result is None:
+            return
+            
+        try:
+            # Handle different types of strategy results
+            if isinstance(strategy_result, list):
+                # List of decisions - apply each one
+                for i, decision in enumerate(strategy_result):
+                    try:
+                        if decision:
+                            self.apply_decision(decision, None)
+                            logger.debug(f"Applied strategic decision {i+1}/{len(strategy_result)}")
+                        else:
+                            logger.warning(f"Received empty decision at index {i}")
+                    except Exception as e:
+                        logger.error(f"Error applying strategic decision {i}: {e}")
+                        update_errors.append(f"Decision application failed (decision {i})")
+                        continue
+            
+            elif hasattr(strategy_result, 'execute'):
+                # Single action - execute it directly
+                try:
+                    success = strategy_result.execute()
+                    if success:
+                        logger.debug(f"Successfully executed strategy action: {strategy_result.name}")
+                        self.game_statistics["actions_executed"] += 1
+                    else:
+                        logger.warning(f"Strategy action execution failed: {strategy_result.name}")
+                        self.game_statistics["actions_failed"] += 1
+                        update_errors.append("Strategy action execution failed")
+                        
+                    # Track action execution for analytics
+                    if hasattr(self, 'action_resolver'):
+                        self.action_resolver.track_action_execution(strategy_result, None, success)
+                        
+                except Exception as e:
+                    logger.error(f"Error executing strategy action: {e}")
+                    update_errors.append("Strategy action execution error")
+            
+            elif isinstance(strategy_result, dict):
+                # Dictionary decision - apply it as a single decision
+                try:
+                    self.apply_decision(strategy_result, None)
+                    logger.debug("Applied dictionary-based strategic decision")
+                except Exception as e:
+                    logger.error(f"Error applying dictionary decision: {e}")
+                    update_errors.append("Dictionary decision application failed")
+            
+            else:
+                # Unknown type - log warning but don't fail
+                logger.warning(f"Unknown strategy result type: {type(strategy_result)}. Skipping application.")
                 
-                # Apply decisions to game state
-                for decision in decisions:
-                    self.apply_decision(decision, None)
+        except Exception as e:
+            logger.error(f"Critical error applying strategy result: {e}")
+            update_errors.append("Strategy result application failure")
+
+    def _apply_strategic_decisions(self, decisions, update_errors):
+        """
+        DEPRECATED: Use _apply_strategy_result instead.
+        Apply strategic decisions generated by the strategy manager.
+        """
+        logger.warning("_apply_strategic_decisions is deprecated. Use _apply_strategy_result instead.")
+        self._apply_strategy_result(decisions, update_errors)
+
+    def _handle_cascading_and_dynamic_events(self, events, update_errors):
+        """Handle cascading events and generate new dynamic events based on current state."""
+        try:
+            # Process any cascading events that were triggered
+            if self.event_handler and hasattr(self.event_handler, 'process_cascading_queue'):
+                cascading_processed = self.event_handler.process_cascading_queue()
+                if cascading_processed:
+                    logger.info(f"Processed {len(cascading_processed)} cascading events")
+
+            # Generate dynamic events based on current world state
+            if self.event_handler and hasattr(self.event_handler, 'generate_dynamic_events'):
+                world_state = self._get_current_world_state()
+                dynamic_events = self.event_handler.generate_dynamic_events(
+                    world_state, 
+                    list(self.characters.values()) if self.characters else None
+                )
+                if dynamic_events:
+                    logger.info(f"Generated {len(dynamic_events)} dynamic events")
                     
         except Exception as e:
-            logger.error(f"Error processing events and updating strategy: {e}")
+            logger.warning(f"Error handling cascading/dynamic events: {e}")
+            update_errors.append("Cascading event processing failed")
 
-    def _process_pending_events(self):
-        """Process any pending events in the basic events list."""
+    def _get_current_world_state(self):
+        """Get current world state for dynamic event generation."""
         try:
+            if not self.characters:
+                return {"average_wealth": 50, "average_relationships": 50, "average_health": 75}
+                
+            # Calculate averages for world state analysis
+            total_chars = len(self.characters)
+            avg_wealth = sum(getattr(char, 'wealth_money', 50) for char in self.characters.values()) / total_chars
+            avg_health = sum(getattr(char, 'health_status', 75) for char in self.characters.values()) / total_chars
+            
+            # Calculate average relationships if social networks exist
+            avg_relationships = 50
+            if hasattr(self, 'social_networks') and self.social_networks.get('relationships'):
+                relationship_values = []
+                for char_relationships in self.social_networks['relationships'].values():
+                    relationship_values.extend(char_relationships.values())
+                if relationship_values:
+                    avg_relationships = sum(relationship_values) / len(relationship_values)
+            
+            return {
+                "average_wealth": avg_wealth,
+                "average_relationships": avg_relationships,
+                "average_health": avg_health,
+                "population": total_chars,
+                "time": pygame.time.get_ticks() if 'pygame' in globals() else 0
+            }
+            
+        except Exception as e:
+            logger.warning(f"Error calculating world state: {e}")
+            return {"average_wealth": 50, "average_relationships": 50, "average_health": 75}
+
+    def _process_basic_events_fallback(self, update_errors):
+        """
+        Fallback event processing when EventHandler is not available.
+        This is a much improved version of the old _process_pending_events.
+        """
+        try:
+            if not hasattr(self, "events") or not self.events:
+                return
+                
+            logger.info("Using fallback event processing (EventHandler not available)")
             events_to_remove = []
+            
             for event in self.events:
                 try:
-                    # Process event logic here
-                    # This is a basic fallback when EventHandler is not available
-                    logger.debug(f"Processing basic event: {event}")
+                    # Basic event processing that actually drives strategy
+                    logger.debug(f"Processing fallback event: {event}")
+                    
+                    # Try to trigger strategy update even for basic events
+                    if self.strategy_manager:
+                        try:
+                            # Convert basic event to a format strategy manager can understand
+                            event_for_strategy = {
+                                'type': getattr(event, 'type', 'general'),
+                                'name': getattr(event, 'name', str(event)),
+                                'importance': getattr(event, 'importance', 5)
+                            }
+                            strategy_result = self.strategy_manager.update_strategy([event_for_strategy])
+                            self._apply_strategy_result(strategy_result, update_errors)
+                        except Exception as e:
+                            logger.warning(f"Error applying strategy for basic event: {e}")
+                    
                     events_to_remove.append(event)
+                    
                 except Exception as e:
-                    logger.warning(f"Error processing event: {e}")
+                    logger.warning(f"Error processing basic event: {e}")
                     events_to_remove.append(event)  # Remove problematic events
             
             # Remove processed events
@@ -3537,8 +3689,31 @@ class GameplayController:
                 if event in self.events:
                     self.events.remove(event)
                     
+            if events_to_remove:
+                logger.debug(f"Processed {len(events_to_remove)} basic events")
+                    
         except Exception as e:
-            logger.error(f"Error processing pending events: {e}")
+            logger.error(f"Error in fallback event processing: {e}")
+            update_errors.append("Fallback event processing failed")
+
+    def _process_pending_events(self):
+        """
+        DEPRECATED: This method has been replaced by _process_events_and_drive_strategy.
+        Kept for backward compatibility but now delegates to the new robust implementation.
+        """
+        logger.warning("_process_pending_events is deprecated. Use _process_events_and_drive_strategy instead.")
+        update_errors = []
+        self._process_basic_events_fallback(update_errors)
+        if update_errors:
+            logger.warning(f"Deprecated _process_pending_events completed with errors: {update_errors}")
+
+    def _process_events_and_update_strategy(self, dt):
+        """
+        DEPRECATED: This method has been replaced by _process_events_and_drive_strategy.
+        Kept for backward compatibility but functionality is now integrated into update_game_state.
+        """
+        logger.warning("_process_events_and_update_strategy is deprecated. Event processing is now integrated into update_game_state.")
+        # No operation - functionality moved to _process_events_and_drive_strategy
 
     def apply_decision(self, decision, game_state):
         """Apply a strategic decision to the game state."""
