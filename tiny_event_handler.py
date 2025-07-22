@@ -321,7 +321,8 @@ class EventHandler:
     def add_event(self, event):
         """Add an event to the handler and register it in the graph."""
         self.events.append(event)
-        self.graph_manager.add_event_node(event)
+        if self.graph_manager:
+            self.graph_manager.add_event_node(event)
         logging.info(f"Added event: {event.name}")
 
     def remove_event(self, event_name: str) -> bool:
@@ -943,6 +944,325 @@ class EventHandler:
                     }
                 ],
             },
+            # Enhanced templates for emergent storytelling
+            "mysterious_stranger": {
+                "type": "social",
+                "importance": 7,
+                "impact": 4,
+                "effects": [
+                    {
+                        "type": "attribute_change",
+                        "targets": ["participants"],
+                        "attribute": "curiosity",
+                        "change_value": 15,
+                    },
+                    {
+                        "type": "attribute_change",
+                        "targets": ["location"],
+                        "attribute": "mystery_level",
+                        "change_value": 20,
+                    },
+                ],
+                "cascading_events": [
+                    {
+                        "name": "stranger_reveals_quest",
+                        "type": "quest",
+                        "delay": 48,  # 2 days later
+                        "effects": [
+                            {
+                                "type": "attribute_change",
+                                "targets": ["participants"],
+                                "attribute": "adventure_opportunity",
+                                "change_value": 25,
+                            }
+                        ],
+                    }
+                ],
+                "max_participants": 5,
+            },
+            "community_project": {
+                "type": "work",
+                "importance": 8,
+                "impact": 6,
+                "effects": [
+                    {
+                        "type": "attribute_change",
+                        "targets": ["participants"],
+                        "attribute": "community_pride",
+                        "change_value": 20,
+                    },
+                    {
+                        "type": "attribute_change",
+                        "targets": ["location"],
+                        "attribute": "infrastructure",
+                        "change_value": 30,
+                    },
+                ],
+                "preconditions": [
+                    {
+                        "type": "attribute_check",
+                        "target": "participants",
+                        "attribute": "energy",
+                        "operator": ">=",
+                        "threshold": 40,
+                    }
+                ],
+                "cascading_events": [
+                    {
+                        "name": "project_celebration",
+                        "type": "social",
+                        "delay": 24,
+                        "effects": [
+                            {
+                                "type": "attribute_change",
+                                "targets": ["participants"],
+                                "attribute": "satisfaction",
+                                "change_value": 15,
+                            }
+                        ],
+                    }
+                ],
+                "max_participants": 20,
+                "required_items": ["tools", "materials"],
+            },
+            "lost_traveler": {
+                "type": "social",
+                "importance": 6,
+                "impact": 3,
+                "effects": [
+                    {
+                        "type": "attribute_change",
+                        "targets": ["participants"],
+                        "attribute": "helpfulness",
+                        "change_value": 10,
+                    },
+                    {
+                        "type": "relationship_change",
+                        "targets": ["participants"],
+                        "attribute": "reputation",
+                        "change_value": 8,
+                    },
+                ],
+                "cascading_events": [
+                    {
+                        "name": "traveler_reward",
+                        "type": "economic",
+                        "delay": 12,
+                        "effects": [
+                            {
+                                "type": "attribute_change",
+                                "targets": ["participants"],
+                                "attribute": "wealth",
+                                "change_value": 15,
+                            }
+                        ],
+                    }
+                ],
+                "max_participants": 3,
+            },
+            "rival_village_challenge": {
+                "type": "competition",
+                "importance": 9,
+                "impact": 5,
+                "effects": [
+                    {
+                        "type": "attribute_change",
+                        "targets": ["participants"],
+                        "attribute": "competitive_spirit",
+                        "change_value": 20,
+                    },
+                    {
+                        "type": "attribute_change",
+                        "targets": ["location"],
+                        "attribute": "prestige",
+                        "change_value": 15,
+                    },
+                ],
+                "preconditions": [
+                    {
+                        "type": "attribute_check",
+                        "target": "participants",
+                        "attribute": "skill_level",
+                        "operator": ">=",
+                        "threshold": 50,
+                    }
+                ],
+                "cascading_events": [
+                    {
+                        "name": "victory_celebration",
+                        "type": "social",
+                        "delay": 6,
+                        "effects": [
+                            {
+                                "type": "attribute_change",
+                                "targets": ["participants"],
+                                "attribute": "confidence",
+                                "change_value": 25,
+                            }
+                        ],
+                    },
+                    {
+                        "name": "improved_relations",
+                        "type": "diplomatic",
+                        "delay": 72,
+                        "effects": [
+                            {
+                                "type": "attribute_change",
+                                "targets": ["location"],
+                                "attribute": "diplomatic_standing",
+                                "change_value": 20,
+                            }
+                        ],
+                    }
+                ],
+                "max_participants": 15,
+            },
+            "ancient_discovery": {
+                "type": "mystery",
+                "importance": 10,
+                "impact": 8,
+                "effects": [
+                    {
+                        "type": "attribute_change",
+                        "targets": ["participants"],
+                        "attribute": "knowledge",
+                        "change_value": 30,
+                    },
+                    {
+                        "type": "attribute_change",
+                        "targets": ["location"],
+                        "attribute": "historical_significance",
+                        "change_value": 50,
+                    },
+                ],
+                "cascading_events": [
+                    {
+                        "name": "research_expedition",
+                        "type": "quest",
+                        "delay": 48,
+                        "effects": [
+                            {
+                                "type": "attribute_change",
+                                "targets": ["participants"],
+                                "attribute": "expertise",
+                                "change_value": 20,
+                            }
+                        ],
+                    },
+                    {
+                        "name": "scholarly_visitors",
+                        "type": "social",
+                        "delay": 168,  # 1 week
+                        "effects": [
+                            {
+                                "type": "attribute_change",
+                                "targets": ["location"],
+                                "attribute": "intellectual_activity",
+                                "change_value": 25,
+                            }
+                        ],
+                    }
+                ],
+                "max_participants": 8,
+                "required_items": ["research_tools", "expertise"],
+            },
+            "seasonal_illness": {
+                "type": "crisis",
+                "importance": 8,
+                "impact": -6,
+                "effects": [
+                    {
+                        "type": "attribute_change",
+                        "targets": ["participants"],
+                        "attribute": "health",
+                        "change_value": -15,
+                    },
+                    {
+                        "type": "attribute_change",
+                        "targets": ["location"],
+                        "attribute": "medical_demand",
+                        "change_value": 30,
+                    },
+                ],
+                "cascading_events": [
+                    {
+                        "name": "community_care",
+                        "type": "social",
+                        "delay": 12,
+                        "effects": [
+                            {
+                                "type": "relationship_change",
+                                "targets": ["participants"],
+                                "attribute": "mutual_support",
+                                "change_value": 20,
+                            }
+                        ],
+                    },
+                    {
+                        "name": "health_recovery",
+                        "type": "healing",
+                        "delay": 72,
+                        "effects": [
+                            {
+                                "type": "attribute_change",
+                                "targets": ["participants"],
+                                "attribute": "health",
+                                "change_value": 20,
+                            }
+                        ],
+                    }
+                ],
+                "max_participants": 50,
+            },
+            "master_craftsman_visit": {
+                "type": "educational",
+                "importance": 7,
+                "impact": 5,
+                "effects": [
+                    {
+                        "type": "attribute_change",
+                        "targets": ["participants"],
+                        "attribute": "skill_improvement",
+                        "change_value": 25,
+                    },
+                    {
+                        "type": "attribute_change",
+                        "targets": ["location"],
+                        "attribute": "crafting_knowledge",
+                        "change_value": 20,
+                    },
+                ],
+                "cascading_events": [
+                    {
+                        "name": "advanced_workshop",
+                        "type": "educational",
+                        "delay": 24,
+                        "effects": [
+                            {
+                                "type": "attribute_change",
+                                "targets": ["participants"],
+                                "attribute": "expertise",
+                                "change_value": 15,
+                            }
+                        ],
+                    },
+                    {
+                        "name": "apprenticeship_opportunity",
+                        "type": "career",
+                        "delay": 48,
+                        "effects": [
+                            {
+                                "type": "attribute_change",
+                                "targets": ["participants"],
+                                "attribute": "career_prospects",
+                                "change_value": 30,
+                            }
+                        ],
+                    }
+                ],
+                "max_participants": 10,
+                "required_items": ["workshop_space", "tools"],
+            },
         }
 
     def create_event_from_template(
@@ -1089,3 +1409,268 @@ class EventHandler:
         removed_count = initial_count - len(self.processed_events)
         logging.info(f"Cleaned up {removed_count} old processed events")
         return removed_count
+
+    def initialize_world_events(self, characters=None, locations=None):
+        """Initialize a variety of world events for emergent storytelling."""
+        try:
+            current_time = datetime.now()
+            
+            # Create initial recurring events
+            self._create_recurring_world_events(current_time)
+            
+            # Create character-specific events if characters provided
+            if characters:
+                self._create_character_driven_events(characters, current_time)
+                
+            # Create location-specific events if locations provided
+            if locations:
+                self._create_location_driven_events(locations, current_time)
+                
+            # Create some mystery/discovery events for emergent stories
+            self._create_mystery_events(current_time)
+            
+            # Trigger lazy creation of recurring events
+            self._lazy_create_recurring_events(current_time)
+            logging.info(f"Initialized {len(self.events)} world events for emergent storytelling")
+            
+        except Exception as e:
+            logging.error(f"Error initializing world events: {e}")
+
+    def _create_recurring_world_events(self, current_time):
+        """Schedule recurring events for lazy creation."""
+        self.recurring_event_templates = [
+            {
+                "template_id": "merchant_arrival",
+                "name": "Weekly Market Day",
+                "timing_offset": random.randint(1, 7),
+                "recurrence_pattern": {"type": "weekly", "interval": 1},
+            },
+            {
+                "template_id": "community_project",
+                "name": "Village Improvement Project",
+                "timing_offset": random.randint(10, 30),
+                "recurrence_pattern": {"type": "monthly", "interval": 1},
+            },
+            {
+                "template_id": "village_festival",
+                "name": "Seasonal Celebration",
+                "timing_offset": random.randint(30, 90),
+                "recurrence_pattern": {"type": "yearly", "interval": 1},
+            },
+        ]
+        logging.info("Recurring event templates scheduled for lazy creation.")
+        """Create recurring events lazily based on templates."""
+        for template in self.recurring_event_templates:
+            event = self.create_event_from_template(
+                template["template_id"],
+                template["name"],
+                current_time + timedelta(days=template["timing_offset"]),
+                recurrence_pattern=template["recurrence_pattern"],
+            )
+            if event:
+                self.add_event(event)
+        logging.info("Lazy creation of recurring events completed.")
+    def _create_character_driven_events(self, characters, current_time):
+        """Create events based on character interactions and stories."""
+        if not characters or len(characters) < 2:
+            return
+            
+        # Create potential relationship events
+        for i, char1 in enumerate(characters):
+            for char2 in characters[i+1:]:
+                if random.random() < 0.1:  # 10% chance for relationship event
+                    event_time = current_time + timedelta(days=random.randint(1, 14))
+                    
+                    # Choose random social event type
+                    event_types = ["mysterious_stranger", "lost_traveler", "master_craftsman_visit"]
+                    event_template = random.choice(event_types)
+                    
+                    relationship_event = self.create_event_from_template(
+                        event_template,
+                        f"Encounter between {char1.name if hasattr(char1, 'name') else 'Character'} and {char2.name if hasattr(char2, 'name') else 'Character'}",
+                        event_time,
+                        participants=[char1, char2]
+                    )
+                    if relationship_event:
+                        self.add_event(relationship_event)
+
+    def _create_location_driven_events(self, locations, current_time):
+        """Create events based on locations and their characteristics."""
+        for location in locations:
+            if random.random() < 0.2:  # 20% chance for location event
+                event_time = current_time + timedelta(days=random.randint(1, 21))
+                
+                # Choose appropriate event based on location type
+                location_type = getattr(location, 'type', 'generic')
+                
+                if location_type in ['market', 'commercial']:
+                    event = self.create_event_from_template(
+                        "merchant_arrival",
+                        f"Trade Activity at {location.name if hasattr(location, 'name') else 'Location'}",
+                        event_time,
+                        location=location
+                    )
+                elif location_type in ['civic', 'community']:
+                    event = self.create_event_from_template(
+                        "community_project",
+                        f"Community Gathering at {location.name if hasattr(location, 'name') else 'Location'}",
+                        event_time,
+                        location=location
+                    )
+                else:
+                    event = self.create_event_from_template(
+                        "ancient_discovery",
+                        f"Discovery at {location.name if hasattr(location, 'name') else 'Location'}",
+                        event_time,
+                        location=location
+                    )
+                    
+                if event:
+                    self.add_event(event)
+
+    def _create_mystery_events(self, current_time):
+        """Create mystery and discovery events for emergent storytelling."""
+        # Ancient discovery event
+        discovery_time = current_time + timedelta(days=random.randint(5, 30))
+        discovery_event = self.create_event_from_template(
+            "ancient_discovery",
+            "Ancient Ruins Discovered",
+            discovery_time
+        )
+        if discovery_event:
+            self.add_event(discovery_event)
+            
+        # Mysterious stranger event
+        stranger_time = current_time + timedelta(days=random.randint(3, 14))
+        stranger_event = self.create_event_from_template(
+            "mysterious_stranger",
+            "Mysterious Traveler Arrives",
+            stranger_time
+        )
+        if stranger_event:
+            self.add_event(stranger_event)
+            
+        # Rival village challenge
+        challenge_time = current_time + timedelta(days=random.randint(21, 60))
+        challenge_event = self.create_event_from_template(
+            "rival_village_challenge",
+            "Challenge from Neighboring Village",
+            challenge_time
+        )
+        if challenge_event:
+            self.add_event(challenge_event)
+
+    def generate_dynamic_events(self, world_state, characters=None):
+        """Generate events dynamically based on current world state."""
+        try:
+            current_time = datetime.now()
+            generated_events = []
+            
+            # Analyze world state to determine appropriate events
+            if isinstance(world_state, dict):
+                # Economic events based on wealth levels
+                avg_wealth = world_state.get('average_wealth', 50)
+                if avg_wealth < 30:
+                    # Economic crisis - create aid events
+                    aid_event = self.create_event_from_template(
+                        "merchant_arrival",
+                        "Emergency Trade Caravan",
+                        current_time + timedelta(hours=random.randint(6, 24)),
+                        importance=8,
+                        impact=5
+                    )
+                    if aid_event:
+                        generated_events.append(aid_event)
+                        
+                elif avg_wealth > 80:
+                    # Prosperity - create celebration events
+                    prosperity_event = self.create_event_from_template(
+                        "village_festival",
+                        "Prosperity Celebration",
+                        current_time + timedelta(days=random.randint(1, 7)),
+                        importance=7,
+                        impact=4
+                    )
+                    if prosperity_event:
+                        generated_events.append(prosperity_event)
+                
+                # Social events based on relationship levels
+                avg_relationships = world_state.get('average_relationships', 50)
+                if avg_relationships < 30:
+                    # Social tensions - create community building events
+                    unity_event = self.create_event_from_template(
+                        "community_project",
+                        "Community Unity Project",
+                        current_time + timedelta(days=random.randint(1, 5)),
+                        importance=8,
+                        impact=6
+                    )
+                    if unity_event:
+                        generated_events.append(unity_event)
+                        
+                # Health events based on overall health
+                avg_health = world_state.get('average_health', 75)
+                if avg_health < 50:
+                    # Health crisis
+                    health_event = self.create_event_from_template(
+                        "seasonal_illness",
+                        "Village Health Crisis",
+                        current_time + timedelta(hours=random.randint(1, 12)),
+                        importance=9,
+                        impact=-5
+                    )
+                    if health_event:
+                        generated_events.append(health_event)
+            
+            # Add generated events to the handler
+            for event in generated_events:
+                self.add_event(event)
+                
+            if generated_events:
+                logging.info(f"Generated {len(generated_events)} dynamic events based on world state")
+                
+            return generated_events
+            
+        except Exception as e:
+            logging.error(f"Error generating dynamic events: {e}")
+            return []
+
+    def get_story_summary(self):
+        """Get a summary of recent events for story generation."""
+        try:
+            recent_events = [e for e in self.processed_events if e.last_triggered and 
+                           (datetime.now() - e.last_triggered).days <= 7]
+            
+            story_elements = {
+                "major_events": [],
+                "character_interactions": [],
+                "world_changes": [],
+                "ongoing_mysteries": []
+            }
+            
+            for event in recent_events:
+                if event.importance >= 8:
+                    story_elements["major_events"].append(event.name)
+                    
+                if event.participants:
+                    story_elements["character_interactions"].append({
+                        "event": event.name,
+                        "participants": [p.name if hasattr(p, 'name') else str(p) for p in event.participants]
+                    })
+                    
+                if hasattr(event, 'effects') and event.effects:
+                    for effect in event.effects:
+                        if effect.get('targets') == ['location']:
+                            story_elements["world_changes"].append({
+                                "event": event.name,
+                                "change": f"{effect.get('attribute', 'unknown')} changed by {effect.get('change_value', 0)}"
+                            })
+                            
+                if "mystery" in event.type or "ancient" in event.name.lower():
+                    story_elements["ongoing_mysteries"].append(event.name)
+            
+            return story_elements
+            
+        except Exception as e:
+            logging.error(f"Error generating story summary: {e}")
+            return {"error": str(e)}
