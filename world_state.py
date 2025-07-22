@@ -70,7 +70,7 @@ class WorldState:
             'relationships': {},
             'emotional_state': {},
             'coordinates_location': getattr(character, 'coordinates_location', None),
-            'resources': getattr(character, 'inventory', None),
+            'inventory': getattr(character, 'inventory', None),
             'needed_resources': getattr(character, 'needed_items', None),
             'mood': getattr(character, 'current_mood', None),
             'wealth_money': getattr(character, 'wealth_money', None),
