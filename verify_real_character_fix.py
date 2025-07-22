@@ -11,7 +11,13 @@ print("=" * 60)
 
 # Test 1: Verify demo character factory creates real Character interface
 print("\n1. Testing demo character factory...")
-from demo_character_factory import create_demo_character, create_demo_characters
+try:
+    from demo_character_factory import create_demo_character, create_demo_characters
+except ImportError as e:
+    print("❌ Error: Failed to import 'demo_character_factory'. Please ensure the module is available and correctly installed.")
+    print(f"Details: {e}")
+    import sys
+    sys.exit(1)
 
 # Create a character and verify it has real Character interface
 alice = create_demo_character("Alice", job="engineer", use_llm_decisions=True)
