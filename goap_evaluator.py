@@ -15,7 +15,6 @@ This class is designed to be stateless and receive world state as dependencies,
 making it easier to test, maintain, and improve the AI's decision-making process.
 """
 
-from ast import Not
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import copy
