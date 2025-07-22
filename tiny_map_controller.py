@@ -3,14 +3,209 @@ import pygame
 import heapq
 import time
 import logging
+import os
 from typing import Dict, List, Tuple, Optional, Set
 from functools import lru_cache
 from tiny_locations import LocationManager, PointOfInterest
 
 
+class InfoPanel:
+    """Information panel for displaying detailed information about locations and buildings."""
+    
+    def __init__(self, x, y, width=300, height=200):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.visible = False
+        self.content = {}
+        self.background_color = (240, 240, 240)
+        self.border_color = (50, 50, 50)
+        self.text_color = (20, 20, 20)
+        self.title_color = (80, 80, 80)
+        self.font_size = 16
+        self.title_font_size = 18
+        
+    def show(self, content: Dict, mouse_pos: Tuple[int, int]):
+        """Show the panel with given content near the mouse position."""
+        self.content = content
+        self.visible = True
+        # Position panel near mouse but ensure it stays on screen
+        self.x = min(mouse_pos[0] + 10, 800 - self.width)  # Assume 800px screen width
+        self.y = min(mouse_pos[1] + 10, 600 - self.height)  # Assume 600px screen height
+        
+    def hide(self):
+        """Hide the information panel."""
+        self.visible = False
+        self.content = {}
+        
+    def render(self, surface):
+        """Render the information panel if visible."""
+        if not self.visible or not self.content:
+            return
+            
+        try:
+            # Draw background
+            panel_rect = pygame.Rect(self.x, self.y, self.width, self.height)
+            pygame.draw.rect(surface, self.background_color, panel_rect)
+            pygame.draw.rect(surface, self.border_color, panel_rect, 2)
+            
+            # Initialize fonts (with fallback)
+            try:
+                title_font = pygame.font.Font(None, self.title_font_size)
+                text_font = pygame.font.Font(None, self.font_size)
+            except:
+                title_font = pygame.font.SysFont('Arial', self.title_font_size)
+                text_font = pygame.font.SysFont('Arial', self.font_size)
+            
+            # Render content
+            y_offset = self.y + 10
+            
+            # Title
+            if 'name' in self.content:
+                title_surface = title_font.render(self.content['name'], True, self.title_color)
+                surface.blit(title_surface, (self.x + 10, y_offset))
+                y_offset += 25
+                
+            # Other content
+            for key, value in self.content.items():
+                if key == 'name':
+                    continue  # Already rendered as title
+                    
+                if y_offset + 20 > self.y + self.height - 10:
+                    break  # Don't overflow panel
+                    
+                text = f"{key.replace('_', ' ').title()}: {value}"
+                if len(text) > 35:  # Truncate long text
+                    text = text[:32] + "..."
+                    
+                text_surface = text_font.render(text, True, self.text_color)
+                surface.blit(text_surface, (self.x + 10, y_offset))
+                y_offset += 18
+                
+        except pygame.error as e:
+            logging.warning(f"Pygame error while rendering info panel: {e}")
+        except Exception as e:
+            logging.warning(f"Unexpected error rendering info panel: {e}")
+
+
+class ContextMenu:
+    """Context menu for buildings and locations with interactive options."""
+    
+    def __init__(self):
+        self.visible = False
+        self.x = 0
+        self.y = 0
+        self.width = 150
+        self.options = []
+        self.selected_option = -1
+        self.target_object = None
+        self.background_color = (255, 255, 255)
+        self.border_color = (100, 100, 100)
+        self.text_color = (20, 20, 20)
+        self.hover_color = (200, 220, 255)
+        self.font_size = 14
+        
+    def show(self, options: List[Dict], mouse_pos: Tuple[int, int], target_object):
+        """Show context menu with given options at mouse position."""
+        self.options = options
+        self.target_object = target_object
+        self.visible = True
+        self.selected_option = -1
+        
+        # Calculate menu height based on options
+        option_height = 25
+        self.height = len(options) * option_height + 10
+        
+        # Position menu near mouse but ensure it stays on screen
+        self.x = min(mouse_pos[0], 800 - self.width)  # Assume 800px screen width
+        self.y = min(mouse_pos[1], 600 - self.height)  # Assume 600px screen height
+        
+    def hide(self):
+        """Hide the context menu."""
+        self.visible = False
+        self.options = []
+        self.target_object = None
+        self.selected_option = -1
+        
+    def handle_mouse_motion(self, mouse_pos: Tuple[int, int]):
+        """Handle mouse motion to highlight menu options."""
+        if not self.visible:
+            return
+            
+        # Check if mouse is over menu
+        if (self.x <= mouse_pos[0] <= self.x + self.width and 
+            self.y <= mouse_pos[1] <= self.y + self.height):
+            
+            # Calculate which option is being hovered
+            option_height = 25
+            relative_y = mouse_pos[1] - self.y - 5
+            self.selected_option = max(0, min(len(self.options) - 1, relative_y // option_height))
+        else:
+            self.selected_option = -1
+            
+    def handle_click(self, mouse_pos: Tuple[int, int]) -> Optional[Dict]:
+        """Handle click on context menu. Returns selected option or None."""
+        if not self.visible:
+            return None
+            
+        # Check if click is within menu bounds
+        if (self.x <= mouse_pos[0] <= self.x + self.width and 
+            self.y <= mouse_pos[1] <= self.y + self.height):
+            
+            option_height = 25
+            relative_y = mouse_pos[1] - self.y - 5
+            option_index = relative_y // option_height
+            
+            if 0 <= option_index < len(self.options):
+                selected_option = self.options[option_index]
+                self.hide()
+                return selected_option
+                
+        return None
+        
+    def render(self, surface):
+        """Render the context menu if visible."""
+        if not self.visible or not self.options:
+            return
+            
+        try:
+            # Draw background
+            menu_rect = pygame.Rect(self.x, self.y, self.width, self.height)
+            pygame.draw.rect(surface, self.background_color, menu_rect)
+            pygame.draw.rect(surface, self.border_color, menu_rect, 2)
+            
+            # Initialize font
+            try:
+                font = pygame.font.Font(None, self.font_size)
+            except:
+                font = pygame.font.SysFont('Arial', self.font_size)
+            
+            # Render options
+            option_height = 25
+            for i, option in enumerate(self.options):
+                option_y = self.y + 5 + i * option_height
+                option_rect = pygame.Rect(self.x + 2, option_y, self.width - 4, option_height)
+                
+                # Highlight selected option
+                if i == self.selected_option:
+                    pygame.draw.rect(surface, self.hover_color, option_rect)
+                
+                # Render option text
+                text = option.get('label', 'Unknown')
+                text_surface = font.render(text, True, self.text_color)
+                text_x = self.x + 8
+                text_y = option_y + (option_height - text_surface.get_height()) // 2
+                surface.blit(text_surface, (text_x, text_y))
+                
+        except pygame.error as e:
+            logging.warning(f"Pygame rendering error in context menu: {e}")
+
+
 class MapController:
     def __init__(self, map_image_path, map_data):
-        self.map_image = pygame.image.load(map_image_path)  # Load map image
+        # Load map image with comprehensive error handling
+        self.map_image = self._load_map_image_safely(map_image_path)
         self.map_data = map_data  # Metadata about map features
         self.characters = {}  # Dictionary of characters currently on the map
         self.selected_character = None  # For user interactions
@@ -20,6 +215,11 @@ class MapController:
         self.path_cache = {}  # Cache for computed paths
         self.cache_timeout = 5.0  # Cache timeout in seconds
         
+        # New interactive components
+        self.info_panel = InfoPanel(0, 0)
+        self.context_menu = ContextMenu()
+        self.selected_building = None
+        self.selected_location = None
         # Location and POI management
         self.location_manager = LocationManager()
         self.points_of_interest = []  # List of PointOfInterest objects
@@ -34,6 +234,92 @@ class MapController:
         self.buildings = []  # List of Building objects
         self.location_manager = None  # Will be set if LocationManager is used
         self._initialize_buildings()
+    
+    def _load_map_image_safely(self, map_image_path):
+        """
+        Safely load map image with comprehensive error handling and fallback mechanisms.
+        
+        Args:
+            map_image_path (str): Path to the map image file
+            
+        Returns:
+            pygame.Surface: The loaded image or a fallback image
+        """
+        try:
+            if not map_image_path:
+                logging.warning("No map image path provided, creating default map")
+                return self._create_default_map_image()
+            
+            # Check if file exists
+            if not os.path.exists(map_image_path):
+                logging.error(f"Map image file not found: {map_image_path}")
+                return self._create_default_map_image()
+            
+            # Try to load the image
+            try:
+                image = pygame.image.load(map_image_path)
+                logging.info(f"Successfully loaded map image: {map_image_path}")
+                return image
+            except pygame.error as e:
+                logging.error(f"Pygame error loading map image '{map_image_path}': {e}")
+                return self._create_default_map_image()
+            except Exception as e:
+                logging.error(f"Unexpected error loading map image '{map_image_path}': {e}")
+                return self._create_default_map_image()
+                
+        except Exception as e:
+            logging.error(f"Critical error in map image loading: {e}")
+            return self._create_default_map_image()
+    
+    def _create_default_map_image(self, width=800, height=600):
+        """
+        Create a default map image when the original cannot be loaded.
+        
+        Args:
+            width (int): Width of the default map
+            height (int): Height of the default map
+            
+        Returns:
+            pygame.Surface: A simple default map image
+        """
+        try:
+            # Create a simple default map with grass background and some basic features
+            default_map = pygame.Surface((width, height))
+            
+            # Fill with grass green background
+            grass_color = (34, 139, 34)  # Forest green
+            default_map.fill(grass_color)
+            
+            # Add some basic features for visual interest
+            road_color = (139, 69, 19)  # Brown road
+            water_color = (65, 105, 225)  # Royal blue water
+            
+            # Draw a simple road
+            pygame.draw.rect(default_map, road_color, (width//2 - 20, 0, 40, height))
+            pygame.draw.rect(default_map, road_color, (0, height//2 - 20, width, 40))
+            
+            # Draw a small pond
+            pygame.draw.circle(default_map, water_color, (width//4, height//4), 50)
+            
+            # Add a simple border
+            border_color = (101, 67, 33)  # Dark brown
+            pygame.draw.rect(default_map, border_color, (0, 0, width, height), 5)
+            
+            logging.info(f"Created default map image ({width}x{height})")
+            return default_map
+            
+        except Exception as e:
+            logging.error(f"Failed to create default map image: {e}")
+            # Ultimate fallback - just a solid color surface
+            try:
+                fallback = pygame.Surface((width, height))
+                fallback.fill((50, 50, 50))  # Dark gray
+                return fallback
+            except Exception as e2:
+                logging.critical(f"Even fallback map creation failed: {e2}")
+                # This should never happen, but if it does, return None
+                # The calling code will need to handle this case
+                return None
     
     def _initialize_buildings(self):
         """Initialize Building objects from map_data"""
@@ -311,8 +597,21 @@ class MapController:
         return None
 
     def render(self, surface):
-        # Render the map image
-        surface.blit(self.map_image, (0, 0))
+        # Render the map image with error handling
+        try:
+            if self.map_image is not None:
+                surface.blit(self.map_image, (0, 0))
+            else:
+                # Fallback rendering if no map image is available
+                logging.warning("No map image available for rendering")
+                surface.fill((34, 139, 34))  # Fill with grass green as emergency fallback
+        except pygame.error as e:
+            logging.error(f"Pygame error rendering map image: {e}")
+            surface.fill((34, 139, 34))  # Emergency fallback
+        except Exception as e:
+            logging.error(f"Unexpected error rendering map image: {e}")
+            surface.fill((34, 139, 34))  # Emergency fallback
+
 
         # Render locations (optional - for debugging or special visualization)
         for location in self.location_manager.locations:
@@ -330,7 +629,10 @@ class MapController:
 
 #         # Render buildings on the map
 #         for building in self.map_data["buildings"]:
-#             pygame.draw.rect(surface, (150, 150, 150), building["rect"])
+#             color = (150, 150, 150)
+#             if building == self.selected_building:
+#                 color = (100, 200, 100)  # Highlight selected building
+#             pygame.draw.rect(surface, color, building["rect"])
         # Render buildings on the map using Building objects
         for building in self.buildings:
             location = building.get_location()
@@ -364,6 +666,10 @@ class MapController:
             pygame.draw.circle(
                 surface, (255, 0, 0), self.selected_character.position, 10, 2
             )
+            
+        # Render interactive UI components
+        self.context_menu.render(surface)
+        self.info_panel.render(surface)
     
     def _get_building_color(self, building):
         """Get color for building based on its properties"""
@@ -502,15 +808,69 @@ class MapController:
     def handle_event(self, event):
         # Handle events like mouse clicks or key presses
         if event.type == pygame.MOUSEBUTTONDOWN:
-            self.handle_click(event.pos)
+            if event.button == 1:  # Left click
+                self.handle_left_click(event.pos)
+            elif event.button == 3:  # Right click
+                self.handle_right_click(event.pos)
+        elif event.type == pygame.MOUSEMOTION:
+            self.context_menu.handle_mouse_motion(event.pos)
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                self.hide_ui_elements()
+
+    def handle_left_click(self, position):
+        # Check if clicking on context menu
+        selected_option = self.context_menu.handle_click(position)
+        if selected_option:
+            self.execute_context_action(selected_option)
+            return
+            
+        # Hide UI elements on left click elsewhere
+        self.hide_ui_elements()
+        
+        # Determine what is at the clicked position
+        try:
+          self.handle_click(event.pos)
+        except Exception:
+          self.handle_click(position)
 
     def handle_click(self, position):
         # Determine what is at the clicked position (priority order)
         char_id = self.is_character(position)
+        building = self.is_building(position)
+        
         if char_id:
             self.select_character(char_id)
-            return
+        elif building:
+            self.select_building(building, position)
+        else:
+            self.clear_selections()
 
+    def handle_right_click(self, position):
+        # Hide existing UI elements
+        self.hide_ui_elements()
+        
+        # Determine what is at the clicked position for context menu
+        building = self.is_building(position)
+        char_id = self.is_character(position)
+        
+        if building:
+            self.show_building_context_menu(building, position)
+        elif char_id:
+            self.show_character_context_menu(char_id, position)
+        else:
+            self.show_general_context_menu(position)
+
+    def hide_ui_elements(self):
+        """Hide all interactive UI elements."""
+        self.context_menu.hide()
+        self.info_panel.hide()
+
+    def clear_selections(self):
+        """Clear all selections."""
+        self.selected_character = None
+        self.selected_building = None
+        self.selected_location = None
         # Check for POI click
         poi = self.find_poi_at_point(position[0], position[1])
         if poi:
@@ -611,10 +971,228 @@ class MapController:
                 return char_id
         return None
 
+    def is_building(self, position):
+        # Check if a building is at the clicked position
+        for building in self.map_data["buildings"]:
+            if building["rect"].collidepoint(position):
+                return building
+        return None
+
     def select_character(self, char_id):
         # Select a character when clicked
         self.selected_character = self.characters[char_id]
+        self.selected_building = None
+        self.selected_location = None
+        
+        # Show character information panel
+        character_info = self.get_character_info(self.selected_character)
+        mouse_pos = pygame.mouse.get_pos()
+        self.info_panel.show(character_info, mouse_pos)
+        
         print(f"Selected {self.selected_character.name}")
+
+    def select_building(self, building, position):
+        """Select a building and show its information panel."""
+        self.selected_building = building
+        self.selected_character = None
+        self.selected_location = None
+        
+        # Show building information panel
+        building_info = self.get_building_info(building)
+        self.info_panel.show(building_info, position)
+        
+        print(f"Selected {building['name']}")
+
+    def get_character_info(self, character) -> Dict:
+        """Get detailed information about a character for the info panel."""
+        info = {
+            'name': getattr(character, 'name', 'Unknown Character'),
+            'type': 'Character',
+            'position': f"({int(character.position.x)}, {int(character.position.y)})",
+        }
+        
+        # Add additional character attributes if available
+        if hasattr(character, 'energy'):
+            info['energy'] = getattr(character, 'energy', 'Unknown')
+        if hasattr(character, 'health'):
+            info['health'] = getattr(character, 'health', 'Unknown')
+        if hasattr(character, 'mood'):
+            info['mood'] = getattr(character, 'mood', 'Unknown')
+        if hasattr(character, 'job'):
+            info['job'] = getattr(character, 'job', 'Unemployed')
+            
+        return info
+
+    def get_building_info(self, building) -> Dict:
+        """Get detailed information about a building for the info panel."""
+        info = {
+            'name': building.get('name', 'Unknown Building'),
+            'type': building.get('type', 'Building'),
+        }
+        
+        # Add building-specific information
+        if 'rect' in building:
+            rect = building['rect']
+            info['position'] = f"({rect.x}, {rect.y})"
+            info['size'] = f"{rect.width} x {rect.height}"
+            info['area'] = rect.width * rect.height
+            
+        # Add additional building attributes if available
+        for key in ['capacity', 'owner', 'value', 'description']:
+            if key in building:
+                info[key] = building[key]
+                
+        return info
+
+    def show_building_context_menu(self, building, position):
+        """Show context menu for a building."""
+        options = [
+            {'label': 'Enter Building', 'action': 'enter', 'target': building},
+            {'label': 'View Details', 'action': 'details', 'target': building},
+            {'label': 'Get Directions', 'action': 'directions', 'target': building},
+        ]
+        
+        # Add building-specific options
+        building_type = building.get('type', '')
+        if building_type == 'shop':
+            options.insert(1, {'label': 'Browse Items', 'action': 'browse', 'target': building})
+        elif building_type == 'house':
+            options.insert(1, {'label': 'Knock on Door', 'action': 'knock', 'target': building})
+        elif building_type == 'social':
+            options.insert(1, {'label': 'Join Activity', 'action': 'join', 'target': building})
+            
+        self.context_menu.show(options, position, building)
+
+    def show_character_context_menu(self, char_id, position):
+        """Show context menu for a character."""
+        character = self.characters[char_id]
+        options = [
+            {'label': 'Talk to Character', 'action': 'talk', 'target': character},
+            {'label': 'View Details', 'action': 'details', 'target': character},
+            {'label': 'Follow Character', 'action': 'follow', 'target': character},
+            {'label': 'Trade with Character', 'action': 'trade', 'target': character},
+        ]
+        
+        self.context_menu.show(options, position, character)
+
+    def show_general_context_menu(self, position):
+        """Show general context menu for empty areas."""
+        options = [
+            {'label': 'Move Here', 'action': 'move', 'target': position},
+            {'label': 'Inspect Area', 'action': 'inspect', 'target': position},
+            {'label': 'Place Marker', 'action': 'marker', 'target': position},
+        ]
+        
+        self.context_menu.show(options, position, None)
+
+    def execute_context_action(self, option):
+        """Execute the selected context menu action."""
+        action = option.get('action')
+        target = option.get('target')
+        
+        if action == 'enter' and hasattr(target, 'get'):
+            self.enter_building(target)
+        elif action == 'details':
+            self.show_target_details(target)
+        elif action == 'directions':
+            self.show_directions_to_target(target)
+        elif action == 'browse':
+            self.browse_building_items(target)
+        elif action == 'knock':
+            self.knock_on_door(target)
+        elif action == 'join':
+            self.join_building_activity(target)
+        elif action == 'talk':
+            self.talk_to_character(target)
+        elif action == 'follow':
+            self.follow_character(target)
+        elif action == 'trade':
+            self.trade_with_character(target)
+        elif action == 'move':
+            self.move_to_position(target)
+        elif action == 'inspect':
+            self.inspect_area(target)
+        elif action == 'marker':
+            self.place_marker(target)
+        else:
+            print(f"Unknown action: {action}")
+
+    def show_target_details(self, target):
+        """Show detailed information about the target."""
+        if hasattr(target, 'get'):  # Building
+            info = self.get_building_info(target)
+        elif hasattr(target, 'position'):  # Character
+            info = self.get_character_info(target)
+        else:
+            info = {'name': 'Unknown', 'type': 'Unknown'}
+            
+        mouse_pos = pygame.mouse.get_pos()
+        self.info_panel.show(info, mouse_pos)
+
+    def show_directions_to_target(self, target):
+        """Show directions to the target location."""
+        if hasattr(target, 'get') and 'rect' in target:
+            target_pos = (target['rect'].centerx, target['rect'].centery)
+            print(f"Directions to {target.get('name', 'Unknown')}: {target_pos}")
+        else:
+            print("Cannot provide directions to this target")
+
+    def browse_building_items(self, building):
+        """Browse items available in a building."""
+        print(f"Browsing items in {building.get('name', 'Unknown Building')}")
+        # This would integrate with an inventory/shop system
+
+    def knock_on_door(self, building):
+        """Knock on a building's door."""
+        print(f"Knocking on the door of {building.get('name', 'Unknown Building')}")
+        # This would trigger character interactions
+
+    def join_building_activity(self, building):
+        """Join an activity at a building."""
+        print(f"Joining activity at {building.get('name', 'Unknown Building')}")
+        # This would integrate with the activity system
+
+    def talk_to_character(self, character):
+        """Initiate conversation with a character."""
+        name = getattr(character, 'name', 'Unknown Character')
+        print(f"Starting conversation with {name}")
+        # This would integrate with the dialogue system
+
+    def follow_character(self, character):
+        """Follow a character."""
+        name = getattr(character, 'name', 'Unknown Character')
+        print(f"Following {name}")
+        # This would update pathfinding to follow the target
+
+    def trade_with_character(self, character):
+        """Initiate trade with a character."""
+        name = getattr(character, 'name', 'Unknown Character')
+        print(f"Initiating trade with {name}")
+        # This would open a trade interface
+
+    def move_to_position(self, position):
+        """Move selected character to position."""
+        if self.selected_character:
+            print(f"Moving {self.selected_character.name} to {position}")
+            # This would update character pathfinding
+        else:
+            print("No character selected to move")
+
+    def inspect_area(self, position):
+        """Inspect the area at the given position."""
+        print(f"Inspecting area at {position}")
+        # This would show area information
+
+    def place_marker(self, position):
+        """Place a marker at the given position."""
+        print(f"Placing marker at {position}")
+        # This would add a visual marker to the map
+
+    def enter_building(self, building):
+        """Enter a building and interact with it."""
+        if building:
+            print(f"Entering {building.get('name', 'Unknown Building')}")
+            # This would trigger building-specific interactions
 
     def is_building(self, position):
         # Check if a building is at the clicked position using Building objects
@@ -627,6 +1205,7 @@ class MapController:
             if "rect" in building and building["rect"].collidepoint(position):
                 return building
         return None
+
 
     def enter_building(self, position):
         # Enter a building and interact with it
@@ -1054,9 +1633,16 @@ if __name__ == "__main__":
     clock = pygame.time.Clock()
     running = True
 
-    # Initialize the Map Controller
+    # Initialize the Map Controller with error-safe image path
+    # The MapController will handle missing images gracefully with fallback
+    map_image_path = "assets/map.png"  # Preferred path
+    if not os.path.exists(map_image_path):
+        # Try alternative paths or use None to trigger fallback creation
+        map_image_path = None
+        logging.info("Using fallback map image creation")
+    
     map_controller = MapController(
-        "path_to_map_image.png",
+        map_image_path,
         map_data={
             "width": 100,
             "height": 100,

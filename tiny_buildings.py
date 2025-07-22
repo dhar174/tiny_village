@@ -13,6 +13,26 @@ except ImportError:
     class Character: pass
     class GraphManager: pass
 
+# Building type to interactions mapping
+BUILDING_TYPE_INTERACTIONS = {
+    "residential": ["Enter Building", "Rest Inside", "Visit Residents", "Use Facilities"],
+    "house": ["Enter Building", "Rest Inside", "Visit Residents", "Use Facilities"],  # Alias for residential
+    "commercial": ["Enter Building", "Browse Goods", "Buy Items", "Trade with Merchants"],
+    "shop": ["Enter Building", "Browse Goods", "Buy Items", "Trade with Merchants"],  # Alias for commercial
+    "social": ["Enter Building", "Socialize with Patrons", "Get a Drink", "Join Activity"],
+    "tavern": ["Enter Building", "Socialize with Patrons", "Get a Drink", "Join Activity"],  # Alias for social
+    "crafting": ["Enter Building", "Commission Item", "Learn Crafting", "Use Equipment"],
+    "workshop": ["Enter Building", "Commission Item", "Learn Crafting", "Use Equipment"],  # Alias for crafting
+    "agricultural": ["Enter Building", "Help with Crops", "Gather Food", "Tend Animals"],
+    "farm": ["Enter Building", "Help with Crops", "Gather Food", "Tend Animals"],  # Alias for agricultural
+    "educational": ["Enter Building", "Attend Class", "Study Books", "Access Resources"],
+    "school": ["Enter Building", "Attend Class", "Study Books", "Access Resources"],  # Alias for educational
+    "library": ["Enter Building", "Study Books", "Access Resources"],  # Special case for libraries
+    "civic": ["Enter Building", "Attend Meeting", "Get Information", "File Complaint"],
+    "office": ["Enter Building", "Get Information"],  # Basic office interactions
+    "building": ["Enter Building"],  # Default fallback
+}
+
 effect_dict = {
     "Enter Building": [
         {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 5},
@@ -23,6 +43,115 @@ effect_dict = {
             "method": "play_animation",
             "method_args": ["talking"],
         },
+    ],
+    # Residential building interactions
+    "Rest Inside": [
+        {"targets": ["initiator"], "attribute": "energy", "change_value": 15},
+        {"targets": ["initiator"], "attribute": "stress", "change_value": -10},
+        {"targets": ["initiator"], "method": "play_animation", "method_args": ["resting"]},
+    ],
+    "Visit Residents": [
+        {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 10},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -3},
+        {"targets": ["initiator"], "method": "play_animation", "method_args": ["talking"]},
+    ],
+    "Use Facilities": [
+        {"targets": ["initiator"], "attribute": "health", "change_value": 5},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -1},
+    ],
+    # Commercial building interactions
+    "Browse Goods": [
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -2},
+        {"targets": ["initiator"], "method": "play_animation", "method_args": ["looking"]},
+    ],
+    "Buy Items": [
+        {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 8},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -3},
+        {"targets": ["initiator"], "method": "play_animation", "method_args": ["trading"]},
+    ],
+    "Trade with Merchants": [
+        {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 5},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -4},
+        {"targets": ["initiator"], "method": "play_animation", "method_args": ["negotiating"]},
+    ],
+    # Social building interactions
+    "Socialize with Patrons": [
+        {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 12},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -3},
+        {"targets": ["initiator"], "method": "play_animation", "method_args": ["socializing"]},
+    ],
+    "Get a Drink": [
+        {"targets": ["initiator"], "attribute": "thirst", "change_value": -15},
+        {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 3},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -2},
+    ],
+    "Join Activity": [
+        {"targets": ["initiator"], "attribute": "entertainment", "change_value": 10},
+        {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 8},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -5},
+    ],
+    # Crafting building interactions
+    "Commission Item": [
+        {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 10},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -5},
+        {"targets": ["initiator"], "method": "play_animation", "method_args": ["commissioning"]},
+    ],
+    "Learn Crafting": [
+        {"targets": ["initiator"], "attribute": "skills.crafting", "change_value": 2},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -8},
+        {"targets": ["initiator"], "method": "play_animation", "method_args": ["learning"]},
+    ],
+    "Use Equipment": [
+        {"targets": ["initiator"], "attribute": "skills.crafting", "change_value": 1},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -6},
+        {"targets": ["initiator"], "method": "play_animation", "method_args": ["crafting"]},
+    ],
+    # Agricultural building interactions
+    "Help with Crops": [
+        {"targets": ["initiator"], "attribute": "skills.farming", "change_value": 2},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -10},
+        {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 5},
+        {"targets": ["initiator"], "method": "play_animation", "method_args": ["farming"]},
+    ],
+    "Gather Food": [
+        {"targets": ["initiator"], "attribute": "hunger", "change_value": -10},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -3},
+        {"targets": ["initiator"], "method": "play_animation", "method_args": ["gathering"]},
+    ],
+    "Tend Animals": [
+        {"targets": ["initiator"], "attribute": "skills.animal_care", "change_value": 2},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -5},
+        {"targets": ["initiator"], "attribute": "compassion", "change_value": 3},
+    ],
+    # Educational building interactions
+    "Attend Class": [
+        {"targets": ["initiator"], "attribute": "intelligence", "change_value": 3},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -4},
+        {"targets": ["initiator"], "method": "play_animation", "method_args": ["studying"]},
+    ],
+    "Study Books": [
+        {"targets": ["initiator"], "attribute": "knowledge", "change_value": 5},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -3},
+        {"targets": ["initiator"], "method": "play_animation", "method_args": ["reading"]},
+    ],
+    "Access Resources": [
+        {"targets": ["initiator"], "attribute": "research_progress", "change_value": 8},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -2},
+    ],
+    # Civic building interactions
+    "Attend Meeting": [
+        {"targets": ["initiator"], "attribute": "civic_engagement", "change_value": 10},
+        {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 5},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -6},
+    ],
+    "Get Information": [
+        {"targets": ["initiator"], "attribute": "knowledge", "change_value": 3},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -1},
+    ],
+    "File Complaint": [
+        {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 5},
+        {"targets": ["initiator"], "attribute": "stress", "change_value": -5},
+        {"targets": ["initiator"], "attribute": "energy", "change_value": -4},
     ],
 }
 
@@ -42,7 +171,322 @@ preconditions_dict = {
             "satisfy_value": 50,
             "operator": "gt",
         },
-    ]
+    ],
+    # Residential building interactions
+    "Rest Inside": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 5,
+            "operator": "gt",
+        },
+        {
+            "name": "fatigue",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 80,
+            "operator": "lt",  # Can only rest if not at full energy
+        },
+    ],
+    "Visit Residents": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 15,
+            "operator": "gt",
+        },
+        {
+            "name": "social_confidence",
+            "attribute": "personality_traits.extraversion",
+            "target": "initiator",
+            "satisfy_value": 30,
+            "operator": "gt",
+        },
+    ],
+    "Use Facilities": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 5,
+            "operator": "gt",
+        },
+    ],
+    # Commercial building interactions
+    "Browse Goods": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 8,
+            "operator": "gt",
+        },
+    ],
+    "Buy Items": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 10,
+            "operator": "gt",
+        },
+        {
+            "name": "has_money",
+            "attribute": "wealth",
+            "target": "initiator",
+            "satisfy_value": 10,
+            "operator": "gt",
+        },
+    ],
+    "Trade with Merchants": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 15,
+            "operator": "gt",
+        },
+        {
+            "name": "social_skill",
+            "attribute": "personality_traits.extraversion",
+            "target": "initiator",
+            "satisfy_value": 40,
+            "operator": "gt",
+        },
+    ],
+    # Social building interactions
+    "Socialize with Patrons": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 12,
+            "operator": "gt",
+        },
+        {
+            "name": "social_nature",
+            "attribute": "personality_traits.extraversion",
+            "target": "initiator",
+            "satisfy_value": 35,
+            "operator": "gt",
+        },
+    ],
+    "Get a Drink": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 8,
+            "operator": "gt",
+        },
+        {
+            "name": "thirsty",
+            "attribute": "thirst",
+            "target": "initiator",
+            "satisfy_value": 20,
+            "operator": "gt",
+        },
+    ],
+    "Join Activity": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 20,
+            "operator": "gt",
+        },
+        {
+            "name": "openness",
+            "attribute": "personality_traits.openness",
+            "target": "initiator",
+            "satisfy_value": 45,
+            "operator": "gt",
+        },
+    ],
+    # Crafting building interactions
+    "Commission Item": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 18,
+            "operator": "gt",
+        },
+        {
+            "name": "has_resources",
+            "attribute": "wealth",
+            "target": "initiator",
+            "satisfy_value": 25,
+            "operator": "gt",
+        },
+    ],
+    "Learn Crafting": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 25,
+            "operator": "gt",
+        },
+        {
+            "name": "curiosity",
+            "attribute": "personality_traits.openness",
+            "target": "initiator",
+            "satisfy_value": 50,
+            "operator": "gt",
+        },
+    ],
+    "Use Equipment": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 20,
+            "operator": "gt",
+        },
+        {
+            "name": "basic_skill",
+            "attribute": "skills.crafting",
+            "target": "initiator",
+            "satisfy_value": 10,
+            "operator": "gt",
+        },
+    ],
+    # Agricultural building interactions
+    "Help with Crops": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 30,
+            "operator": "gt",
+        },
+        {
+            "name": "helpfulness",
+            "attribute": "personality_traits.agreeableness",
+            "target": "initiator",
+            "satisfy_value": 40,
+            "operator": "gt",
+        },
+    ],
+    "Gather Food": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 15,
+            "operator": "gt",
+        },
+        {
+            "name": "hungry",
+            "attribute": "hunger",
+            "target": "initiator",
+            "satisfy_value": 15,
+            "operator": "gt",
+        },
+    ],
+    "Tend Animals": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 20,
+            "operator": "gt",
+        },
+        {
+            "name": "animal_affinity",
+            "attribute": "personality_traits.agreeableness",
+            "target": "initiator",
+            "satisfy_value": 60,
+            "operator": "gt",
+        },
+    ],
+    # Educational building interactions
+    "Attend Class": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 20,
+            "operator": "gt",
+        },
+        {
+            "name": "intellectual_curiosity",
+            "attribute": "personality_traits.openness",
+            "target": "initiator",
+            "satisfy_value": 55,
+            "operator": "gt",
+        },
+    ],
+    "Study Books": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 15,
+            "operator": "gt",
+        },
+        {
+            "name": "love_learning",
+            "attribute": "personality_traits.conscientiousness",
+            "target": "initiator",
+            "satisfy_value": 50,
+            "operator": "gt",
+        },
+    ],
+    "Access Resources": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 10,
+            "operator": "gt",
+        },
+    ],
+    # Civic building interactions
+    "Attend Meeting": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 25,
+            "operator": "gt",
+        },
+        {
+            "name": "civic_minded",
+            "attribute": "personality_traits.conscientiousness",
+            "target": "initiator",
+            "satisfy_value": 60,
+            "operator": "gt",
+        },
+    ],
+    "Get Information": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 8,
+            "operator": "gt",
+        },
+    ],
+    "File Complaint": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "target": "initiator",
+            "satisfy_value": 12,
+            "operator": "gt",
+        },
+        {
+            "name": "assertiveness",
+            "attribute": "personality_traits.extraversion",
+            "target": "initiator",
+            "satisfy_value": 55,
+            "operator": "gt",
+        },
+    ],
 }
 
 
@@ -82,41 +526,94 @@ class Building:
         
         # Create or assign location for this building
         if location is None:
-           
-
-            
-        # Create Location instance for this building
-        self.location = Location(
-            name=f"{name} Location",
-            x=x,
-            y=y,
-            width=width,
-            height=length,  # Use length as height for location
-            action_system=action_system,
-            security=self._calculate_security(),
-            popularity=self._calculate_popularity(),
-        )
-        
-        # Add building-specific activities to location
-        self._setup_location_activities()
-        
-        self.possible_interactions = [
-            Action(
-                "Enter Building",
-                action_system.instantiate_conditions(
-                    preconditions_dict["Enter Building"]
-                ),
-                effect_dict["Enter Building"],
+            # Create Location instance for this building
+            self.location = Location(
+                name=f"{name} Location",
+                x=x,
+                y=y,
+                width=width,
+                height=length,  # Use length as height for location
+                action_system=action_system,
+                security=self._calculate_security(),
+                popularity=self._calculate_popularity(),
             )
-        ]
+            
+            # Add building-specific activities to location
+            self._setup_location_activities()
         else:
             self.location = location
+        
+        # Initialize possible interactions based on building type
+        self.possible_interactions = self._create_building_interactions(action_system)
     def get_possible_interactions(self, requester):
-        return [
-            action
-            for action in self.possible_interactions
-            if action.can_execute(requester)
-        ]
+        """Get interactions available to a specific character."""
+        # For now, return all interactions for the building type
+        # In a full implementation, this would check character attributes, energy, etc.
+        # against the action's preconditions using requester.compare_to_condition()
+        
+        # Basic energy check as an example of filtering
+        available_interactions = []
+        
+        for action in self.possible_interactions:
+            # Very basic filtering - if character has energy attribute, do simple check
+            if hasattr(requester, 'energy'):
+                if requester.energy > 5:  # Require minimum energy for interactions
+                    available_interactions.append(action)
+                # If energy is too low, don't add this action
+            else:
+                # If no energy attribute, allow all interactions (backward compatibility)
+                available_interactions.append(action)
+        
+        # Always ensure at least Enter Building is available if no other interactions pass
+        if not available_interactions and self.possible_interactions:
+            # Find the "Enter Building" action as a fallback
+            for action in self.possible_interactions:
+                if action.name == "Enter Building":
+                    available_interactions.append(action)
+                    break
+        
+        return available_interactions
+
+    def _create_building_interactions(self, action_system):
+        """Create interactions based on building type"""
+        interactions = []
+        
+        # Get interaction names for this building type
+        interaction_names = BUILDING_TYPE_INTERACTIONS.get(self.building_type, ["Enter Building"])
+        
+        # Create Action objects for each interaction
+        for interaction_name in interaction_names:
+            if interaction_name in effect_dict and interaction_name in preconditions_dict:
+                try:
+                    action = Action(
+                        interaction_name,
+                        action_system.instantiate_conditions(
+                            preconditions_dict[interaction_name]
+                        ),
+                        effect_dict[interaction_name],
+                    )
+                    interactions.append(action)
+                except Exception as e:
+                    logging.warning(f"Failed to create action '{interaction_name}': {e}")
+                    # Fallback to basic Enter Building action if something fails
+                    if interaction_name == "Enter Building":
+                        basic_action = Action(
+                            "Enter Building",
+                            [],  # No preconditions as fallback
+                            effect_dict.get("Enter Building", []),
+                        )
+                        interactions.append(basic_action)
+        
+        # Ensure at least one interaction exists
+        if not interactions:
+            basic_action = Action(
+                "Enter Building",
+                [],
+                effect_dict.get("Enter Building", []),
+            )
+            interactions.append(basic_action)
+            
+        return interactions
 
     def set_owner(self, owner):
         self.owner = owner
