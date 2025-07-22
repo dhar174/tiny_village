@@ -11,11 +11,8 @@ import re
 from typing import List
 import uuid
 import attr
-from numpy import rint
 from tiny_types import PromptBuilder, GraphManager
-from pyparsing import Char
-from sympy import im
-from torch import Graph, eq, rand
+# Removed incorrect torch import - Graph, eq, rand not used and Graph is not a torch function
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
@@ -2501,6 +2498,182 @@ class Character:
             if memory.description == description:
                 memory.importance_score = new_importance
                 break
+    
+    def evaluate_location_for_visit(self, building):
+        """
+        Evaluate how suitable a location is for this character to visit
+        based on their personality, needs, and the location's properties.
+        Returns a score from 0-100.
+        """
+        if not hasattr(building, 'get_location'):
+            return 0
+            
+        location = building.get_location()
+        score = 50  # Base score
+        
+        # Factor in security based on personality
+        security = location.security
+        if hasattr(self, 'personality_traits'):
+            # Characters with high neuroticism prefer secure locations
+            neuroticism = getattr(self.personality_traits, 'neuroticism', 50)
+            if neuroticism > 70:
+                score += (security - 5) * 3  # Bonus for secure locations
+            elif neuroticism < 30:
+                score -= (security - 5) * 1  # Small penalty for overly secure locations
+                
+        # Factor in popularity based on extraversion
+        popularity = location.popularity
+        if hasattr(self, 'personality_traits'):
+            extraversion = getattr(self.personality_traits, 'extraversion', 50)
+            if extraversion > 70:
+                score += (popularity - 5) * 3  # Extraverts like popular places
+            elif extraversion < 30:
+                score -= (popularity - 5) * 2  # Introverts avoid crowded places
+                
+        # Factor in activities based on current needs
+        activities = location.activities_available
+        
+        # Rest activities are valuable when energy is low
+        if self.energy < 5:
+            if any('rest' in activity or 'sleep' in activity for activity in activities):
+                score += 20
+                
+        # Social activities are valuable for social wellbeing
+        if hasattr(self, 'social_wellbeing') and self.social_wellbeing < 5:
+            if any('visit' in activity or 'social' in activity for activity in activities):
+                score += 15
+                
+        # Security activities are valuable when feeling unsafe
+        if any('secure' in activity for activity in activities):
+            score += 5
+            
+        # Factor in building type preferences
+        if hasattr(building, 'building_type'):
+            building_type = building.building_type
+            
+            # Houses are generally comfortable
+            if building_type == 'house':
+                score += 5
+                # Own home is always preferred
+                if hasattr(self, 'home') and self.home == building:
+                    score += 30
+                    
+            # Commercial buildings for shopping/business
+            elif building_type == 'commercial':
+                if hasattr(self, 'wealth_money') and self.wealth_money > 20:
+                    score += 10  # Can afford to shop
+                else:
+                    score -= 5   # Can't afford it
+                    
+        return max(0, min(100, score))
+    
+    def find_suitable_locations(self, available_buildings, min_score=60):
+        """
+        Find locations that are suitable for this character to visit.
+        Returns a list of (building, score) tuples sorted by score.
+        """
+        evaluated_locations = []
+        
+        for building in available_buildings:
+            score = self.evaluate_location_for_visit(building)
+            if score >= min_score:
+                evaluated_locations.append((building, score))
+                
+        # Sort by score (highest first)
+        evaluated_locations.sort(key=lambda x: x[1], reverse=True)
+        return evaluated_locations
+    
+    def choose_location_based_on_motivation(self, available_buildings, motivation_type):
+        """
+        Choose a location based on a specific motivation (safety, social, rest, etc.)
+        """
+        best_building = None
+        best_score = 0
+        
+        for building in available_buildings:
+            if not hasattr(building, 'get_location'):
+                continue
+                
+            location = building.get_location()
+            score = 0
+            
+            if motivation_type == 'safety':
+                score = location.security * 10
+            elif motivation_type == 'social':
+                score = location.popularity * 10
+                # Bonus for social activities
+                if any('visit' in activity or 'social' in activity 
+                       for activity in location.activities_available):
+                    score += 20
+            elif motivation_type == 'rest':
+                # Look for rest-related activities
+                if any('rest' in activity or 'sleep' in activity 
+                       for activity in location.activities_available):
+                    score += 50
+                # Houses are good for rest
+                if hasattr(building, 'building_type') and building.building_type == 'house':
+                    score += 20
+            elif motivation_type == 'work':
+                # Look for work-related activities
+                if any('work' in activity or 'business' in activity 
+                       for activity in location.activities_available):
+                    score += 50
+                    
+            if score > best_score:
+                best_score = score
+                best_building = building
+                
+        return best_building, best_score
+    
+    def make_location_decision(self, available_buildings):
+        """
+        Make a decision about which location to visit based on character state,
+        personality, and location properties.
+        """
+        if not available_buildings:
+            return None, "No locations available"
+            
+        decision_factors = {}
+        
+        # Determine primary motivation
+        if self.energy < 3:
+            primary_motivation = 'rest'
+            decision_factors['motivation'] = 'Need rest due to low energy'
+        elif hasattr(self, 'social_wellbeing') and self.social_wellbeing < 4:
+            primary_motivation = 'social'
+            decision_factors['motivation'] = 'Need social interaction'
+        elif hasattr(self, 'personality_traits'):
+            neuroticism = getattr(self.personality_traits, 'neuroticism', 50)
+            if neuroticism > 80:
+                primary_motivation = 'safety'
+                decision_factors['motivation'] = 'High anxiety - seeking safety'
+            else:
+                primary_motivation = 'general'
+                decision_factors['motivation'] = 'General exploration'
+        else:
+            primary_motivation = 'general'
+            decision_factors['motivation'] = 'General exploration'
+            
+        if primary_motivation != 'general':
+            # Choose based on specific motivation
+            chosen_building, score = self.choose_location_based_on_motivation(
+                available_buildings, primary_motivation
+            )
+            decision_factors['method'] = f'Motivation-based ({primary_motivation})'
+            decision_factors['score'] = score
+        else:
+            # Use general location evaluation
+            suitable_locations = self.find_suitable_locations(available_buildings, min_score=40)
+            if suitable_locations:
+                chosen_building, score = suitable_locations[0]
+                decision_factors['method'] = 'General suitability evaluation'
+                decision_factors['score'] = score
+            else:
+                chosen_building = None
+                decision_factors['method'] = 'No suitable locations found'
+                decision_factors['score'] = 0
+                
+        return chosen_building, decision_factors
 
     def __repr__(self):
         return f"Character({self.name}, {self.age}, {self.pronouns}, {self.job}, {self.health_status}, {self.hunger_level}, {self.wealth_money}, {self.mental_health}, {self.social_wellbeing}, {self.job_performance}, {self.community}, {self.recent_event}, {self.long_term_goal}, {self.home}, {self.inventory}, {self.motives}, {self.personality_traits}, {self.skills}, {self.career_goals}, {self.possible_interactions}, {self.move_speed}, {self.location}, {self.energy}, {self.romanceable}, {self.romantic_relationships}, {self.exclusive_relationship}, {self.base_libido}, {self.monogamy}, {self.investment_portfolio}, {self.goals}, {self.needed_items}, {self.stamina}, {self.current_satisfaction}, {self.current_mood}, {self.current_activity}, {self.speed}, {self.path}, {self.destination})"
@@ -2636,6 +2809,101 @@ class Character:
         elif self.neuroticism > 70:
             return "avoids the situation entirely"
         return "confronts the issue directly"
+
+    def respond_to_talk(self, initiator):
+        """
+        Respond to a conversation initiated by another character.
+        This method provides additional social interaction beyond the effects 
+        handled by TalkAction.
+        """
+        # Give a small additional boost to social wellbeing when talked to
+        self.social_wellbeing += 0.1
+        
+        # Boost based on personality compatibility
+        if hasattr(initiator, 'personality_traits') and self.personality_traits:
+            # Simple compatibility boost - agreeable characters get along better
+            initiator_agreeable = getattr(initiator.personality_traits, 'agreeableness', 50)
+            self_agreeable = getattr(self.personality_traits, 'agreeableness', 50)
+            
+            if initiator_agreeable > 60 and self_agreeable > 60:
+                self.social_wellbeing += 0.1  # Bonus for agreeable personalities
+                
+        # Update friendship grid if it exists
+        if hasattr(self, 'friendship_grid') and hasattr(initiator, 'name'):
+            if initiator.name not in self.friendship_grid:
+                self.friendship_grid[initiator.name] = 0.1  # New acquaintance
+            else:
+                # Strengthen existing relationship slightly
+                self.friendship_grid[initiator.name] = min(
+                    self.friendship_grid[initiator.name] + 0.05, 
+                    1.0
+                )
+        
+        # Return a response based on personality traits
+        if hasattr(self.personality_traits, 'extraversion') and self.personality_traits.extraversion > 65:
+            return f"{self.name} engages enthusiastically in conversation with {getattr(initiator, 'name', 'someone')}"
+        elif hasattr(self.personality_traits, 'neuroticism') and self.personality_traits.neuroticism > 70:
+            return f"{self.name} responds nervously but appreciates the attention from {getattr(initiator, 'name', 'someone')}"
+        elif hasattr(self.personality_traits, 'openness') and self.personality_traits.openness > 70:
+            return f"{self.name} shares interesting thoughts with {getattr(initiator, 'name', 'someone')}"
+        else:
+            return f"{self.name} listens and responds thoughtfully to {getattr(initiator, 'name', 'someone')}"
+
+    def respond_to_greeting(self, initiator):
+        """
+        Respond to a greeting from another character.
+        """
+        # Small boost to social wellbeing from being greeted
+        self.social_wellbeing += 0.05
+        
+        # Update friendship grid if it exists
+        if hasattr(self, 'friendship_grid') and hasattr(initiator, 'name'):
+            if initiator.name not in self.friendship_grid:
+                self.friendship_grid[initiator.name] = 0.05  # New acquaintance greeting
+            else:
+                # Strengthen existing relationship slightly
+                self.friendship_grid[initiator.name] = min(
+                    self.friendship_grid[initiator.name] + 0.02, 
+                    1.0
+                )
+        
+        # Return greeting response based on personality
+        initiator_name = getattr(initiator, 'name', 'someone')
+        if hasattr(self.personality_traits, 'extraversion') and self.personality_traits.extraversion > 65:
+            return f"{self.name} warmly greets {initiator_name} back"
+        elif hasattr(self.personality_traits, 'neuroticism') and self.personality_traits.neuroticism > 70:
+            return f"{self.name} shyly acknowledges {initiator_name}'s greeting"
+        else:
+            return f"{self.name} politely returns {initiator_name}'s greeting"
+
+    def respond_to_compliment(self, initiator, compliment_topic):
+        """
+        Respond to a compliment from another character.
+        """
+        # Significant boost to social wellbeing from compliments
+        self.social_wellbeing += 0.2
+        
+        # Compliments have a stronger effect on friendship
+        if hasattr(self, 'friendship_grid') and hasattr(initiator, 'name'):
+            if initiator.name not in self.friendship_grid:
+                self.friendship_grid[initiator.name] = 0.15  # Strong start for complimenting
+            else:
+                # Strengthen existing relationship more significantly
+                self.friendship_grid[initiator.name] = min(
+                    self.friendship_grid[initiator.name] + 0.1, 
+                    1.0
+                )
+        
+        # Return compliment response based on personality
+        initiator_name = getattr(initiator, 'name', 'someone')
+        if hasattr(self.personality_traits, 'extraversion') and self.personality_traits.extraversion > 65:
+            return f"{self.name} beams with joy at {initiator_name}'s compliment about {compliment_topic}"
+        elif hasattr(self.personality_traits, 'neuroticism') and self.personality_traits.neuroticism > 70:
+            return f"{self.name} blushes and thanks {initiator_name} for the kind words about {compliment_topic}"
+        elif hasattr(self.personality_traits, 'agreeableness') and self.personality_traits.agreeableness > 70:
+            return f"{self.name} graciously accepts {initiator_name}'s compliment about {compliment_topic}"
+        else:
+            return f"{self.name} appreciates {initiator_name}'s compliment about {compliment_topic}"
 
     def define_descriptors(self):
         """

@@ -15,19 +15,44 @@ This module integrates the GOAP system and the graph manager to formulate compre
 """
 
 from tiny_goap_system import GOAPPlanner
-from tiny_graph_manager import GraphManager
 from tiny_utility_functions import (
     calculate_action_utility,
     Goal,
 )  # evaluate_utility seems to be for plans
-from tiny_characters import Character  # Assuming Character class is imported
-from actions import Action  # Use the modified Action from actions.py
-from tiny_prompt_builder import PromptBuilder
-from tiny_brain_io import TinyBrainIO
-from tiny_output_interpreter import OutputInterpreter
+from actions import Action, State  # Use the modified Action from actions.py
 import logging
 
+# Optional imports to avoid dependency issues
+try:
+    from tiny_characters import Character
+except ImportError:
+    Character = None
+    logging.warning("Character class not available - using simplified character handling")
+
+try:
+    from tiny_graph_manager import GraphManager
+except ImportError:
+    GraphManager = None
+    logging.warning("GraphManager not available - graph functionality will be limited")
+
+try:
+    from tiny_prompt_builder import PromptBuilder
+    from tiny_brain_io import TinyBrainIO
+    from tiny_output_interpreter import OutputInterpreter
+except ImportError:
+    PromptBuilder = None
+    TinyBrainIO = None
+    OutputInterpreter = None
+    logging.warning("LLM components not available - LLM functionality will be disabled")
+
 logger = logging.getLogger(__name__)
+
+# Constants for goal targets
+SATISFACTION_TARGET = 70
+ENERGY_TARGET = 65
+# # Constants for goal targets used in daily planning (normalized 0-1 scale)
+# SATISFACTION_TARGET = 0.8   # 80% satisfaction
+# ENERGY_TARGET = 0.8         # 80% energy
 
 
 # Define placeholder/simplified Action classes for use within StrategyManager if not using complex ones from actions.py
@@ -80,13 +105,25 @@ class StrategyManager:
     The StrategyManager class is responsible for managing the strategies used in goal-oriented action planning and utility evaluation.
     """
 
+
     def __init__(self, use_llm=False, model_name=None):
-        self.goap_planner = GOAPPlanner()
-        self.graph_manager = GraphManager()
+        # Initialize graph_manager if available
+        if GraphManager:
+            self.graph_manager = GraphManager()
+        else:
+            self.graph_manager = None
+            
+        # Initialize GOAP planner with graph manager
+        try:
+            self.goap_planner = GOAPPlanner(self.graph_manager)
+        except Exception as e:
+            self.goap_planner = None
+            logging.error(f"Failed to initialize GOAPPlanner: {e}")
+ 
         self.use_llm = use_llm
 
-        # Initialize LLM components if needed
-        if self.use_llm:
+        # Initialize LLM components if needed and available
+        if self.use_llm and TinyBrainIO and PromptBuilder and OutputInterpreter:
             self.brain_io = TinyBrainIO(
                 model_name or "alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2"
             )
@@ -94,49 +131,209 @@ class StrategyManager:
         else:
             self.brain_io = None
             self.output_interpreter = None
+            if self.use_llm:
+                logging.warning("LLM components not available - disabling LLM functionality")
+                
+        # Track characters using LLM for strategy decisions
+        self._characters_using_llm = set()
 
-    def get_character_state_dict(self, character: Character) -> dict:
+    def enable_llm_for_character(self, character):
+        """Enable LLM decision-making for a specific character."""
+        if hasattr(character, 'name'):
+            char_id = character.name
+        else:
+            char_id = str(character)
+            
+        if hasattr(character, 'use_llm_decisions'):
+            character.use_llm_decisions = True
+            
+        self._characters_using_llm.add(char_id)
+        logger.info(f"Enabled LLM decisions for character: {char_id}")
+
+    def disable_llm_for_character(self, character):
+        """Disable LLM decision-making for a specific character."""
+        if hasattr(character, 'name'):
+            char_id = character.name
+        else:
+            char_id = str(character)
+            
+        if hasattr(character, 'use_llm_decisions'):
+            character.use_llm_decisions = False
+            
+        self._characters_using_llm.discard(char_id)
+        logger.info(f"Disabled LLM decisions for character: {char_id}")
+
+    def enable_llm_for_characters(self, characters, character_names=None):
+        """Enable LLM decision-making for multiple characters.
+        
+        Args:
+            characters: List of character objects
+            character_names: Optional list of character names to enable (enables all if None)
+        """
+        for character in characters:
+            if character_names is None or character.name in character_names:
+                self.enable_llm_for_character(character)
+
+                self.use_llm = False  # Actually disable if components not available
+
+    def should_use_llm_for_decision(self, character, situation_context: dict = None) -> bool:
+        """
+        Strategic decision logic for when to invoke LLM vs utility-based planning.
+        
+        LLM is beneficial for:
+        - Complex social situations requiring nuanced understanding
+        - Novel scenarios outside of routine patterns
+        - High-stakes decisions with significant consequences
+        - Situations requiring creative problem-solving
+        
+        Args:
+            character: The character making the decision
+            situation_context: Additional context about the current situation
+            
+        Returns:
+            True if LLM should be used, False for utility-based planning
+        """
+        if not self.use_llm or not self.brain_io or not self.output_interpreter:
+            return False
+            
+        # Always use LLM if explicitly requested
+        if situation_context and situation_context.get('force_llm', False):
+            return True
+            
+        # Use LLM for complex social interactions
+        if situation_context and situation_context.get('social_complexity', 0) > 0.7:
+            return True
+            
+        # Use LLM when character is in crisis (low health, mental health, etc.)
+        character_state = self.get_character_state_dict(character)
+        crisis_threshold = self.CRISIS_THRESHOLD  # Below 30% on critical stats
+        
+        critical_stats = ['health', 'mental_health', 'energy']
+        in_crisis = any(character_state.get(stat, 1.0) < crisis_threshold for stat in critical_stats)
+        
+        if in_crisis:
+            logger.info(f"Using LLM for crisis decision-making for {getattr(character, 'name', 'character')}")
+            return True
+            
+        # Use LLM for novel situations (detected by unusual action patterns)
+        if situation_context and situation_context.get('novelty_score', 0) > 0.6:
+            return True
+            
+        # Use LLM periodically for variety and emergent behavior (1 in 5 decisions)
+        import random
+        if random.random() < VARIETY_PROBABILITY:  # 20% chance for variety
+            logger.info(f"Using LLM for variety in decision-making for {getattr(character, 'name', 'character')}")
+            return True
+            
+        # Use LLM when character has complex goals requiring planning
+        if hasattr(character, 'get_current_goal'):
+            current_goal = character.get_current_goal()
+            if current_goal and getattr(current_goal, 'complexity', 0) > 0.7:
+                return True
+                
+        # Default to utility-based planning for routine decisions
+        return False
+
+    def get_enhanced_daily_actions(self, character, time="morning", weather="clear", 
+                                 situation_context: dict = None) -> list[Action]:
+        """
+        Enhanced daily action planning that strategically chooses between LLM and utility-based approaches.
+        
+        This method implements the strategic invocation logic to determine the best approach
+        for each decision-making scenario.
+        """
+        # Determine whether to use LLM based on strategic considerations
+        should_use_llm = self.should_use_llm_for_decision(character, situation_context)
+        
+        if should_use_llm:
+            logger.info(f"Strategic decision: Using LLM for {getattr(character, 'name', 'character')}")
+            try:
+                return self.decide_action_with_llm(character, time, weather)
+            except Exception as e:
+                logger.error(f"LLM decision failed, falling back to utility-based: {e}")
+                # Fallback to utility-based if LLM fails
+        else:
+            logger.debug(f"Strategic decision: Using utility-based planning for {getattr(character, 'name', 'character')}")
+            
+        # Use utility-based planning as default or fallback
+        return self.get_daily_actions(character)
+
+    def get_character_state_dict(self, character) -> dict:
         """
         Extracts a simplified dictionary representation of the character's state
         relevant for utility calculations.
+        
+        Args:
+            character: Character object or dictionary with character state
         """
         state = {}
-        # Basic needs - assuming direct attribute access or simple getters
-        # Normalize hunger/energy to 0-1 range if they aren't already.
-        # For utility function: higher hunger = more need; lower energy = more need.
-        state["hunger"] = (
-            getattr(character, "hunger_level", 0.0) / 10.0
-            if hasattr(character, "hunger_level")
-            else 0.5
-        )  # Assuming hunger 0-10
-        state["energy"] = (
-            getattr(character, "energy", 0.0) / 10.0
-            if hasattr(character, "energy")
-            else 0.5
-        )  # Assuming energy 0-10
-        state["money"] = float(getattr(character, "wealth_money", 0))
+        
+        # Handle different character input types
+        if isinstance(character, dict):
+            # If character is already a dictionary, use it directly
+            return character
+        elif hasattr(character, '__dict__'):
+            # If character is an object, extract attributes
+            # Basic needs - assuming direct attribute access or simple getters
+            # Normalize hunger/energy to 0-1 range if they aren't already.
+            # For utility function: higher hunger = more need; lower energy = more need.
+            try:
+                state["hunger"] = (
+                    getattr(character, "hunger_level", 0.0) / 10.0
+                    if hasattr(character, "hunger_level")
+                    else 0.5
+                )  # Assuming hunger 0-10
+                state["energy"] = (
+                    getattr(character, "energy", 0.0) / 10.0
+                    if hasattr(character, "energy")
+                    else 0.5
+                )  # Assuming energy 0-10
+                state["money"] = float(getattr(character, "wealth_money", 0))
 
-        # Add other relevant states if needed by utility function's need fulfillment logic
-        # e.g., social_wellbeing, mental_health
-        state["social_wellbeing"] = (
-            getattr(character, "social_wellbeing", 5.0) / 10.0
-            if hasattr(character, "social_wellbeing")
-            else 0.5
-        )
-        state["mental_health"] = (
-            getattr(character, "mental_health", 5.0) / 10.0
-            if hasattr(character, "mental_health")
-            else 0.5
-        )
+                # Add other relevant states if needed by utility function's need fulfillment logic
+                # e.g., social_wellbeing, mental_health
+                state["social_wellbeing"] = (
+                    getattr(character, "social_wellbeing", 5.0) / 10.0
+                    if hasattr(character, "social_wellbeing")
+                    else 0.5
+                )
+                state["mental_health"] = (
+                    getattr(character, "mental_health", 5.0) / 10.0
+                    if hasattr(character, "mental_health")
+                    else 0.5
+                )
+            except (AttributeError, TypeError, ValueError) as e:
+                logger.warning(f"Error extracting character state: {e}, using defaults")
+                # Fallback to default values
+                state = {
+                    "hunger": 0.5,
+                    "energy": 0.5,
+                    "money": 0.0,
+                    "social_wellbeing": 0.5,
+                    "mental_health": 0.5
+                }
+        else:
+            # Fallback for simple character representation
+            state = {
+                "hunger": 0.5,
+                "energy": 0.5,
+                "money": 0.0,
+                "social_wellbeing": 0.5,
+                "mental_health": 0.5
+            }
 
         return state
 
     def get_daily_actions(
-        self, character: Character, current_goal: Goal = None
+        self, character, current_goal=None
     ) -> list[Action]:
         """
         Generates a list of potential daily actions for a character,
         calculates their utility, and returns them sorted by utility.
+        
+        Args:
+            character: Character object, dictionary, or string name
+            current_goal: Optional goal object for utility calculation
         """
         potential_actions = []
 
@@ -148,33 +345,71 @@ class StrategyManager:
         )  # Wandering costs a little energy
 
         # 2. Contextual Actions
-        # Assumed Character object structure:
-        # - character.inventory: an object with get_food_items() -> list of FoodItem objects
-        #   - FoodItem has .name and .calories (or similar attribute for hunger satisfaction)
-        # - character.energy: float/int, current energy level (e.g., 0-10, or 0.0-1.0)
-        # - character.hunger_level: float/int, current hunger (e.g., 0-10, 0 is not hungry, 10 is very hungry)
-        # - character.location: an object with .name (e.g., "Home", "Cafe")
-        # - character.job: a string or an object indicating job (e.g., "Farmer", None)
+        # Handle different character input types
+        char_energy_normalized = 0.5  # Default value
+        char_location_name = "Unknown"  # Default value
+        char_job = "unemployed"  # Default value
+        
+        if hasattr(character, 'energy'):
+            char_energy_normalized = getattr(character, "energy", 5.0) / 10.0
+        elif isinstance(character, dict):
+            char_energy_normalized = character.get("energy", 5.0) / 10.0
+            
+        if hasattr(character, 'location'):
+            char_location_name = getattr(character.location, "name", "Unknown") if character.location else "Unknown"
+        elif isinstance(character, dict):
+            char_location_name = character.get("location", "Unknown")
+            
+        if hasattr(character, 'job'):
+            char_job = character.job
+        elif isinstance(character, dict):
+            char_job = character.get("job", "unemployed")
 
         LOW_ENERGY_THRESHOLD = 0.3  # Assuming energy is normalized 0-1 for this check
         HIGH_HUNGER_THRESHOLD = 0.6  # Assuming hunger is normalized 0-1 for this check
 
-        char_energy_normalized = (
-            getattr(character, "energy", 5.0) / 10.0
-        )  # Normalize for threshold checks
+        # Add actions that can improve satisfaction and energy to match common goals (0-1 scale)
+        rest_action = Action(
+            name="Rest",
+            preconditions=[],
+            effects=[
+                {"targets": ["initiator"], "attribute": "energy", "change_value": 0.15},
+                {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 0.08}
+            ],
+            cost=0.1
+        )
+        potential_actions.append(rest_action)
+        
+        # Leisure activity to improve satisfaction
+        leisure_action = Action(
+            name="Leisure Activity", 
+            preconditions=[],
+            effects=[
+                {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 0.12},
+                {"targets": ["initiator"], "attribute": "happiness", "change_value": 0.08}
+            ],
+            cost=0.2
+        )
+        potential_actions.append(leisure_action)
+        
+        # Exercise to improve energy and satisfaction
+        exercise_action = Action(
+            name="Exercise",
+            preconditions=[],
+            effects=[
+                {"targets": ["initiator"], "attribute": "energy", "change_value": 0.10},
+                {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 0.06}
+            ],
+            cost=0.3
+        )
+        potential_actions.append(exercise_action)
 
-        # Eat Actions (from inventory)
-        if hasattr(character, "inventory") and hasattr(
-            character.inventory, "get_food_items"
-        ):
-
+        # Eat Actions (from inventory) - simplified for now
+        if hasattr(character, "inventory") and hasattr(character.inventory, "get_food_items"):
             food_items = character.inventory.get_food_items()
             if food_items:
                 # Consider eating the first available food item for simplicity
-                # More advanced: choose based on hunger level or food properties
                 for food_item in food_items[:2]:  # Limit to checking first 2 food items
-                    # Assuming food_item.calories is a positive value indicating hunger reduction potential
-                    # The effect's change_value for hunger should be negative.
                     hunger_reduction_effect = -(
                         getattr(food_item, "calories", 20) * 0.1
                     )  # Scale calories to hunger effect
@@ -188,29 +423,22 @@ class StrategyManager:
                     )
 
         # Sleep Action
-        if hasattr(character, "location") and hasattr(character.location, "name"):
-            if (
-                char_energy_normalized < LOW_ENERGY_THRESHOLD
-                and character.location.name == "Home"
-            ):
-                sleep_effects = [
-                    {"attribute": "energy", "change_value": 0.7}
-                ]  # Restore 70% energy
-                potential_actions.append(
-                    SleepAction(effects=sleep_effects, cost=0)
-                )  # Sleep itself has no direct cost other than time
+        if (char_energy_normalized < LOW_ENERGY_THRESHOLD and char_location_name == "Home"):
+            sleep_effects = [
+                {"attribute": "energy", "change_value": 0.7}
+            ]  # Restore 70% energy
+            potential_actions.append(
+                SleepAction(effects=sleep_effects, cost=0)
+            )  # Sleep itself has no direct cost other than time
 
         # Work Action
-        if (
-            hasattr(character, "job")
-            and character.job
-            and character.job != "unemployed"
-        ):
-            job_name = (
-                character.job.job_title
-                if hasattr(character.job, "job_title")
-                else str(character.job)
-            )
+        if char_job and char_job != "unemployed":
+            job_name = char_job
+            if hasattr(char_job, "job_title"):
+                job_name = char_job.job_title
+            elif not isinstance(char_job, str):
+                job_name = str(char_job)
+                
             work_effects = [
                 {"attribute": "money", "change_value": 20.0},  # Example money gain
                 {"attribute": "energy", "change_value": -0.3},  # Example energy cost
@@ -240,7 +468,7 @@ class StrategyManager:
         return [action_tuple[0] for action_tuple in sorted_actions]
 
     def decide_action_with_llm(
-        self, character: Character, time="morning", weather="clear"
+        self, character, time="morning", weather="clear"
     ) -> list[Action]:
         """
         Use LLM to make an intelligent decision about character actions.
@@ -258,6 +486,10 @@ class StrategyManager:
             potential_actions = self.get_daily_actions(character)
 
             # Step 2: Create PromptBuilder for this character
+            if not PromptBuilder:
+                logger.warning("PromptBuilder not available, falling back to utility-based actions")
+                return potential_actions[:1] if potential_actions else []
+                
             prompt_builder = PromptBuilder(character)
 
             # Step 3: Generate action choices with utility scores from potential actions
@@ -295,26 +527,33 @@ class StrategyManager:
                 action_choices.append(action_choice)
 
             # Step 4: Generate LLM prompt with enhanced action choices and character context
+            character_name = getattr(character, 'name', 'Character') if hasattr(character, 'name') else 'Character'
             prompt = prompt_builder.generate_decision_prompt(
                 time, weather, action_choices, character_state_dict
             )
 
             # Step 5: Query LLM
             logger.debug(
-                f"Sending prompt to LLM for {character.name}: {prompt[:100]}..."
+                f"Sending prompt to LLM for {character_name}: {prompt[:100]}..."
             )
             llm_responses = self.brain_io.input_to_model([prompt])
 
             if not llm_responses or len(llm_responses) == 0:
-                logger.warning(f"No LLM response received for {character.name}")
+                logger.warning(f"No LLM response received for {character_name}")
                 return potential_actions[:1]  # Return top utility action as fallback
 
-            llm_response_text = (
-                llm_responses[0][0]
-                if isinstance(llm_responses[0], tuple)
-                else llm_responses[0]
-            )
-            logger.debug(f"LLM response for {character.name}: {llm_response_text}")
+            # Handle different response formats from LLM
+            try:
+                if isinstance(llm_responses[0], tuple):
+                    llm_response_text = llm_responses[0][0]
+                elif isinstance(llm_responses[0], str):
+                    llm_response_text = llm_responses[0]
+                else:
+                    llm_response_text = str(llm_responses[0])
+            except (IndexError, TypeError) as parse_error:
+                logger.warning(f"Error parsing LLM response format: {parse_error}")
+                return potential_actions[:1]
+            logger.debug(f"LLM response for {character_name}: {llm_response_text}")
 
             # Step 6: Interpret LLM response
             try:
@@ -324,65 +563,333 @@ class StrategyManager:
 
                 if selected_actions and len(selected_actions) > 0:
                     logger.info(
-                        f"LLM selected action for {character.name}: {[a.name for a in selected_actions]}"
+                        f"LLM selected action for {character_name}: {[a.name for a in selected_actions]}"
                     )
                     return selected_actions
                 else:
                     logger.warning(
-                        f"LLM response could not be interpreted for {character.name}"
+                        f"LLM response could not be interpreted for {character_name}"
                     )
                     return potential_actions[:1]  # Fallback to top utility action
 
             except Exception as interpretation_error:
                 logger.error(
-                    f"Error interpreting LLM response for {character.name}: {interpretation_error}"
+                    f"Error interpreting LLM response for {character_name}: {interpretation_error}"
                 )
                 return potential_actions[:1]  # Fallback to top utility action
 
         except Exception as e:
-            logger.error(f"Error in LLM decision-making for {character.name}: {e}")
+            character_name = getattr(character, 'name', 'Character') if hasattr(character, 'name') else 'Character'
+            logger.error(f"Error in LLM decision-making for {character_name}: {e}")
             # Always fallback to utility-based decision making
             return self.get_daily_actions(character)[:1]
 
     # --- Other methods from the original file (potentially needing updates) ---
     def update_strategy(self, events, subject="Emma"):
-        # This method likely needs significant updates to use Character objects
-        # and the new get_daily_actions with utility.
-        # For now, focusing on get_daily_actions as per subtask.
+        """
+        Updates strategy based on events using GOAP planning with optional LLM integration.
+        Enhanced to handle various event types and respond meaningfully.
+        """
+        if not events:
+            return self.plan_daily_activities(subject)
+            
         for event in events:
-            if event.type == "new_day":
-                return self.plan_daily_activities("Emma")
-            character_state = self.graph_manager.get_character_state("Emma")
-            actions = self.graph_manager.get_possible_actions("Emma")
-            plan = self.goap_planner.plan_actions(character_state, actions)
-            return plan
+            # Handle different event types with specific responses
+            if hasattr(event, 'type'):
+                event_type = event.type
+            elif isinstance(event, dict):
+                event_type = event.get('type', 'unknown')
+            else:
+                event_type = str(type(event).__name__).lower()
+                
+            logger.debug(f"Processing event of type '{event_type}' for {subject}")
+            
+            # Check if character should use LLM decision-making for strategy updates
+            use_llm_for_strategy = False
+            if hasattr(subject, 'use_llm_decisions'):
+                use_llm_for_strategy = subject.use_llm_decisions
+            elif isinstance(subject, str) and hasattr(self, '_characters_using_llm'):
+                use_llm_for_strategy = subject in self._characters_using_llm
+            
+            # Route to specific event handlers with LLM awareness
+            if event_type == "new_day":
+                return self._handle_new_day_strategy(subject, use_llm_for_strategy)
+            elif event_type in ["social", "celebration", "festival"]:
+                return self._handle_social_event(event, subject)
+            elif event_type in ["economic", "trade", "market"]:
+                return self._handle_economic_event(event, subject)
+            elif event_type in ["crisis", "disaster", "emergency"]:
+                return self._handle_crisis_event(event, subject)
+            elif event_type in ["work", "task", "project"]:
+                return self._handle_work_event(event, subject)
+            elif event_type in ["weather", "environmental"]:
+                return self._handle_environmental_event(event, subject)
+            else:
+                # Default event handling
+                return self._handle_generic_event(event, subject)
+
+    def _handle_social_event(self, event, character):
+        """Handle social events by prioritizing social actions."""
+        try:
+            # Create goal focused on social interaction and happiness
+            goal = Goal(
+                name="social_engagement",
+                target_effects={"social_wellbeing": 80, "happiness": 75},
+                priority=0.8
+            )
+            
+            # Get social-focused actions
+            actions = self.get_daily_actions(character)
+            social_actions = [a for a in actions if 'social' in a.name.lower() or 'talk' in a.name.lower() or 'help' in a.name.lower()]
+            
+            if not social_actions:
+                social_actions = actions[:3]  # Take top 3 if no social actions found
+                
+            return self._plan_with_goal_and_actions(character, goal, social_actions)
+            
+        except Exception as e:
+            logger.warning(f"Error handling social event: {e}")
+            return self.plan_daily_activities(character)
+
+    def _handle_economic_event(self, event, character):
+        """Handle economic events by prioritizing wealth and trade actions."""
+        try:
+            goal = Goal(
+                name="economic_opportunity",
+                target_effects={"wealth": 100, "satisfaction": 70},
+                priority=0.9
+            )
+            
+            actions = self.get_daily_actions(character)
+            economic_actions = [a for a in actions if 'work' in a.name.lower() or 'trade' in a.name.lower() or 'craft' in a.name.lower()]
+            
+            if not economic_actions:
+                economic_actions = actions[:3]
+                
+            return self._plan_with_goal_and_actions(character, goal, economic_actions)
+            
+        except Exception as e:
+            logger.warning(f"Error handling economic event: {e}")
+            return self.plan_daily_activities(character)
+
+    def _handle_crisis_event(self, event, character):
+        """Handle crisis events by prioritizing safety and recovery actions."""
+        try:
+            goal = Goal(
+                name="crisis_response",
+                target_effects={"safety": 90, "energy": 60},
+                priority=1.0  # Highest priority
+            )
+            
+            # In crisis, prioritize safety and basic needs
+            crisis_actions = []
+            
+            # Add safety actions
+            crisis_actions.append(Action(
+                name="Seek Safety",
+                preconditions={},
+                effects=[
+                    {"targets": ["initiator"], "attribute": "safety", "change_value": 20},
+                    {"targets": ["initiator"], "attribute": "energy", "change_value": -10}
+                ],
+                cost=0.2
+            ))
+            
+            # Add help others action
+            crisis_actions.append(Action(
+                name="Help Others",
+                preconditions={},
+                effects=[
+                    {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 15},
+                    {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 10}
+                ],
+                cost=0.3
+            ))
+            
+            return self._plan_with_goal_and_actions(character, goal, crisis_actions)
+            
+        except Exception as e:
+            logger.warning(f"Error handling crisis event: {e}")
+            return self.plan_daily_activities(character)
+
+    def _handle_work_event(self, event, character):
+        """Handle work events by prioritizing productivity and skill development."""
+        try:
+            goal = Goal(
+                name="work_productivity",
+                target_effects={"job_performance": 85, "satisfaction": 65},
+                priority=0.7
+            )
+            
+            actions = self.get_daily_actions(character)
+            work_actions = [a for a in actions if 'work' in a.name.lower() or 'craft' in a.name.lower() or 'build' in a.name.lower()]
+            
+            if not work_actions:
+                # Create a basic work action if none exist
+                work_actions = [WorkAction(
+                    name="Contribute to Project",
+                    effects=[
+                        {"targets": ["initiator"], "attribute": "job_performance", "change_value": 10},
+                        {"targets": ["initiator"], "attribute": "energy", "change_value": -15}
+                    ]
+                )]
+                
+            return self._plan_with_goal_and_actions(character, goal, work_actions)
+            
+        except Exception as e:
+            logger.warning(f"Error handling work event: {e}")
+            return self.plan_daily_activities(character)
+
+    def _handle_environmental_event(self, event, character):
+        """Handle environmental/weather events by adapting to conditions."""
+        try:
+            # Determine appropriate response based on event severity
+            event_impact = getattr(event, 'impact', 0)
+            
+            if event_impact < 0:  # Negative weather (storm, etc.)
+                goal = Goal(
+                    name="weather_adaptation",
+                    target_effects={"safety": 80, "energy": 70},
+                    priority=0.8
+                )
+                
+                # Stay indoors, rest, prepare
+                weather_actions = [
+                    SleepAction(name="Take Shelter", effects=[
+                        {"targets": ["initiator"], "attribute": "safety", "change_value": 15},
+                        {"targets": ["initiator"], "attribute": "energy", "change_value": 10}
+                    ]),
+                ]
+            else:  # Positive weather
+                goal = Goal(
+                    name="enjoy_weather",
+                    target_effects={"happiness": 80, "energy": 75},
+                    priority=0.6
+                )
+                
+                # Outdoor activities, work, socialize
+                weather_actions = [
+                    WanderAction(name="Enjoy Outdoors", effects=[
+                        {"targets": ["initiator"], "attribute": "happiness", "change_value": 10},
+                        {"targets": ["initiator"], "attribute": "energy", "change_value": 5}
+                    ])
+                ]
+                
+            return self._plan_with_goal_and_actions(character, goal, weather_actions)
+            
+        except Exception as e:
+            logger.warning(f"Error handling environmental event: {e}")
+            return self.plan_daily_activities(character)
+
+    def _handle_new_day_strategy(self, character, use_llm=False):
+        """Handle new day events with optional LLM decision-making."""
+        try:
+            if use_llm and self.use_llm and self.brain_io and self.output_interpreter:
+                # Use LLM for strategic new day planning
+                logger.info(f"Using LLM strategy for new day planning for {getattr(character, 'name', character)}")
+                
+                # Get environmental context if available
+                time = "morning"  # Default for new day
+                weather = "clear"  # Default weather
+                
+                try:
+                    return self.decide_action_with_llm(character, time=time, weather=weather)
+                except Exception as llm_error:
+                    logger.warning(f"LLM strategy failed for new day: {llm_error}")
+                    # Fall back to standard planning
+                    return self.plan_daily_activities(character)
+            else:
+                # Use standard utility-based planning
+                return self.plan_daily_activities(character)
+                
+        except Exception as e:
+            logger.warning(f"Error handling new day strategy: {e}")
+            return self.plan_daily_activities(character)
+
+    def _handle_generic_event(self, event, character):
+        """Handle generic events with balanced response."""
+        try:
+            # Default balanced goal
+            goal = Goal(
+                name="balanced_response",
+                target_effects={"satisfaction": 70, "energy": 65},
+                priority=0.6
+            )
+            
+            # Use standard daily actions
+            actions = self.get_daily_actions(character)
+            
+            return self._plan_with_goal_and_actions(character, goal, actions[:5])
+            
+        except Exception as e:
+            logger.warning(f"Error handling generic event: {e}")
+            return self.plan_daily_activities(character)
+
+    def _plan_with_goal_and_actions(self, character, goal, actions):
+        """Helper method to plan actions with a specific goal."""
+        try:
+            # Get character state
+            if isinstance(character, str):
+                current_state = State({"satisfaction": 50, "energy": 50, "happiness": 50})
+            else:
+                character_state_dict = self.get_character_state_dict(character)
+                current_state = State(character_state_dict)
+            
+            # Plan using GOAP with the specific goal and actions
+            if self.goap_planner:
+                plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
+                
+                if plan:
+                    # Evaluate the utility of the plan
+                    final_decision = self.goap_planner.evaluate_utility(plan, character)
+                    return final_decision
+                    
+            # Fallback to highest utility action
+            if actions:
+                return actions[0]  # Actions are already sorted by utility
+                
+            return None
+            
+        except Exception as e:
+            logger.warning(f"Error in planning with goal and actions: {e}")
+            return None
 
     def plan_daily_activities(self, character):
         """
         Plans the daily activities for the given character.
-        It defines the goal for daily activities, gets potential actions, and uses the graph to analyze current relationships and preferences.
+        This method properly interfaces with GOAPPlanner.
         """
-        # Define the goal for daily activities
-        goal = {"satisfaction": max, "energy_usage": min}
+        # Define a proper Goal object for daily activities
+        goal = Goal(
+            name="daily_wellbeing",
+            target_effects={"satisfaction": SATISFACTION_TARGET, "energy": ENERGY_TARGET},
+            priority=0.8
+        )
 
-        # Get potential actions from a dynamic or context-specific action generator
+        # Get potential actions from the utility-based action generator
         actions = self.get_daily_actions(character)
 
-        # Use the graph to analyze current relationships and preferences
-        current_state = self.graph_analysis(character_graph, character, "daily")
+        # Create current state - handle both Character objects and string names
+        if isinstance(character, str):
+            # If character is a string, create a simple state
+            current_state = State({"satisfaction": 50, "energy": 50, "hunger": 50})
+        else:
+            # If character is a Character object, get its state
+            character_state_dict = self.get_character_state_dict(character)
+            current_state = State(character_state_dict)
 
-        # Plan the career steps using GOAP
-        plan = self.goap_planner(character, goal, current_state, actions)
+        # Plan using GOAP with correct interface
+        plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
 
-        # Evaluate the utility of each step in the plan
-        final_decision = evaluate_utility(plan, character)
-
-        return final_decision
-
-    def get_daily_actions(self, character):
-        """Get daily actions for a character."""
-        # This is a placeholder for daily action logic
-        return []
+        # Evaluate the utility of the plan using the planner's evaluate_utility method
+        if plan:
+            final_decision = self.goap_planner.evaluate_utility(plan, character)
+            return final_decision
+        else:
+            # If no plan found, return the highest utility action as fallback
+            if actions:
+                return max(actions, key=lambda a: self.goap_planner.calculate_utility(a, character))
+            return None
 
     def get_career_actions(self, character, job_details):
         # This is a placeholder and would need similar utility-based ranking
@@ -402,16 +909,48 @@ class StrategyManager:
             {"name": "Decline Offer", "career_progress": 0, "cost": 0, "effects": []},
         ]
 
-    def respond_to_job_offer(self, character, job_details, graph):
-        # FIX: This method also needs significant updates
-        goal = {"career_progress": "max"}
-        current_state = {"satisfaction": 100}  # Assuming current job satisfaction
+    def respond_to_job_offer(self, character, job_details, graph=None):
+        """
+        Plans a response to a job offer using GOAP planning.
+        This method properly interfaces with GOAPPlanner.
+        """
+        # Create a proper Goal object for career decisions
+        goal = Goal(
+            name="career_advancement",
+            target_effects={"career_progress": 80, "satisfaction": 70},
+            priority=0.9
+        )
+        
+        # Create current state
+        current_state = State({"satisfaction": 70, "career_progress": 50})  # Assuming current state
+        
+        # Get career actions
         actions = self.get_career_actions(character, job_details)
+        
+        # Convert dictionary actions to Action objects if needed
+        action_objects = []
+        for action_dict in actions:
+            if isinstance(action_dict, dict):
+                action_obj = Action(
+                    name=action_dict["name"],
+                    preconditions=[],
+                    effects=[
+                        {"attribute": "career_progress", "change_value": action_dict.get("career_progress", 0)},
+                        {"attribute": "satisfaction", "change_value": action_dict.get("cost", 0) * -1}  # Cost reduces satisfaction
+                    ],
+                    cost=action_dict.get("cost", 0)
+                )
+                action_objects.append(action_obj)
+            else:
+                action_objects.append(action_dict)
 
-        # Use GOAP to plan career moves
-        plan = self.goap_planner(character, goal, current_state, actions)
+        # Use GOAP to plan career moves with correct interface
+        plan = self.goap_planner.plan_actions(character, goal, current_state, action_objects)
 
         # Evaluate the utility of the plan
-        final_decision = evaluate_utility(plan, character)
-
-        return final_decision
+        if plan:
+            final_decision = self.goap_planner.evaluate_utility(plan, character)
+            return final_decision
+        else:
+            # Fallback to first action if no plan found
+            return action_objects[0] if action_objects else None
