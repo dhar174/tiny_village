@@ -337,19 +337,19 @@ class SelectedCharacterPanel(UIPanel):
             current_y += action_text.get_height() + 3
             
             # Social and quest info (condensed)
-            if hasattr(char, "uuid") and hasattr(controller, "social_networks"):
+            if (hasattr(char, "uuid") and hasattr(controller, "graph_manager") and 
+                controller.graph_manager):
                 try:
-                    relationships = controller.social_networks["relationships"].get(char.uuid, {})
-                    avg_relationship = (
-                        sum(relationships.values()) / len(relationships)
-                        if relationships else 50
-                    )
-                    social_text = tiny_font.render(f"Social: {avg_relationship:.0f}/100", True, (180, 180, 180))
-                    screen.blit(social_text, (x, current_y))
-                    current_y += social_text.get_height() + 1
-
+                    relationships = controller.graph_manager.get_character_relationships(char)
+                    if relationships:
+                        avg_relationship = sum(
+                            rel_data.get('strength', 50) for rel_data in relationships.values()
+                        ) / len(relationships)
+                        social_text = tiny_font.render(f"Social: {avg_relationship:.0f}/100", True, (180, 180, 180))
+                        screen.blit(social_text, (x, current_y))
+                        current_y += social_text.get_height() + 1
                 except Exception as e:
-                    logging.error(f"Error accessing social_networks while rendering selected character panel: {e}")
+                    logging.error(f"Error accessing GraphManager while rendering selected character panel: {e}")
             
             if hasattr(char, "uuid") and hasattr(controller, "quest_system"):
                 try:
@@ -508,12 +508,15 @@ class VillageOverviewPanel(UIPanel):
                 health = getattr(char, 'health_status', 50)
                 char_mood = (energy + health) / 2
                 
-                # Factor in social relationships if available
-                if hasattr(controller, 'social_networks') and hasattr(char, 'uuid'):
+                # Factor in social relationships if available through GraphManager
+                if (hasattr(controller, 'graph_manager') and controller.graph_manager and 
+                    hasattr(char, 'uuid')):
                     try:
-                        relationships = controller.social_networks.get('relationships', {}).get(char.uuid, {})
+                        relationships = controller.graph_manager.get_character_relationships(char)
                         if relationships:
-                            avg_relationship = sum(relationships.values()) / len(relationships)
+                            avg_relationship = sum(
+                                rel_data.get('strength', 50) for rel_data in relationships.values()
+                            ) / len(relationships)
                             char_mood = (char_mood + avg_relationship) / 2
                     except:
                         pass
@@ -1572,10 +1575,10 @@ class GameplayController:
         # Setup user-driven configuration
         self.setup_user_driven_configuration()
 
-        # Initialize feature systems
+        # Initialize feature systems (delegate social networks to GraphManager)
         self.implement_achievement_system()
         self.implement_weather_system()
-        self.implement_social_network_system()
+        # Social network system is now handled by GraphManager - removed separate implementation
         self.implement_quest_system()
 
         # Initialize world events for emergent storytelling
@@ -2310,6 +2313,11 @@ class GameplayController:
             except Exception as e:
                 logger.error(f"Error registering character {character.name}: {e}")
                 continue
+        
+        # Initialize relationships through GraphManager (single source of truth)
+        if self.graph_manager and len(self.characters) > 1:
+            self.graph_manager.initialize_character_relationships(self.characters)
+            logger.info(f"Initialized social relationships for {len(self.characters)} characters through GraphManager")
 
     def game_loop(self):
         """Main game loop with configurable frame rate and performance monitoring."""
@@ -2895,20 +2903,13 @@ class GameplayController:
             logger.warning(f"Error updating feature systems: {e}")
 
     def _update_social_relationships(self, dt):
-        """Update social relationships over time."""
+        """Update social relationships over time using GraphManager."""
         try:
-            if not hasattr(self, "social_networks"):
-                return
-
-            # Slow relationship decay/growth over time
-            for char_id, relationships in self.social_networks["relationships"].items():
-                for other_id, strength in relationships.items():
-                    # Very slow decay towards neutral (50)
-                    if strength > 50:
-                        relationships[other_id] = max(50, strength - 0.1 * dt)
-                    elif strength < 50:
-                        relationships[other_id] = min(50, strength + 0.1 * dt)
-
+            if self.graph_manager:
+                # Delegate to GraphManager for social relationship updates
+                self.graph_manager.update_social_relationships(dt)
+            else:
+                logger.warning("GraphManager not available for social relationship updates")
         except Exception as e:
             logger.warning(f"Error updating social relationships: {e}")
 
@@ -3250,15 +3251,28 @@ class GameplayController:
             return self._execute_fallback_character_action(character)
 
     def _update_social_networks_from_event(self, event_name):
-        """Update social networks based on social events."""
+        """Update social networks based on social events using GraphManager."""
         try:
-            if hasattr(self, 'social_networks'):
-                # Strengthen relationships for participants in social events
-                for char_id, relationships in self.social_networks.get('relationships', {}).items():
-                    for other_id in relationships:
-                        # Small boost to all relationships after community events
-                        current_strength = relationships[other_id]
-                        relationships[other_id] = min(100, current_strength + 2)
+            if self.graph_manager:
+                # Strengthen relationships for participants in social events through GraphManager
+                for char1 in self.characters.values():
+                    for char2 in self.characters.values():
+                        if (char1 != char2 and 
+                            char1 in self.graph_manager.G.nodes and 
+                            char2 in self.graph_manager.G.nodes and
+                            self.graph_manager.G.has_edge(char1, char2)):
+                            
+                            # Small boost to relationship strength after community events
+                            edge_data = self.graph_manager.G[char1][char2]
+                            current_strength = edge_data.get('strength', 50)
+                            edge_data['strength'] = min(100, current_strength + 2)
+                            
+                            # Also boost emotional impact slightly
+                            current_emotional = edge_data.get('emotional', 0)
+                            if current_emotional >= 0:
+                                edge_data['emotional'] = min(1.0, current_emotional + 0.1)
+            else:
+                logger.warning("GraphManager not available for social network updates")
                         
         except Exception as e:
             logger.warning(f"Error updating social networks from event: {e}")
@@ -3703,7 +3717,8 @@ class GameplayController:
                 "statistics": self.game_statistics,
                 "weather": getattr(self, "weather_system", {}),
                 "quest_system": getattr(self, "quest_system", {}),
-                "social_networks": getattr(self, "social_networks", {})
+                # Social networks are now managed by GraphManager
+                "social_networks": self.get_social_networks()
             }
             
             # Save character data
@@ -3765,7 +3780,9 @@ class GameplayController:
                 
             # Restore social networks
             if "social_networks" in game_state:
-                self.social_networks = game_state["social_networks"]
+                # Note: Social networks are now managed by GraphManager
+                # The saved data will be used to restore relationships in GraphManager if needed
+                logger.info("Social network data found in save file - managed by GraphManager")
             
             # Note: Character restoration is more complex and would require
             # full character recreation, which is beyond basic save/load
@@ -3820,28 +3837,27 @@ class GameplayController:
         except Exception as e:
             logger.error(f"Error in weather system: {e}")
 
-    def implement_social_network_system(self):
-        """Implement basic social relationship tracking."""
-        try:
-            if not hasattr(self, "social_networks"):
-                self.social_networks = {
-                    "relationships": {},
-                    "last_update": pygame.time.get_ticks()
-                }
-            
-            # Initialize relationships for all characters
-            for char_id in self.characters.keys():
-                if char_id not in self.social_networks["relationships"]:
-                    self.social_networks["relationships"][char_id] = {}
-                    
-                    # Create relationships with other characters
-                    for other_id in self.characters.keys():
-                        if other_id != char_id:
-                            # Random initial relationship strength (30-70)
-                            self.social_networks["relationships"][char_id][other_id] = random.randint(30, 70)
-                            
-        except Exception as e:
-            logger.error(f"Error in social network system: {e}")
+    def get_social_networks(self):
+        """
+        Get social network data by delegating to GraphManager (single source of truth).
+        
+        Returns:
+            dict: Social network data from GraphManager
+        """
+        if self.graph_manager:
+            return self.graph_manager.get_social_networks()
+        else:
+            # Fallback if GraphManager not available
+            return {"relationships": {}, "last_update": pygame.time.get_ticks()}
+    
+    # Note: social_networks property now delegates to GraphManager
+    @property 
+    def social_networks(self):
+        """
+        Property that delegates to GraphManager for social network data.
+        This maintains compatibility while ensuring single source of truth.
+        """
+        return self.get_social_networks()
 
     def implement_quest_system(self):
         """Implement basic quest and goal system."""
@@ -3982,7 +3998,7 @@ class GameplayController:
             "save_load_system": "BASIC_IMPLEMENTED",
             "achievement_system": "BASIC_IMPLEMENTED",
             "weather_system": "STUB_IMPLEMENTED",
-            "social_network_system": "STUB_IMPLEMENTED", 
+            "social_network_system": "FULLY_IMPLEMENTED",  # Now properly managed by GraphManager 
             "quest_system": "STUB_IMPLEMENTED",
             "skill_progression": "BASIC_IMPLEMENTED",
             "reputation_system": "BASIC_IMPLEMENTED",

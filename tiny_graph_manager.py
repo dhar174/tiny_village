@@ -3196,6 +3196,172 @@ class GraphManager:
             decision_context, influence_factors
         )
 
+    # Social Network Management Methods (Single Source of Truth)
+    def get_social_networks(self):
+        """
+        Get social network data in the format expected by GameplayController.
+        This ensures GraphManager is the single source of truth for social data.
+        
+        Returns:
+            dict: Social network data with relationships and metadata
+        """
+        try:
+            relationships = {}
+            
+            # Get all character nodes and their relationships
+            for char_node in self.characters.values():
+                char_id = getattr(char_node, 'uuid', getattr(char_node, 'name', str(char_node)))
+                relationships[char_id] = {}
+                
+                # Get relationships from graph edges
+                if char_node in self.G.nodes:
+                    for neighbor in self.G.neighbors(char_node):
+                        if self.G.nodes[neighbor].get('type') == 'character':
+                            neighbor_id = getattr(neighbor, 'uuid', getattr(neighbor, 'name', str(neighbor)))
+                            
+                            # Get relationship strength from edge attributes
+                            edge_data = self.G.get_edge_data(char_node, neighbor, {})
+                            strength = edge_data.get('strength', 50)  # Default to neutral
+                            emotional = edge_data.get('emotional', 0)
+                            trust = edge_data.get('trust', 0.5)
+                            
+                            # Convert to 0-100 scale expected by GameplayController
+                            relationship_score = int((strength + abs(emotional) + trust) * 33.33)
+                            relationship_score = max(0, min(100, relationship_score))
+                            
+                            relationships[char_id][neighbor_id] = relationship_score
+            
+            return {
+                "relationships": relationships,
+                "last_update": self._get_current_time()
+            }
+            
+        except Exception as e:
+            logging.error(f"Error getting social networks from GraphManager: {e}")
+            return {"relationships": {}, "last_update": self._get_current_time()}
+
+    def update_social_relationships(self, dt):
+        """
+        Update social relationships over time using GraphManager's centralized state.
+        This replaces the separate social network updates in GameplayController.
+        
+        Args:
+            dt: Delta time for relationship decay calculations
+        """
+        try:
+            # Get all character-character edges and apply time-based decay
+            for char1 in self.characters.values():
+                if char1 not in self.G.nodes:
+                    continue
+                    
+                for char2 in self.G.neighbors(char1):
+                    if (char2 in self.characters.values() and 
+                        self.G.nodes[char2].get('type') == 'character' and
+                        self.G.has_edge(char1, char2)):
+                        
+                        edge_data = self.G[char1][char2]
+                        
+                        # Apply slow decay towards neutral values
+                        if 'emotional' in edge_data:
+                            current_emotional = edge_data['emotional']
+                            if current_emotional > 0:
+                                edge_data['emotional'] = max(0, current_emotional - 0.1 * dt)
+                            elif current_emotional < 0:
+                                edge_data['emotional'] = min(0, current_emotional + 0.1 * dt)
+                        
+                        # Update interaction frequency decay
+                        if 'interaction_frequency' in edge_data:
+                            current_freq = edge_data['interaction_frequency']
+                            edge_data['interaction_frequency'] = max(0, current_freq - 0.05 * dt)
+                            
+        except Exception as e:
+            logging.error(f"Error updating social relationships in GraphManager: {e}")
+
+    def get_character_relationships(self, character):
+        """
+        Get all relationships for a specific character from GraphManager.
+        
+        Args:
+            character: Character object or identifier
+            
+        Returns:
+            dict: Dictionary of relationships with other characters
+        """
+        try:
+            char_id = getattr(character, 'uuid', getattr(character, 'name', str(character)))
+            relationships = {}
+            
+            if character in self.G.nodes:
+                for neighbor in self.G.neighbors(character):
+                    if self.G.nodes[neighbor].get('type') == 'character':
+                        neighbor_id = getattr(neighbor, 'uuid', getattr(neighbor, 'name', str(neighbor)))
+                        
+                        # Get relationship data from edge
+                        edge_data = self.G.get_edge_data(character, neighbor, {})
+                        relationships[neighbor_id] = {
+                            'strength': edge_data.get('strength', 50),
+                            'emotional': edge_data.get('emotional', 0),
+                            'trust': edge_data.get('trust', 0.5),
+                            'relationship_type': edge_data.get('relationship_type', 'acquaintance'),
+                            'interaction_frequency': edge_data.get('interaction_frequency', 0)
+                        }
+            
+            return relationships
+            
+        except Exception as e:
+            logging.error(f"Error getting character relationships from GraphManager: {e}")
+            return {}
+
+    def initialize_character_relationships(self, characters):
+        """
+        Initialize relationships between characters in the graph.
+        This replaces the separate initialization in GameplayController.
+        
+        Args:
+            characters: Dictionary of characters to initialize relationships for
+        """
+        try:
+            # Convert to list for iteration, handling both dict and list inputs
+            if isinstance(characters, dict):
+                character_list = list(characters.values())
+            else:
+                character_list = list(characters)
+            
+            for i, char1 in enumerate(character_list):
+                for char2 in character_list[i+1:]:
+                    if char1 != char2 and char1 in self.G.nodes and char2 in self.G.nodes:
+                        # Only create edge if it doesn't exist
+                        if not self.G.has_edge(char1, char2):
+                            # Create initial relationship with random values
+                            import random
+                            initial_strength = random.randint(30, 70)
+                            initial_emotional = random.uniform(-0.2, 0.2)
+                            initial_trust = random.uniform(0.3, 0.7)
+                            
+                            self.add_character_character_edge(
+                                char1, char2,
+                                relationship_type="acquaintance",
+                                strength=initial_strength,
+                                emotional_impact=initial_emotional,
+                                trust=initial_trust
+                            )
+                            
+            logging.info(f"Initialized relationships for {len(character_list)} characters in GraphManager")
+            
+        except Exception as e:
+            logging.error(f"Error initializing character relationships in GraphManager: {e}")
+            import traceback
+            logging.error(traceback.format_exc())
+
+    def _get_current_time(self):
+        """Helper method to get current time for social network metadata."""
+        try:
+            import pygame
+            return pygame.time.get_ticks()
+        except:
+            import time
+            return int(time.time() * 1000)
+
     # Including the provided decay functions here for completeness
     def time_based_decay(self, time_since):
         return 1 / (1 + time_since / 365)
