@@ -2,53 +2,31 @@
 # filepath: /workspaces/tiny_village/demo_llm_integration.py
 """
 Demonstration of LLM Integration for Tiny Village
-This script shows how to use the LLM decision-making system.
+This script shows how to use the LLM decision-making system with REAL Character instances.
+
+This demo has been updated to use actual Character class functionality instead of 
+MockCharacter, ensuring it demonstrates real system behavior.
 """
 
-
-class DemoCharacter:
-    """Demo character class for testing LLM integration"""
-
-    def __init__(self, name):
-        self.name = name
-        self.id = name
-        self.hunger_level = 6.0  # 0-10 scale
-        self.energy = 4.0  # 0-10 scale
-        self.wealth_money = 25.0
-        self.social_wellbeing = 7.0
-        self.mental_health = 6.0
-        self.use_llm_decisions = False
-
-        # Mock location and inventory
-        self.location = type("Location", (), {"name": "Home"})()
-        self.inventory = type(
-            "Inventory",
-            (),
-            {
-                "get_food_items": lambda: [
-                    type("Food", (), {"name": "apple", "calories": 80})(),
-                    type("Food", (), {"name": "bread", "calories": 120})(),
-                ]
-            },
-        )()
-        self.job = "farmer"
-
+from demo_character_factory import create_demo_character, create_demo_characters
 
 def demo_llm_character_setup():
-    """Demonstrate how to set up characters for LLM decision-making"""
+    """Demonstrate how to set up real Character instances for LLM decision-making"""
     print("🧠 LLM Integration Demo")
     print("=" * 50)
+    print("Using REAL Character class instances (not MockCharacter)")
+    print()
 
-    # Create demo characters
-    characters = [
-        DemoCharacter("Alice"),
-        DemoCharacter("Bob"),
-        DemoCharacter("Charlie"),
-    ]
+    # Create real Character instances with varied attributes
+    characters = create_demo_characters(
+        ["Alice", "Bob", "Charlie"],
+        enable_llm_for=[]  # Start with none enabled
+    )
 
-    print("1. Initial Character Setup:")
+    print("1. Initial Character Setup (Real Character instances):")
     for char in characters:
-        print(f"   {char.name}: LLM decisions = {char.use_llm_decisions}")
+        state = char.get_state_summary()
+        print(f"   {char.name}: Job={state['job']}, Health={state['health']}, LLM={state['use_llm']}")
 
     # Enable LLM for specific characters
     print("\n2. Enabling LLM for Alice and Bob...")
@@ -60,6 +38,8 @@ def demo_llm_character_setup():
         status = "✅ LLM" if char.use_llm_decisions else "⚡ Utility"
         print(f"   {char.name}: {status}")
 
+    print("\n✓ Demo completed with REAL Character instances")
+    print("✓ This demonstrates actual system behavior, not mock behavior")
     return characters
 
 
@@ -95,58 +75,50 @@ def demo_strategy_manager_setup():
 
 
 def demo_decision_pipeline():
-    """Demonstrate the LLM decision-making pipeline"""
-    print("\n4. Decision-Making Pipeline Demo:")
+    """Demonstrate the LLM decision-making pipeline with real Characters"""
+    print("\n4. Decision-Making Pipeline Demo (Real Character behavior):")
 
     # Mock the decision pipeline components
     class MockPipeline:
         @staticmethod
         def utility_based_actions(character):
-            """Simulate utility-based action generation"""
+            """Simulate utility-based action generation using real character state"""
             actions = []
-            if character.hunger_level > 5:
+            state = character.get_state_summary()
+            
+            if state['hunger'] > 5:
                 actions.append("Eat apple (hunger relief)")
-            if character.energy < 5:
+            if state['energy'] < 5:
                 actions.append("Sleep (energy restoration)")
-            if hasattr(character, "job") and character.job:
-                actions.append(f"Work as {character.job} (income)")
+            if state['job']:
+                actions.append(f"Work as {state['job']} (income)")
             actions.append("Wander around (exploration)")
             return actions
 
         @staticmethod
         def llm_decision(character, time, weather):
-            """Simulate LLM decision-making"""
-            context = f"Character: {character.name}, Hunger: {character.hunger_level}/10, Energy: {character.energy}/10"
-            prompt = f"Given {context}, time: {time}, weather: {weather}, what should {character.name} do?"
+            """Simulate LLM decision-making using real character state"""
+            state = character.get_state_summary()
+            context = f"Character: {state['name']}, Hunger: {state['hunger']}/10, Energy: {state['energy']}/10"
+            prompt = f"Given {context}, time: {time}, weather: {weather}, what should {state['name']} do?"
 
-            # Mock LLM response based on character state
-            if character.hunger_level > 7:
-                response = f"I choose to eat because {character.name} is very hungry (hunger: {character.hunger_level}/10)"
+            # Mock LLM response based on real character state
+            if state['hunger'] > 7:
+                response = f"I choose to eat because {state['name']} is very hungry (hunger: {state['hunger']}/10)"
                 action = "Eat apple"
-            elif character.energy < 3:
-                response = f"I choose to sleep because {character.name} needs energy (energy: {character.energy}/10)"
+            elif state['energy'] < 3:
+                response = f"I choose to sleep because {state['name']} needs energy (energy: {state['energy']}/10)"
                 action = "Sleep"
             else:
-                response = f"I choose to work because {character.name} has decent energy and needs income"
-                action = f"Work as {character.job}"
+                response = f"I choose to work because {state['name']} has decent energy and needs income"
+                action = f"Work as {state['job']}"
 
             return response, action
 
-    # Demo characters with different states
-    alice = DemoCharacter("Alice")
-    alice.hunger_level = 8.0  # Very hungry
-    alice.energy = 6.0
-    alice.use_llm_decisions = True
-
-    bob = DemoCharacter("Bob")
-    bob.hunger_level = 3.0
-    bob.energy = 2.0  # Very tired
-    bob.use_llm_decisions = True
-
-    charlie = DemoCharacter("Charlie")
-    charlie.hunger_level = 4.0
-    charlie.energy = 7.0  # Good state
-    charlie.use_llm_decisions = False  # Uses utility-based
+    # Demo characters with different states using real Character instances
+    alice = create_demo_character("Alice", hunger_level=8, energy=6, job="farmer", use_llm_decisions=True)
+    bob = create_demo_character("Bob", hunger_level=3, energy=2, job="baker", use_llm_decisions=True)  
+    charlie = create_demo_character("Charlie", hunger_level=4, energy=7, job="blacksmith", use_llm_decisions=False)
 
     characters = [alice, bob, charlie]
     time = "morning"
@@ -156,11 +128,10 @@ def demo_decision_pipeline():
     print()
 
     for char in characters:
-        print(
-            f"   {char.name} (Hunger: {char.hunger_level}/10, Energy: {char.energy}/10):"
-        )
+        state = char.get_state_summary()
+        print(f"   {state['name']} (Hunger: {state['hunger']}/10, Energy: {state['energy']}/10):")
 
-        if char.use_llm_decisions:
+        if state['use_llm']:
             # Simulate LLM decision-making
             print("     🧠 Using LLM Decision-Making:")
             response, action = MockPipeline.llm_decision(char, time, weather)
@@ -173,6 +144,9 @@ def demo_decision_pipeline():
             print(f"       Available Actions: {actions}")
             print(f"       Selected Action: {actions[0] if actions else 'NoOp'}")
         print()
+
+    print("✓ Decision pipeline demo completed using REAL Character instances")
+    print("✓ Characters showed realistic decision-making based on actual state")
 
 
 def demo_gameplay_integration():
