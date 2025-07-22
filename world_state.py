@@ -5,7 +5,7 @@ This module contains the WorldState class which encapsulates the core graph stor
 and basic CRUD operations for the tiny_village simulation.
 
 The WorldState class is responsible for:
-- Initializing and managing the networkx.DiGraph instance
+- Initializing and managing the networkx.MultiDiGraph instance
 - Providing basic Create, Read, Update, and Delete operations for nodes and edges
 - Maintaining the graph data structure without business logic
 """
