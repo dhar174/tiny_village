@@ -8,7 +8,10 @@ from actions import Skill
 from tiny_characters import Motive
 from tiny_items import InvestmentPortfolio, ItemInventory, ItemObject, Stock
 from tiny_time_manager import GameTimeManager as gametime_manager
-from tiny_types import Character, Location, ActionSystem
+# Import real classes for proper integration testing
+from tiny_characters import Character
+from tiny_locations import Location  
+from actions import ActionSystem
 
 from tiny_graph_manager import GraphManager
 import logging
@@ -23,9 +26,8 @@ class TestMotiveCalc:
 
     def test_calculate_motives(self):
 
-        from tiny_characters import Character, Motive
-        from tiny_locations import Location
-        from actions import Action, ActionSystem
+        from tiny_characters import Motive
+        from actions import Action
 
         action_system = ActionSystem()
 
