@@ -3666,6 +3666,7 @@ class GameplayController:
         This is a much improved version of the old _process_pending_events.
         """
         try:
+            # self.events is always initialized in __init__, so no hasattr check needed
             if not self.events:
                 return
                 
