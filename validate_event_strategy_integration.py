@@ -5,7 +5,6 @@ This validates the core logic changes for issue #190.
 """
 
 import sys
-import os
 from datetime import datetime
 from unittest.mock import Mock
 
@@ -33,6 +32,7 @@ def test_event_handler_check_events():
     )
     
     # Override should_trigger to return True for testing
+    # NOTE: This is a test-only pattern. Real events should define their trigger logic properly.
     test_event.should_trigger = lambda x: True
     eh.add_event(test_event)
     
@@ -107,6 +107,9 @@ def test_event_processing_workflow():
     # Step 3: Update strategy based on events
     sm = StrategyManager()
     strategy_result = sm.update_strategy(events, subject="TestCharacter")
+    # Strategy manager can return different types: list, Action, dict, or None
+    assert strategy_result is None or isinstance(strategy_result, (list, dict)) or hasattr(strategy_result, 'execute'), \
+        f"Expected list, dict, Action, or None, got {type(strategy_result)}"
     
     print("✓ Complete event processing workflow works")
 
@@ -114,10 +117,6 @@ def test_event_processing_workflow():
 def test_improved_integration_logic():
     """Test the improved integration logic components."""
     print("Testing improved integration logic...")
-    
-    # Test that we can create the necessary components
-    eh = EventHandler()
-    sm = StrategyManager()
     
     # Test world state calculation logic (simplified version)
     mock_characters = {

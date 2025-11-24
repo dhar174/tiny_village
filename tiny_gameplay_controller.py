@@ -2753,11 +2753,7 @@ class GameplayController:
         systems_to_recover = []
 
         # Robust event-driven strategy update using EventHandler
-        try:
-            self._process_events_and_drive_strategy(update_errors)
-        except Exception as e:
-            logger.error(f"Error in event-driven strategy update: {e}")
-            update_errors.append("Event-driven strategy update failed")
+        self._process_events_and_drive_strategy(update_errors)
 
         # Update the map controller (handles character movement and pathfinding)
         if self.map_controller:
@@ -3524,7 +3520,7 @@ class GameplayController:
             
         except Exception as e:
             logger.error(f"Critical error in event-driven strategy processing: {e}")
-            update_errors.append("Event-driven strategy system failure")
+            update_errors.append(f"Event-driven strategy system failure: {str(e)}")
 
     def _apply_strategy_result(self, strategy_result, update_errors):
         """Apply strategy result from the strategy manager, handling different return types."""
@@ -3560,7 +3556,7 @@ class GameplayController:
                         update_errors.append("Strategy action execution failed")
                         
                     # Track action execution for analytics
-                    if hasattr(self, 'action_resolver'):
+                    if self.action_resolver and hasattr(self.action_resolver, 'track_action_execution'):
                         self.action_resolver.track_action_execution(strategy_result, None, success)
                         
                 except Exception as e:
@@ -3582,7 +3578,7 @@ class GameplayController:
                 
         except Exception as e:
             logger.error(f"Critical error applying strategy result: {e}")
-            update_errors.append("Strategy result application failure")
+            update_errors.append(f"Strategy result application failure: {str(e)}")
 
     def _apply_strategic_decisions(self, decisions, update_errors):
         """
@@ -3596,20 +3592,28 @@ class GameplayController:
         """Handle cascading events and generate new dynamic events based on current state."""
         try:
             # Process any cascading events that were triggered
-            if self.event_handler and hasattr(self.event_handler, 'process_cascading_queue'):
-                cascading_processed = self.event_handler.process_cascading_queue()
-                if cascading_processed:
-                    logger.info(f"Processed {len(cascading_processed)} cascading events")
+            if self.event_handler:
+                try:
+                    cascading_processed = self.event_handler.process_cascading_queue()
+                    if cascading_processed:
+                        logger.info(f"Processed {len(cascading_processed)} cascading events")
+                except AttributeError:
+                    # Method doesn't exist, skip
+                    pass
 
             # Generate dynamic events based on current world state
-            if self.event_handler and hasattr(self.event_handler, 'generate_dynamic_events'):
-                world_state = self._get_current_world_state()
-                dynamic_events = self.event_handler.generate_dynamic_events(
-                    world_state, 
-                    list(self.characters.values()) if self.characters else None
-                )
-                if dynamic_events:
-                    logger.info(f"Generated {len(dynamic_events)} dynamic events")
+            if self.event_handler:
+                try:
+                    world_state = self._get_current_world_state()
+                    dynamic_events = self.event_handler.generate_dynamic_events(
+                        world_state, 
+                        list(self.characters.values()) if self.characters else None
+                    )
+                    if dynamic_events:
+                        logger.info(f"Generated {len(dynamic_events)} dynamic events")
+                except AttributeError:
+                    # Method doesn't exist, skip
+                    pass
                     
         except Exception as e:
             logger.warning(f"Error handling cascading/dynamic events: {e}")
@@ -3635,12 +3639,17 @@ class GameplayController:
                 if relationship_values:
                     avg_relationships = sum(relationship_values) / len(relationship_values)
             
+            try:
+                time_value = pygame.time.get_ticks()
+            except:
+                time_value = 0
+            
             return {
                 "average_wealth": avg_wealth,
                 "average_relationships": avg_relationships,
                 "average_health": avg_health,
                 "population": total_chars,
-                "time": pygame.time.get_ticks() if 'pygame' in globals() else 0
+                "time": time_value
             }
             
         except Exception as e:
@@ -3653,7 +3662,7 @@ class GameplayController:
         This is a much improved version of the old _process_pending_events.
         """
         try:
-            if not hasattr(self, "events") or not self.events:
+            if not self.events:
                 return
                 
             logger.info("Using fallback event processing (EventHandler not available)")
