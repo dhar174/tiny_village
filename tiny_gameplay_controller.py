@@ -3556,8 +3556,12 @@ class GameplayController:
                         update_errors.append("Strategy action execution failed")
                         
                     # Track action execution for analytics
-                    if self.action_resolver and hasattr(self.action_resolver, 'track_action_execution'):
-                        self.action_resolver.track_action_execution(strategy_result, None, success)
+                    try:
+                        if self.action_resolver:
+                            self.action_resolver.track_action_execution(strategy_result, None, success)
+                    except AttributeError:
+                        # track_action_execution method doesn't exist, skip
+                        pass
                         
                 except Exception as e:
                     logger.error(f"Error executing strategy action: {e}")
@@ -3641,7 +3645,7 @@ class GameplayController:
             
             try:
                 time_value = pygame.time.get_ticks()
-            except:
+            except (AttributeError, ImportError):
                 time_value = 0
             
             return {

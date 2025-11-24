@@ -15,6 +15,7 @@ sys.path.insert(0, "/home/runner/work/tiny_village/tiny_village")
 # Import the modules we're testing
 from tiny_event_handler import Event, EventHandler
 from tiny_gameplay_controller import GameplayController
+from actions import Action
 
 
 class TestEventStrategyIntegration(unittest.TestCase):
@@ -111,9 +112,6 @@ class TestEventStrategyIntegration(unittest.TestCase):
 
     def test_strategic_decision_application(self):
         """Test that strategic decisions are properly applied."""
-        # Create a real action class for testing instead of mocking everything
-        from actions import Action
-        
         # Create a test decision
         test_decision = {
             "type": "character_action",
@@ -175,8 +173,7 @@ class TestEventStrategyIntegration(unittest.TestCase):
         # Remove event handler
         self.game_controller.event_handler = None
         
-        # Create a real event object instead of a mock
-        from tiny_event_handler import Event
+        # Create a real event object
         test_event = Event(
             name="Test Event",
             date=datetime.now(),

@@ -44,6 +44,13 @@ def test_event_handler_check_events():
     print("✓ EventHandler.check_events() works correctly")
 
 
+def _is_valid_strategy_result(result):
+    """Helper to validate strategy result type."""
+    return (result is None or 
+            isinstance(result, (list, dict)) or 
+            hasattr(result, 'execute'))
+
+
 def test_strategy_manager_update_strategy():
     """Test StrategyManager.update_strategy() with events."""
     print("Testing StrategyManager.update_strategy()...")
@@ -65,7 +72,7 @@ def test_strategy_manager_update_strategy():
     strategy_result = sm.update_strategy(test_events, subject="TestCharacter")
     
     # Strategy manager can return different types: list, Action, dict, or None
-    assert strategy_result is None or isinstance(strategy_result, (list, dict)) or hasattr(strategy_result, 'execute'), \
+    assert _is_valid_strategy_result(strategy_result), \
         f"Expected list, dict, Action, or None, got {type(strategy_result)}"
     
     print("✓ StrategyManager.update_strategy() processes events correctly")
