@@ -1,10 +1,12 @@
-"""Utilities for constructing LLM prompts for Tiny Village characters.
+"""Prompt generation utilities for Tiny Village characters.
 
-This module provides the :class:`PromptBuilder` and supporting classes used to
-build rich text prompts that are sent to the language model. The prompts include
-character state, goals and available actions so that the model can choose the
-next behaviour for a character.  The classes here do not perform any network
-calls; they only format information.
+This module forms the core of the Tiny Village *prompt system*.  It contains
+helper classes for evaluating a character's current needs and available actions
+and, most importantly, the :class:`PromptBuilder`.  ``PromptBuilder`` combines
+character state with world context to create textual prompts which are then
+passed to the language model via :mod:`tiny_brain_io`.  Responses from the LLM
+are interpreted using :mod:`tiny_output_interpreter`.  No networking occurs in
+this module; it purely formats information for those other components.
 """
 
 import random
@@ -13,6 +15,178 @@ from dataclasses import dataclass
 from datetime import datetime
 
 import tiny_characters as tc
+
+
+class ContextManager:
+    """Systematically gathers and organizes relevant context for prompt generation.
+    
+    This class ensures consistent prompt structure and comprehensive information
+    across all prompt types by centralizing context assembly logic.
+    """
+    
+    def __init__(self, character, memory_manager=None):
+        """Initialize context manager for a character.
+        
+        Args:
+            character: The character to gather context for
+            memory_manager: Optional memory manager for retrieving memories
+        """
+        self.character = character
+        self.memory_manager = memory_manager
+        
+    def gather_character_context(self):
+        """Gather comprehensive character context information.
+        
+        Returns:
+            Dictionary containing organized character context
+        """
+        context = {
+            'basic_info': {
+                'name': self.character.name,
+                'job': getattr(self.character, 'job', 'Unknown'),
+                'personality_traits': getattr(self.character, 'personality_traits', {}),
+            },
+            'current_state': {
+                'health_status': getattr(self.character, 'health_status', 5),
+                'hunger_level': getattr(self.character, 'hunger_level', 5),
+                'mental_health': getattr(self.character, 'mental_health', 5),
+                'social_wellbeing': getattr(self.character, 'social_wellbeing', 5),
+                'energy': getattr(self.character, 'energy', 5),
+                'wealth_money': getattr(self.character, 'wealth_money', 0),
+            },
+            'motivations': {
+                'long_term_goal': getattr(self.character, 'long_term_goal', None),
+                'recent_event': getattr(self.character, 'recent_event', 'default'),
+            },
+            'inventory': {
+                'food_items': getattr(self.character, 'inventory', {})
+            }
+        }
+        
+        # Add motives if available
+        if hasattr(self.character, 'motives') and self.character.motives:
+            try:
+                context['motives'] = self._extract_character_motives()
+            except Exception:
+                context['motives'] = {}
+                
+        return context
+        
+    def gather_environmental_context(self, time: str, weather: str):
+        """Gather environmental context for prompts.
+        
+        Args:
+            time: Current time description
+            weather: Current weather description
+            
+        Returns:
+            Dictionary containing environmental context
+        """
+        return {
+            'time': time,
+            'weather': weather,
+            'time_formatted': f"it's {time}",
+            'weather_formatted': descriptors.get_weather_description(weather)
+        }
+        
+    def gather_memory_context(self, query: str, max_memories: int = 3):
+        """Gather relevant memories for the given context query.
+        
+        Args:
+            query: Query string to find relevant memories
+            max_memories: Maximum number of memories to return
+            
+        Returns:
+            List of relevant memory objects
+        """
+        if not self.memory_manager:
+            return []
+            
+        try:
+            # Use the memory manager to search for relevant memories
+            memory_results = self.memory_manager.search_memories(query)
+            
+            # Extract top memories based on relevance score
+            if isinstance(memory_results, dict):
+                sorted_memories = sorted(
+                    memory_results.items(), 
+                    key=lambda x: x[1], 
+                    reverse=True
+                )
+                return [memory for memory, score in sorted_memories[:max_memories]]
+            elif isinstance(memory_results, list):
+                return memory_results[:max_memories]
+            else:
+                return []
+        except Exception:
+            return []
+            
+    def gather_goal_context(self):
+        """Gather character goal and priority context.
+        
+        Returns:
+            Dictionary containing goal information and priorities
+        """
+        context = {
+            'active_goals': [],
+            'goal_priorities': {},
+            'needs_priorities': {}
+        }
+        
+        # Get active goals if character has goal evaluation capability
+        try:
+            if hasattr(self.character, 'evaluate_goals'):
+                goal_queue = self.character.evaluate_goals()
+                context['active_goals'] = goal_queue[:3]  # Top 3 goals
+        except Exception:
+            pass
+            
+        # Calculate needs priorities
+        try:
+            needs_calculator = NeedsPriorities()
+            context['needs_priorities'] = needs_calculator.calculate_needs_priorities(self.character)
+        except Exception:
+            pass
+            
+        return context
+        
+    def assemble_complete_context(self, time: str, weather: str, 
+                                  memory_query=None):
+        """Assemble all context types into a comprehensive context object.
+        
+        Args:
+            time: Current time description
+            weather: Current weather description  
+            memory_query: Optional query for relevant memories
+            
+        Returns:
+            Complete context dictionary for prompt generation
+        """
+        context = {
+            'character': self.gather_character_context(),
+            'environment': self.gather_environmental_context(time, weather),
+            'goals': self.gather_goal_context(),
+            'memories': [],
+            'timestamp': datetime.now().isoformat(),
+        }
+        
+        # Add memory context if query provided
+        if memory_query:
+            context['memories'] = self.gather_memory_context(memory_query)
+            
+        return context
+        
+    def _extract_character_motives(self):
+        """Extract character motives as a dictionary.
+        
+        Returns:
+            Dictionary mapping motive names to scores
+        """
+        try:
+            motives_dict = self.character.motives.to_dict()
+            return {name: motive.score for name, motive in motives_dict.items()}
+        except Exception:
+            return {}
 
 
 @dataclass
@@ -208,8 +382,11 @@ class OutputSchema:
 
 
 class NeedsPriorities:
-    """Calculate priority scores for all basic character needs."""
-    def __init__(self):
+    """Utility object for scoring how pressing each of a character's needs is."""
+
+    def __init__(self) -> None:
+        """Initialise the list of tracked needs and their default priority values."""
+
         self.needs = [
             "health",
             "hunger",
@@ -230,7 +407,7 @@ class NeedsPriorities:
             "friendship_grid",
         ]
         # Value represents a character's current need level
-        self.needs_priorities = {
+        self.needs_priorities: Dict[str, float] = {
             "health": 0,
             "hunger": 0,
             "wealth": 0,
@@ -250,199 +427,180 @@ class NeedsPriorities:
             "friendship_grid": 0,
         }
 
-    def get_needs_priorities(self):
+    def get_needs_priorities(self) -> Dict[str, float]:
+        """Return the current mapping of needs to priority scores."""
+
         return self.needs_priorities
 
     def get_needs_priorities_list(self):
+        """Return a view of names of tracked needs."""
+
         return self.needs_priorities.keys()
 
     def get_needs_priorities_values(self):
+        """Return a view of priority scores in their current order."""
+
         return self.needs_priorities.values()
 
-    def get_needs_priorities_sorted(self):
+    def get_needs_priorities_sorted(self) -> List[tuple]:
+        """Return need/priority pairs sorted from lowest to highest priority."""
+
         return sorted(self.needs_priorities.items(), key=lambda x: x[1])
 
-    def get_needs_priorities_sorted_list(self):
-        return [x[0] for x in sorted(self.needs_priorities.items(), key=lambda x: x[1])]
+    def get_needs_priorities_sorted_list(self) -> List[str]:
+        """Return need names sorted from lowest to highest priority."""
 
-    def get_needs_priorities_sorted_values(self):
-        return [x[1] for x in sorted(self.needs_priorities.items(), key=lambda x: x[1])]
+        return [name for name, _ in self.get_needs_priorities_sorted()]
 
-    def get_needs_priorities_sorted_reverse(self):
+    def get_needs_priorities_sorted_values(self) -> List[float]:
+        """Return priority scores sorted from lowest to highest."""
+
+        return [score for _, score in self.get_needs_priorities_sorted()]
+
+    def get_needs_priorities_sorted_reverse(self) -> List[tuple]:
+        """Return need/priority pairs sorted from highest to lowest."""
+
         return sorted(self.needs_priorities.items(), key=lambda x: x[1], reverse=True)
 
-    def get_needs_priorities_sorted_list_reverse(self):
-        return [
-            x[0]
-            for x in sorted(
-                self.needs_priorities.items(), key=lambda x: x[1], reverse=True
-            )
-        ]
+    def get_needs_priorities_sorted_list_reverse(self) -> List[str]:
+        """Return need names sorted from highest to lowest priority."""
 
-    def get_needs_priorities_sorted_values_reverse(self):
-        return [
-            x[1]
-            for x in sorted(
-                self.needs_priorities.items(), key=lambda x: x[1], reverse=True
-            )
-        ]
+        return [name for name in sorted(self.needs_priorities, key=self.needs_priorities.get, reverse=True)]
 
-    def get_needs_priorities_sorted_by_value(self):
-        return sorted(self.needs_priorities.items(), key=lambda x: x[1])
+    def get_needs_priorities_sorted_values_reverse(self) -> List[float]:
+        """Return priority scores sorted from highest to lowest."""
 
-    def set_needs_priorities(self, needs_priorities):
+        return [score for _, score in self.get_needs_priorities_sorted_reverse()]
+
+    def get_needs_priorities_sorted_by_value(self) -> List[tuple]:
+        """Alias for :meth:`get_needs_priorities_sorted` for backward compatibility."""
+
+        return self.get_needs_priorities_sorted()
+
+    def set_needs_priorities(self, needs_priorities: Dict[str, float]) -> None:
+        """Replace the internal priority mapping with ``needs_priorities``."""
 
         self.needs_priorities = needs_priorities
 
-    def calculate_health_priority(self, character: tc.Character):
-        # Health priority is based on health status
-        # Health status is a value from 1-10
-        # Health priority is a value from 1-100
-        # Health priority is calculated by multiplying health status times 10 and subtracting from 100
+    def calculate_health_priority(self, character: tc.Character) -> float:
+        """Return a priority score (0-100) representing how urgently the
+        character needs medical attention."""
+
         health_status = character.get_health_status()
         health_priority = (
             100 - (health_status * 10)
-        ) + character.get_motives().get_health_motive()
+        ) + character.get_motives().get_health_motive().get_score()
         return health_priority
 
-    def calculate_hunger_priority(self, character: tc.Character):
-        # Hunger priority is based on hunger level
-        # Hunger level is a value from 1-10
-        # Hunger priority is a value from 1-100
-        # Hunger priority is calculated by multiplying hunger level times 10
+    def calculate_hunger_priority(self, character: tc.Character) -> float:
+        """Return a priority score for the character's hunger level."""
+
         hunger_level = character.get_hunger_level()
         hunger_priority = (
-            hunger_level * 10 + character.get_motives().get_hunger_motive()
+            hunger_level * 10 + character.get_motives().get_hunger_motive().get_score()
         )
         return hunger_priority
 
-    def calculate_wealth_priority(self, character: tc.Character):
-        # Wealth priority is based on wealth
-        # Wealth is a value from 1-10
-        # Wealth priority is a value from 1-100
-        # Wealth priority is calculated by multiplying wealth times 10
+    def calculate_wealth_priority(self, character: tc.Character) -> float:
+        """Return a priority score based on the character's financial state."""
+
         wealth = character.get_wealth()
-        wealth_priority = character.get_motives().get_wealth_motive()
+        wealth_priority = character.get_motives().get_wealth_motive().get_score()
         return wealth_priority
 
-    def calculate_mental_health_priority(self, character: tc.Character):
-        # Mental health priority is based on mental health
-        # Mental health is a value from 1-10
-        # Mental health priority is a value from 1-100
-        # Mental health priority is calculated by multiplying mental health times 10
+    def calculate_mental_health_priority(self, character: tc.Character) -> float:
+        """Return a priority score for improving mental wellness."""
+
         mental_health = character.get_mental_health()
-        mental_health_priority = character.get_motives().get_mental_health_motive()
+        mental_health_priority = character.get_motives().get_mental_health_motive().get_score()
         return mental_health_priority
 
-    def calculate_social_wellbeing_priority(self, character: tc.Character):
-        # Social wellbeing priority is based on social wellbeing
-        # Social wellbeing is a value from 1-10
-        # Social wellbeing priority is a value from 1-100
-        # Social wellbeing priority is calculated by multiplying social wellbeing times 10
+    def calculate_social_wellbeing_priority(self, character: tc.Character) -> float:
+        """Return a priority score reflecting the need for social interaction."""
+
         social_wellbeing = character.get_social_wellbeing()
         social_wellbeing_priority = (
-            character.get_motives().get_social_wellbeing_motive()
+            character.get_motives().get_social_wellbeing_motive().get_score()
         )
         return social_wellbeing_priority
 
-    def calculate_happiness_priority(self, character: tc.Character):
-        # Happiness priority is based on happiness
-        # Happiness is a value from 1-10
-        # Happiness priority is a value from 1-100
-        # Happiness priority is calculated by multiplying happiness times 10
+    def calculate_happiness_priority(self, character: tc.Character) -> float:
+        """Return a priority score indicating how much the character seeks happiness."""
+
         happiness = character.get_happiness()
-        happiness_priority = character.get_motives().get_happiness_motive()
+        happiness_priority = character.get_motives().get_happiness_motive().get_score()
         return happiness_priority
 
-    def calculate_shelter_priority(self, character: tc.Character):
-        # Shelter priority is based on shelter
-        # Shelter is a value from 1-10
-        # Shelter priority is a value from 1-100
-        # Shelter priority is calculated by multiplying shelter times 10
+    def calculate_shelter_priority(self, character: tc.Character) -> float:
+        """Return a priority score describing the need for shelter/housing."""
+
         shelter = character.get_shelter()
-        shelter_priority = character.get_motives().get_shelter_motive()
+        shelter_priority = character.get_motives().get_shelter_motive().get_score()
         return shelter_priority
 
-    def calculate_stability_priority(self, character: tc.Character):
-        # Stability priority is based on stability
-        # Stability is a value from 1-10
-        # Stability priority is a value from 1-100
-        # Stability priority is calculated by multiplying stability times 10
+    def calculate_stability_priority(self, character: tc.Character) -> float:
+        """Return a priority score representing the desire for routine and stability."""
+
         stability = character.get_stability()
-        stability_priority = character.get_motives().get_stability_motive()
+        stability_priority = character.get_motives().get_stability_motive().get_score()
         return stability_priority
 
-    def calculate_luxury_priority(self, character: tc.Character):
-        # Luxury priority is based on luxury
-        # Luxury is a value from 1-10
-        # Luxury priority is a value from 1-100
-        # Luxury priority is calculated by multiplying luxury times 10
+    def calculate_luxury_priority(self, character: tc.Character) -> float:
+        """Return a priority score representing the desire for luxury items or comfort."""
+
         luxury = character.get_luxury()
-        luxury_priority = character.get_motives().get_luxury_motive()
+        luxury_priority = character.get_motives().get_luxury_motive().get_score()
         return luxury_priority
 
-    def calculate_hope_priority(self, character: tc.Character):
-        # Hope priority is based on hope
-        # Hope is a value from 1-10
-        # Hope priority is a value from 1-100
-        # Hope priority is calculated by multiplying hope times 10
+    def calculate_hope_priority(self, character: tc.Character) -> float:
+        """Return a priority score representing the character's need for optimism."""
+
         hope = character.get_hope()
-        hope_priority = character.get_motives().get_hope_motive()
+        hope_priority = character.get_motives().get_hope_motive().get_score()
         return hope_priority
 
-    def calculate_success_priority(self, character: tc.Character):
-        # Success priority is based on success
-        # Success is a value from 1-10
-        # Success priority is a value from 1-100
-        # Success priority is calculated by multiplying success times 10
+    def calculate_success_priority(self, character: tc.Character) -> float:
+        """Return a priority score for career or personal success."""
+
         success = character.get_success()
-        success_priority = character.get_motives().get_success_motive()
+        success_priority = character.get_motives().get_success_motive().get_score()
         return success_priority
 
-    def calculate_control_priority(self, character: tc.Character):
-        # Control priority is based on control
-        # Control is a value from 1-10
-        # Control priority is a value from 1-100
-        # Control priority is calculated by multiplying control times 10
+    def calculate_control_priority(self, character: tc.Character) -> float:
+        """Return a priority score for the character's sense of personal control."""
+
         control = character.get_control()
-        control_priority = character.get_motives().get_control_motive()
+        control_priority = character.get_motives().get_control_motive().get_score()
         return control_priority
 
-    def calculate_job_performance_priority(self, character: tc.Character):
-        # Job performance priority is based on job performance
-        # Job performance is a value from 1-10
-        # Job performance priority is a value from 1-100
-        # Job performance priority is calculated by multiplying job performance times 10
+    def calculate_job_performance_priority(self, character: tc.Character) -> float:
+        """Return a priority score for improving job performance."""
+
         job_performance = character.get_job_performance()
-        job_performance_priority = character.get_motives().get_job_performance_motive()
+        job_performance_priority = character.get_motives().get_job_performance_motive().get_score()
         return job_performance_priority
 
-    def calculate_beauty_priority(self, character: tc.Character):
-        # Beauty priority is based on beauty
-        # Beauty is a value from 1-10
-        # Beauty priority is a value from 1-100
-        # Beauty priority is calculated by multiplying beauty times 10
+    def calculate_beauty_priority(self, character: tc.Character) -> float:
+        """Return a priority score describing desire to improve appearance."""
+
         beauty = character.get_beauty()
-        beauty_priority = character.get_motives().get_beauty_motive() - beauty
+        beauty_priority = character.get_motives().get_beauty_motive().get_score() - beauty
         return beauty_priority
 
-    def calculate_community_priority(self, character: tc.Character):
-        # Community priority is based on community
-        # Community is a value from 1-10
-        # Community priority is a value from 1-100
-        # Community priority is calculated by multiplying community times 10
+    def calculate_community_priority(self, character: tc.Character) -> float:
+        """Return a priority score reflecting the need for community involvement."""
+
         community = character.get_community()
-        community_priority = character.get_motives().get_community_motive()
+        community_priority = character.get_motives().get_community_motive().get_score()
         return community_priority
 
-    def calculate_material_goods_priority(self, character: tc.Character):
-        # Material goods priority is based on material goods
-        # Material goods is a value from 1-10
-        # Material goods priority is a value from 1-100
-        # Material goods priority is calculated by multiplying material goods times 10
+    def calculate_material_goods_priority(self, character: tc.Character) -> float:
+        """Return a priority score for acquiring material possessions."""
+
         material_goods = character.get_material_goods()
-        material_goods_priority = character.get_motives().get_material_goods_motive()
+        material_goods_priority = character.get_motives().get_material_goods_motive().get_score()
         return material_goods_priority
+
 
     def calculate_friendship_grid_priority(self, character: tc.Character):
         # Friendship grid priority is based on social connections and relationships
@@ -466,20 +624,16 @@ class NeedsPriorities:
             friendship_state = 0  # No friendship data
         
         # Combine with social wellbeing motive (friendship is social)
-        social_motive = character.get_motives().get_social_wellbeing_motive()
+        social_motive = character.get_motives().get_social_wellbeing_motive().get_score()
         
         # Calculate priority: higher motive with lower current state = higher priority
         # Ensure priority is always non-negative
         friendship_grid_priority = max(0, social_motive + (10 - friendship_state) * 2)
         return friendship_grid_priority
 
-    def calculate_needs_priorities(self, character: tc.Character):
-        # Calculate needs priorities based on character's current situation
-        # Needs priorities are values from 1-100
-        # Needs priorities are calculated by multiplying need level times 10
-        # Needs priorities are calculated by adding motive value
-        # Needs priorities are calculated by adding need level times motive value
-        # Needs priorities are calculated by adding need level times motive value and subtracting from 100
+    def calculate_needs_priorities(self, character: tc.Character) -> Dict[str, float]:
+        """Calculate priority values for all needs for ``character``."""
+
         needs_priorities = {
             "health": self.calculate_health_priority(character),
             "hunger": self.calculate_hunger_priority(character),
@@ -505,7 +659,10 @@ class NeedsPriorities:
 
 class ActionOptions:
     """List and prioritize the actions a character can perform."""
-    def __init__(self):
+
+    def __init__(self) -> None:
+        """Initialise the set of known action strings."""
+
         self.actions = [
             "buy_food",
             "eat_food",
@@ -540,13 +697,12 @@ class ActionOptions:
             "work_current_job",
         ]
 
-    def prioritize_actions(self, character: tc.Character):
-        # Prioritize actions based on character's current situation
-        # Actions that are more likely to be chosen are placed earlier in the list
-        # Actions that are less likely to be chosen are placed later in the list
-        # Actions that are not possible are removed from the list
-        # Actions that are possible are kept in the list
-        # Actions that are possible but not likely are moved to the end
+    def prioritize_actions(self, character: tc.Character) -> List[str]:
+        """Return a list of plausible actions ordered by likelihood.
+
+        The ordering is determined using a few heuristic checks on ``character``
+        state such as hunger level or available money.
+        """
 
         # char_dict = character.to_dict()
         # inv_dict = character.inventory.to_dict()
@@ -590,6 +746,217 @@ class ActionOptions:
         if len(prioritized_actions) < 5:
             prioritized_actions += other_actions[: 5 - len(prioritized_actions)]
         return prioritized_actions
+
+
+class ParameterizedTemplateEngine:
+    """Dynamic template system that can be modified at runtime based on character personality and game state.
+    
+    This replaces static descriptor matrices with a flexible template system that supports
+    placeholders, template definitions, and runtime parameter substitution.
+    """
+    
+    def __init__(self):
+        """Initialize the template engine with base templates."""
+        self.templates = {}
+        self.parameters = {}
+        self.character_context = {}
+        self._load_base_templates()
+        
+    def _load_base_templates(self):
+        """Load base template definitions with placeholders."""
+        self.templates = {
+            "character_intro": "You are {character_name}, a {character_adjective} {character_role}",
+            "character_activity": "who enjoys {activity_verb} {activity_object}",
+            "current_project": "You are currently working on {current_project} {work_location}",
+            "future_plans": "and you are excited to see how it turns out. You are also planning to attend a {event_type} in the next few weeks",
+            "event_expectations": "and you are hoping to {event_goal} there",
+            "health_status": "You're feeling {health_descriptor}",
+            "hunger_status": "and {hunger_descriptor}",
+            "recent_events": "{recent_event_prefix}",
+            "financial_status": "and {financial_descriptor}",
+            "motivation": "{motivation_prefix} {goal_description}",
+            "weather_context": "it's {time_period}, and {weather_description}",
+            "question_framing": "{question_style}"
+        }
+        
+    def set_character_parameters(self, character, personality_modifier: str = None):
+        """Set character-specific parameters for template substitution.
+        
+        Args:
+            character: Character object to extract parameters from
+            personality_modifier: Optional personality-based template modifier
+        """
+        job = getattr(character, 'job', 'person')
+        
+        # Base character parameters
+        self.parameters.update({
+            'character_name': character.name,
+            'character_role': job.lower(),
+            'current_project': self._get_project_for_job(job),
+            'work_location': self._get_work_location_for_job(job),
+            'event_type': self._get_event_for_job(job),
+            'event_goal': self._get_event_goal_for_job(job),
+        })
+        
+        # Personality-based modifications
+        if personality_modifier:
+            self._apply_personality_modifier(personality_modifier)
+            
+        # Dynamic adjectives based on character state
+        self._set_dynamic_descriptors(character)
+        
+    def _get_project_for_job(self, job: str) -> str:
+        """Get appropriate current project based on job."""
+        project_map = {
+            'Engineer': ['a new software project', 'a new system design', 'debugging a complex issue'],
+            'Farmer': ['a new crop rotation', 'preparing the fields', 'planning the harvest'],
+            'Waitress': ['improving customer service', 'learning new recipes', 'organizing the restaurant']
+        }
+        return random.choice(project_map.get(job, ['a new project']))
+        
+    def _get_work_location_for_job(self, job: str) -> str:
+        """Get work location for job."""
+        location_map = {
+            'Engineer': 'at your desk',
+            'Farmer': 'on the farm', 
+            'Waitress': 'at the restaurant'
+        }
+        return location_map.get(job, 'at work')
+        
+    def _get_event_for_job(self, job: str) -> str:
+        """Get appropriate event type for job."""
+        event_map = {
+            'Engineer': ['tech conference', 'hackathon', 'developer meetup'],
+            'Farmer': ['farmers market', 'agricultural fair', 'farming conference'],
+            'Waitress': ['culinary event', 'service training', 'restaurant expo']
+        }
+        import random
+        return random.choice(event_map.get(job, ['professional event']))
+        
+    def _get_event_goal_for_job(self, job: str) -> str:
+        """Get event goal for job."""
+        goal_map = {
+            'Engineer': ['network with other developers', 'learn new technologies', 'showcase your work'],
+            'Farmer': ['sell your produce', 'learn about new techniques', 'meet other farmers'],
+            'Waitress': ['improve your skills', 'learn new recipes', 'meet other service professionals']
+        }
+        import random
+        return random.choice(goal_map.get(job, ['learn something new']))
+        
+    def _apply_personality_modifier(self, modifier: str):
+        """Apply personality-based template modifications."""
+        personality_modifiers = {
+            'analytical': {
+                'character_adjective': ['methodical', 'precise', 'logical'],
+                'activity_verb': ['analyzing', 'optimizing', 'systematizing'],
+                'question_style': 'What is the most logical next step?'
+            },
+            'creative': {
+                'character_adjective': ['innovative', 'imaginative', 'artistic'],
+                'activity_verb': ['creating', 'designing', 'innovating'],
+                'question_style': 'What creative solution will you pursue?'
+            },
+            'social': {
+                'character_adjective': ['friendly', 'outgoing', 'collaborative'],
+                'activity_verb': ['connecting with', 'helping', 'supporting'],
+                'question_style': 'How will you engage with others?'
+            }
+        }
+        
+        if modifier in personality_modifiers:
+            for key, value in personality_modifiers[modifier].items():
+                if isinstance(value, list):
+                    import random
+                    self.parameters[key] = random.choice(value)
+                else:
+                    self.parameters[key] = value
+                    
+    def _set_dynamic_descriptors(self, character):
+        """Set descriptors based on current character state."""
+        # Health descriptor based on health status
+        health = getattr(character, 'health_status', 5)
+        if health >= 8:
+            self.parameters['health_descriptor'] = 'excellent'
+        elif health >= 6:
+            self.parameters['health_descriptor'] = 'good'
+        elif health >= 4:
+            self.parameters['health_descriptor'] = 'okay'
+        else:
+            self.parameters['health_descriptor'] = 'unwell'
+            
+        # Hunger descriptor
+        hunger = getattr(character, 'hunger_level', 5)
+        if hunger >= 8:
+            self.parameters['hunger_descriptor'] = 'very hungry'
+        elif hunger >= 6:
+            self.parameters['hunger_descriptor'] = 'somewhat hungry'
+        elif hunger >= 3:
+            self.parameters['hunger_descriptor'] = 'satisfied'
+        else:
+            self.parameters['hunger_descriptor'] = 'full'
+            
+        # Financial descriptor
+        wealth = getattr(character, 'wealth_money', 0)
+        if wealth >= 100:
+            self.parameters['financial_descriptor'] = 'you are financially comfortable'
+        elif wealth >= 50:
+            self.parameters['financial_descriptor'] = 'your finances are stable'
+        elif wealth >= 10:
+            self.parameters['financial_descriptor'] = 'you have some money saved'
+        else:
+            self.parameters['financial_descriptor'] = 'money is tight'
+            
+    def set_environmental_parameters(self, time: str, weather: str):
+        """Set environmental parameters for templates."""
+        self.parameters.update({
+            'time_period': time,
+            'weather_description': weather
+        })
+        
+    def generate_text(self, template_key: str, additional_params: Dict[str, str] = None) -> str:
+        """Generate text from a template with parameter substitution.
+        
+        Args:
+            template_key: Key of the template to use
+            additional_params: Additional parameters for substitution
+            
+        Returns:
+            Generated text with parameters substituted
+        """
+        if template_key not in self.templates:
+            return f"[Template '{template_key}' not found]"
+            
+        template = self.templates[template_key]
+        params = self.parameters.copy()
+        
+        if additional_params:
+            params.update(additional_params)
+            
+        try:
+            return template.format(**params)
+        except KeyError as e:
+            return f"[Missing parameter {e} for template '{template_key}']"
+            
+    def add_custom_template(self, key: str, template: str):
+        """Add a custom template definition.
+        
+        Args:
+            key: Template identifier
+            template: Template string with {parameter} placeholders
+        """
+        self.templates[key] = template
+        
+    def modify_template(self, key: str, new_template: str):
+        """Modify an existing template at runtime.
+        
+        Args:
+            key: Template identifier to modify
+            new_template: New template string
+        """
+        if key in self.templates:
+            self.templates[key] = new_template
+        else:
+            self.add_custom_template(key, new_template)
 
 
 class DescriptorMatrices:
@@ -1818,9 +2185,15 @@ descriptors = DescriptorMatrices()
 
 
 class PromptBuilder:
-    """Build detailed prompts for Tiny Village characters."""
+    """Construct complex prompts for the Tiny Village language model.
 
-    def __init__(self, character: tc.Character) -> None:
+    A ``PromptBuilder`` instance collects information from a :class:`~tiny_characters.Character`
+    and formats it into strings which the LLM can understand.  It does not
+    communicate with the model directly; :mod:`tiny_brain_io` is responsible for
+    that step.
+    """
+
+    def __init__(self, character, memory_manager=None) -> None:
         """Initialize the builder for ``character``."""
 
         self.character = character
@@ -1831,6 +2204,19 @@ class PromptBuilder:
         self.conversation_history = ConversationHistory()
         self.few_shot_manager = FewShotExampleManager()
         self.character_voice_traits = self._initialize_character_voice()
+        
+        # Enhanced context management
+        self.context_manager = ContextManager(character, memory_manager)
+        self.memory_manager = memory_manager
+        
+        # Prompt versioning
+        self.prompt_version = "1.0.0"
+        self.prompt_metadata = {
+            "created_at": datetime.now().isoformat(),
+            "version": self.prompt_version,
+            "character_id": getattr(character, 'name', 'unknown'),
+            "performance_metrics": {}
+        }
         
     def _initialize_character_voice(self) -> Dict[str, str]:
         """Initialize character-specific voice and personality traits."""
@@ -1917,6 +2303,89 @@ class PromptBuilder:
         )
         self.few_shot_manager.add_example(example)
 
+    def integrate_relevant_memories(self, context_query: str, max_memories: int = 3):
+        """Integrate relevant memories from MemoryManager into prompts.
+        
+        Args:
+            context_query: Query to find relevant memories
+            max_memories: Maximum number of memories to retrieve
+            
+        Returns:
+            List of relevant memory objects
+        """
+        return self.context_manager.gather_memory_context(context_query, max_memories)
+        
+    def format_memories_for_prompt(self, memories):
+        """Format memories for inclusion in prompts.
+        
+        Args:
+            memories: List of memory objects to format
+            
+        Returns:
+            Formatted string for prompt inclusion
+        """
+        if not memories:
+            return ""
+            
+        lines = ["Relevant memories to consider:"]
+        for i, memory in enumerate(memories, 1):
+            # Handle different memory object types
+            if hasattr(memory, 'description'):
+                desc = memory.description
+            elif hasattr(memory, 'content'):
+                desc = memory.content
+            else:
+                desc = str(memory)
+                
+            lines.append(f"{i}. {desc}")
+            
+        return "\n".join(lines) + "\n"
+        
+    def add_prompt_metadata(self, prompt_type: str, context_info = None):
+        """Add versioning and metadata to prompts.
+        
+        Args:
+            prompt_type: Type of prompt being generated
+            context_info: Additional context information
+            
+        Returns:
+            Metadata dictionary for the prompt
+        """
+        metadata = {
+            "prompt_version": self.prompt_version,
+            "prompt_type": prompt_type,
+            "character_name": self.character.name,
+            "timestamp": datetime.now().isoformat(),
+        }
+        
+        if context_info:
+            metadata.update(context_info)
+            
+        return metadata
+        
+    def collect_performance_feedback(self, prompt_type: str, success_rating: float, 
+                                   response_quality: float = None, user_feedback: str = None):
+        """Collect performance metrics for prompt versions.
+        
+        Args:
+            prompt_type: Type of prompt that was used
+            success_rating: Rating of how successful the prompt was (0-1)
+            response_quality: Optional quality rating of the response
+            user_feedback: Optional user feedback text
+        """
+        if prompt_type not in self.prompt_metadata["performance_metrics"]:
+            self.prompt_metadata["performance_metrics"][prompt_type] = []
+            
+        metrics = {
+            "timestamp": datetime.now().isoformat(),
+            "version": self.prompt_version,
+            "success_rating": success_rating,
+            "response_quality": response_quality,
+            "user_feedback": user_feedback
+        }
+        
+        self.prompt_metadata["performance_metrics"][prompt_type].append(metrics)
+
     def calculate_needs_priorities(self) -> None:
         """Compute and store the character's current need priorities."""
 
@@ -1970,12 +2439,12 @@ class PromptBuilder:
 
         return self.action_choices
 
-    def generate_completion_message(self, character: tc.Character, action: str) -> str:
+    def generate_completion_message(self, character, action: str) -> str:
         """Return a short message describing successful completion of ``action``."""
 
         return f"{character.name} has {DescriptorMatrices.get_action_descriptors(action)} {action}."
 
-    def generate_failure_message(self, character: tc.Character, action: str) -> str:
+    def generate_failure_message(self, character, action: str) -> str:
         """Return a short message describing failure to perform ``action``."""
 
         return f"{character.name} has failed to {DescriptorMatrices.get_action_descriptors(action)} {action}."
@@ -2040,19 +2509,52 @@ class PromptBuilder:
         weather: str, 
         include_conversation_context: bool = True,
         include_few_shot_examples: bool = True,
+        include_memories: bool = True,
         output_format: str = "structured"
     ) -> str:
-        """Generate a basic daily routine prompt with LLM integration features."""
+        """Generate a basic daily routine prompt with enhanced context management and memory integration."""
+        
+        # Use ContextManager to gather comprehensive context
+        context = self.context_manager.assemble_complete_context(
+            time, weather, 
+            memory_query=f"daily routine for {self.character.name}" if include_memories else None
+        )
+        
+        # Add prompt metadata for versioning
+        metadata = self.add_prompt_metadata("daily_routine", {
+            "time": time,
+            "weather": weather,
+            "include_memories": include_memories
+        })
+        
         prompt = "<|system|>"
+        prompt += f"<!-- Prompt Version: {metadata['prompt_version']} -->\n"
+        
+        # Use enhanced character context
+        char_info = context['character']
         prompt += (
-            f"You are {self.character.name}, a {self.character.job} in a small town. You are a {descriptors.get_job_adjective(self.character.job)} {descriptors.get_job_pronoun(self.character.job)} who enjoys {descriptors.get_job_enjoys_verb(self.character.job)} {descriptors.get_job_verb_acts_on_noun(self.character.job)}. You are currently working on {descriptors.get_job_currently_working_on(self.character.job)} {descriptors.get_job_place(self.character.job)}, and you are excited to see how it turns out. You are also planning to attend a {descriptors.get_job_planning_to_attend(self.character.job)} in the next few weeks, and you are hoping to {descriptors.get_job_hoping_to_there(self.character.job)} there."
+            f"You are {char_info['basic_info']['name']}, a {char_info['basic_info']['job']} in a small town. "
+            f"You are a {descriptors.get_job_adjective(char_info['basic_info']['job'])} "
+            f"{descriptors.get_job_pronoun(char_info['basic_info']['job'])} who enjoys "
+            f"{descriptors.get_job_enjoys_verb(char_info['basic_info']['job'])} "
+            f"{descriptors.get_job_verb_acts_on_noun(char_info['basic_info']['job'])}. "
+            f"You are currently working on {descriptors.get_job_currently_working_on(char_info['basic_info']['job'])} "
+            f"{descriptors.get_job_place(char_info['basic_info']['job'])}, and you are excited to see how it turns out. "
+            f"You are also planning to attend a {descriptors.get_job_planning_to_attend(char_info['basic_info']['job'])} "
+            f"in the next few weeks, and you are hoping to {descriptors.get_job_hoping_to_there(char_info['basic_info']['job'])} there."
         )
         
         # Add conversation context if available and requested
         if include_conversation_context:
-            context = self.conversation_history.format_context_for_prompt(self.character.name)
-            if context:
-                prompt += f"\n{context}"
+            context_text = self.conversation_history.format_context_for_prompt(self.character.name)
+            if context_text:
+                prompt += f"\n{context_text}"
+
+        # Add relevant memories
+        if include_memories and context['memories']:
+            memory_text = self.format_memories_for_prompt(context['memories'])
+            if memory_text:
+                prompt += f"\n{memory_text}"
 
         # Add few-shot examples if requested
         if include_few_shot_examples:
@@ -2071,7 +2573,14 @@ class PromptBuilder:
         prompt += "3. Visit a friend to Increase_Friendship.\n"
         prompt += "4. Engage in a Leisure_Activity to improve Mental_Health.\n"
         prompt += "5. Work on a personal project to Pursue_Hobby.\n"
-        
+        actions = self.action_options.prioritize_actions(self.character)
+        for i, action in enumerate(actions[:5], 1):
+            try:
+                descriptor = descriptors.get_action_descriptors(action)
+            except (KeyError, AttributeError):
+                descriptor = action.replace("_", " ").title()
+            action_name = action.replace("_", " ").title().replace(" ", "_")
+            prompt += f"{i}. {descriptor} to {action_name}.\n"
         # Add structured output format instructions
         if output_format == "json":
             prompt += f"\n\n{OutputSchema.get_decision_schema()}"
@@ -2094,38 +2603,62 @@ class PromptBuilder:
         action_choices: List[str],
         character_state_dict: Optional[Dict[str, float]] = None,
         memories: Optional[List] = None,
-
         include_conversation_context: bool = True,
         include_few_shot_examples: bool = True,
+        include_memory_integration: bool = True,
         output_format: str = "json",
     ) -> str:
-        """Create a decision prompt incorporating goals, needs and context."""
-        # Calculate needs priorities for character context
-        needs_calculator = NeedsPriorities()
-        needs_priorities = needs_calculator.calculate_needs_priorities(self.character)
-
+        """Create a decision prompt with enhanced context management and memory integration."""
+        
+        # Use ContextManager for comprehensive context gathering
+        context = self.context_manager.assemble_complete_context(
+            time, weather,
+            memory_query=f"decision making for {self.character.name}" if include_memory_integration else None
+        )
+        
+        # Add prompt metadata for versioning
+        metadata = self.add_prompt_metadata("decision", {
+            "time": time,
+            "weather": weather,
+            "include_memory_integration": include_memory_integration,
+            "action_choices_count": len(action_choices)
+        })
+        
         # Get character's current goals prioritized by importance
-        try:
-            goal_queue = self.character.evaluate_goals()
-        except Exception as e:
-            print(f"Warning: Could not evaluate goals for {self.character.name}: {e}")
-            goal_queue = []
+        goal_context = context['goals']
+        goal_queue = goal_context.get('active_goals', [])
+        needs_priorities = goal_context.get('needs_priorities', {})
 
         # Build enhanced prompt with rich character context
         prompt = f"<|system|>"
+        prompt += f"<!-- Prompt Version: {metadata['prompt_version']} -->\n"
 
-        # Basic character identity and role
+        # Basic character identity and role using context
+        char_info = context['character']
         prompt += (
-            f"You are {self.character.name}, a {self.character.job} in a small town. "
+            f"You are {char_info['basic_info']['name']}, a {char_info['basic_info']['job']} in a small town. "
         )
-        prompt += f"You are a {descriptors.get_job_adjective(self.character.job)} {descriptors.get_job_pronoun(self.character.job)} "
-        prompt += f"who enjoys {descriptors.get_job_enjoys_verb(self.character.job)} {descriptors.get_job_verb_acts_on_noun(self.character.job)}. "
+        prompt += f"You are a {descriptors.get_job_adjective(char_info['basic_info']['job'])} {descriptors.get_job_pronoun(char_info['basic_info']['job'])} "
+        prompt += f"who enjoys {descriptors.get_job_enjoys_verb(char_info['basic_info']['job'])} {descriptors.get_job_verb_acts_on_noun(char_info['basic_info']['job'])}. "
 
         # Add conversation context if available and requested
         if include_conversation_context:
-            context = self.conversation_history.format_context_for_prompt(self.character.name)
-            if context:
-                prompt += f"\n{context}"
+            context_text = self.conversation_history.format_context_for_prompt(self.character.name)
+            if context_text:
+                prompt += f"\n{context_text}"
+
+        # Add memory integration - prioritize new integration over legacy memories parameter
+        relevant_memories = []
+        if include_memory_integration:
+            # Use new memory integration from context
+            relevant_memories = context.get('memories', [])
+        elif memories:
+            # Fallback to legacy memories parameter
+            relevant_memories = memories
+        if relevant_memories:
+            memory_text = self.format_memories_for_prompt(relevant_memories)
+            if memory_text:
+                prompt += f"\n{memory_text}"
 
         # Add few-shot examples if requested
         if include_few_shot_examples:
@@ -2135,21 +2668,34 @@ class PromptBuilder:
                 examples_text = self.few_shot_manager.format_examples_for_prompt(relevant_examples)
                 prompt += f"\n{examples_text}"
 
-        # Current goals and motivations
+        # Current goals and motivations - Enhanced for LLM guidance
         if goal_queue and len(goal_queue) > 0:
-            prompt += f"\n\nYour current goals (in order of importance):\n"
+            prompt += f"\n\n🎯 **CURRENT ACTIVE GOALS** (in priority order):\n"
             for i, (utility_score, goal) in enumerate(goal_queue[:3]):  # Top 3 goals
-                prompt += f"{i+1}. {goal.name}: {goal.description} (Priority: {utility_score:.1f})\n"
+                # Enhanced goal description with urgency indicator
+                urgency = "🔥 URGENT" if utility_score > self.URGENCY_THRESHOLD_URGENT else "⚡ HIGH" if utility_score > self.URGENCY_THRESHOLD_HIGH else "📌 MODERATE"
+                prompt += f"{i+1}. **{goal.name}**: {goal.description}\n"
+                prompt += f"   → Priority Score: {utility_score:.1f}/10 ({urgency})\n"
+        else:
+            prompt += f"\n\n🎯 **CURRENT ACTIVE GOALS** (in priority order):\n"
+            prompt += f"   → No active goals currently. 🌱 Consider establishing new objectives to guide your actions.\n"
 
-        # Character's pressing needs and motivations
+        # Character's pressing needs and motivations - Enhanced priority display
         top_needs = sorted(needs_priorities.items(), key=lambda x: x[1], reverse=True)[
             :5
         ]
         if top_needs:
-            prompt += f"\nYour most pressing needs:\n"
+            prompt += f"\n🚨 **MOST PRESSING NEEDS** (requiring immediate attention):\n"
             for need_name, priority_score in top_needs:
                 need_desc = self._get_need_description(need_name, priority_score)
-                prompt += f"- {need_desc}\n"
+                # Add visual urgency indicators
+                if priority_score > self.NEEDS_PRIORITY_CRITICAL_THRESHOLD:
+                    urgency_icon = "🔴 CRITICAL"
+                elif priority_score > self.NEEDS_PRIORITY_HIGH_THRESHOLD:
+                    urgency_icon = "🟡 HIGH"
+                else:
+                    urgency_icon = "🟢 MODERATE"
+                prompt += f"- {urgency_icon} {need_desc}\n"
 
         # Character motives and personality context
         if hasattr(self.character, "motives") and self.character.motives:
@@ -2202,8 +2748,10 @@ class PromptBuilder:
         for i, action_choice in enumerate(action_choices):
             prompt += f"{action_choice}\n"
 
-        prompt += f"\nChoose the action that best aligns with your goals, needs, and current situation. "
-        prompt += f"Consider both immediate benefits and long-term progress toward your aspirations."
+        prompt += f"\nChoose the action that best addresses your ACTIVE GOALS and PRESSING NEEDS listed above. "
+        prompt += f"Prioritize actions that: (1) advance your highest-priority active goals, "
+        prompt += f"(2) address your most critical needs (🔴/🟡), and (3) support your long-term aspirations. "
+        prompt += f"Consider both immediate urgency and strategic value."
 
         # Add structured output format instructions
         if output_format == "json":
@@ -2265,6 +2813,34 @@ class PromptBuilder:
             else "High" if score >= 6 else "Moderate" if score >= 4 else "Low"
         )
         return f"{intensity} ({score:.1f}/10)"
+
+    def _build_scenario_prompt(self, scenario: str, actions: List[str]) -> str:
+        """Return a simple prompt for a given scenario and actions."""
+        prompt = "<|system|>"
+        prompt += f"You are {self.character.name}, a {self.character.job}."
+        prompt += "<|user|>"
+        prompt += scenario
+        prompt += (
+            f" Current state: Health {self.character.health_status}/10,"
+            f" Hunger {self.character.hunger_level}/10,"
+            f" Energy {getattr(self.character, 'energy', 5):.1f}/10."
+        )
+        prompt += "\nAvailable actions:\n"
+        for action in actions:
+            prompt += f"{action}\n"
+        prompt += "</s><|assistant|>"
+        prompt += f"{self.character.name}, I choose "
+        return prompt
+
+    def generate_social_interaction_prompt(self, actions: List[str]) -> str:
+        """Generate a prompt for a social interaction scenario."""
+        scenario = "You are about to interact with another villager."
+        return self._build_scenario_prompt(scenario, actions)
+
+    def generate_travel_prompt(self, destination: str, actions: List[str]) -> str:
+        """Generate a prompt for planning travel to ``destination``."""
+        scenario = f"You are considering travelling to {destination}."
+        return self._build_scenario_prompt(scenario, actions)
 
 
     def generate_crisis_response_prompt(

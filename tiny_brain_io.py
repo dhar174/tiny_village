@@ -1,9 +1,31 @@
 import json
 import re
 from unittest import result
-from numpy import where
-from requests import get
-from transformers import AutoModelForCausalLM, AutoTokenizer
+# Graceful fallback for numpy
+try:
+    from numpy import where
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
+    def where(condition):
+        return condition  # Simple fallback
+
+# Optional requests import
+try:
+    from requests import get
+    REQUESTS_AVAILABLE = True
+except ImportError:
+    REQUESTS_AVAILABLE = False
+    def get(*args, **kwargs):
+        raise ImportError("requests not available")
+
+# Optional transformers import
+try:
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    TRANSFORMERS_AVAILABLE = False
+    AutoModelForCausalLM = AutoTokenizer = None
 # Conditional torch import - skip functionality if not available
 try:
     import torch
@@ -11,16 +33,33 @@ try:
 except ImportError:
     TORCH_AVAILABLE = False
     torch = None
+
 import time
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+
+# Optional sklearn imports
+try:
+    from sklearn.feature_extraction.text import CountVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
+    CountVectorizer = None
+    def cosine_similarity(a, b):
+        return [[0.5]]  # Neutral similarity
+
 import re
 from collections import defaultdict
 import os
 
 os.environ["TRANSFORMERS_CACHE"] = "/mnt/d/transformers_cache"
 
-from llama_cpp import Llama
+# Optional llama_cpp import
+try:
+    from llama_cpp import Llama
+    LLAMA_CPP_AVAILABLE = True
+except ImportError:
+    LLAMA_CPP_AVAILABLE = False
+    Llama = None
 
 remove_list = [r"\)", r"\(", "–", '"', '"', '"', r"\[.*\]", r".*\|.*", "—"]
 
@@ -45,6 +84,9 @@ class TinyBrainIO:
         if model_name is not None:
             self.model_name = model_name
         if "gguf" in self.model_name.lower():
+            if not LLAMA_CPP_AVAILABLE:
+                print("Warning: llama_cpp not available, cannot load GGUF models")
+                return
             self.model = Llama(
                 model_path="./" + self.model_name,
                 n_ctx=self.n_ctx,
@@ -54,6 +96,9 @@ class TinyBrainIO:
                 use_mlock=self.use_mlock,
             )
         else:
+            if not TRANSFORMERS_AVAILABLE:
+                print("Warning: transformers not available, cannot load HuggingFace models")
+                return
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.model_name,
                 trust_remote_code=True,
@@ -67,6 +112,10 @@ class TinyBrainIO:
             )
 
     def input_to_model(self, prompts, reset_model=True):
+        if not self.model:
+            print("Warning: No model loaded. Cannot process prompts.")
+            return [(f"Model not available: {prompt}", "0.0") for prompt in (prompts if isinstance(prompts, list) else [prompts])]
+            
         print(f"Testing model: {self.model_name}")
         special_args = self.model_special_args.get(self.model_name, {})
         print("Type of prompts: ", type(prompts))
@@ -79,12 +128,18 @@ class TinyBrainIO:
             text = text.replace("  ", " ")
             # Measure the processing time
             if "gguf" in self.model_name.lower():
+                if not LLAMA_CPP_AVAILABLE:
+                    results.append(("GGUF model not available", "0.0"))
+                    continue
                 start_time = time.time()
                 output = self.model(text, max_tokens=256, stop="</s>", echo=True)
                 end_time = time.time()
                 print(output)
                 generated_text = output["choices"][0]["text"]
             else:
+                if not TRANSFORMERS_AVAILABLE or not self.tokenizer:
+                    results.append(("HuggingFace model not available", "0.0"))
+                    continue
                 # Encode the input text
                 input_ids = self.tokenizer.encode(text, return_tensors="pt").to(
                     self.device
