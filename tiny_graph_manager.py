@@ -3226,7 +3226,10 @@ class GraphManager:
                             trust = edge_data.get('trust', 0.5)
                             
                             # Convert to 0-100 scale expected by GameplayController
-                            relationship_score = int((strength + abs(emotional) + trust) * 33.33)
+                            # Scale factor: normalizes combined relationship metrics (strength + emotional + trust)
+                            # from their typical 0-3 combined range to a 0-100 score (100/3 ≈ 33.33)
+                            RELATIONSHIP_SCALE_FACTOR = 33.33
+                            relationship_score = int((strength + abs(emotional) + trust) * RELATIONSHIP_SCALE_FACTOR)
                             relationship_score = max(0, min(100, relationship_score))
                             
                             relationships[char_id][neighbor_id] = relationship_score
@@ -3358,7 +3361,7 @@ class GraphManager:
         try:
             import pygame
             return pygame.time.get_ticks()
-        except:
+        except (ImportError, AttributeError):
             import time
             return int(time.time() * 1000)
 

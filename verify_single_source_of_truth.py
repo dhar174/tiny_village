@@ -4,6 +4,8 @@ Simple verification test to ensure GraphManager is the single source of truth
 and GameplayController doesn't maintain separate social network state.
 """
 
+import os
+
 def test_single_source_of_truth():
     """Verify GameplayController uses GraphManager as single source of truth."""
     print("Verifying Single Source of Truth Implementation")
@@ -53,7 +55,9 @@ def test_single_source_of_truth():
         
         # Verify 4: Check that GameplayController initialization doesn't create separate state
         print("\n4. Verifying no separate initialization...")
-        gc_source = open('/home/runner/work/tiny_village/tiny_village/tiny_gameplay_controller.py').read()
+        gc_path = os.path.join(os.path.dirname(__file__), 'tiny_gameplay_controller.py')
+        with open(gc_path) as f:
+            gc_source = f.read()
         
         if 'implement_social_network_system()' in gc_source:
             print("   ❌ Found separate social network system implementation")

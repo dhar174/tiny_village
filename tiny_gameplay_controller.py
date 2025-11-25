@@ -4043,8 +4043,10 @@ class GameplayController:
     @property 
     def social_networks(self):
         """
-        Property that delegates to GraphManager for social network data.
-        This maintains compatibility while ensuring single source of truth.
+        Read-only property that delegates to GraphManager for social network data.
+        This property is now a read-only view; direct modification is not supported.
+        Any changes to social network data must be performed via GraphManager.
+        This may differ from previous implementations where direct access or mutation was allowed.
         """
         return self.get_social_networks()
 
