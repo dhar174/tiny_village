@@ -187,10 +187,11 @@ class GraphAnalytics:
                 # Create a signature for this character's interests
                 # Use a deterministic, sortable key (activity name) to avoid
                 # TypeError when activity identifiers are non-comparable objects.
+                # Include the node identifier for uniqueness.
                 interest_signature = tuple(
                     sorted(
                         activities,
-                        key=lambda a: self.graph.nodes[a].get('name', '')
+                        key=lambda a: (self.graph.nodes[a].get('name', ''), str(a))
                     )
                 )
                 
@@ -228,7 +229,8 @@ class GraphAnalytics:
             
         Usage example:
             characters = graph_analytics.get_filtered_nodes(node_type='character')
-            # Note: Complex filters like safety_threshold require using GraphManager
+            # Note: Complex filters (safety_threshold, relationship, item_ownership, 
+            # trade filters) require using GraphManager's get_filtered_nodes instead
         """
         try:
             filtered_nodes = set(self.graph.nodes)
