@@ -146,7 +146,7 @@ class GraphAnalytics:
                 
             for node in self.graph.nodes():
                 degree = self.graph.degree(node)
-                centrality[node] = degree / (num_nodes - 1) if num_nodes > 1 else 0
+                centrality[node] = degree / (num_nodes - 1)
             return centrality
             
         try:
