@@ -43,24 +43,6 @@ class GraphAnalytics:
         self.world_state = world_state
         self.graph = world_state.graph
         
-        # Setup operator mappings for get_filtered_nodes
-        self.ops = {
-            "gt": lambda a, b: a > b,
-            "lt": lambda a, b: a < b,
-            "eq": lambda a, b: a == b,
-            "ge": lambda a, b: a >= b,
-            "le": lambda a, b: a <= b,
-            "ne": lambda a, b: a != b,
-        }
-        self.symb_map = {
-            ">": "gt",
-            "<": "lt",
-            "==": "eq",
-            ">=": "ge",
-            "<=": "le",
-            "!=": "ne",
-        }
-        
         logging.debug("GraphAnalytics initialized with WorldState dependency")
     
     def find_shortest_path(self, source, target) -> Optional[List]:
@@ -203,7 +185,14 @@ class GraphAnalytics:
                         activities.append(neighbor)
                 
                 # Create a signature for this character's interests
-                interest_signature = tuple(sorted(activities))
+                # Use a deterministic, sortable key (activity name) to avoid
+                # TypeError when activity identifiers are non-comparable objects.
+                interest_signature = tuple(
+                    sorted(
+                        activities,
+                        key=lambda a: self.graph.nodes[a].get('name', '')
+                    )
+                )
                 
                 if interest_signature not in interest_groups:
                     interest_groups[interest_signature] = set()
@@ -239,10 +228,7 @@ class GraphAnalytics:
             
         Usage example:
             characters = graph_analytics.get_filtered_nodes(node_type='character')
-            safe_locations = graph_analytics.get_filtered_nodes(
-                node_type='location', 
-                safety_threshold=5
-            )
+            # Note: Complex filters like safety_threshold require using GraphManager
         """
         try:
             filtered_nodes = set(self.graph.nodes)
@@ -307,7 +293,7 @@ class GraphAnalytics:
                     {
                         n
                         for n in filtered_nodes
-                        if self.graph.get_edge_data(n, event, default={}).get("participation_status") == True
+                        if self.graph.get_edge_data(n, event, default={}).get("participation_status") is True
                     }
                 )
 
@@ -457,7 +443,8 @@ class GraphAnalytics:
                     else:
                         stats['is_connected'] = False
                         stats['connected_components'] = nx.number_connected_components(self.graph.to_undirected())
-                except:
+                except Exception as e:
+                    logging.warning(f"Error computing connectivity metrics: {e}")
                     stats['is_connected'] = False
             
             return stats

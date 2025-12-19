@@ -246,14 +246,22 @@ class TestGraphManagerGraphAnalyticsDelegation(unittest.TestCase):
         """Test that the interface remains backwards compatible."""
         # These methods should work exactly as they did before
         try:
-            # Test method signatures haven't changed
+            # Test method signatures haven't changed and return values are sensible
             path = self.graph_manager.find_shortest_path(self.char1, self.char2)
             centrality = self.graph_manager.calculate_centrality()
             communities = self.graph_manager.detect_communities()
             char_path = self.graph_manager.shortest_path_between_characters(self.char1, self.char2)
             clusters = self.graph_manager.common_interests_cluster()
             filtered = self.graph_manager.get_filtered_nodes(node_type='character')
-            
+
+            # Basic sanity checks to ensure methods still behave as expected
+            self.assertIsNotNone(path)
+            self.assertIsNotNone(char_path)
+            self.assertIsInstance(centrality, dict)
+            self.assertIsInstance(communities, list)
+            self.assertIsInstance(clusters, list)
+            self.assertIsInstance(filtered, dict)
+
             # All should succeed without errors
             self.assertTrue(True, "All methods executed without errors")
             

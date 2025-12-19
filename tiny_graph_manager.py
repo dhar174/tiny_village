@@ -3984,7 +3984,7 @@ class GraphManager:
                     }
                 )
             if action_effects.get("early_quit"):
-                return filtered_nodes if filtered_nodes else None
+                return {n: self.G.nodes[n] for n in filtered_nodes} if filtered_nodes else None
 
         # For remaining complex filters, delegate to GraphAnalytics for basic filtering
         # and then apply additional GraphManager-specific logic
@@ -4038,8 +4038,12 @@ class GraphManager:
                     }
                 )
 
-        # Handle other complex trade filters...
-        # (Additional complex filtering logic would go here)
+        # Note:
+        # Historically, additional complex filters (e.g., offer_item_trade, trade_opportunity,
+        # desired_resource, career_opportunity, social_influence, memory_topic, and various
+        # attribute filters) were handled here. Those filters have been removed as part of a
+        # refactor. If new or restored filters are needed in the future, they should be
+        # implemented in this section using the same filtered_nodes intersection pattern.
 
         return {
             n: self.G.nodes[n] for n in filtered_nodes
