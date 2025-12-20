@@ -29,7 +29,14 @@ def test_checkpoint_manager_basic():
         # Import after setting up mocks
         sys.modules['pygame'] = MagicMock()
         sys.modules['pygame.time'] = MagicMock()
-        sys.modules['pygame.time'].get_ticks = lambda: 1000
+        
+        # Use incrementing time instead of constant
+        _time_counter = [1000]
+        def mock_get_ticks():
+            _time_counter[0] += 100
+            return _time_counter[0]
+        
+        sys.modules['pygame'].time.get_ticks = mock_get_ticks
         
         from tiny_gameplay_controller import CheckpointManager
         

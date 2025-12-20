@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Standalone test for CheckpointManager without game dependencies.
-Extracts CheckpointManager logic for isolated testing.
+Standalone test for CheckpointManager without full game dependencies.
+Tests the actual CheckpointManager implementation with mocked dependencies.
 """
 
 import sys
@@ -9,157 +9,39 @@ import os
 import json
 import tempfile
 import shutil
-from unittest.mock import Mock
+from unittest.mock import Mock, MagicMock, patch
 
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Minimal CheckpointManager implementation for testing
-class CheckpointManager:
-    """Manages automatic game state checkpointing and restoration."""
-    
-    def __init__(self, gameplay_controller, checkpoint_dir: str = "saves/checkpoints"):
-        self.gameplay_controller = gameplay_controller
-        self.checkpoint_dir = checkpoint_dir
-        self.checkpoint_interval = 300000  # 5 minutes in milliseconds by default
-        self.last_checkpoint_time = 0
-        self.max_checkpoints = 10  # Keep last 10 checkpoints
-        self.checkpoint_history = []
-        self.auto_checkpoint_enabled = True
-        
-        # Create checkpoint directory if it doesn't exist
-        os.makedirs(checkpoint_dir, exist_ok=True)
-    
-    def should_checkpoint(self, current_time: int) -> bool:
-        """Check if it's time for an automatic checkpoint."""
-        if not self.auto_checkpoint_enabled:
-            return False
-        
-        time_since_last = current_time - self.last_checkpoint_time
-        return time_since_last >= self.checkpoint_interval
-    
-    def create_checkpoint(self, checkpoint_name: str = None) -> bool:
-        """Create a checkpoint of the current game state."""
-        try:
-            current_time = 1000  # Mock time
-            
-            # Generate checkpoint filename
-            if checkpoint_name is None:
-                checkpoint_name = f"checkpoint_{current_time}.json"
-            elif not checkpoint_name.endswith('.json'):
-                checkpoint_name = f"{checkpoint_name}.json"
-            
-            checkpoint_path = os.path.join(self.checkpoint_dir, checkpoint_name)
-            
-            # Create the checkpoint using the gameplay controller's save method
-            if self.gameplay_controller.save_game_state(checkpoint_path):
-                # Add to checkpoint history
-                checkpoint_info = {
-                    "filename": checkpoint_name,
-                    "path": checkpoint_path,
-                    "timestamp": current_time,
-                    "game_ticks": current_time,
-                    "character_count": len(self.gameplay_controller.characters)
-                }
-                self.checkpoint_history.append(checkpoint_info)
-                
-                # Update last checkpoint time
-                self.last_checkpoint_time = current_time
-                
-                # Cleanup old checkpoints
-                self._cleanup_old_checkpoints()
-                
-                return True
-            else:
-                return False
-                
-        except Exception as e:
-            print(f"Error creating checkpoint: {e}")
-            return False
-    
-    def restore_checkpoint(self, checkpoint_index: int = -1) -> bool:
-        """Restore game state from a checkpoint."""
-        try:
-            if not self.checkpoint_history:
-                return False
-            
-            # Get checkpoint info
-            if checkpoint_index < 0:
-                checkpoint_index = len(self.checkpoint_history) + checkpoint_index
-            
-            if checkpoint_index < 0 or checkpoint_index >= len(self.checkpoint_history):
-                return False
-            
-            checkpoint_info = self.checkpoint_history[checkpoint_index]
-            checkpoint_path = checkpoint_info["path"]
-            
-            # Verify checkpoint file exists
-            if not os.path.exists(checkpoint_path):
-                return False
-            
-            # Restore the checkpoint
-            return self.gameplay_controller.load_game_state(checkpoint_path)
-                
-        except Exception as e:
-            print(f"Error restoring checkpoint: {e}")
-            return False
-    
-    def _cleanup_old_checkpoints(self):
-        """Remove old checkpoints beyond the maximum limit."""
-        while len(self.checkpoint_history) > self.max_checkpoints:
-            # Remove oldest checkpoint
-            old_checkpoint = self.checkpoint_history.pop(0)
-            
-            # Delete the file if it exists
-            if os.path.exists(old_checkpoint["path"]):
-                try:
-                    os.remove(old_checkpoint["path"])
-                except Exception:
-                    pass
-    
-    def get_checkpoint_list(self) -> list:
-        """Get list of available checkpoints."""
-        return [
-            {
-                "index": i,
-                "filename": cp["filename"],
-                "timestamp": cp["timestamp"],
-                "character_count": cp["character_count"]
-            }
-            for i, cp in enumerate(self.checkpoint_history)
-        ]
-    
-    def set_checkpoint_interval(self, interval_ms: int):
-        """Set the automatic checkpoint interval in milliseconds."""
-        if interval_ms < 10000:  # Minimum 10 seconds
-            interval_ms = 10000
-        self.checkpoint_interval = interval_ms
-    
-    def enable_auto_checkpoint(self, enabled: bool):
-        """Enable or disable automatic checkpointing."""
-        self.auto_checkpoint_enabled = enabled
-    
-    def recover_from_corruption(self) -> bool:
-        """Attempt to recover from corrupted save by restoring the most recent valid checkpoint."""
-        try:
-            # Try checkpoints from most recent to oldest
-            for i in range(len(self.checkpoint_history) - 1, -1, -1):
-                checkpoint_info = self.checkpoint_history[i]
-                
-                # Verify checkpoint file is readable
-                try:
-                    with open(checkpoint_info["path"], 'r') as f:
-                        json.load(f)
-                    
-                    # If we can read it, try to restore it
-                    if self.restore_checkpoint(i):
-                        return True
-                        
-                except Exception:
-                    continue
-            
-            return False
-            
-        except Exception:
-            return False
+# Mock all the problematic modules before any imports
+sys.modules['pygame'] = MagicMock()
+sys.modules['pygame.time'] = MagicMock()
+sys.modules['pygame.font'] = MagicMock()
+sys.modules['pygame.display'] = MagicMock()
+sys.modules['pygame.math'] = MagicMock()
+
+# Mock time to be controllable
+_mock_time = [0]
+def mock_get_ticks():
+    """Return and increment mock time."""
+    _mock_time[0] += 100
+    return _mock_time[0]
+
+sys.modules['pygame'].time.get_ticks = mock_get_ticks
+
+# Mock the problematic time manager
+mock_calendar = MagicMock()
+mock_calendar.get_game_time_string = lambda: "Day 1, 00:00"
+sys.modules['tiny_time_manager'] = MagicMock()
+sys.modules['tiny_time_manager'].GameCalendar = lambda *args, **kwargs: mock_calendar
+
+# Mock tiny_globals to avoid initialization issues
+sys.modules['tiny_globals'] = MagicMock()
+sys.modules['tiny_globals'].global_calendar = mock_calendar
+
+# Now we can safely import
+from tiny_gameplay_controller import CheckpointManager
 
 
 def run_standalone_tests():
@@ -180,12 +62,16 @@ def run_standalone_tests():
             "actions_failed": 2
         }
         
-        # Mock save/load methods
+        # Mock save/load methods with success/failure control
+        save_should_fail = [False]  # Mutable to allow test control
+        
         def mock_save(filepath):
+            if save_should_fail[0]:
+                return False
             try:
                 os.makedirs(os.path.dirname(filepath), exist_ok=True)
                 data = {
-                    "timestamp": 1000,
+                    "timestamp": _mock_time[0],
                     "characters": {},
                     "statistics": mock_controller.game_statistics.copy()
                 }
@@ -208,8 +94,12 @@ def run_standalone_tests():
         
         mock_controller.save_game_state = mock_save
         mock_controller.load_game_state = mock_load
+        mock_controller.add_event_notification = Mock()  # Mock notification method
         
-        # Create CheckpointManager
+        # Reset mock time
+        _mock_time[0] = 0
+        
+        # Create CheckpointManager with actual implementation
         checkpoint_mgr = CheckpointManager(mock_controller, checkpoint_dir)
         
         tests_passed = 0
@@ -218,13 +108,14 @@ def run_standalone_tests():
         # Test 1: Create checkpoint
         print("\n[Test 1] Checkpoint Creation")
         tests_total += 1
+        _mock_time[0] = 1000
         result = checkpoint_mgr.create_checkpoint("test_checkpoint")
-        checkpoint_file = os.path.join(checkpoint_dir, "test_checkpoint.json")
+        checkpoint_file = os.path.join(checkpoint_dir, "test_checkpoint_1100.json")  # With timestamp
         if result and os.path.exists(checkpoint_file):
             print("  ✓ PASS: Checkpoint created successfully")
             tests_passed += 1
         else:
-            print("  ✗ FAIL: Checkpoint creation failed")
+            print(f"  ✗ FAIL: Checkpoint creation failed (file exists: {os.path.exists(checkpoint_file)})")
         
         # Test 2: Restore checkpoint
         print("\n[Test 2] Checkpoint Restoration")
@@ -240,15 +131,16 @@ def run_standalone_tests():
         else:
             print(f"  ✗ FAIL: Restoration failed (expected {original_value}, got {restored_value})")
         
-        # Test 3: Multiple checkpoints
-        print("\n[Test 3] Multiple Checkpoint Creation")
+        # Test 3: Multiple checkpoints with unique names
+        print("\n[Test 3] Multiple Checkpoint Creation with Unique Names")
         tests_total += 1
         for i in range(3):
+            _mock_time[0] += 1000
             checkpoint_mgr.create_checkpoint(f"checkpoint_{i}")
         
         checkpoint_count = len(checkpoint_mgr.checkpoint_history)
         if checkpoint_count == 4:  # Including first test checkpoint
-            print(f"  ✓ PASS: {checkpoint_count} checkpoints created")
+            print(f"  ✓ PASS: {checkpoint_count} checkpoints created with unique names")
             tests_passed += 1
         else:
             print(f"  ✗ FAIL: Expected 4 checkpoints, got {checkpoint_count}")
@@ -270,8 +162,9 @@ def run_standalone_tests():
         print("\n[Test 5] Automatic Checkpoint Timing")
         tests_total += 1
         checkpoint_mgr.set_checkpoint_interval(5000)
-        checkpoint_mgr.last_checkpoint_time = 0
-        should_cp = checkpoint_mgr.should_checkpoint(6000)
+        checkpoint_mgr.last_checkpoint_time = 1000
+        _mock_time[0] = 7000
+        should_cp = checkpoint_mgr.should_checkpoint(7000)
         
         if should_cp:
             print("  ✓ PASS: Timing logic correct")
@@ -301,6 +194,45 @@ def run_standalone_tests():
             tests_passed += 1
         else:
             print(f"  ✗ FAIL: Expected list of 2, got {len(cp_list) if isinstance(cp_list, list) else 'not a list'}")
+        
+        # Test 8: Consecutive failure tracking
+        print("\n[Test 8] Consecutive Failure Tracking")
+        tests_total += 1
+        checkpoint_mgr.enable_auto_checkpoint(True)
+        checkpoint_mgr.consecutive_failures = 0
+        save_should_fail[0] = True  # Make saves fail
+        
+        # Try to create checkpoints that will fail
+        for i in range(4):
+            checkpoint_mgr.create_checkpoint(f"failing_checkpoint_{i}")
+        
+        if checkpoint_mgr.consecutive_failures >= 3:
+            print(f"  ✓ PASS: Consecutive failures tracked ({checkpoint_mgr.consecutive_failures})")
+            tests_passed += 1
+        else:
+            print(f"  ✗ FAIL: Expected 3+ failures, got {checkpoint_mgr.consecutive_failures}")
+        
+        # Test 9: History validation
+        print("\n[Test 9] Checkpoint History Validation")
+        tests_total += 1
+        save_should_fail[0] = False  # Re-enable saves
+        
+        # Create a checkpoint then delete its file manually
+        _mock_time[0] += 1000
+        checkpoint_mgr.create_checkpoint("to_be_deleted")
+        deleted_checkpoint = checkpoint_mgr.checkpoint_history[-1]
+        os.remove(deleted_checkpoint["path"])
+        
+        # Validate history
+        checkpoint_mgr._validate_checkpoint_history()
+        
+        # Check if the deleted checkpoint was removed from history
+        valid_count = len(checkpoint_mgr.checkpoint_history)
+        if deleted_checkpoint not in checkpoint_mgr.checkpoint_history:
+            print(f"  ✓ PASS: Invalid checkpoint removed from history")
+            tests_passed += 1
+        else:
+            print(f"  ✗ FAIL: Invalid checkpoint still in history")
         
         # Print summary
         print("\n" + "="*70)

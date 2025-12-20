@@ -1252,6 +1252,9 @@ class CheckpointManager:
         self.max_checkpoints = 10  # Keep last 10 checkpoints
         self.checkpoint_history = []
         self.auto_checkpoint_enabled = True
+        self.consecutive_failures = 0  # Track consecutive checkpoint failures
+        self.max_failure_warning_threshold = 3  # Show warning after 3 failures
+        self._checkpoint_lock = False  # Simple lock to prevent concurrent operations
         
         # Create checkpoint directory if it doesn't exist
         try:
@@ -1278,16 +1281,30 @@ class CheckpointManager:
         Returns:
             bool: True if checkpoint was created successfully
         """
+        # Prevent concurrent checkpoint operations
+        if self._checkpoint_lock:
+            logger.debug("Checkpoint operation already in progress, skipping")
+            return False
+        
         try:
+            self._checkpoint_lock = True
             current_time = pygame.time.get_ticks()
             
-            # Generate checkpoint filename
+            # Generate checkpoint filename with timestamp to ensure uniqueness
             if checkpoint_name is None:
                 checkpoint_name = f"checkpoint_{current_time}.json"
             elif not checkpoint_name.endswith('.json'):
-                checkpoint_name = f"{checkpoint_name}.json"
+                # Add timestamp suffix to manual checkpoints to prevent overwriting
+                checkpoint_name = f"{checkpoint_name}_{current_time}.json"
             
             checkpoint_path = os.path.join(self.checkpoint_dir, checkpoint_name)
+            
+            # Check if checkpoint already exists in history and warn
+            existing = [cp for cp in self.checkpoint_history if cp["path"] == checkpoint_path]
+            if existing:
+                logger.warning(f"Checkpoint {checkpoint_name} already exists, updating entry")
+                # Remove the old entry to be replaced
+                self.checkpoint_history = [cp for cp in self.checkpoint_history if cp["path"] != checkpoint_path]
             
             # Create the checkpoint using the gameplay controller's save method
             if self.gameplay_controller.save_game_state(checkpoint_path):
@@ -1304,18 +1321,56 @@ class CheckpointManager:
                 # Update last checkpoint time
                 self.last_checkpoint_time = current_time
                 
-                # Cleanup old checkpoints
+                # Reset failure counter on success
+                self.consecutive_failures = 0
+                
+                # Cleanup old checkpoints and validate history
                 self._cleanup_old_checkpoints()
+                self._validate_checkpoint_history()
                 
                 logger.info(f"Checkpoint created: {checkpoint_name}")
                 return True
             else:
                 logger.error(f"Failed to create checkpoint: {checkpoint_name}")
+                self.consecutive_failures += 1
+                self._check_failure_threshold()
                 return False
                 
         except Exception as e:
             logger.error(f"Error creating checkpoint: {e}")
+            self.consecutive_failures += 1
+            self._check_failure_threshold()
             return False
+        finally:
+            self._checkpoint_lock = False
+    
+    def _check_failure_threshold(self):
+        """Check if consecutive failures exceed threshold and notify user."""
+        if self.consecutive_failures >= self.max_failure_warning_threshold:
+            logger.error(f"Checkpoint system has failed {self.consecutive_failures} times consecutively")
+            # Notify user with high priority
+            if hasattr(self.gameplay_controller, 'add_event_notification'):
+                self.gameplay_controller.add_event_notification(
+                    f"Auto-save disabled: {self.consecutive_failures} failures",
+                    "high"
+                )
+    
+    def _validate_checkpoint_history(self):
+        """Validate checkpoint history against filesystem and remove invalid entries."""
+        try:
+            valid_checkpoints = []
+            for cp in self.checkpoint_history:
+                if os.path.exists(cp["path"]):
+                    valid_checkpoints.append(cp)
+                else:
+                    logger.debug(f"Removing invalid checkpoint from history: {cp['filename']}")
+            
+            # Update history with only valid checkpoints
+            if len(valid_checkpoints) != len(self.checkpoint_history):
+                logger.info(f"Cleaned {len(self.checkpoint_history) - len(valid_checkpoints)} invalid entries from checkpoint history")
+                self.checkpoint_history = valid_checkpoints
+        except Exception as e:
+            logger.error(f"Error validating checkpoint history: {e}")
     
     def restore_checkpoint(self, checkpoint_index: int = -1) -> bool:
         """
@@ -2556,9 +2611,10 @@ class GameplayController:
                 current_time = pygame.time.get_ticks()
                 if self.checkpoint_manager.should_checkpoint(current_time):
                     if self.checkpoint_manager.create_checkpoint():
-                        # Optionally notify the user
+                        # Only notify on success with low priority
                         if hasattr(self, 'add_event_notification'):
                             self.add_event_notification("Game auto-saved", "low")
+                    # Failure notification is handled by CheckpointManager._check_failure_threshold
             except Exception as e:
                 logger.warning(f"Error during automatic checkpointing: {e}")
 

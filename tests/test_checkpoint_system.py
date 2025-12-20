@@ -78,7 +78,7 @@ class TestCheckpointManager:
         # Mock pygame initialization to prevent display window
         pygame.init = lambda: None
         pygame.display.set_mode = lambda *args, **kwargs: mock.MagicMock()
-        pygame.time.Clock = lambda: mock.MagicMock()
+        pygame.time.Clock = mock.MagicMock
         
         try:
             self.controller = GameplayController(config=config)
@@ -138,7 +138,6 @@ class TestCheckpointManager:
         print("\nTest: Checkpoint Restoration")
         try:
             # Create a checkpoint with known state
-            original_stats = self.controller.game_statistics.copy()
             self.controller.game_statistics["actions_executed"] = 42
             self.controller.game_statistics["characters_created"] = 5
             
@@ -381,7 +380,7 @@ def test_save_load_integration():
         # Mock pygame
         pygame.init = lambda: None
         pygame.display.set_mode = lambda *args, **kwargs: mock.MagicMock()
-        pygame.time.Clock = lambda: mock.MagicMock()
+        pygame.time.Clock = mock.MagicMock
         pygame.time.get_ticks = lambda: 12345
         
         save_path = os.path.join(test_dir, "test_save.json")
