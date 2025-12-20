@@ -3730,6 +3730,7 @@ class GameplayController:
         Use _process_events_and_drive_strategy for new code paths.
         """
         update_errors = []
+        remaining_events = None
         try:
             # Forward any locally queued events to the primary event handler
             if self.events:
@@ -3764,7 +3765,7 @@ class GameplayController:
 
             # Use the unified event/strategy pipeline
             self._process_events_and_drive_strategy(update_errors)
-            if self.events and "remaining_events" in locals():
+            if self.events and remaining_events is not None:
                 self.events = remaining_events
 
         except Exception as e:
