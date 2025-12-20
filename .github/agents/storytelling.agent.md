@@ -33,7 +33,7 @@ Implement a `StoryManager` with:
 - event detection: identify “significant” events from actions/state changes
 - beat generation: produce concise narrative summaries
 - arc tracking: per-character arc state (motivation, conflict, bonds)
-- coherence control: avoid contradictions and spam
+- coherence control: avoid narrative contradictions (e.g., conflicting character states, relationship statuses, or locations; timeline inconsistencies; mutually-exclusive repeated events) and generation spam (e.g., too many similar beats within a short time window, duplicate or near-duplicate story threads for the same event, or excessive beat generation for trivial/minor events).
 
 ### 2) Significance heuristics
 Define what counts as a story event:
