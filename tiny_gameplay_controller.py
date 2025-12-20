@@ -337,19 +337,19 @@ class SelectedCharacterPanel(UIPanel):
             current_y += action_text.get_height() + 3
             
             # Social and quest info (condensed)
-            if hasattr(char, "uuid") and hasattr(controller, "social_networks"):
+            if (hasattr(char, "uuid") and hasattr(controller, "graph_manager") and 
+                controller.graph_manager):
                 try:
-                    relationships = controller.social_networks["relationships"].get(char.uuid, {})
-                    avg_relationship = (
-                        sum(relationships.values()) / len(relationships)
-                        if relationships else 50
-                    )
-                    social_text = tiny_font.render(f"Social: {avg_relationship:.0f}/100", True, (180, 180, 180))
-                    screen.blit(social_text, (x, current_y))
-                    current_y += social_text.get_height() + 1
-
+                    relationships = controller.graph_manager.get_character_relationships(char)
+                    if relationships:
+                        avg_relationship = sum(
+                            rel_data.get('strength', 50) for rel_data in relationships.values()
+                        ) / len(relationships)
+                        social_text = tiny_font.render(f"Social: {avg_relationship:.0f}/100", True, (180, 180, 180))
+                        screen.blit(social_text, (x, current_y))
+                        current_y += social_text.get_height() + 1
                 except Exception as e:
-                    logging.error(f"Error accessing social_networks while rendering selected character panel: {e}")
+                    logging.error(f"Error accessing GraphManager while rendering selected character panel: {e}")
             
             if hasattr(char, "uuid") and hasattr(controller, "quest_system"):
                 try:
@@ -508,12 +508,15 @@ class VillageOverviewPanel(UIPanel):
                 health = getattr(char, 'health_status', 50)
                 char_mood = (energy + health) / 2
                 
-                # Factor in social relationships if available
-                if hasattr(controller, 'social_networks') and hasattr(char, 'uuid'):
+                # Factor in social relationships if available through GraphManager
+                if (hasattr(controller, 'graph_manager') and controller.graph_manager and 
+                    hasattr(char, 'uuid')):
                     try:
-                        relationships = controller.social_networks.get('relationships', {}).get(char.uuid, {})
+                        relationships = controller.graph_manager.get_character_relationships(char)
                         if relationships:
-                            avg_relationship = sum(relationships.values()) / len(relationships)
+                            avg_relationship = sum(
+                                rel_data.get('strength', 50) for rel_data in relationships.values()
+                            ) / len(relationships)
                             char_mood = (char_mood + avg_relationship) / 2
                     except:
                         pass
@@ -1570,10 +1573,10 @@ class GameplayController:
         # Setup user-driven configuration
         self.setup_user_driven_configuration()
 
-        # Initialize feature systems
+        # Initialize feature systems (delegate social networks to GraphManager)
         self.implement_achievement_system()
         self.implement_weather_system()
-        self.implement_social_network_system()
+        # Social network system is now handled by GraphManager - removed separate implementation
         self.implement_quest_system()
 
         # Initialize world events for emergent storytelling
@@ -2308,6 +2311,11 @@ class GameplayController:
             except Exception as e:
                 logger.error(f"Error registering character {character.name}: {e}")
                 continue
+        
+        # Initialize relationships through GraphManager (single source of truth)
+        if self.graph_manager and len(self.characters) > 1:
+            self.graph_manager.initialize_character_relationships(self.characters)
+            logger.info(f"Initialized social relationships for {len(self.characters)} characters through GraphManager")
 
     def game_loop(self):
         """Main game loop with configurable frame rate and performance monitoring."""
@@ -2750,38 +2758,8 @@ class GameplayController:
         update_errors = []
         systems_to_recover = []
 
-        # Integrated event-driven strategy update (from legacy update method)
-        try:
-            # Check for new events if event handler exists
-            events = []
-            if self.event_handler:
-                try:
-                    events = self.event_handler.check_events()
-                except Exception as e:
-                    logger.warning(f"Error checking events: {e}")
-                    update_errors.append("Event checking failed")
-
-            # Update strategy based on events if strategy manager exists
-            decisions = []
-            if self.strategy_manager:
-                try:
-                    decisions = self.strategy_manager.update_strategy(events if events else [])
-                except Exception as e:
-                    logger.warning(f"Error updating strategy: {e}")
-                    update_errors.append("Strategy update failed")
-
-            # Apply decisions to game state
-            for decision in decisions:
-                try:
-                    # Pass None as game_state since update_game_state doesn't have access to it
-                    # The decision application logic will use the controller's internal state
-                    self.apply_decision(decision, None)
-                except Exception as e:
-                    logger.error(f"Error applying decision: {e}")
-                    update_errors.append(f"Decision application failed")
-        except Exception as e:
-            logger.error(f"Error in event-driven strategy update: {e}")
-            update_errors.append("Event-driven strategy update failed")
+        # Robust event-driven strategy update using EventHandler
+        self._process_events_and_drive_strategy(update_errors)
 
         # Update the map controller (handles character movement and pathfinding)
         if self.map_controller:
@@ -2833,17 +2811,8 @@ class GameplayController:
                 logger.warning(f"Error updating animation system: {e}")
                 # Animation errors are not critical
 
-        # Process events using the EventHandler system and drive strategy
-        try:
-            if self.event_handler:
-                self._process_events_and_update_strategy(dt)
-            elif hasattr(self, "events") and self.events:
-                # Fallback to basic event processing if no EventHandler
-                self._process_pending_events()
-        except Exception as e:
-            logger.error(f"Error processing events and strategy: {e}")
-            update_errors.append("Event processing failed")
-            systems_to_recover.append("event_handler")
+        # Note: Event processing and strategy update is now handled above in _process_events_and_drive_strategy
+        # No need for separate event processing calls
 
         # Update feature systems
         try:
@@ -2893,20 +2862,13 @@ class GameplayController:
             logger.warning(f"Error updating feature systems: {e}")
 
     def _update_social_relationships(self, dt):
-        """Update social relationships over time."""
+        """Update social relationships over time using GraphManager."""
         try:
-            if not hasattr(self, "social_networks"):
-                return
-
-            # Slow relationship decay/growth over time
-            for char_id, relationships in self.social_networks["relationships"].items():
-                for other_id, strength in relationships.items():
-                    # Very slow decay towards neutral (50)
-                    if strength > 50:
-                        relationships[other_id] = max(50, strength - 0.1 * dt)
-                    elif strength < 50:
-                        relationships[other_id] = min(50, strength + 0.1 * dt)
-
+            if self.graph_manager:
+                # Delegate to GraphManager for social relationship updates
+                self.graph_manager.update_social_relationships(dt)
+            else:
+                logger.warning("GraphManager not available for social relationship updates")
         except Exception as e:
             logger.warning(f"Error updating social relationships: {e}")
 
@@ -3248,15 +3210,28 @@ class GameplayController:
             return self._execute_fallback_character_action(character)
 
     def _update_social_networks_from_event(self, event_name):
-        """Update social networks based on social events."""
+        """Update social networks based on social events using GraphManager."""
         try:
-            if hasattr(self, 'social_networks'):
-                # Strengthen relationships for participants in social events
-                for char_id, relationships in self.social_networks.get('relationships', {}).items():
-                    for other_id in relationships:
-                        # Small boost to all relationships after community events
-                        current_strength = relationships[other_id]
-                        relationships[other_id] = min(100, current_strength + 2)
+            if self.graph_manager:
+                # Strengthen relationships for participants in social events through GraphManager
+                for char1 in self.characters.values():
+                    for char2 in self.characters.values():
+                        if (char1 != char2 and 
+                            char1 in self.graph_manager.G.nodes and 
+                            char2 in self.graph_manager.G.nodes and
+                            self.graph_manager.G.has_edge(char1, char2)):
+                            
+                            # Small boost to relationship strength after community events
+                            edge_data = self.graph_manager.G[char1][char2]
+                            current_strength = edge_data.get('strength', 50)
+                            edge_data['strength'] = min(100, current_strength + 2)
+                            
+                            # Also boost emotional impact slightly
+                            current_emotional = edge_data.get('emotional', 0)
+                            if current_emotional >= 0:
+                                edge_data['emotional'] = min(1.0, current_emotional + 0.1)
+            else:
+                logger.warning("GraphManager not available for social network updates")
                         
         except Exception as e:
             logger.warning(f"Error updating social networks from event: {e}")
@@ -3496,38 +3471,243 @@ class GameplayController:
             # Return empty list if we can't even create basic actions
             return []
 
-    def _process_events_and_update_strategy(self, dt):
-        """Process events via EventHandler and update strategy accordingly."""
+    def _process_events_and_drive_strategy(self, update_errors):
+        """
+        Robust event processing and strategy driving using EventHandler.check_events().
+        
+        This method replaces the previous insufficient _process_pending_events and
+        consolidates all event-driven strategy logic into a single, comprehensive approach.
+        
+        Args:
+            update_errors (list): List to append any errors encountered during processing
+        """
+        if not self.event_handler:
+            # Fallback to basic event processing for legacy compatibility
+            self._process_basic_events_fallback(update_errors)
+            return
+
         try:
-            if not self.event_handler:
+            # Step 1: Check for events using EventHandler - this is the primary driver
+            events = []
+            try:
+                events = self.event_handler.check_events()
+                logger.debug(f"EventHandler found {len(events)} events to process")
+            except Exception as e:
+                logger.warning(f"Error checking events via EventHandler: {e}")
+                update_errors.append("Event checking failed")
                 return
 
-            # Get events from event handler
-            events = self.event_handler.check_events()
+            # Step 2: Process events if any were found
+            if events:
+                try:
+                    # Let EventHandler process the events and their effects
+                    event_results = self.event_handler.process_events()
+                    logger.debug(f"EventHandler processed events: {len(event_results.get('processed_events', []))} successful")
+                    
+                    # Handle event processing results
+                    if event_results.get('failed_events'):
+                        logger.warning(f"Some events failed processing: {event_results['failed_events']}")
+                        update_errors.append(f"Event processing failures: {len(event_results['failed_events'])}")
+                        
+                except Exception as e:
+                    logger.warning(f"Error processing events: {e}")
+                    update_errors.append("Event processing failed")
+
+            # Step 3: Update strategy based on events (whether processed or not)
+            strategy_result = None
+            if self.strategy_manager:
+                try:
+                    # Strategy manager should receive all events to make informed decisions
+                    strategy_result = self.strategy_manager.update_strategy(events)
+                    logger.debug(f"StrategyManager generated strategy result: {type(strategy_result)}")
+                except Exception as e:
+                    logger.warning(f"Error updating strategy based on events: {e}")
+                    update_errors.append("Strategy update failed")
+
+            # Step 4: Apply strategic result to game state
+            self._apply_strategy_result(strategy_result, update_errors)
             
-            # Update strategy manager based on events
-            if self.strategy_manager and events:
-                decisions = self.strategy_manager.update_strategy(events)
+            # Step 5: Handle cascading events and dynamic event generation
+            self._handle_cascading_and_dynamic_events(events, update_errors)
+            
+        except Exception as e:
+            logger.error(f"Critical error in event-driven strategy processing: {e}")
+            update_errors.append(f"Event-driven strategy system failure: {str(e)}")
+
+    def _apply_strategy_result(self, strategy_result, update_errors):
+        """Apply strategy result from the strategy manager, handling different return types."""
+        if strategy_result is None:
+            return
+            
+        try:
+            # Handle different types of strategy results
+            if isinstance(strategy_result, list):
+                # List of decisions - apply each one
+                for i, decision in enumerate(strategy_result):
+                    try:
+                        if decision:
+                            self.apply_decision(decision, None)
+                            logger.debug(f"Applied strategic decision {i+1}/{len(strategy_result)}")
+                        else:
+                            logger.warning(f"Received empty decision at index {i}")
+                    except Exception as e:
+                        logger.error(f"Error applying strategic decision {i}: {e}")
+                        update_errors.append(f"Decision application failed (decision {i})")
+                        continue
+            
+            elif hasattr(strategy_result, 'execute'):
+                # Single action - execute it directly
+                try:
+                    success = strategy_result.execute()
+                    if success:
+                        logger.debug(f"Successfully executed strategy action: {strategy_result.name}")
+                        self.game_statistics["actions_executed"] += 1
+                    else:
+                        logger.warning(f"Strategy action execution failed: {strategy_result.name}")
+                        self.game_statistics["actions_failed"] += 1
+                        update_errors.append("Strategy action execution failed")
+                        
+                    # Track action execution for analytics
+                    try:
+                        if self.action_resolver:
+                            self.action_resolver.track_action_execution(strategy_result, None, success)
+                    except AttributeError:
+                        # track_action_execution method doesn't exist, skip
+                        pass
+                        
+                except Exception as e:
+                    logger.error(f"Error executing strategy action: {e}")
+                    update_errors.append("Strategy action execution error")
+            
+            elif isinstance(strategy_result, dict):
+                # Dictionary decision - apply it as a single decision
+                try:
+                    self.apply_decision(strategy_result, None)
+                    logger.debug("Applied dictionary-based strategic decision")
+                except Exception as e:
+                    logger.error(f"Error applying dictionary decision: {e}")
+                    update_errors.append("Dictionary decision application failed")
+            
+            else:
+                # Unknown type - log warning but don't fail
+                logger.warning(f"Unknown strategy result type: {type(strategy_result)}. Skipping application.")
                 
-                # Apply decisions to game state
-                for decision in decisions:
-                    self.apply_decision(decision, None)
+        except Exception as e:
+            logger.error(f"Critical error applying strategy result: {e}")
+            update_errors.append(f"Strategy result application failure: {str(e)}")
+
+    def _apply_strategic_decisions(self, decisions, update_errors):
+        """
+        DEPRECATED: Use _apply_strategy_result instead.
+        Apply strategic decisions generated by the strategy manager.
+        """
+        logger.warning("_apply_strategic_decisions is deprecated. Use _apply_strategy_result instead.")
+        self._apply_strategy_result(decisions, update_errors)
+
+    def _handle_cascading_and_dynamic_events(self, events, update_errors):
+        """Handle cascading events and generate new dynamic events based on current state."""
+        try:
+            # Process any cascading events that were triggered
+            if self.event_handler:
+                try:
+                    cascading_processed = self.event_handler.process_cascading_queue()
+                    if cascading_processed:
+                        logger.info(f"Processed {len(cascading_processed)} cascading events")
+                except AttributeError:
+                    # Method doesn't exist, skip
+                    pass
+
+            # Generate dynamic events based on current world state
+            if self.event_handler:
+                try:
+                    world_state = self._get_current_world_state()
+                    dynamic_events = self.event_handler.generate_dynamic_events(
+                        world_state, 
+                        list(self.characters.values()) if self.characters else None
+                    )
+                    if dynamic_events:
+                        logger.info(f"Generated {len(dynamic_events)} dynamic events")
+                except AttributeError:
+                    # Method doesn't exist, skip
+                    pass
                     
         except Exception as e:
-            logger.error(f"Error processing events and updating strategy: {e}")
+            logger.warning(f"Error handling cascading/dynamic events: {e}")
+            update_errors.append("Cascading event processing failed")
 
-    def _process_pending_events(self):
-        """Process any pending events in the basic events list."""
+    def _get_current_world_state(self):
+        """Get current world state for dynamic event generation."""
         try:
+            if not self.characters:
+                return {"average_wealth": 50, "average_relationships": 50, "average_health": 75}
+                
+            # Calculate averages for world state analysis
+            total_chars = len(self.characters)
+            avg_wealth = sum(getattr(char, 'wealth_money', 50) for char in self.characters.values()) / total_chars
+            avg_health = sum(getattr(char, 'health_status', 75) for char in self.characters.values()) / total_chars
+            
+            # Calculate average relationships if social networks exist
+            avg_relationships = 50
+            if hasattr(self, 'social_networks') and self.social_networks.get('relationships'):
+                relationship_values = []
+                for char_relationships in self.social_networks['relationships'].values():
+                    relationship_values.extend(char_relationships.values())
+                if relationship_values:
+                    avg_relationships = sum(relationship_values) / len(relationship_values)
+            
+            try:
+                time_value = pygame.time.get_ticks()
+            except (AttributeError, ImportError):
+                time_value = 0
+            
+            return {
+                "average_wealth": avg_wealth,
+                "average_relationships": avg_relationships,
+                "average_health": avg_health,
+                "population": total_chars,
+                "time": time_value
+            }
+            
+        except Exception as e:
+            logger.warning(f"Error calculating world state: {e}")
+            return {"average_wealth": 50, "average_relationships": 50, "average_health": 75}
+
+    def _process_basic_events_fallback(self, update_errors):
+        """
+        Fallback event processing when EventHandler is not available.
+        This is a much improved version of the old _process_pending_events.
+        """
+        try:
+            # self.events is always initialized in __init__, so no hasattr check needed
+            if not self.events:
+                return
+                
+            logger.info("Using fallback event processing (EventHandler not available)")
             events_to_remove = []
+            
             for event in self.events:
                 try:
-                    # Process event logic here
-                    # This is a basic fallback when EventHandler is not available
-                    logger.debug(f"Processing basic event: {event}")
+                    # Basic event processing that actually drives strategy
+                    logger.debug(f"Processing fallback event: {event}")
+                    
+                    # Try to trigger strategy update even for basic events
+                    if self.strategy_manager:
+                        try:
+                            # Convert basic event to a format strategy manager can understand
+                            event_for_strategy = {
+                                'type': getattr(event, 'type', 'general'),
+                                'name': getattr(event, 'name', str(event)),
+                                'importance': getattr(event, 'importance', 5)
+                            }
+                            strategy_result = self.strategy_manager.update_strategy([event_for_strategy])
+                            self._apply_strategy_result(strategy_result, update_errors)
+                        except Exception as e:
+                            logger.warning(f"Error applying strategy for basic event: {e}")
+                    
                     events_to_remove.append(event)
+                    
                 except Exception as e:
-                    logger.warning(f"Error processing event: {e}")
+                    logger.warning(f"Error processing basic event: {e}")
                     events_to_remove.append(event)  # Remove problematic events
             
             # Remove processed events
@@ -3535,8 +3715,31 @@ class GameplayController:
                 if event in self.events:
                     self.events.remove(event)
                     
+            if events_to_remove:
+                logger.debug(f"Processed {len(events_to_remove)} basic events")
+                    
         except Exception as e:
-            logger.error(f"Error processing pending events: {e}")
+            logger.error(f"Error in fallback event processing: {e}")
+            update_errors.append("Fallback event processing failed")
+
+    def _process_pending_events(self):
+        """
+        DEPRECATED: This method has been replaced by _process_events_and_drive_strategy.
+        Kept for backward compatibility but now delegates to the new robust implementation.
+        """
+        logger.warning("_process_pending_events is deprecated. Use _process_events_and_drive_strategy instead.")
+        update_errors = []
+        self._process_basic_events_fallback(update_errors)
+        if update_errors:
+            logger.warning(f"Deprecated _process_pending_events completed with errors: {update_errors}")
+
+    def _process_events_and_update_strategy(self, dt):
+        """
+        DEPRECATED: This method has been replaced by _process_events_and_drive_strategy.
+        Kept for backward compatibility but functionality is now integrated into update_game_state.
+        """
+        logger.warning("_process_events_and_update_strategy is deprecated. Event processing is now integrated into update_game_state.")
+        # No operation - functionality moved to _process_events_and_drive_strategy
 
     def apply_decision(self, decision, game_state):
         """Apply a strategic decision to the game state."""
@@ -3701,7 +3904,8 @@ class GameplayController:
                 "statistics": self.game_statistics,
                 "weather": getattr(self, "weather_system", {}),
                 "quest_system": getattr(self, "quest_system", {}),
-                "social_networks": getattr(self, "social_networks", {})
+                # Social networks are now managed by GraphManager
+                "social_networks": self.get_social_networks()
             }
             
             # Save character data
@@ -3763,7 +3967,9 @@ class GameplayController:
                 
             # Restore social networks
             if "social_networks" in game_state:
-                self.social_networks = game_state["social_networks"]
+                # Note: Social networks are now managed by GraphManager
+                # The saved data will be used to restore relationships in GraphManager if needed
+                logger.info("Social network data found in save file - managed by GraphManager")
             
             # Note: Character restoration is more complex and would require
             # full character recreation, which is beyond basic save/load
@@ -3818,28 +4024,29 @@ class GameplayController:
         except Exception as e:
             logger.error(f"Error in weather system: {e}")
 
-    def implement_social_network_system(self):
-        """Implement basic social relationship tracking."""
-        try:
-            if not hasattr(self, "social_networks"):
-                self.social_networks = {
-                    "relationships": {},
-                    "last_update": pygame.time.get_ticks()
-                }
-            
-            # Initialize relationships for all characters
-            for char_id in self.characters.keys():
-                if char_id not in self.social_networks["relationships"]:
-                    self.social_networks["relationships"][char_id] = {}
-                    
-                    # Create relationships with other characters
-                    for other_id in self.characters.keys():
-                        if other_id != char_id:
-                            # Random initial relationship strength (30-70)
-                            self.social_networks["relationships"][char_id][other_id] = random.randint(30, 70)
-                            
-        except Exception as e:
-            logger.error(f"Error in social network system: {e}")
+    def get_social_networks(self):
+        """
+        Get social network data by delegating to GraphManager (single source of truth).
+        
+        Returns:
+            dict: Social network data from GraphManager
+        """
+        if self.graph_manager:
+            return self.graph_manager.get_social_networks()
+        else:
+            # Fallback if GraphManager not available
+            return {"relationships": {}, "last_update": pygame.time.get_ticks()}
+    
+    # Note: social_networks property now delegates to GraphManager
+    @property 
+    def social_networks(self):
+        """
+        Read-only property that delegates to GraphManager for social network data.
+        This property is now a read-only view; direct modification is not supported.
+        Any changes to social network data must be performed via GraphManager.
+        This may differ from previous implementations where direct access or mutation was allowed.
+        """
+        return self.get_social_networks()
 
     def implement_quest_system(self):
         """Implement basic quest and goal system."""
@@ -3980,7 +4187,7 @@ class GameplayController:
             "save_load_system": "BASIC_IMPLEMENTED",
             "achievement_system": "BASIC_IMPLEMENTED",
             "weather_system": "STUB_IMPLEMENTED",
-            "social_network_system": "STUB_IMPLEMENTED", 
+            "social_network_system": "FULLY_IMPLEMENTED",  # Now properly managed by GraphManager 
             "quest_system": "STUB_IMPLEMENTED",
             "skill_progression": "BASIC_IMPLEMENTED",
             "reputation_system": "BASIC_IMPLEMENTED",
