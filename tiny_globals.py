@@ -205,7 +205,7 @@ def initialize_global_graph_manager():
                 _global_graph_manager = GraphManager()
                 return _global_graph_manager
             except ImportError as e:
-                raise ImportError(f"Failed to import GraphManager: {e}")
+                raise ImportError(f"Failed to import GraphManager: {e}") from e
         return _global_graph_manager
 
 
@@ -230,7 +230,7 @@ def get_global_graph_manager():
                     from tiny_graph_manager import GraphManager
                     _global_graph_manager = GraphManager()
                 except ImportError as e:
-                    raise ImportError(f"Failed to import GraphManager: {e}")
+                    raise ImportError(f"Failed to import GraphManager: {e}") from e
     return _global_graph_manager
 
 
@@ -249,6 +249,10 @@ def has_global_graph_manager():
     """Check if the global GraphManager instance is initialized.
     
     Thread-safe check that acquires the lock to ensure consistent reads.
+    
+    Note: While reading a reference in Python is atomic, we acquire the lock
+    for consistency with other functions and to ensure proper memory visibility
+    across threads. The performance overhead is negligible for this check operation.
     """
     with _graph_manager_lock:
         return _global_graph_manager is not None
@@ -257,9 +261,26 @@ def has_global_graph_manager():
 def reset_global_graph_manager():
     """Reset the global GraphManager instance. Primarily for testing purposes.
     
+    This clears both the module-level reference to the global GraphManager
+    and the GraphManager singleton instance itself. This is important for tests
+    that need a truly clean GraphManager state between runs.
+    
     Warning: This should only be used in test code to ensure a clean state
     between test runs. Do not use this in production code.
     """
     global _global_graph_manager
     with _graph_manager_lock:
+        # Clear the module-level reference
         _global_graph_manager = None
+        
+        # Also clear the GraphManager singleton instance, if available.
+        # This ensures that subsequent calls to GraphManager() yield a fresh
+        # instance instead of reusing stale state from previous tests.
+        try:
+            from tiny_graph_manager import GraphManager
+            if hasattr(GraphManager, "_instance"):
+                GraphManager._instance = None
+        except ImportError:
+            # If GraphManager cannot be imported, there is no singleton to reset.
+            # This preserves the previous behavior of this function.
+            pass

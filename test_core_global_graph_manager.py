@@ -117,21 +117,34 @@ class TestGlobalGraphManagerCore(unittest.TestCase):
                      "ActionGenerator should use the global GraphManager instance")
     
     def test_set_global_graph_manager(self):
-        """Test that set_global_graph_manager changes the global instance."""
+        """Test that set_global_graph_manager changes the global instance reference.
+        
+        Note: GraphManager uses a singleton pattern, so calling GraphManager()
+        multiple times returns the same instance. This test verifies that
+        set_global_graph_manager() can update the global reference, even though
+        the underlying singleton instance remains the same.
+        """
         # Initialize with default
         gm1 = get_global_graph_manager()
         
-        # Create a new GraphManager
+        # Create another reference to GraphManager (will be the same singleton)
         from tiny_graph_manager import GraphManager
         gm2 = GraphManager()
+        
+        # Due to singleton pattern, gm1 and gm2 are the same instance
+        self.assertIs(gm1, gm2, "GraphManager uses singleton pattern")
+        
+        # Reset to None to test setting
+        reset_global_graph_manager()
+        self.assertFalse(has_global_graph_manager())
         
         # Set it as global
         set_global_graph_manager(gm2)
         
-        # Verify the new instance is now global
+        # Verify the instance is now global
         gm3 = get_global_graph_manager()
-        self.assertIs(gm3, gm2, "set_global_graph_manager should change the global instance")
-        self.assertIsNot(gm3, gm1, "New global instance should be different from old one")
+        self.assertIs(gm3, gm2, "set_global_graph_manager should set the global instance")
+        self.assertTrue(has_global_graph_manager())
 
 
 if __name__ == "__main__":
