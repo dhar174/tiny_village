@@ -3726,37 +3726,34 @@ class GameplayController:
 
     def _process_pending_events(self):
         """
-        Backward-compatible event processing that now forwards queued events into the
-        robust event pipeline so storytelling and strategy logic stay in sync.
+        Deprecated: forwards queued events into the unified event pipeline.
+        Use _process_events_and_drive_strategy for new code paths.
         """
         update_errors = []
         try:
             # Forward any locally queued events to the primary event handler
             if self.events:
-                pending_events = self.events
-                self.events = []
+                pending_events = list(self.events)
+                remaining_events = []
                 if self.event_handler:
                     for event in pending_events:
-                        success = False
                         try:
                             self.event_handler.add_event(event)
-                            success = True
                         except Exception as e:
                             logger.warning(f"Error adding event to handler: {e}")
-                        if not success:
-                            self.events.append(event)
+                            remaining_events.append(event)
                 else:
                     # Fallback: still let storytelling consume the events directly
                     for event in pending_events:
-                        success = False
+                        if not self.storytelling_system:
+                            remaining_events.append(event)
+                            continue
                         try:
-                            if self.storytelling_system:
-                                self.storytelling_system.process_event_for_stories(event)
-                                success = True
+                            self.storytelling_system.process_event_for_stories(event)
                         except Exception as e:
                             logger.warning(f"Error forwarding event to storytelling: {e}")
-                        if not success:
-                            self.events.append(event)
+                            remaining_events.append(event)
+                self.events = remaining_events
 
             # Use the unified event/strategy pipeline
             self._process_events_and_drive_strategy(update_errors)
