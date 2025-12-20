@@ -3733,32 +3733,30 @@ class GameplayController:
         try:
             # Forward any locally queued events to the primary event handler
             if self.events:
-                pending_events = list(self.events)
-                remaining_events = []
+                pending_events = self.events
+                self.events = []
                 if self.event_handler:
                     for event in pending_events:
+                        success = False
                         try:
                             self.event_handler.add_event(event)
-                            handler_events = getattr(self.event_handler, "events", [])
-                            if event not in handler_events:
-                                remaining_events.append(event)
+                            success = True
                         except Exception as e:
                             logger.warning(f"Error adding event to handler: {e}")
-                            remaining_events.append(event)
+                        if not success:
+                            self.events.append(event)
                 else:
                     # Fallback: still let storytelling consume the events directly
                     for event in pending_events:
+                        success = False
                         try:
                             if self.storytelling_system:
-                                result = self.storytelling_system.process_event_for_stories(event)
-                                if not result:
-                                    remaining_events.append(event)
-                            else:
-                                remaining_events.append(event)
+                                self.storytelling_system.process_event_for_stories(event)
+                                success = True
                         except Exception as e:
                             logger.warning(f"Error forwarding event to storytelling: {e}")
-                            remaining_events.append(event)
-                self.events = remaining_events
+                        if not success:
+                            self.events.append(event)
 
             # Use the unified event/strategy pipeline
             self._process_events_and_drive_strategy(update_errors)
