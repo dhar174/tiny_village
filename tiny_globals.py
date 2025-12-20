@@ -214,6 +214,11 @@ def get_global_graph_manager():
     
     Thread-safe access to the global GraphManager instance using
     a double-checked locking pattern for optimal performance.
+    
+    Note: The initialization code is duplicated here rather than calling
+    initialize_global_graph_manager() because the double-checked locking
+    pattern requires the initialization to be inline within the lock block
+    for proper thread safety and performance.
     """
     global _global_graph_manager
     # First check without acquiring the lock for fast-path access
