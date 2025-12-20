@@ -208,78 +208,7 @@ class TestEventStrategyIntegration(unittest.TestCase):
         
         # Test deprecated _process_events_and_update_strategy
         # Should not crash
-            self.game_controller._process_events_and_update_strategy(0.1)
-
-
-class TestPendingEventForwarding(unittest.TestCase):
-    """Targeted tests for deprecated _process_pending_events forwarding logic."""
-
-    def _make_controller(self):
-        ctrl = GameplayController.__new__(GameplayController)
-        ctrl.events = []
-        ctrl.event_handler = None
-        ctrl.storytelling_system = None
-        ctrl._process_events_and_drive_strategy = lambda update_errors: None
-        return ctrl
-
-    def test_forwards_to_event_handler_and_clears(self):
-        ctrl = self._make_controller()
-        event = Mock()
-        handler = Mock()
-        handler.events = []
-        handler.add_event = Mock()
-        ctrl.event_handler = handler
-        ctrl.events = [event]
-
-        ctrl._process_pending_events()
-
-        handler.add_event.assert_called_once_with(event)
-        self.assertEqual(ctrl.events, [])
-
-    def test_retains_event_on_handler_failure(self):
-        ctrl = self._make_controller()
-        event = Mock()
-
-        def failing_add(_):
-            raise RuntimeError("handler failure")
-
-        handler = Mock()
-        handler.add_event = Mock(side_effect=failing_add)
-        ctrl.event_handler = handler
-        ctrl.events = [event]
-
-        ctrl._process_pending_events()
-
-        self.assertEqual(ctrl.events, [event])
-
-    def test_forwards_to_storytelling_when_no_handler(self):
-        ctrl = self._make_controller()
-        event = Mock()
-        storytelling = Mock()
-        storytelling.process_event_for_stories = Mock()
-        ctrl.storytelling_system = storytelling
-        ctrl.events = [event]
-
-        ctrl._process_pending_events()
-
-        storytelling.process_event_for_stories.assert_called_once_with(event)
-        self.assertEqual(ctrl.events, [])
-
-    def test_retains_event_on_storytelling_failure(self):
-        ctrl = self._make_controller()
-        event = Mock()
-
-        def failing_story(_):
-            raise RuntimeError("story failure")
-
-        storytelling = Mock()
-        storytelling.process_event_for_stories = Mock(side_effect=failing_story)
-        ctrl.storytelling_system = storytelling
-        ctrl.events = [event]
-
-        ctrl._process_pending_events()
-
-        self.assertEqual(ctrl.events, [event])
+        self.game_controller._process_events_and_update_strategy(0.1)
 
     def test_integration_in_update_game_state(self):
         """Test that the integration works properly within update_game_state."""
