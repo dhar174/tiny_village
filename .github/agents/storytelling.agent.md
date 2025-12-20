@@ -84,4 +84,4 @@ You may either:
 1. **Extend `StorytellingSystem`**: Add missing features directly to the existing class in `tiny_storytelling_system.py`
 2. **Create `StoryManager`**: Build a new coordinating class that wraps/enhances `StorytellingSystem`, `StoryArcManager`, and `NarrativeGenerator`
 
-Choose the approach that best fits the existing architecture and minimizes code duplication. The goal is to add missing functionality while preserving existing features
+Choose the approach that best fits the existing architecture and minimizes code duplication. The goal is to add missing functionality while preserving existing features.
