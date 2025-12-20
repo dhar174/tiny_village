@@ -92,6 +92,7 @@ class TestGlobalGraphManagerIntegration(unittest.TestCase):
             action_gen = ActionGenerator()
             instances_to_test.append(('ActionGenerator', action_gen.graph_manager))
         except Exception:
+            # Skip if actions module cannot be imported or instantiated due to dependencies
             pass
         
         # Test EventHandler
@@ -100,6 +101,7 @@ class TestGlobalGraphManagerIntegration(unittest.TestCase):
             event_handler = EventHandler()
             instances_to_test.append(('EventHandler', event_handler.graph_manager))
         except Exception:
+            # Skip if EventHandler cannot be imported or instantiated due to dependencies
             pass
         
         # Test StrategyManager
@@ -108,6 +110,7 @@ class TestGlobalGraphManagerIntegration(unittest.TestCase):
             strategy_mgr = StrategyManager()
             instances_to_test.append(('StrategyManager', strategy_mgr.graph_manager))
         except Exception:
+            # Skip if StrategyManager cannot be imported or instantiated due to dependencies
             pass
         
         # Test GameplayController
@@ -116,6 +119,7 @@ class TestGlobalGraphManagerIntegration(unittest.TestCase):
             gameplay_ctrl = GameplayController()
             instances_to_test.append(('GameplayController', gameplay_ctrl.graph_manager))
         except Exception:
+            # Skip if GameplayController cannot be imported or instantiated due to dependencies
             pass
         
         # Verify all instances are the same

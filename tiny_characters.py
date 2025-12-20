@@ -1376,8 +1376,8 @@ class GoalGenerator:
             try:
                 from tiny_globals import get_global_graph_manager
                 self.graph_manager = get_global_graph_manager()
-            except ImportError:
-                raise ValueError("GraphManager instance required and could not import global instance.")
+            except ImportError as e:
+                raise ValueError("GraphManager instance required and could not import global instance.") from e
         else:
             self.graph_manager = graph_manager
         self.goap_planner = goap_planner
@@ -2092,8 +2092,8 @@ class Character:
             try:
                 from tiny_globals import get_global_graph_manager
                 self.graph_manager = get_global_graph_manager()
-            except ImportError:
-                raise ValueError("GraphManager instance required and could not import global instance.")
+            except ImportError as e:
+                raise ValueError("GraphManager instance required and could not import global instance.") from e
         else:
             self.graph_manager = graph_manager
         self.energy = energy

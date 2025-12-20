@@ -14,7 +14,6 @@ sys.path.insert(0, '.')
 from tiny_globals import (
     get_global_graph_manager,
     has_global_graph_manager,
-    initialize_global_graph_manager,
     reset_global_graph_manager
 )
 

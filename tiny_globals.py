@@ -178,6 +178,17 @@ def global_values():
 
 
 # GraphManager global instance management
+# 
+# Note: GraphManager itself implements a singleton pattern (see line 717 in tiny_graph_manager.py),
+# which ensures only one GraphManager instance can exist in the application. The global instance
+# management here in tiny_globals provides:
+#   1. Explicit initialization control via initialize_global_graph_manager()
+#   2. Thread-safe access with locks for concurrent initialization
+#   3. Test reset functionality via reset_global_graph_manager()
+#   4. Clear global access point via get_global_graph_manager()
+#
+# The two patterns work together: GraphManager's singleton ensures a single instance exists,
+# while tiny_globals provides controlled, thread-safe access to that singleton.
 _graph_manager_lock = threading.Lock()
 
 def initialize_global_graph_manager():
@@ -201,11 +212,20 @@ def initialize_global_graph_manager():
 def get_global_graph_manager():
     """Get the global GraphManager instance. Initializes it if not already done.
     
-    Thread-safe access to the global GraphManager instance.
+    Thread-safe access to the global GraphManager instance using
+    a double-checked locking pattern for optimal performance.
     """
     global _global_graph_manager
+    # First check without acquiring the lock for fast-path access
     if _global_graph_manager is None:
-        return initialize_global_graph_manager()
+        with _graph_manager_lock:
+            # Check again inside the lock to ensure only one initializer
+            if _global_graph_manager is None:
+                try:
+                    from tiny_graph_manager import GraphManager
+                    _global_graph_manager = GraphManager()
+                except ImportError as e:
+                    raise ImportError(f"Failed to import GraphManager: {e}")
     return _global_graph_manager
 
 
@@ -221,8 +241,12 @@ def set_global_graph_manager(graph_manager):
 
 
 def has_global_graph_manager():
-    """Check if the global GraphManager instance is initialized."""
-    return _global_graph_manager is not None
+    """Check if the global GraphManager instance is initialized.
+    
+    Thread-safe check that acquires the lock to ensure consistent reads.
+    """
+    with _graph_manager_lock:
+        return _global_graph_manager is not None
 
 
 def reset_global_graph_manager():
