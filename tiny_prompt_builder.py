@@ -10,11 +10,14 @@ this module; it purely formats information for those other components.
 """
 
 import random
+import logging
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
 from datetime import datetime
 
 import tiny_characters as tc
+
+logger = logging.getLogger(__name__)
 
 
 class ContextManager:
@@ -2192,6 +2195,14 @@ class PromptBuilder:
     communicate with the model directly; :mod:`tiny_brain_io` is responsible for
     that step.
     """
+    
+    # Urgency thresholds for goal priorities
+    URGENCY_THRESHOLD_URGENT = 8.0
+    URGENCY_THRESHOLD_HIGH = 6.0
+    
+    # Needs priority thresholds
+    NEEDS_PRIORITY_CRITICAL_THRESHOLD = 80.0
+    NEEDS_PRIORITY_HIGH_THRESHOLD = 60.0
 
     def __init__(self, character, memory_manager=None) -> None:
         """Initialize the builder for ``character``."""
@@ -2419,9 +2430,9 @@ class PromptBuilder:
         for i, action in enumerate(actions[:5]):
             try:
                 util = calculate_action_utility(char_state, action, current_goal)
-            except (ValueError, TypeError):  # Replace with specific exceptions
+            except (ValueError, TypeError) as e:
                 util = 0.0
-                print(f"Error calculating utility for action {action}: {e}")  # Optional logging
+                logger.warning(f"Error calculating utility for action {action}: {e}")
 
             effects_str = ""
             if hasattr(action, "effects") and action.effects:
@@ -2567,20 +2578,25 @@ class PromptBuilder:
         prompt += f"<|user|>"
         prompt += f"{self.character.name}, it's {time}, and {descriptors.get_weather_description(weather)}. You're feeling {descriptors.get_feeling_health(self.character.health_status)}, and {descriptors.get_feeling_hunger(self.character.hunger_level)}. "
         prompt += f"{descriptors.get_event_recent(self.character.recent_event)}, and {descriptors.get_financial_situation(self.character.wealth_money)}. {descriptors.get_motivation()} {getattr(self.character, 'long_term_goal', 'personal growth')}. {descriptors.get_routine_question_framing()}"
+        
+        # Generate dynamic action choices from StrategyManager/GOAPPlanner
         prompt += "Options:\n"
-        prompt += "1. Go to the market to Buy_Food.\n"
-        prompt += f"2. Work at your job to Improve_{getattr(self.character, 'job_performance', 'job_performance')}.\n"
-        prompt += "3. Visit a friend to Increase_Friendship.\n"
-        prompt += "4. Engage in a Leisure_Activity to improve Mental_Health.\n"
-        prompt += "5. Work on a personal project to Pursue_Hobby.\n"
-        actions = self.action_options.prioritize_actions(self.character)
-        for i, action in enumerate(actions[:5], 1):
-            try:
-                descriptor = descriptors.get_action_descriptors(action)
-            except (KeyError, AttributeError):
-                descriptor = action.replace("_", " ").title()
-            action_name = action.replace("_", " ").title().replace(" ", "_")
-            prompt += f"{i}. {descriptor} to {action_name}.\n"
+        dynamic_action_choices = self.prioritize_actions()
+        
+        if dynamic_action_choices:
+            # Use dynamically generated action choices with utility scores
+            for choice in dynamic_action_choices:
+                prompt += f"{choice}\n"
+        else:
+            # Fallback to basic action prioritization if StrategyManager unavailable
+            actions = self.action_options.prioritize_actions(self.character)
+            for i, action in enumerate(actions[:5], 1):
+                try:
+                    descriptor = descriptors.get_action_descriptors(action)
+                except (KeyError, AttributeError):
+                    descriptor = action.replace("_", " ").title()
+                action_name = action.replace("_", " ").title().replace(" ", "_")
+                prompt += f"{i}. {descriptor} to {action_name}.\n"
         # Add structured output format instructions
         if output_format == "json":
             prompt += f"\n\n{OutputSchema.get_decision_schema()}"
