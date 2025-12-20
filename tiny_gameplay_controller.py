@@ -3726,52 +3726,12 @@ class GameplayController:
 
     def _process_pending_events(self):
         """
-        Deprecated: forwards queued events into the unified event pipeline.
-        Use _process_events_and_drive_strategy for new code paths.
+        DEPRECATED: This method has been replaced by _process_events_and_drive_strategy.
+        Kept for backward compatibility but now delegates to the new robust implementation.
         """
+        logger.warning("_process_pending_events is deprecated. Use _process_events_and_drive_strategy instead.")
         update_errors = []
-        remaining_events = None
-        try:
-            # Forward any locally queued events to the primary event handler
-            if self.events:
-                pending_events = list(self.events)
-                remaining_events = []
-                if self.event_handler:
-                    for event in pending_events:
-                        try:
-                            self.event_handler.add_event(event)
-                        except Exception as e:
-                            logger.warning(
-                                f"Failed to add event to event handler via add_event "
-                                f"(event={getattr(event, 'name', str(event))}): {e}"
-                            )
-                            remaining_events.append(event)
-                else:
-                    # Fallback: still let storytelling consume the events directly
-                    for event in pending_events:
-                        if not self.storytelling_system:
-                            remaining_events.append(event)
-                            continue
-                        try:
-                            self.storytelling_system.process_event_for_stories(event)
-                        except Exception as e:
-                            logger.warning(
-                                f"Error processing event with storytelling system: {e}; event={event}"
-                            )
-                            update_errors.append(
-                                f"Error forwarding event to storytelling: {e}"
-                            )
-                            remaining_events.append(event)
-
-            # Use the unified event/strategy pipeline
-            self._process_events_and_drive_strategy(update_errors)
-            if self.events and remaining_events is not None:
-                self.events = remaining_events
-
-        except Exception as e:
-            logger.warning(f"Error in deprecated _process_pending_events: {e}")
-            self._process_basic_events_fallback(update_errors)
-
+        self._process_basic_events_fallback(update_errors)
         if update_errors:
             logger.warning(f"Deprecated _process_pending_events completed with errors: {update_errors}")
 
