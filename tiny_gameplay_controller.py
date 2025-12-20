@@ -3734,24 +3734,31 @@ class GameplayController:
             # Forward any locally queued events to the primary event handler
             if self.events:
                 pending_events = list(self.events)
+                remaining_events = []
                 if self.event_handler:
                     for event in pending_events:
                         try:
                             self.event_handler.add_event(event)
-                            if event in self.events:
-                                self.events.remove(event)
+                            handler_events = getattr(self.event_handler, "events", [])
+                            if event not in handler_events:
+                                remaining_events.append(event)
                         except Exception as e:
                             logger.warning(f"Error adding event to handler: {e}")
+                            remaining_events.append(event)
                 else:
                     # Fallback: still let storytelling consume the events directly
                     for event in pending_events:
                         try:
                             if self.storytelling_system:
-                                self.storytelling_system.process_event_for_stories(event)
-                                if event in self.events:
-                                    self.events.remove(event)
+                                result = self.storytelling_system.process_event_for_stories(event)
+                                if not result:
+                                    remaining_events.append(event)
+                            else:
+                                remaining_events.append(event)
                         except Exception as e:
                             logger.warning(f"Error forwarding event to storytelling: {e}")
+                            remaining_events.append(event)
+                self.events = remaining_events
 
             # Use the unified event/strategy pipeline
             self._process_events_and_drive_strategy(update_errors)
