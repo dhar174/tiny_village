@@ -14,7 +14,8 @@ sys.path.insert(0, '.')
 from tiny_globals import (
     get_global_graph_manager,
     has_global_graph_manager,
-    initialize_global_graph_manager
+    initialize_global_graph_manager,
+    reset_global_graph_manager
 )
 
 
@@ -24,14 +25,12 @@ class TestGlobalGraphManager(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures before each test method."""
         # Reset the global graph manager before each test
-        import tiny_globals
-        tiny_globals._global_graph_manager = None
+        reset_global_graph_manager()
     
     def tearDown(self):
         """Clean up after each test."""
         # Reset the global graph manager after each test
-        import tiny_globals
-        tiny_globals._global_graph_manager = None
+        reset_global_graph_manager()
     
     def test_basic_global_graph_manager_access(self):
         """Test basic access to global GraphManager."""

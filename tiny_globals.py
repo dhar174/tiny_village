@@ -223,3 +223,14 @@ def set_global_graph_manager(graph_manager):
 def has_global_graph_manager():
     """Check if the global GraphManager instance is initialized."""
     return _global_graph_manager is not None
+
+
+def reset_global_graph_manager():
+    """Reset the global GraphManager instance. Primarily for testing purposes.
+    
+    Warning: This should only be used in test code to ensure a clean state
+    between test runs. Do not use this in production code.
+    """
+    global _global_graph_manager
+    with _graph_manager_lock:
+        _global_graph_manager = None
