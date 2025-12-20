@@ -55,7 +55,7 @@ Use GraphManager + MemoryManager signals where possible.
 - ensure arc state updates are consistent and monotonic where appropriate
 
 ### 5) Integration: story -> memory -> goals
-- emit StoryEvents into EventHandler
+- emit story-focused `Event` instances (e.g., using `StoryEventType` or story-related metadata) into `EventHandler`
 - store story beats as memories (tagged for recall)
 - allow StoryManager to propose story-driven goals for StrategyManager
 
