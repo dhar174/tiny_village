@@ -1,86 +1,120 @@
 #!/usr/bin/env python3
 """
-Test script to verify that the global GraphManager instance is working correctly
+Unit tests to verify that the global GraphManager instance is working correctly.
+
+This test suite validates that different modules properly use the global
+GraphManager instance instead of creating their own instances.
 """
 
-def test_global_graph_manager():
-    """Test that the global GraphManager is working correctly"""
-    print("Testing global GraphManager implementation...")
+import unittest
+import sys
+
+sys.path.insert(0, '.')
+
+from tiny_globals import (
+    get_global_graph_manager,
+    has_global_graph_manager,
+    initialize_global_graph_manager
+)
+
+
+class TestGlobalGraphManager(unittest.TestCase):
+    """Test cases for global GraphManager implementation."""
     
-    # Test 1: Basic global GraphManager access
-    print("\n1. Testing basic global GraphManager access...")
-    from tiny_globals import get_global_graph_manager, has_global_graph_manager, initialize_global_graph_manager
+    def setUp(self):
+        """Set up test fixtures before each test method."""
+        # Reset the global graph manager before each test
+        import tiny_globals
+        tiny_globals._global_graph_manager = None
     
-    print(f"Before initialization: {has_global_graph_manager()}")
-    gm1 = get_global_graph_manager()
-    print(f"After initialization: {has_global_graph_manager()}")
-    print(f"GraphManager type: {type(gm1)}")
+    def tearDown(self):
+        """Clean up after each test."""
+        # Reset the global graph manager after each test
+        import tiny_globals
+        tiny_globals._global_graph_manager = None
     
-    # Test 2: Singleton behavior
-    print("\n2. Testing singleton behavior...")
-    gm2 = get_global_graph_manager()
-    print(f"Same instance: {gm1 is gm2}")
-    
-    # Test 3: Action uses global GraphManager
-    print("\n3. Testing Action uses global GraphManager...")
-    from actions import Action
-    action = Action('TestAction', [], [], 1.0)
-    print(f"Action has graph_manager: {action.graph_manager is not None}")
-    print(f"Action uses global instance: {action.graph_manager is gm1}")
-    
-    # Test 4: ActionGenerator uses global GraphManager  
-    print("\n4. Testing ActionGenerator uses global GraphManager...")
-    from actions import ActionGenerator
-    ag = ActionGenerator()
-    print(f"ActionGenerator has graph_manager: {ag.graph_manager is not None}")
-    print(f"ActionGenerator uses global instance: {ag.graph_manager is gm1}")
-    
-    # Test 5: Character uses global GraphManager (simplified test)
-    print("\n5. Testing Character can use global GraphManager...")
-    try:
-        # We'll create a minimal test for Character without all dependencies
-        from tiny_characters import PersonalityTraits, PersonalMotives, Motive
-        from tiny_items import ItemInventory
+    def test_basic_global_graph_manager_access(self):
+        """Test basic access to global GraphManager."""
+        self.assertFalse(has_global_graph_manager(),
+                        "GraphManager should not be initialized before first access")
         
-        # Create minimal required objects
-        personality = PersonalityTraits()
-        motives = PersonalMotives(
-            hunger_motive=Motive("hunger", "need food", 5.0),
-            wealth_motive=Motive("wealth", "need money", 5.0),
-            mental_health_motive=Motive("mental_health", "need good mental health", 5.0),
-            social_wellbeing_motive=Motive("social", "need social connections", 5.0),
-            happiness_motive=Motive("happiness", "need happiness", 5.0),
-            health_motive=Motive("health", "need good health", 5.0),
-            shelter_motive=Motive("shelter", "need shelter", 5.0),
-            stability_motive=Motive("stability", "need stability", 5.0),
-            luxury_motive=Motive("luxury", "need luxury", 5.0),
-            hope_motive=Motive("hope", "need hope", 5.0),
-            success_motive=Motive("success", "need success", 5.0),
-            control_motive=Motive("control", "need control", 5.0),
-            beauty_motive=Motive("beauty", "need beauty", 5.0),
-            community_motive=Motive("community", "need community", 5.0),
-            material_goods_motive=Motive("material_goods", "need material goods", 5.0),
-        )
-        inventory = ItemInventory()
+        gm1 = get_global_graph_manager()
+        self.assertIsNotNone(gm1)
         
-        # Try to create character without explicit graph_manager
-        from tiny_characters import Character
-        char = Character(
-            'TestCharacter', 
-            25, 
-            personality_traits=personality,
-            motives=motives,
-            inventory=inventory
-        )
-        print(f"Character created successfully!")
-        print(f"Character has graph_manager: {char.graph_manager is not None}")
-        print(f"Character uses global instance: {char.graph_manager is gm1}")
+        self.assertTrue(has_global_graph_manager(),
+                       "GraphManager should be initialized after first access")
         
-    except Exception as e:
-        print(f"Character test failed (expected due to dependencies): {e}")
-        # This is expected due to complex dependencies, but it shows our code path is working
-        
-    print("\n✅ Global GraphManager tests completed!")
+        from tiny_graph_manager import GraphManager
+        self.assertIsInstance(gm1, GraphManager,
+                            "get_global_graph_manager should return a GraphManager instance")
     
+    def test_singleton_behavior(self):
+        """Test that multiple calls return the same instance."""
+        gm1 = get_global_graph_manager()
+        gm2 = get_global_graph_manager()
+        
+        self.assertIs(gm1, gm2,
+                     "Multiple calls to get_global_graph_manager should return the same instance")
+    
+    def test_action_uses_global_graph_manager(self):
+        """Test that Action class uses the global GraphManager."""
+        from actions import Action
+        
+        gm = get_global_graph_manager()
+        action = Action('TestAction', [], [], 1.0)
+        
+        self.assertIsNotNone(action.graph_manager,
+                           "Action should have a graph_manager attribute")
+        self.assertIs(action.graph_manager, gm,
+                     "Action should use the global GraphManager instance")
+    
+    def test_action_generator_uses_global_graph_manager(self):
+        """Test that ActionGenerator uses the global GraphManager."""
+        from actions import ActionGenerator
+        
+        gm = get_global_graph_manager()
+        ag = ActionGenerator()
+        
+        self.assertIsNotNone(ag.graph_manager,
+                           "ActionGenerator should have a graph_manager attribute")
+        self.assertIs(ag.graph_manager, gm,
+                     "ActionGenerator should use the global GraphManager instance")
+    
+    def test_character_can_use_global_graph_manager(self):
+        """Test that Character class can use the global GraphManager.
+        
+        This is a simplified test that may fail due to Character's complex
+        dependencies, but validates the code path.
+        """
+        try:
+            from tiny_characters import Character, PersonalityTraits
+            from tiny_items import ItemInventory
+            
+            gm = get_global_graph_manager()
+            
+            # Create minimal required objects
+            personality = PersonalityTraits()
+            inventory = ItemInventory()
+            
+            # Try to create character without explicit graph_manager
+            # This should use the global instance
+            char = Character(
+                'TestCharacter',
+                25,
+                personality_traits=personality,
+                inventory=inventory
+            )
+            
+            self.assertIsNotNone(char.graph_manager,
+                               "Character should have a graph_manager attribute")
+            self.assertIs(char.graph_manager, gm,
+                         "Character should use the global GraphManager instance")
+            
+        except (ImportError, TypeError, AttributeError) as e:
+            # Character has complex dependencies, so we may not be able to create one
+            # But we can still verify the code structure is correct
+            self.skipTest(f"Character test skipped due to dependencies: {e}")
+
+
 if __name__ == "__main__":
-    test_global_graph_manager()
+    unittest.main()

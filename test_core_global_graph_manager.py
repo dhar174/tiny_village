@@ -1,63 +1,140 @@
 #!/usr/bin/env python3
 """
-Focused test of global GraphManager without complex dependencies
+Unit tests for core global GraphManager functionality.
+
+Tests the global GraphManager instance management in tiny_globals
+without complex dependencies.
 """
 
-def test_global_graphmanager_core_functionality():
-    """Test core GraphManager functionality using global instance"""
-    print("Testing core GraphManager functionality with global instance...")
+import unittest
+import sys
+
+sys.path.insert(0, '.')
+
+from tiny_globals import (
+    get_global_graph_manager,
+    has_global_graph_manager,
+    initialize_global_graph_manager,
+    set_global_graph_manager,
+    _global_graph_manager
+)
+
+
+class TestGlobalGraphManagerCore(unittest.TestCase):
+    """Test cases for core global GraphManager functionality."""
     
-    # Test 1: Global instance creation and singleton behavior
-    from tiny_globals import get_global_graph_manager, has_global_graph_manager
+    def setUp(self):
+        """Set up test fixtures before each test method."""
+        # Reset the global graph manager before each test
+        import tiny_globals
+        tiny_globals._global_graph_manager = None
     
-    print("1. Testing singleton behavior...")
-    print(f"Before: {has_global_graph_manager()}")
+    def tearDown(self):
+        """Clean up after each test."""
+        # Reset the global graph manager after each test
+        import tiny_globals
+        tiny_globals._global_graph_manager = None
     
-    gm1 = get_global_graph_manager()
-    gm2 = get_global_graph_manager()
+    def test_singleton_behavior(self):
+        """Test that get_global_graph_manager returns the same instance."""
+        self.assertFalse(has_global_graph_manager())
+        
+        gm1 = get_global_graph_manager()
+        self.assertIsNotNone(gm1)
+        self.assertTrue(has_global_graph_manager())
+        
+        gm2 = get_global_graph_manager()
+        self.assertIsNotNone(gm2)
+        
+        # Verify singleton behavior - same instance
+        self.assertIs(gm1, gm2, "get_global_graph_manager should return the same instance")
     
-    print(f"After: {has_global_graph_manager()}")
-    print(f"Same instance: {gm1 is gm2}")
-    print(f"Type: {type(gm1)}")
+    def test_initialize_creates_instance(self):
+        """Test that initialize_global_graph_manager creates a GraphManager instance."""
+        self.assertFalse(has_global_graph_manager())
+        
+        gm = initialize_global_graph_manager()
+        self.assertIsNotNone(gm)
+        self.assertTrue(has_global_graph_manager())
+        
+        # Verify it's a GraphManager instance
+        from tiny_graph_manager import GraphManager
+        self.assertIsInstance(gm, GraphManager)
     
-    # Test 2: Basic graph operations
-    print("\n2. Testing basic graph operations...")
+    def test_multiple_initialize_calls_return_same_instance(self):
+        """Test that multiple calls to initialize return the same instance."""
+        gm1 = initialize_global_graph_manager()
+        gm2 = initialize_global_graph_manager()
+        
+        self.assertIs(gm1, gm2, "Multiple initialize calls should return the same instance")
     
-    # Test the graph is initialized
-    print(f"Graph has nodes: {gm1.G.number_of_nodes()}")
-    print(f"Graph has edges: {gm1.G.number_of_edges()}")
-    print(f"Graph type: {type(gm1.G)}")
+    def test_graph_manager_has_graph(self):
+        """Test that the GraphManager has an initialized graph."""
+        gm = get_global_graph_manager()
+        
+        self.assertTrue(hasattr(gm, 'G'), "GraphManager should have a 'G' attribute")
+        self.assertIsNotNone(gm.G)
+        
+        # Verify it's a NetworkX graph
+        import networkx as nx
+        self.assertIsInstance(gm.G, (nx.Graph, nx.DiGraph, nx.MultiGraph, nx.MultiDiGraph))
     
-    # Test 3: World state integration
-    print("\n3. Testing WorldState integration...")
-    print(f"Has world_state: {hasattr(gm1, 'world_state')}")
-    print(f"WorldState type: {type(gm1.world_state)}")
-    print(f"WorldState graph same as G: {gm1.world_state.graph is gm1.G}")
+    def test_graph_manager_has_world_state(self):
+        """Test that the GraphManager has a WorldState instance."""
+        gm = get_global_graph_manager()
+        
+        self.assertTrue(hasattr(gm, 'world_state'), "GraphManager should have 'world_state' attribute")
+        self.assertIsNotNone(gm.world_state)
+        
+        from world_state import WorldState
+        self.assertIsInstance(gm.world_state, WorldState)
     
-    # Test 4: Actions using global GraphManager
-    print("\n4. Testing Actions integration...")
-    from actions import Action, TalkAction, ActionGenerator
+    def test_world_state_graph_is_same_as_g(self):
+        """Test that WorldState.graph is the same object as GraphManager.G."""
+        gm = get_global_graph_manager()
+        
+        self.assertIs(gm.world_state.graph, gm.G,
+                     "WorldState.graph should be the same object as GraphManager.G")
     
-    # Test basic Action
-    action = Action("TestAction", [], [], 1.0)
-    print(f"Action has graph_manager: {action.graph_manager is not None}")
-    print(f"Action uses global: {action.graph_manager is gm1}")
+    def test_actions_use_global_graph_manager(self):
+        """Test that Action class uses the global GraphManager."""
+        from actions import Action
+        
+        gm = get_global_graph_manager()
+        action = Action("TestAction", [], [], 1.0)
+        
+        self.assertIsNotNone(action.graph_manager)
+        self.assertIs(action.graph_manager, gm,
+                     "Action should use the global GraphManager instance")
     
-    # Test TalkAction (which extends SocialAction -> Action)
-    try:
-        talk_action = TalkAction("Speaker", "Listener")
-        print(f"TalkAction has graph_manager: {talk_action.graph_manager is not None}")
-        print(f"TalkAction uses global: {talk_action.graph_manager is gm1}")
-    except Exception as e:
-        print(f"TalkAction test failed: {e}")
+    def test_action_generator_uses_global_graph_manager(self):
+        """Test that ActionGenerator uses the global GraphManager."""
+        from actions import ActionGenerator
+        
+        gm = get_global_graph_manager()
+        ag = ActionGenerator()
+        
+        self.assertIsNotNone(ag.graph_manager)
+        self.assertIs(ag.graph_manager, gm,
+                     "ActionGenerator should use the global GraphManager instance")
     
-    # Test ActionGenerator
-    ag = ActionGenerator()
-    print(f"ActionGenerator has graph_manager: {ag.graph_manager is not None}")
-    print(f"ActionGenerator uses global: {ag.graph_manager is gm1}")
-    
-    print("\n✅ Core functionality tests completed successfully!")
-    return True
+    def test_set_global_graph_manager(self):
+        """Test that set_global_graph_manager changes the global instance."""
+        # Initialize with default
+        gm1 = get_global_graph_manager()
+        
+        # Create a new GraphManager
+        from tiny_graph_manager import GraphManager
+        gm2 = GraphManager()
+        
+        # Set it as global
+        set_global_graph_manager(gm2)
+        
+        # Verify the new instance is now global
+        gm3 = get_global_graph_manager()
+        self.assertIs(gm3, gm2, "set_global_graph_manager should change the global instance")
+        self.assertIsNot(gm3, gm1, "New global instance should be different from old one")
+
 
 if __name__ == "__main__":
-    test_global_graphmanager_core_functionality()
+    unittest.main()
