@@ -19,21 +19,33 @@ You are the **Storytelling Agent** for Tiny Village.
 
 Your mission: create coherent, event-driven story beats that influence future behavior.
 
-## Primary files
-- Create: `tiny_story_manager.py` (recommended new component)
-- `tiny_event_handler.py` (event propagation)
-- `tiny_memories.py` (story memory storage and recall)
-- `tiny_strategy_manager.py` (story-driven goals)
-- `tiny_graph_manager.py` (story context, entities/relationships)
+## Existing components
+The codebase already has foundational storytelling components:
+- `tiny_storytelling_system.py` - Contains `StorytellingSystem` (main coordinator), `StoryArcManager` (arc tracking), and `NarrativeGenerator` (text generation)
+- `tiny_storytelling_engine.py` - Story-focused event templates and narrative context
+- `tiny_story_arc.py` - `StoryArc` class for narrative progression tracking
+
+## Primary files to modify/extend
+- **Enhance**: `tiny_storytelling_system.py` - Add `StoryManager` class or extend `StorytellingSystem` with missing functionality (see requirements below)
+- **Integrate with**: `tiny_event_handler.py` (event propagation)
+- **Integrate with**: `tiny_memories.py` (story memory storage and recall)
+- **Integrate with**: `tiny_strategy_manager.py` (story-driven goals)
+- **Integrate with**: `tiny_graph_manager.py` (story context, entities/relationships)
 
 ## Implementation requirements
 
-### 1) StoryManager core
-Implement a `StoryManager` with:
-- event detection: identify “significant” events from actions/state changes
-- beat generation: produce concise narrative summaries
-- arc tracking: per-character arc state (motivation, conflict, bonds)
-- coherence control: avoid narrative contradictions (e.g., conflicting character states, relationship statuses, or locations; timeline inconsistencies; mutually-exclusive repeated events) and generation spam (e.g., too many similar beats within a short time window, duplicate or near-duplicate story threads for the same event, or excessive beat generation for trivial/minor events).
+### 1) Story management enhancements
+The existing `StorytellingSystem` class in `tiny_storytelling_system.py` provides:
+- ✅ Basic arc tracking via `StoryArcManager`
+- ✅ Narrative text generation via `NarrativeGenerator`
+- ✅ Event processing for story creation
+
+**Add missing functionality** (either by extending `StorytellingSystem` or creating a new `StoryManager` class):
+- ❌ **Event significance detection**: Implement heuristics to identify "significant" events from actions/state changes (currently uses simple `importance >= 6` threshold)
+- ❌ **Beat generation**: Produce concise narrative beat summaries (current narrative generation is template-based and verbose)
+- ❌ **Per-character arc state**: Track motivation, conflict, and bonds for each character (current system only tracks participants list)
+- ❌ **Coherence control**: Add logic to avoid narrative contradictions (e.g., conflicting character states, relationship statuses, or locations; timeline inconsistencies; mutually-exclusive repeated events) and generation spam (e.g., too many similar beats within a short time window, duplicate or near-duplicate story threads for the same event, or excessive beat generation for trivial/minor events)
+
 
 ### 2) Significance heuristics
 Define what counts as a story event:
@@ -60,7 +72,14 @@ Use GraphManager + MemoryManager signals where possible.
 - allow StoryManager to propose story-driven goals for StrategyManager
 
 ## Deliverables checklist
-- StoryManager implementation + tests
+- Enhanced `StorytellingSystem` (or new `StoryManager` class) implementation + tests
 - Integration so beats appear during normal play
 - Memory creation from beats verified
 - Optional: story-driven goal generation verified
+
+## Note on implementation approach
+You may either:
+1. **Extend `StorytellingSystem`**: Add missing features directly to the existing class in `tiny_storytelling_system.py`
+2. **Create `StoryManager`**: Build a new coordinating class that wraps/enhances `StorytellingSystem`, `StoryArcManager`, and `NarrativeGenerator`
+
+Choose the approach that best fits the existing architecture and minimizes code duplication. The goal is to add missing functionality while preserving existing features
