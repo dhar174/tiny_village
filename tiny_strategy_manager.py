@@ -107,10 +107,11 @@ class StrategyManager:
 
 
     def __init__(self, use_llm=False, model_name=None):
-        # Initialize graph_manager if available
-        if GraphManager:
-            self.graph_manager = GraphManager()
-        else:
+        # Initialize graph_manager using global instance
+        try:
+            from tiny_globals import get_global_graph_manager
+            self.graph_manager = get_global_graph_manager()
+        except ImportError:
             self.graph_manager = None
             
         # Initialize GOAP planner with graph manager
