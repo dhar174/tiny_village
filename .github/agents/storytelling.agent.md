@@ -41,10 +41,12 @@ The existing `StorytellingSystem` class in `tiny_storytelling_system.py` provide
 - ✅ Event processing for story creation
 
 **Add missing functionality** (either by extending `StorytellingSystem` or creating a new `StoryManager` class):
-- ❌ **Event significance detection**: Implement heuristics to identify "significant" events from actions/state changes (currently uses simple `importance >= 6` threshold)
+- ❌ **Event significance detection**: Implement heuristics to identify "significant" events from actions/state changes (currently uses simple `importance >= 6` threshold in `tiny_storytelling_system.py:529`)
 - ❌ **Beat generation**: Produce concise narrative beat summaries (current narrative generation is template-based and verbose)
 - ❌ **Per-character arc state**: Track motivation, conflict, and bonds for each character (current system only tracks participants list)
-- ❌ **Coherence control**: Add logic to avoid narrative contradictions (e.g., conflicting character states, relationship statuses, or locations; timeline inconsistencies; mutually-exclusive repeated events) and generation spam (e.g., too many similar beats within a short time window, duplicate or near-duplicate story threads for the same event, or excessive beat generation for trivial/minor events)
+- ❌ **Coherence control**: Add logic to:
+  - Avoid narrative contradictions (e.g., conflicting character states, relationship statuses, or locations; timeline inconsistencies; mutually-exclusive repeated events)
+  - Prevent generation spam (e.g., too many similar beats within a short time window, duplicate or near-duplicate story threads for the same event, or excessive beat generation for trivial/minor events)
 
 
 ### 2) Significance heuristics
