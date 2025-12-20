@@ -102,8 +102,8 @@ config = {
 1. **test_checkpoint_standalone.py** (12,396 bytes)
    - Tests CheckpointManager in isolation
    - No game dependencies required
-   - 7 comprehensive tests
-   - **Result**: 6/7 tests passing
+   - 9 comprehensive tests
+   - **Result**: 8/9 tests passing (89% pass rate)
 
 2. **test_checkpoint_focused.py** (9,359 bytes)
    - Focused tests with minimal mocking

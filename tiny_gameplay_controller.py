@@ -4,6 +4,7 @@ import logging
 import traceback
 import json
 import os
+import threading
 import datetime # Added for time-based achievement
 from datetime import timedelta
 
@@ -1254,7 +1255,7 @@ class CheckpointManager:
         self.auto_checkpoint_enabled = True
         self.consecutive_failures = 0  # Track consecutive checkpoint failures
         self.max_failure_warning_threshold = 3  # Show warning after 3 failures
-        self._checkpoint_lock = False  # Simple lock to prevent concurrent operations
+        self._checkpoint_lock = threading.Lock()  # Thread-safe lock to prevent concurrent operations
         
         # Create checkpoint directory if it doesn't exist
         try:
@@ -1281,13 +1282,12 @@ class CheckpointManager:
         Returns:
             bool: True if checkpoint was created successfully
         """
-        # Prevent concurrent checkpoint operations
-        if self._checkpoint_lock:
+        # Prevent concurrent checkpoint operations using thread-safe lock
+        if not self._checkpoint_lock.acquire(blocking=False):
             logger.debug("Checkpoint operation already in progress, skipping")
             return False
         
         try:
-            self._checkpoint_lock = True
             current_time = pygame.time.get_ticks()
             
             # Generate checkpoint filename with timestamp to ensure uniqueness
@@ -1342,7 +1342,7 @@ class CheckpointManager:
             self._check_failure_threshold()
             return False
         finally:
-            self._checkpoint_lock = False
+            self._checkpoint_lock.release()
     
     def _check_failure_threshold(self):
         """Check if consecutive failures exceed threshold and notify user."""
@@ -1351,7 +1351,7 @@ class CheckpointManager:
             # Notify user with high priority
             if hasattr(self.gameplay_controller, 'add_event_notification'):
                 self.gameplay_controller.add_event_notification(
-                    f"Auto-save disabled: {self.consecutive_failures} failures",
+                    f"Auto-save failing: {self.consecutive_failures} consecutive errors",
                     "high"
                 )
     
@@ -1382,6 +1382,11 @@ class CheckpointManager:
         Returns:
             bool: True if restoration was successful
         """
+        # Prevent concurrent checkpoint operations using thread-safe lock
+        if not self._checkpoint_lock.acquire(blocking=False):
+            logger.debug("Checkpoint operation already in progress, skipping restore")
+            return False
+        
         try:
             if not self.checkpoint_history:
                 logger.warning("No checkpoints available to restore")
@@ -1414,6 +1419,8 @@ class CheckpointManager:
         except Exception as e:
             logger.error(f"Error restoring checkpoint: {e}")
             return False
+        finally:
+            self._checkpoint_lock.release()
     
     def _cleanup_old_checkpoints(self):
         """Remove old checkpoints beyond the maximum limit."""

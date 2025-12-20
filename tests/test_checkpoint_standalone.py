@@ -9,7 +9,7 @@ import os
 import json
 import tempfile
 import shutil
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, MagicMock
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -227,7 +227,6 @@ def run_standalone_tests():
         checkpoint_mgr._validate_checkpoint_history()
         
         # Check if the deleted checkpoint was removed from history
-        valid_count = len(checkpoint_mgr.checkpoint_history)
         if deleted_checkpoint not in checkpoint_mgr.checkpoint_history:
             print(f"  ✓ PASS: Invalid checkpoint removed from history")
             tests_passed += 1

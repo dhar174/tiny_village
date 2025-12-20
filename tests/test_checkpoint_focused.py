@@ -92,8 +92,14 @@ def test_checkpoint_manager_basic():
         
         print("\nTest 1: Checkpoint Creation")
         result = checkpoint_mgr.create_checkpoint("test_checkpoint")
-        if result and os.path.exists(os.path.join(checkpoint_dir, "test_checkpoint.json")):
-            print("  ✓ Checkpoint created successfully")
+        # Check using checkpoint history instead of filename (since timestamp is added)
+        if result and len(checkpoint_mgr.checkpoint_history) > 0:
+            created_checkpoint = checkpoint_mgr.checkpoint_history[-1]
+            if os.path.exists(created_checkpoint["path"]):
+                print("  ✓ Checkpoint created successfully")
+            else:
+                print("  ✗ Checkpoint file not found")
+                return False
         else:
             print("  ✗ Checkpoint creation failed")
             return False

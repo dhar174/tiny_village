@@ -96,7 +96,7 @@ python tests/test_checkpoint_system.py
 
 ### Expected Results
 
-- ✅ 6/7 standalone tests should pass
+- ✅ 8/9 standalone tests should pass
 - ✅ All save/load basic tests should pass
 - ⚠️ 1 timing test may fail (known edge case with mocking)
 
