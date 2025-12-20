@@ -2,7 +2,7 @@
 # A minimalistic global variable manager for Python scripts.
 
 import tiny_time_manager
-
+import threading
 import sys
 
 
@@ -178,22 +178,31 @@ def global_values():
 
 
 # GraphManager global instance management
+_graph_manager_lock = threading.Lock()
+
 def initialize_global_graph_manager():
-    """Initialize the global GraphManager instance. Should be called on game start."""
+    """Initialize the global GraphManager instance. Should be called on game start.
+    
+    Thread-safe initialization ensures only one GraphManager instance is created
+    even if called simultaneously from multiple threads.
+    """
     global _global_graph_manager
-    if _global_graph_manager is None:
-        try:
-            from tiny_graph_manager import GraphManager
-            _global_graph_manager = GraphManager()
-            tiny_globals_obj.set("global_graph_manager", _global_graph_manager)
-            return _global_graph_manager
-        except ImportError as e:
-            raise ImportError(f"Failed to import GraphManager: {e}")
-    return _global_graph_manager
+    with _graph_manager_lock:
+        if _global_graph_manager is None:
+            try:
+                from tiny_graph_manager import GraphManager
+                _global_graph_manager = GraphManager()
+                return _global_graph_manager
+            except ImportError as e:
+                raise ImportError(f"Failed to import GraphManager: {e}")
+        return _global_graph_manager
 
 
 def get_global_graph_manager():
-    """Get the global GraphManager instance. Initializes it if not already done."""
+    """Get the global GraphManager instance. Initializes it if not already done.
+    
+    Thread-safe access to the global GraphManager instance.
+    """
     global _global_graph_manager
     if _global_graph_manager is None:
         return initialize_global_graph_manager()
@@ -201,10 +210,14 @@ def get_global_graph_manager():
 
 
 def set_global_graph_manager(graph_manager):
-    """Set the global GraphManager instance. Use with caution."""
+    """Set the global GraphManager instance. Use with caution.
+    
+    Args:
+        graph_manager: The GraphManager instance to set as global.
+    """
     global _global_graph_manager
-    _global_graph_manager = graph_manager
-    tiny_globals_obj.set("global_graph_manager", graph_manager)
+    with _graph_manager_lock:
+        _global_graph_manager = graph_manager
 
 
 def has_global_graph_manager():

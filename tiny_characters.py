@@ -1370,8 +1370,6 @@ class GoalGenerator:
         goap_planner: GOAPPlanner = None,
         prompt_builder: PromptBuilder = None,
     ):
-        GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
-
         self.personal_motives = personal_motives
         if graph_manager is None:
             # Use the global GraphManager instance from tiny_globals

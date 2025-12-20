@@ -784,7 +784,7 @@ class GraphManager:
         self.__initialized = True
     
     def _get_world_state(self):
-        """Helper method to create a WorldState object from current graph state."""
+        """Return the current WorldState instance managed by this GraphManager."""
         return self.world_state
 
     def initialize_graph(self):
