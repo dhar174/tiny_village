@@ -1241,6 +1241,204 @@ class ActionResolver:
         return self._dict_to_action(self.fallback_actions["default_rest"], character)
 
 
+class CheckpointManager:
+    """Manages automatic game state checkpointing and restoration."""
+    
+    def __init__(self, gameplay_controller, checkpoint_dir: str = "saves/checkpoints"):
+        self.gameplay_controller = gameplay_controller
+        self.checkpoint_dir = checkpoint_dir
+        self.checkpoint_interval = 300000  # 5 minutes in milliseconds by default
+        self.last_checkpoint_time = 0
+        self.max_checkpoints = 10  # Keep last 10 checkpoints
+        self.checkpoint_history = []
+        self.auto_checkpoint_enabled = True
+        
+        # Create checkpoint directory if it doesn't exist
+        try:
+            os.makedirs(checkpoint_dir, exist_ok=True)
+            logger.info(f"Checkpoint directory ready: {checkpoint_dir}")
+        except Exception as e:
+            logger.error(f"Failed to create checkpoint directory: {e}")
+    
+    def should_checkpoint(self, current_time: int) -> bool:
+        """Check if it's time for an automatic checkpoint."""
+        if not self.auto_checkpoint_enabled:
+            return False
+        
+        time_since_last = current_time - self.last_checkpoint_time
+        return time_since_last >= self.checkpoint_interval
+    
+    def create_checkpoint(self, checkpoint_name: str = None) -> bool:
+        """
+        Create a checkpoint of the current game state.
+        
+        Args:
+            checkpoint_name: Optional name for the checkpoint. If None, uses timestamp.
+            
+        Returns:
+            bool: True if checkpoint was created successfully
+        """
+        try:
+            current_time = pygame.time.get_ticks()
+            
+            # Generate checkpoint filename
+            if checkpoint_name is None:
+                checkpoint_name = f"checkpoint_{current_time}.json"
+            elif not checkpoint_name.endswith('.json'):
+                checkpoint_name = f"{checkpoint_name}.json"
+            
+            checkpoint_path = os.path.join(self.checkpoint_dir, checkpoint_name)
+            
+            # Create the checkpoint using the gameplay controller's save method
+            if self.gameplay_controller.save_game_state(checkpoint_path):
+                # Add to checkpoint history
+                checkpoint_info = {
+                    "filename": checkpoint_name,
+                    "path": checkpoint_path,
+                    "timestamp": current_time,
+                    "game_ticks": current_time,
+                    "character_count": len(self.gameplay_controller.characters)
+                }
+                self.checkpoint_history.append(checkpoint_info)
+                
+                # Update last checkpoint time
+                self.last_checkpoint_time = current_time
+                
+                # Cleanup old checkpoints
+                self._cleanup_old_checkpoints()
+                
+                logger.info(f"Checkpoint created: {checkpoint_name}")
+                return True
+            else:
+                logger.error(f"Failed to create checkpoint: {checkpoint_name}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error creating checkpoint: {e}")
+            return False
+    
+    def restore_checkpoint(self, checkpoint_index: int = -1) -> bool:
+        """
+        Restore game state from a checkpoint.
+        
+        Args:
+            checkpoint_index: Index in checkpoint history (-1 for most recent)
+            
+        Returns:
+            bool: True if restoration was successful
+        """
+        try:
+            if not self.checkpoint_history:
+                logger.warning("No checkpoints available to restore")
+                return False
+            
+            # Get checkpoint info
+            if checkpoint_index < 0:
+                checkpoint_index = len(self.checkpoint_history) + checkpoint_index
+            
+            if checkpoint_index < 0 or checkpoint_index >= len(self.checkpoint_history):
+                logger.error(f"Invalid checkpoint index: {checkpoint_index}")
+                return False
+            
+            checkpoint_info = self.checkpoint_history[checkpoint_index]
+            checkpoint_path = checkpoint_info["path"]
+            
+            # Verify checkpoint file exists
+            if not os.path.exists(checkpoint_path):
+                logger.error(f"Checkpoint file not found: {checkpoint_path}")
+                return False
+            
+            # Restore the checkpoint
+            if self.gameplay_controller.load_game_state(checkpoint_path):
+                logger.info(f"Restored checkpoint: {checkpoint_info['filename']}")
+                return True
+            else:
+                logger.error(f"Failed to restore checkpoint: {checkpoint_info['filename']}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error restoring checkpoint: {e}")
+            return False
+    
+    def _cleanup_old_checkpoints(self):
+        """Remove old checkpoints beyond the maximum limit."""
+        try:
+            while len(self.checkpoint_history) > self.max_checkpoints:
+                # Remove oldest checkpoint
+                old_checkpoint = self.checkpoint_history.pop(0)
+                
+                # Delete the file if it exists
+                if os.path.exists(old_checkpoint["path"]):
+                    try:
+                        os.remove(old_checkpoint["path"])
+                        logger.debug(f"Removed old checkpoint: {old_checkpoint['filename']}")
+                    except Exception as e:
+                        logger.warning(f"Failed to delete old checkpoint file: {e}")
+                        
+        except Exception as e:
+            logger.error(f"Error cleaning up old checkpoints: {e}")
+    
+    def get_checkpoint_list(self) -> list:
+        """Get list of available checkpoints."""
+        return [
+            {
+                "index": i,
+                "filename": cp["filename"],
+                "timestamp": cp["timestamp"],
+                "character_count": cp["character_count"]
+            }
+            for i, cp in enumerate(self.checkpoint_history)
+        ]
+    
+    def set_checkpoint_interval(self, interval_ms: int):
+        """Set the automatic checkpoint interval in milliseconds."""
+        if interval_ms < 10000:  # Minimum 10 seconds
+            logger.warning("Checkpoint interval too short, setting to 10 seconds")
+            interval_ms = 10000
+        self.checkpoint_interval = interval_ms
+        logger.info(f"Checkpoint interval set to {interval_ms}ms ({interval_ms/1000:.1f}s)")
+    
+    def enable_auto_checkpoint(self, enabled: bool):
+        """Enable or disable automatic checkpointing."""
+        self.auto_checkpoint_enabled = enabled
+        logger.info(f"Automatic checkpointing {'enabled' if enabled else 'disabled'}")
+    
+    def recover_from_corruption(self) -> bool:
+        """
+        Attempt to recover from corrupted save by restoring the most recent valid checkpoint.
+        
+        Returns:
+            bool: True if recovery was successful
+        """
+        try:
+            logger.info("Attempting to recover from corruption...")
+            
+            # Try checkpoints from most recent to oldest
+            for i in range(len(self.checkpoint_history) - 1, -1, -1):
+                checkpoint_info = self.checkpoint_history[i]
+                
+                # Verify checkpoint file is readable
+                try:
+                    with open(checkpoint_info["path"], 'r') as f:
+                        json.load(f)
+                    
+                    # If we can read it, try to restore it
+                    if self.restore_checkpoint(i):
+                        logger.info(f"Successfully recovered from checkpoint: {checkpoint_info['filename']}")
+                        return True
+                        
+                except Exception as e:
+                    logger.warning(f"Checkpoint {checkpoint_info['filename']} is corrupted: {e}")
+                    continue
+            
+            logger.error("No valid checkpoints found for recovery")
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error during corruption recovery: {e}")
+            return False
+
+
 class SystemRecoveryManager:
     """Manages system recovery and fallback strategies."""
 
@@ -1450,6 +1648,20 @@ class GameplayController:
 
         # Initialize recovery manager
         self.recovery_manager = SystemRecoveryManager(self)
+        
+        # Initialize checkpoint manager for game state persistence
+        checkpoint_config = self.config.get("checkpoint", {})
+        checkpoint_dir = checkpoint_config.get("directory", "saves/checkpoints")
+        self.checkpoint_manager = CheckpointManager(self, checkpoint_dir)
+        
+        # Configure checkpointing
+        checkpoint_interval = checkpoint_config.get("interval_ms", 300000)  # 5 minutes default
+        self.checkpoint_manager.set_checkpoint_interval(checkpoint_interval)
+        
+        auto_checkpoint = checkpoint_config.get("auto_enabled", True)
+        self.checkpoint_manager.enable_auto_checkpoint(auto_checkpoint)
+        
+        logger.info(f"Checkpoint manager initialized (interval: {checkpoint_interval}ms, auto: {auto_checkpoint})")
 
         # Initialize core systems with error handling and recovery
 
@@ -2323,7 +2535,6 @@ class GameplayController:
         """Main game loop with configurable frame rate and performance monitoring."""
         # TODO: Add performance profiling and optimization
         # TODO: Add frame rate adjustment based on performance
-        # TODO: Add game state persistence and checkpointing
         # TODO: Add network synchronization for multiplayer
         # TODO: Add mod system integration
         # TODO: Add automated testing hooks
@@ -2339,6 +2550,17 @@ class GameplayController:
             self.handle_events()
             self.update_game_state(dt)
             self.render()
+            
+            # Automatic checkpointing
+            try:
+                current_time = pygame.time.get_ticks()
+                if self.checkpoint_manager.should_checkpoint(current_time):
+                    if self.checkpoint_manager.create_checkpoint():
+                        # Optionally notify the user
+                        if hasattr(self, 'add_event_notification'):
+                            self.add_event_notification("Game auto-saved", "low")
+            except Exception as e:
+                logger.warning(f"Error during automatic checkpointing: {e}")
 
             # TODO: Add frame time analysis and optimization suggestions
             # frame_end_time = time.time()
@@ -2444,6 +2666,8 @@ class GameplayController:
                 "reset": [pygame.K_r],
                 "save": [pygame.K_s],
                 "load": [pygame.K_l],
+                "checkpoint": [pygame.K_c],  # Manual checkpoint
+                "restore_checkpoint": [pygame.K_v],  # Restore last checkpoint
                 "help": [pygame.K_h, pygame.K_F1],
                 "debug": [pygame.K_F3],
                 "fullscreen": [pygame.K_F11],
@@ -2471,15 +2695,35 @@ class GameplayController:
             save_path = "saves/quicksave.json"
             if self.save_game_state(save_path):
                 logger.info(f"Game saved to {save_path}")
+                self.add_event_notification("Game saved", "normal")
             else:
                 logger.error("Failed to save game")
+                self.add_event_notification("Save failed", "high")
         elif event.key in key_bindings.get("load", [pygame.K_l]):
             # Load game functionality
             save_path = "saves/quicksave.json"
             if self.load_game_state(save_path):
                 logger.info(f"Game loaded from {save_path}")
+                self.add_event_notification("Game loaded", "normal")
             else:
                 logger.error("Failed to load game")
+                self.add_event_notification("Load failed", "high")
+        elif event.key in key_bindings.get("checkpoint", [pygame.K_c]):
+            # Manual checkpoint
+            if self.checkpoint_manager.create_checkpoint("manual_checkpoint"):
+                logger.info("Manual checkpoint created")
+                self.add_event_notification("Checkpoint created", "normal")
+            else:
+                logger.error("Failed to create checkpoint")
+                self.add_event_notification("Checkpoint failed", "high")
+        elif event.key in key_bindings.get("restore_checkpoint", [pygame.K_v]):
+            # Restore last checkpoint
+            if self.checkpoint_manager.restore_checkpoint(-1):
+                logger.info("Checkpoint restored")
+                self.add_event_notification("Checkpoint restored", "normal")
+            else:
+                logger.error("Failed to restore checkpoint")
+                self.add_event_notification("Restore failed", "high")
         elif event.key in key_bindings.get("help", [pygame.K_h, pygame.K_F1]):
             # Cycle help modes
             self.cycle_help_mode()
@@ -2529,6 +2773,8 @@ class GameplayController:
             logger.info("  R - Reset characters")
             logger.info("  S - Save game")
             logger.info("  L - Load game")
+            logger.info("  C - Create checkpoint")
+            logger.info("  V - Restore last checkpoint")
             logger.info("  F - Show feature status")
             logger.info("  F5 - Force system recovery")
             logger.info("  A - Show analytics")
@@ -2537,6 +2783,8 @@ class GameplayController:
             logger.info("  ESC - Quit")
             logger.info("Features:")
             logger.info("  - Character AI with goals and actions")
+            logger.info("  - Automatic checkpointing every 5 minutes")
+            logger.info("  - Manual save/load system")
             logger.info("  - Basic quest system")
             logger.info("  - Weather simulation")
             logger.info("  - Social relationship tracking")
