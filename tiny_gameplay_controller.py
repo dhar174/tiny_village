@@ -3798,6 +3798,23 @@ class GameplayController:
             return
 
         try:
+            # Step 0: Forward any locally queued events to the EventHandler so check_events sees them
+            if self.events:
+                remaining_events = []
+                for event in list(self.events):
+                    try:
+                        if hasattr(self.event_handler, "add_event"):
+                            self.event_handler.add_event(event)
+                        else:
+                            remaining_events.append(event)
+                    except Exception as e:
+                        logger.warning(
+                            f"Failed to forward event {getattr(event, 'name', str(event))} to handler: {e}"
+                        )
+                        update_errors.append("Event forwarding failed")
+                        remaining_events.append(event)
+                self.events = remaining_events
+
             # Step 1: Check for events using EventHandler - this is the primary driver
             events = []
             try:
