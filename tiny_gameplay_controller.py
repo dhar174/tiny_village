@@ -3740,7 +3740,10 @@ class GameplayController:
                         try:
                             self.event_handler.add_event(event)
                         except Exception as e:
-                            logger.warning(f"Error adding event to handler: {e}")
+                            logger.warning(
+                                f"Failed to add event to event handler via add_event "
+                                f"(event={getattr(event, 'name', str(event))}): {e}"
+                            )
                             remaining_events.append(event)
                 else:
                     # Fallback: still let storytelling consume the events directly
@@ -3751,12 +3754,18 @@ class GameplayController:
                         try:
                             self.storytelling_system.process_event_for_stories(event)
                         except Exception as e:
-                            logger.warning(f"Error forwarding event to storytelling: {e}")
+                            logger.warning(
+                                f"Error processing event with storytelling system: {e}; event={event}"
+                            )
+                            update_errors.append(
+                                f"Error forwarding event to storytelling: {e}"
+                            )
                             remaining_events.append(event)
-                self.events = remaining_events
 
             # Use the unified event/strategy pipeline
             self._process_events_and_drive_strategy(update_errors)
+            if self.events and "remaining_events" in locals():
+                self.events = remaining_events
 
         except Exception as e:
             logger.warning(f"Error in deprecated _process_pending_events: {e}")
