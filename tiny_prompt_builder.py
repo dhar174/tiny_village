@@ -10,11 +10,14 @@ this module; it purely formats information for those other components.
 """
 
 import random
+import logging
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
 from datetime import datetime
 
 import tiny_characters as tc
+
+logger = logging.getLogger(__name__)
 
 
 class ContextManager:
@@ -2427,9 +2430,9 @@ class PromptBuilder:
         for i, action in enumerate(actions[:5]):
             try:
                 util = calculate_action_utility(char_state, action, current_goal)
-            except (ValueError, TypeError):  # Replace with specific exceptions
+            except (ValueError, TypeError) as e:
                 util = 0.0
-                print(f"Error calculating utility for action {action}: {e}")  # Optional logging
+                logger.warning(f"Error calculating utility for action {action}: {e}")
 
             effects_str = ""
             if hasattr(action, "effects") and action.effects:
