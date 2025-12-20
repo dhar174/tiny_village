@@ -127,7 +127,7 @@ class TestGlobalGraphManagerCore(unittest.TestCase):
         # Initialize with default
         gm1 = get_global_graph_manager()
         
-        # Create another reference to GraphManager (will be the same singleton)
+        # Get a reference to the GraphManager singleton (same instance as gm1)
         from tiny_graph_manager import GraphManager
         gm2 = GraphManager()
         

@@ -274,7 +274,7 @@ def reset_global_graph_manager():
         _global_graph_manager = None
         
         # Also clear the GraphManager singleton instance, if available.
-        # This ensures that subsequent calls to GraphManager() yield a fresh
+        # This ensures that subsequent calls to GraphManager() return a fresh
         # instance instead of reusing stale state from previous tests.
         try:
             from tiny_graph_manager import GraphManager
