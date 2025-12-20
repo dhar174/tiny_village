@@ -3732,24 +3732,26 @@ class GameplayController:
         update_errors = []
         try:
             # Forward any locally queued events to the primary event handler
-            if getattr(self, "events", None):
+            if self.events:
                 pending_events = list(self.events)
                 if self.event_handler:
                     for event in pending_events:
                         try:
                             self.event_handler.add_event(event)
-                        finally:
                             if event in self.events:
                                 self.events.remove(event)
+                        except Exception as e:
+                            logger.warning(f"Error adding event to handler: {e}")
                 else:
                     # Fallback: still let storytelling consume the events directly
                     for event in pending_events:
                         try:
                             if self.storytelling_system:
                                 self.storytelling_system.process_event_for_stories(event)
-                        finally:
-                            if event in self.events:
-                                self.events.remove(event)
+                                if event in self.events:
+                                    self.events.remove(event)
+                        except Exception as e:
+                            logger.warning(f"Error forwarding event to storytelling: {e}")
 
             # Use the unified event/strategy pipeline
             self._process_events_and_drive_strategy(update_errors)
