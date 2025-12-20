@@ -298,15 +298,13 @@ class Event:
 
 class EventHandler:
     def __init__(self, graph_manager=None, time_manager=None):
-        # Only import GraphManager if we don't have a graph_manager passed in
+        # Use the global GraphManager instance if none provided
         if graph_manager is None:
             try:
-                GraphManager = importlib.import_module(
-                    "tiny_graph_manager"
-                ).GraphManager
-                self.graph_manager = GraphManager()
+                from tiny_globals import get_global_graph_manager
+                self.graph_manager = get_global_graph_manager()
             except ImportError:
-                print("Warning: Could not import GraphManager, using None")
+                print("Warning: Could not import global GraphManager, using None")
                 self.graph_manager = None
         else:
             self.graph_manager = graph_manager
