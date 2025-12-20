@@ -3726,12 +3726,38 @@ class GameplayController:
 
     def _process_pending_events(self):
         """
-        DEPRECATED: This method has been replaced by _process_events_and_drive_strategy.
-        Kept for backward compatibility but now delegates to the new robust implementation.
+        Backward-compatible event processing that now forwards queued events into the
+        robust event pipeline so storytelling and strategy logic stay in sync.
         """
-        logger.warning("_process_pending_events is deprecated. Use _process_events_and_drive_strategy instead.")
         update_errors = []
-        self._process_basic_events_fallback(update_errors)
+        try:
+            # Forward any locally queued events to the primary event handler
+            if getattr(self, "events", None):
+                pending_events = list(self.events)
+                if self.event_handler:
+                    for event in pending_events:
+                        try:
+                            self.event_handler.add_event(event)
+                        finally:
+                            if event in self.events:
+                                self.events.remove(event)
+                else:
+                    # Fallback: still let storytelling consume the events directly
+                    for event in pending_events:
+                        try:
+                            if self.storytelling_system:
+                                self.storytelling_system.process_event_for_stories(event)
+                        finally:
+                            if event in self.events:
+                                self.events.remove(event)
+
+            # Use the unified event/strategy pipeline
+            self._process_events_and_drive_strategy(update_errors)
+
+        except Exception as e:
+            logger.warning(f"Error in deprecated _process_pending_events: {e}")
+            self._process_basic_events_fallback(update_errors)
+
         if update_errors:
             logger.warning(f"Deprecated _process_pending_events completed with errors: {update_errors}")
 
