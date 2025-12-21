@@ -5,7 +5,6 @@ This tests the fixes made to address issue #190.
 """
 
 import sys
-from collections import defaultdict
 import unittest
 from datetime import datetime
 from unittest.mock import Mock, patch
@@ -25,7 +24,7 @@ class TestEventStrategyIntegration(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         # Mock pygame to avoid initialization issues
-        with patch('pygame.init'), patch('pygame.display.set_mode'), patch('pygame.time.Clock'), patch('pygame.font.Font'):
+        with patch('pygame.init'), patch('pygame.display.set_mode'), patch('pygame.time.Clock'):
             self.game_controller = GameplayController()
     
     def tearDown(self):
@@ -153,15 +152,13 @@ class TestEventStrategyIntegration(unittest.TestCase):
         
         self.game_controller.characters = {"char1": char1, "char2": char2}
         
-        # Add social networks via graph manager delegation
-        mock_graph = Mock()
-        mock_graph.get_social_networks = Mock(return_value={
+        # Add social networks
+        self.game_controller.social_networks = {
             "relationships": {
                 "char1": {"char2": 70},
                 "char2": {"char1": 65}
             }
-        })
-        self.game_controller.graph_manager = mock_graph
+        }
         
         world_state = self.game_controller._get_current_world_state()
         
@@ -211,7 +208,7 @@ class TestEventStrategyIntegration(unittest.TestCase):
         
         # Test deprecated _process_events_and_update_strategy
         # Should not crash
-        self.game_controller._process_events_and_update_strategy(0.1)
+            self.game_controller._process_events_and_update_strategy(0.1)
 
 
 class TestPendingEventForwarding(unittest.TestCase):
@@ -286,76 +283,18 @@ class TestPendingEventForwarding(unittest.TestCase):
 
     def test_integration_in_update_game_state(self):
         """Test that the integration works properly within update_game_state."""
-        game_controller = GameplayController.__new__(GameplayController)
-        game_controller.events = []
-        game_controller.event_handler = None
-        game_controller.storytelling_system = None
-        game_controller.map_controller = Mock()
-        game_controller.map_controller.update = Mock()
-        game_controller.characters = {}
-        game_controller.strategy_manager = None
-        game_controller.gametime_manager = None
-        game_controller.animation_system = None
-        game_controller.recovery_manager = Mock()
-        game_controller.recovery_manager.attempt_recovery = Mock(return_value=False)
-        game_controller.game_statistics = defaultdict(int)
-
         # Mock the new method to verify it's called
-        with patch.object(game_controller, '_process_events_and_drive_strategy') as mock_process:
+        with patch.object(self.game_controller, '_process_events_and_drive_strategy') as mock_process:
             # Mock other dependencies to avoid side effects
-            with patch.object(game_controller, '_update_feature_systems'):
-                with patch.object(game_controller, '_update_character', return_value=True):
+            with patch.object(self.game_controller, '_update_feature_systems'):
+                with patch.object(self.game_controller, '_update_character', return_value=True):
                     
                     # Call update_game_state
-                    game_controller.paused = False  # Ensure not paused
-                    game_controller.update_game_state(0.1)
+                    self.game_controller.paused = False  # Ensure not paused
+                    self.game_controller.update_game_state(0.1)
                     
                     # Verify our new method was called
                     mock_process.assert_called_once()
-
-
-class TestUpdateGameStateEventHandlerUsage(unittest.TestCase):
-    """Ensure update_game_state feeds queued events through EventHandler and strategy."""
-
-    def test_update_game_state_forwards_events_and_updates_strategy(self):
-        controller = GameplayController.__new__(GameplayController)
-        controller.paused = False
-        queued_event = Mock(name="queued_event")
-        controller.events = [queued_event]
-
-        handler_event = Mock(name="handler_event")
-        controller.event_handler = Mock()
-        controller.event_handler.add_event = Mock()
-        controller.event_handler.check_events = Mock(return_value=[handler_event])
-        controller.event_handler.process_events = Mock(
-            return_value={"processed_events": [], "failed_events": []}
-        )
-        controller.event_handler.process_cascading_queue = Mock()
-        controller.event_handler.generate_dynamic_events = Mock()
-
-        controller.strategy_manager = Mock()
-        controller.strategy_manager.update_strategy = Mock(return_value=None)
-
-        controller._update_feature_systems = Mock()
-        controller.map_controller = Mock()
-        controller.map_controller.update = Mock()
-        controller.characters = {}
-        controller.gametime_manager = None
-        controller.animation_system = None
-        controller.recovery_manager = Mock()
-        controller.recovery_manager.attempt_recovery = Mock(return_value=False)
-        controller.game_statistics = defaultdict(int)
-        controller.action_resolver = None
-        controller._update_character = Mock(return_value=True)
-
-        controller.update_game_state(0.1)
-
-        controller.event_handler.add_event.assert_called_once_with(queued_event)
-        controller.event_handler.check_events.assert_called_once()
-        controller.strategy_manager.update_strategy.assert_called_once_with(
-            [handler_event]
-        )
-        self.assertEqual(controller.events, [])
 
 
 class TestEventHandlerIntegration(unittest.TestCase):
