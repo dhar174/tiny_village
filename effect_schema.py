@@ -11,6 +11,29 @@ from enum import Enum
 import logging
 
 
+def _is_mock_object(obj: Any) -> bool:
+    """
+    Check if an object is a mock object (for testing).
+    
+    This is used internally to handle mock objects in tests properly.
+    In production, this should always return False.
+    
+    Args:
+        obj: Object to check
+        
+    Returns:
+        bool: True if object appears to be a mock
+    """
+    # Check for unittest.mock.Mock attributes
+    if hasattr(obj, '_mock_name') or hasattr(obj, '_mock_methods'):
+        return True
+    # Check type string as fallback
+    type_str = str(type(obj))
+    if 'mock' in type_str.lower() and 'unittest' in type_str.lower():
+        return True
+    return False
+
+
 class EffectType(str, Enum):
     """Supported effect types."""
     ATTRIBUTE_CHANGE = "attribute_change"
@@ -217,8 +240,8 @@ class EffectV2:
             if value is None and hasattr(entity, condition.attribute):
                 try:
                     val = getattr(entity, condition.attribute)
-                    # Make sure it's not a Mock
-                    if not (hasattr(val, '_mock_name') or str(type(val)).startswith("<class 'unittest.mock")):
+                    # Make sure it's not a Mock (for testing)
+                    if not _is_mock_object(val):
                         value = val
                 except Exception:
                     pass

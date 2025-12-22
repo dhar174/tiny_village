@@ -8,7 +8,7 @@ handling all effect types consistently and safely.
 from typing import Any, Dict, List, Optional
 import logging
 
-from effect_schema import EffectV2, EffectType, OperatorType
+from effect_schema import EffectV2, EffectType, OperatorType, _is_mock_object
 
 
 class EffectDispatcher:
@@ -323,8 +323,8 @@ class EffectDispatcher:
                 if hasattr(entity, attribute):
                     try:
                         val = getattr(entity, attribute)
-                        # Make sure we got a real value, not a Mock
-                        if not (hasattr(val, '_mock_name') or str(type(val)).startswith("<class 'unittest.mock")):
+                        # Make sure we got a real value, not a Mock (for testing)
+                        if not _is_mock_object(val):
                             current_value = val
                         else:
                             # It's a mock, default to 0

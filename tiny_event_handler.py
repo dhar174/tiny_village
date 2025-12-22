@@ -479,13 +479,19 @@ class EventHandler:
 
     def _apply_single_effect(self, event: "Event", effect: Dict[str, Any]):
         """
-        Legacy method for applying single effects (deprecated).
+        Legacy method for applying single effects (deprecated in v2.0).
         
         This method is kept for backward compatibility but delegates to the new
-        effect dispatcher system.
+        effect dispatcher system. It will be removed in v3.0.
+        
+        Use _apply_event_effects instead, which handles both dict and EffectV2 formats.
         """
-        logging.warning(
-            "_apply_single_effect is deprecated, use _apply_event_effects instead"
+        import warnings
+        warnings.warn(
+            "_apply_single_effect is deprecated as of v2.0 and will be removed in v3.0. "
+            "Use _apply_event_effects instead.",
+            DeprecationWarning,
+            stacklevel=2
         )
         
         try:
