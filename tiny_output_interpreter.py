@@ -4,6 +4,7 @@ import json
 import inspect
 import logging
 from typing import Dict, Any, Optional, Union
+from pydantic import BaseModel, ValidationError, Field
 from actions import (
     Action,
     TalkAction,
@@ -49,6 +50,16 @@ class LLMResponseParsingError(Exception):
     """Raised when LLM response cannot be parsed or understood."""
 
     pass
+
+
+class StructuredLLMOutput(BaseModel):
+    """Schema-aligned container for LLM responses."""
+
+    action: str
+    parameters: Dict[str, Any] = Field(default_factory=dict)
+    reasoning: Optional[str] = None
+    confidence: Optional[float] = None
+    raw: Optional[str] = None
 
 
 class OutputInterpreter:
@@ -296,41 +307,70 @@ class OutputInterpreter:
 
         return MovementAction
 
-    def parse_llm_response(self, llm_response_str: str) -> dict:
+    def parse_llm_response(self, llm_response_str: Union[str, Dict[str, Any]]) -> dict:
         """
-        Enhanced parsing of LLM response with multiple format support and error recovery.
-        Supports JSON format, natural language, and mixed formats.
-        Priority: JSON extraction > strict JSON > natural language > fallback
+        Enhanced parsing of LLM response with multiple format support, schema validation,
+        and deterministic recovery steps. Priority: structured/parsed payloads →
+        JSON extraction/repair → natural language → fallback.
         """
-        if not llm_response_str:
-            # For enhanced interpreter, return NoOp for empty strings instead of raising error
+        if llm_response_str is None or llm_response_str == "":
             return {"action": "NoOp", "parameters": {"reason": "empty_response"}}
 
+        # Handle structured output envelopes first (e.g., ChatOpenAI with include_raw=True)
+        if isinstance(llm_response_str, dict):
+            if "parsed" in llm_response_str and llm_response_str.get("parsed"):
+                try:
+                    return self._validate_structured_output(
+                        llm_response_str["parsed"],
+                        raw=llm_response_str.get("raw") or llm_response_str.get("text"),
+                    )
+                except InvalidLLMResponseFormatError:
+                    # Fall through to raw handling if validation fails
+                    pass
+
+            if "action" in llm_response_str and "parameters" in llm_response_str:
+                try:
+                    return self._validate_structured_output(llm_response_str)
+                except InvalidLLMResponseFormatError:
+                    pass
+
+            # Use raw/text fields when present, otherwise stringify for downstream parsing
+            llm_response_str = (
+                llm_response_str.get("raw")
+                or llm_response_str.get("text")
+                or json.dumps(llm_response_str)
+            )
+
         # Clean and normalize the response
-        cleaned_response = llm_response_str.strip()
+        cleaned_response = str(llm_response_str).strip()
+        sanitized_response = self._strip_markdown_fences(cleaned_response)
+        last_error: Optional[Exception] = None
 
-        # First priority: Try extracting JSON from mixed format (handles mixed responses)
-        try:
-            parsed_response = self._extract_json_from_text(cleaned_response)
-            return parsed_response
-        except (json.JSONDecodeError, InvalidLLMResponseFormatError):
-            pass
+        # Deterministic parsing/recovery attempts
+        for parser in (
+            self._extract_json_from_text,
+            self._parse_json_response,
+            self._recover_json_object,
+        ):
+            try:
+                parsed = parser(sanitized_response)
+                return self._validate_structured_output(parsed, raw=cleaned_response)
+            except (json.JSONDecodeError, InvalidLLMResponseFormatError) as e:
+                last_error = e
+                continue
 
-        # Second priority: Try strict JSON parsing
-        try:
-            parsed_response = self._parse_json_response(cleaned_response)
-            return parsed_response
-        except (json.JSONDecodeError, InvalidLLMResponseFormatError):
-            pass
-
-        # Third priority: Try natural language parsing
+        # Natural language parsing as a softer fallback
         try:
             parsed_response = self._parse_natural_language_response(cleaned_response)
-            return parsed_response
-        except LLMResponseParsingError:
-            pass
+            return self._validate_structured_output(parsed_response, raw=cleaned_response)
+        except LLMResponseParsingError as e:
+            last_error = e
 
-        # Fallback: Create a basic action from keywords
+        logger.warning(
+            "LLM response parsing failed; returning fallback action. Raw: %s | error: %s",
+            cleaned_response[:200],
+            last_error,
+        )
         return self._create_fallback_action_dict(cleaned_response)
 
     def interpret_response(
@@ -379,6 +419,65 @@ class OutputInterpreter:
             if potential_actions and len(potential_actions) > 0:
                 return [potential_actions[0]]
             return [NoOpAction(initiator_id=getattr(character, "id", character.name))]
+
+    def _validate_structured_output(
+        self, parsed: Union[Dict[str, Any], StructuredLLMOutput], raw: Optional[str] = None
+    ) -> dict:
+        """
+        Validate/normalize parsed payloads against the structured schema.
+        """
+        try:
+            model = (
+                parsed
+                if isinstance(parsed, StructuredLLMOutput)
+                else StructuredLLMOutput.model_validate(
+                    {**parsed, **({"raw": raw} if raw else {})}
+                )
+            )
+        except ValidationError as exc:
+            raise InvalidLLMResponseFormatError(str(exc))
+
+        return model.model_dump(exclude_none=True)
+
+    def _strip_markdown_fences(self, text: str) -> str:
+        """Remove Markdown code fences and return inner content when present."""
+        fence_match = re.search(r"```(?:json)?(.*?)```", text, re.DOTALL | re.IGNORECASE)
+        if fence_match:
+            inner = fence_match.group(1).strip()
+            return inner if inner else text
+        return text
+
+    def _recover_json_object(self, text: str) -> dict:
+        """
+        Tolerant JSON recovery:
+        - trims leading/trailing prose
+        - rebalances missing closing braces
+        """
+        start = text.find("{")
+        if start == -1:
+            raise InvalidLLMResponseFormatError("No JSON object found")
+
+        candidate = text[start:]
+        opens = candidate.count("{")
+        closes = candidate.count("}")
+        if closes < opens:
+            candidate = candidate + ("}" * (opens - closes))
+
+        # Trim everything after the last closing brace to remove trailing prose
+        last_brace = candidate.rfind("}")
+        if last_brace != -1:
+            candidate = candidate[: last_brace + 1]
+
+        parsed = json.loads(candidate)
+        if not isinstance(parsed, dict):
+            raise InvalidLLMResponseFormatError("Recovered JSON is not an object")
+        if "action" not in parsed:
+            raise InvalidLLMResponseFormatError("Recovered JSON missing 'action'")
+        if "parameters" not in parsed or not isinstance(parsed["parameters"], dict):
+            parsed["parameters"] = (
+                parsed["parameters"] if isinstance(parsed.get("parameters"), dict) else {}
+            )
+        return parsed
 
     def _match_with_potential_actions(
         self, parsed_response: dict, potential_actions: list
