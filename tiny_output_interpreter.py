@@ -58,7 +58,7 @@ class StructuredLLMOutput(BaseModel):
     action: str
     parameters: Dict[str, Any] = Field(default_factory=dict)
     reasoning: Optional[str] = None
-    confidence: Optional[float] = None
+    confidence: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     raw: Optional[str] = None
 
 
@@ -309,12 +309,23 @@ class OutputInterpreter:
 
     def parse_llm_response(self, llm_response_str: Union[str, Dict[str, Any]]) -> dict:
         """
-        Enhanced parsing of LLM response with multiple format support, schema validation,
-        and deterministic recovery steps. Priority: structured/parsed payloads →
-        JSON extraction/repair → natural language → fallback.
+        Enhanced parsing of an LLM response with multiple format support, schema validation,
+        and deterministic local recovery steps.
+
+        Parsing priority within this function is:
+        1. Structured/parsed payloads (already in dict form)
+        2. JSON extraction and JSON parsing/repair from free-form text
+        3. Natural language parsing into an action structure
+        4. A conservative fallback action if all parsing attempts fail
+
+        Note: This function only performs local parsing and recovery. Any higher-level
+        LLM retry strategies (e.g., re-prompting the model with stricter instructions
+        when parsing fails) are expected to be implemented by the caller or other layers.
         """
         if llm_response_str is None or llm_response_str == "":
             return {"action": "NoOp", "parameters": {"reason": "empty_response"}}
+
+        original_input = llm_response_str
 
         # Handle structured output envelopes first (e.g., ChatOpenAI with include_raw=True)
         if isinstance(llm_response_str, dict):
@@ -324,22 +335,40 @@ class OutputInterpreter:
                         llm_response_str["parsed"],
                         raw=llm_response_str.get("raw") or llm_response_str.get("text"),
                     )
-                except InvalidLLMResponseFormatError:
+                except InvalidLLMResponseFormatError as exc:
+                    logger.warning(
+                        "Structured payload validation failed (parsed key); falling back. error=%s",
+                        exc,
+                    )
                     # Fall through to raw handling if validation fails
                     pass
 
             if "action" in llm_response_str and "parameters" in llm_response_str:
                 try:
                     return self._validate_structured_output(llm_response_str)
-                except InvalidLLMResponseFormatError:
+                except InvalidLLMResponseFormatError as exc:
+                    logger.warning(
+                        "Structured payload validation failed (direct dict); falling back. error=%s",
+                        exc,
+                    )
                     pass
 
             # Use raw/text fields when present, otherwise stringify for downstream parsing
-            llm_response_str = (
-                llm_response_str.get("raw")
-                or llm_response_str.get("text")
-                or json.dumps(llm_response_str)
-            )
+            raw_or_text = llm_response_str.get("raw") or llm_response_str.get("text")
+            if raw_or_text is not None:
+                llm_response_str = raw_or_text
+            else:
+                try:
+                    logger.debug(
+                        "No 'raw' or 'text' field in LLM response dict; falling back to json.dumps."
+                    )
+                    llm_response_str = json.dumps(llm_response_str)
+                except TypeError as exc:
+                    logger.warning(
+                        "Failed to JSON-serialize LLM response dict fallback (%s); using repr() instead.",
+                        exc,
+                    )
+                    llm_response_str = repr(llm_response_str)
 
         # Clean and normalize the response
         cleaned_response = str(llm_response_str).strip()
@@ -354,15 +383,15 @@ class OutputInterpreter:
         ):
             try:
                 parsed = parser(sanitized_response)
-                return self._validate_structured_output(parsed, raw=cleaned_response)
-            except (json.JSONDecodeError, InvalidLLMResponseFormatError) as e:
+                return self._validate_structured_output(parsed, raw=None)
+            except (json.JSONDecodeError, InvalidLLMResponseFormatError, Exception) as e:
                 last_error = e
                 continue
 
         # Natural language parsing as a softer fallback
         try:
             parsed_response = self._parse_natural_language_response(cleaned_response)
-            return self._validate_structured_output(parsed_response, raw=cleaned_response)
+            return self._validate_structured_output(parsed_response, raw=None)
         except LLMResponseParsingError as e:
             last_error = e
 
@@ -427,25 +456,32 @@ class OutputInterpreter:
         Validate/normalize parsed payloads against the structured schema.
         """
         try:
+            payload = parsed if isinstance(parsed, StructuredLLMOutput) else parsed.copy()
+            if raw:
+                payload.setdefault("raw", raw)
             model = (
                 parsed
                 if isinstance(parsed, StructuredLLMOutput)
-                else StructuredLLMOutput.model_validate(
-                    {**parsed, **({"raw": raw} if raw else {})}
-                )
+                else StructuredLLMOutput.model_validate(payload)
             )
         except ValidationError as exc:
+            logger.warning("Structured output validation failed: %s", exc)
             raise InvalidLLMResponseFormatError(str(exc))
 
         return model.model_dump(exclude_none=True)
 
     def _strip_markdown_fences(self, text: str) -> str:
         """Remove Markdown code fences and return inner content when present."""
-        fence_match = re.search(r"```(?:json)?(.*?)```", text, re.DOTALL | re.IGNORECASE)
-        if fence_match:
-            inner = fence_match.group(1).strip()
-            return inner if inner else text
-        return text
+        opening_match = re.search(r"```(?:json)?", text, re.IGNORECASE)
+        if not opening_match:
+            return text
+
+        closing_index = text.rfind("```")
+        if closing_index == -1 or closing_index <= opening_match.end():
+            return text
+
+        inner = text[opening_match.end() : closing_index].strip()
+        return inner if inner else text
 
     def _recover_json_object(self, text: str) -> dict:
         """
@@ -458,8 +494,26 @@ class OutputInterpreter:
             raise InvalidLLMResponseFormatError("No JSON object found")
 
         candidate = text[start:]
-        opens = candidate.count("{")
-        closes = candidate.count("}")
+        # Count only structural braces, ignoring those inside string literals
+        opens = closes = 0
+        in_string = False
+        escape = False
+        for ch in candidate:
+            if escape:
+                escape = False
+                continue
+            if ch == "\\" and in_string:
+                escape = True
+                continue
+            if ch == '"':
+                in_string = not in_string
+                continue
+            if not in_string:
+                if ch == "{":
+                    opens += 1
+                elif ch == "}":
+                    closes += 1
+
         if closes < opens:
             candidate = candidate + ("}" * (opens - closes))
 
@@ -475,7 +529,7 @@ class OutputInterpreter:
             raise InvalidLLMResponseFormatError("Recovered JSON missing 'action'")
         if "parameters" not in parsed or not isinstance(parsed["parameters"], dict):
             parsed["parameters"] = (
-                parsed["parameters"] if isinstance(parsed.get("parameters"), dict) else {}
+                parsed.get("parameters") if isinstance(parsed.get("parameters"), dict) else {}
             )
         return parsed
 
@@ -867,9 +921,14 @@ class OutputInterpreter:
 
             # Food & Health Actions
             if action_class == EatAction:
-                item_name = clean_params.pop(
-                    "item_name", clean_params.pop("food_type", "food")
-                )
+                if "item_name" in clean_params:
+                    item_name = clean_params.pop("item_name")
+                elif "food_type" in clean_params:
+                    item_name = clean_params.pop("food_type")
+                else:
+                    raise InvalidActionParametersError(
+                        "Parameter mismatch or missing required argument for action Eat"
+                    )
                 clean_params.pop(
                     "initiator_id", None
                 )  # Remove to avoid duplicate parameter
@@ -899,12 +958,16 @@ class OutputInterpreter:
 
             # Movement Actions
             elif action_class == GoToLocationAction:
-                location_name = clean_params.pop(
-                    "location_name",
-                    clean_params.pop(
-                        "destination", clean_params.pop("location", "home")
-                    ),
-                )
+                if "location_name" in clean_params:
+                    location_name = clean_params.pop("location_name")
+                elif "destination" in clean_params:
+                    location_name = clean_params.pop("destination")
+                elif "location" in clean_params:
+                    location_name = clean_params.pop("location")
+                else:
+                    raise InvalidActionParametersError(
+                        "Parameter mismatch or missing required argument for action GoTo"
+                    )
                 clean_params.pop(
                     "initiator_id", None
                 )  # Remove to avoid duplicate parameter
@@ -944,11 +1007,11 @@ class OutputInterpreter:
 
                 if not target:
                     raise InvalidActionParametersError(
-                        "Missing 'target_name' or 'target' for Talk action."
+                        "Parameter mismatch or missing required argument for action Talk"
                     )
                 if initiator_id is None:
                     raise InvalidActionParametersError(
-                        "Missing 'initiator_id' for Talk action."
+                        "Parameter mismatch or missing required argument for action Talk"
                     )
 
                 # Remove ALL parameters that could conflict with base Action class
@@ -1172,7 +1235,7 @@ class OutputInterpreter:
                             return action_class()
                     except Exception:
                         raise InvalidActionParametersError(
-                            f"Could not instantiate {action_name_str} with available parameters: {init_error}"
+                            f"Parameter mismatch or missing required argument for action {action_name_str}: {init_error}"
                         )
 
         except TypeError as e:
