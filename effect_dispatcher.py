@@ -315,7 +315,7 @@ class EffectDispatcher:
                     if isinstance(state, dict):
                         current_value = state.get(attribute, 0)
                         uses_state = True
-                except Exception:
+                except (AttributeError, TypeError, KeyError):
                     # If get_state fails, try direct attribute access
                     pass
             
@@ -323,7 +323,7 @@ class EffectDispatcher:
                 if hasattr(entity, attribute):
                     try:
                         current_value = getattr(entity, attribute)
-                    except Exception:
+                    except (AttributeError, TypeError):
                         # If attribute exists but can't be retrieved, use 0
                         current_value = 0
                 else:

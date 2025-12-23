@@ -219,15 +219,15 @@ class EffectV2:
                     state = entity.get_state()
                     if isinstance(state, dict):
                         value = state.get(condition.attribute)
-                except Exception:
-                    # get_state may fail or not return a dict, continue to try direct access
+                except (AttributeError, TypeError, KeyError):
+                    # get_state may fail or not return expected dict, continue to try direct access
                     pass
             
             # Try direct attribute access if we haven't got a value yet
             if value is None and hasattr(entity, condition.attribute):
                 try:
                     value = getattr(entity, condition.attribute)
-                except Exception:
+                except (AttributeError, TypeError):
                     # Attribute access may fail, treat as condition not met
                     pass
             
