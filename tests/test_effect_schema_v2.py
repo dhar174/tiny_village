@@ -13,8 +13,7 @@ Tests cover:
 import sys
 import os
 import unittest
-from datetime import datetime
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -27,7 +26,14 @@ from effect_schema import (
     validate_effect_dict,
     create_canonical_effects
 )
-from effect_dispatcher import EffectDispatcher, apply_effect
+from effect_dispatcher import EffectDispatcher
+
+
+class TestEntity:
+    """Simple test entity for testing effects without mocks."""
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
 
 class TestEffectCondition(unittest.TestCase):
@@ -61,6 +67,12 @@ class TestEffectCondition(unittest.TestCase):
         cond = EffectCondition("status", "!=", "dead")
         self.assertTrue(cond.evaluate("alive"))
         self.assertFalse(cond.evaluate("dead"))
+    
+    def test_invalid_operator(self):
+        """Test that invalid operators are rejected."""
+        with self.assertRaises(ValueError) as context:
+            EffectCondition("energy", "~=", 50)
+        self.assertIn("Invalid condition operator", str(context.exception))
 
 
 class TestEffectV2Validation(unittest.TestCase):
@@ -266,9 +278,8 @@ class TestEffectDispatcher(unittest.TestCase):
     
     def test_apply_attribute_change_to_participants(self):
         """Test applying attribute change to participants."""
-        # Create mock participant with proper attribute configuration
-        participant = Mock()
-        participant.configure_mock(happiness=50)
+        # Create test participant
+        participant = TestEntity(happiness=50)
         self.mock_event.participants = [participant]
         
         effect = EffectV2(
@@ -284,12 +295,9 @@ class TestEffectDispatcher(unittest.TestCase):
     
     def test_apply_attribute_change_with_condition(self):
         """Test applying conditional attribute change."""
-        # Create participants with different energy levels using configure_mock
-        participant1 = Mock()
-        participant1.configure_mock(energy=60, productivity=50)
-        
-        participant2 = Mock()
-        participant2.configure_mock(energy=30, productivity=50)
+        # Create participants with different energy levels
+        participant1 = TestEntity(energy=60, productivity=50)
+        participant2 = TestEntity(energy=30, productivity=50)
         
         self.mock_event.participants = [participant1, participant2]
         
@@ -312,8 +320,7 @@ class TestEffectDispatcher(unittest.TestCase):
     
     def test_apply_different_operators(self):
         """Test applying effects with different operators."""
-        participant = Mock()
-        participant.configure_mock(score=100)
+        participant = TestEntity(score=100)
         self.mock_event.participants = [participant]
         
         # Test SET operator
@@ -351,8 +358,7 @@ class TestEffectDispatcher(unittest.TestCase):
     
     def test_apply_location_change(self):
         """Test applying effect to location."""
-        location = Mock()
-        location.configure_mock(development_level=10)
+        location = TestEntity(development_level=10)
         self.mock_event.location = location
         
         effect = EffectV2(
@@ -390,8 +396,7 @@ class TestEffectDispatcher(unittest.TestCase):
     
     def test_effect_with_chain(self):
         """Test applying effect with chained attributes."""
-        participant = Mock()
-        participant.configure_mock(trust=50, friendship_level=30, loyalty=20)
+        participant = TestEntity(trust=50, friendship_level=30, loyalty=20)
         self.mock_event.participants = [participant]
         
         effect = EffectV2(
@@ -412,8 +417,7 @@ class TestEffectDispatcher(unittest.TestCase):
     
     def test_dispatcher_summary(self):
         """Test getting applied effects summary."""
-        participant = Mock()
-        participant.configure_mock(happiness=50, energy=100)
+        participant = TestEntity(happiness=50, energy=100)
         self.mock_event.participants = [participant]
         
         effect1 = EffectV2(

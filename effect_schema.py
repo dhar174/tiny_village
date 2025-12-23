@@ -11,29 +11,6 @@ from enum import Enum
 import logging
 
 
-def _is_mock_object(obj: Any) -> bool:
-    """
-    Check if an object is a mock object (for testing).
-    
-    This is used internally to handle mock objects in tests properly.
-    In production, this should always return False.
-    
-    Args:
-        obj: Object to check
-        
-    Returns:
-        bool: True if object appears to be a mock
-    """
-    # Check for unittest.mock.Mock attributes
-    if hasattr(obj, '_mock_name') or hasattr(obj, '_mock_methods'):
-        return True
-    # Check type string as fallback
-    type_str = str(type(obj))
-    if 'mock' in type_str.lower() and 'unittest' in type_str.lower():
-        return True
-    return False
-
-
 class EffectType(str, Enum):
     """Supported effect types."""
     ATTRIBUTE_CHANGE = "attribute_change"
@@ -51,7 +28,7 @@ class TargetSpec(str, Enum):
 
 
 class OperatorType(str, Enum):
-    """Supported operators for conditional effects."""
+    """Supported operators for attribute modification."""
     ADD = "add"
     SUBTRACT = "subtract"
     MULTIPLY = "multiply"
@@ -75,6 +52,15 @@ class EffectCondition:
     attribute: str
     operator: str  # ">=", ">", "<=", "<", "==", "!="
     threshold: Union[int, float, str]
+    
+    def __post_init__(self):
+        """Validate the condition after initialization."""
+        valid_operators = [">=", ">", "<=", "<", "==", "!="]
+        if self.operator not in valid_operators:
+            raise ValueError(
+                f"Invalid condition operator: {self.operator}. "
+                f"Must be one of {valid_operators}"
+            )
     
     def evaluate(self, value: Any) -> bool:
         """Evaluate the condition against a value."""
@@ -180,15 +166,7 @@ class EffectV2:
         if not self.attribute or not isinstance(self.attribute, str):
             raise ValueError(f"attribute must be a non-empty string, got {self.attribute}")
         
-        # Validate change_value for numeric operations
-        if self.operator in [OperatorType.ADD, OperatorType.SUBTRACT, OperatorType.MULTIPLY]:
-            if not isinstance(self.change_value, (int, float)):
-                raise ValueError(
-                    f"change_value must be numeric for operator {self.operator}, "
-                    f"got {type(self.change_value)}"
-                )
-        
-        # Validate operator
+        # Validate operator first before using it in comparisons
         if not isinstance(self.operator, OperatorType):
             try:
                 self.operator = OperatorType(self.operator)
@@ -196,6 +174,14 @@ class EffectV2:
                 raise ValueError(
                     f"Invalid operator: {self.operator}. "
                     f"Must be one of {[e.value for e in OperatorType]}"
+                )
+        
+        # Validate change_value for numeric operations (after operator is validated)
+        if self.operator in [OperatorType.ADD, OperatorType.SUBTRACT, OperatorType.MULTIPLY]:
+            if not isinstance(self.change_value, (int, float)):
+                raise ValueError(
+                    f"change_value must be numeric for operator {self.operator}, "
+                    f"got {type(self.change_value)}"
                 )
         
         # Validate conditions
@@ -234,16 +220,15 @@ class EffectV2:
                     if isinstance(state, dict):
                         value = state.get(condition.attribute)
                 except Exception:
+                    # get_state may fail or not return a dict, continue to try direct access
                     pass
             
             # Try direct attribute access if we haven't got a value yet
             if value is None and hasattr(entity, condition.attribute):
                 try:
-                    val = getattr(entity, condition.attribute)
-                    # Make sure it's not a Mock (for testing)
-                    if not _is_mock_object(val):
-                        value = val
+                    value = getattr(entity, condition.attribute)
                 except Exception:
+                    # Attribute access may fail, treat as condition not met
                     pass
             
             if value is None:
