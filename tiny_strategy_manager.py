@@ -635,8 +635,6 @@ class StrategyManager:
 
                 plans[char_id] = plan if plan is not None else self.plan_daily_activities(character_obj)
 
-        if len(plans) == 1:
-            return next(iter(plans.values()))
         return plans
 
     def _get_event_type(self, event):
@@ -648,7 +646,11 @@ class StrategyManager:
 
     def _get_affected_characters(self, event, default_subject):
         def _is_mock_object(obj):
-            return getattr(obj, "__class__", type(None)).__module__ == "unittest.mock"
+            if obj is None:
+                return False
+            obj_class = getattr(obj, "__class__", None)
+            module = getattr(obj_class, "__module__", "") if obj_class is not None else ""
+            return module.startswith("unittest.mock") or module.endswith(".mock")
 
         characters = []
         for attr in ("participants", "characters", "targets"):
@@ -673,14 +675,29 @@ class StrategyManager:
         seen = set()
         unique = []
         for char in characters:
-            identifier = self._get_character_identifier(char)
+            identifier = self._get_normalized_identifier(char)
             if identifier not in seen:
                 seen.add(identifier)
                 unique.append(char)
         return unique
 
     def _get_character_identifier(self, character):
-        return character.name if hasattr(character, "name") else str(character)
+        return self._get_normalized_identifier(character)
+
+    def _get_normalized_identifier(self, character):
+        if isinstance(character, str):
+            base = character
+        elif isinstance(character, dict) and "name" in character:
+            base = str(character.get("name"))
+        elif hasattr(character, "name"):
+            try:
+                base = getattr(character, "name")
+            except Exception:
+                base = str(character)
+        else:
+            base = str(character)
+
+        return base.strip().lower() if isinstance(base, str) else str(base).strip().lower()
 
     def _resolve_character(self, character):
         if not isinstance(character, str):
@@ -688,18 +705,22 @@ class StrategyManager:
 
         if self.graph_manager:
             try:
-                if hasattr(self.graph_manager, "characters") and character in getattr(
-                    self.graph_manager, "characters", {}
-                ):
-                    resolved = self.graph_manager.characters.get(character)
+                characters_map = getattr(self.graph_manager, "characters", None)
+                if isinstance(characters_map, dict):
+                    resolved = characters_map.get(character)
                     if resolved is not None:
                         return resolved
 
-                if hasattr(self.graph_manager, "get_character"):
-                    resolved = self.graph_manager.get_character(character)
-                    if resolved and hasattr(resolved, "name") and isinstance(
-                        resolved.name, str
-                    ):
+                get_character = getattr(self.graph_manager, "get_character", None)
+                if callable(get_character):
+                    resolved = get_character(character)
+                    if resolved is not None:
+                        if not hasattr(resolved, "name") or not isinstance(
+                            getattr(resolved, "name", None), str
+                        ):
+                            logger.debug(
+                                f"Resolved character object for '{character}' lacks a valid string 'name' attribute"
+                            )
                         return resolved
             except Exception as e:
                 logger.debug(f"Could not resolve character '{character}' from graph: {e}")
@@ -760,7 +781,15 @@ class StrategyManager:
                     )
                 )
             else:
-                converted.append(ActionWrapper(name=str(action)))
+                converted.append(
+                    ActionWrapper(
+                        name=getattr(action, "name", str(action)),
+                        cost=getattr(action, "cost", 1.0),
+                        effects=getattr(action, "effects", []),
+                        preconditions=getattr(action, "preconditions", {}),
+                        utility=getattr(action, "utility", 0.0),
+                    )
+                )
         return converted
 
     def _goal_for_event_type(self, event_type):
@@ -809,17 +838,54 @@ class StrategyManager:
                 a
                 for a in actions
                 if hasattr(a, "name")
-                and any(keyword in a.name.lower() for keyword in ["talk", "social", "help"])
+                and any(
+                    keyword in a.name.lower()
+                    for keyword in [
+                        "talk",
+                        "social",
+                        "help",
+                        "meet",
+                        "chat",
+                        "party",
+                        "greet",
+                        "visit",
+                        "friend",
+                    ]
+                )
             ]
-            return filtered or actions
+            if not filtered:
+                logger.warning(
+                    "No social-specific actions found for event_type '%s'; falling back to all actions.",
+                    event_type,
+                )
+                return actions
+            return filtered
         if lowered in ["economic", "trade", "market", "work", "task", "project"]:
             filtered = [
                 a
                 for a in actions
                 if hasattr(a, "name")
-                and any(keyword in a.name.lower() for keyword in ["work", "trade", "craft", "build"])
+                and any(
+                    keyword in a.name.lower()
+                    for keyword in [
+                        "work",
+                        "trade",
+                        "craft",
+                        "build",
+                        "sell",
+                        "buy",
+                        "earn",
+                        "job",
+                    ]
+                )
             ]
-            return filtered or actions
+            if not filtered:
+                logger.warning(
+                    "No economic/work-specific actions found for event_type '%s'; falling back to all actions.",
+                    event_type,
+                )
+                return actions
+            return filtered
         return actions
 
     def _handle_social_event(self, event, character):

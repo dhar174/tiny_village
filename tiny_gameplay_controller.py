@@ -3908,10 +3908,44 @@ class GameplayController:
                     update_errors.append("Strategy action execution error")
             
             elif isinstance(strategy_result, dict):
-                # Dictionary decision - apply it as a single decision
                 try:
-                    self.apply_decision(strategy_result, None)
-                    logger.debug("Applied dictionary-based strategic decision")
+                    if "type" in strategy_result:
+                        # Single decision payload
+                        self.apply_decision(strategy_result, None)
+                        logger.debug("Applied dictionary-based strategic decision")
+                    else:
+                        # Treat as mapping of character -> plan/actions/decision
+                        for char_id, decision in strategy_result.items():
+                            if decision is None:
+                                continue
+                            if isinstance(decision, dict) and "type" in decision:
+                                self.apply_decision(decision, None)
+                                continue
+                            if isinstance(decision, list):
+                                for item in decision:
+                                    if hasattr(item, "execute"):
+                                        try:
+                                            success = item.execute()
+                                            if success:
+                                                self.game_statistics["actions_executed"] += 1
+                                            else:
+                                                self.game_statistics["actions_failed"] += 1
+                                        except Exception as action_error:
+                                            logger.warning(
+                                                f"Error executing action for {char_id}: {action_error}"
+                                            )
+                                    elif isinstance(item, dict) and "type" in item:
+                                        self.apply_decision(item, None)
+                            elif hasattr(decision, "execute"):
+                                success = decision.execute()
+                                if success:
+                                    self.game_statistics["actions_executed"] += 1
+                                else:
+                                    self.game_statistics["actions_failed"] += 1
+                            else:
+                                logger.debug(
+                                    f"Unhandled strategy mapping entry for {char_id}: {type(decision)}"
+                                )
                 except Exception as e:
                     logger.error(f"Error applying dictionary decision: {e}")
                     update_errors.append("Dictionary decision application failed")
