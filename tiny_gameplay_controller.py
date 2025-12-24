@@ -4,6 +4,7 @@ import logging
 import traceback
 import json
 import os
+import threading
 import datetime # Added for time-based achievement
 from datetime import timedelta
 
@@ -337,19 +338,19 @@ class SelectedCharacterPanel(UIPanel):
             current_y += action_text.get_height() + 3
             
             # Social and quest info (condensed)
-            if hasattr(char, "uuid") and hasattr(controller, "social_networks"):
+            if (hasattr(char, "uuid") and hasattr(controller, "graph_manager") and 
+                controller.graph_manager):
                 try:
-                    relationships = controller.social_networks["relationships"].get(char.uuid, {})
-                    avg_relationship = (
-                        sum(relationships.values()) / len(relationships)
-                        if relationships else 50
-                    )
-                    social_text = tiny_font.render(f"Social: {avg_relationship:.0f}/100", True, (180, 180, 180))
-                    screen.blit(social_text, (x, current_y))
-                    current_y += social_text.get_height() + 1
-
+                    relationships = controller.graph_manager.get_character_relationships(char)
+                    if relationships:
+                        avg_relationship = sum(
+                            rel_data.get('strength', 50) for rel_data in relationships.values()
+                        ) / len(relationships)
+                        social_text = tiny_font.render(f"Social: {avg_relationship:.0f}/100", True, (180, 180, 180))
+                        screen.blit(social_text, (x, current_y))
+                        current_y += social_text.get_height() + 1
                 except Exception as e:
-                    logging.error(f"Error accessing social_networks while rendering selected character panel: {e}")
+                    logging.error(f"Error accessing GraphManager while rendering selected character panel: {e}")
             
             if hasattr(char, "uuid") and hasattr(controller, "quest_system"):
                 try:
@@ -508,12 +509,15 @@ class VillageOverviewPanel(UIPanel):
                 health = getattr(char, 'health_status', 50)
                 char_mood = (energy + health) / 2
                 
-                # Factor in social relationships if available
-                if hasattr(controller, 'social_networks') and hasattr(char, 'uuid'):
+                # Factor in social relationships if available through GraphManager
+                if (hasattr(controller, 'graph_manager') and controller.graph_manager and 
+                    hasattr(char, 'uuid')):
                     try:
-                        relationships = controller.social_networks.get('relationships', {}).get(char.uuid, {})
+                        relationships = controller.graph_manager.get_character_relationships(char)
                         if relationships:
-                            avg_relationship = sum(relationships.values()) / len(relationships)
+                            avg_relationship = sum(
+                                rel_data.get('strength', 50) for rel_data in relationships.values()
+                            ) / len(relationships)
                             char_mood = (char_mood + avg_relationship) / 2
                     except:
                         pass
@@ -1238,6 +1242,265 @@ class ActionResolver:
         return self._dict_to_action(self.fallback_actions["default_rest"], character)
 
 
+class CheckpointManager:
+    """Manages automatic game state checkpointing and restoration."""
+    
+    def __init__(self, gameplay_controller, checkpoint_dir: str = "saves/checkpoints"):
+        self.gameplay_controller = gameplay_controller
+        self.checkpoint_dir = checkpoint_dir
+        self.checkpoint_interval = 300000  # 5 minutes in milliseconds by default
+        self.last_checkpoint_time = 0
+        self.max_checkpoints = 10  # Keep last 10 checkpoints
+        self.checkpoint_history = []
+        self.auto_checkpoint_enabled = True
+        self.consecutive_failures = 0  # Track consecutive checkpoint failures
+        self.max_failure_warning_threshold = 3  # Show warning after 3 failures
+        self._checkpoint_lock = threading.Lock()  # Thread-safe lock to prevent concurrent operations
+        
+        # Create checkpoint directory if it doesn't exist
+        try:
+            os.makedirs(checkpoint_dir, exist_ok=True)
+            logger.info(f"Checkpoint directory ready: {checkpoint_dir}")
+        except Exception as e:
+            logger.error(f"Failed to create checkpoint directory: {e}")
+    
+    def should_checkpoint(self, current_time: int) -> bool:
+        """Check if it's time for an automatic checkpoint."""
+        if not self.auto_checkpoint_enabled:
+            return False
+        
+        time_since_last = current_time - self.last_checkpoint_time
+        return time_since_last >= self.checkpoint_interval
+    
+    def create_checkpoint(self, checkpoint_name: str = None) -> bool:
+        """
+        Create a checkpoint of the current game state.
+        
+        Args:
+            checkpoint_name: Optional name for the checkpoint. If None, uses timestamp.
+            
+        Returns:
+            bool: True if checkpoint was created successfully
+        """
+        # Prevent concurrent checkpoint operations using thread-safe lock
+        if not self._checkpoint_lock.acquire(blocking=False):
+            logger.debug("Checkpoint operation already in progress, skipping")
+            return False
+        
+        try:
+            current_time = pygame.time.get_ticks()
+            
+            # Generate checkpoint filename with timestamp to ensure uniqueness
+            if checkpoint_name is None:
+                checkpoint_name = f"checkpoint_{current_time}.json"
+            elif not checkpoint_name.endswith('.json'):
+                # Add timestamp suffix to manual checkpoints to prevent overwriting
+                checkpoint_name = f"{checkpoint_name}_{current_time}.json"
+            
+            checkpoint_path = os.path.join(self.checkpoint_dir, checkpoint_name)
+            
+            # Check if checkpoint already exists in history and warn
+            existing = [cp for cp in self.checkpoint_history if cp["path"] == checkpoint_path]
+            if existing:
+                logger.warning(f"Checkpoint {checkpoint_name} already exists, updating entry")
+                # Remove the old entry to be replaced
+                self.checkpoint_history = [cp for cp in self.checkpoint_history if cp["path"] != checkpoint_path]
+            
+            # Create the checkpoint using the gameplay controller's save method
+            if self.gameplay_controller.save_game_state(checkpoint_path):
+                # Add to checkpoint history
+                checkpoint_info = {
+                    "filename": checkpoint_name,
+                    "path": checkpoint_path,
+                    "timestamp": current_time,
+                    "game_ticks": current_time,
+                    "character_count": len(self.gameplay_controller.characters)
+                }
+                self.checkpoint_history.append(checkpoint_info)
+                
+                # Update last checkpoint time
+                self.last_checkpoint_time = current_time
+                
+                # Reset failure counter on success
+                self.consecutive_failures = 0
+                
+                # Cleanup old checkpoints and validate history
+                self._cleanup_old_checkpoints()
+                self._validate_checkpoint_history()
+                
+                logger.info(f"Checkpoint created: {checkpoint_name}")
+                return True
+            else:
+                logger.error(f"Failed to create checkpoint: {checkpoint_name}")
+                self.consecutive_failures += 1
+                self._check_failure_threshold()
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error creating checkpoint: {e}")
+            self.consecutive_failures += 1
+            self._check_failure_threshold()
+            return False
+        finally:
+            self._checkpoint_lock.release()
+    
+    def _check_failure_threshold(self):
+        """Check if consecutive failures exceed threshold and notify user."""
+        if self.consecutive_failures >= self.max_failure_warning_threshold:
+            logger.error(f"Checkpoint system has failed {self.consecutive_failures} times consecutively")
+            # Notify user with high priority
+            if hasattr(self.gameplay_controller, 'add_event_notification'):
+                self.gameplay_controller.add_event_notification(
+                    f"Auto-save failing: {self.consecutive_failures} consecutive errors",
+                    "high"
+                )
+    
+    def _validate_checkpoint_history(self):
+        """Validate checkpoint history against filesystem and remove invalid entries."""
+        try:
+            valid_checkpoints = []
+            for cp in self.checkpoint_history:
+                if os.path.exists(cp["path"]):
+                    valid_checkpoints.append(cp)
+                else:
+                    logger.debug(f"Removing invalid checkpoint from history: {cp['filename']}")
+            
+            # Update history with only valid checkpoints
+            if len(valid_checkpoints) != len(self.checkpoint_history):
+                logger.info(f"Cleaned {len(self.checkpoint_history) - len(valid_checkpoints)} invalid entries from checkpoint history")
+                self.checkpoint_history = valid_checkpoints
+        except Exception as e:
+            logger.error(f"Error validating checkpoint history: {e}")
+    
+    def restore_checkpoint(self, checkpoint_index: int = -1) -> bool:
+        """
+        Restore game state from a checkpoint.
+        
+        Args:
+            checkpoint_index: Index in checkpoint history (-1 for most recent)
+            
+        Returns:
+            bool: True if restoration was successful
+        """
+        # Prevent concurrent checkpoint operations using thread-safe lock
+        if not self._checkpoint_lock.acquire(blocking=False):
+            logger.debug("Checkpoint operation already in progress, skipping restore")
+            return False
+        
+        try:
+            if not self.checkpoint_history:
+                logger.warning("No checkpoints available to restore")
+                return False
+            
+            # Get checkpoint info
+            if checkpoint_index < 0:
+                checkpoint_index = len(self.checkpoint_history) + checkpoint_index
+            
+            if checkpoint_index < 0 or checkpoint_index >= len(self.checkpoint_history):
+                logger.error(f"Invalid checkpoint index: {checkpoint_index}")
+                return False
+            
+            checkpoint_info = self.checkpoint_history[checkpoint_index]
+            checkpoint_path = checkpoint_info["path"]
+            
+            # Verify checkpoint file exists
+            if not os.path.exists(checkpoint_path):
+                logger.error(f"Checkpoint file not found: {checkpoint_path}")
+                return False
+            
+            # Restore the checkpoint
+            if self.gameplay_controller.load_game_state(checkpoint_path):
+                logger.info(f"Restored checkpoint: {checkpoint_info['filename']}")
+                return True
+            else:
+                logger.error(f"Failed to restore checkpoint: {checkpoint_info['filename']}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error restoring checkpoint: {e}")
+            return False
+        finally:
+            self._checkpoint_lock.release()
+    
+    def _cleanup_old_checkpoints(self):
+        """Remove old checkpoints beyond the maximum limit."""
+        try:
+            while len(self.checkpoint_history) > self.max_checkpoints:
+                # Remove oldest checkpoint
+                old_checkpoint = self.checkpoint_history.pop(0)
+                
+                # Delete the file if it exists
+                if os.path.exists(old_checkpoint["path"]):
+                    try:
+                        os.remove(old_checkpoint["path"])
+                        logger.debug(f"Removed old checkpoint: {old_checkpoint['filename']}")
+                    except Exception as e:
+                        logger.warning(f"Failed to delete old checkpoint file: {e}")
+                        
+        except Exception as e:
+            logger.error(f"Error cleaning up old checkpoints: {e}")
+    
+    def get_checkpoint_list(self) -> list:
+        """Get list of available checkpoints."""
+        return [
+            {
+                "index": i,
+                "filename": cp["filename"],
+                "timestamp": cp["timestamp"],
+                "character_count": cp["character_count"]
+            }
+            for i, cp in enumerate(self.checkpoint_history)
+        ]
+    
+    def set_checkpoint_interval(self, interval_ms: int):
+        """Set the automatic checkpoint interval in milliseconds."""
+        if interval_ms < 10000:  # Minimum 10 seconds
+            logger.warning("Checkpoint interval too short, setting to 10 seconds")
+            interval_ms = 10000
+        self.checkpoint_interval = interval_ms
+        logger.info(f"Checkpoint interval set to {interval_ms}ms ({interval_ms/1000:.1f}s)")
+    
+    def enable_auto_checkpoint(self, enabled: bool):
+        """Enable or disable automatic checkpointing."""
+        self.auto_checkpoint_enabled = enabled
+        logger.info(f"Automatic checkpointing {'enabled' if enabled else 'disabled'}")
+    
+    def recover_from_corruption(self) -> bool:
+        """
+        Attempt to recover from corrupted save by restoring the most recent valid checkpoint.
+        
+        Returns:
+            bool: True if recovery was successful
+        """
+        try:
+            logger.info("Attempting to recover from corruption...")
+            
+            # Try checkpoints from most recent to oldest
+            for i in range(len(self.checkpoint_history) - 1, -1, -1):
+                checkpoint_info = self.checkpoint_history[i]
+                
+                # Verify checkpoint file is readable
+                try:
+                    with open(checkpoint_info["path"], 'r') as f:
+                        json.load(f)
+                    
+                    # If we can read it, try to restore it
+                    if self.restore_checkpoint(i):
+                        logger.info(f"Successfully recovered from checkpoint: {checkpoint_info['filename']}")
+                        return True
+                        
+                except Exception as e:
+                    logger.warning(f"Checkpoint {checkpoint_info['filename']} is corrupted: {e}")
+                    continue
+            
+            logger.error("No valid checkpoints found for recovery")
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error during corruption recovery: {e}")
+            return False
+
+
 class SystemRecoveryManager:
     """Manages system recovery and fallback strategies."""
 
@@ -1311,9 +1574,8 @@ class SystemRecoveryManager:
         """Recover the graph manager system."""
         try:
             if not self.gameplay_controller.graph_manager:
-                from tiny_graph_manager import GraphManager as ActualGraphManager
-
-                self.gameplay_controller.graph_manager = ActualGraphManager()
+                from tiny_globals import get_global_graph_manager
+                self.gameplay_controller.graph_manager = get_global_graph_manager()
                 return True
             return True
         except Exception as e:
@@ -1447,6 +1709,20 @@ class GameplayController:
 
         # Initialize recovery manager
         self.recovery_manager = SystemRecoveryManager(self)
+        
+        # Initialize checkpoint manager for game state persistence
+        checkpoint_config = self.config.get("checkpoint", {})
+        checkpoint_dir = checkpoint_config.get("directory", "saves/checkpoints")
+        self.checkpoint_manager = CheckpointManager(self, checkpoint_dir)
+        
+        # Configure checkpointing
+        checkpoint_interval = checkpoint_config.get("interval_ms", 300000)  # 5 minutes default
+        self.checkpoint_manager.set_checkpoint_interval(checkpoint_interval)
+        
+        auto_checkpoint = checkpoint_config.get("auto_enabled", True)
+        self.checkpoint_manager.enable_auto_checkpoint(auto_checkpoint)
+        
+        logger.info(f"Checkpoint manager initialized (interval: {checkpoint_interval}ms, auto: {auto_checkpoint})")
 
         # Initialize core systems with error handling and recovery
 
@@ -1463,9 +1739,8 @@ class GameplayController:
         # Initialize graph manager if not provided
         if graph_manager is None:
             try:
-                from tiny_graph_manager import GraphManager as ActualGraphManager
-
-                self.graph_manager = ActualGraphManager()
+                from tiny_globals import get_global_graph_manager
+                self.graph_manager = get_global_graph_manager()
             except Exception as e:
                 logger.error(f"Failed to initialize GraphManager: {e}")
                 self.graph_manager = None
@@ -1572,10 +1847,10 @@ class GameplayController:
         # Setup user-driven configuration
         self.setup_user_driven_configuration()
 
-        # Initialize feature systems
+        # Initialize feature systems (delegate social networks to GraphManager)
         self.implement_achievement_system()
         self.implement_weather_system()
-        self.implement_social_network_system()
+        # Social network system is now handled by GraphManager - removed separate implementation
         self.implement_quest_system()
 
         # Initialize world events for emergent storytelling
@@ -2310,12 +2585,16 @@ class GameplayController:
             except Exception as e:
                 logger.error(f"Error registering character {character.name}: {e}")
                 continue
+        
+        # Initialize relationships through GraphManager (single source of truth)
+        if self.graph_manager and len(self.characters) > 1:
+            self.graph_manager.initialize_character_relationships(self.characters)
+            logger.info(f"Initialized social relationships for {len(self.characters)} characters through GraphManager")
 
     def game_loop(self):
         """Main game loop with configurable frame rate and performance monitoring."""
         # TODO: Add performance profiling and optimization
         # TODO: Add frame rate adjustment based on performance
-        # TODO: Add game state persistence and checkpointing
         # TODO: Add network synchronization for multiplayer
         # TODO: Add mod system integration
         # TODO: Add automated testing hooks
@@ -2331,6 +2610,18 @@ class GameplayController:
             self.handle_events()
             self.update_game_state(dt)
             self.render()
+            
+            # Automatic checkpointing
+            try:
+                current_time = pygame.time.get_ticks()
+                if self.checkpoint_manager.should_checkpoint(current_time):
+                    if self.checkpoint_manager.create_checkpoint():
+                        # Only notify on success with low priority
+                        if hasattr(self, 'add_event_notification'):
+                            self.add_event_notification("Game auto-saved", "low")
+                    # Failure notification is handled by CheckpointManager._check_failure_threshold
+            except Exception as e:
+                logger.warning(f"Error during automatic checkpointing: {e}")
 
             # TODO: Add frame time analysis and optimization suggestions
             # frame_end_time = time.time()
@@ -2436,6 +2727,8 @@ class GameplayController:
                 "reset": [pygame.K_r],
                 "save": [pygame.K_s],
                 "load": [pygame.K_l],
+                "checkpoint": [pygame.K_c],  # Manual checkpoint
+                "restore_checkpoint": [pygame.K_v],  # Restore last checkpoint
                 "help": [pygame.K_h, pygame.K_F1],
                 "debug": [pygame.K_F3],
                 "fullscreen": [pygame.K_F11],
@@ -2463,15 +2756,35 @@ class GameplayController:
             save_path = "saves/quicksave.json"
             if self.save_game_state(save_path):
                 logger.info(f"Game saved to {save_path}")
+                self.add_event_notification("Game saved", "normal")
             else:
                 logger.error("Failed to save game")
+                self.add_event_notification("Save failed", "high")
         elif event.key in key_bindings.get("load", [pygame.K_l]):
             # Load game functionality
             save_path = "saves/quicksave.json"
             if self.load_game_state(save_path):
                 logger.info(f"Game loaded from {save_path}")
+                self.add_event_notification("Game loaded", "normal")
             else:
                 logger.error("Failed to load game")
+                self.add_event_notification("Load failed", "high")
+        elif event.key in key_bindings.get("checkpoint", [pygame.K_c]):
+            # Manual checkpoint
+            if self.checkpoint_manager.create_checkpoint("manual_checkpoint"):
+                logger.info("Manual checkpoint created")
+                self.add_event_notification("Checkpoint created", "normal")
+            else:
+                logger.error("Failed to create checkpoint")
+                self.add_event_notification("Checkpoint failed", "high")
+        elif event.key in key_bindings.get("restore_checkpoint", [pygame.K_v]):
+            # Restore last checkpoint
+            if self.checkpoint_manager.restore_checkpoint(-1):
+                logger.info("Checkpoint restored")
+                self.add_event_notification("Checkpoint restored", "normal")
+            else:
+                logger.error("Failed to restore checkpoint")
+                self.add_event_notification("Restore failed", "high")
         elif event.key in key_bindings.get("help", [pygame.K_h, pygame.K_F1]):
             # Cycle help modes
             self.cycle_help_mode()
@@ -2521,6 +2834,8 @@ class GameplayController:
             logger.info("  R - Reset characters")
             logger.info("  S - Save game")
             logger.info("  L - Load game")
+            logger.info("  C - Create checkpoint")
+            logger.info("  V - Restore last checkpoint")
             logger.info("  F - Show feature status")
             logger.info("  F5 - Force system recovery")
             logger.info("  A - Show analytics")
@@ -2529,6 +2844,8 @@ class GameplayController:
             logger.info("  ESC - Quit")
             logger.info("Features:")
             logger.info("  - Character AI with goals and actions")
+            logger.info("  - Automatic checkpointing every 5 minutes")
+            logger.info("  - Manual save/load system")
             logger.info("  - Basic quest system")
             logger.info("  - Weather simulation")
             logger.info("  - Social relationship tracking")
@@ -2752,38 +3069,8 @@ class GameplayController:
         update_errors = []
         systems_to_recover = []
 
-        # Integrated event-driven strategy update (from legacy update method)
-        try:
-            # Check for new events if event handler exists
-            events = []
-            if self.event_handler:
-                try:
-                    events = self.event_handler.check_events()
-                except Exception as e:
-                    logger.warning(f"Error checking events: {e}")
-                    update_errors.append("Event checking failed")
-
-            # Update strategy based on events if strategy manager exists
-            decisions = []
-            if self.strategy_manager:
-                try:
-                    decisions = self.strategy_manager.update_strategy(events if events else [])
-                except Exception as e:
-                    logger.warning(f"Error updating strategy: {e}")
-                    update_errors.append("Strategy update failed")
-
-            # Apply decisions to game state
-            for decision in decisions:
-                try:
-                    # Pass None as game_state since update_game_state doesn't have access to it
-                    # The decision application logic will use the controller's internal state
-                    self.apply_decision(decision, None)
-                except Exception as e:
-                    logger.error(f"Error applying decision: {e}")
-                    update_errors.append(f"Decision application failed")
-        except Exception as e:
-            logger.error(f"Error in event-driven strategy update: {e}")
-            update_errors.append("Event-driven strategy update failed")
+        # Robust event-driven strategy update using EventHandler
+        self._process_events_and_drive_strategy(update_errors)
 
         # Update the map controller (handles character movement and pathfinding)
         if self.map_controller:
@@ -2835,17 +3122,8 @@ class GameplayController:
                 logger.warning(f"Error updating animation system: {e}")
                 # Animation errors are not critical
 
-        # Process events using the EventHandler system and drive strategy
-        try:
-            if self.event_handler:
-                self._process_events_and_update_strategy(dt)
-            elif hasattr(self, "events") and self.events:
-                # Fallback to basic event processing if no EventHandler
-                self._process_pending_events()
-        except Exception as e:
-            logger.error(f"Error processing events and strategy: {e}")
-            update_errors.append("Event processing failed")
-            systems_to_recover.append("event_handler")
+        # Note: Event processing and strategy update is now handled above in _process_events_and_drive_strategy
+        # No need for separate event processing calls
 
         # Update feature systems
         try:
@@ -2895,20 +3173,13 @@ class GameplayController:
             logger.warning(f"Error updating feature systems: {e}")
 
     def _update_social_relationships(self, dt):
-        """Update social relationships over time."""
+        """Update social relationships over time using GraphManager."""
         try:
-            if not hasattr(self, "social_networks"):
-                return
-
-            # Slow relationship decay/growth over time
-            for char_id, relationships in self.social_networks["relationships"].items():
-                for other_id, strength in relationships.items():
-                    # Very slow decay towards neutral (50)
-                    if strength > 50:
-                        relationships[other_id] = max(50, strength - 0.1 * dt)
-                    elif strength < 50:
-                        relationships[other_id] = min(50, strength + 0.1 * dt)
-
+            if self.graph_manager:
+                # Delegate to GraphManager for social relationship updates
+                self.graph_manager.update_social_relationships(dt)
+            else:
+                logger.warning("GraphManager not available for social relationship updates")
         except Exception as e:
             logger.warning(f"Error updating social relationships: {e}")
 
@@ -3250,15 +3521,28 @@ class GameplayController:
             return self._execute_fallback_character_action(character)
 
     def _update_social_networks_from_event(self, event_name):
-        """Update social networks based on social events."""
+        """Update social networks based on social events using GraphManager."""
         try:
-            if hasattr(self, 'social_networks'):
-                # Strengthen relationships for participants in social events
-                for char_id, relationships in self.social_networks.get('relationships', {}).items():
-                    for other_id in relationships:
-                        # Small boost to all relationships after community events
-                        current_strength = relationships[other_id]
-                        relationships[other_id] = min(100, current_strength + 2)
+            if self.graph_manager:
+                # Strengthen relationships for participants in social events through GraphManager
+                for char1 in self.characters.values():
+                    for char2 in self.characters.values():
+                        if (char1 != char2 and 
+                            char1 in self.graph_manager.G.nodes and 
+                            char2 in self.graph_manager.G.nodes and
+                            self.graph_manager.G.has_edge(char1, char2)):
+                            
+                            # Small boost to relationship strength after community events
+                            edge_data = self.graph_manager.G[char1][char2]
+                            current_strength = edge_data.get('strength', 50)
+                            edge_data['strength'] = min(100, current_strength + 2)
+                            
+                            # Also boost emotional impact slightly
+                            current_emotional = edge_data.get('emotional', 0)
+                            if current_emotional >= 0:
+                                edge_data['emotional'] = min(1.0, current_emotional + 0.1)
+            else:
+                logger.warning("GraphManager not available for social network updates")
                         
         except Exception as e:
             logger.warning(f"Error updating social networks from event: {e}")
@@ -3498,38 +3782,260 @@ class GameplayController:
             # Return empty list if we can't even create basic actions
             return []
 
-    def _process_events_and_update_strategy(self, dt):
-        """Process events via EventHandler and update strategy accordingly."""
+    def _process_events_and_drive_strategy(self, update_errors):
+        """
+        Robust event processing and strategy driving using EventHandler.check_events().
+        
+        This method replaces the previous insufficient _process_pending_events and
+        consolidates all event-driven strategy logic into a single, comprehensive approach.
+        
+        Args:
+            update_errors (list): List to append any errors encountered during processing
+        """
+        if not self.event_handler:
+            # Fallback to basic event processing for legacy compatibility
+            self._process_basic_events_fallback(update_errors)
+            return
+
         try:
-            if not self.event_handler:
+            # Step 0: Forward any locally queued events to the EventHandler so check_events sees them
+            if self.events:
+                remaining_events = []
+                for event in list(self.events):
+                    try:
+                        if hasattr(self.event_handler, "add_event"):
+                            self.event_handler.add_event(event)
+                        else:
+                            remaining_events.append(event)
+                    except Exception as e:
+                        logger.warning(
+                            f"Failed to forward event {getattr(event, 'name', str(event))} to handler: {e}"
+                        )
+                        update_errors.append("Event forwarding failed")
+                        remaining_events.append(event)
+                self.events = remaining_events
+
+            # Step 1: Check for events using EventHandler - this is the primary driver
+            events = []
+            try:
+                events = self.event_handler.check_events()
+                logger.debug(f"EventHandler found {len(events)} events to process")
+            except Exception as e:
+                logger.warning(f"Error checking events via EventHandler: {e}")
+                update_errors.append("Event checking failed")
                 return
 
-            # Get events from event handler
-            events = self.event_handler.check_events()
+            # Step 2: Process events if any were found
+            if events:
+                try:
+                    # Let EventHandler process the events and their effects
+                    event_results = self.event_handler.process_events()
+                    logger.debug(f"EventHandler processed events: {len(event_results.get('processed_events', []))} successful")
+                    
+                    # Handle event processing results
+                    if event_results.get('failed_events'):
+                        logger.warning(f"Some events failed processing: {event_results['failed_events']}")
+                        update_errors.append(f"Event processing failures: {len(event_results['failed_events'])}")
+                        
+                except Exception as e:
+                    logger.warning(f"Error processing events: {e}")
+                    update_errors.append("Event processing failed")
+
+            # Step 3: Update strategy based on events (whether processed or not)
+            strategy_result = None
+            if self.strategy_manager:
+                try:
+                    # Strategy manager should receive all events to make informed decisions
+                    strategy_result = self.strategy_manager.update_strategy(events)
+                    logger.debug(f"StrategyManager generated strategy result: {type(strategy_result)}")
+                except Exception as e:
+                    logger.warning(f"Error updating strategy based on events: {e}")
+                    update_errors.append("Strategy update failed")
+
+            # Step 4: Apply strategic result to game state
+            self._apply_strategy_result(strategy_result, update_errors)
             
-            # Update strategy manager based on events
-            if self.strategy_manager and events:
-                decisions = self.strategy_manager.update_strategy(events)
+            # Step 5: Handle cascading events and dynamic event generation
+            self._handle_cascading_and_dynamic_events(events, update_errors)
+            
+        except Exception as e:
+            logger.error(f"Critical error in event-driven strategy processing: {e}")
+            update_errors.append(f"Event-driven strategy system failure: {str(e)}")
+
+    def _apply_strategy_result(self, strategy_result, update_errors):
+        """Apply strategy result from the strategy manager, handling different return types."""
+        if strategy_result is None:
+            return
+            
+        try:
+            # Handle different types of strategy results
+            if isinstance(strategy_result, list):
+                # List of decisions - apply each one
+                for i, decision in enumerate(strategy_result):
+                    try:
+                        if decision:
+                            self.apply_decision(decision, None)
+                            logger.debug(f"Applied strategic decision {i+1}/{len(strategy_result)}")
+                        else:
+                            logger.warning(f"Received empty decision at index {i}")
+                    except Exception as e:
+                        logger.error(f"Error applying strategic decision {i}: {e}")
+                        update_errors.append(f"Decision application failed (decision {i})")
+                        continue
+            
+            elif hasattr(strategy_result, 'execute'):
+                # Single action - execute it directly
+                try:
+                    success = strategy_result.execute()
+                    if success:
+                        logger.debug(f"Successfully executed strategy action: {strategy_result.name}")
+                        self.game_statistics["actions_executed"] += 1
+                    else:
+                        logger.warning(f"Strategy action execution failed: {strategy_result.name}")
+                        self.game_statistics["actions_failed"] += 1
+                        update_errors.append("Strategy action execution failed")
+                        
+                    # Track action execution for analytics
+                    try:
+                        if self.action_resolver:
+                            self.action_resolver.track_action_execution(strategy_result, None, success)
+                    except AttributeError:
+                        # track_action_execution method doesn't exist, skip
+                        pass
+                        
+                except Exception as e:
+                    logger.error(f"Error executing strategy action: {e}")
+                    update_errors.append("Strategy action execution error")
+            
+            elif isinstance(strategy_result, dict):
+                # Dictionary decision - apply it as a single decision
+                try:
+                    self.apply_decision(strategy_result, None)
+                    logger.debug("Applied dictionary-based strategic decision")
+                except Exception as e:
+                    logger.error(f"Error applying dictionary decision: {e}")
+                    update_errors.append("Dictionary decision application failed")
+            
+            else:
+                # Unknown type - log warning but don't fail
+                logger.warning(f"Unknown strategy result type: {type(strategy_result)}. Skipping application.")
                 
-                # Apply decisions to game state
-                for decision in decisions:
-                    self.apply_decision(decision, None)
+        except Exception as e:
+            logger.error(f"Critical error applying strategy result: {e}")
+            update_errors.append(f"Strategy result application failure: {str(e)}")
+
+    def _apply_strategic_decisions(self, decisions, update_errors):
+        """
+        DEPRECATED: Use _apply_strategy_result instead.
+        Apply strategic decisions generated by the strategy manager.
+        """
+        logger.warning("_apply_strategic_decisions is deprecated. Use _apply_strategy_result instead.")
+        self._apply_strategy_result(decisions, update_errors)
+
+    def _handle_cascading_and_dynamic_events(self, events, update_errors):
+        """Handle cascading events and generate new dynamic events based on current state."""
+        try:
+            # Process any cascading events that were triggered
+            if self.event_handler:
+                try:
+                    cascading_processed = self.event_handler.process_cascading_queue()
+                    if cascading_processed:
+                        logger.info(f"Processed {len(cascading_processed)} cascading events")
+                except AttributeError:
+                    # Method doesn't exist, skip
+                    pass
+
+            # Generate dynamic events based on current world state
+            if self.event_handler:
+                try:
+                    world_state = self._get_current_world_state()
+                    dynamic_events = self.event_handler.generate_dynamic_events(
+                        world_state, 
+                        list(self.characters.values()) if self.characters else None
+                    )
+                    if dynamic_events:
+                        logger.info(f"Generated {len(dynamic_events)} dynamic events")
+                except AttributeError:
+                    # Method doesn't exist, skip
+                    pass
                     
         except Exception as e:
-            logger.error(f"Error processing events and updating strategy: {e}")
+            logger.warning(f"Error handling cascading/dynamic events: {e}")
+            update_errors.append("Cascading event processing failed")
 
-    def _process_pending_events(self):
-        """Process any pending events in the basic events list."""
+    def _get_current_world_state(self):
+        """Get current world state for dynamic event generation."""
         try:
+            if not self.characters:
+                return {"average_wealth": 50, "average_relationships": 50, "average_health": 75}
+                
+            # Calculate averages for world state analysis
+            total_chars = len(self.characters)
+            avg_wealth = sum(getattr(char, 'wealth_money', 50) for char in self.characters.values()) / total_chars
+            avg_health = sum(getattr(char, 'health_status', 75) for char in self.characters.values()) / total_chars
+            
+            # Calculate average relationships if social networks exist
+            avg_relationships = 50
+            if hasattr(self, 'social_networks') and self.social_networks.get('relationships'):
+                relationship_values = []
+                for char_relationships in self.social_networks['relationships'].values():
+                    relationship_values.extend(char_relationships.values())
+                if relationship_values:
+                    avg_relationships = sum(relationship_values) / len(relationship_values)
+            
+            try:
+                time_value = pygame.time.get_ticks()
+            except (AttributeError, ImportError):
+                time_value = 0
+            
+            return {
+                "average_wealth": avg_wealth,
+                "average_relationships": avg_relationships,
+                "average_health": avg_health,
+                "population": total_chars,
+                "time": time_value
+            }
+            
+        except Exception as e:
+            logger.warning(f"Error calculating world state: {e}")
+            return {"average_wealth": 50, "average_relationships": 50, "average_health": 75}
+
+    def _process_basic_events_fallback(self, update_errors):
+        """
+        Fallback event processing when EventHandler is not available.
+        This is a much improved version of the old _process_pending_events.
+        """
+        try:
+            # self.events is always initialized in __init__, so no hasattr check needed
+            if not self.events:
+                return
+                
+            logger.info("Using fallback event processing (EventHandler not available)")
             events_to_remove = []
+            
             for event in self.events:
                 try:
-                    # Process event logic here
-                    # This is a basic fallback when EventHandler is not available
-                    logger.debug(f"Processing basic event: {event}")
+                    # Basic event processing that actually drives strategy
+                    logger.debug(f"Processing fallback event: {event}")
+                    
+                    # Try to trigger strategy update even for basic events
+                    if self.strategy_manager:
+                        try:
+                            # Convert basic event to a format strategy manager can understand
+                            event_for_strategy = {
+                                'type': getattr(event, 'type', 'general'),
+                                'name': getattr(event, 'name', str(event)),
+                                'importance': getattr(event, 'importance', 5)
+                            }
+                            strategy_result = self.strategy_manager.update_strategy([event_for_strategy])
+                            self._apply_strategy_result(strategy_result, update_errors)
+                        except Exception as e:
+                            logger.warning(f"Error applying strategy for basic event: {e}")
+                    
                     events_to_remove.append(event)
+                    
                 except Exception as e:
-                    logger.warning(f"Error processing event: {e}")
+                    logger.warning(f"Error processing basic event: {e}")
                     events_to_remove.append(event)  # Remove problematic events
             
             # Remove processed events
@@ -3537,8 +4043,71 @@ class GameplayController:
                 if event in self.events:
                     self.events.remove(event)
                     
+            if events_to_remove:
+                logger.debug(f"Processed {len(events_to_remove)} basic events")
+                    
         except Exception as e:
-            logger.error(f"Error processing pending events: {e}")
+            logger.error(f"Error in fallback event processing: {e}")
+            update_errors.append("Fallback event processing failed")
+
+    def _process_pending_events(self):
+        """
+        Deprecated: forwards queued events into the unified event pipeline.
+        Use _process_events_and_drive_strategy for new code paths.
+        """
+        update_errors = []
+        remaining_events = None
+        try:
+            # Forward any locally queued events to the primary event handler
+            if self.events:
+                pending_events = list(self.events)
+                remaining_events = []
+                if self.event_handler:
+                    for event in pending_events:
+                        try:
+                            self.event_handler.add_event(event)
+                        except Exception as e:
+                            logger.warning(
+                                f"Failed to add event to event handler via add_event "
+                                f"(event={getattr(event, 'name', str(event))}): {e}"
+                            )
+                            remaining_events.append(event)
+                else:
+                    # Fallback: still let storytelling consume the events directly
+                    for event in pending_events:
+                        if not self.storytelling_system:
+                            remaining_events.append(event)
+                            continue
+                        try:
+                            self.storytelling_system.process_event_for_stories(event)
+                        except Exception as e:
+                            logger.warning(
+                                f"Error processing event with storytelling system: {e}; event={event}"
+                            )
+                            update_errors.append(
+                                f"Error forwarding event to storytelling: {e}"
+                            )
+                            remaining_events.append(event)
+
+            # Use the unified event/strategy pipeline
+            self._process_events_and_drive_strategy(update_errors)
+            if self.events and remaining_events is not None:
+                self.events = remaining_events
+
+        except Exception as e:
+            logger.warning(f"Error in deprecated _process_pending_events: {e}")
+            self._process_basic_events_fallback(update_errors)
+
+        if update_errors:
+            logger.warning(f"Deprecated _process_pending_events completed with errors: {update_errors}")
+
+    def _process_events_and_update_strategy(self, dt):
+        """
+        DEPRECATED: This method has been replaced by _process_events_and_drive_strategy.
+        Kept for backward compatibility but functionality is now integrated into update_game_state.
+        """
+        logger.warning("_process_events_and_update_strategy is deprecated. Event processing is now integrated into update_game_state.")
+        # No operation - functionality moved to _process_events_and_drive_strategy
 
     def apply_decision(self, decision, game_state):
         """Apply a strategic decision to the game state."""
@@ -3703,7 +4272,8 @@ class GameplayController:
                 "statistics": self.game_statistics,
                 "weather": getattr(self, "weather_system", {}),
                 "quest_system": getattr(self, "quest_system", {}),
-                "social_networks": getattr(self, "social_networks", {})
+                # Social networks are now managed by GraphManager
+                "social_networks": self.get_social_networks()
             }
             
             # Save character data
@@ -3765,7 +4335,9 @@ class GameplayController:
                 
             # Restore social networks
             if "social_networks" in game_state:
-                self.social_networks = game_state["social_networks"]
+                # Note: Social networks are now managed by GraphManager
+                # The saved data will be used to restore relationships in GraphManager if needed
+                logger.info("Social network data found in save file - managed by GraphManager")
             
             # Note: Character restoration is more complex and would require
             # full character recreation, which is beyond basic save/load
@@ -3820,28 +4392,29 @@ class GameplayController:
         except Exception as e:
             logger.error(f"Error in weather system: {e}")
 
-    def implement_social_network_system(self):
-        """Implement basic social relationship tracking."""
-        try:
-            if not hasattr(self, "social_networks"):
-                self.social_networks = {
-                    "relationships": {},
-                    "last_update": pygame.time.get_ticks()
-                }
-            
-            # Initialize relationships for all characters
-            for char_id in self.characters.keys():
-                if char_id not in self.social_networks["relationships"]:
-                    self.social_networks["relationships"][char_id] = {}
-                    
-                    # Create relationships with other characters
-                    for other_id in self.characters.keys():
-                        if other_id != char_id:
-                            # Random initial relationship strength (30-70)
-                            self.social_networks["relationships"][char_id][other_id] = random.randint(30, 70)
-                            
-        except Exception as e:
-            logger.error(f"Error in social network system: {e}")
+    def get_social_networks(self):
+        """
+        Get social network data by delegating to GraphManager (single source of truth).
+        
+        Returns:
+            dict: Social network data from GraphManager
+        """
+        if self.graph_manager:
+            return self.graph_manager.get_social_networks()
+        else:
+            # Fallback if GraphManager not available
+            return {"relationships": {}, "last_update": pygame.time.get_ticks()}
+    
+    # Note: social_networks property now delegates to GraphManager
+    @property 
+    def social_networks(self):
+        """
+        Read-only property that delegates to GraphManager for social network data.
+        This property is now a read-only view; direct modification is not supported.
+        Any changes to social network data must be performed via GraphManager.
+        This may differ from previous implementations where direct access or mutation was allowed.
+        """
+        return self.get_social_networks()
 
     def implement_quest_system(self):
         """Implement basic quest and goal system."""
@@ -3982,7 +4555,7 @@ class GameplayController:
             "save_load_system": "BASIC_IMPLEMENTED",
             "achievement_system": "BASIC_IMPLEMENTED",
             "weather_system": "STUB_IMPLEMENTED",
-            "social_network_system": "STUB_IMPLEMENTED", 
+            "social_network_system": "FULLY_IMPLEMENTED",  # Now properly managed by GraphManager 
             "quest_system": "STUB_IMPLEMENTED",
             "skill_progression": "BASIC_IMPLEMENTED",
             "reputation_system": "BASIC_IMPLEMENTED",
