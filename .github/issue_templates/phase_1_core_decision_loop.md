@@ -110,7 +110,7 @@ This phase unblocks the core AI functionality, enabling characters to make intel
 - **Enables**: GOAP planning, social interactions, storytelling
 
 ## Estimated Timeline
-**Total**: 5 days (1 week)
+**Total**: 5 days (Week 1)
 - Task 1.1: 2 days  
 - Task 1.2: 3 days
 
