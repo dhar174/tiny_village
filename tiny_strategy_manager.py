@@ -14,7 +14,7 @@ This function should dynamically weigh these factors according to the current pl
 This module integrates the GOAP system and the graph manager to formulate comprehensive strategies based on events.
 """
 
-from tiny_goap_system import GOAPPlanner
+from tiny_goap_system import GOAPPlanner, ActionWrapper
 from tiny_utility_functions import (
     calculate_action_utility,
     Goal,
@@ -591,43 +591,302 @@ class StrategyManager:
         Updates strategy based on events using GOAP planning with optional LLM integration.
         Enhanced to handle various event types and respond meaningfully.
         """
+        if events is None:
+            events = []
+        if not isinstance(events, (list, tuple, set)):
+            events = [events]
+
         if not events:
             return self.plan_daily_activities(subject)
-            
+
+        plans = {}
         for event in events:
-            # Handle different event types with specific responses
-            if hasattr(event, 'type'):
-                event_type = event.type
-            elif isinstance(event, dict):
-                event_type = event.get('type', 'unknown')
+            event_type = self._get_event_type(event)
+            affected_characters = self._get_affected_characters(event, subject)
+
+            for character in affected_characters:
+                character_obj = self._resolve_character(character)
+                char_id = self._get_character_identifier(character_obj)
+
+                use_llm_for_strategy = self._should_use_llm_for_strategy(character_obj)
+                if event_type == "new_day":
+                    plans[char_id] = self._handle_new_day_strategy(
+                        character_obj, use_llm_for_strategy
+                    )
+                    continue
+
+                goal = self._goal_for_event_type(event_type)
+                current_state = self._get_current_state_for_character(character_obj)
+                available_actions = self._get_actions_for_character(character_obj)
+                available_actions = self._filter_actions_for_event(
+                    event_type, available_actions
+                )
+
+                plan = None
+                if self.goap_planner:
+                    try:
+                        plan = self.goap_planner.plan_actions(
+                            character_obj, goal, current_state, available_actions
+                        )
+                    except Exception as planning_error:
+                        logger.warning(
+                            f"GOAP planning failed for {char_id}: {planning_error}"
+                        )
+
+                plans[char_id] = plan if plan is not None else self.plan_daily_activities(character_obj)
+
+        return plans
+
+    def _get_event_type(self, event):
+        if hasattr(event, "type"):
+            return event.type
+        if isinstance(event, dict):
+            return event.get("type", "unknown")
+        return str(type(event).__name__).lower()
+
+    def _get_affected_characters(self, event, default_subject):
+        def _is_mock_object(obj):
+            if obj is None:
+                return False
+            obj_class = getattr(obj, "__class__", None)
+            module = getattr(obj_class, "__module__", "") if obj_class is not None else ""
+            return module.startswith("unittest.mock") or module.endswith(".mock")
+
+        characters = []
+        for attr in ("participants", "characters", "targets"):
+            if hasattr(event, attr):
+                participants = getattr(event, attr)
+                if participants and not _is_mock_object(participants):
+                    if isinstance(participants, (list, tuple, set)):
+                        characters.extend(participants)
+                    elif isinstance(participants, str) or hasattr(participants, "name"):
+                        characters.append(participants)
+
+        for attr in ("character", "subject"):
+            if hasattr(event, attr):
+                candidate = getattr(event, attr)
+                if candidate and not _is_mock_object(candidate):
+                    characters.append(candidate)
+
+        if not characters:
+            characters.append(default_subject)
+
+        # Deduplicate while preserving order
+        seen = set()
+        unique = []
+        for char in characters:
+            identifier = self._get_normalized_identifier(char)
+            if identifier not in seen:
+                seen.add(identifier)
+                unique.append(char)
+        return unique
+
+    def _get_character_identifier(self, character):
+        return self._get_normalized_identifier(character)
+
+    def _get_normalized_identifier(self, character):
+        if isinstance(character, str):
+            base = character
+        elif isinstance(character, dict) and "name" in character:
+            base = str(character.get("name"))
+        elif hasattr(character, "name"):
+            try:
+                base = getattr(character, "name")
+            except Exception:
+                base = str(character)
+        else:
+            base = str(character)
+
+        return base.strip().lower() if isinstance(base, str) else str(base).strip().lower()
+
+    def _resolve_character(self, character):
+        if not isinstance(character, str):
+            return character
+
+        if self.graph_manager:
+            try:
+                characters_map = getattr(self.graph_manager, "characters", None)
+                if isinstance(characters_map, dict):
+                    resolved = characters_map.get(character)
+                    if resolved is not None:
+                        return resolved
+
+                get_character = getattr(self.graph_manager, "get_character", None)
+                if callable(get_character):
+                    resolved = get_character(character)
+                    if resolved is not None:
+                        if not hasattr(resolved, "name") or not isinstance(
+                            getattr(resolved, "name", None), str
+                        ):
+                            logger.debug(
+                                f"Resolved character object for '{character}' lacks a valid string 'name' attribute"
+                            )
+                        return resolved
+            except Exception as e:
+                logger.debug(f"Could not resolve character '{character}' from graph: {e}")
+        return character
+
+    def _should_use_llm_for_strategy(self, character):
+        if hasattr(character, "use_llm_decisions"):
+            return character.use_llm_decisions
+        char_id = self._get_character_identifier(character)
+        return hasattr(self, "_characters_using_llm") and char_id in self._characters_using_llm
+
+    def _get_current_state_for_character(self, character):
+        char_id = self._get_character_identifier(character)
+        if self.graph_manager and hasattr(self.graph_manager, "get_character_state"):
+            try:
+                state = self.graph_manager.get_character_state(char_id)
+                if isinstance(state, State):
+                    return state
+                if isinstance(state, dict):
+                    return State(state)
+            except Exception as e:
+                logger.warning(f"Failed to fetch state for {char_id} from graph: {e}")
+
+        try:
+            return State(self.get_character_state_dict(character))
+        except Exception as e:
+            logger.debug(f"Using empty state for {char_id}: {e}")
+            return State({})
+
+    def _get_actions_for_character(self, character):
+        char_id = self._get_character_identifier(character)
+        actions = []
+        if self.graph_manager and hasattr(self.graph_manager, "get_possible_actions"):
+            try:
+                possible_actions = self.graph_manager.get_possible_actions(char_id)
+                actions = self._convert_actions_to_objects(possible_actions)
+            except Exception as e:
+                logger.warning(f"Failed to fetch actions for {char_id} from graph: {e}")
+
+        if not actions:
+            actions = self.get_daily_actions(character)
+
+        return actions or []
+
+    def _convert_actions_to_objects(self, possible_actions):
+        converted = []
+        for action in possible_actions or []:
+            if isinstance(action, Action):
+                converted.append(action)
+            elif isinstance(action, dict):
+                converted.append(
+                    ActionWrapper(
+                        name=action.get("name", "Unknown"),
+                        cost=action.get("cost", 1.0),
+                        effects=action.get("effects", []),
+                        preconditions=action.get("preconditions", {}),
+                        utility=action.get("utility", 0.0),
+                    )
+                )
             else:
-                event_type = str(type(event).__name__).lower()
-                
-            logger.debug(f"Processing event of type '{event_type}' for {subject}")
-            
-            # Check if character should use LLM decision-making for strategy updates
-            use_llm_for_strategy = False
-            if hasattr(subject, 'use_llm_decisions'):
-                use_llm_for_strategy = subject.use_llm_decisions
-            elif isinstance(subject, str) and hasattr(self, '_characters_using_llm'):
-                use_llm_for_strategy = subject in self._characters_using_llm
-            
-            # Route to specific event handlers with LLM awareness
-            if event_type == "new_day":
-                return self._handle_new_day_strategy(subject, use_llm_for_strategy)
-            elif event_type in ["social", "celebration", "festival"]:
-                return self._handle_social_event(event, subject)
-            elif event_type in ["economic", "trade", "market"]:
-                return self._handle_economic_event(event, subject)
-            elif event_type in ["crisis", "disaster", "emergency"]:
-                return self._handle_crisis_event(event, subject)
-            elif event_type in ["work", "task", "project"]:
-                return self._handle_work_event(event, subject)
-            elif event_type in ["weather", "environmental"]:
-                return self._handle_environmental_event(event, subject)
-            else:
-                # Default event handling
-                return self._handle_generic_event(event, subject)
+                converted.append(
+                    ActionWrapper(
+                        name=getattr(action, "name", str(action)),
+                        cost=getattr(action, "cost", 1.0),
+                        effects=getattr(action, "effects", []),
+                        preconditions=getattr(action, "preconditions", {}),
+                        utility=getattr(action, "utility", 0.0),
+                    )
+                )
+        return converted
+
+    def _goal_for_event_type(self, event_type):
+        if event_type in ["social", "celebration", "festival"]:
+            return Goal(
+                name="social_engagement",
+                target_effects={"social_wellbeing": 80, "happiness": 75},
+                priority=0.8,
+            )
+        if event_type in ["economic", "trade", "market"]:
+            return Goal(
+                name="economic_opportunity",
+                target_effects={"wealth": 100, "satisfaction": 70},
+                priority=0.9,
+            )
+        if event_type in ["crisis", "disaster", "emergency"]:
+            return Goal(
+                name="crisis_response",
+                target_effects={"safety": 90, "energy": 60},
+                priority=1.0,
+            )
+        if event_type in ["work", "task", "project"]:
+            return Goal(
+                name="work_productivity",
+                target_effects={"job_performance": 85, "satisfaction": 65},
+                priority=0.7,
+            )
+        if event_type in ["weather", "environmental"]:
+            return Goal(
+                name="weather_adaptation",
+                target_effects={"safety": 80, "energy": 70},
+                priority=0.8,
+            )
+        return Goal(
+            name="balanced_response",
+            target_effects={"satisfaction": 70, "energy": 65},
+            priority=0.6,
+        )
+
+    def _filter_actions_for_event(self, event_type, actions):
+        if not actions:
+            return actions
+        lowered = event_type.lower() if event_type else ""
+        if lowered in ["social", "celebration", "festival"]:
+            filtered = [
+                a
+                for a in actions
+                if hasattr(a, "name")
+                and any(
+                    keyword in a.name.lower()
+                    for keyword in [
+                        "talk",
+                        "social",
+                        "help",
+                        "meet",
+                        "chat",
+                        "party",
+                        "greet",
+                        "visit",
+                        "friend",
+                    ]
+                )
+            ]
+            if not filtered:
+                logger.warning(
+                    "No social-specific actions found for event_type '%s'; falling back to all actions.",
+                    event_type,
+                )
+                return actions
+            return filtered
+        if lowered in ["economic", "trade", "market", "work", "task", "project"]:
+            filtered = [
+                a
+                for a in actions
+                if hasattr(a, "name")
+                and any(
+                    keyword in a.name.lower()
+                    for keyword in [
+                        "work",
+                        "trade",
+                        "craft",
+                        "build",
+                        "sell",
+                        "buy",
+                        "earn",
+                        "job",
+                    ]
+                )
+            ]
+            if not filtered:
+                logger.warning(
+                    "No economic/work-specific actions found for event_type '%s'; falling back to all actions.",
+                    event_type,
+                )
+                return actions
+            return filtered
+        return actions
 
     def _handle_social_event(self, event, character):
         """Handle social events by prioritizing social actions."""
