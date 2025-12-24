@@ -338,7 +338,7 @@ def validate_effect_dict(effect_dict: Dict[str, Any]) -> bool:
     try:
         EffectV2.from_dict(effect_dict)
         return True
-    except Exception as e:
+    except (ValueError, TypeError, KeyError) as e:
         logging.error(f"Effect validation failed: {e}")
         return False
 
