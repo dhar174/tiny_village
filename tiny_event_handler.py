@@ -5,6 +5,7 @@ This module will be responsible for detecting and handling game events, triggeri
 from datetime import datetime, timedelta
 import importlib
 import logging
+import random
 from typing import List, Dict, Any, Optional, Callable
 
 # from tiny_graph_manager import GraphManager as graph_manager
@@ -12,6 +13,10 @@ from actions import Action, ActionSystem
 from tiny_locations import Location
 import tiny_time_manager as time_manager
 from tiny_types import GraphManager
+
+# Import Effect Schema v2 components
+from effect_schema import EffectV2
+from effect_dispatcher import EffectDispatcher
 
 
 class Event:
@@ -315,6 +320,9 @@ class EventHandler:
         self.time_manager = time_manager
         self.event_triggers = {}  # Dict to store custom event triggers
         self.cascading_event_queue = []  # Queue for cascading events
+        
+        # Initialize Effect Schema v2 dispatcher
+        self.effect_dispatcher = EffectDispatcher(self.graph_manager)
 
     def add_event(self, event):
         """Add an event to the handler and register it in the graph."""
@@ -440,52 +448,58 @@ class EventHandler:
         return event.check_required_items(available_items)
 
     def _apply_event_effects(self, event: "Event"):
-        """Apply the effects of an event to the game state."""
+        """Apply the effects of an event to the game state using Effect Schema v2."""
         for effect in event.effects:
             try:
-                self._apply_single_effect(event, effect)
+                # Convert dict to EffectV2 if needed (backward compatibility)
+                if isinstance(effect, dict):
+                    # Validate and convert to EffectV2
+                    try:
+                        effect_v2 = EffectV2.from_dict(effect)
+                        # Apply using new dispatcher
+                        self.effect_dispatcher.apply_effect(effect_v2, event)
+                    except ValueError as e:
+                        # Invalid effect, log and skip
+                        logging.error(
+                            f"Invalid effect for event {event.name}: {e}. "
+                            f"Effect data: {effect}"
+                        )
+                        continue
+                elif isinstance(effect, EffectV2):
+                    # Already an EffectV2, apply directly
+                    self.effect_dispatcher.apply_effect(effect, event)
+                else:
+                    logging.error(
+                        f"Unknown effect type {type(effect)} for event {event.name}"
+                    )
             except Exception as e:
                 logging.error(
                     f"Error applying effect {effect} for event {event.name}: {e}"
                 )
 
     def _apply_single_effect(self, event: "Event", effect: Dict[str, Any]):
-        """Apply a single effect from an event."""
-        targets = effect.get("targets", [])
-        attribute = effect.get("attribute")
-        change_value = effect.get("change_value", 0)
-        effect_type = effect.get("type", "attribute_change")
-
-        if effect_type == "attribute_change":
-            for target in targets:
-                if target == "participants":
-                    for participant in event.participants:
-                        self._modify_entity_attribute(
-                            participant, attribute, change_value
-                        )
-                elif target == "location" and event.location:
-                    self._modify_entity_attribute(
-                        event.location, attribute, change_value
-                    )
-                else:
-                    # Try to find the target in the graph
-                    target_node = self.graph_manager.get_node(target)
-                    if target_node:
-                        self._modify_entity_attribute(
-                            target_node, attribute, change_value
-                        )
-
-        elif effect_type == "relationship_change":
-            # Modify relationships between participants
-            for i, participant1 in enumerate(event.participants):
-                for participant2 in event.participants[i + 1 :]:
-                    if self.graph_manager.G.has_edge(participant1, participant2):
-                        self.graph_manager.update_character_character_edge(
-                            participant1,
-                            participant2,
-                            impact_factor=1,
-                            impact_value=change_value,
-                        )
+        """
+        Legacy method for applying single effects (deprecated in v2.0).
+        
+        This method is kept for backward compatibility but delegates to the new
+        effect dispatcher system. It will be removed in v3.0.
+        
+        Use _apply_event_effects instead, which handles both dict and EffectV2 formats.
+        """
+        import warnings
+        warnings.warn(
+            "_apply_single_effect is deprecated as of v2.0 and will be removed in v3.0. "
+            "Use _apply_event_effects instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        
+        try:
+            effect_v2 = EffectV2.from_dict(effect)
+            return self.effect_dispatcher.apply_effect(effect_v2, event)
+        except Exception as e:
+            logging.error(f"Error in legacy effect application: {e}")
+            return False
 
     def _modify_entity_attribute(self, entity, attribute: str, change_value):
         """Modify an attribute of an entity."""
@@ -1457,7 +1471,12 @@ class EventHandler:
             },
         ]
         logging.info("Recurring event templates scheduled for lazy creation.")
+    
+    def _lazy_create_recurring_events(self, current_time):
         """Create recurring events lazily based on templates."""
+        if not hasattr(self, 'recurring_event_templates'):
+            return
+            
         for template in self.recurring_event_templates:
             event = self.create_event_from_template(
                 template["template_id"],
