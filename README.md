@@ -58,8 +58,35 @@ TinyVillage is a 2D simulation game where AI characters autonomously go about th
 To start the game, run the following command:
 ```bash
 python main.py
+```
 
-Contributing
+The game supports multiple modes:
+
+**Visual Demo** (Full pygame display):
+```bash
+python main.py --mode visual
+```
+
+**Minimal Demo** (Console output, no display):
+```bash
+python main.py --mode minimal
+```
+
+**Integration Tests** (Verify system integration):
+```bash
+python main.py --mode test
+```
+
+**Additional Options**:
+```bash
+python main.py --characters 3      # Create 3 characters
+python main.py --no-llm            # Disable LLM (use fallback logic)
+python main.py --fps 30            # Run at 30 FPS
+python main.py --verbose           # Enable debug logging
+python main.py --help              # Show all options
+```
+
+## Contributing
 We welcome contributions! Please read our Contributing Guide for details on our code of conduct and the process for submitting pull requests.
 
 License
