@@ -3299,7 +3299,7 @@ class GameplayController:
                         action = actions[0]
                         
                         if hasattr(action, 'execute'):
-                            result = action.execute(target=character, initiator=character)
+                            result = action.execute(character=character, graph_manager=self.graph_manager)
                             if result:
                                 # Update character state after successful action
                                 self._update_character_state_after_action(character, action)
@@ -3356,7 +3356,7 @@ class GameplayController:
         try:
             fallback_action = self.action_resolver.get_fallback_action(character)
             if fallback_action and hasattr(fallback_action, "execute"):
-                result = fallback_action.execute(target=character, initiator=character)
+                result = fallback_action.execute(character=character, graph_manager=self.graph_manager)
                 if result:
                     logger.info(f"Fallback action executed for {character.name}")
                     return True

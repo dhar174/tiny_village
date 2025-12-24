@@ -52,21 +52,35 @@ def mock_heavy_dependencies():
     sys.modules['transformers'] = Mock()
     sys.modules['sentence_transformers'] = Mock()
 
-def create_minimal_character(name: str, energy: int = 50) -> Mock:
-    """Create a minimal mock character for testing."""
-    char = Mock()
+def create_minimal_character(name: str, energy: int = 50):
+    """Create a minimal mock character for testing with real attributes."""
+    # Use a simple class instead of Mock for better attribute handling
+    class SimpleCharacter:
+        pass
+    
+    char = SimpleCharacter()
     char.name = name
     char.energy = energy
     char.health_status = 80
     char.hunger_level = 5
     char.mental_health = 7
     char.social_wellbeing = 6
-    char.use_llm_decisions = False  # Use fallback logic, not LLM
+    char.use_llm_decisions = False
     char.uuid = f"char_{name.lower()}"
     char.job = "Villager"
     char.long_term_goal = "Live peacefully"
     char.wealth_money = 100
     char.inventory = {}
+    char.current_satisfaction = 60
+    char.stamina = 80
+    char.current_mood = 7
+    char.hope = 7
+    char.stability = 8
+    char.control = 7
+    char.success = 6
+    char.shelter = 8
+    char.luxury = 5
+    
     return char
 
 def demonstrate_minimal_integration():
@@ -203,7 +217,7 @@ def demonstrate_minimal_integration():
                 
                 # Try to execute it
                 try:
-                    result = resolved.execute(target=emma, initiator=emma)
+                    result = resolved.execute(character=emma, graph_manager=controller.graph_manager)
                     logger.info(f"   - Execution result: {result}")
                     logger.info(f"   - Emma's energy after rest: {emma.energy}")
                 except Exception as e:
