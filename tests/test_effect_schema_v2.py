@@ -374,8 +374,8 @@ class TestEffectDispatcher(unittest.TestCase):
     
     def test_apply_relationship_change(self):
         """Test applying relationship change effect."""
-        participant1 = Mock()
-        participant2 = Mock()
+        participant1 = TestEntity(name="Alice")
+        participant2 = TestEntity(name="Bob")
         self.mock_event.participants = [participant1, participant2]
         
         # Set up graph manager to say edge exists
