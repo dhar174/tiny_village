@@ -18,83 +18,62 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 def create_test_character(name="Alex", crisis_mode=False):
-    """Create a test character with configurable state"""
-    class TestCharacter:
-        def __init__(self, name, crisis_mode=False):
-            self.name = name
-            self.job = "Engineer"
-            
-            if crisis_mode:
-                # Crisis scenario - low health and energy
-                self.health_status = 2  # Very low health
-                self.energy = 1         # Very low energy
-                self.mental_health = 3  # Low mental health
-                self.hunger_level = 8   # Very hungry
-            else:
-                # Normal scenario
-                self.health_status = 7
-                self.energy = 6
-                self.mental_health = 6
-                self.hunger_level = 4
-                
-            self.social_wellbeing = 5
-            self.wealth_money = 50
-            self.recent_event = "learning"
-            self.long_term_goal = "career_advancement"
-            self.personality_traits = {"extraversion": 60, "conscientiousness": 70}
-            
-        # Add all the getter methods
-        def get_health_status(self): return self.health_status
-        def get_hunger_level(self): return self.hunger_level
-        def get_mental_health(self): return self.mental_health
-        def get_social_wellbeing(self): return self.social_wellbeing
-        def get_wealth_money(self): return self.wealth_money
-        def get_wealth(self): return self.wealth_money
-        def get_long_term_goal(self): return self.long_term_goal
-        def get_happiness(self): return 5
-        def get_shelter(self): return 5
-        def get_stability(self): return 5
-        def get_luxury(self): return 3
-        def get_hope(self): return 6
-        def get_success(self): return 5
-        def get_control(self): return 5
-        def get_job_performance(self): return 6
-        def get_beauty(self): return 5
-        def get_community(self): return 4
-        def get_material_goods(self): return 4
-        def get_friendship_grid(self): return 5
-        
-        def get_inventory(self):
-            class MockInventory:
-                def count_food_items_total(self): return 3
-                def count_food_calories_total(self): return 150
-            return MockInventory()
-            
-        def get_motives(self):
-            class MockMotive:
-                def __init__(self, score): self.score = score
-                def get_score(self): return self.score
-                
-            class MockMotives:
-                def get_health_motive(self): return MockMotive(5)
-                def get_hunger_motive(self): return MockMotive(4)
-                def get_wealth_motive(self): return MockMotive(6)
-                def get_mental_health_motive(self): return MockMotive(5)
-                def get_social_wellbeing_motive(self): return MockMotive(4)
-                def get_happiness_motive(self): return MockMotive(5)
-                def get_shelter_motive(self): return MockMotive(5)
-                def get_stability_motive(self): return MockMotive(5)
-                def get_luxury_motive(self): return MockMotive(3)
-                def get_hope_motive(self): return MockMotive(6)
-                def get_success_motive(self): return MockMotive(5)
-                def get_control_motive(self): return MockMotive(5)
-                def get_job_performance_motive(self): return MockMotive(6)
-                def get_beauty_motive(self): return MockMotive(5)
-                def get_community_motive(self): return MockMotive(4)
-                def get_material_goods_motive(self): return MockMotive(4)
-            return MockMotives()
-            
-    return TestCharacter(name, crisis_mode)
+    """Create a test character with configurable state using real classes"""
+    from demo_character_factory import create_demo_character
+    from tiny_items import ItemInventory
+    from tiny_characters import Motive, PersonalMotives
+
+    def build_motives():
+        def motive(name, score):
+            return Motive(name, f"{name} motive", score)
+
+        return PersonalMotives(
+            hunger_motive=motive("hunger", 4),
+            wealth_motive=motive("wealth", 6),
+            mental_health_motive=motive("mental_health", 5),
+            social_wellbeing_motive=motive("social_wellbeing", 4),
+            happiness_motive=motive("happiness", 5),
+            health_motive=motive("health", 5),
+            shelter_motive=motive("shelter", 5),
+            stability_motive=motive("stability", 5),
+            luxury_motive=motive("luxury", 3),
+            hope_motive=motive("hope", 6),
+            success_motive=motive("success", 5),
+            control_motive=motive("control", 5),
+            job_performance_motive=motive("job_performance", 6),
+            beauty_motive=motive("beauty", 5),
+            community_motive=motive("community", 4),
+            material_goods_motive=motive("material_goods", 4),
+            family_motive=motive("family", 5),
+        )
+
+    base_kwargs = {
+        "job": "Engineer",
+        "wealth_money": 50,
+        "recent_event": "learning",
+        "long_term_goal": "career_advancement",
+        "personality_traits": {"extraversion": 60, "conscientiousness": 70},
+    }
+
+    if crisis_mode:
+        base_kwargs.update(
+            {
+                "health_status": 2,
+                "energy": 1,
+                "mental_health": 3,
+                "hunger_level": 8,
+            }
+        )
+    else:
+        base_kwargs.update(
+            {"health_status": 7, "energy": 6, "mental_health": 6, "hunger_level": 4}
+        )
+
+    character = create_demo_character(name, **base_kwargs)
+    character.social_wellbeing = 5
+    character.inventory = ItemInventory()
+    character.motives = build_motives()
+    return character
 
 
 def demo_strategic_invocation():

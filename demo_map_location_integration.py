@@ -7,45 +7,9 @@ Shows the new functionality in action without requiring heavy dependencies
 import sys
 import os
 import time
-
-# Mock minimal dependencies
-class MockActionSystem:
-    def instantiate_conditions(self, conditions):
-        return conditions
-
-class MockCharacter:
-    def __init__(self, name, x=0, y=0, energy=50, safety_threshold=2):
-        self.name = name
-        self.energy = energy
-        self.safety_threshold = safety_threshold
-        self.social_preference = 50
-        self.movement_preferences = {
-            'avoid_danger': True,
-            'prefer_roads': False
-        }
-        self.location = MockLocation("current_pos", x, y, 1, 1)
-
-class MockLocation:
-    def __init__(self, name, x, y, width, height):
-        self.name = name
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.coordinates_location = (x, y)
-
-# Mock the modules
-sys.modules['actions'] = type(sys)('MockActions')
-sys.modules['actions'].Action = type('MockAction', (), {'__init__': lambda self, *args, **kwargs: None})
-sys.modules['actions'].ActionSystem = MockActionSystem
-sys.modules['actions'].State = type('MockState', (), {'__init__': lambda self, *args, **kwargs: None})
-
-sys.modules['tiny_types'] = type(sys)('MockTinyTypes')
-sys.modules['tiny_types'].Action = type('MockAction', (), {'__init__': lambda self, *args, **kwargs: None})
-sys.modules['tiny_types'].ActionSystem = MockActionSystem
-sys.modules['tiny_types'].State = type('MockState', (), {'__init__': lambda self, *args, **kwargs: None})
-sys.modules['tiny_types'].Character = MockCharacter
-sys.modules['tiny_types'].GraphManager = type('MockGraphManager', (), {})
+from actions import ActionSystem
+from tiny_locations import Location
+from simple_character_for_testing import SimpleCharacter
 
 def demonstrate_building_location_integration():
     """Demonstrate Building-Location integration"""
@@ -57,10 +21,10 @@ def demonstrate_building_location_integration():
     
     # Create different types of buildings
     buildings = [
-        Building("Village Bakery", 10, 20, 12, 15, 20, action_system=MockActionSystem(), building_type="shop"),
-        Building("Town Library", 50, 60, 15, 25, 30, action_system=MockActionSystem(), building_type="library"),
-        Building("Mayor's House", 100, 10, 20, 18, 22, action_system=MockActionSystem(), building_type="house"),
-        Building("Adventurer's Inn", 30, 80, 18, 20, 25, action_system=MockActionSystem(), building_type="restaurant"),
+        Building("Village Bakery", 10, 20, 12, 15, 20, action_system=ActionSystem(), building_type="shop"),
+        Building("Town Library", 50, 60, 15, 25, 30, action_system=ActionSystem(), building_type="library"),
+        Building("Mayor's House", 100, 10, 20, 18, 22, action_system=ActionSystem(), building_type="house"),
+        Building("Adventurer's Inn", 30, 80, 18, 20, 25, action_system=ActionSystem(), building_type="restaurant"),
     ]
     
     print(f"Created {len(buildings)} buildings with integrated locations:\n")
@@ -97,10 +61,10 @@ def demonstrate_points_of_interest():
     
     # Create various POIs
     pois = [
-        PointOfInterest("Village Well", 25, 25, "well", 8, MockActionSystem(), "Ancient stone well"),
-        PointOfInterest("Park Bench", 70, 40, "bench", 5, MockActionSystem(), "Comfortable wooden bench"),
-        PointOfInterest("Rose Garden", 15, 70, "garden", 10, MockActionSystem(), "Beautiful flower garden"),
-        PointOfInterest("Town Fountain", 60, 15, "fountain", 12, MockActionSystem(), "Ornate marble fountain"),
+        PointOfInterest("Village Well", 25, 25, "well", 8, ActionSystem(), "Ancient stone well"),
+        PointOfInterest("Park Bench", 70, 40, "bench", 5, ActionSystem(), "Comfortable wooden bench"),
+        PointOfInterest("Rose Garden", 15, 70, "garden", 10, ActionSystem(), "Beautiful flower garden"),
+        PointOfInterest("Town Fountain", 60, 15, "fountain", 12, ActionSystem(), "Ornate marble fountain"),
     ]
     
     print(f"Created {len(pois)} points of interest:\n")
@@ -113,11 +77,15 @@ def demonstrate_points_of_interest():
         print(f"   📝 Description: {poi.description}")
         
         # Simulate some visitors
-        characters = [
-            MockCharacter("Alice", poi.x + 2, poi.y + 1),
-            MockCharacter("Bob", poi.x - 1, poi.y + 2),
-            MockCharacter("Charlie", poi.x + 20, poi.y + 20),  # Too far away
-        ]
+        characters = []
+        for name, coords in [
+            ("Alice", (poi.x + 2, poi.y + 1)),
+            ("Bob", (poi.x - 1, poi.y + 2)),
+            ("Charlie", (poi.x + 20, poi.y + 20)),
+        ]:
+            character = SimpleCharacter(name)
+            character.location = Location(f"{name}_location", coords[0], coords[1], 1, 1, ActionSystem())
+            characters.append(character)
         
         for char in characters:
             if poi.can_interact(char):
@@ -142,10 +110,10 @@ def demonstrate_location_ai_utilities():
     
     # Create locations with different characteristics
     locations = [
-        Location("Safe District", 0, 0, 50, 50, MockActionSystem(), security=8, popularity=6),
-        Location("Dangerous Alley", 100, 100, 20, 20, MockActionSystem(), security=2, popularity=1),
-        Location("Popular Market", 60, 60, 40, 40, MockActionSystem(), security=5, popularity=9),
-        Location("Quiet Park", 20, 120, 30, 30, MockActionSystem(), security=7, popularity=4),
+        Location("Safe District", 0, 0, 50, 50, ActionSystem(), security=8, popularity=6),
+        Location("Dangerous Alley", 100, 100, 20, 20, ActionSystem(), security=2, popularity=1),
+        Location("Popular Market", 60, 60, 40, 40, ActionSystem(), security=5, popularity=9),
+        Location("Quiet Park", 20, 120, 30, 30, ActionSystem(), security=7, popularity=4),
     ]
     
     # Set additional properties
@@ -167,14 +135,16 @@ def demonstrate_location_ai_utilities():
     print("Analyzing locations for different character types:\n")
     
     # Create different character types
-    characters = [
-        MockCharacter("Cautious Carl", safety_threshold=6, energy=30),
-        MockCharacter("Brave Betty", safety_threshold=1, energy=80),
-        MockCharacter("Social Sam", safety_threshold=3, energy=60),
-    ]
-    characters[0].social_preference = 30  # Introverted
-    characters[1].social_preference = 70  # Extroverted
-    characters[2].social_preference = 90  # Very social
+    characters = []
+    for name, safety, energy, social in [
+        ("Cautious Carl", 6, 30, 30),
+        ("Brave Betty", 1, 80, 70),
+        ("Social Sam", 3, 60, 90),
+    ]:
+        character = SimpleCharacter(name, energy=energy)
+        character.safety_threshold = safety
+        character.social_preference = social
+        characters.append(character)
     
     for char in characters:
         print(f"👤 {char.name} (Safety Threshold: {char.safety_threshold}, Energy: {char.energy})")
