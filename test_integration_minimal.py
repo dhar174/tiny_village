@@ -16,7 +16,7 @@ actual integration behavior.
 import unittest
 import sys
 import logging
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock
 from datetime import datetime
 
 # Set up logging
@@ -41,10 +41,8 @@ def mock_pygame():
 # Mock pygame before imports
 mock_pygame()
 
-from tiny_gameplay_controller import GameplayController, ActionResolver
-from tiny_event_handler import Event, EventHandler
-from tiny_strategy_manager import StrategyManager
-from actions import Action
+from tiny_gameplay_controller import GameplayController
+from tiny_event_handler import Event
 
 class TestFullTurnCycle(unittest.TestCase):
     """Test the complete character turn cycle."""
@@ -80,8 +78,8 @@ class TestFullTurnCycle(unittest.TestCase):
         # Process the character's turn
         result = self.controller._execute_character_actions(self.test_char)
         
-        # Should return True even if using fallback
-        self.assertTrue(result or result is False)  # Accept both outcomes
+        # Should return a boolean value
+        self.assertIn(result, [True, False], "Turn cycle should return a boolean")
         logger.info("✅ Turn cycle completed (fallback logic)")
     
     def test_turn_cycle_with_strategy_manager(self):
@@ -196,9 +194,6 @@ class TestFailureModes(unittest.TestCase):
         """Test that errors are recovered and don't crash the system."""
         logger.info("\n=== Test: Error Recovery ===")
         
-        # Save initial error count
-        initial_errors = self.controller.game_statistics.get('errors_recovered', 0)
-        
         # Try to trigger an error condition that should be recovered
         try:
             # Process character turn with minimal setup
@@ -240,15 +235,6 @@ class TestEventIntegration(unittest.TestCase):
         
         if not self.controller.event_handler:
             self.skipTest("Event handler not initialized")
-        
-        # Create a test event
-        event = Event(
-            name="Test Event",
-            date=datetime.now(),
-            event_type="test",
-            importance=5,
-            impact={"test_impact": 1}
-        )
         
         # Try to check and process events
         try:

@@ -28,7 +28,7 @@ Examples:
 import sys
 import argparse
 import logging
-from typing import Optional
+from typing import Tuple, List
 
 # Set up logging before imports
 def setup_logging(verbose: bool = False):
@@ -40,7 +40,7 @@ def setup_logging(verbose: bool = False):
     )
     return logging.getLogger(__name__)
 
-def check_dependencies() -> tuple[bool, list[str]]:
+def check_dependencies() -> Tuple[bool, List[str]]:
     """Check if required dependencies are installed."""
     missing = []
     

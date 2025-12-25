@@ -14,10 +14,8 @@ This is a minimal viable demo that can run without GPU or large models.
 """
 
 import sys
-import os
 import logging
-from unittest.mock import Mock, MagicMock
-from typing import Dict, List, Any
+from unittest.mock import Mock
 
 # Set up logging
 logging.basicConfig(
