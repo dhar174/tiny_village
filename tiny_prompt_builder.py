@@ -1639,21 +1639,31 @@ class PromptBuilder:
 
         return self.action_utilities
 
-    def generate_daily_routine_prompt(self, time: str, weather: str) -> str:
-        """Generate a basic daily routine prompt."""
+
+    def generate_daily_routine_prompt(
+        self, time: str, weather: str, actions: Optional[List[str]] = None
+    ) -> str:
+        """Generate a basic daily routine prompt using prioritized actions."""
+
+        if actions is None:
+            action_options = ActionOptions()
+            prioritized = action_options.prioritize_actions(self.character)
+            actions = [f"{i+1}. {action}" for i, action in enumerate(prioritized)]
+
         prompt = "<|system|>"
         prompt += (
-            f"You are {self.character.name}, a {self.character.job} in a small town. You are a {descriptors.get_job_adjective(self.character.job)} {descriptors.get_job_pronoun(self.character.job)} who enjoys {descriptors.get_job_enjoys_verb(self.character.job)} {descriptors.get_job_verb_acts_on_noun(self.character.job)}. You are currently working on {descriptors.get_job_currently_working_on(self.character.job)} {descriptors.get_job_place(self.character.job)}, and you are excited to see how it turns out. You are also planning to attend a {descriptors.get_job_planning_to_attend(self.character.job)} in the next few weeks, and you are hoping to {descriptors.get_job_hoping_to_there(self.character.job)} there.",
+            f"You are {self.character.name}, a {self.character.job} in a small town. You are a {descriptors.get_job_adjective(self.character.job)} {descriptors.get_job_pronoun(self.character.job)} who enjoys {descriptors.get_job_enjoys_verb(self.character.job)} {descriptors.get_job_verb_acts_on_noun(self.character.job)}. You are currently working on {descriptors.get_job_currently_working_on(self.character.job)} {descriptors.get_job_place(self.character.job)}, and you are excited to see how it turns out. You are also planning to attend a {descriptors.get_job_planning_to_attend(self.character.job)} in the next few weeks, and you are hoping to {descriptors.get_job_hoping_to_there(self.character.job)} there."
         )
         prompt += f"<|user|>"
-        prompt += f"{self.character.name}, it's {time}, and {descriptors.get_weather_description(weather)}. You're feeling {descriptors.get_feeling_health(self.character.health_status)}, and {descriptors.get_feeling_hunger(self.character.hunger_level)}. "
-        prompt += f"{descriptors.get_event_recent(self.character.recent_event)}, and {descriptors.get_financial_situation(self.character.wealth_money)}. {descriptors.get_motivation()} {self.long_term_goal}. {descriptors.get_routine_question_framing()}"
+        prompt += (
+            f"{self.character.name}, it's {time}, and {descriptors.get_weather_description(weather)}. You're feeling {descriptors.get_feeling_health(self.character.health_status)}, and {descriptors.get_feeling_hunger(self.character.hunger_level)}. "
+        )
+        prompt += (
+            f"{descriptors.get_event_recent(self.character.recent_event)}, and {descriptors.get_financial_situation(self.character.wealth_money)}. {descriptors.get_motivation()} {self.long_term_goal}. {descriptors.get_routine_question_framing()}"
+        )
         prompt += "Options:\n"
-        prompt += "1. Go to the market to Buy_Food.\n"
-        prompt += f"2. Work at your job to Improve_{self.job_performance}.\n"
-        prompt += "3. Visit a friend to Increase_Friendship.\n"
-        prompt += "4. Engage in a Leisure_Activity to improve Mental_Health.\n"
-        prompt += "5. Work on a personal project to Pursue_Hobby.\n"
+        for action_choice in actions:
+            prompt += f"{action_choice}\n"
         prompt += "</s>"
         prompt += "<|assistant|>"
         prompt += f"{self.character.name}, I choose "
