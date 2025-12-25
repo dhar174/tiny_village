@@ -54,7 +54,8 @@ class TestRealUtilityFunctions(unittest.TestCase):
             cls.gametime_manager = GameTimeManager(calendar=cls.calendar)
 
         except Exception as e:
-            print(f"Warning: Could not set up managers: {e}")
+            # Classes not available - tests will be skipped with clear messaging
+            print(f"Notice: Real classes not available for testing: {e}")
             cls.action_system = None
             cls.graph_manager = None
             cls.gametime_manager = None
@@ -66,7 +67,8 @@ class TestRealUtilityFunctions(unittest.TestCase):
             self.character = self._create_test_character()
             self.real_classes_available = True
         except Exception as e:
-            print(f"Warning: Could not create real character: {e}")
+            # Character creation failed - tests will be skipped with clear messaging  
+            print(f"Notice: Real character not available for testing: {e}")
             self.character = None
             self.real_classes_available = False
 
