@@ -2516,9 +2516,7 @@ class PromptBuilder:
 
 
     def generate_daily_routine_prompt(
-        self,
-        time: str,
-        weather: str,
+        self, time: str, weather: str,
         actions: Optional[List[str]] = None,
         include_conversation_context: bool = True,
         include_few_shot_examples: bool = True,
@@ -2534,6 +2532,10 @@ class PromptBuilder:
             action_options = ActionOptions()
             actions = action_options.prioritize_actions(self.character)
 
+        # Expose the final action list to the rest of the prompt-building logic,
+        # which relies on self.prioritized_actions when constructing the action
+        # choices section of the prompt.
+        self.prioritized_actions = actions
 
         # Use ContextManager to gather comprehensive context
         context = self.context_manager.assemble_complete_context(
