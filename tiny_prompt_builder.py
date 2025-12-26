@@ -2548,7 +2548,6 @@ class PromptBuilder:
         # Use enhanced character context
         char_info = context['character']
         prompt += (
-            f"You are {self.character.name}, a {self.character.job} in a small town. You are a {descriptors.get_job_adjective(self.character.job)} {descriptors.get_job_pronoun(self.character.job)} who enjoys {descriptors.get_job_enjoys_verb(self.character.job)} {descriptors.get_job_verb_acts_on_noun(self.character.job)}. You are currently working on {descriptors.get_job_currently_working_on(self.character.job)} {descriptors.get_job_place(self.character.job)}, and you are excited to see how it turns out. You are also planning to attend a {descriptors.get_job_planning_to_attend(self.character.job)} in the next few weeks, and you are hoping to {descriptors.get_job_hoping_to_there(self.character.job)} there."
             f"You are {char_info['basic_info']['name']}, a {char_info['basic_info']['job']} in a small town. "
             f"You are a {descriptors.get_job_adjective(char_info['basic_info']['job'])} "
             f"{descriptors.get_job_pronoun(char_info['basic_info']['job'])} who enjoys "
