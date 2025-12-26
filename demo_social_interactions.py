@@ -7,12 +7,19 @@ Demo of the enhanced social interaction system showing characters forming relati
 import sys
 import os
 from tiny_graph_manager import GraphManager
-from unittest.mock import MagicMock
 
 # Add the current directory to Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from actions import TalkAction, GreetAction, ShareNewsAction, OfferComplimentAction
+
+
+class PersonalityTraits:
+    def __init__(self, extraversion=50, agreeableness=60, neuroticism=30, openness=70):
+        self.extraversion = extraversion
+        self.agreeableness = agreeableness
+        self.neuroticism = neuroticism
+        self.openness = openness
 
 
 class SocialDemoCharacter:
@@ -22,29 +29,13 @@ class SocialDemoCharacter:
         self.social_wellbeing = 50.0
         self.friendship_grid = {}
         if personality_type == "extraverted":
-            self.personality_traits = type(
-                "PersonalityTraits",
-                (),
-                {"extraversion": 80, "agreeableness": 70, "neuroticism": 30, "openness": 65},
-            )()
+            self.personality_traits = PersonalityTraits(extraversion=80, agreeableness=70, neuroticism=30, openness=65)
         elif personality_type == "introverted":
-            self.personality_traits = type(
-                "PersonalityTraits",
-                (),
-                {"extraversion": 30, "agreeableness": 55, "neuroticism": 60, "openness": 55},
-            )()
+            self.personality_traits = PersonalityTraits(extraversion=30, agreeableness=55, neuroticism=60, openness=55)
         elif personality_type == "creative":
-            self.personality_traits = type(
-                "PersonalityTraits",
-                (),
-                {"extraversion": 60, "agreeableness": 60, "neuroticism": 35, "openness": 85},
-            )()
+            self.personality_traits = PersonalityTraits(extraversion=60, agreeableness=60, neuroticism=35, openness=85)
         else:
-            self.personality_traits = type(
-                "PersonalityTraits",
-                (),
-                {"extraversion": 50, "agreeableness": 60, "neuroticism": 30, "openness": 70},
-            )()
+            self.personality_traits = PersonalityTraits()
 
     def respond_to_talk(self, initiator):
         """Enhanced respond_to_talk that updates relationships"""
@@ -123,7 +114,7 @@ def demo_social_interactions():
     bob = SocialDemoCharacter("Bob", "introverted")      # Shy but thoughtful
     carol = SocialDemoCharacter("Carol", "creative")     # Open and artistic
 
-    # Real graph manager
+    # GraphManager is a singleton; this retrieves the shared instance used across the sim
     graph_manager = GraphManager()
     graph_manager.characters.update({"Alice": alice, "Bob": bob, "Carol": carol})
 
@@ -165,9 +156,6 @@ def demo_social_interactions():
     print("Social interactions:")
     for i, (action, description) in enumerate(interactions, 1):
         print(f"\n{i}. {description}")
-
-        # Mock preconditions to always pass
-        action.preconditions_met = MagicMock(return_value=True)
 
         # Execute the action
         success = action.execute()

@@ -11,6 +11,8 @@ from actions import ActionSystem
 from tiny_locations import Location
 from simple_character_for_testing import SimpleCharacter
 
+SHARED_ACTION_SYSTEM = ActionSystem()
+
 def demonstrate_building_location_integration():
     """Demonstrate Building-Location integration"""
     print("\n" + "="*60)
@@ -21,10 +23,10 @@ def demonstrate_building_location_integration():
     
     # Create different types of buildings
     buildings = [
-        Building("Village Bakery", 10, 20, 12, 15, 20, action_system=ActionSystem(), building_type="shop"),
-        Building("Town Library", 50, 60, 15, 25, 30, action_system=ActionSystem(), building_type="library"),
-        Building("Mayor's House", 100, 10, 20, 18, 22, action_system=ActionSystem(), building_type="house"),
-        Building("Adventurer's Inn", 30, 80, 18, 20, 25, action_system=ActionSystem(), building_type="restaurant"),
+        Building("Village Bakery", 10, 20, 12, 15, 20, action_system=SHARED_ACTION_SYSTEM, building_type="shop"),
+        Building("Town Library", 50, 60, 15, 25, 30, action_system=SHARED_ACTION_SYSTEM, building_type="library"),
+        Building("Mayor's House", 100, 10, 20, 18, 22, action_system=SHARED_ACTION_SYSTEM, building_type="house"),
+        Building("Adventurer's Inn", 30, 80, 18, 20, 25, action_system=SHARED_ACTION_SYSTEM, building_type="restaurant"),
     ]
     
     print(f"Created {len(buildings)} buildings with integrated locations:\n")
@@ -61,10 +63,10 @@ def demonstrate_points_of_interest():
     
     # Create various POIs
     pois = [
-        PointOfInterest("Village Well", 25, 25, "well", 8, ActionSystem(), "Ancient stone well"),
-        PointOfInterest("Park Bench", 70, 40, "bench", 5, ActionSystem(), "Comfortable wooden bench"),
-        PointOfInterest("Rose Garden", 15, 70, "garden", 10, ActionSystem(), "Beautiful flower garden"),
-        PointOfInterest("Town Fountain", 60, 15, "fountain", 12, ActionSystem(), "Ornate marble fountain"),
+        PointOfInterest("Village Well", 25, 25, "well", 8, SHARED_ACTION_SYSTEM, "Ancient stone well"),
+        PointOfInterest("Park Bench", 70, 40, "bench", 5, SHARED_ACTION_SYSTEM, "Comfortable wooden bench"),
+        PointOfInterest("Rose Garden", 15, 70, "garden", 10, SHARED_ACTION_SYSTEM, "Beautiful flower garden"),
+        PointOfInterest("Town Fountain", 60, 15, "fountain", 12, SHARED_ACTION_SYSTEM, "Ornate marble fountain"),
     ]
     
     print(f"Created {len(pois)} points of interest:\n")
@@ -84,7 +86,7 @@ def demonstrate_points_of_interest():
             ("Charlie", (poi.x + 20, poi.y + 20)),
         ]:
             character = SimpleCharacter(name)
-            character.location = Location(f"{name}_location", coords[0], coords[1], 1, 1, ActionSystem())
+            character.location = Location(f"{name}_location", coords[0], coords[1], 1, 1, SHARED_ACTION_SYSTEM)
             characters.append(character)
         
         for char in characters:
@@ -110,10 +112,10 @@ def demonstrate_location_ai_utilities():
     
     # Create locations with different characteristics
     locations = [
-        Location("Safe District", 0, 0, 50, 50, ActionSystem(), security=8, popularity=6),
-        Location("Dangerous Alley", 100, 100, 20, 20, ActionSystem(), security=2, popularity=1),
-        Location("Popular Market", 60, 60, 40, 40, ActionSystem(), security=5, popularity=9),
-        Location("Quiet Park", 20, 120, 30, 30, ActionSystem(), security=7, popularity=4),
+        Location("Safe District", 0, 0, 50, 50, SHARED_ACTION_SYSTEM, security=8, popularity=6),
+        Location("Dangerous Alley", 100, 100, 20, 20, SHARED_ACTION_SYSTEM, security=2, popularity=1),
+        Location("Popular Market", 60, 60, 40, 40, SHARED_ACTION_SYSTEM, security=5, popularity=9),
+        Location("Quiet Park", 20, 120, 30, 30, SHARED_ACTION_SYSTEM, security=7, popularity=4),
     ]
     
     # Set additional properties

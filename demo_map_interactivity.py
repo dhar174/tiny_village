@@ -140,9 +140,9 @@ def demo_map_controller():
             self.health = 90
             self.mood = 'Happy'
             self.job = 'Blacksmith'
-    mock_character = DemoCharacter()
+    demo_character = DemoCharacter()
     
-    char_info = controller.get_character_info(mock_character)
+    char_info = controller.get_character_info(demo_character)
     for key, value in char_info.items():
         print(f"  {key}: {value}")
     
@@ -164,9 +164,9 @@ def demo_map_controller():
     # Test character actions
     print("  Character actions:")
     char_actions = [
-        {'action': 'talk', 'target': mock_character},
-        {'action': 'follow', 'target': mock_character},
-        {'action': 'trade', 'target': mock_character}
+        {'action': 'talk', 'target': demo_character},
+        {'action': 'follow', 'target': demo_character},
+        {'action': 'trade', 'target': demo_character}
     ]
     
     for action in char_actions:

@@ -87,7 +87,9 @@ def demo_decision_pipeline():
             print("     🧠 Using LLM Decision-Making:")
             try:
                 actions = strategy_manager.get_enhanced_daily_actions(char, time=time, weather=weather)
-            except Exception:
+            except Exception as e:
+                print(f"       Error in LLM decision-making for {state['name']} ({time}, {weather}); "
+                      f"falling back to utility-based decisions. Details: {e}")
                 actions = strategy_manager.get_daily_actions(char)
             chosen = actions[0].name if actions else "NoOp"
             print(f"       Selected Action: {chosen}")
