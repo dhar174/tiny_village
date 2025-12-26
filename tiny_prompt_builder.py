@@ -2525,11 +2525,17 @@ class PromptBuilder:
     ) -> str:
         """Generate a basic daily routine prompt using prioritized actions."""
 
+        # Determine which actions to use for this prompt.
+        # If the caller supplied an explicit list, honor it; otherwise, fall back
+        # to the default prioritized actions for this character.
         if actions is None:
             action_options = ActionOptions()
-            prioritized = action_options.prioritize_actions(self.character)
-            actions = [f"{i+1}. {action}" for i, action in enumerate(prioritized)]
+            actions = action_options.prioritize_actions(self.character)
 
+        # Expose the final action list to the rest of the prompt-building logic,
+        # which relies on self.prioritized_actions when constructing the action
+        # choices section of the prompt.
+        self.prioritized_actions = actions
 
         # Use ContextManager to gather comprehensive context
         context = self.context_manager.assemble_complete_context(
