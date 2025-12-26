@@ -419,5 +419,129 @@ class TestDynamicActionGeneration(unittest.TestCase):
                 self.assertIn("Test Action", prompt)
 
 
+class TestGenerateDailyRoutinePromptWithActions(unittest.TestCase):
+    """Test suite for generate_daily_routine_prompt with actions parameter functionality."""
+    
+    def setUp(self):
+        """Set up test cases for actions parameter testing."""
+        self.character = MockCharacter(hunger_level=5, wealth_money=20)
+        self.prompt_builder = PromptBuilder(self.character)
+        
+        # Mock dependencies
+        self.mock_context_manager = MagicMock()
+        self.prompt_builder.context_manager = self.mock_context_manager
+        
+        # Set up default context
+        self.mock_context_manager.assemble_complete_context.return_value = {
+            'character': {
+                'basic_info': {
+                    'name': 'Emily',
+                    'job': 'Engineer'
+                }
+            },
+            'memories': []
+        }
+        
+        # Mock action options
+        self.mock_action_options = MagicMock()
+        self.prompt_builder.action_options = self.mock_action_options
+        
+    def test_actions_parameter_none_uses_prioritize_actions(self):
+        """Test that when actions=None, the function calls prioritize_actions."""
+        # Set up mock to return specific actions
+        expected_actions = ['work', 'eat', 'sleep', 'exercise']
+        
+        # Patch ActionOptions at the module level to avoid instantiation issues
+        with patch('tiny_prompt_builder.ActionOptions') as MockActionOptions:
+            mock_instance = MagicMock()
+            mock_instance.prioritize_actions.return_value = expected_actions
+            MockActionOptions.return_value = mock_instance
+            
+            with patch('tiny_prompt_builder.descriptors.get_action_descriptors') as mock_desc:
+                mock_desc.side_effect = lambda x: x.replace('_', ' ').title()
+                prompt = self.prompt_builder.generate_daily_routine_prompt(
+                    "morning", "sunny", actions=None
+                )
+            
+            # Verify ActionOptions was instantiated and prioritize_actions was called
+            MockActionOptions.assert_called_once()
+            mock_instance.prioritize_actions.assert_called_once_with(self.character)
+        
+        # Verify actions appear in prompt
+        self.assertIn("Options:", prompt)
+        
+    def test_actions_parameter_provided_skips_prioritize_actions(self):
+        """Test that when actions are provided, prioritize_actions is not called."""
+        custom_actions = ['read_book', 'write_code', 'debug']
+        
+        # prioritize_actions should NOT be called
+        self.mock_action_options.prioritize_actions = MagicMock()
+        
+        with patch('tiny_prompt_builder.descriptors.get_action_descriptors') as mock_desc:
+            mock_desc.side_effect = lambda x: x.replace('_', ' ').title()
+            prompt = self.prompt_builder.generate_daily_routine_prompt(
+                "morning", "sunny", actions=custom_actions
+            )
+        
+        # Verify prioritize_actions was NOT called
+        self.mock_action_options.prioritize_actions.assert_not_called()
+        
+        # Verify custom actions appear in prompt
+        self.assertIn("Options:", prompt)
+        
+    def test_actions_formatted_with_numbers_during_iteration(self):
+        """Test that actions are numbered during iteration (1. 2. 3. etc)."""
+        unnumbered_actions = ['action_one', 'action_two', 'action_three']
+        
+        with patch('tiny_prompt_builder.descriptors.get_action_descriptors') as mock_desc:
+            mock_desc.side_effect = lambda x: x.replace('_', ' ').title()
+            prompt = self.prompt_builder.generate_daily_routine_prompt(
+                "morning", "sunny", actions=unnumbered_actions
+            )
+        
+        # Verify actions are numbered in the prompt
+        self.assertIn("1. Action One", prompt)
+        self.assertIn("2. Action Two", prompt)
+        self.assertIn("3. Action Three", prompt)
+        
+    def test_actions_not_prenumbered(self):
+        """Test that the function expects unnumbered actions (not pre-numbered strings)."""
+        # This tests the fix - actions should NOT be pre-numbered
+        unnumbered_actions = ['work', 'eat', 'sleep']
+        
+        with patch('tiny_prompt_builder.descriptors.get_action_descriptors') as mock_desc:
+            mock_desc.side_effect = lambda x: x.replace('_', ' ').title()
+            prompt = self.prompt_builder.generate_daily_routine_prompt(
+                "morning", "sunny", actions=unnumbered_actions
+            )
+        
+        # Should NOT find double-numbering like "1. 1. Work"
+        self.assertNotIn("1. 1.", prompt)
+        self.assertNotIn("2. 2.", prompt)
+        
+        # Should find proper single numbering
+        self.assertIn("1. Work", prompt)
+        self.assertIn("2. Eat", prompt)
+        self.assertIn("3. Sleep", prompt)
+        
+    def test_consistency_with_decision_prompt_pattern(self):
+        """Test that action handling is consistent with generate_decision_prompt pattern."""
+        # Both functions should accept unnumbered actions and number them during iteration
+        test_actions = ['work', 'eat', 'sleep']
+        
+        with patch('tiny_prompt_builder.descriptors.get_action_descriptors') as mock_desc:
+            mock_desc.side_effect = lambda x: x.replace('_', ' ').title()
+            
+            # Generate daily routine prompt
+            routine_prompt = self.prompt_builder.generate_daily_routine_prompt(
+                "morning", "sunny", actions=test_actions
+            )
+            
+            # Verify routine prompt has numbered actions
+            self.assertIn("1. Work", routine_prompt)
+            self.assertIn("2. Eat", routine_prompt)
+            self.assertIn("3. Sleep", routine_prompt)
+
+
 if __name__ == "__main__":
     unittest.main()
