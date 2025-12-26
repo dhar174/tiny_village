@@ -2516,7 +2516,9 @@ class PromptBuilder:
 
 
     def generate_daily_routine_prompt(
-        self, time: str, weather: str, actions: Optional[List[str]] = None, include_conversation_context: bool = True,
+        self, time: str, weather: str,
+        actions: Optional[List[str]] = None,
+        include_conversation_context: bool = True,
         include_few_shot_examples: bool = True,
         include_memories: bool = True,
         output_format: str = "structured"
