@@ -220,11 +220,18 @@ class TestPromptBuilder(unittest.TestCase):
         self.assertEqual(self.prompt_builder.needs_priorities, {"need1": 1})
 
     def test_generate_daily_routine_prompt(self):
-        self.mock_actions.prioritize_actions.return_value = ["buy_food", "social_visit"]
-        with patch('tiny_prompt_builder.descriptors.get_action_descriptors') as mock_desc:
-            mock_desc.side_effect = ["Go shopping", "Meet friend"]
-            prompt = self.prompt_builder.generate_daily_routine_prompt("morning", "sunny")
-        self.mock_actions.prioritize_actions.assert_called_once_with(self.character)
+        # Patch ActionOptions to avoid instantiation issues with MockCharacter
+        with patch('tiny_prompt_builder.ActionOptions') as MockActionOptions:
+            mock_instance = MagicMock()
+            mock_instance.prioritize_actions.return_value = ["buy_food", "social_visit"]
+            MockActionOptions.return_value = mock_instance
+            
+            with patch('tiny_prompt_builder.descriptors.get_action_descriptors') as mock_desc:
+                mock_desc.side_effect = ["Go shopping", "Meet friend"]
+                prompt = self.prompt_builder.generate_daily_routine_prompt("morning", "sunny")
+            
+            mock_instance.prioritize_actions.assert_called_once_with(self.character)
+        
         self.assertIn("1. Go shopping to Buy_Food.", prompt)
         self.assertIn("2. Meet friend to Social_Visit.", prompt)
         self.assertIn("Emily, I choose", prompt)
