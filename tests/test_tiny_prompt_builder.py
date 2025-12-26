@@ -446,12 +446,12 @@ class TestGenerateDailyRoutinePromptWithActions(unittest.TestCase):
                     'job': 'Engineer'
                 }
             },
-            'memories': []
+            'memories': [],
+            'goals': {
+                'active_goals': [],
+                'needs_priorities': {}
+            }
         }
-        
-        # Mock action options
-        self.mock_action_options = MagicMock()
-        self.prompt_builder.action_options = self.mock_action_options
         
     def test_actions_parameter_none_uses_prioritize_actions(self):
         """Test that when actions=None, the function calls prioritize_actions."""
@@ -481,17 +481,16 @@ class TestGenerateDailyRoutinePromptWithActions(unittest.TestCase):
         """Test that when actions are provided, prioritize_actions is not called."""
         custom_actions = ['read_book', 'write_code', 'debug']
         
-        # prioritize_actions should NOT be called
-        self.mock_action_options.prioritize_actions = MagicMock()
-        
-        with patch('tiny_prompt_builder.descriptors.get_action_descriptors') as mock_desc:
-            mock_desc.side_effect = lambda x: x.replace('_', ' ').title()
-            prompt = self.prompt_builder.generate_daily_routine_prompt(
-                "morning", "sunny", actions=custom_actions
-            )
-        
-        # Verify prioritize_actions was NOT called
-        self.mock_action_options.prioritize_actions.assert_not_called()
+        # Patch ActionOptions to verify it's NOT instantiated when actions are provided
+        with patch('tiny_prompt_builder.ActionOptions') as MockActionOptions:
+            with patch('tiny_prompt_builder.descriptors.get_action_descriptors') as mock_desc:
+                mock_desc.side_effect = lambda x: x.replace('_', ' ').title()
+                prompt = self.prompt_builder.generate_daily_routine_prompt(
+                    "morning", "sunny", actions=custom_actions
+                )
+            
+            # Verify ActionOptions was NOT instantiated when actions are provided
+            MockActionOptions.assert_not_called()
         
         # Verify custom actions appear in prompt
         self.assertIn("Options:", prompt)
@@ -533,21 +532,33 @@ class TestGenerateDailyRoutinePromptWithActions(unittest.TestCase):
         
     def test_consistency_with_decision_prompt_pattern(self):
         """Test that action handling is consistent with generate_decision_prompt pattern."""
-        # Both functions should accept unnumbered actions and number them during iteration
+        # Both functions should handle actions consistently - daily_routine numbers them,
+        # decision_prompt expects pre-numbered strings
         test_actions = ['work', 'eat', 'sleep']
         
         with patch('tiny_prompt_builder.descriptors.get_action_descriptors') as mock_desc:
             mock_desc.side_effect = lambda x: x.replace('_', ' ').title()
             
-            # Generate daily routine prompt
+            # Generate daily routine prompt with unnumbered actions
             routine_prompt = self.prompt_builder.generate_daily_routine_prompt(
                 "morning", "sunny", actions=test_actions
             )
             
-            # Verify routine prompt has numbered actions
+            # Verify routine prompt has numbered actions (it adds numbering)
             self.assertIn("1. Work", routine_prompt)
             self.assertIn("2. Eat", routine_prompt)
             self.assertIn("3. Sleep", routine_prompt)
+            
+            # Generate decision prompt with pre-numbered actions (as used by StrategyManager)
+            pre_numbered_actions = ['1. Work', '2. Eat', '3. Sleep']
+            decision_prompt = self.prompt_builder.generate_decision_prompt(
+                "morning", "sunny", action_choices=pre_numbered_actions
+            )
+            
+            # Verify decision prompt contains the pre-numbered actions as-is
+            self.assertIn("1. Work", decision_prompt)
+            self.assertIn("2. Eat", decision_prompt)
+            self.assertIn("3. Sleep", decision_prompt)
 
 
 if __name__ == "__main__":

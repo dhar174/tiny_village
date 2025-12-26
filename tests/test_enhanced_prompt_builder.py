@@ -345,17 +345,16 @@ class TestEnhancedPromptBuilder(unittest.TestCase):
             return_value=mock_context
         )
         
-        # Mock action prioritization - should NOT be called when actions are provided
-        self.prompt_builder.action_options.prioritize_actions = MagicMock()
-        
-        # Provide explicit action list
-        custom_actions = ['read_book', 'write_code', 'debug']
-        prompt = self.prompt_builder.generate_daily_routine_prompt(
-            "morning", "sunny", actions=custom_actions
-        )
-        
-        # Verify that prioritize_actions was NOT called when actions are provided
-        self.prompt_builder.action_options.prioritize_actions.assert_not_called()
+        # Patch ActionOptions to verify it's NOT instantiated when actions are provided
+        with patch('tiny_prompt_builder.ActionOptions') as MockActionOptions:
+            # Provide explicit action list
+            custom_actions = ['read_book', 'write_code', 'debug']
+            prompt = self.prompt_builder.generate_daily_routine_prompt(
+                "morning", "sunny", actions=custom_actions
+            )
+            
+            # Verify that ActionOptions was NOT instantiated when actions are provided
+            MockActionOptions.assert_not_called()
         
         # Verify that custom actions appear in the prompt
         self.assertIn("Options:", prompt)
@@ -414,25 +413,33 @@ class TestEnhancedPromptBuilder(unittest.TestCase):
             return_value=mock_context
         )
         
-        # Use the same action list for both methods (unnumbered)
+        # Use unnumbered actions for daily_routine (it adds numbering)
         test_actions = ['work', 'eat', 'sleep']
         
         # Mock descriptor to avoid KeyError
         mock_descriptors.get_action_descriptors.side_effect = lambda x: x.replace('_', ' ').title()
         
-        # Generate both prompts
+        # Generate daily routine prompt with unnumbered actions
         routine_prompt = self.prompt_builder.generate_daily_routine_prompt(
             "morning", "sunny", actions=test_actions
         )
         
+        # Use pre-numbered actions for decision prompt (as used by StrategyManager)
+        pre_numbered_actions = ['1. Work', '2. Eat', '3. Sleep']
         decision_prompt = self.prompt_builder.generate_decision_prompt(
-            "morning", "sunny", action_choices=test_actions
+            "morning", "sunny", action_choices=pre_numbered_actions
         )
         
-        # Both should number actions during iteration, not expect pre-numbered strings
-        # This ensures API consistency - callers always pass unnumbered actions
+        # Verify both prompts contain numbered actions
         self.assertIn("Options:", routine_prompt)
+        self.assertIn("1. Work", routine_prompt)
+        self.assertIn("2. Eat", routine_prompt)
+        self.assertIn("3. Sleep", routine_prompt)
+        
         self.assertIn("Available actions:", decision_prompt)
+        self.assertIn("1. Work", decision_prompt)
+        self.assertIn("2. Eat", decision_prompt)
+        self.assertIn("3. Sleep", decision_prompt)
 
 
 if __name__ == '__main__':

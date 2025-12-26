@@ -2766,8 +2766,8 @@ class PromptBuilder:
 
         # Enhanced action choices with better formatting
         prompt += f"\nAvailable actions:\n"
-        for i, action_choice in enumerate(action_choices, 1):
-            prompt += f"{i}. {action_choice}\n"
+        for action_choice in action_choices:
+            prompt += f"{action_choice}\n"
 
         prompt += f"\nChoose the action that best addresses your ACTIVE GOALS and PRESSING NEEDS listed above. "
         prompt += f"Prioritize actions that: (1) advance your highest-priority active goals, "
