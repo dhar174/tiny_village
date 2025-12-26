@@ -2516,17 +2516,23 @@ class PromptBuilder:
 
 
     def generate_daily_routine_prompt(
-        self, time: str, weather: str, actions: Optional[List[str]] = None, include_conversation_context: bool = True,
+        self,
+        time: str,
+        weather: str,
+        actions: Optional[List[str]] = None,
+        include_conversation_context: bool = True,
         include_few_shot_examples: bool = True,
         include_memories: bool = True,
         output_format: str = "structured"
     ) -> str:
         """Generate a basic daily routine prompt using prioritized actions."""
 
+        # Determine which actions to use for this prompt.
+        # If the caller supplied an explicit list, honor it; otherwise, fall back
+        # to the default prioritized actions for this character.
         if actions is None:
             action_options = ActionOptions()
-            prioritized = action_options.prioritize_actions(self.character)
-            actions = [f"{i+1}. {action}" for i, action in enumerate(prioritized)]
+            actions = action_options.prioritize_actions(self.character)
 
 
         # Use ContextManager to gather comprehensive context
@@ -2548,7 +2554,6 @@ class PromptBuilder:
         # Use enhanced character context
         char_info = context['character']
         prompt += (
-            f"You are {self.character.name}, a {self.character.job} in a small town. You are a {descriptors.get_job_adjective(self.character.job)} {descriptors.get_job_pronoun(self.character.job)} who enjoys {descriptors.get_job_enjoys_verb(self.character.job)} {descriptors.get_job_verb_acts_on_noun(self.character.job)}. You are currently working on {descriptors.get_job_currently_working_on(self.character.job)} {descriptors.get_job_place(self.character.job)}, and you are excited to see how it turns out. You are also planning to attend a {descriptors.get_job_planning_to_attend(self.character.job)} in the next few weeks, and you are hoping to {descriptors.get_job_hoping_to_there(self.character.job)} there."
             f"You are {char_info['basic_info']['name']}, a {char_info['basic_info']['job']} in a small town. "
             f"You are a {descriptors.get_job_adjective(char_info['basic_info']['job'])} "
             f"{descriptors.get_job_pronoun(char_info['basic_info']['job'])} who enjoys "
@@ -2584,24 +2589,17 @@ class PromptBuilder:
         prompt += f"{self.character.name}, it's {time}, and {descriptors.get_weather_description(weather)}. You're feeling {descriptors.get_feeling_health(self.character.health_status)}, and {descriptors.get_feeling_hunger(self.character.hunger_level)}. "
         prompt += f"{descriptors.get_event_recent(self.character.recent_event)}, and {descriptors.get_financial_situation(self.character.wealth_money)}. {descriptors.get_motivation()} {getattr(self.character, 'long_term_goal', 'personal growth')}. {descriptors.get_routine_question_framing()}"
         
-        # Generate dynamic action choices from StrategyManager/GOAPPlanner
+        # Generate action choices
         prompt += "Options:\n"
-        dynamic_action_choices = self.prioritize_actions()
         
-        if dynamic_action_choices:
-            # Use dynamically generated action choices with utility scores
-            for choice in dynamic_action_choices:
-                prompt += f"{choice}\n"
-        else:
-            # Fallback to basic action prioritization if StrategyManager unavailable
-            actions = self.action_options.prioritize_actions(self.character)
-            for i, action in enumerate(actions[:5], 1):
-                try:
-                    descriptor = descriptors.get_action_descriptors(action)
-                except (KeyError, AttributeError):
-                    descriptor = action.replace("_", " ").title()
-                action_name = action.replace("_", " ").title().replace(" ", "_")
-                prompt += f"{i}. {descriptor} to {action_name}.\n"
+        # Use the actions parameter (either provided by caller or prioritized above)
+        for i, action in enumerate(actions, 1):
+            try:
+                descriptor = descriptors.get_action_descriptors(action)
+            except (KeyError, AttributeError):
+                descriptor = action.replace("_", " ").title()
+            action_name = action.replace("_", " ").title().replace(" ", "_")
+            prompt += f"{i}. {descriptor} to {action_name}.\n"
         # Add structured output format instructions
         if output_format == "json":
             prompt += f"\n\n{OutputSchema.get_decision_schema()}"
