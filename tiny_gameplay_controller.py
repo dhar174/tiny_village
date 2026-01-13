@@ -3169,8 +3169,19 @@ class GameplayController:
                 # Process production for all buildings
                 if self.map_controller and hasattr(self.map_controller, 'buildings'):
                     for building in self.map_controller.buildings:
-                        building_id = str(building.get('uuid', building.get('name', 'unknown')))
-                        building_type = building.get('type', 'building')
+                        if isinstance(building, dict):
+                            building_id = str(building.get('uuid', building.get('name', 'unknown')))
+                            building_type = building.get('type', 'building')
+                        else:
+                            # Support Building instances or other objects without .get()
+                            b_uuid = getattr(building, "uuid", None)
+                            b_name = getattr(building, "name", "unknown")
+                            building_id = str(b_uuid or b_name)
+                            building_type = getattr(
+                                building,
+                                "building_type",
+                                getattr(building, "type", "building"),
+                            )
                         self.building_manager.process_production(building_id, building_type, current_tick)
             except Exception as e:
                 logger.warning(f"Error updating building manager: {e}")
