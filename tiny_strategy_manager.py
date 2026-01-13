@@ -1117,17 +1117,24 @@ class StrategyManager:
     def plan_daily_activities(self, character):
         """
         Plans the daily activities for the given character.
-        This method properly interfaces with GOAPPlanner.
+        This method properly interfaces with GOAPPlanner when available,
+        with fallback to utility-based action selection.
         """
+        # Get potential actions from the utility-based action generator
+        actions = self.get_daily_actions(character)
+        
+        # If GOAP planner is not available, return utility-sorted actions
+        if not self.goap_planner:
+            logger.debug("GOAP planner not available, using utility-based action selection")
+            # Actions are already sorted by utility from get_daily_actions()
+            return actions[0] if actions else None
+        
         # Define a proper Goal object for daily activities
         goal = Goal(
             name="daily_wellbeing",
             target_effects={"satisfaction": SATISFACTION_TARGET, "energy": ENERGY_TARGET},
             priority=0.8
         )
-
-        # Get potential actions from the utility-based action generator
-        actions = self.get_daily_actions(character)
 
         # Create current state - handle both Character objects and string names
         if isinstance(character, str):
@@ -1139,17 +1146,22 @@ class StrategyManager:
             current_state = State(character_state_dict)
 
         # Plan using GOAP with correct interface
-        plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
+        try:
+            plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
 
-        # Evaluate the utility of the plan using the planner's evaluate_utility method
-        if plan:
-            final_decision = self.goap_planner.evaluate_utility(plan, character)
-            return final_decision
-        else:
-            # If no plan found, return the highest utility action as fallback
-            if actions:
-                return max(actions, key=lambda a: self.goap_planner.calculate_utility(a, character))
-            return None
+            # Evaluate the utility of the plan using the planner's evaluate_utility method
+            if plan:
+                final_decision = self.goap_planner.evaluate_utility(plan, character)
+                return final_decision
+            else:
+                # If no plan found, return the highest utility action as fallback
+                if actions:
+                    return max(actions, key=lambda a: self.goap_planner.calculate_utility(a, character))
+                return None
+        except Exception as e:
+            logger.warning(f"GOAP planning failed, falling back to utility-based selection: {e}")
+            # Fallback to utility-sorted actions
+            return actions[0] if actions else None
 
     def get_career_actions(self, character, job_details):
         # This is a placeholder and would need similar utility-based ranking
@@ -1171,9 +1183,17 @@ class StrategyManager:
 
     def respond_to_job_offer(self, character, job_details, graph=None):
         """
-        Plans a response to a job offer using GOAP planning.
-        This method properly interfaces with GOAPPlanner.
+        Plans a response to a job offer using GOAP planning when available,
+        with fallback to utility-based decision.
         """
+        # Get career actions
+        actions = self.get_career_actions(character, job_details)
+        
+        # If GOAP planner is not available, return first action (highest utility)
+        if not self.goap_planner:
+            logger.debug("GOAP planner not available, using first career action")
+            return actions[0] if actions else None
+        
         # Create a proper Goal object for career decisions
         goal = Goal(
             name="career_advancement",
@@ -1183,9 +1203,6 @@ class StrategyManager:
         
         # Create current state
         current_state = State({"satisfaction": 70, "career_progress": 50})  # Assuming current state
-        
-        # Get career actions
-        actions = self.get_career_actions(character, job_details)
         
         # Convert dictionary actions to Action objects if needed
         action_objects = []
@@ -1205,12 +1222,16 @@ class StrategyManager:
                 action_objects.append(action_dict)
 
         # Use GOAP to plan career moves with correct interface
-        plan = self.goap_planner.plan_actions(character, goal, current_state, action_objects)
+        try:
+            plan = self.goap_planner.plan_actions(character, goal, current_state, action_objects)
 
-        # Evaluate the utility of the plan
-        if plan:
-            final_decision = self.goap_planner.evaluate_utility(plan, character)
-            return final_decision
-        else:
-            # Fallback to first action if no plan found
+            # Evaluate the utility of the plan
+            if plan:
+                final_decision = self.goap_planner.evaluate_utility(plan, character)
+                return final_decision
+            else:
+                # Fallback to first action if no plan found
+                return action_objects[0] if action_objects else None
+        except Exception as e:
+            logger.warning(f"GOAP planning failed for job offer, using fallback: {e}")
             return action_objects[0] if action_objects else None
