@@ -552,8 +552,10 @@ class BuildingManager:
                     new_value = current_value + change_value
                     
                     # Apply bounds if applicable
-                    if attribute in ["hunger_level", "thirst"]:
+                    if attribute == "hunger_level":
                         new_value = max(0, min(10, new_value))
+                    elif attribute == "thirst":
+                        new_value = max(0, min(100, new_value))
                     elif attribute in ["energy", "social_wellbeing", "current_satisfaction"]:
                         new_value = max(0, min(100, new_value))
                     
