@@ -344,12 +344,18 @@ class StrategyManager:
             scored_goals = []
             for goal in candidate_goals:
                 try:
+                    # Verify goal has required structure before evaluation
+                    if not isinstance(goal, Goal) and not (hasattr(goal, 'name') and hasattr(goal, 'target_effects')):
+                        logger.warning(f"Goal {goal} lacks required structure for evaluation, using priority fallback")
+                        scored_goals.append((getattr(goal, "priority", 0.5), goal))
+                        continue
+                    
                     score = self.goap_planner.evaluate_goal_importance(
                         character, goal, self.graph_manager
                     )
                     scored_goals.append((score, goal))
                 except Exception as e:
-                    logger.debug(f"Goal importance evaluation failed for {goal}: {e}")
+                    logger.warning(f"Goal importance evaluation failed for {goal}: {e}")
                     scored_goals.append((getattr(goal, "priority", 0.5), goal))
 
             scored_goals.sort(key=lambda x: x[0], reverse=True)
@@ -1016,11 +1022,24 @@ class StrategyManager:
     def _handle_social_event(self, event, character, situation_context=None):
         """Handle social events by prioritizing social actions."""
         try:
+            # Use event importance and impact from situation_context if available
+            event_importance = 0.8  # Default priority
+            target_wellbeing = 80
+            target_happiness = 75
+            
+            if situation_context:
+                event_importance = situation_context.get("event_importance", event_importance) / 10.0  # Normalize to 0-1
+                event_impact = situation_context.get("event_impact", 0)
+                # Adjust targets based on event impact
+                if event_impact > 0:
+                    target_wellbeing += min(event_impact, 20)
+                    target_happiness += min(event_impact, 20)
+            
             # Create goal focused on social interaction and happiness
             goal = Goal(
                 name="social_engagement",
-                target_effects={"social_wellbeing": 80, "happiness": 75},
-                priority=0.8
+                target_effects={"social_wellbeing": target_wellbeing, "happiness": target_happiness},
+                priority=min(event_importance, 1.0)
             )
             
             # Get social-focused actions
@@ -1039,10 +1058,22 @@ class StrategyManager:
     def _handle_economic_event(self, event, character, situation_context=None):
         """Handle economic events by prioritizing wealth and trade actions."""
         try:
+            # Use event importance and impact from situation_context if available
+            event_importance = 0.9  # Default high priority for economic events
+            target_wealth = 100
+            target_satisfaction = 70
+            
+            if situation_context:
+                event_importance = situation_context.get("event_importance", event_importance * 10) / 10.0
+                event_impact = situation_context.get("event_impact", 0)
+                # Economic events with positive impact increase wealth targets
+                if event_impact > 0:
+                    target_wealth += min(event_impact * 2, 50)
+            
             goal = Goal(
                 name="economic_opportunity",
-                target_effects={"wealth": 100, "satisfaction": 70},
-                priority=0.9
+                target_effects={"wealth": target_wealth, "satisfaction": target_satisfaction},
+                priority=min(event_importance, 1.0)
             )
             
             actions = self.get_daily_actions(character)
@@ -1060,10 +1091,21 @@ class StrategyManager:
     def _handle_crisis_event(self, event, character, situation_context=None):
         """Handle crisis events by prioritizing safety and recovery actions."""
         try:
+            # Crisis events always have maximum priority
+            event_importance = 1.0
+            target_safety = 90
+            target_energy = 60
+            
+            if situation_context:
+                event_impact = situation_context.get("event_impact", 0)
+                # Negative impact increases safety requirement
+                if event_impact < 0:
+                    target_safety = min(target_safety + abs(event_impact), 100)
+            
             goal = Goal(
                 name="crisis_response",
-                target_effects={"safety": 90, "energy": 60},
-                priority=1.0  # Highest priority
+                target_effects={"safety": target_safety, "energy": target_energy},
+                priority=event_importance  # Highest priority
             )
             
             # In crisis, prioritize safety and basic needs
@@ -1100,10 +1142,22 @@ class StrategyManager:
     def _handle_work_event(self, event, character, situation_context=None):
         """Handle work events by prioritizing productivity and skill development."""
         try:
+            # Use event importance from situation_context if available
+            event_importance = 0.7
+            target_performance = 85
+            target_satisfaction = 65
+            
+            if situation_context:
+                event_importance = situation_context.get("event_importance", event_importance * 10) / 10.0
+                event_impact = situation_context.get("event_impact", 0)
+                # High-impact work events increase performance targets
+                if event_impact > 0:
+                    target_performance += min(event_impact, 15)
+            
             goal = Goal(
                 name="work_productivity",
-                target_effects={"job_performance": 85, "satisfaction": 65},
-                priority=0.7
+                target_effects={"job_performance": target_performance, "satisfaction": target_satisfaction},
+                priority=min(event_importance, 1.0)
             )
             
             actions = self.get_daily_actions(character)
@@ -1129,13 +1183,22 @@ class StrategyManager:
         """Handle environmental/weather events by adapting to conditions."""
         try:
             # Determine appropriate response based on event severity
-            event_impact = getattr(event, 'impact', 0)
+            # Try to get impact from situation_context first, then from event
+            event_impact = 0
+            if situation_context:
+                event_impact = situation_context.get("event_impact", 0)
+            if event_impact == 0 and event:
+                event_impact = getattr(event, 'impact', 0)
             
             if event_impact < 0:  # Negative weather (storm, etc.)
+                # More severe negative impact increases safety priority
+                priority = min(0.8 + abs(event_impact) * 0.02, 1.0)
+                target_safety = min(80 + abs(event_impact), 100)
+                
                 goal = Goal(
                     name="weather_adaptation",
-                    target_effects={"safety": 80, "energy": 70},
-                    priority=0.8
+                    target_effects={"safety": target_safety, "energy": 70},
+                    priority=priority
                 )
                 
                 # Stay indoors, rest, prepare
@@ -1146,9 +1209,12 @@ class StrategyManager:
                     ]),
                 ]
             else:  # Positive weather
+                # Better weather increases happiness targets
+                target_happiness = min(80 + event_impact, 100)
+                
                 goal = Goal(
                     name="enjoy_weather",
-                    target_effects={"happiness": 80, "energy": 75},
+                    target_effects={"happiness": target_happiness, "energy": 75},
                     priority=0.6
                 )
                 
