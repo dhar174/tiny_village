@@ -2082,6 +2082,45 @@ class GameplayController:
                 logger.warning(f"Animation system initialization failed: {e}")
                 self.animation_system = None
                 # Not adding to errors as animation is optional
+            
+            # Initialize building management system
+            try:
+                from tiny_building_manager import BuildingManager
+                
+                self.building_manager = BuildingManager()
+                logger.info("Building management system initialized")
+                
+                # Register existing buildings with the manager
+                if self.map_controller and hasattr(self.map_controller, 'buildings'):
+                    for building in self.map_controller.buildings:
+                        try:
+                            # Support both dict-based and instance-based buildings
+                            if isinstance(building, dict):
+                                building_id = str(
+                                    building.get("uuid")
+                                    or building.get("name")
+                                    or "unknown"
+                                )
+                                building_type = building.get("type") or "building"
+                            else:
+                                uuid_val = getattr(building, "uuid", None)
+                                name_val = getattr(building, "name", None)
+                                type_val = getattr(building, "type", None)
+                                building_id = str(uuid_val or name_val or "unknown")
+                                building_type = type_val or "building"
+
+                            self.building_manager.register_building(
+                                building_id, building_type
+                            )
+                        except Exception as e:
+                            logger.warning(
+                                f"Failed to register building {building!r}: {e}"
+                            )
+                    logger.info(f"Registered {len(self.map_controller.buildings)} buildings with manager")
+            except Exception as e:
+                logger.warning(f"Building management system initialization failed: {e}")
+                self.building_manager = None
+                # Not adding to errors as building system enhancements are optional
 
             # Create characters with improved error handling
             character_creation_config = self.config.get("characters", {})
@@ -3121,6 +3160,32 @@ class GameplayController:
             except Exception as e:
                 logger.warning(f"Error updating animation system: {e}")
                 # Animation errors are not critical
+        
+        # Update building production and resource management
+        if hasattr(self, "building_manager") and self.building_manager:
+            try:
+                current_tick = pygame.time.get_ticks()
+                
+                # Process production for all buildings
+                if self.map_controller and hasattr(self.map_controller, 'buildings'):
+                    for building in self.map_controller.buildings:
+                        if isinstance(building, dict):
+                            building_id = str(building.get('uuid', building.get('name', 'unknown')))
+                            building_type = building.get('type', 'building')
+                        else:
+                            # Support Building instances or other objects without .get()
+                            b_uuid = getattr(building, "uuid", None)
+                            b_name = getattr(building, "name", "unknown")
+                            building_id = str(b_uuid or b_name)
+                            building_type = getattr(
+                                building,
+                                "building_type",
+                                getattr(building, "type", "building"),
+                            )
+                        self.building_manager.process_production(building_id, building_type, current_tick)
+            except Exception as e:
+                logger.warning(f"Error updating building manager: {e}")
+                # Building management errors are not critical
 
         # Note: Event processing and strategy update is now handled above in _process_events_and_drive_strategy
         # No need for separate event processing calls
