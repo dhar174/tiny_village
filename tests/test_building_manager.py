@@ -5,7 +5,7 @@ Tests resource production, consumption, and service functionality.
 """
 
 import unittest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from tiny_building_manager import (
     BuildingManager,
     ResourceType,
