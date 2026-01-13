@@ -2093,9 +2093,29 @@ class GameplayController:
                 # Register existing buildings with the manager
                 if self.map_controller and hasattr(self.map_controller, 'buildings'):
                     for building in self.map_controller.buildings:
-                        building_id = str(building.get('uuid', building.get('name', 'unknown')))
-                        building_type = building.get('type', 'building')
-                        self.building_manager.register_building(building_id, building_type)
+                        try:
+                            # Support both dict-based and instance-based buildings
+                            if isinstance(building, dict):
+                                building_id = str(
+                                    building.get("uuid")
+                                    or building.get("name")
+                                    or "unknown"
+                                )
+                                building_type = building.get("type") or "building"
+                            else:
+                                uuid_val = getattr(building, "uuid", None)
+                                name_val = getattr(building, "name", None)
+                                type_val = getattr(building, "type", None)
+                                building_id = str(uuid_val or name_val or "unknown")
+                                building_type = type_val or "building"
+
+                            self.building_manager.register_building(
+                                building_id, building_type
+                            )
+                        except Exception as e:
+                            logger.warning(
+                                f"Failed to register building {building!r}: {e}"
+                            )
                     logger.info(f"Registered {len(self.map_controller.buildings)} buildings with manager")
             except Exception as e:
                 logger.warning(f"Building management system initialization failed: {e}")
