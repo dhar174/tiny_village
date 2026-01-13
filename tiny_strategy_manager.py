@@ -21,6 +21,7 @@ from tiny_utility_functions import (
 )  # evaluate_utility seems to be for plans
 from actions import Action, State  # Use the modified Action from actions.py
 import logging
+import time
 
 # Optional imports to avoid dependency issues
 try:
@@ -218,6 +219,7 @@ class StrategyManager:
         ## Decision Flow:
         
         The method evaluates criteria in order of importance:
+        - LLM availability check (components must be initialized)
         - Explicit override (force_llm flag)
         - Social complexity check
         - Crisis detection
@@ -263,7 +265,7 @@ class StrategyManager:
         # Track decision metadata for logging
         decision_metadata = {
             'character': char_name,
-            'timestamp': logging.time.time() if hasattr(logging, 'time') else 0,
+            'timestamp': time.time(),
             'criteria_checks': []
         }
         
@@ -590,6 +592,11 @@ class StrategyManager:
                     if hasattr(character, "hunger_level")
                     else 0.5
                 )  # Assuming hunger 0-10
+                state["health"] = (
+                    getattr(character, "health", 0.0) / 10.0
+                    if hasattr(character, "health")
+                    else 0.5
+                )  # Assuming health 0-10
                 state["energy"] = (
                     getattr(character, "energy", 0.0) / 10.0
                     if hasattr(character, "energy")
@@ -614,6 +621,7 @@ class StrategyManager:
                 # Fallback to default values
                 state = {
                     "hunger": 0.5,
+                    "health": 0.5,
                     "energy": 0.5,
                     "money": 0.0,
                     "social_wellbeing": 0.5,
@@ -623,6 +631,7 @@ class StrategyManager:
             # Fallback for simple character representation
             state = {
                 "hunger": 0.5,
+                "health": 0.5,
                 "energy": 0.5,
                 "money": 0.0,
                 "social_wellbeing": 0.5,

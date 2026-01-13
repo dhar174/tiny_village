@@ -73,7 +73,7 @@ decide_action_with_llm()  get_daily_actions()
 
 **File:** `tiny_strategy_manager.py`
 
-#### Constants (Lines 50-61)
+#### Constants (Lines 57-63)
 ```python
 CRISIS_THRESHOLD = 0.3          # Below 30% triggers crisis mode
 SOCIAL_COMPLEXITY_THRESHOLD = 0.7  # Above 70% uses LLM
@@ -82,7 +82,7 @@ GOAL_COMPLEXITY_THRESHOLD = 0.7 # Above 70% uses LLM
 VARIETY_PROBABILITY = 0.2       # 20% chance for variety
 ```
 
-#### Decision Method (Lines 180-378)
+#### Decision Method (Lines 188-376)
 ```python
 def should_use_llm_for_decision(self, character, situation_context=None) -> bool:
     """Strategic decision logic for when to invoke LLM vs utility-based planning."""
@@ -95,7 +95,7 @@ def should_use_llm_for_decision(self, character, situation_context=None) -> bool
     # Check 6: Variety/emergent behavior
 ```
 
-#### Instrumentation (Lines 380-431)
+#### Instrumentation (Lines 378-408)
 ```python
 def _log_decision(self, metadata: dict, use_llm: bool):
     """Log LLM decision metadata for analysis and debugging."""
@@ -104,7 +104,7 @@ def _log_decision(self, metadata: dict, use_llm: bool):
     # Enables pattern analysis
 ```
 
-#### Action Planning (Lines 433-508)
+#### Action Planning (Lines 410-498)
 ```python
 def get_enhanced_daily_actions(self, character, time="morning", 
                               weather="clear", situation_context=None):
@@ -114,7 +114,7 @@ def get_enhanced_daily_actions(self, character, time="morning",
     # Comprehensive error handling
 ```
 
-#### Analytics (Lines 510-550)
+#### Analytics (Lines 500-566)
 ```python
 def get_decision_analytics(self) -> dict:
     """Get analytics about LLM vs utility-based decision patterns."""
@@ -384,7 +384,7 @@ for decision in strategy_manager._decision_history[-10:]:
 ## References
 
 - **Issue:** [#163 - Strategic LLM Calls](https://github.com/dhar174/tiny_village/issues/163)
-- **Code:** `tiny_strategy_manager.py` lines 50-550
+- **Code:** `tiny_strategy_manager.py` lines 57-566
 - **Tests:** `tests/test_strategic_llm_integration.py`
 - **Related:** `tiny_brain_io.py`, `tiny_output_interpreter.py`, `tiny_goap_system.py`
 
