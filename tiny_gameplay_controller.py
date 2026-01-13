@@ -59,7 +59,7 @@ class UIPanel:
         self.border_color = None
         self.padding = 5
         
-    def render(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def render(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         """
         Render the panel to the screen.
         
@@ -76,7 +76,7 @@ class UIPanel:
             
         return self._render_content(screen, controller, fonts)
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         """Override this method in subclasses to implement specific panel rendering."""
         return 0
     
@@ -88,7 +88,7 @@ class UIPanel:
 class CharacterInfoPanel(UIPanel):
     """Panel for displaying character count and basic info."""
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         font = fonts.get('normal', pygame.font.Font(None, 24))
         x, y = self.position
         
@@ -102,7 +102,7 @@ class CharacterInfoPanel(UIPanel):
 class GameStatusPanel(UIPanel):
     """Panel for displaying game status (pause, time, speed)."""
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         font = fonts.get('normal', pygame.font.Font(None, 24))
         small_font = fonts.get('small', pygame.font.Font(None, 18))
         x, y = self.position
@@ -145,7 +145,7 @@ class GameStatusPanel(UIPanel):
 class WeatherPanel(UIPanel):
     """Panel for displaying weather information."""
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         small_font = fonts.get('small', pygame.font.Font(None, 18))
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         x, y = self.position
@@ -175,7 +175,7 @@ class WeatherPanel(UIPanel):
 class StatsPanel(UIPanel):
     """Panel for displaying game statistics and analytics."""
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         x, y = self.position
         current_y = y
@@ -233,7 +233,7 @@ class StatsPanel(UIPanel):
 class AchievementPanel(UIPanel):
     """Panel for displaying achievements."""
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         x, y = self.position
         current_y = y
@@ -273,7 +273,7 @@ class AchievementPanel(UIPanel):
 class SelectedCharacterPanel(UIPanel):
     """Panel for displaying selected character information with enhanced needs tracking."""
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         small_font = fonts.get('small', pygame.font.Font(None, 18))
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         x, y = self.position
@@ -375,7 +375,7 @@ class SelectedCharacterPanel(UIPanel):
         
         return current_y - y
     
-    def _get_character_goal(self, char, controller):
+    def _get_character_goal(self, char, controller: "GameplayController"):
         """Get character's current primary goal."""
         try:
             # Try to get goal from various sources
@@ -400,7 +400,7 @@ class SelectedCharacterPanel(UIPanel):
         except Exception as e:
             return "Living peacefully"
     
-    def _get_character_action(self, char, controller):
+    def _get_character_action(self, char, controller: "GameplayController"):
         """Get character's current action."""
         try:
             # Try to get current action from various sources
@@ -431,7 +431,7 @@ class SelectedCharacterPanel(UIPanel):
 class VillageOverviewPanel(UIPanel):
     """Panel for displaying village-wide information."""
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         small_font = fonts.get('small', pygame.font.Font(None, 18))
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         x, y = self.position
@@ -481,7 +481,7 @@ class VillageOverviewPanel(UIPanel):
         
         return current_y - y
     
-    def _calculate_homeless(self, controller):
+    def _calculate_homeless(self, controller: "GameplayController"):
         """Calculate number of homeless villagers."""
         try:
             # For now, simulate based on building capacity vs population
@@ -494,7 +494,7 @@ class VillageOverviewPanel(UIPanel):
         except:
             return 0
     
-    def _calculate_village_mood(self, controller):
+    def _calculate_village_mood(self, controller: "GameplayController"):
         """Calculate overall village mood."""
         try:
             if not controller.characters:
@@ -529,7 +529,7 @@ class VillageOverviewPanel(UIPanel):
         except:
             return 50
     
-    def _get_active_events(self, controller):
+    def _get_active_events(self, controller: "GameplayController"):
         """Get list of active major events."""
         try:
             events = []
@@ -601,7 +601,7 @@ class EventNotificationPanel(UIPanel):
         }
         return colors.get(priority, colors['normal'])
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         import pygame
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         x, y = self.position
@@ -648,7 +648,7 @@ class TimeControlPanel(UIPanel):
         self.button_height = 20
         self.button_spacing = 5
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         x, y = self.position
         current_y = y
@@ -694,7 +694,7 @@ class TimeControlPanel(UIPanel):
         
         return current_y - y
     
-    def handle_click(self, position, controller):
+    def handle_click(self, position, controller: "GameplayController"):
         """Handle clicks on time control buttons."""
         x, y = self.position
         button_y = y + 18  # Adjust for header
@@ -722,7 +722,7 @@ class InstructionsPanel(UIPanel):
         self.help_mode = 'basic'  # 'basic', 'advanced', 'tutorial'
         self.tutorial_step = 0
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         x, y = self.position
         current_y = y
@@ -734,7 +734,7 @@ class InstructionsPanel(UIPanel):
         else:
             return self._render_basic_help(screen, controller, fonts, x, current_y)
     
-    def _render_basic_help(self, screen, controller, fonts, x, y):
+    def _render_basic_help(self, screen, controller: "GameplayController", fonts, x, y):
         """Render basic help instructions."""
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         current_y = y
@@ -776,7 +776,7 @@ class InstructionsPanel(UIPanel):
         
         return current_y - y
     
-    def _render_advanced_help(self, screen, controller, fonts, x, y):
+    def _render_advanced_help(self, screen, controller: "GameplayController", fonts, x, y):
         """Render advanced help information."""
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         current_y = y
@@ -819,7 +819,7 @@ class InstructionsPanel(UIPanel):
         
         return current_y - y
     
-    def _render_tutorial(self, screen, controller, fonts, x, y):
+    def _render_tutorial(self, screen, controller: "GameplayController", fonts, x, y):
         """Render interactive tutorial."""
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         current_y = y
@@ -913,7 +913,7 @@ class BuildingInteractionPanel(UIPanel):
         self.visible = True
         self.interaction_timeout = pygame.time.get_ticks() + 5000  # 5 second timeout
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         import pygame
         if not self.selected_building or pygame.time.get_ticks() > self.interaction_timeout:
             self.visible = False
@@ -1245,7 +1245,7 @@ class ActionResolver:
 class CheckpointManager:
     """Manages automatic game state checkpointing and restoration."""
     
-    def __init__(self, gameplay_controller, checkpoint_dir: str = "saves/checkpoints"):
+    def __init__(self, gameplay_controller: "GameplayController", checkpoint_dir: str = "saves/checkpoints"):
         self.gameplay_controller = gameplay_controller
         self.checkpoint_dir = checkpoint_dir
         self.checkpoint_interval = 300000  # 5 minutes in milliseconds by default
@@ -1504,7 +1504,7 @@ class CheckpointManager:
 class SystemRecoveryManager:
     """Manages system recovery and fallback strategies."""
 
-    def __init__(self, gameplay_controller):
+    def __init__(self, gameplay_controller: "GameplayController"):
         self.gameplay_controller = gameplay_controller
         self.recovery_strategies = {}
         self.recovery_attempts = {}
