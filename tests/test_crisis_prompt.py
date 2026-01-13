@@ -92,6 +92,49 @@ class CrisisPromptTests(unittest.TestCase):
         # MockCharacter should have many more methods than basic object
         self.assertGreater(len(additional_methods), 20, 
                           "MockCharacter should have significantly more methods than basic object")
+    
+    def test_prompt_builder_handles_varying_motive_values(self):
+        """
+        Test that PromptBuilder can handle characters with extreme high and low attribute values.
+        This ensures PromptBuilder logic works correctly with varying inputs without errors.
+        """
+        with patch.dict(sys.modules, {"tiny_characters": stub_tc, "attr": stub_attr}):
+            import tiny_prompt_builder
+            tiny_prompt_builder.descriptors.event_recent.setdefault("default", [""])
+            tiny_prompt_builder.descriptors.financial_situation.setdefault("default", [""])
+            PromptBuilder = tiny_prompt_builder.PromptBuilder
+            
+            # Test with extreme low values
+            low_char = MockCharacter(
+                health_status=1.0,
+                wealth_money=1.0,
+                mental_health=1.0,
+                hunger_level=10.0
+            )
+            
+            builder_low = PromptBuilder(low_char)
+            prompt_low = builder_low.generate_crisis_response_prompt("drought", urgency="high")
+            
+            # Test with extreme high values
+            high_char = MockCharacter(
+                health_status=10.0,
+                wealth_money=100.0,
+                mental_health=10.0,
+                hunger_level=1.0
+            )
+            
+            builder_high = PromptBuilder(high_char)
+            prompt_high = builder_high.generate_crisis_response_prompt("drought", urgency="high")
+            
+            # Both prompts should be generated successfully without errors
+            self.assertIsInstance(prompt_low, str)
+            self.assertIsInstance(prompt_high, str)
+            self.assertGreater(len(prompt_low), 0)
+            self.assertGreater(len(prompt_high), 0)
+            
+            # Prompts should contain the crisis description
+            self.assertIn("drought", prompt_low)
+            self.assertIn("drought", prompt_high)
 
 if __name__ == "__main__":
     unittest.main()
