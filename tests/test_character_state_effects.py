@@ -18,7 +18,7 @@ from unittest.mock import Mock
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from character_attribute_mapper import AttributeMapper
-from effect_schema import EffectV2, EffectType, OperatorType
+from effect_schema import EffectV2, EffectType
 from effect_dispatcher import EffectDispatcher
 from demo_character_factory import create_demo_character
 
@@ -599,7 +599,8 @@ class TestMissingAttributeHandling(unittest.TestCase):
         # Should not raise exception, just return False or log error
         try:
             result = self.dispatcher.apply_effect(effect, self.mock_event)
-            # The key is it shouldn't crash
+            # The key is it shouldn't crash, and it should signal failure via the result
+            self.assertFalse(result)
         except Exception as e:
             self.fail(f"Effect application should not raise exception: {e}")
 

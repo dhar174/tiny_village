@@ -45,6 +45,11 @@ class AttributeMapper:
         "hunger_level": ("hunger_level", 0, 10, 3),
         
         # Job/Work
+        # Note: The default of 20 for job_performance here is an effect/mapper default
+        # and is intentionally higher than the DemoRealCharacter baseline of 7 used
+        # in demo_character_factory.py. DemoRealCharacter models an initial character
+        # state, while this mapper provides a generic default when events reference
+        # job_performance without an existing value on the character.
         "job_performance": ("job_performance", 0, 100, 20),
         "productivity": ("job_performance", 0, 100, 20),
         
@@ -114,6 +119,8 @@ class AttributeMapper:
                     if value is not None:
                         return value
             except (AttributeError, TypeError, KeyError):
+                # If get_state is missing or returns an unexpected structure,
+                # fall back to other attribute access methods below.
                 pass
         
         # Try direct attribute access with mapped name
@@ -177,7 +184,15 @@ class AttributeMapper:
                             value = max_val
                     state[actual_attr] = value
                     uses_state = True
-            except (AttributeError, TypeError, KeyError):
+            except (AttributeError, TypeError, KeyError) as e:
+                # If state-based access fails, fall back to direct attribute setting below.
+                logging.debug(
+                    "Failed to update state via get_state() for %s on %s; "
+                    "falling back to direct attribute update: %s",
+                    actual_attr,
+                    entity,
+                    e,
+                )
                 pass
         
         # Set directly if not using state

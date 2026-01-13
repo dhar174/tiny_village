@@ -20,7 +20,7 @@ import logging
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
-from effect_schema import EffectV2, EffectType, OperatorType, EffectCondition
+from effect_schema import EffectV2, EffectType, EffectCondition
 from effect_dispatcher import EffectDispatcher
 from demo_character_factory import create_demo_character
 from tiny_event_handler import Event
