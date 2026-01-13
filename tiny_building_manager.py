@@ -84,9 +84,12 @@ class BuildingService:
     
     def can_provide(self, character, building_resources: ResourcePool) -> bool:
         """Check if service can be provided based on character wealth and building resources."""
-        # Check character wealth
-        if hasattr(character, 'wealth_money') and character.wealth_money < self.cost:
-            return False
+        # Check character wealth for positive-cost services
+        if self.cost > 0:
+            if not hasattr(character, 'wealth_money'):
+                return False
+            if character.wealth_money < self.cost:
+                return False
         
         # Check building has required resources
         for resource_type, required_amount in self.resource_requirements.items():
