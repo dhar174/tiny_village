@@ -313,16 +313,21 @@ class TestEnhancedPromptBuilder(unittest.TestCase):
             return_value=mock_context
         )
         
-        # Mock action prioritization to return a specific list
+        # Mock ActionOptions.prioritize_actions to return a specific list
         mock_actions = ['work', 'eat', 'sleep', 'socialize', 'exercise']
-        self.prompt_builder.action_options.prioritize_actions = MagicMock(return_value=mock_actions)
         
-        prompt = self.prompt_builder.generate_daily_routine_prompt(
-            "morning", "sunny", actions=None
-        )
-        
-        # Verify that prioritize_actions was called
-        self.prompt_builder.action_options.prioritize_actions.assert_called_once_with(self.character)
+        with patch('tiny_prompt_builder.ActionOptions') as MockActionOptions:
+            mock_instance = MagicMock()
+            mock_instance.prioritize_actions.return_value = mock_actions
+            MockActionOptions.return_value = mock_instance
+            
+            prompt = self.prompt_builder.generate_daily_routine_prompt(
+                "morning", "sunny", actions=None
+            )
+            
+            # Verify that ActionOptions was instantiated and prioritize_actions was called with the character
+            MockActionOptions.assert_called_once()
+            mock_instance.prioritize_actions.assert_called_once_with(self.character)
         
         # Verify that actions appear numbered in the prompt (1. 2. 3. etc.)
         self.assertIn("1.", prompt)

@@ -220,6 +220,13 @@ class TestPromptBuilder(unittest.TestCase):
         self.assertEqual(self.prompt_builder.needs_priorities, {"need1": 1})
 
     def test_generate_daily_routine_prompt(self):
+        # Mock context_manager to avoid dependency issues and ensure stable character info
+        self.prompt_builder.context_manager = MagicMock()
+        self.prompt_builder.context_manager.assemble_complete_context.return_value = {
+            'character': {'basic_info': {'name': 'Emily', 'job': 'Engineer'}},
+            'memories': [],
+            'goals': {'active_goals': [], 'needs_priorities': {}}
+        }
         # Patch ActionOptions to avoid instantiation issues with MockCharacter
         with patch('tiny_prompt_builder.ActionOptions') as MockActionOptions:
             mock_instance = MagicMock()
