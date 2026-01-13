@@ -1234,8 +1234,9 @@ class StrategyManager:
                     
             # Fallback: return utility-sorted actions as a simple sequential plan
             # This maintains consistent return type (list of actions) with GOAP planning
+            # Limit to 5 actions to match reasonable plan lengths and avoid overwhelming downstream systems
             if actions:
-                return actions  # Actions are already sorted by utility, return all available
+                return actions[:5]  # Actions are already sorted by utility
                 
             return None
             
@@ -1281,8 +1282,9 @@ class StrategyManager:
 
         # Fallback: return utility-sorted actions as a simple sequential plan
         # This maintains consistent return type (list of actions) with GOAP planning
+        # Limit to 5 actions to match reasonable plan lengths and avoid overwhelming downstream systems
         if actions:
-            return actions  # Actions are already sorted by utility, return all available
+            return actions[:5]  # Actions are already sorted by utility
         return None
 
     def get_career_actions(self, character, job_details):
