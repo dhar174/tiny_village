@@ -507,6 +507,7 @@ class Building:
         building_type="building",
         owner=None,
         location=None,
+        building_manager=None,
     ):
         self.name = name
         self.height = height
@@ -519,10 +520,15 @@ class Building:
         self.owner = owner
         self.building_type = building_type
         self.num_rooms = num_rooms
+        self.building_manager = building_manager
 
         self.area_val = self.area()
         self.uuid = uuid.uuid4()
         self.coordinates_location = (x, y)
+        
+        # Register with building manager if provided
+        if self.building_manager:
+            self.building_manager.register_building(str(self.uuid), self.building_type)
         
         # Create or assign location for this building
         if location is None:
@@ -851,6 +857,87 @@ class Building:
     def is_within_building(self, character_location):
         """Check if a character location is within this building"""
         return self.location.contains_point(*character_location)
+    
+    def get_available_services(self, character):
+        """
+        Get available services for a character at this building.
+        
+        Args:
+            character: Character requesting services
+            
+        Returns:
+            List of available BuildingService objects
+        """
+        if self.building_manager:
+            return self.building_manager.get_available_services(self.building_type, character)
+        return []
+    
+    def provide_service(self, service_name: str, character):
+        """
+        Provide a service to a character.
+        
+        Args:
+            service_name: Name of service to provide
+            character: Character receiving service
+            
+        Returns:
+            Tuple of (success, message)
+        """
+        if self.building_manager:
+            return self.building_manager.provide_service(
+                str(self.uuid), self.building_type, service_name, character
+            )
+        return False, "Building manager not available"
+    
+    def get_resource_levels(self):
+        """
+        Get current resource levels at this building.
+        
+        Returns:
+            Dictionary of resource levels or None if manager not available
+        """
+        if self.building_manager:
+            return self.building_manager.get_building_resources(str(self.uuid))
+        return None
+    
+    def process_production(self, current_tick: int):
+        """
+        Process resource production for this building.
+        
+        Args:
+            current_tick: Current game tick
+            
+        Returns:
+            True if production occurred, False otherwise
+        """
+        if self.building_manager:
+            return self.building_manager.process_production(
+                str(self.uuid), self.building_type, current_tick
+            )
+        return False
+    
+    def get_full_building_info(self):
+        """
+        Get comprehensive building information including resources and services.
+        
+        Returns:
+            Dictionary with full building information
+        """
+        base_info = self.get_building_info()
+        
+        if self.building_manager:
+            manager_info = self.building_manager.get_building_info(
+                str(self.uuid), self.building_type
+            )
+            base_info.update({
+                "resources": manager_info.get("resources"),
+                "available_services": manager_info.get("available_services"),
+                "production_interval": manager_info.get("production_interval"),
+                "produces": manager_info.get("produces"),
+                "consumes": manager_info.get("consumes"),
+            })
+        
+        return base_info
 
 
 class House(Building):
