@@ -22,6 +22,7 @@ from tiny_utility_functions import (
 from actions import Action, State  # Use the modified Action from actions.py
 import logging
 import time
+import random
 
 # Optional imports to avoid dependency issues
 try:
@@ -221,8 +222,8 @@ class StrategyManager:
         The method evaluates criteria in order of importance:
         - LLM availability check (components must be initialized)
         - Explicit override (force_llm flag)
+        - Crisis detection (prioritized for survival)
         - Social complexity check
-        - Crisis detection
         - Novelty assessment
         - Goal complexity evaluation
         - Random variety injection
@@ -288,20 +289,7 @@ class StrategyManager:
             self._log_decision(decision_metadata, True)
             return True
         
-        # Check 2: Complex social interactions
-        social_complexity = situation_context.get('social_complexity', 0) if situation_context else 0
-        if social_complexity > SOCIAL_COMPLEXITY_THRESHOLD:
-            logger.info(
-                f"LLM Decision: {char_name} - HIGH SOCIAL COMPLEXITY "
-                f"({social_complexity:.2f} > {SOCIAL_COMPLEXITY_THRESHOLD})"
-            )
-            decision_metadata['reason'] = 'social_complexity'
-            decision_metadata['social_complexity'] = social_complexity
-            decision_metadata['threshold'] = SOCIAL_COMPLEXITY_THRESHOLD
-            self._log_decision(decision_metadata, True)
-            return True
-        
-        # Check 3: Crisis situation (low critical stats)
+        # Check 2: Crisis situation (low critical stats) - prioritized for survival
         character_state = self.get_character_state_dict(character)
         critical_stats = ['health', 'mental_health', 'energy']
         crisis_stats = []
@@ -320,6 +308,19 @@ class StrategyManager:
             decision_metadata['reason'] = 'crisis'
             decision_metadata['crisis_stats'] = crisis_stats
             decision_metadata['threshold'] = CRISIS_THRESHOLD
+            self._log_decision(decision_metadata, True)
+            return True
+        
+        # Check 3: Complex social interactions
+        social_complexity = situation_context.get('social_complexity', 0) if situation_context else 0
+        if social_complexity > SOCIAL_COMPLEXITY_THRESHOLD:
+            logger.info(
+                f"LLM Decision: {char_name} - HIGH SOCIAL COMPLEXITY "
+                f"({social_complexity:.2f} > {SOCIAL_COMPLEXITY_THRESHOLD})"
+            )
+            decision_metadata['reason'] = 'social_complexity'
+            decision_metadata['social_complexity'] = social_complexity
+            decision_metadata['threshold'] = SOCIAL_COMPLEXITY_THRESHOLD
             self._log_decision(decision_metadata, True)
             return True
         
@@ -356,7 +357,6 @@ class StrategyManager:
                     return True
         
         # Check 6: Variety and emergent behavior
-        import random
         variety_roll = random.random()
         if variety_roll < VARIETY_PROBABILITY:
             logger.info(

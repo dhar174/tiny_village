@@ -82,7 +82,7 @@ GOAL_COMPLEXITY_THRESHOLD = 0.7 # Above 70% uses LLM
 VARIETY_PROBABILITY = 0.2       # 20% chance for variety
 ```
 
-#### Decision Method (Lines 188-376)
+#### Decision Method (Lines 189-376)
 ```python
 def should_use_llm_for_decision(self, character, situation_context=None) -> bool:
     """Strategic decision logic for when to invoke LLM vs utility-based planning."""
