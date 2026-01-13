@@ -2514,17 +2514,29 @@ class PromptBuilder:
 
         return self.action_utilities
 
+
     def generate_daily_routine_prompt(
-        self, 
-        time: str, 
-        weather: str, 
+        self, time: str, weather: str,
+        actions: Optional[List[str]] = None,
         include_conversation_context: bool = True,
         include_few_shot_examples: bool = True,
         include_memories: bool = True,
         output_format: str = "structured"
     ) -> str:
-        """Generate a basic daily routine prompt with enhanced context management and memory integration."""
-        
+        """Generate a basic daily routine prompt using prioritized actions."""
+
+        # Determine which actions to use for this prompt.
+        # If the caller supplied an explicit list, honor it; otherwise, fall back
+        # to the default prioritized actions for this character.
+        if actions is None:
+            action_options = ActionOptions()
+            actions = action_options.prioritize_actions(self.character)
+
+        # Expose the final action list to the rest of the prompt-building logic,
+        # which relies on self.prioritized_actions when constructing the action
+        # choices section of the prompt.
+        self.prioritized_actions = actions
+
         # Use ContextManager to gather comprehensive context
         context = self.context_manager.assemble_complete_context(
             time, weather, 
@@ -2579,24 +2591,17 @@ class PromptBuilder:
         prompt += f"{self.character.name}, it's {time}, and {descriptors.get_weather_description(weather)}. You're feeling {descriptors.get_feeling_health(self.character.health_status)}, and {descriptors.get_feeling_hunger(self.character.hunger_level)}. "
         prompt += f"{descriptors.get_event_recent(self.character.recent_event)}, and {descriptors.get_financial_situation(self.character.wealth_money)}. {descriptors.get_motivation()} {getattr(self.character, 'long_term_goal', 'personal growth')}. {descriptors.get_routine_question_framing()}"
         
-        # Generate dynamic action choices from StrategyManager/GOAPPlanner
+        # Generate action choices
         prompt += "Options:\n"
-        dynamic_action_choices = self.prioritize_actions()
         
-        if dynamic_action_choices:
-            # Use dynamically generated action choices with utility scores
-            for choice in dynamic_action_choices:
-                prompt += f"{choice}\n"
-        else:
-            # Fallback to basic action prioritization if StrategyManager unavailable
-            actions = self.action_options.prioritize_actions(self.character)
-            for i, action in enumerate(actions[:5], 1):
-                try:
-                    descriptor = descriptors.get_action_descriptors(action)
-                except (KeyError, AttributeError):
-                    descriptor = action.replace("_", " ").title()
-                action_name = action.replace("_", " ").title().replace(" ", "_")
-                prompt += f"{i}. {descriptor} to {action_name}.\n"
+        # Use the actions parameter (either provided by caller or prioritized above)
+        for i, action in enumerate(actions, 1):
+            try:
+                descriptor = descriptors.get_action_descriptors(action)
+            except (KeyError, AttributeError):
+                descriptor = action.replace("_", " ").title()
+            action_name = action.replace("_", " ").title().replace(" ", "_")
+            prompt += f"{i}. {descriptor} to {action_name}.\n"
         # Add structured output format instructions
         if output_format == "json":
             prompt += f"\n\n{OutputSchema.get_decision_schema()}"
@@ -2761,7 +2766,7 @@ class PromptBuilder:
 
         # Enhanced action choices with better formatting
         prompt += f"\nAvailable actions:\n"
-        for i, action_choice in enumerate(action_choices):
+        for action_choice in action_choices:
             prompt += f"{action_choice}\n"
 
         prompt += f"\nChoose the action that best addresses your ACTIVE GOALS and PRESSING NEEDS listed above. "
