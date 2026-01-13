@@ -4,15 +4,11 @@ description: >
   Make Tiny Village demo-ready. Add end-to-end integration tests, harden failure handling across subsystems,
   optimize performance, detect memory leaks, and implement a repeatable demo scenario with useful logging.
 infer: false
-tools:
-  - read
-  - edit
-  - search
-  - execute
-  - github/*
+tools: ["agent", "read", "search", "edit", "execute", "web", "github/*", "playwright/*"]
 metadata:
   component: integration
   repo_area: demo_readiness
+  scope: "all"
 ---
 
 You are the **System Integration Agent** for Tiny Village.
