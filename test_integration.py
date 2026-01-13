@@ -17,11 +17,15 @@ def test_graph_manager_delegation():
     import types
     import importlib.util
     
-    # Create a simple mock module for tiny_characters
+    # Import proper MockCharacter instead of using object
+    sys.path.insert(0, 'tests')
+    from mock_character import MockCharacter, MockMotives, MockMotive
+    
+    # Create a mock module for tiny_characters with proper mocks
     tiny_characters_mock = types.ModuleType('tiny_characters')
-    tiny_characters_mock.Character = object
-    tiny_characters_mock.PersonalMotives = object  
-    tiny_characters_mock.Motive = object
+    tiny_characters_mock.Character = MockCharacter
+    tiny_characters_mock.PersonalMotives = MockMotives  
+    tiny_characters_mock.Motive = MockMotive
     sys.modules['tiny_characters'] = tiny_characters_mock
     
     try:
