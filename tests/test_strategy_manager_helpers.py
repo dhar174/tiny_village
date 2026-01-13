@@ -10,7 +10,12 @@ Tests the new helper methods added for GOAP planning and event routing:
 import unittest
 from unittest.mock import MagicMock, Mock, patch
 import sys
-sys.path.insert(0, "/home/runner/work/tiny_village/tiny_village")
+import os
+
+# Add the project directory to path dynamically
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 from tiny_strategy_manager import StrategyManager
 from tiny_utility_functions import Goal

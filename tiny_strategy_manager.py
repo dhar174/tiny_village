@@ -1028,7 +1028,10 @@ class StrategyManager:
             target_happiness = 75
             
             if situation_context:
-                event_importance = situation_context.get("event_importance", event_importance) / 10.0  # Normalize to 0-1
+                # Normalize importance to 0-1 range and ensure it's within bounds
+                raw_importance = situation_context.get("event_importance", event_importance * 10)
+                event_importance = min(max(raw_importance / 10.0, 0.0), 1.0)
+                
                 event_impact = situation_context.get("event_impact", 0)
                 # Adjust targets based on event impact
                 if event_impact > 0:
@@ -1039,7 +1042,7 @@ class StrategyManager:
             goal = Goal(
                 name="social_engagement",
                 target_effects={"social_wellbeing": target_wellbeing, "happiness": target_happiness},
-                priority=min(event_importance, 1.0)
+                priority=event_importance
             )
             
             # Get social-focused actions
@@ -1064,7 +1067,10 @@ class StrategyManager:
             target_satisfaction = 70
             
             if situation_context:
-                event_importance = situation_context.get("event_importance", event_importance * 10) / 10.0
+                # Normalize importance to 0-1 range and ensure it's within bounds
+                raw_importance = situation_context.get("event_importance", event_importance * 10)
+                event_importance = min(max(raw_importance / 10.0, 0.0), 1.0)
+                
                 event_impact = situation_context.get("event_impact", 0)
                 # Economic events with positive impact increase wealth targets
                 if event_impact > 0:
@@ -1073,7 +1079,7 @@ class StrategyManager:
             goal = Goal(
                 name="economic_opportunity",
                 target_effects={"wealth": target_wealth, "satisfaction": target_satisfaction},
-                priority=min(event_importance, 1.0)
+                priority=event_importance
             )
             
             actions = self.get_daily_actions(character)
@@ -1148,7 +1154,10 @@ class StrategyManager:
             target_satisfaction = 65
             
             if situation_context:
-                event_importance = situation_context.get("event_importance", event_importance * 10) / 10.0
+                # Normalize importance to 0-1 range and ensure it's within bounds
+                raw_importance = situation_context.get("event_importance", event_importance * 10)
+                event_importance = min(max(raw_importance / 10.0, 0.0), 1.0)
+                
                 event_impact = situation_context.get("event_impact", 0)
                 # High-impact work events increase performance targets
                 if event_impact > 0:
@@ -1157,7 +1166,7 @@ class StrategyManager:
             goal = Goal(
                 name="work_productivity",
                 target_effects={"job_performance": target_performance, "satisfaction": target_satisfaction},
-                priority=min(event_importance, 1.0)
+                priority=event_importance
             )
             
             actions = self.get_daily_actions(character)
@@ -1185,9 +1194,9 @@ class StrategyManager:
             # Determine appropriate response based on event severity
             # Try to get impact from situation_context first, then from event
             event_impact = 0
-            if situation_context:
+            if situation_context and "event_impact" in situation_context:
                 event_impact = situation_context.get("event_impact", 0)
-            if event_impact == 0 and event:
+            elif event:
                 event_impact = getattr(event, 'impact', 0)
             
             if event_impact < 0:  # Negative weather (storm, etc.)
