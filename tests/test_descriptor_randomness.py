@@ -19,8 +19,12 @@ from types import ModuleType
 
 # Create stub modules to satisfy imports in tiny_prompt_builder
 # (This is a lightweight approach to avoid complex dependency issues)
+# Import proper MockCharacter instead of using object
+sys.path.insert(0, '.')
+from mock_character import MockCharacter
+
 stub_tc = ModuleType('tiny_characters')
-stub_tc.Character = object
+stub_tc.Character = MockCharacter
 stub_attr = ModuleType('attr')
 
 
