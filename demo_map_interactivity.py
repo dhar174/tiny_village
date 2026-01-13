@@ -1,89 +1,18 @@
 #!/usr/bin/env python3
 """
 Demo script for map interactivity enhancements.
-Shows how the new context menus and information panels work.
-
-Note: This demo uses mocked pygame components to demonstrate functionality
-without requiring pygame installation.
+Shows how the new context menus and information panels work using real pygame components.
 """
 
 import sys
-from unittest.mock import Mock
 
-# Mock pygame for demo purposes
-class MockPygame:
-    QUIT = 12
-    MOUSEBUTTONDOWN = 5
-    MOUSEMOTION = 4
-    KEYDOWN = 2
-    K_ESCAPE = 27
-    
-    class Rect:
-        def __init__(self, x, y, width, height):
-            self.x = x
-            self.y = y
-            self.width = width
-            self.height = height
-            self.left = x
-            self.top = y
-            self.right = x + width
-            self.bottom = y + height
-            self.centerx = x + width // 2
-            self.centery = y + height // 2
-            
-        def collidepoint(self, pos):
-            x, y = pos
-            return self.x <= x <= self.x + self.width and self.y <= y <= self.y + self.height
-    
-    class math:
-        @staticmethod
-        class Vector2:
-            def __init__(self, x, y):
-                self.x = x
-                self.y = y
-            
-            def distance_to(self, other):
-                return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5
-    
-    class font:
-        @staticmethod
-        def Font(font_file, size):
-            return Mock()
-        
-        @staticmethod
-        def SysFont(name, size):
-            return Mock()
-    
-    class image:
-        @staticmethod
-        def load(path):
-            return Mock()
-    
-    class display:
-        @staticmethod
-        def set_mode(size):
-            return Mock()
-    
-    class mouse:
-        @staticmethod
-        def get_pos():
-            return (100, 100)
-    
-    @staticmethod
-    def init():
-        pass
-    
-    @staticmethod
-    def draw():
-        pass
-
-# Mock pygame before importing our modules
-sys.modules['pygame'] = MockPygame()
-sys.modules['pygame.math'] = MockPygame.math()
-sys.modules['pygame.font'] = MockPygame.font()
-sys.modules['pygame.image'] = MockPygame.image()
-sys.modules['pygame.display'] = MockPygame.display()
-sys.modules['pygame.mouse'] = MockPygame.mouse()
+try:
+    import pygame
+    pygame.init()
+    pygame.font.init()
+except ImportError:
+    print("pygame is required for this demo. Please install pygame to run map interactivity showcase.")
+    sys.exit(1)
 
 from tiny_map_controller import MapController, InfoPanel, ContextMenu
 
@@ -131,7 +60,7 @@ def demo_context_menu():
         {'label': 'Browse Items', 'action': 'browse'}
     ]
     
-    menu.show(options, (200, 200), Mock())
+    menu.show(options, (200, 200), options[0])
     print(f"After showing - Visible: {menu.visible}")
     print(f"Menu position: ({menu.x}, {menu.y})")
     print(f"Menu options: {[opt['label'] for opt in menu.options]}")
@@ -159,21 +88,21 @@ def demo_map_controller():
             {
                 'name': 'Town Hall',
                 'type': 'government',
-                'rect': MockPygame.Rect(100, 100, 50, 50),
+                'rect': pygame.Rect(100, 100, 50, 50),
                 'capacity': 50,
                 'owner': 'City Council'
             },
             {
                 'name': 'General Store',
                 'type': 'shop',
-                'rect': MockPygame.Rect(200, 150, 40, 30),
+                'rect': pygame.Rect(200, 150, 40, 30),
                 'owner': 'Bob Smith',
                 'inventory': 25
             },
             {
                 'name': 'Village Tavern',
                 'type': 'social',
-                'rect': MockPygame.Rect(300, 200, 45, 35),
+                'rect': pygame.Rect(300, 200, 45, 35),
                 'owner': 'Alice Johnson',
                 'capacity': 30
             }
@@ -203,15 +132,17 @@ def demo_map_controller():
     
     # Demo character info generation
     print("\nCharacter Information:")
-    mock_character = Mock()
-    mock_character.name = 'John Doe'
-    mock_character.position = MockPygame.math.Vector2(200, 300)
-    mock_character.energy = 75
-    mock_character.health = 90
-    mock_character.mood = 'Happy'
-    mock_character.job = 'Blacksmith'
+    class DemoCharacter:
+        def __init__(self):
+            self.name = 'John Doe'
+            self.position = pygame.math.Vector2(200, 300)
+            self.energy = 75
+            self.health = 90
+            self.mood = 'Happy'
+            self.job = 'Blacksmith'
+    demo_character = DemoCharacter()
     
-    char_info = controller.get_character_info(mock_character)
+    char_info = controller.get_character_info(demo_character)
     for key, value in char_info.items():
         print(f"  {key}: {value}")
     
@@ -233,9 +164,9 @@ def demo_map_controller():
     # Test character actions
     print("  Character actions:")
     char_actions = [
-        {'action': 'talk', 'target': mock_character},
-        {'action': 'follow', 'target': mock_character},
-        {'action': 'trade', 'target': mock_character}
+        {'action': 'talk', 'target': demo_character},
+        {'action': 'follow', 'target': demo_character},
+        {'action': 'trade', 'target': demo_character}
     ]
     
     for action in char_actions:
@@ -256,7 +187,7 @@ def demo_interaction_scenarios():
             {
                 'name': 'Blacksmith Shop',
                 'type': 'shop',
-                'rect': MockPygame.Rect(150, 200, 60, 40),
+                'rect': pygame.Rect(150, 200, 60, 40),
                 'owner': 'Master Smith',
                 'speciality': 'Weapons & Tools'
             }
