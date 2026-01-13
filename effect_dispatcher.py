@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 import logging
 
 from effect_schema import EffectV2, EffectType, OperatorType
+from character_attribute_mapper import AttributeMapper
 
 
 class EffectDispatcher:
@@ -293,9 +294,12 @@ class EffectDispatcher:
         """
         Modify an attribute on an entity using the specified operator.
         
+        Uses AttributeMapper to handle attribute name mapping and bounds checking
+        for character attributes.
+        
         Args:
             entity: The entity to modify
-            attribute: The attribute name
+            attribute: The attribute name (may be a template/alias name)
             change_value: The value to apply
             operator: The operator to use (add, subtract, set, etc.)
             
@@ -303,32 +307,20 @@ class EffectDispatcher:
             bool: True if modification was successful
         """
         try:
-            # Get current value
-            current_value = None
-            uses_state = False
+            # Get current value using mapper
+            current_value = AttributeMapper.get_attribute_value(entity, attribute)
+            if current_value is None:
+                current_value = 0
+                
+            # Get the actual attribute name and bounds info
+            actual_attr, min_val, max_val, default = AttributeMapper.map_attribute(attribute)
             
-            # Try get_state if it exists and looks like a real method
-            if hasattr(entity, "get_state") and callable(entity.get_state):
-                try:
-                    state = entity.get_state()
-                    # Verify state is dict-like
-                    if isinstance(state, dict):
-                        current_value = state.get(attribute, 0)
-                        uses_state = True
-                except (AttributeError, TypeError, KeyError):
-                    # If get_state fails, try direct attribute access
-                    pass
-            
-            if not uses_state and current_value is None:
-                if hasattr(entity, attribute):
-                    try:
-                        current_value = getattr(entity, attribute)
-                    except (AttributeError, TypeError):
-                        # If attribute exists but can't be retrieved, use 0
-                        current_value = 0
-                else:
-                    # Attribute doesn't exist, create it with default value
-                    current_value = 0
+            # Log before value
+            if logging.getLogger().isEnabledFor(logging.DEBUG):
+                logging.debug(
+                    f"Modifying {entity} attribute '{attribute}' (mapped to '{actual_attr}'): "
+                    f"current={current_value}, change={change_value}, operator={operator.value}"
+                )
             
             # Apply operator
             if operator == OperatorType.ADD:
@@ -347,16 +339,23 @@ class EffectDispatcher:
                 logging.warning(f"Unknown operator {operator}, using ADD")
                 new_value = current_value + change_value
             
-            # Set new value
-            if uses_state:
-                state[attribute] = new_value
-            else:
-                setattr(entity, attribute, new_value)
-            
-            logging.debug(
-                f"Modified {entity} {attribute}: {current_value} -> {new_value} (operator: {operator.value})"
+            # Set new value using mapper (which applies bounds)
+            success = AttributeMapper.set_attribute_value(
+                entity,
+                attribute,
+                new_value,
+                apply_bounds=True
             )
-            return True
+            
+            if success:
+                # Get the final value (after bounds applied) for logging
+                final_value = AttributeMapper.get_attribute_value(entity, attribute)
+                logging.info(
+                    f"Modified {entity} {actual_attr}: {current_value} -> {final_value} "
+                    f"(operator: {operator.value}, bounds: [{min_val}, {max_val}])"
+                )
+            
+            return success
             
         except Exception as e:
             logging.error(f"Error modifying attribute {attribute} on {entity}: {e}")
