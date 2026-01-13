@@ -470,14 +470,23 @@ class BuildingManager:
         
         # Process service transaction
         try:
-            # Deduct cost from character
+            # Ensure character can participate in monetary transactions when required
+            if service.cost != 0 and not hasattr(character, 'wealth_money'):
+                logger.error(
+                    "Character '%s' lacks 'wealth_money' attribute required for service '%s' "
+                    "with non-zero cost at building '%s'",
+                    getattr(character, 'name', 'Unknown'),
+                    service_name,
+                    building_id,
+                )
+                return False, "Character cannot participate in monetary transactions for this service"
+
+            # Deduct or pay cost to character
             if service.cost > 0:
-                if hasattr(character, 'wealth_money'):
-                    character.wealth_money = max(0, character.wealth_money - service.cost)
+                character.wealth_money = max(0, character.wealth_money - service.cost)
             elif service.cost < 0:
                 # Service pays the character
-                if hasattr(character, 'wealth_money'):
-                    character.wealth_money += abs(service.cost)
+                character.wealth_money += abs(service.cost)
             
             # Consume building resources
             for resource_type, amount in service.resource_requirements.items():
