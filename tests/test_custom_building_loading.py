@@ -17,8 +17,7 @@ from unittest.mock import Mock, patch
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from tiny_gameplay_controller import GameplayController
-from tiny_buildings import Building, BUILDING_TYPE_INTERACTIONS
-from actions import ActionSystem
+from tiny_buildings import Building
 
 
 class TestCustomBuildingLoading(unittest.TestCase):

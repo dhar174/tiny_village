@@ -1973,8 +1973,8 @@ class GameplayController:
         Load building configuration from external file with comprehensive validation.
         
         Supports all building properties including:
-        - Required: name, x, y, width, height
-        - Optional: type, length, stories, num_rooms, address, owner, description, door
+        - Required: name, x, y
+        - Optional: width (default 40), height (default 40), type, length, stories, num_rooms, address, owner, description, door
         - Additional custom properties are preserved
         
         Args:
@@ -2021,17 +2021,36 @@ class GameplayController:
                     width = building_data.get("width", 40)
                     height = building_data.get("height", 40)
                     
-                    # Validate numeric values
-                    try:
-                        x = int(x)
-                        y = int(y)
-                        width = int(width)
-                        height = int(height)
-                    except (ValueError, TypeError) as e:
-                        logger.warning(
-                            f"Invalid coordinate/size values for building '{building_data.get('name')}': {e}. Using defaults."
-                        )
-                        x, y, width, height = 0, 0, 40, 40
+                    # Validate numeric values individually so valid fields are preserved
+                    def safe_int(value, default, field_name):
+                        try:
+                            result = int(value)
+                            # Validate range: ensure non-negative and within reasonable bounds
+                            if result < 0:
+                                logger.warning(
+                                    f"Negative value for '{field_name}' in building '{building_data.get('name')}': {result}. "
+                                    f"Using default {default}."
+                                )
+                                return default
+                            # Check for unreasonably large values (e.g., > 10000 pixels)
+                            if result > 10000:
+                                logger.warning(
+                                    f"Unreasonably large value for '{field_name}' in building '{building_data.get('name')}': {result}. "
+                                    f"Using default {default}."
+                                )
+                                return default
+                            return result
+                        except (ValueError, TypeError) as e:
+                            logger.warning(
+                                f"Invalid value for '{field_name}' in building '{building_data.get('name')}': {e}. "
+                                f"Using default {default}."
+                            )
+                            return default
+
+                    x = safe_int(x, 0, "x")
+                    y = safe_int(y, 0, "y")
+                    width = safe_int(width, 40, "width")
+                    height = safe_int(height, 40, "height")
                     
                     # Validate building type
                     building_type = building_data.get("type", "building")
@@ -2082,7 +2101,10 @@ class GameplayController:
                             building[prop] = default
                     
                     # Preserve any additional custom properties not explicitly handled
-                    excluded_keys = set(["x", "y", "width", "height"] + list(optional_properties.keys()))
+                    excluded_keys = set(
+                        ["x", "y", "width", "height", "name", "type"]
+                        + list(optional_properties.keys())
+                    )
                     for key, value in building_data.items():
                         if key not in excluded_keys and key not in building:
                             building[key] = value
@@ -2104,7 +2126,6 @@ class GameplayController:
             return []
         except Exception as e:
             logger.error(f"Error loading buildings from file {filepath}: {e}")
-            import traceback
             logger.debug(traceback.format_exc())
             return []
 
