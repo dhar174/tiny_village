@@ -1969,7 +1969,20 @@ class GameplayController:
         return default_buildings
 
     def _load_buildings_from_file(self, filepath: str) -> List[Dict]:
-        """Load building configuration from external file."""
+        """
+        Load building configuration from external file with comprehensive validation.
+        
+        Supports all building properties including:
+        - Required: name, x, y
+        - Optional: width (default 40), height (default 40), type, length, stories, num_rooms, address, owner, description, door
+        - Additional custom properties are preserved
+        
+        Args:
+            filepath: Path to JSON file containing building definitions
+            
+        Returns:
+            List of building dictionaries ready for instantiation
+        """
         try:
             import json
             import os
@@ -1981,31 +1994,143 @@ class GameplayController:
             with open(filepath, "r") as f:
                 data = json.load(f)
 
+            # Validate JSON structure
+            if not isinstance(data, dict):
+                logger.error(f"Invalid JSON structure in {filepath}: expected object with 'buildings' array")
+                return []
+                
+            if "buildings" not in data:
+                logger.error(f"No 'buildings' array found in {filepath}")
+                return []
+
             buildings = []
-            for building_data in data.get("buildings", []):
-                # Convert to required format
-                building = {
-                    "name": building_data.get("name", "Unknown Building"),
-                    "type": building_data.get("type", "generic"),
-                    "rect": pygame.Rect(
-                        building_data.get("x", 0),
-                        building_data.get("y", 0),
-                        building_data.get("width", 40),
-                        building_data.get("height", 40),
-                    ),
-                }
+            for idx, building_data in enumerate(data.get("buildings", [])):
+                try:
+                    # Validate required fields
+                    required_fields = ["name", "x", "y"]
+                    missing_fields = [f for f in required_fields if f not in building_data]
+                    if missing_fields:
+                        logger.warning(
+                            f"Building at index {idx} missing required fields: {missing_fields}. Skipping."
+                        )
+                        continue
+                    
+                    # Extract and validate coordinates
+                    x = building_data.get("x", 0)
+                    y = building_data.get("y", 0)
+                    width = building_data.get("width", 40)
+                    height = building_data.get("height", 40)
+                    
+                    # Validate numeric values individually so valid fields are preserved
+                    def safe_int(value, default, field_name):
+                        try:
+                            result = int(value)
+                            # Validate range: ensure non-negative and within reasonable bounds
+                            if result < 0:
+                                logger.warning(
+                                    f"Negative value for '{field_name}' in building '{building_data.get('name')}': {result}. "
+                                    f"Using default {default}."
+                                )
+                                return default
+                            # Check for unreasonably large values (e.g., > 10000 pixels)
+                            if result > 10000:
+                                logger.warning(
+                                    f"Unreasonably large value for '{field_name}' in building '{building_data.get('name')}': {result}. "
+                                    f"Using default {default}."
+                                )
+                                return default
 
-                # Add any additional properties
-                for key, value in building_data.items():
-                    if key not in ["x", "y", "width", "height"]:
-                        building[key] = value
+                    # Validate numeric values individually so valid fields are preserved
+                    def safe_int(value, default, field_name):
+                        try:
+                            return int(value)
+                        except (ValueError, TypeError) as e:
+                            logger.warning(
+                                f"Invalid value for '{field_name}' in building '{building_data.get('name')}': {e}. "
+                                f"Using default {default}."
+                            )
+                            return default
 
-                buildings.append(building)
+                    x = safe_int(x, 0, "x")
+                    y = safe_int(y, 0, "y")
+                    width = safe_int(width, 40, "width")
+                    height = safe_int(height, 40, "height")
+                    
+                    # Validate building type
+                    building_type = building_data.get("type", "building")
+                    valid_types = [
+                        "residential", "house", "commercial", "shop", "social", "tavern",
+                        "crafting", "workshop", "agricultural", "farm", "educational",
+                        "school", "library", "civic", "office", "building"
+                    ]
+                    if building_type not in valid_types:
+                        logger.info(
+                            f"Building '{building_data.get('name')}' has unrecognized type '{building_type}'. "
+                            f"It will use default 'building' interactions."
+                        )
+                    
+                    # Build the building dict
+                    building = {
+                        "name": building_data.get("name", "Unknown Building"),
+                        "type": building_type,
+                        "rect": pygame.Rect(x, y, width, height),
+                    }
 
+                    # Add optional properties with validation
+                    optional_properties = {
+                        "length": (int, height),  # Default length to height if not provided
+                        "stories": (int, 1),
+                        "num_rooms": (int, 1),
+                        "address": (str, ""),
+                        "owner": (str, None),
+                        "description": (str, ""),
+                        "door": (dict, None),
+                    }
+                    
+                    for prop, (prop_type, default) in optional_properties.items():
+                        if prop in building_data:
+                            try:
+                                if prop_type == int:
+                                    building[prop] = int(building_data[prop])
+                                elif prop_type == str:
+                                    building[prop] = str(building_data[prop])
+                                else:
+                                    building[prop] = building_data[prop]
+                            except (ValueError, TypeError) as e:
+                                logger.warning(
+                                    f"Invalid value for property '{prop}' in building '{building['name']}': {e}. Using default."
+                                )
+                                building[prop] = default
+                        elif default is not None:
+                            building[prop] = default
+                    
+                    # Preserve any additional custom properties not explicitly handled
+                    excluded_keys = set(
+                        ["x", "y", "width", "height", "name", "type"]
+                        + list(optional_properties.keys())
+                    )
+                    for key, value in building_data.items():
+                        if key not in excluded_keys and key not in building:
+                            building[key] = value
+
+                    buildings.append(building)
+                    logger.debug(f"Successfully loaded building: {building['name']}")
+                    
+                except Exception as e:
+                    logger.warning(
+                        f"Error processing building at index {idx}: {e}. Skipping this building."
+                    )
+                    continue
+
+            logger.info(f"Successfully loaded {len(buildings)} buildings from {filepath}")
             return buildings
 
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON in file {filepath}: {e}")
+            return []
         except Exception as e:
             logger.error(f"Error loading buildings from file {filepath}: {e}")
+            logger.debug(traceback.format_exc())
             return []
 
     def initialize_game_systems(self):
