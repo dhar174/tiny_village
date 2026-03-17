@@ -212,6 +212,7 @@ class TestGameplayController(unittest.TestCase):
     def test_render_ui_with_modular_system(self):
         """Test that _render_ui works with the modular system and verifies expected behavior."""
         # Ensure modular UI system is initialized
+        self.assertTrue(self.controller.initialize_modular_ui_system(), "Controller should initialize the modular UI system")
         self.assertTrue(hasattr(self.controller, 'ui_panels'), "Controller should have ui_panels")
         self.assertTrue(hasattr(self.controller, 'ui_fonts'), "Controller should have ui_fonts")
         self.assertSetEqual(
@@ -228,26 +229,45 @@ class TestGameplayController(unittest.TestCase):
             self.assertIn(panel_name, self.controller.ui_panels, f"Panel {panel_name} should exist")
             panel = self.controller.ui_panels[panel_name]
             self.assertTrue(panel.visible, f"Panel {panel_name} should be visible by default")
-        
+
         test_surface = pygame.Surface((100, 100))
         char_info_panel = self.controller.ui_panels['character_info']
         weather_panel = self.controller.ui_panels['weather']
 
+        before_panel_render = pygame.image.tostring(test_surface, "RGB")
         result = char_info_panel.render(test_surface, self.controller, self.controller.ui_fonts)
+        after_panel_render = pygame.image.tostring(test_surface, "RGB")
         self.assertIsInstance(result, int, "Panel render should return a height using the controller/fonts API")
         self.assertGreaterEqual(result, 0, "Panel render height should be non-negative")
         self.assertLessEqual(result, test_surface.get_height(), "Panel render height should fit within the test surface")
+        self.assertNotEqual(before_panel_render, after_panel_render, "Panel render should draw content onto the target surface")
 
-        weather_panel.visible = False
+        original_visibility = {
+            panel_name: panel.visible for panel_name, panel in self.controller.ui_panels.items()
+        }
         try:
-            with patch.object(char_info_panel, "render", wraps=char_info_panel.render) as visible_render, \
-                 patch.object(weather_panel, "render", wraps=weather_panel.render) as hidden_render:
-                self.controller._render_ui()
+            for panel in self.controller.ui_panels.values():
+                panel.visible = False
+
+            char_info_panel.visible = True
+            weather_panel.visible = False
+            self.controller.screen.fill((0, 0, 0))
+            before_visible_ui = pygame.image.tostring(self.controller.screen, "RGB")
+            self.controller._render_ui()
+            after_visible_ui = pygame.image.tostring(self.controller.screen, "RGB")
+            self.assertNotEqual(before_visible_ui, after_visible_ui, "Visible modular panels should change the rendered screen")
+
+            char_info_panel.visible = False
+            self.controller.screen.fill((0, 0, 0))
+            before_hidden_ui = pygame.image.tostring(self.controller.screen, "RGB")
+            self.controller._render_ui()
+            after_hidden_ui = pygame.image.tostring(self.controller.screen, "RGB")
+            self.assertEqual(before_hidden_ui, after_hidden_ui, "Fully hidden modular panels should not draw onto the screen")
         except Exception as e:
             self.fail(f"Modular UI rendering failed with error: {e}")
-
-        visible_render.assert_called_once_with(self.controller.screen, self.controller, self.controller.ui_fonts)
-        hidden_render.assert_not_called()
+        finally:
+            for panel_name, visible in original_visibility.items():
+                self.controller.ui_panels[panel_name].visible = visible
 
     def test_render_ui_fallback_modes(self):
         """Test that UI rendering falls back gracefully when panels are unavailable."""
