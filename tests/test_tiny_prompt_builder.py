@@ -75,6 +75,7 @@ class TestPromptBuilder(unittest.TestCase):
         """Set up test cases with configurable MockInventory."""
         # Create mock character for testing inventory scenarios
         self.character = MockCharacter(hunger_level=2, wealth_money=10)
+        self.prompt_builder = PromptBuilder(self.character)
         self.mock_needs = MagicMock()
         self.mock_actions = MagicMock()
         self.prompt_builder.needs_priorities_func = self.mock_needs
@@ -219,11 +220,25 @@ class TestPromptBuilder(unittest.TestCase):
         self.assertEqual(self.prompt_builder.needs_priorities, {"need1": 1})
 
     def test_generate_daily_routine_prompt(self):
-        self.mock_actions.prioritize_actions.return_value = ["buy_food", "social_visit"]Expand commentComment on line R52ResolvedCode has comments. Press enter to view.
-        with patch('tiny_prompt_builder.descriptors.get_action_descriptors') as mock_desc:Expand commentComment on line R53ResolvedCode has comments. Press enter to view.
-            mock_desc.side_effect = ["Go shopping", "Meet friend"]
-            prompt = self.prompt_builder.generate_daily_routine_prompt("morning", "sunny")
-        self.mock_actions.prioritize_actions.assert_called_once_with(self.character)
+        # Mock context_manager to avoid dependency issues and ensure stable character info
+        self.prompt_builder.context_manager = MagicMock()
+        self.prompt_builder.context_manager.assemble_complete_context.return_value = {
+            'character': {'basic_info': {'name': 'Emily', 'job': 'Engineer'}},
+            'memories': [],
+            'goals': {'active_goals': [], 'needs_priorities': {}}
+        }
+        # Patch ActionOptions to avoid instantiation issues with MockCharacter
+        with patch('tiny_prompt_builder.ActionOptions') as MockActionOptions:
+            mock_instance = MagicMock()
+            mock_instance.prioritize_actions.return_value = ["buy_food", "social_visit"]
+            MockActionOptions.return_value = mock_instance
+            
+            with patch('tiny_prompt_builder.descriptors.get_action_descriptors') as mock_desc:
+                mock_desc.side_effect = ["Go shopping", "Meet friend"]
+                prompt = self.prompt_builder.generate_daily_routine_prompt("morning", "sunny")
+            
+            mock_instance.prioritize_actions.assert_called_once_with(self.character)
+        
         self.assertIn("1. Go shopping to Buy_Food.", prompt)
         self.assertIn("2. Meet friend to Social_Visit.", prompt)
         self.assertIn("Emily, I choose", prompt)
@@ -279,6 +294,278 @@ class TestPromptBuilder(unittest.TestCase):
         # This proves that configurable MockInventory catches scenarios that fixed values miss
         self.assertNotEqual(buy_food_fixed, buy_food_high, 
                            "Configurable MockInventory enables testing scenarios that fixed values would never test")
+
+
+class TestDynamicActionGeneration(unittest.TestCase):
+    """Test suite for dynamic action generation from StrategyManager/GOAPPlanner."""
+    
+    def setUp(self):
+        """Set up test cases for dynamic action generation."""
+        self.character = MockCharacter(hunger_level=5, wealth_money=50)
+        self.character.energy = 7
+        self.character.mental_health = 8
+        self.character.social_wellbeing = 6
+        
+        # Ensure descriptor defaults exist for dictionaries
+        descriptors.job_currently_working_on.setdefault("default", ["a project"])
+        descriptors.job_planning_to_attend.setdefault("default", ["an event"])
+        descriptors.job_hoping_to_there.setdefault("default", ["participate"])
+        descriptors.feeling_health.setdefault("default", ["healthy"])
+        descriptors.feeling_hunger.setdefault("default", ["hungry"])
+        descriptors.event_recent.setdefault("default", ["Recently"])
+        descriptors.financial_situation.setdefault("default", ["you have some money"])
+        descriptors.weather_description.setdefault("default", ["nice weather"])
+        descriptors.motivation.setdefault("default", ["You are motivated to"])
+        descriptors.routine_question_framing.setdefault("default", ["What do you do?"])
+        
+        self.prompt_builder = PromptBuilder(self.character)
+    
+    def test_generate_daily_routine_prompt_with_dynamic_actions(self):
+        """Test that generate_daily_routine_prompt includes dynamic actions when prioritize_actions returns choices."""
+        # Mock prioritize_actions to return formatted action choices
+        mock_choices = [
+            "1. Rest to regain energy (Utility: 7.5) - Effects: energy: +0.15",
+            "2. Work on project (Utility: 6.8) - Effects: money: +20.0",
+            "3. Exercise (Utility: 5.2) - Effects: health: +0.10"
+        ]
+        
+        with patch.object(self.prompt_builder, 'prioritize_actions', return_value=mock_choices):
+            prompt = self.prompt_builder.generate_daily_routine_prompt("morning", "sunny")
+            
+            # Verify dynamic action choices are in the prompt
+            self.assertIn("Options:", prompt)
+            self.assertIn("1. Rest to regain energy (Utility: 7.5) - Effects: energy: +0.15", prompt)
+            self.assertIn("2. Work on project (Utility: 6.8) - Effects: money: +20.0", prompt)
+            self.assertIn("3. Exercise (Utility: 5.2) - Effects: health: +0.10", prompt)
+            
+            # Verify utility scores and effects are included
+            self.assertIn("Utility:", prompt)
+            self.assertIn("Effects:", prompt)
+    
+    def test_generate_daily_routine_prompt_fallback_to_action_options(self):
+        """Test that generate_daily_routine_prompt falls back to action_options.prioritize_actions when prioritize_actions returns empty."""
+        # Mock prioritize_actions to return empty list (simulating ImportError or no actions)
+        with patch.object(self.prompt_builder, 'prioritize_actions', return_value=[]):
+            # Mock action_options.prioritize_actions to return fallback actions
+            self.prompt_builder.action_options.prioritize_actions = MagicMock(
+                return_value=["buy_food", "social_visit", "work_current_job"]
+            )
+            
+            # Mock descriptors for fallback formatting
+            with patch('tiny_prompt_builder.descriptors.get_action_descriptors') as mock_desc:
+                mock_desc.side_effect = ["Go shopping", "Visit friend", "Go to work"]
+                
+                prompt = self.prompt_builder.generate_daily_routine_prompt("morning", "sunny")
+                
+                # Verify fallback actions are in the prompt
+                self.assertIn("Options:", prompt)
+                self.assertIn("1. Go shopping to Buy_Food.", prompt)
+                self.assertIn("2. Visit friend to Social_Visit.", prompt)
+                self.assertIn("3. Go to work to Work_Current_Job.", prompt)
+                
+                # Verify action_options.prioritize_actions was called as fallback
+                self.prompt_builder.action_options.prioritize_actions.assert_called_once_with(self.character)
+    
+    def test_dynamic_action_format_in_prompt(self):
+        """Test that dynamic actions are formatted correctly with numbering, description, utility, and effects."""
+        # Mock prioritize_actions with various action formats
+        mock_choices = [
+            "1. Simple action (Utility: 4.2)",  # No effects
+            "2. Action with effects (Utility: 8.7) - Effects: energy: -0.3, money: +15.5",  # Multiple effects
+            "3. Another action (Utility: 6.0) - Effects: health: +0.10"  # Single effect
+        ]
+        
+        with patch.object(self.prompt_builder, 'prioritize_actions', return_value=mock_choices):
+            prompt = self.prompt_builder.generate_daily_routine_prompt("morning", "sunny")
+            
+            # Verify all action formats are preserved in the prompt
+            self.assertIn("1. Simple action (Utility: 4.2)", prompt)
+            self.assertIn("2. Action with effects (Utility: 8.7) - Effects: energy: -0.3, money: +15.5", prompt)
+            self.assertIn("3. Another action (Utility: 6.0) - Effects: health: +0.10", prompt)
+    
+    def test_prioritize_actions_integration(self):
+        """Integration test to verify prioritize_actions method structure and error handling."""
+        # This tests the actual method behavior without mocking internals
+        # If StrategyManager/utility functions are available, it should work
+        # If not, it should gracefully return empty list
+        
+        try:
+            # Try calling the actual method
+            action_choices = self.prompt_builder.prioritize_actions()
+            
+            # If it succeeds, verify it returns a list
+            self.assertIsInstance(action_choices, list)
+            
+            # If it returns choices, verify they have the expected format
+            if action_choices:
+                for choice in action_choices:
+                    self.assertIsInstance(choice, str)
+                    # Should have numbering
+                    self.assertRegex(choice, r'^\d+\.')
+                    # Should have utility score
+                    self.assertIn("Utility:", choice)
+                    
+        except ImportError:
+            # If imports fail, that's expected in test environment
+            # The method should handle it gracefully
+            pass
+    
+    def test_fallback_mechanism_in_prompt_generation(self):
+        """Test that fallback mechanism is triggered when prioritize_actions returns empty."""
+        # Mock empty prioritize_actions return
+        with patch.object(self.prompt_builder, 'prioritize_actions', return_value=[]):
+            # Ensure action_options has a prioritize_actions method
+            if not hasattr(self.prompt_builder.action_options, 'prioritize_actions'):
+                self.prompt_builder.action_options.prioritize_actions = MagicMock(return_value=["test_action"])
+            
+            original_method = self.prompt_builder.action_options.prioritize_actions
+            self.prompt_builder.action_options.prioritize_actions = MagicMock(
+                return_value=["test_action"]
+            )
+            
+            with patch('tiny_prompt_builder.descriptors.get_action_descriptors', return_value="Test Action"):
+                prompt = self.prompt_builder.generate_daily_routine_prompt("morning", "sunny")
+                
+                # Verify fallback was called
+                self.prompt_builder.action_options.prioritize_actions.assert_called_once()
+                
+                # Verify prompt contains fallback action
+                self.assertIn("Test Action", prompt)
+
+
+class TestGenerateDailyRoutinePromptWithActions(unittest.TestCase):
+    """Test suite for generate_daily_routine_prompt with actions parameter functionality."""
+    
+    def setUp(self):
+        """Set up test cases for actions parameter testing."""
+        self.character = MockCharacter(hunger_level=5, wealth_money=20)
+        self.prompt_builder = PromptBuilder(self.character)
+        
+        # Mock dependencies
+        self.mock_context_manager = MagicMock()
+        self.prompt_builder.context_manager = self.mock_context_manager
+        
+        # Set up default context
+        self.mock_context_manager.assemble_complete_context.return_value = {
+            'character': {
+                'basic_info': {
+                    'name': 'Emily',
+                    'job': 'Engineer'
+                }
+            },
+            'memories': [],
+            'goals': {
+                'active_goals': [],
+                'needs_priorities': {}
+            }
+        }
+        
+    def test_actions_parameter_none_uses_prioritize_actions(self):
+        """Test that when actions=None, the function calls prioritize_actions."""
+        # Set up mock to return specific actions
+        expected_actions = ['work', 'eat', 'sleep', 'exercise']
+        
+        # Patch ActionOptions at the module level to avoid instantiation issues
+        with patch('tiny_prompt_builder.ActionOptions') as MockActionOptions:
+            mock_instance = MagicMock()
+            mock_instance.prioritize_actions.return_value = expected_actions
+            MockActionOptions.return_value = mock_instance
+            
+            with patch('tiny_prompt_builder.descriptors.get_action_descriptors') as mock_desc:
+                mock_desc.side_effect = lambda x: x.replace('_', ' ').title()
+                prompt = self.prompt_builder.generate_daily_routine_prompt(
+                    "morning", "sunny", actions=None
+                )
+            
+            # Verify ActionOptions was instantiated and prioritize_actions was called
+            MockActionOptions.assert_called_once()
+            mock_instance.prioritize_actions.assert_called_once_with(self.character)
+        
+        # Verify actions appear in prompt
+        self.assertIn("Options:", prompt)
+        
+    def test_actions_parameter_provided_skips_prioritize_actions(self):
+        """Test that when actions are provided, prioritize_actions is not called."""
+        custom_actions = ['read_book', 'write_code', 'debug']
+        
+        # Patch ActionOptions to verify it's NOT instantiated when actions are provided
+        with patch('tiny_prompt_builder.ActionOptions') as MockActionOptions:
+            with patch('tiny_prompt_builder.descriptors.get_action_descriptors') as mock_desc:
+                mock_desc.side_effect = lambda x: x.replace('_', ' ').title()
+                prompt = self.prompt_builder.generate_daily_routine_prompt(
+                    "morning", "sunny", actions=custom_actions
+                )
+            
+            # Verify ActionOptions was NOT instantiated when actions are provided
+            MockActionOptions.assert_not_called()
+        
+        # Verify custom actions appear in prompt
+        self.assertIn("Options:", prompt)
+        
+    def test_actions_formatted_with_numbers_during_iteration(self):
+        """Test that actions are numbered during iteration (1. 2. 3. etc)."""
+        unnumbered_actions = ['action_one', 'action_two', 'action_three']
+        
+        with patch('tiny_prompt_builder.descriptors.get_action_descriptors') as mock_desc:
+            mock_desc.side_effect = lambda x: x.replace('_', ' ').title()
+            prompt = self.prompt_builder.generate_daily_routine_prompt(
+                "morning", "sunny", actions=unnumbered_actions
+            )
+        
+        # Verify actions are numbered in the prompt
+        self.assertIn("1. Action One", prompt)
+        self.assertIn("2. Action Two", prompt)
+        self.assertIn("3. Action Three", prompt)
+        
+    def test_actions_not_prenumbered(self):
+        """Test that the function expects unnumbered actions (not pre-numbered strings)."""
+        # This tests the fix - actions should NOT be pre-numbered
+        unnumbered_actions = ['work', 'eat', 'sleep']
+        
+        with patch('tiny_prompt_builder.descriptors.get_action_descriptors') as mock_desc:
+            mock_desc.side_effect = lambda x: x.replace('_', ' ').title()
+            prompt = self.prompt_builder.generate_daily_routine_prompt(
+                "morning", "sunny", actions=unnumbered_actions
+            )
+        
+        # Should NOT find double-numbering like "1. 1. Work"
+        self.assertNotIn("1. 1.", prompt)
+        self.assertNotIn("2. 2.", prompt)
+        
+        # Should find proper single numbering
+        self.assertIn("1. Work", prompt)
+        self.assertIn("2. Eat", prompt)
+        self.assertIn("3. Sleep", prompt)
+        
+    def test_consistency_with_decision_prompt_pattern(self):
+        """Test that action handling is consistent with generate_decision_prompt pattern."""
+        # Both functions should handle actions consistently - daily_routine numbers them,
+        # decision_prompt expects pre-numbered strings
+        test_actions = ['work', 'eat', 'sleep']
+        
+        with patch('tiny_prompt_builder.descriptors.get_action_descriptors') as mock_desc:
+            mock_desc.side_effect = lambda x: x.replace('_', ' ').title()
+            
+            # Generate daily routine prompt with unnumbered actions
+            routine_prompt = self.prompt_builder.generate_daily_routine_prompt(
+                "morning", "sunny", actions=test_actions
+            )
+            
+            # Verify routine prompt has numbered actions (it adds numbering)
+            self.assertIn("1. Work", routine_prompt)
+            self.assertIn("2. Eat", routine_prompt)
+            self.assertIn("3. Sleep", routine_prompt)
+            
+            # Generate decision prompt with pre-numbered actions (as used by StrategyManager)
+            pre_numbered_actions = ['1. Work', '2. Eat', '3. Sleep']
+            decision_prompt = self.prompt_builder.generate_decision_prompt(
+                "morning", "sunny", action_choices=pre_numbered_actions
+            )
+            
+            # Verify decision prompt contains the pre-numbered actions as-is
+            self.assertIn("1. Work", decision_prompt)
+            self.assertIn("2. Eat", decision_prompt)
+            self.assertIn("3. Sleep", decision_prompt)
 
 
 if __name__ == "__main__":

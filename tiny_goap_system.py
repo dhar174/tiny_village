@@ -77,6 +77,9 @@ class Plan:
         current_action_index (int): Index of the current action being evaluated.
         completed_actions (set): Set of completed actions.
     """
+    
+    # Constants for utility calculations
+    UTILITY_INFLUENCE_FACTOR = 0.05
 
     def __init__(self, name, goals=None, actions=None, graph_manager=None):
         self.name = name
@@ -1488,7 +1491,7 @@ class GOAPPlanner:
         # Calculate priority with utility influence
         # Lower priority number means higher priority
         base_priority = cost
-        utility_adjustment = utility * UTILITY_INFLUENCE_FACTOR
+        utility_adjustment = utility * self.UTILITY_INFLUENCE_FACTOR
         
         # Higher utility should result in lower priority number (higher actual priority)
         priority = base_priority - utility_adjustment

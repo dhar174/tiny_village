@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from tiny_buildings import Building, House, CreateBuilding
 from tiny_locations import Location, LocationManager
 from actions import ActionSystem
+from simple_character_for_testing import SimpleCharacter, SimplePersonalityTraits
 
 
 def demo_building_location_integration():
@@ -81,66 +82,15 @@ def demo_character_location_decisions():
     """Demonstrate character AI location decision-making"""
     print("\n\n=== Character AI Location Decisions Demo ===\n")
     
-    # Create a mock character class for demonstration
-    class MockCharacter:
-        def __init__(self, name, energy=10, social_wellbeing=8):
-            self.name = name
-            self.energy = energy
-            self.social_wellbeing = social_wellbeing
-            self.wealth_money = 50
-            
-            # Mock personality traits
-            class MockPersonalityTraits:
-                def __init__(self, neuroticism, extraversion):
-                    self.neuroticism = neuroticism
-                    self.extraversion = extraversion
-                    
-            self.personality_traits = MockPersonalityTraits(
-                neuroticism=60, extraversion=70
-            )
-            self.home = None
-            
-        def evaluate_location_for_visit(self, building):
-            """Simplified version of the location evaluation"""
-            if not hasattr(building, 'get_location'):
-                return 0
-                
-            location = building.get_location()
-            score = 50  # Base score
-            
-            # Factor in security based on personality
-            security = location.security
-            neuroticism = self.personality_traits.neuroticism
-            if neuroticism > 70:
-                score += (security - 5) * 3
-                
-            # Factor in popularity based on extraversion
-            popularity = location.popularity
-            extraversion = self.personality_traits.extraversion
-            if extraversion > 70:
-                score += (popularity - 5) * 3
-                
-            # Factor in activities based on current needs
-            activities = location.activities_available
-            
-            # Rest activities are valuable when energy is low
-            if self.energy < 5:
-                if any('rest' in activity or 'sleep' in activity for activity in activities):
-                    score += 20
-                    
-            # Social activities are valuable for social wellbeing
-            if self.social_wellbeing < 5:
-                if any('visit' in activity or 'social' in activity for activity in activities):
-                    score += 15
-                    
-            return max(0, min(100, score))
-    
     # Create test characters with different traits
     characters = [
-        MockCharacter("Alice (High Energy, Social)", energy=9, social_wellbeing=8),
-        MockCharacter("Bob (Low Energy, Tired)", energy=2, social_wellbeing=8),
-        MockCharacter("Carol (Socially Isolated)", energy=8, social_wellbeing=2),
+        SimpleCharacter("Alice (High Energy, Social)", energy=9, social_wellbeing=8),
+        SimpleCharacter("Bob (Low Energy, Tired)", energy=2, social_wellbeing=8),
+        SimpleCharacter("Carol (Socially Isolated)", energy=8, social_wellbeing=2),
     ]
+    characters[0].personality_traits = SimplePersonalityTraits(neuroticism=60, extraversion=70)
+    characters[1].personality_traits = SimplePersonalityTraits(neuroticism=60, extraversion=45)
+    characters[2].personality_traits = SimplePersonalityTraits(neuroticism=40, extraversion=65)
     
     # Create test buildings
     buildings = [
@@ -170,49 +120,10 @@ def demo_map_controller_integration():
     """Demonstrate MapController integration"""
     print("\n\n=== MapController Integration Demo ===\n")
     
-    # Create a mock MapController for demonstration
-    class MockMapController:
-        def __init__(self):
-            self.buildings = []
-            
-        def add_building(self, building):
-            self.buildings.append(building)
-            
-        def get_buildings_at_position(self, position):
-            x, y = position
-            buildings_at_pos = []
-            for building in self.buildings:
-                if building.is_within_building((x, y)):
-                    buildings_at_pos.append(building)
-            return buildings_at_pos
-            
-        def find_safe_locations(self, min_security=7):
-            safe_locations = []
-            for building in self.buildings:
-                location = building.get_location()
-                if location.security >= min_security:
-                    safe_locations.append(building)
-            return safe_locations
-            
-        def find_popular_locations(self, min_popularity=6):
-            popular_locations = []
-            for building in self.buildings:
-                location = building.get_location()
-                if location.popularity >= min_popularity:
-                    popular_locations.append(building)
-            return popular_locations
-            
-        def find_locations_with_activity(self, activity):
-            matching_locations = []
-            for building in self.buildings:
-                location = building.get_location()
-                if activity in location.activities_available:
-                    matching_locations.append(building)
-            return matching_locations
-    
-    # Create controller and add buildings
-    controller = MockMapController()
-    
+    # Track buildings directly without mock controllers
+    controller_buildings = []
+    location_manager = LocationManager()
+
     buildings = [
         House("Safe Family Home", 10, 10, 30, 25, 20, "100 Safe St", bedrooms=4),
         Building("Popular Nightclub", 50, 30, 25, 20, 15, building_type="commercial"),
@@ -221,31 +132,34 @@ def demo_map_controller_integration():
     ]
     
     for building in buildings:
-        controller.add_building(building)
+        controller_buildings.append(building)
+        location_manager.add_location(building.get_location())
     
     print("MapController can find locations by criteria:")
     
     # Test position-based finding
     test_position = (15, 15)
-    buildings_at_pos = controller.get_buildings_at_position(test_position)
+    buildings_at_pos = [b for b in controller_buildings if b.is_within_building(test_position)]
     print(f"\nBuildings at position {test_position}:")
     for building in buildings_at_pos:
         print(f"  - {building.name}")
     
     # Test criteria-based finding
-    safe_locations = controller.find_safe_locations(min_security=8)
+    safe_locations = [b for b in controller_buildings if b.get_location().security >= 8]
     print(f"\nSafe locations (security >= 8):")
     for building in safe_locations:
         location = building.get_location()
         print(f"  - {building.name} (Security: {location.security})")
     
-    popular_locations = controller.find_popular_locations(min_popularity=7)
+    popular_locations = [b for b in controller_buildings if b.get_location().popularity >= 7]
     print(f"\nPopular locations (popularity >= 7):")
     for building in popular_locations:
         location = building.get_location()
         print(f"  - {building.name} (Popularity: {location.popularity})")
     
-    rest_locations = controller.find_locations_with_activity("rest")
+    rest_locations = [
+        b for b in controller_buildings if "rest" in b.get_location().activities_available
+    ]
     print(f"\nLocations with rest activity:")
     for building in rest_locations:
         print(f"  - {building.name}")
