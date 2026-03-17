@@ -950,7 +950,12 @@ class StrategyManager:
     def _build_goals_for_event(self, event_type, character, current_state):
         character_state = {}
         if isinstance(current_state, State):
-            character_state = current_state.dict_or_obj if isinstance(current_state.dict_or_obj, dict) else {}
+            dict_or_obj = getattr(current_state, "dict_or_obj", None)
+            if isinstance(dict_or_obj, dict):
+                character_state = dict_or_obj
+            elif dict_or_obj is not None and hasattr(dict_or_obj, "__dict__"):
+                # Fallback: use the object's __dict__ if it carries state as attributes
+                character_state = dict_or_obj.__dict__
         if not character_state:
             character_state = self.get_character_state_dict(character)
 
