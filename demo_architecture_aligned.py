@@ -25,8 +25,6 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 from tiny_strategy_manager import StrategyManager
 from tiny_event_handler import Event, EventHandler
-from tiny_utility_functions import Goal, calculate_action_utility
-from actions import Action, State
 
 try:
     from tiny_goap_system import GOAPPlanner
@@ -38,9 +36,10 @@ try:
 except ImportError:
     # Create a simple Character class for demo
     class Character:
-        def __init__(self, name, traits=None, job=None):
+        def __init__(self, name, age=25, pronouns="they/them", job=None):
             self.name = name
-            self.traits = traits or {}
+            self.age = age
+            self.pronouns = pronouns
             self.job = job
             self.energy = 50
             self.hunger_level = 50
@@ -80,7 +79,8 @@ class ArchitectureAlignedDemo:
         # Character 1: Alice - Low energy, needs rest
         alice = Character(
             name="Alice",
-            traits={"hardworking": 0.8, "friendly": 0.7},
+            age=28,
+            pronouns="she/her",
             job="farmer"
         )
         alice.energy = 30  # Low energy
@@ -95,7 +95,8 @@ class ArchitectureAlignedDemo:
         # Character 2: Bob - Hungry, needs food
         bob = Character(
             name="Bob",
-            traits={"social": 0.9, "adventurous": 0.6},
+            age=35,
+            pronouns="he/him",
             job="merchant"
         )
         bob.energy = 70
@@ -110,7 +111,8 @@ class ArchitectureAlignedDemo:
         # Character 3: Carol - Balanced, open to social interaction
         carol = Character(
             name="Carol",
-            traits={"creative": 0.8, "empathetic": 0.9},
+            age=30,
+            pronouns="she/her",
             job="artist"
         )
         carol.energy = 65

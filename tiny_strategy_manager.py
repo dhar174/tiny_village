@@ -1187,12 +1187,12 @@ class StrategyManager:
         with fallback to utility-based decision.
         """
         # Get career actions
-        actions = self.get_career_actions(character, job_details)
+        career_actions = self.get_career_actions(character, job_details)
         
         # If GOAP planner is not available, return first action (highest utility)
         if not self.goap_planner:
             logger.debug("GOAP planner not available, using first career action")
-            return actions[0] if actions else None
+            return career_actions[0] if career_actions else None
         
         # Create a proper Goal object for career decisions
         goal = Goal(
@@ -1205,8 +1205,8 @@ class StrategyManager:
         current_state = State({"satisfaction": 70, "career_progress": 50})  # Assuming current state
         
         # Convert dictionary actions to Action objects if needed
-        action_objects = []
-        for action_dict in actions:
+        actions = []
+        for action_dict in career_actions:
             if isinstance(action_dict, dict):
                 action_obj = Action(
                     name=action_dict["name"],
@@ -1217,13 +1217,13 @@ class StrategyManager:
                     ],
                     cost=action_dict.get("cost", 0)
                 )
-                action_objects.append(action_obj)
+                actions.append(action_obj)
             else:
-                action_objects.append(action_dict)
+                actions.append(action_dict)
 
         # Use GOAP to plan career moves with correct interface
         try:
-            plan = self.goap_planner.plan_actions(character, goal, current_state, action_objects)
+            plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
 
             # Evaluate the utility of the plan
             if plan:
@@ -1231,7 +1231,7 @@ class StrategyManager:
                 return final_decision
             else:
                 # Fallback to first action if no plan found
-                return action_objects[0] if action_objects else None
+                return actions[0] if actions else None
         except Exception as e:
             logger.warning(f"GOAP planning failed for job offer, using fallback: {e}")
-            return action_objects[0] if action_objects else None
+            return actions[0] if actions else None

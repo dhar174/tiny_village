@@ -13,7 +13,7 @@ Tests required by System Integration Agent:
 import unittest
 import sys
 import os
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, patch
 from datetime import datetime
 import time
 
@@ -164,7 +164,7 @@ class TestActionValidationFailures(unittest.TestCase):
         
     def test_action_with_invalid_parameters(self):
         """Test handling of actions with invalid parameters."""
-        # Create action with missing required parameters
+        # Create action with an attribute that may not exist on characters
         invalid_action = Action(
             name="InvalidAction",
             preconditions={},
@@ -172,11 +172,25 @@ class TestActionValidationFailures(unittest.TestCase):
             cost=1.0
         )
         
-        # System should handle this gracefully
-        # In real execution, the action system would validate
-        # For now, just verify we can create and work with it
+        # Verify action can be created
         self.assertIsNotNone(invalid_action)
         self.assertEqual(invalid_action.name, "InvalidAction")
+        
+        # Test that planning with this action doesn't crash the system
+        if self.sm.goap_planner:
+            from tiny_utility_functions import Goal
+            from actions import State
+            goal = Goal(name="test_goal", target_effects={"energy": 100})
+            state = State({"energy": 50})
+            
+            # Should handle gracefully - may return None or skip the invalid action
+            try:
+                plan = self.sm.goap_planner.plan_actions(
+                    self.character, goal, state, [invalid_action]
+                )
+                # Test passes if no exception
+            except Exception as e:
+                self.fail(f"Should handle invalid action gracefully, but raised: {e}")
         
     def test_action_with_impossible_preconditions(self):
         """Test handling of actions with impossible preconditions."""
@@ -191,7 +205,8 @@ class TestActionValidationFailures(unittest.TestCase):
         # GOAP planner should skip this action
         if self.sm.goap_planner:
             from tiny_utility_functions import Goal
-            goal = Goal(name="test_goal", target_effects={"energy": 100}, priority=1.0)
+            from actions import State
+            goal = Goal(name="test_goal", target_effects={"energy": 100})
             state = State({"energy": 50})
             
             # Planning with impossible action should either skip it or return None
@@ -237,9 +252,10 @@ class TestPlanInvalidation(unittest.TestCase):
             self.skipTest("GOAP planner not available")
             
         from tiny_utility_functions import Goal
+        from actions import State
         
         # Create a goal and initial state
-        goal = Goal(name="recover_energy", target_effects={"energy": 80}, priority=1.0)
+        goal = Goal(name="recover_energy", target_effects={"energy": 80})
         initial_state = State({"energy": 50, "hunger": 40})
         
         # Create actions that could be invalidated
@@ -270,13 +286,17 @@ class TestPlanInvalidation(unittest.TestCase):
         if not self.sm.goap_planner:
             self.skipTest("GOAP planner not available")
             
-        # In the architecture, Plan.handle_failure() should trigger replanning
-        # This is a documentation test to ensure the interface exists
-        # Actual implementation would test the behavior
-        
         # Verify GOAP planner has necessary methods for replanning
-        # (this validates the architecture compliance)
-        pass
+        # This validates the architecture compliance
+        planner = self.sm.goap_planner
+        self.assertTrue(
+            hasattr(planner, "plan_actions"),
+            "GOAP planner must define a 'plan_actions' method for replanning support",
+        )
+        self.assertTrue(
+            callable(planner.plan_actions),
+            "'plan_actions' on GOAP planner must be callable",
+        )
 
 
 class TestMemorySubsystemFailures(unittest.TestCase):
@@ -316,18 +336,17 @@ class TestMemorySubsystemFailures(unittest.TestCase):
             
     def test_memory_storage_failure(self):
         """Test handling when memory storage fails."""
+        # Future implementation: validate that execution continues if memory storage fails
         # In the architecture, action execution should generate memories
         # If memory storage fails, execution should continue
-        
-        # This is a placeholder for future memory integration
-        pass
+        # TODO: Implement once MemoryManager integration is complete
+        self.skipTest("Memory integration not yet implemented")
         
     def test_corrupted_memory_data(self):
         """Test handling of corrupted memory data."""
-        # Test that corrupted memory data doesn't crash the system
-        
-        # This is a placeholder for future memory integration
-        pass
+        # Future implementation: validate system handles corrupted memory gracefully
+        # TODO: Implement once MemoryManager integration is complete
+        self.skipTest("Memory integration not yet implemented")
 
 
 class TestEventDrivenFailures(unittest.TestCase):
@@ -345,6 +364,15 @@ class TestEventDrivenFailures(unittest.TestCase):
         char.energy = 50
         char.hunger_level = 50
         char.health_status = 75
+        char.mental_health = 70
+        char.social_wellbeing = 65
+        char.wealth_money = 100
+        char.location = Mock()
+        char.location.name = "Home"
+        char.job = "farmer"
+        char.inventory = Mock()
+        char.inventory.get_food_items = Mock(return_value=[])
+        char.get_current_goal = Mock(return_value=None)
         return char
         
     def test_malformed_event_handling(self):
@@ -354,13 +382,9 @@ class TestEventDrivenFailures(unittest.TestCase):
         malformed_event.type = None
         malformed_event.name = None
         
-        # Should handle gracefully
-        try:
-            result = self.sm.update_strategy([malformed_event], subject=self.character)
-            # Should not crash
-        except Exception as e:
-            # If it raises, it should be caught and handled
-            pass
+        # System should handle malformed events gracefully
+        self.sm.update_strategy([malformed_event], subject=self.character)
+        # Test passes if no exception is raised
             
     def test_missing_event_participants(self):
         """Test handling of events with missing participants."""
@@ -373,13 +397,9 @@ class TestEventDrivenFailures(unittest.TestCase):
             participants=None  # Missing participants
         )
         
-        # Should handle gracefully
-        try:
-            result = self.sm.update_strategy([event], subject=self.character)
-            # Should not crash
-        except Exception as e:
-            # Should be handled
-            pass
+        # System should handle events with missing participants gracefully
+        self.sm.update_strategy([event], subject=self.character)
+        # Test passes if no exception is raised
             
     def test_cascading_event_failure(self):
         """Test handling when cascading events fail."""
@@ -395,13 +415,9 @@ class TestEventDrivenFailures(unittest.TestCase):
             cascading_events=["event1", "event2"]  # Simplified cascading events
         )
         
-        # Should handle cascading events gracefully
-        try:
-            result = self.sm.update_strategy([event], subject=self.character)
-            # Should not crash
-        except Exception as e:
-            # Should be handled
-            pass
+        # System should handle cascading events gracefully
+        self.sm.update_strategy([event], subject=self.character)
+        # Test passes if no exception is raised
 
 
 def run_failure_mode_tests():

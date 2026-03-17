@@ -13,15 +13,14 @@ These tests ensure the decision-making sequence follows the documented workflow:
 import unittest
 import sys
 import os
-from unittest.mock import Mock, MagicMock, patch, call
-from typing import List, Dict, Any
+from unittest.mock import Mock, patch
 
 # Add project root to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from tiny_strategy_manager import StrategyManager
-from tiny_event_handler import Event, EventHandler
-from actions import Action, State
+from tiny_event_handler import Event
+from actions import Action
 
 
 class TestArchitectureAlignment(unittest.TestCase):
@@ -102,7 +101,7 @@ class TestArchitectureAlignment(unittest.TestCase):
         from tiny_utility_functions import Goal
         goal = Goal(
             name="Rest and Recover",
-            completion_conditions={'energy': 80}
+            target_effects={'energy': 80}
         )
         
         actions = [
@@ -116,7 +115,7 @@ class TestArchitectureAlignment(unittest.TestCase):
         
         # Call GOAP planner
         try:
-            plan = self.strategy_manager.goap_planner.plan_actions(
+            self.strategy_manager.goap_planner.plan_actions(
                 self.character, goal, actions=actions
             )
             # Test passes if no exception is raised
@@ -165,8 +164,8 @@ class TestArchitectureAlignment(unittest.TestCase):
         
         # Should not crash even without GOAP
         try:
-            result = sm_no_goap.update_strategy([event], subject=self.character)
-            # Test passes if no exception
+            sm_no_goap.update_strategy([event], subject=self.character)
+            # Test passes if no exception - system should handle gracefully
         except Exception as e:
             self.fail(f"Should have fallback behavior, but raised: {e}")
 
@@ -236,12 +235,9 @@ class TestDecisionSequenceIntegration(unittest.TestCase):
         bad_event.type = None
         bad_event.name = None
         
-        try:
-            result = self.strategy_manager.update_strategy([bad_event], subject="Alice")
-            # Should handle gracefully
-        except Exception as e:
-            # Should not raise exception, but if it does, it should be caught
-            pass
+        # System should handle malformed events gracefully without crashing
+        self.strategy_manager.update_strategy([bad_event], subject="Alice")
+        # Test passes if no exception is raised
 
 
 class TestLLMIntegrationAlignment(unittest.TestCase):
@@ -301,14 +297,16 @@ class TestMemoryAndEventPropagation(unittest.TestCase):
     
     def test_event_creates_memory_entry(self):
         """Test Phase 11: Action results generate new events and memories."""
-        # This is a placeholder for future memory integration tests
+        # Future implementation: validate that executed actions create memory entries
         # Architecture shows: Actions → Events → Memories
-        pass
+        # TODO: Implement once MemoryManager integration is complete
+        self.skipTest("Memory integration not yet implemented")
         
     def test_cascading_events(self):
         """Test that one event can trigger cascading events."""
-        # This validates the feedback loop: Events → Actions → New Events
-        pass
+        # Future implementation: validate the feedback loop Events → Actions → New Events
+        # TODO: Implement cascading event validation
+        self.skipTest("Cascading event validation not yet implemented")
 
 
 def run_architecture_alignment_tests():
