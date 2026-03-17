@@ -10,7 +10,7 @@ Tiny Village is a single-repo Python simulation where contributor work usually t
 - `assets`: screenshots and other game-facing assets.
 - `docs`: current project documentation.
     - `guides`: end-user and getting-started docs.
-    - `reference`: technical reference docs; `docs/reference/AGENTS.md` is supplemental background, not the canonical root guide.
+    - `reference`: technical reference docs; `docs/reference/AGENTS.md` provides additional background and may be linked from other docs, but this root `AGENTS.md` is the primary up-to-date contributor guide while references are being consolidated.
     - `testing`: testing guidance, anti-pattern notes, and related references.
     - `archived`: historical or superseded documentation.
 - `design_docs`: architecture deep dives and system-design notes.
