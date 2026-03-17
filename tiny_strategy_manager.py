@@ -297,7 +297,11 @@ class StrategyManager:
                     if hasattr(character, "energy")
                     else 0.5
                 )  # Assuming energy 0-10
-                state["money"] = float(getattr(character, "wealth_money", 0))
+                state["money"] = (
+                    _normalize(getattr(character, "wealth_money", None), 1000.0)
+                    if hasattr(character, "wealth_money")
+                    else 0.0
+                )  # Assuming wealth_money 0-1000
 
                 # Add other relevant states if needed by utility function's need fulfillment logic
                 state["social_wellbeing"] = (
