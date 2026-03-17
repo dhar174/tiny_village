@@ -2039,7 +2039,11 @@ class GameplayController:
                                     f"Using default {default}."
                                 )
                                 return default
-                            return result
+
+                    # Validate numeric values individually so valid fields are preserved
+                    def safe_int(value, default, field_name):
+                        try:
+                            return int(value)
                         except (ValueError, TypeError) as e:
                             logger.warning(
                                 f"Invalid value for '{field_name}' in building '{building_data.get('name')}': {e}. "
