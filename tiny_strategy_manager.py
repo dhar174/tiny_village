@@ -49,15 +49,13 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-# Constants for goal targets
-SATISFACTION_TARGET = 70
-ENERGY_TARGET = 65
-# Strategic decision thresholds
-CRISIS_THRESHOLD = 0.3
-VARIETY_PROBABILITY = 0.2
-# # Constants for goal targets used in daily planning (normalized 0-1 scale)
-# SATISFACTION_TARGET = 0.8   # 80% satisfaction
-# ENERGY_TARGET = 0.8         # 80% energy
+# Constants for goal targets (normalized 0-1 scale)
+SATISFACTION_TARGET = 0.8  # 80% satisfaction
+ENERGY_TARGET = 0.65  # 65% energy
+
+# LLM decision thresholds
+CRISIS_THRESHOLD = 0.3  # Below 30% on critical stats
+VARIETY_PROBABILITY = 0.2  # 20% chance for variety
 
 # Constants for strategic LLM invocation criteria
 # These thresholds determine when to use LLM vs utility-based planning
@@ -117,6 +115,9 @@ class StrategyManager:
     """
     The StrategyManager class is responsible for managing the strategies used in goal-oriented action planning and utility evaluation.
     """
+
+    CRISIS_THRESHOLD = CRISIS_THRESHOLD
+    VARIETY_PROBABILITY = VARIETY_PROBABILITY
 
     def __init__(self, use_llm=False, model_name=None):
         # Initialize graph_manager using global instance
@@ -698,42 +699,60 @@ class StrategyManager:
         
         # Handle different character input types
         if isinstance(character, dict):
-            # If character is already a dictionary, use it directly
-            return character
+            # Preserve existing values while aliasing wealth_money for GOAP/actions that use money.
+            state = character.copy()
+            if "money" not in state and "wealth_money" in state:
+                try:
+                    state["money"] = float(state.get("wealth_money", 0.0))
+                except (TypeError, ValueError):
+                    state["money"] = 0.0
+            return state
         elif hasattr(character, '__dict__'):
             # If character is an object, extract attributes
             # Basic needs - assuming direct attribute access or simple getters
             # Normalize hunger/energy to 0-1 range if they aren't already.
             # For utility function: higher hunger = more need; lower energy = more need.
+            def _normalize(value, divisor, default=0.5):
+                try:
+                    return float(value) / divisor
+                except (TypeError, ValueError):
+                    return default
+
             try:
-                state["hunger"] = (
-                    getattr(character, "hunger_level", 0.0) / 10.0
-                    if hasattr(character, "hunger_level")
-                    else 0.5
+                state["hunger"] = _normalize(
+                    getattr(character, "hunger_level", None), 10.0
                 )  # Assuming hunger 0-10
-                state["health"] = (
-                    getattr(character, "health", 0.0) / 10.0
-                    if hasattr(character, "health")
-                    else 0.5
-                )  # Assuming health 0-10
-                state["energy"] = (
-                    getattr(character, "energy", 0.0) / 10.0
-                    if hasattr(character, "energy")
-                    else 0.5
+                state["energy"] = _normalize(
+                    getattr(character, "energy", None), 10.0
                 )  # Assuming energy 0-10
-                state["money"] = float(getattr(character, "wealth_money", 0))
+                try:
+                    state["money"] = float(getattr(character, "wealth_money", 0.0))
+                except (TypeError, ValueError):
+                    state["money"] = 0.0
 
                 # Add other relevant states if needed by utility function's need fulfillment logic
-                # e.g., social_wellbeing, mental_health
-                state["social_wellbeing"] = (
-                    getattr(character, "social_wellbeing", 5.0) / 10.0
-                    if hasattr(character, "social_wellbeing")
-                    else 0.5
+                state["social_wellbeing"] = _normalize(
+                    getattr(character, "social_wellbeing", None), 10.0
                 )
-                state["mental_health"] = (
-                    getattr(character, "mental_health", 5.0) / 10.0
-                    if hasattr(character, "mental_health")
-                    else 0.5
+                state["mental_health"] = _normalize(
+                    getattr(character, "mental_health", None), 10.0
+                )
+                state["health"] = _normalize(
+                    getattr(character, "health_status", None), 100.0
+                )
+                # satisfaction and happiness are independent attributes; happiness falls back
+                # to the computed satisfaction value only when the character truly lacks it.
+                state["satisfaction"] = _normalize(
+                    getattr(character, "satisfaction", None), 100.0
+                )
+                if hasattr(character, "happiness"):
+                    state["happiness"] = _normalize(
+                        getattr(character, "happiness", None), 100.0
+                    )
+                else:
+                    state["happiness"] = state["satisfaction"]
+                state["job_performance"] = _normalize(
+                    getattr(character, "job_performance", None), 100.0
                 )
             except (AttributeError, TypeError, ValueError) as e:
                 logger.warning(f"Error extracting character state: {e}, using defaults")
@@ -744,7 +763,11 @@ class StrategyManager:
                     "energy": 0.5,
                     "money": 0.0,
                     "social_wellbeing": 0.5,
-                    "mental_health": 0.5
+                    "mental_health": 0.5,
+                    "health": 0.5,
+                    "satisfaction": 0.5,
+                    "happiness": 0.5,
+                    "job_performance": 0.5,
                 }
         else:
             # Fallback for simple character representation
@@ -754,7 +777,11 @@ class StrategyManager:
                 "energy": 0.5,
                 "money": 0.0,
                 "social_wellbeing": 0.5,
-                "mental_health": 0.5
+                "mental_health": 0.5,
+                "health": 0.5,
+                "satisfaction": 0.5,
+                "happiness": 0.5,
+                "job_performance": 0.5,
             }
 
         return state
@@ -903,7 +930,12 @@ class StrategyManager:
         return [action_tuple[0] for action_tuple in sorted_actions]
 
     def decide_action_with_llm(
-        self, character, time="morning", weather="clear"
+        self,
+        character,
+        time="morning",
+        weather="clear",
+        potential_actions=None,
+        situation_context: dict = None,
     ) -> list[Action]:
         """
         Use LLM to make an intelligent decision about character actions.
@@ -918,7 +950,10 @@ class StrategyManager:
 
         try:
             # Step 1: Generate potential actions using utility-based system
-            potential_actions = self.get_daily_actions(character)
+            if potential_actions is None:
+                potential_actions = self.get_daily_actions(character)
+            if not potential_actions:
+                return []
 
             # Step 2: Create PromptBuilder for this character
             if not PromptBuilder:
@@ -1041,9 +1076,11 @@ class StrategyManager:
             for character in affected_characters:
                 character_obj = self._resolve_character(character)
                 char_id = self._get_character_identifier(character_obj)
-
-                situation_context = self._build_situation_context(event)
-                use_llm_for_strategy = self._should_use_llm_for_strategy(character_obj)
+                situation_context = self._build_event_context(event, event_type)
+                use_llm_for_strategy = (
+                    self._should_use_llm_for_strategy(character_obj)
+                    or self.should_use_llm_for_decision(character_obj, situation_context)
+                )
                 if event_type == "new_day":
                     plans[char_id] = self._handle_new_day_strategy(
                         character_obj, use_llm_for_strategy
@@ -1079,6 +1116,26 @@ class StrategyManager:
                     event_type, available_actions
                 )
 
+                if use_llm_for_strategy:
+                    llm_actions = self.decide_action_with_llm(
+                        character_obj,
+                        time=situation_context.get("time_of_day", "morning"),
+                        weather=situation_context.get("weather", "clear"),
+                        potential_actions=available_actions,
+                        situation_context=situation_context,
+                    )
+                    if llm_actions:
+                        plans[char_id] = llm_actions
+                        continue
+
+                goal_candidates = self._build_goals_for_event(
+                    event_type, character_obj, current_state
+                )
+                ranked_goals = self._rank_goals(character_obj, goal_candidates)
+                goal = ranked_goals[0] if ranked_goals else self._goal_for_event_type(
+                    event_type, self.get_character_state_dict(character_obj)
+                )
+
                 plan = None
                 if self.goap_planner:
                     try:
@@ -1096,6 +1153,25 @@ class StrategyManager:
                     plans[char_id] = self.plan_daily_activities(character_obj)
 
         return plans
+
+    def _build_event_context(self, event, event_type):
+        context = {
+            "event_type": event_type,
+            "social_complexity": 0.0,
+            "novelty_score": 0.0,
+        }
+        if event_type in ["social", "celebration", "festival"]:
+            context["social_complexity"] = 0.9
+        if event_type in ["crisis", "disaster", "emergency"]:
+            context["force_llm"] = True
+        if event_type not in ["new_day", "social", "economic", "work", "weather", "environmental", "crisis"]:
+            context["novelty_score"] = 0.7
+        for attr in ("impact", "importance", "time_of_day", "weather"):
+            if hasattr(event, attr):
+                context[attr] = getattr(event, attr)
+            elif isinstance(event, dict) and attr in event:
+                context[attr] = event.get(attr)
+        return context
 
     def _get_event_type(self, event):
         if hasattr(event, "type"):
@@ -1252,42 +1328,160 @@ class StrategyManager:
                 )
         return converted
 
-    def _goal_for_event_type(self, event_type):
+    def _get_money_value(self, character_state):
+        if isinstance(character_state, State):
+            nested_state = getattr(character_state, "dict_or_obj", None)
+            character_state = nested_state if nested_state is not None else character_state
+
+        if isinstance(character_state, dict):
+            for key in ("money", "wealth_money"):
+                if key in character_state:
+                    try:
+                        return float(character_state.get(key, 0.0))
+                    except (TypeError, ValueError):
+                        return 0.0
+        for key in ("money", "wealth_money"):
+            if hasattr(character_state, key):
+                try:
+                    return float(getattr(character_state, key))
+                except (TypeError, ValueError):
+                    return 0.0
+        return 0.0
+
+    def _select_best_action(self, actions, character, current_goal=None):
+        if not actions:
+            return None
+
+        character_state = self.get_character_state_dict(character)
+
+        def _score(action):
+            try:
+                return calculate_action_utility(character_state, action, current_goal)
+            except (AttributeError, TypeError, ValueError):
+                utility = getattr(action, "utility", None)
+                return utility if isinstance(utility, (int, float)) else float("-inf")
+
+        return max(actions, key=_score)
+
+    def _goal_for_event_type(self, event_type, character_state=None):
+        character_state = character_state or {}
+        current_money = self._get_money_value(character_state)
+        current_social = character_state.get("social_wellbeing", 0.5)
+        current_satisfaction = character_state.get("satisfaction", 0.5)
+        current_energy = character_state.get("energy", 0.5)
+        current_happiness = character_state.get("happiness", current_satisfaction)
+        current_job = character_state.get("job_performance", 0.5)
+
         if event_type in ["social", "celebration", "festival"]:
             return Goal(
                 name="social_engagement",
-                target_effects={"social_wellbeing": 80, "happiness": 75},
+                target_effects={
+                    "social_wellbeing": min(1.0, current_social + 0.2),
+                    "happiness": min(1.0, current_happiness + 0.2),
+                },
                 priority=0.8,
             )
         if event_type in ["economic", "trade", "market"]:
             return Goal(
                 name="economic_opportunity",
-                target_effects={"wealth": 100, "satisfaction": 70},
+                target_effects={
+                    "money": current_money + 20.0,
+                    "satisfaction": min(1.0, current_satisfaction + 0.15),
+                },
                 priority=0.9,
             )
         if event_type in ["crisis", "disaster", "emergency"]:
             return Goal(
                 name="crisis_response",
-                target_effects={"safety": 90, "energy": 60},
+                target_effects={
+                    "safety": 0.9,
+                    "energy": max(current_energy, 0.6),
+                },
                 priority=1.0,
             )
         if event_type in ["work", "task", "project"]:
             return Goal(
                 name="work_productivity",
-                target_effects={"job_performance": 85, "satisfaction": 65},
+                target_effects={
+                    "job_performance": min(1.0, current_job + 0.15),
+                    "satisfaction": min(1.0, current_satisfaction + 0.1),
+                },
                 priority=0.7,
             )
         if event_type in ["weather", "environmental"]:
             return Goal(
                 name="weather_adaptation",
-                target_effects={"safety": 80, "energy": 70},
+                target_effects={
+                    "safety": 0.8,
+                    "energy": max(current_energy, 0.7),
+                },
                 priority=0.8,
             )
         return Goal(
             name="balanced_response",
-            target_effects={"satisfaction": 70, "energy": 65},
+            target_effects={
+                "satisfaction": max(current_satisfaction, 0.7),
+                "energy": max(current_energy, 0.65),
+            },
             priority=0.6,
         )
+
+    def _build_goals_for_event(self, event_type, character, current_state):
+        character_state = {}
+        if isinstance(current_state, State):
+            dict_or_obj = getattr(current_state, "dict_or_obj", None)
+            if isinstance(dict_or_obj, dict):
+                character_state = dict_or_obj
+            elif dict_or_obj is not None and hasattr(dict_or_obj, "__dict__"):
+                # Fallback: use the object's __dict__ if it carries state as attributes
+                character_state = dict_or_obj.__dict__
+        if not character_state:
+            character_state = self.get_character_state_dict(character)
+
+        goals = [self._goal_for_event_type(event_type, character_state)]
+        if event_type != "new_day":
+            goals.append(
+                Goal(
+                    name="daily_wellbeing",
+                    target_effects={
+                        "satisfaction": max(character_state.get("satisfaction", 0.5), SATISFACTION_TARGET),
+                        "energy": max(character_state.get("energy", 0.5), ENERGY_TARGET),
+                    },
+                    priority=0.6,
+                )
+            )
+        return goals
+
+    def _rank_goals(self, character, goals):
+        if not goals:
+            return []
+        ranked = []
+        for goal in goals:
+            importance = getattr(goal, "priority", 0.5)
+            if (
+                self.goap_planner
+                and self.graph_manager
+                and hasattr(self.goap_planner, "evaluate_goal_importance")
+                and hasattr(character, "__dict__")
+            ):
+                try:
+                    importance = self.goap_planner.evaluate_goal_importance(
+                        character, goal, self.graph_manager
+                    )
+                except Exception as e:
+                    logger.debug(f"Goal importance fallback for {goal.name}: {e}")
+            try:
+                goal.priority = importance
+            except Exception as e:
+                logger.warning(
+                    "Failed to update priority for goal '%s' (%r): %s",
+                    getattr(goal, "name", type(goal).__name__),
+                    goal,
+                    e,
+                )
+            ranked.append((importance, goal))
+        ranked.sort(key=lambda item: item[0], reverse=True)
+        return [goal for _, goal in ranked]
 
     def _filter_actions_for_event(self, event_type, actions):
         if not actions:
@@ -1391,6 +1585,13 @@ class StrategyManager:
     def _handle_economic_event(self, event, character, situation_context=None):
         """Handle economic events by prioritizing wealth and trade actions."""
         try:
+            character_state = (
+                self.get_character_state_dict(character)
+                if not isinstance(character, str)
+                else {}
+            )
+            current_money = self._get_money_value(character_state)
+
             # Use event importance and impact from situation_context if available
             event_importance = 0.9  # Default high priority for economic events
             target_wealth = 100
@@ -1441,8 +1642,8 @@ class StrategyManager:
             
             goal = Goal(
                 name="crisis_response",
-                target_effects={"safety": target_safety, "energy": target_energy},
-                priority=event_importance
+                target_effects={"safety": 0.9, "energy": 0.6},
+                priority=1.0  # Highest priority
             )
             
             # In crisis, prioritize safety and basic needs
@@ -1605,7 +1806,7 @@ class StrategyManager:
             # Default balanced goal
             goal = Goal(
                 name="balanced_response",
-                target_effects={"satisfaction": 70, "energy": 65},
+                target_effects={"satisfaction": 0.7, "energy": 0.65},
                 priority=0.6
             )
             
@@ -1637,8 +1838,17 @@ class StrategyManager:
             if self.goap_planner:
                 plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
                 
-                if plan:
-                    return plan
+                if plan is not None:
+                    if not plan:
+                        return None
+                    # Evaluate the utility of the plan
+                    final_decision = self.goap_planner.evaluate_utility(plan, character)
+                    return final_decision
+                    
+            # Fallback to highest utility action
+            return self._select_best_action(actions, character, goal)
+            if plan:
+                return plan
                     
             # Fallback: return utility-sorted actions as a simple sequential plan
             # This maintains consistent return type (list of actions) with GOAP planning
@@ -1665,35 +1875,38 @@ class StrategyManager:
         goal = Goal(
             name="daily_wellbeing",
             target_effects={"satisfaction": SATISFACTION_TARGET, "energy": ENERGY_TARGET},
-            priority=0.8
+            priority=0.8,
         )
 
         # Get potential actions from the utility-based action generator
-        actions = self.get_daily_actions(character)
+        actions = self._get_actions_for_character(character)
 
         # Create current state - handle both Character objects and string names
         if isinstance(character, str):
             # If character is a string, create a simple state
-            current_state = State({"satisfaction": 50, "energy": 50, "hunger": 50})
+            current_state = State({"satisfaction": 0.5, "energy": 0.5, "hunger": 0.5})
         else:
             # If character is a Character object, get its state
             character_state_dict = self.get_character_state_dict(character)
             current_state = State(character_state_dict)
 
+        ranked_goals = self._rank_goals(character, [goal])
+        if ranked_goals:
+            goal = ranked_goals[0]
+
         # Plan using GOAP with correct interface
-        plan = None
         if self.goap_planner:
             plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
 
-        if plan:
-            return plan
+            # Evaluate the utility of the plan using the planner's evaluate_utility method
+            if plan is not None:
+                if not plan:
+                    return None
+                final_decision = self.goap_planner.evaluate_utility(plan, character)
+                return final_decision
 
-        # Fallback: return utility-sorted actions as a simple sequential plan
-        # This maintains consistent return type (list of actions) with GOAP planning
-        # Limit to 5 actions to match reasonable plan lengths and avoid overwhelming downstream systems
-        if actions:
-            return actions[:5]  # Actions are already sorted by utility
-        return None
+        # Fallback when goap_planner is unavailable or no plan found
+        return self._select_best_action(actions, character, goal)
 
     def get_career_actions(self, character, job_details):
         # This is a placeholder and would need similar utility-based ranking
