@@ -21,6 +21,8 @@ from tiny_utility_functions import (
 )  # evaluate_utility seems to be for plans
 from actions import Action, State  # Use the modified Action from actions.py
 import logging
+import time
+import random
 
 # Optional imports to avoid dependency issues
 try:
@@ -56,6 +58,14 @@ VARIETY_PROBABILITY = 0.2
 # # Constants for goal targets used in daily planning (normalized 0-1 scale)
 # SATISFACTION_TARGET = 0.8   # 80% satisfaction
 # ENERGY_TARGET = 0.8         # 80% energy
+
+# Constants for strategic LLM invocation criteria
+# These thresholds determine when to use LLM vs utility-based planning
+CRISIS_THRESHOLD = 0.3          # Below 30% on critical stats triggers LLM use
+SOCIAL_COMPLEXITY_THRESHOLD = 0.7  # Above 70% social complexity triggers LLM
+NOVELTY_THRESHOLD = 0.6         # Above 60% novelty score triggers LLM
+GOAL_COMPLEXITY_THRESHOLD = 0.7 # Above 70% goal complexity triggers LLM
+VARIETY_PROBABILITY = 0.2       # 20% chance to use LLM for emergent behavior
 
 
 # Define placeholder/simplified Action classes for use within StrategyManager if not using complex ones from actions.py
@@ -182,59 +192,228 @@ class StrategyManager:
         """
         Strategic decision logic for when to invoke LLM vs utility-based planning.
         
-        LLM is beneficial for:
-        - Complex social situations requiring nuanced understanding
-        - Novel scenarios outside of routine patterns
-        - High-stakes decisions with significant consequences
-        - Situations requiring creative problem-solving
+        This method implements the core strategy for determining when LLM-based decisions
+        provide value over utility-based planning. The decision is made through a series
+        of criteria checks, each representing a different scenario where LLM excels.
+        
+        ## LLM is beneficial for:
+        
+        1. **Complex Social Situations**: Nuanced social interactions require understanding
+           of relationship dynamics, emotional states, and social context that LLMs handle well.
+           Threshold: social_complexity > SOCIAL_COMPLEXITY_THRESHOLD (0.7)
+           
+        2. **Novel Scenarios**: Situations outside routine patterns where pre-defined utility
+           functions may not capture the full decision space.
+           Threshold: novelty_score > NOVELTY_THRESHOLD (0.6)
+           
+        3. **Crisis Situations**: High-stakes decisions where character survival is at risk
+           require creative problem-solving beyond simple optimization.
+           Threshold: Any critical stat < CRISIS_THRESHOLD (0.3)
+           
+        4. **Complex Goals**: Multi-step or ambiguous goals that benefit from natural language
+           reasoning and long-term planning.
+           Threshold: goal.complexity > GOAL_COMPLEXITY_THRESHOLD (0.7)
+           
+        5. **Emergent Behavior**: Periodic use of LLM for variety and unpredictability,
+           creating more engaging and less deterministic behavior.
+           Probability: VARIETY_PROBABILITY (0.2 = 20% chance)
+        
+        ## Decision Flow:
+        
+        The method evaluates criteria in order of importance:
+        - LLM availability check (components must be initialized)
+        - Explicit override (force_llm flag)
+        - Crisis detection (prioritized for survival)
+        - Social complexity check
+        - Novelty assessment
+        - Goal complexity evaluation
+        - Random variety injection
+        
+        Each positive match logs the reason for LLM invocation for debugging and analysis.
+        
+        ## Fallback Strategy:
+        
+        If LLM components are unavailable or LLM call fails, the system automatically
+        falls back to utility-based planning (see get_enhanced_daily_actions).
         
         Args:
-            character: The character making the decision
-            situation_context: Additional context about the current situation
-            
+            character: The character making the decision. Used to assess current state.
+            situation_context: Optional dict with contextual information:
+                - 'force_llm' (bool): Override to force LLM use
+                - 'social_complexity' (float 0-1): Complexity of social situation
+                - 'novelty_score' (float 0-1): How unusual/novel the situation is
+                - 'event_type' (str): Type of event triggering decision
+                
         Returns:
-            True if LLM should be used, False for utility-based planning
+            bool: True if LLM should be used, False for utility-based planning
+            
+        Example:
+            ```python
+            context = {
+                'social_complexity': 0.8,
+                'novelty_score': 0.5,
+                'event_type': 'social_gathering'
+            }
+            use_llm = strategy_manager.should_use_llm_for_decision(character, context)
+            ```
+            
+        See Also:
+            - get_enhanced_daily_actions(): Implements the strategic routing
+            - decide_action_with_llm(): Handles LLM-based decision making
+            - get_daily_actions(): Handles utility-based decision making
         """
+        char_name = getattr(character, 'name', 'Unknown')
+        
+        # Track decision metadata for logging
+        decision_metadata = {
+            'character': char_name,
+            'timestamp': time.time(),
+            'criteria_checks': []
+        }
+        
+        # Check 0: LLM availability
         if not self.use_llm or not self.brain_io or not self.output_interpreter:
+            logger.debug(f"LLM components unavailable for {char_name}, using utility-based planning")
+            decision_metadata['reason'] = 'llm_unavailable'
+            self._log_decision(decision_metadata, False)
             return False
-            
-        # Always use LLM if explicitly requested
+        
+        # Check 1: Explicit LLM override
         if situation_context and situation_context.get('force_llm', False):
+            reason = situation_context.get('force_llm_reason', 'explicit_override')
+            logger.info(
+                f"LLM Decision: {char_name} - FORCED via explicit override "
+                f"(reason: {reason})"
+            )
+            decision_metadata['reason'] = 'forced_override'
+            decision_metadata['override_reason'] = reason
+            self._log_decision(decision_metadata, True)
             return True
-            
-        # Use LLM for complex social interactions
-        if situation_context and situation_context.get('social_complexity', 0) > 0.7:
-            return True
-            
-        # Use LLM when character is in crisis (low health, mental health, etc.)
+        
+        # Check 2: Crisis situation (low critical stats) - prioritized for survival
         character_state = self.get_character_state_dict(character)
-        crisis_threshold = self.CRISIS_THRESHOLD  # Below 30% on critical stats
-        
         critical_stats = ['health', 'mental_health', 'energy']
-        in_crisis = any(character_state.get(stat, 1.0) < crisis_threshold for stat in critical_stats)
+        crisis_stats = []
         
-        if in_crisis:
-            logger.info(f"Using LLM for crisis decision-making for {getattr(character, 'name', 'character')}")
+        for stat in critical_stats:
+            stat_value = character_state.get(stat, 1.0)
+            if stat_value < CRISIS_THRESHOLD:
+                crisis_stats.append((stat, stat_value))
+        
+        if crisis_stats:
+            crisis_details = ', '.join([f"{stat}={val:.2f}" for stat, val in crisis_stats])
+            logger.info(
+                f"LLM Decision: {char_name} - CRISIS DETECTED "
+                f"({crisis_details} < {CRISIS_THRESHOLD})"
+            )
+            decision_metadata['reason'] = 'crisis'
+            decision_metadata['crisis_stats'] = crisis_stats
+            decision_metadata['threshold'] = CRISIS_THRESHOLD
+            self._log_decision(decision_metadata, True)
             return True
-            
-        # Use LLM for novel situations (detected by unusual action patterns)
-        if situation_context and situation_context.get('novelty_score', 0) > 0.6:
+        
+        # Check 3: Complex social interactions
+        social_complexity = situation_context.get('social_complexity', 0) if situation_context else 0
+        if social_complexity > SOCIAL_COMPLEXITY_THRESHOLD:
+            logger.info(
+                f"LLM Decision: {char_name} - HIGH SOCIAL COMPLEXITY "
+                f"({social_complexity:.2f} > {SOCIAL_COMPLEXITY_THRESHOLD})"
+            )
+            decision_metadata['reason'] = 'social_complexity'
+            decision_metadata['social_complexity'] = social_complexity
+            decision_metadata['threshold'] = SOCIAL_COMPLEXITY_THRESHOLD
+            self._log_decision(decision_metadata, True)
             return True
+        
+        # Check 4: Novel/unusual situations
+        novelty_score = situation_context.get('novelty_score', 0) if situation_context else 0
+        if novelty_score > NOVELTY_THRESHOLD:
+            logger.info(
+                f"LLM Decision: {char_name} - NOVEL SITUATION "
+                f"({novelty_score:.2f} > {NOVELTY_THRESHOLD})"
+            )
+            decision_metadata['reason'] = 'novelty'
+            decision_metadata['novelty_score'] = novelty_score
+            decision_metadata['threshold'] = NOVELTY_THRESHOLD
+            self._log_decision(decision_metadata, True)
             
         # Use LLM periodically for variety and emergent behavior (1 in 5 decisions)
         import random
         if random.random() < self.VARIETY_PROBABILITY:  # 20% chance for variety
             logger.info(f"Using LLM for variety in decision-making for {getattr(character, 'name', 'character')}")
             return True
-            
-        # Use LLM when character has complex goals requiring planning
+        
+        # Check 5: Complex goals requiring sophisticated planning
         if hasattr(character, 'get_current_goal'):
             current_goal = character.get_current_goal()
-            if current_goal and getattr(current_goal, 'complexity', 0) > 0.7:
-                return True
+            if current_goal:
+                goal_complexity = getattr(current_goal, 'complexity', 0)
+                goal_name = getattr(current_goal, 'name', 'unknown')
                 
-        # Default to utility-based planning for routine decisions
+                if goal_complexity > GOAL_COMPLEXITY_THRESHOLD:
+                    logger.info(
+                        f"LLM Decision: {char_name} - COMPLEX GOAL "
+                        f"('{goal_name}' complexity={goal_complexity:.2f} > {GOAL_COMPLEXITY_THRESHOLD})"
+                    )
+                    decision_metadata['reason'] = 'goal_complexity'
+                    decision_metadata['goal_name'] = goal_name
+                    decision_metadata['goal_complexity'] = goal_complexity
+                    decision_metadata['threshold'] = GOAL_COMPLEXITY_THRESHOLD
+                    self._log_decision(decision_metadata, True)
+                    return True
+        
+        # Check 6: Variety and emergent behavior
+        variety_roll = random.random()
+        if variety_roll < VARIETY_PROBABILITY:
+            logger.info(
+                f"LLM Decision: {char_name} - VARIETY/EMERGENT BEHAVIOR "
+                f"(roll={variety_roll:.3f} < {VARIETY_PROBABILITY})"
+            )
+            decision_metadata['reason'] = 'variety'
+            decision_metadata['variety_roll'] = variety_roll
+            decision_metadata['probability'] = VARIETY_PROBABILITY
+            self._log_decision(decision_metadata, True)
+            return True
+        
+        # Default: Use utility-based planning for routine decisions
+        logger.debug(
+            f"LLM Decision: {char_name} - ROUTINE SITUATION, using utility-based planning"
+        )
+        decision_metadata['reason'] = 'routine'
+        self._log_decision(decision_metadata, False)
         return False
+    
+    def _log_decision(self, metadata: dict, use_llm: bool):
+        """
+        Log LLM decision metadata for analysis and debugging.
+        
+        This method creates a structured log entry for each decision made about
+        whether to use LLM or utility-based planning. These logs can be aggregated
+        to analyze decision patterns and optimize thresholds.
+        
+        Args:
+            metadata: Dictionary containing decision context and criteria
+            use_llm: Whether LLM was chosen (True) or utility-based planning (False)
+        """
+        # Track decision history if not already initialized
+        if not hasattr(self, '_decision_history'):
+            self._decision_history = []
+        
+        # Add decision outcome
+        metadata['use_llm'] = use_llm
+        metadata['decision_type'] = 'llm' if use_llm else 'utility'
+        
+        # Store in history (keep last 1000 decisions)
+        self._decision_history.append(metadata)
+        if len(self._decision_history) > 1000:
+            self._decision_history = self._decision_history[-1000:]
+        
+        # Log structured decision for external analysis tools
+        logger.debug(
+            f"Decision Log: character={metadata['character']}, "
+            f"decision={metadata['decision_type']}, "
+            f"reason={metadata.get('reason', 'unknown')}"
+        )
 
     def get_enhanced_daily_actions(self, character, time="morning", weather="clear", 
                                  situation_context: dict = None) -> list[Action]:
@@ -242,23 +421,157 @@ class StrategyManager:
         Enhanced daily action planning that strategically chooses between LLM and utility-based approaches.
         
         This method implements the strategic invocation logic to determine the best approach
-        for each decision-making scenario.
+        for each decision-making scenario. It integrates the full decision pipeline with
+        proper fallback mechanisms and instrumentation.
+        
+        ## Decision Pipeline:
+        
+        1. **Strategic Routing**: Calls should_use_llm_for_decision() to determine approach
+        2. **LLM Path**: If selected, uses decide_action_with_llm() for natural language reasoning
+        3. **Fallback Path**: On LLM failure or routine situations, uses get_daily_actions()
+        4. **Instrumentation**: All decisions are logged with context for analysis
+        
+        Args:
+            character: Character making the decision
+            time: Time of day context (e.g., "morning", "afternoon", "evening")
+            weather: Weather conditions affecting decisions (e.g., "clear", "rainy", "stormy")
+            situation_context: Optional context dict for strategic routing (see should_use_llm_for_decision)
+            
+        Returns:
+            list[Action]: Prioritized list of actions for the character to execute
+            
+        See Also:
+            - should_use_llm_for_decision(): Strategic routing logic
+            - decide_action_with_llm(): LLM-based decision making
+            - get_daily_actions(): Utility-based decision making
         """
+        char_name = getattr(character, 'name', 'Unknown')
+        
+        # Log the decision request with context
+        logger.debug(
+            f"Action Planning Request: character={char_name}, time={time}, "
+            f"weather={weather}, context={situation_context}"
+        )
+        
         # Determine whether to use LLM based on strategic considerations
         should_use_llm = self.should_use_llm_for_decision(character, situation_context)
         
         if should_use_llm:
-            logger.info(f"Strategic decision: Using LLM for {getattr(character, 'name', 'character')}")
+            logger.info(
+                f"Strategic Routing: {char_name} → LLM-based decision making "
+                f"(time={time}, weather={weather})"
+            )
             try:
-                return self.decide_action_with_llm(character, time, weather)
+                actions = self.decide_action_with_llm(character, time, weather)
+                
+                if actions and len(actions) > 0:
+                    action_names = [getattr(a, 'name', str(a)) for a in actions]
+                    logger.info(
+                        f"LLM Decision Success: {char_name} selected {len(actions)} actions: "
+                        f"{', '.join(action_names[:3])}{'...' if len(actions) > 3 else ''}"
+                    )
+                    return actions
+                else:
+                    logger.warning(
+                        f"LLM Decision Returned Empty: {char_name} - falling back to utility-based"
+                    )
+                    
             except Exception as e:
-                logger.error(f"LLM decision failed, falling back to utility-based: {e}")
-                # Fallback to utility-based if LLM fails
+                logger.error(
+                    f"LLM Decision Failed: {char_name} - {type(e).__name__}: {str(e)} "
+                    f"- falling back to utility-based"
+                )
+                # Track LLM failures for monitoring
+                if not hasattr(self, '_llm_failure_count'):
+                    self._llm_failure_count = 0
+                self._llm_failure_count += 1
         else:
-            logger.debug(f"Strategic decision: Using utility-based planning for {getattr(character, 'name', 'character')}")
-            
+            logger.debug(
+                f"Strategic Routing: {char_name} → Utility-based planning "
+                f"(routine situation)"
+            )
+        
         # Use utility-based planning as default or fallback
-        return self.get_daily_actions(character)
+        actions = self.get_daily_actions(character)
+        
+        if actions and len(actions) > 0:
+            action_names = [getattr(a, 'name', str(a)) for a in actions]
+            logger.debug(
+                f"Utility Decision: {char_name} generated {len(actions)} actions: "
+                f"{', '.join(action_names[:3])}{'...' if len(actions) > 3 else ''}"
+            )
+        else:
+            logger.warning(f"Utility Decision Returned Empty: {char_name}")
+        
+        return actions
+    
+    def get_decision_analytics(self) -> dict:
+        """
+        Get analytics about LLM vs utility-based decision patterns.
+        
+        Analyzes the decision history to provide insights into:
+        - Distribution of LLM vs utility-based decisions
+        - Reasons for LLM invocation
+        - Success/failure rates
+        - Common patterns
+        
+        This information is valuable for:
+        - Tuning decision thresholds
+        - Understanding character behavior patterns
+        - Debugging decision-making issues
+        - Optimizing LLM usage costs
+        
+        Returns:
+            dict: Analytics summary with the following keys:
+                - 'total_decisions': Total number of recorded decisions
+                - 'llm_decisions': Number of LLM-based decisions
+                - 'utility_decisions': Number of utility-based decisions
+                - 'llm_percentage': Percentage using LLM
+                - 'reasons_breakdown': Count of each invocation reason
+                - 'llm_failures': Number of LLM call failures (if tracked)
+                
+        Example:
+            ```python
+            analytics = strategy_manager.get_decision_analytics()
+            print(f"LLM usage: {analytics['llm_percentage']:.1f}%")
+            print(f"Top reason: {analytics['top_reason']}")
+            ```
+        """
+        if not hasattr(self, '_decision_history'):
+            return {
+                'total_decisions': 0,
+                'llm_decisions': 0,
+                'utility_decisions': 0,
+                'llm_percentage': 0.0,
+                'reasons_breakdown': {},
+                'message': 'No decision history available'
+            }
+        
+        total = len(self._decision_history)
+        llm_count = sum(1 for d in self._decision_history if d.get('use_llm', False))
+        utility_count = total - llm_count
+        
+        # Count reasons for LLM invocation
+        reasons = {}
+        for decision in self._decision_history:
+            if decision.get('use_llm', False):
+                reason = decision.get('reason', 'unknown')
+                reasons[reason] = reasons.get(reason, 0) + 1
+        
+        # Find most common reason
+        top_reason = max(reasons.items(), key=lambda x: x[1])[0] if reasons else None
+        
+        analytics = {
+            'total_decisions': total,
+            'llm_decisions': llm_count,
+            'utility_decisions': utility_count,
+            'llm_percentage': (llm_count / total * 100) if total > 0 else 0.0,
+            'reasons_breakdown': reasons,
+            'top_reason': top_reason,
+            'llm_failures': getattr(self, '_llm_failure_count', 0)
+        }
+        
+        return analytics
 
     def _build_situation_context(self, event):
         """Create a situation context dict from an event for LLM decision heuristics."""
@@ -398,6 +711,11 @@ class StrategyManager:
                     if hasattr(character, "hunger_level")
                     else 0.5
                 )  # Assuming hunger 0-10
+                state["health"] = (
+                    getattr(character, "health", 0.0) / 10.0
+                    if hasattr(character, "health")
+                    else 0.5
+                )  # Assuming health 0-10
                 state["energy"] = (
                     getattr(character, "energy", 0.0) / 10.0
                     if hasattr(character, "energy")
@@ -422,6 +740,7 @@ class StrategyManager:
                 # Fallback to default values
                 state = {
                     "hunger": 0.5,
+                    "health": 0.5,
                     "energy": 0.5,
                     "money": 0.0,
                     "social_wellbeing": 0.5,
@@ -431,6 +750,7 @@ class StrategyManager:
             # Fallback for simple character representation
             state = {
                 "hunger": 0.5,
+                "health": 0.5,
                 "energy": 0.5,
                 "money": 0.0,
                 "social_wellbeing": 0.5,
