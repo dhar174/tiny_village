@@ -269,9 +269,10 @@ class TestStrategyManagerHelpers(unittest.TestCase):
         
         character = MockCharacter(goals=[goal1, goal2])
         
-        self.strategy_manager._select_goal_for_event(character, "social")
+        selected_goal = self.strategy_manager._select_goal_for_event(character, "social")
         
         # Should have logged a warning when evaluation failed
+        self.assertIsNotNone(selected_goal)
         self.assertTrue(mock_logger.warning.called)
         warning_calls = [str(call) for call in mock_logger.warning.call_args_list]
         has_evaluation_warning = any('evaluation failed' in str(call).lower() for call in warning_calls)
