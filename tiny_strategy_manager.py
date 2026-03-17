@@ -326,6 +326,15 @@ class StrategyManager:
                 logger.debug(f"Failed to read goals for {getattr(character, 'name', character)}: {e}")
         return goals
 
+    def _normalize_event_importance(self, situation_context, default_importance):
+        """Normalize event importance from 0-10 input scale to bounded 0-1 priority."""
+        if not situation_context:
+            return default_importance
+        raw_importance = situation_context.get(
+            "event_importance", default_importance * 10
+        )
+        return min(max(raw_importance / 10.0, 0.0), 1.0)
+
     def _select_goal_for_event(self, character, event_type):
         """Select the most relevant goal based on event type and goal importance."""
         candidate_goals = self._gather_character_goals(character)
@@ -1029,8 +1038,9 @@ class StrategyManager:
             
             if situation_context:
                 # Normalize importance to 0-1 range and ensure it's within bounds
-                raw_importance = situation_context.get("event_importance", event_importance * 10)
-                event_importance = min(max(raw_importance / 10.0, 0.0), 1.0)
+                event_importance = self._normalize_event_importance(
+                    situation_context, event_importance
+                )
                 
                 event_impact = situation_context.get("event_impact", 0)
                 # Adjust targets based on event impact
@@ -1068,8 +1078,9 @@ class StrategyManager:
             
             if situation_context:
                 # Normalize importance to 0-1 range and ensure it's within bounds
-                raw_importance = situation_context.get("event_importance", event_importance * 10)
-                event_importance = min(max(raw_importance / 10.0, 0.0), 1.0)
+                event_importance = self._normalize_event_importance(
+                    situation_context, event_importance
+                )
                 
                 event_impact = situation_context.get("event_impact", 0)
                 # Economic events with positive impact increase wealth targets
@@ -1111,7 +1122,7 @@ class StrategyManager:
             goal = Goal(
                 name="crisis_response",
                 target_effects={"safety": target_safety, "energy": target_energy},
-                priority=event_importance  # Highest priority
+                priority=event_importance
             )
             
             # In crisis, prioritize safety and basic needs
@@ -1155,8 +1166,9 @@ class StrategyManager:
             
             if situation_context:
                 # Normalize importance to 0-1 range and ensure it's within bounds
-                raw_importance = situation_context.get("event_importance", event_importance * 10)
-                event_importance = min(max(raw_importance / 10.0, 0.0), 1.0)
+                event_importance = self._normalize_event_importance(
+                    situation_context, event_importance
+                )
                 
                 event_impact = situation_context.get("event_impact", 0)
                 # High-impact work events increase performance targets
@@ -1193,6 +1205,7 @@ class StrategyManager:
         try:
             # Determine appropriate response based on event severity
             # Try to get impact from situation_context first, then from event
+            event_importance = self._normalize_event_importance(situation_context, 0.6)
             event_impact = 0
             if situation_context and "event_impact" in situation_context:
                 event_impact = situation_context.get("event_impact", 0)
@@ -1224,7 +1237,7 @@ class StrategyManager:
                 goal = Goal(
                     name="enjoy_weather",
                     target_effects={"happiness": target_happiness, "energy": 75},
-                    priority=0.6
+                    priority=event_importance
                 )
                 
                 # Outdoor activities, work, socialize

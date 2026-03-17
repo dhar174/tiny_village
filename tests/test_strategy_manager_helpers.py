@@ -8,7 +8,7 @@ Tests the new helper methods added for GOAP planning and event routing:
 """
 
 import unittest
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 import sys
 import os
 
@@ -19,7 +19,6 @@ if project_root not in sys.path:
 
 from tiny_strategy_manager import StrategyManager
 from tiny_utility_functions import Goal
-from actions import Action
 
 
 class MockEvent:
@@ -103,6 +102,18 @@ class TestStrategyManagerHelpers(unittest.TestCase):
         self.assertIn("force_llm", context)
         self.assertTrue(context["force_llm"])
 
+    def test_normalize_event_importance_without_context(self):
+        """Test _normalize_event_importance returns default when no context is provided."""
+        importance = self.strategy_manager._normalize_event_importance(None, 0.6)
+        self.assertEqual(importance, 0.6)
+
+    def test_normalize_event_importance_clamps_context_value(self):
+        """Test _normalize_event_importance converts 0-10 scale to bounded 0-1 scale."""
+        importance = self.strategy_manager._normalize_event_importance(
+            {"event_importance": 12}, 0.6
+        )
+        self.assertEqual(importance, 1.0)
+
     def test_coerce_goal_with_none(self):
         """Test _coerce_goal with None input."""
         result = self.strategy_manager._coerce_goal(None)
@@ -110,7 +121,7 @@ class TestStrategyManagerHelpers(unittest.TestCase):
 
     def test_coerce_goal_with_goal_object(self):
         """Test _coerce_goal with existing Goal object."""
-        goal = Goal(name="test_goal", target_effects={"happiness": 80}, priority=0.7)
+        goal = Goal("test_goal", {"happiness": 80}, 0.7)
         result = self.strategy_manager._coerce_goal(goal)
         
         self.assertIsInstance(result, Goal)
@@ -154,8 +165,8 @@ class TestStrategyManagerHelpers(unittest.TestCase):
 
     def test_gather_character_goals_with_evaluate_goals(self):
         """Test _gather_character_goals using character.evaluate_goals()."""
-        goal1 = Goal(name="goal1", target_effects={"happiness": 70}, priority=0.6)
-        goal2 = Goal(name="goal2", target_effects={"wealth": 80}, priority=0.7)
+        goal1 = Goal("goal1", {"happiness": 70}, 0.6)
+        goal2 = Goal("goal2", {"wealth": 80}, 0.7)
         character = MockCharacter(goals=[goal1, goal2])
         
         goals = self.strategy_manager._gather_character_goals(character)
@@ -168,8 +179,8 @@ class TestStrategyManagerHelpers(unittest.TestCase):
 
     def test_gather_character_goals_with_tuple_format(self):
         """Test _gather_character_goals handles tuple format (score, goal)."""
-        goal1 = Goal(name="goal1", target_effects={"happiness": 70}, priority=0.6)
-        goal2 = Goal(name="goal2", target_effects={"wealth": 80}, priority=0.7)
+        goal1 = Goal("goal1", {"happiness": 70}, 0.6)
+        goal2 = Goal("goal2", {"wealth": 80}, 0.7)
         character = MockCharacter(goals=[(0.8, goal1), (0.9, goal2)])
         
         goals = self.strategy_manager._gather_character_goals(character)
@@ -202,8 +213,8 @@ class TestStrategyManagerHelpers(unittest.TestCase):
 
     def test_select_goal_for_event_with_character_goals(self):
         """Test _select_goal_for_event selects from character goals."""
-        goal1 = Goal(name="social_goal", target_effects={"happiness": 70}, priority=0.6)
-        goal2 = Goal(name="economic_goal", target_effects={"wealth": 80}, priority=0.9)
+        goal1 = Goal("social_goal", {"happiness": 70}, 0.6)
+        goal2 = Goal("economic_goal", {"wealth": 80}, 0.9)
         character = MockCharacter(goals=[goal1, goal2])
         
         selected_goal = self.strategy_manager._select_goal_for_event(character, "social")
@@ -213,8 +224,8 @@ class TestStrategyManagerHelpers(unittest.TestCase):
 
     def test_select_goal_for_event_prioritizes_higher_priority(self):
         """Test _select_goal_for_event selects highest priority goal."""
-        goal1 = Goal(name="low_priority", target_effects={"happiness": 70}, priority=0.3)
-        goal2 = Goal(name="high_priority", target_effects={"wealth": 80}, priority=0.9)
+        goal1 = Goal("low_priority", {"happiness": 70}, 0.3)
+        goal2 = Goal("high_priority", {"wealth": 80}, 0.9)
         character = MockCharacter(goals=[goal1, goal2])
         
         selected_goal = self.strategy_manager._select_goal_for_event(character, None)
@@ -258,13 +269,33 @@ class TestStrategyManagerHelpers(unittest.TestCase):
         
         character = MockCharacter(goals=[goal1, goal2])
         
-        selected_goal = self.strategy_manager._select_goal_for_event(character, "social")
+        self.strategy_manager._select_goal_for_event(character, "social")
         
         # Should have logged a warning when evaluation failed
         self.assertTrue(mock_logger.warning.called)
         warning_calls = [str(call) for call in mock_logger.warning.call_args_list]
         has_evaluation_warning = any('evaluation failed' in str(call).lower() for call in warning_calls)
         self.assertTrue(has_evaluation_warning)
+
+    def test_handle_environmental_event_uses_context_importance_for_positive_weather(self):
+        """Test positive weather path uses normalized context importance for priority."""
+        captured = {}
+
+        def fake_plan(character, goal, actions):
+            captured["goal"] = goal
+            return actions
+
+        self.strategy_manager._plan_with_goal_and_actions = fake_plan
+        character = MockCharacter()
+
+        self.strategy_manager._handle_environmental_event(
+            None,
+            character,
+            {"event_impact": 5, "event_importance": 9},
+        )
+
+        self.assertIn("goal", captured)
+        self.assertEqual(captured["goal"].priority, 0.9)
 
 
 if __name__ == '__main__':
