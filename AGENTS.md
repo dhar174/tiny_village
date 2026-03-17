@@ -76,7 +76,7 @@ Both examples are examples only; check the current helper signatures and agent f
 - Respond in the user's preferred language; keep technical terms in English and never translate code blocks.
 - Before changing agent-related logic, inspect neighboring flows and reuse existing helpers, templates, and recurring patterns.
 - Prefer simple, minimal changes; preserve public behavior unless the user explicitly asks for a behavior change.
-- Do not add tests, lint steps, or formatting or type-check work unless the user explicitly asks for them.
+- For ad-hoc user requests, do not add tests, lint steps, formatting, or type-check work unless the user explicitly asks. For contributor-agent missions defined in `.github/agents/*.agent.md`, follow the mission spec: if it calls for adding or updating tests or tooling, do so.
 - Be conservative with mocks and fake classes. This repository repeatedly favors tests that fail on real behavior mismatches over tests that are easy to satisfy.
 - Keep prompt contracts, parser logic, and action definitions in sync when touching the LLM-backed decision loop.
 - No repo-level type-check command is currently discoverable from project config; state that plainly rather than inventing one.
