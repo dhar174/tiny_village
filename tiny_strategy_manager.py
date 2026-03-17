@@ -50,6 +50,9 @@ logger = logging.getLogger(__name__)
 # Constants for goal targets
 SATISFACTION_TARGET = 70
 ENERGY_TARGET = 65
+# Strategic decision thresholds
+CRISIS_THRESHOLD = 0.3
+VARIETY_PROBABILITY = 0.2
 # # Constants for goal targets used in daily planning (normalized 0-1 scale)
 # SATISFACTION_TARGET = 0.8   # 80% satisfaction
 # ENERGY_TARGET = 0.8         # 80% energy
@@ -105,7 +108,6 @@ class StrategyManager:
     The StrategyManager class is responsible for managing the strategies used in goal-oriented action planning and utility evaluation.
     """
 
-
     def __init__(self, use_llm=False, model_name=None):
         # Initialize graph_manager using global instance
         try:
@@ -134,6 +136,7 @@ class StrategyManager:
             self.output_interpreter = None
             if self.use_llm:
                 logging.warning("LLM components not available - disabling LLM functionality")
+                self.use_llm = False
                 
         # Track characters using LLM for strategy decisions
         self._characters_using_llm = set()
@@ -174,8 +177,6 @@ class StrategyManager:
         for character in characters:
             if character_names is None or character.name in character_names:
                 self.enable_llm_for_character(character)
-
-                self.use_llm = False  # Actually disable if components not available
 
     def should_use_llm_for_decision(self, character, situation_context: dict = None) -> bool:
         """
@@ -222,7 +223,7 @@ class StrategyManager:
             
         # Use LLM periodically for variety and emergent behavior (1 in 5 decisions)
         import random
-        if random.random() < VARIETY_PROBABILITY:  # 20% chance for variety
+        if random.random() < self.VARIETY_PROBABILITY:  # 20% chance for variety
             logger.info(f"Using LLM for variety in decision-making for {getattr(character, 'name', 'character')}")
             return True
             
@@ -258,6 +259,119 @@ class StrategyManager:
             
         # Use utility-based planning as default or fallback
         return self.get_daily_actions(character)
+
+    def _build_situation_context(self, event):
+        """Create a situation context dict from an event for LLM decision heuristics."""
+        context = {}
+        if event is None:
+            return context
+
+        if hasattr(event, "type"):
+            context["event_type"] = event.type
+        if isinstance(event, dict):
+            context["event_type"] = event.get("type", context.get("event_type"))
+
+        importance = getattr(event, "importance", None)
+        impact = getattr(event, "impact", None)
+        if isinstance(event, dict):
+            importance = event.get("importance", importance)
+            impact = event.get("impact", impact)
+
+        if importance is not None:
+            context["event_importance"] = importance
+        if impact is not None:
+            context["event_impact"] = impact
+
+        if context.get("event_type") in ["social", "celebration", "festival"]:
+            context["social_complexity"] = 0.8
+        if importance is not None and importance >= 8:
+            context["force_llm"] = True
+
+        return context
+
+    def _coerce_goal(self, goal):
+        """Ensure we return a Goal-like object with target_effects for GOAP."""
+        if goal is None:
+            return None
+        if isinstance(goal, Goal):
+            return goal
+        if isinstance(goal, dict):
+            return Goal(
+                name=goal.get("name", "custom_goal"),
+                target_effects=goal.get("target_effects", goal),
+                priority=goal.get("priority", 0.5),
+            )
+        return goal
+
+    def _gather_character_goals(self, character):
+        goals = []
+        if hasattr(character, "evaluate_goals"):
+            try:
+                evaluated = character.evaluate_goals()
+                for entry in evaluated:
+                    if isinstance(entry, (list, tuple)) and len(entry) == 2:
+                        goals.append(entry[1])
+                    else:
+                        goals.append(entry)
+            except Exception as e:
+                logger.debug(f"Failed to evaluate goals for {getattr(character, 'name', character)}: {e}")
+        if hasattr(character, "goals"):
+            try:
+                for entry in character.goals or []:
+                    if isinstance(entry, (list, tuple)) and len(entry) == 2:
+                        goals.append(entry[1])
+                    else:
+                        goals.append(entry)
+            except Exception as e:
+                logger.debug(f"Failed to read goals for {getattr(character, 'name', character)}: {e}")
+        return goals
+
+    def _normalize_event_importance(self, situation_context, default_importance):
+        """Normalize event importance from 0-10 input scale to bounded 0-1 priority."""
+        if not situation_context:
+            return default_importance
+        raw_importance = situation_context.get(
+            "event_importance", default_importance * 10
+        )
+        return min(max(raw_importance / 10.0, 0.0), 1.0)
+
+    def _select_goal_for_event(self, character, event_type):
+        """Select the most relevant goal based on event type and goal importance."""
+        candidate_goals = self._gather_character_goals(character)
+        event_type_goal = None
+        if event_type:
+            event_type_goal = self._goal_for_event_type(event_type)
+            if event_type_goal is not None:
+                candidate_goals.append(event_type_goal)
+
+        candidate_goals = [self._coerce_goal(goal) for goal in candidate_goals if goal]
+        if not candidate_goals:
+            # Reuse the previously computed event_type_goal if available
+            return event_type_goal
+
+        if self.goap_planner and self.graph_manager and hasattr(self.goap_planner, "evaluate_goal_importance"):
+            scored_goals = []
+            for goal in candidate_goals:
+                try:
+                    # Verify goal has required structure before evaluation
+                    if not isinstance(goal, Goal) and not (hasattr(goal, 'name') and hasattr(goal, 'target_effects')):
+                        logger.warning(f"Goal {goal} lacks required structure for evaluation, using priority fallback")
+                        scored_goals.append((getattr(goal, "priority", 0.5), goal))
+                        continue
+                    
+                    score = self.goap_planner.evaluate_goal_importance(
+                        character, goal, self.graph_manager
+                    )
+                    scored_goals.append((score, goal))
+                except Exception as e:
+                    logger.warning(f"Goal importance evaluation failed for {goal}: {e}")
+                    scored_goals.append((getattr(goal, "priority", 0.5), goal))
+
+            scored_goals.sort(key=lambda x: x[0], reverse=True)
+            return scored_goals[0][1]
+
+        candidate_goals.sort(key=lambda g: getattr(g, "priority", 0.5), reverse=True)
+        return candidate_goals[0]
 
     def get_character_state_dict(self, character) -> dict:
         """
@@ -608,6 +722,7 @@ class StrategyManager:
                 character_obj = self._resolve_character(character)
                 char_id = self._get_character_identifier(character_obj)
 
+                situation_context = self._build_situation_context(event)
                 use_llm_for_strategy = self._should_use_llm_for_strategy(character_obj)
                 if event_type == "new_day":
                     plans[char_id] = self._handle_new_day_strategy(
@@ -615,7 +730,29 @@ class StrategyManager:
                     )
                     continue
 
-                goal = self._goal_for_event_type(event_type)
+                if event_type in ["social", "celebration", "festival"]:
+                    plans[char_id] = self._handle_social_event(event, character_obj, situation_context)
+                    continue
+                if event_type in ["economic", "trade", "market"]:
+                    plans[char_id] = self._handle_economic_event(event, character_obj, situation_context)
+                    continue
+                if event_type in ["crisis", "disaster", "emergency"]:
+                    plans[char_id] = self._handle_crisis_event(event, character_obj, situation_context)
+                    continue
+                if event_type in ["work", "task", "project"]:
+                    plans[char_id] = self._handle_work_event(event, character_obj, situation_context)
+                    continue
+                if event_type in ["weather", "environmental"]:
+                    plans[char_id] = self._handle_environmental_event(event, character_obj, situation_context)
+                    continue
+
+                if use_llm_for_strategy and self.should_use_llm_for_decision(
+                    character_obj, situation_context
+                ):
+                    plans[char_id] = self.decide_action_with_llm(character_obj)
+                    continue
+
+                goal = self._select_goal_for_event(character_obj, event_type)
                 current_state = self._get_current_state_for_character(character_obj)
                 available_actions = self._get_actions_for_character(character_obj)
                 available_actions = self._filter_actions_for_event(
@@ -633,7 +770,10 @@ class StrategyManager:
                             f"GOAP planning failed for {char_id}: {planning_error}"
                         )
 
-                plans[char_id] = plan if plan is not None else self.plan_daily_activities(character_obj)
+                if plan:
+                    plans[char_id] = plan
+                else:
+                    plans[char_id] = self.plan_daily_activities(character_obj)
 
         return plans
 
@@ -888,14 +1028,31 @@ class StrategyManager:
             return filtered
         return actions
 
-    def _handle_social_event(self, event, character):
+    def _handle_social_event(self, event, character, situation_context=None):
         """Handle social events by prioritizing social actions."""
         try:
+            # Use event importance and impact from situation_context if available
+            event_importance = 0.8  # Default priority
+            target_wellbeing = 80
+            target_happiness = 75
+            
+            if situation_context:
+                # Normalize importance to 0-1 range and ensure it's within bounds
+                event_importance = self._normalize_event_importance(
+                    situation_context, event_importance
+                )
+                
+                event_impact = situation_context.get("event_impact", 0)
+                # Adjust targets based on event impact
+                if event_impact > 0:
+                    target_wellbeing += min(event_impact, 20)
+                    target_happiness += min(event_impact, 20)
+            
             # Create goal focused on social interaction and happiness
             goal = Goal(
                 name="social_engagement",
-                target_effects={"social_wellbeing": 80, "happiness": 75},
-                priority=0.8
+                target_effects={"social_wellbeing": target_wellbeing, "happiness": target_happiness},
+                priority=event_importance
             )
             
             # Get social-focused actions
@@ -911,13 +1068,29 @@ class StrategyManager:
             logger.warning(f"Error handling social event: {e}")
             return self.plan_daily_activities(character)
 
-    def _handle_economic_event(self, event, character):
+    def _handle_economic_event(self, event, character, situation_context=None):
         """Handle economic events by prioritizing wealth and trade actions."""
         try:
+            # Use event importance and impact from situation_context if available
+            event_importance = 0.9  # Default high priority for economic events
+            target_wealth = 100
+            target_satisfaction = 70
+            
+            if situation_context:
+                # Normalize importance to 0-1 range and ensure it's within bounds
+                event_importance = self._normalize_event_importance(
+                    situation_context, event_importance
+                )
+                
+                event_impact = situation_context.get("event_impact", 0)
+                # Economic events with positive impact increase wealth targets
+                if event_impact > 0:
+                    target_wealth += min(event_impact * 2, 50)
+            
             goal = Goal(
                 name="economic_opportunity",
-                target_effects={"wealth": 100, "satisfaction": 70},
-                priority=0.9
+                target_effects={"wealth": target_wealth, "satisfaction": target_satisfaction},
+                priority=event_importance
             )
             
             actions = self.get_daily_actions(character)
@@ -932,13 +1105,24 @@ class StrategyManager:
             logger.warning(f"Error handling economic event: {e}")
             return self.plan_daily_activities(character)
 
-    def _handle_crisis_event(self, event, character):
+    def _handle_crisis_event(self, event, character, situation_context=None):
         """Handle crisis events by prioritizing safety and recovery actions."""
         try:
+            # Crisis events always have maximum priority
+            event_importance = 1.0
+            target_safety = 90
+            target_energy = 60
+            
+            if situation_context:
+                event_impact = situation_context.get("event_impact", 0)
+                # Negative impact increases safety requirement
+                if event_impact < 0:
+                    target_safety = min(target_safety + abs(event_impact), 100)
+            
             goal = Goal(
                 name="crisis_response",
-                target_effects={"safety": 90, "energy": 60},
-                priority=1.0  # Highest priority
+                target_effects={"safety": target_safety, "energy": target_energy},
+                priority=event_importance
             )
             
             # In crisis, prioritize safety and basic needs
@@ -972,13 +1156,29 @@ class StrategyManager:
             logger.warning(f"Error handling crisis event: {e}")
             return self.plan_daily_activities(character)
 
-    def _handle_work_event(self, event, character):
+    def _handle_work_event(self, event, character, situation_context=None):
         """Handle work events by prioritizing productivity and skill development."""
         try:
+            # Use event importance from situation_context if available
+            event_importance = 0.7
+            target_performance = 85
+            target_satisfaction = 65
+            
+            if situation_context:
+                # Normalize importance to 0-1 range and ensure it's within bounds
+                event_importance = self._normalize_event_importance(
+                    situation_context, event_importance
+                )
+                
+                event_impact = situation_context.get("event_impact", 0)
+                # High-impact work events increase performance targets
+                if event_impact > 0:
+                    target_performance += min(event_impact, 15)
+            
             goal = Goal(
                 name="work_productivity",
-                target_effects={"job_performance": 85, "satisfaction": 65},
-                priority=0.7
+                target_effects={"job_performance": target_performance, "satisfaction": target_satisfaction},
+                priority=event_importance
             )
             
             actions = self.get_daily_actions(character)
@@ -1000,17 +1200,27 @@ class StrategyManager:
             logger.warning(f"Error handling work event: {e}")
             return self.plan_daily_activities(character)
 
-    def _handle_environmental_event(self, event, character):
+    def _handle_environmental_event(self, event, character, situation_context=None):
         """Handle environmental/weather events by adapting to conditions."""
         try:
             # Determine appropriate response based on event severity
-            event_impact = getattr(event, 'impact', 0)
+            # Try to get impact from situation_context first, then from event
+            event_importance = self._normalize_event_importance(situation_context, 0.6)
+            event_impact = 0
+            if situation_context and "event_impact" in situation_context:
+                event_impact = situation_context.get("event_impact", 0)
+            elif event:
+                event_impact = getattr(event, 'impact', 0)
             
             if event_impact < 0:  # Negative weather (storm, etc.)
+                # More severe negative impact increases safety priority
+                priority = min(0.8 + abs(event_impact) * 0.02, 1.0)
+                target_safety = min(80 + abs(event_impact), 100)
+                
                 goal = Goal(
                     name="weather_adaptation",
-                    target_effects={"safety": 80, "energy": 70},
-                    priority=0.8
+                    target_effects={"safety": target_safety, "energy": 70},
+                    priority=priority
                 )
                 
                 # Stay indoors, rest, prepare
@@ -1021,10 +1231,13 @@ class StrategyManager:
                     ]),
                 ]
             else:  # Positive weather
+                # Better weather increases happiness targets
+                target_happiness = min(80 + event_impact, 100)
+                
                 goal = Goal(
                     name="enjoy_weather",
-                    target_effects={"happiness": 80, "energy": 75},
-                    priority=0.6
+                    target_effects={"happiness": target_happiness, "energy": 75},
+                    priority=event_importance
                 )
                 
                 # Outdoor activities, work, socialize
@@ -1086,27 +1299,32 @@ class StrategyManager:
             return self.plan_daily_activities(character)
 
     def _plan_with_goal_and_actions(self, character, goal, actions):
-        """Helper method to plan actions with a specific goal."""
+        """
+        Helper method to plan actions with a specific goal.
+        
+        Returns:
+            list or None: A list of Action objects forming a plan (potentially multi-step from GOAP,
+                         or a fallback list of utility-sorted actions), or None if no actions available.
+        """
         try:
             # Get character state
             if isinstance(character, str):
                 current_state = State({"satisfaction": 50, "energy": 50, "happiness": 50})
             else:
-                character_state_dict = self.get_character_state_dict(character)
-                current_state = State(character_state_dict)
+                current_state = self._get_current_state_for_character(character)
             
             # Plan using GOAP with the specific goal and actions
             if self.goap_planner:
                 plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
                 
                 if plan:
-                    # Evaluate the utility of the plan
-                    final_decision = self.goap_planner.evaluate_utility(plan, character)
-                    return final_decision
+                    return plan
                     
-            # Fallback to highest utility action
+            # Fallback: return utility-sorted actions as a simple sequential plan
+            # This maintains consistent return type (list of actions) with GOAP planning
+            # Limit to 5 actions to match reasonable plan lengths and avoid overwhelming downstream systems
             if actions:
-                return actions[0]  # Actions are already sorted by utility
+                return actions[:5]  # Actions are already sorted by utility
                 
             return None
             
@@ -1118,6 +1336,10 @@ class StrategyManager:
         """
         Plans the daily activities for the given character.
         This method properly interfaces with GOAPPlanner.
+        
+        Returns:
+            list or None: A list of Action objects forming a plan (potentially multi-step from GOAP,
+                         or a fallback list of utility-sorted actions), or None if no actions available.
         """
         # Define a proper Goal object for daily activities
         goal = Goal(
@@ -1139,17 +1361,19 @@ class StrategyManager:
             current_state = State(character_state_dict)
 
         # Plan using GOAP with correct interface
-        plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
+        plan = None
+        if self.goap_planner:
+            plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
 
-        # Evaluate the utility of the plan using the planner's evaluate_utility method
         if plan:
-            final_decision = self.goap_planner.evaluate_utility(plan, character)
-            return final_decision
-        else:
-            # If no plan found, return the highest utility action as fallback
-            if actions:
-                return max(actions, key=lambda a: self.goap_planner.calculate_utility(a, character))
-            return None
+            return plan
+
+        # Fallback: return utility-sorted actions as a simple sequential plan
+        # This maintains consistent return type (list of actions) with GOAP planning
+        # Limit to 5 actions to match reasonable plan lengths and avoid overwhelming downstream systems
+        if actions:
+            return actions[:5]  # Actions are already sorted by utility
+        return None
 
     def get_career_actions(self, character, job_details):
         # This is a placeholder and would need similar utility-based ranking
