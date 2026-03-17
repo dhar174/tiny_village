@@ -219,6 +219,8 @@ class TestGameplayController(unittest.TestCase):
             {"normal", "small", "tiny"},
             "Controller should expose the modular UI font dictionary used by panel rendering",
         )
+        for font_name, font in self.controller.ui_fonts.items():
+            self.assertIsInstance(font, pygame.font.Font, f"{font_name} should be a pygame font instance")
         
         # Verify panels exist and are visible by default
         expected_panels = ['character_info', 'game_status', 'weather', 'stats', 'achievements', 'selected_character', 'instructions']
@@ -233,6 +235,8 @@ class TestGameplayController(unittest.TestCase):
 
         result = char_info_panel.render(test_surface, self.controller, self.controller.ui_fonts)
         self.assertIsInstance(result, int, "Panel render should return a height using the controller/fonts API")
+        self.assertGreaterEqual(result, 0, "Panel render height should be non-negative")
+        self.assertLessEqual(result, test_surface.get_height(), "Panel render height should fit within the test surface")
 
         weather_panel.visible = False
         try:
@@ -242,7 +246,7 @@ class TestGameplayController(unittest.TestCase):
         except Exception as e:
             self.fail(f"Modular UI rendering failed with error: {e}")
 
-        self.assertGreaterEqual(visible_render.call_count, 1, "Visible panels should be rendered by _render_ui")
+        visible_render.assert_called_once_with(self.controller.screen, self.controller, self.controller.ui_fonts)
         hidden_render.assert_not_called()
 
     def test_render_ui_fallback_modes(self):
