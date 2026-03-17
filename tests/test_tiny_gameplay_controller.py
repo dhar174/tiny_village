@@ -210,14 +210,64 @@ class TestGameplayController(unittest.TestCase):
             self.assertEqual(original_visibility, char_info_panel.visible, "Panel visibility should return to original state")
 
     def test_render_ui_with_modular_system(self):
-        """Test that _render_ui works with the modular system."""
-        # This test verifies that _render_ui doesn't crash with the new modular system
+        """Test that _render_ui works with the modular system and verifies expected behavior."""
+        # Ensure modular UI system is initialized
+        self.assertTrue(self.controller.initialize_modular_ui_system(), "Controller should initialize the modular UI system")
+        self.assertTrue(hasattr(self.controller, 'ui_panels'), "Controller should have ui_panels")
+        self.assertTrue(hasattr(self.controller, 'ui_fonts'), "Controller should have ui_fonts")
+        self.assertSetEqual(
+            set(self.controller.ui_fonts.keys()),
+            {"normal", "small", "tiny"},
+            "Controller should expose the modular UI font dictionary used by panel rendering",
+        )
+        for font_name, font in self.controller.ui_fonts.items():
+            self.assertIsInstance(font, pygame.font.Font, f"{font_name} should be a pygame font instance")
+        
+        # Verify panels exist and are visible by default
+        expected_panels = ['character_info', 'game_status', 'weather', 'stats', 'achievements', 'selected_character', 'instructions']
+        for panel_name in expected_panels:
+            self.assertIn(panel_name, self.controller.ui_panels, f"Panel {panel_name} should exist")
+            panel = self.controller.ui_panels[panel_name]
+            self.assertTrue(panel.visible, f"Panel {panel_name} should be visible by default")
+
+        test_surface = pygame.Surface((100, 100))
+        char_info_panel = self.controller.ui_panels['character_info']
+        weather_panel = self.controller.ui_panels['weather']
+
+        before_panel_render = pygame.image.tostring(test_surface, "RGB")
+        result = char_info_panel.render(test_surface, self.controller, self.controller.ui_fonts)
+        after_panel_render = pygame.image.tostring(test_surface, "RGB")
+        self.assertIsInstance(result, int, "Panel render should return a height using the controller/fonts API")
+        self.assertGreaterEqual(result, 0, "Panel render height should be non-negative")
+        self.assertLessEqual(result, test_surface.get_height(), "Panel render height should fit within the test surface")
+        self.assertNotEqual(before_panel_render, after_panel_render, "Panel render should draw content onto the target surface")
+
+        original_visibility = {
+            panel_name: panel.visible for panel_name, panel in self.controller.ui_panels.items()
+        }
         try:
+            for panel in self.controller.ui_panels.values():
+                panel.visible = False
+
+            char_info_panel.visible = True
+            weather_panel.visible = False
+            self.controller.screen.fill((0, 0, 0))
+            before_visible_ui = pygame.image.tostring(self.controller.screen, "RGB")
             self.controller._render_ui()
-            # If we get here without exception, the test passes
-            self.assertTrue(True, "Modular UI rendering completed without errors")
+            after_visible_ui = pygame.image.tostring(self.controller.screen, "RGB")
+            self.assertNotEqual(before_visible_ui, after_visible_ui, "Visible modular panels should change the rendered screen")
+
+            char_info_panel.visible = False
+            self.controller.screen.fill((0, 0, 0))
+            before_hidden_ui = pygame.image.tostring(self.controller.screen, "RGB")
+            self.controller._render_ui()
+            after_hidden_ui = pygame.image.tostring(self.controller.screen, "RGB")
+            self.assertEqual(before_hidden_ui, after_hidden_ui, "Fully hidden modular panels should not draw onto the screen")
         except Exception as e:
             self.fail(f"Modular UI rendering failed with error: {e}")
+        finally:
+            for panel_name, visible in original_visibility.items():
+                self.controller.ui_panels[panel_name].visible = visible
 
     def test_render_ui_fallback_modes(self):
         """Test that UI rendering falls back gracefully when panels are unavailable."""

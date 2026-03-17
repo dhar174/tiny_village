@@ -2024,25 +2024,6 @@ class GameplayController:
                     # Validate numeric values individually so valid fields are preserved
                     def safe_int(value, default, field_name):
                         try:
-                            result = int(value)
-                            # Validate range: ensure non-negative and within reasonable bounds
-                            if result < 0:
-                                logger.warning(
-                                    f"Negative value for '{field_name}' in building '{building_data.get('name')}': {result}. "
-                                    f"Using default {default}."
-                                )
-                                return default
-                            # Check for unreasonably large values (e.g., > 10000 pixels)
-                            if result > 10000:
-                                logger.warning(
-                                    f"Unreasonably large value for '{field_name}' in building '{building_data.get('name')}': {result}. "
-                                    f"Using default {default}."
-                                )
-                                return default
-
-                    # Validate numeric values individually so valid fields are preserved
-                    def safe_int(value, default, field_name):
-                        try:
                             return int(value)
                         except (ValueError, TypeError) as e:
                             logger.warning(
@@ -3875,7 +3856,7 @@ class GameplayController:
     def _render_legacy_ui(self):
         """Legacy UI rendering method for fallback."""
         try:
-
+ 
             # TODO: Implement modular UI system with panels
             # TODO: Add character relationship visualization
             # TODO: Add village statistics dashboard
@@ -4765,6 +4746,17 @@ class GameplayController:
         except Exception as e:
             logger.error(f"Error notifying major event: {e}")
 
+    def initialize_modular_ui_system(self) -> bool:
+        """
+        Compatibility wrapper around the controller's UI initialization.
+        """
+        try:
+            self._init_ui_system()
+            return bool(getattr(self, "ui_panels", {})) and bool(getattr(self, "ui_fonts", {}))
+        except Exception as e:
+            logger.error(f"Error initializing modular UI system: {e}")
+            return False
+
     def get_feature_implementation_status(self) -> Dict[str, str]:
         """
         Report the implementation status of all planned features.
@@ -4803,6 +4795,7 @@ class GameplayController:
             "performance_optimization": "NOT_STARTED",
             "automated_testing": "NOT_STARTED",
             "configuration_ui": "NOT_STARTED",
+            "modular_ui_system": "BASIC_IMPLEMENTED",
         }
 
     def get_current_stories(self) -> Dict[str, Any]:
