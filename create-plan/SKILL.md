@@ -28,7 +28,7 @@ Throughout the entire workflow, operate in read-only mode. Do not write or updat
 3. **Create a plan using the template below**
    - Start with **1 short paragraph** describing the intent and approach.
    - Clearly call out what is **in scope** and what is **not in scope** in short.
-   - Then provide a **small checklist** of action items (default 6–10 items).
+   - Then provide a **small checklist** of action items (default 6 items).
       - Each checklist item should be a concrete action and, when helpful, mention files/commands.
       - **Make items atomic and ordered**: discovery → changes → tests → rollout.
       - **Verb-first**: “Add…”, “Refactor…”, “Verify…”, “Ship…”.
