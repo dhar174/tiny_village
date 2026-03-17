@@ -106,6 +106,9 @@ class MockAction:
     This includes critical attributes that the real Action class has to ensure
     tests properly validate utility calculations and don't pass with broken implementations.
     """
+    DEFAULT_SATISFACTION = 5.0
+    DEFAULT_URGENCY = 1.0
+
     def __init__(
         self,
         name,
@@ -127,8 +130,10 @@ class MockAction:
         self.effects = effects if effects else []
 
         self.preconditions = preconditions if preconditions else []
-        self.satisfaction = 5.0 if satisfaction is None else satisfaction
-        self.urgency = 1.0 if urgency is None else urgency
+        self.satisfaction = (
+            self.DEFAULT_SATISFACTION if satisfaction is None else satisfaction
+        )
+        self.urgency = self.DEFAULT_URGENCY if urgency is None else urgency
         self.target = target
         self.initiator = initiator
         self.priority = priority if priority is not None else 0.5
