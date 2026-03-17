@@ -251,8 +251,10 @@ class TestStrategyManagerHelpers(unittest.TestCase):
         )
         
         # Create valid goals
-        goal1 = Goal(name="goal1", target_effects={"happiness": 80}, priority=0.6)
-        goal2 = Goal(name="goal2", target_effects={"wealth": 90}, priority=0.7)
+        goal1 = Goal(name="goal1", target_effects={"happiness": 80})
+        goal1.priority = 0.6
+        goal2 = Goal(name="goal2", target_effects={"wealth": 90})
+        goal2.priority = 0.7
         
         character = MockCharacter(goals=[goal1, goal2])
         
