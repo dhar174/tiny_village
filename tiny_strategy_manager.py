@@ -280,63 +280,46 @@ class StrategyManager:
             # Basic needs - assuming direct attribute access or simple getters
             # Normalize hunger/energy to 0-1 range if they aren't already.
             # For utility function: higher hunger = more need; lower energy = more need.
-            def _normalize(value, divisor):
+            def _normalize(value, divisor, default=0.5):
                 try:
                     return float(value) / divisor
                 except (TypeError, ValueError):
-                    return None
+                    return default
 
             try:
-                state["hunger"] = (
-                    _normalize(getattr(character, "hunger_level", None), 10.0)
-                    if hasattr(character, "hunger_level")
-                    else 0.5
+                state["hunger"] = _normalize(
+                    getattr(character, "hunger_level", None), 10.0
                 )  # Assuming hunger 0-10
-                state["energy"] = (
-                    _normalize(getattr(character, "energy", None), 10.0)
-                    if hasattr(character, "energy")
-                    else 0.5
+                state["energy"] = _normalize(
+                    getattr(character, "energy", None), 10.0
                 )  # Assuming energy 0-10
-                state["money"] = (
-                    _normalize(getattr(character, "wealth_money", None), 1000.0)
-                    if hasattr(character, "wealth_money")
-                    else 0.0
+                state["money"] = _normalize(
+                    getattr(character, "wealth_money", None), 1000.0, default=0.0
                 )  # Assuming wealth_money 0-1000
 
                 # Add other relevant states if needed by utility function's need fulfillment logic
-                state["social_wellbeing"] = (
-                    _normalize(getattr(character, "social_wellbeing", None), 10.0)
-                    if hasattr(character, "social_wellbeing")
-                    else 0.5
+                state["social_wellbeing"] = _normalize(
+                    getattr(character, "social_wellbeing", None), 10.0
                 )
-                state["mental_health"] = (
-                    _normalize(getattr(character, "mental_health", None), 10.0)
-                    if hasattr(character, "mental_health")
-                    else 0.5
+                state["mental_health"] = _normalize(
+                    getattr(character, "mental_health", None), 10.0
                 )
-                state["health"] = (
-                    _normalize(getattr(character, "health_status", None), 100.0)
-                    if hasattr(character, "health_status")
-                    else 0.5
+                state["health"] = _normalize(
+                    getattr(character, "health_status", None), 100.0
                 )
-                satisfaction_value = getattr(character, "satisfaction", None)
-                if satisfaction_value is None and hasattr(character, "happiness"):
-                    satisfaction_value = getattr(character, "happiness", None)
-                state["satisfaction"] = (
-                    _normalize(satisfaction_value, 100.0)
-                    if satisfaction_value is not None
-                    else 0.5
+                # satisfaction and happiness are independent attributes; happiness falls back
+                # to the computed satisfaction value only when the character truly lacks it.
+                state["satisfaction"] = _normalize(
+                    getattr(character, "satisfaction", None), 100.0
                 )
-                happiness_value = getattr(character, "happiness", None)
+                happiness_normalized = _normalize(
+                    getattr(character, "happiness", None), 100.0, default=None
+                )
                 state["happiness"] = (
-                    _normalize(happiness_value, 100.0)
-                    if happiness_value is not None
-                    else state["satisfaction"]
+                    happiness_normalized if happiness_normalized is not None else state["satisfaction"]
                 )
-                state["job_performance"] = (
-                    _normalize(getattr(character, "job_performance", None), 100.0)
-                    if hasattr(character, "job_performance")
-                    else 0.5
+                state["job_performance"] = _normalize(
+                    getattr(character, "job_performance", None), 100.0
                 )
             except (AttributeError, TypeError, ValueError) as e:
                 logger.warning(f"Error extracting character state: {e}, using defaults")
@@ -906,7 +889,7 @@ class StrategyManager:
             return Goal(
                 name="economic_opportunity",
                 target_effects={
-                    "money": current_money + 50.0,
+                    "money": min(1.0, current_money + 0.1),
                     "satisfaction": min(1.0, current_satisfaction + 0.15),
                 },
                 priority=0.9,
@@ -1089,9 +1072,15 @@ class StrategyManager:
     def _handle_economic_event(self, event, character):
         """Handle economic events by prioritizing wealth and trade actions."""
         try:
+            character_state = (
+                self.get_character_state_dict(character)
+                if not isinstance(character, str)
+                else {}
+            )
+            current_money = character_state.get("money", 0.0)
             goal = Goal(
                 name="economic_opportunity",
-                target_effects={"money": 100.0, "satisfaction": 0.7},
+                target_effects={"money": min(1.0, current_money + 0.1), "satisfaction": 0.7},
                 priority=0.9
             )
             
@@ -1318,17 +1307,20 @@ class StrategyManager:
             goal = ranked_goals[0]
 
         # Plan using GOAP with correct interface
-        plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
+        if self.goap_planner:
+            plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
 
-        # Evaluate the utility of the plan using the planner's evaluate_utility method
-        if plan:
-            final_decision = self.goap_planner.evaluate_utility(plan, character)
-            return final_decision
-        else:
-            # If no plan found, return the highest utility action as fallback
-            if actions:
-                return max(actions, key=lambda a: self.goap_planner.calculate_utility(a, character))
-            return None
+            # Evaluate the utility of the plan using the planner's evaluate_utility method
+            if plan:
+                final_decision = self.goap_planner.evaluate_utility(plan, character)
+                return final_decision
+            else:
+                # If no plan found, return the highest utility action as fallback
+                if actions:
+                    return max(actions, key=lambda a: self.goap_planner.calculate_utility(a, character))
+
+        # Fallback when goap_planner is unavailable or no plan found
+        return actions[0] if actions else None
 
     def get_career_actions(self, character, job_details):
         # This is a placeholder and would need similar utility-based ranking
