@@ -13,25 +13,6 @@ MAX_SPEED = 5.0
 MIN_SPEED = 0.1
 SPEED_STEP = 0.1
 
-# Basic UI Panel implementation for modular system
-class UIPanel:
-    """Base class for modular UI panels."""
-    def __init__(self, name, visible=True):
-        self.name = name
-        self.visible = visible
-        
-    def render(self, screen, font, x, y):
-        """Render the panel content to the screen."""
-        if not self.visible:
-            return y
-        # Basic render - subclasses should override
-        text = font.render(f"{self.name} Panel", True, (255, 255, 255))
-        screen.blit(text, (x, y))
-        return y + 20
-        
-    def toggle_visibility(self):
-        """Toggle panel visibility."""
-        self.visible = not self.visible
 # Constants for UI elements
 # MINIMAP_SIZE = 150  # Size of the minimap window
 
@@ -1872,8 +1853,6 @@ class GameplayController:
         # Social network system is now handled by GraphManager - removed separate implementation
         self.implement_quest_system()
 
-        # Initialize modular UI system
-        self.initialize_modular_ui_system()
         # Initialize world events for emergent storytelling
         self.initialize_world_events()
         # Initialize modular UI system
@@ -2042,25 +2021,6 @@ class GameplayController:
                     width = building_data.get("width", 40)
                     height = building_data.get("height", 40)
                     
-                    # Validate numeric values individually so valid fields are preserved
-                    def safe_int(value, default, field_name):
-                        try:
-                            result = int(value)
-                            # Validate range: ensure non-negative and within reasonable bounds
-                            if result < 0:
-                                logger.warning(
-                                    f"Negative value for '{field_name}' in building '{building_data.get('name')}': {result}. "
-                                    f"Using default {default}."
-                                )
-                                return default
-                            # Check for unreasonably large values (e.g., > 10000 pixels)
-                            if result > 10000:
-                                logger.warning(
-                                    f"Unreasonably large value for '{field_name}' in building '{building_data.get('name')}': {result}. "
-                                    f"Using default {default}."
-                                )
-                                return default
-
                     # Validate numeric values individually so valid fields are preserved
                     def safe_int(value, default, field_name):
                         try:
@@ -3896,44 +3856,7 @@ class GameplayController:
     def _render_legacy_ui(self):
         """Legacy UI rendering method for fallback."""
         try:
-            # Check if modular UI system is available
-            if hasattr(self, 'ui_panels') and hasattr(self, 'ui_fonts') and self.ui_panels:
-                self._render_modular_ui()
-            else:
-                self._render_legacy_ui()
-                
-        except Exception as e:
-            # Fallback to minimal UI
-            try:
-                font = pygame.font.Font(None, 24)
-                error_text = font.render("UI Error - Fallback Mode", True, (255, 0, 0))
-                self.screen.blit(error_text, (10, 10))
-                char_text = font.render(
-                    f"Characters: {len(self.characters)}", True, (255, 255, 255)
-                )
-                self.screen.blit(char_text, (10, 35))
-            except:
-                pass  # Even fallback failed
-
-    def _render_modular_ui(self):
-        """Render UI using the modular panel system."""
-        try:
-            y_offset = 10
-            
-            # Render each panel if visible
-            for panel_name, panel in self.ui_panels.items():
-                if panel.visible:
-                    y_offset = panel.render(self.screen, self.ui_fonts['medium'], 10, y_offset)
-                    y_offset += 5  # Small spacing between panels
-                    
-        except Exception as e:
-            logger.warning(f"Error in modular UI rendering: {e}")
-            # Fall back to legacy UI
-            self._render_legacy_ui()
-
-    def _render_legacy_ui(self):
-        """Render UI using the original legacy system."""
-        try:
+ 
             # TODO: Implement modular UI system with panels
             # TODO: Add character relationship visualization
             # TODO: Add village statistics dashboard
@@ -4097,95 +4020,8 @@ class GameplayController:
                     strategy_result = self.strategy_manager.update_strategy(events)
                     logger.debug(f"StrategyManager generated strategy result: {type(strategy_result)}")
                 except Exception as e:
-                    logger.warning(f"Could not render selected character achievements: {e}")
-
-
-                for i, info in enumerate(char_info):
-                    info_text = small_font.render(info, True, (255, 255, 0))
-                    self.screen.blit(info_text, (10, y_offset + i * 20))
-
-            # Render enhanced instructions
-            instructions = [
-                "Click characters to select them",
-                "Click buildings to interact",
-                "SPACE to pause/unpause",
-                "R to reset characters",
-                "S to save game (basic)",
-                "L to load game (basic)",
-                "F to show feature status",
-                "M to toggle mini-map",
-                "O to toggle overview mode",
-                "ESC to quit",
-            ]
-
-            instruction_start_y = self.screen.get_height() - len(instructions) * 15 - 10
-            for i, instruction in enumerate(instructions):
-                inst_text = tiny_font.render(instruction, True, (200, 200, 200))
-                self.screen.blit(inst_text, (10, instruction_start_y + i * 15))
-
-            # Show feature implementation status on F key press (stored state)
-            if getattr(self, "_show_feature_status", False):
-                self._render_feature_status_overlay()
-
-            # Show mini-map if enabled
-            if getattr(self, "_minimap_mode", False):
-                self._render_minimap()
-
-        except Exception as e:
-            logger.error(f"Error in legacy UI rendering: {e}")
-            # Basic fallback
-            try:
-                font = pygame.font.Font(None, 24)
-                error_text = font.render("Legacy UI Error", True, (255, 0, 0))
-                self.screen.blit(error_text, (10, 10))
-            except:
-                pass
-
-    def _render_feature_status_overlay(self):
-        """Render an overlay showing feature implementation status."""
-        try:
-            font = pygame.font.Font(None, 18)
-
-            # Create semi-transparent overlay
-            overlay = pygame.Surface((400, 300))
-            overlay.set_alpha(200)
-            overlay.fill((0, 0, 0))
-
-            # Get feature status
-            feature_status = self.get_feature_implementation_status()
-
-            # Render title
-            title_text = font.render(
-                "Feature Implementation Status", True, (255, 255, 255)
-            )
-            overlay.blit(title_text, (10, 10))
-
-            y_pos = 35
-            for feature, status in feature_status.items():
-                # Color code based on status
-                if status == "FULLY_IMPLEMENTED":
-                    color = (0, 255, 0)
-                elif status == "BASIC_IMPLEMENTED":
-                    color = (255, 255, 0)
-                elif status == "STUB_IMPLEMENTED":
-                    color = (255, 165, 0)
-                else:  # NOT_STARTED
-                    color = (255, 0, 0)
-
-                # Format feature name
-                display_name = feature.replace("_", " ").title()
-                status_text = font.render(f"{display_name}: {status}", True, color)
-                overlay.blit(status_text, (10, y_pos))
-                y_pos += 18
-
-                if y_pos > 260:  # Prevent overflow
-                    break
-
-            # Blit overlay to main screen
-            self.screen.blit(overlay, (self.screen.get_width() - 420, 50))
-
-        except Exception as e:
-            logger.warning(f"Error rendering feature status overlay: {e}")
+                    logger.warning(f"Error updating strategy based on events: {e}")
+                    update_errors.append("Strategy update failed")
 
             # Step 4: Apply strategic result to game state
             self._apply_strategy_result(strategy_result, update_errors)
@@ -4912,34 +4748,11 @@ class GameplayController:
 
     def initialize_modular_ui_system(self) -> bool:
         """
-        Initialize the modular UI system with panels and fonts.
-        
-        STATUS: BASIC_IMPLEMENTED
-        Creates ui_panels and ui_fonts attributes with basic UI panel structure.
+        Compatibility wrapper around the controller's UI initialization.
         """
         try:
-            # Initialize UI fonts dictionary
-            self.ui_fonts = {
-                'small': pygame.font.Font(None, 16),
-                'medium': pygame.font.Font(None, 24),
-                'large': pygame.font.Font(None, 32),
-            }
-            
-            # Initialize UI panels dictionary
-            self.ui_panels = {}
-            
-            # Create expected panels
-            expected_panels = [
-                'character_info', 'game_status', 'weather', 'stats', 
-                'achievements', 'selected_character', 'instructions'
-            ]
-            
-            for panel_name in expected_panels:
-                self.ui_panels[panel_name] = UIPanel(panel_name, visible=True)
-            
-            logger.info("Modular UI system initialized successfully")
-            return True
-            
+            self._init_ui_system()
+            return bool(getattr(self, "ui_panels", {})) and bool(getattr(self, "ui_fonts", {}))
         except Exception as e:
             logger.error(f"Error initializing modular UI system: {e}")
             return False
