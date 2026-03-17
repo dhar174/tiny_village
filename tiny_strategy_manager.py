@@ -273,70 +273,60 @@ class StrategyManager:
         
         # Handle different character input types
         if isinstance(character, dict):
-            # If character is already a dictionary, use it directly
-            return character
+            # Preserve existing values while aliasing wealth_money for GOAP/actions that use money.
+            state = character.copy()
+            if "money" not in state and "wealth_money" in state:
+                try:
+                    state["money"] = float(state.get("wealth_money", 0.0))
+                except (TypeError, ValueError):
+                    state["money"] = 0.0
+            return state
         elif hasattr(character, '__dict__'):
             # If character is an object, extract attributes
             # Basic needs - assuming direct attribute access or simple getters
             # Normalize hunger/energy to 0-1 range if they aren't already.
             # For utility function: higher hunger = more need; lower energy = more need.
-            def _normalize(value, divisor):
+            def _normalize(value, divisor, default=0.5):
                 try:
                     return float(value) / divisor
                 except (TypeError, ValueError):
-                    return None
+                    return default
 
             try:
-                state["hunger"] = (
-                    _normalize(getattr(character, "hunger_level", None), 10.0)
-                    if hasattr(character, "hunger_level")
-                    else 0.5
+                state["hunger"] = _normalize(
+                    getattr(character, "hunger_level", None), 10.0
                 )  # Assuming hunger 0-10
-                state["energy"] = (
-                    _normalize(getattr(character, "energy", None), 10.0)
-                    if hasattr(character, "energy")
-                    else 0.5
+                state["energy"] = _normalize(
+                    getattr(character, "energy", None), 10.0
                 )  # Assuming energy 0-10
-                state["money"] = (
-                    _normalize(getattr(character, "wealth_money", None), 1000.0)
-                    if hasattr(character, "wealth_money")
-                    else 0.0
-                )  # Assuming wealth_money 0-1000
+                try:
+                    state["money"] = float(getattr(character, "wealth_money", 0.0))
+                except (TypeError, ValueError):
+                    state["money"] = 0.0
 
                 # Add other relevant states if needed by utility function's need fulfillment logic
-                state["social_wellbeing"] = (
-                    _normalize(getattr(character, "social_wellbeing", None), 10.0)
-                    if hasattr(character, "social_wellbeing")
-                    else 0.5
+                state["social_wellbeing"] = _normalize(
+                    getattr(character, "social_wellbeing", None), 10.0
                 )
-                state["mental_health"] = (
-                    _normalize(getattr(character, "mental_health", None), 10.0)
-                    if hasattr(character, "mental_health")
-                    else 0.5
+                state["mental_health"] = _normalize(
+                    getattr(character, "mental_health", None), 10.0
                 )
-                state["health"] = (
-                    _normalize(getattr(character, "health_status", None), 100.0)
-                    if hasattr(character, "health_status")
-                    else 0.5
+                state["health"] = _normalize(
+                    getattr(character, "health_status", None), 100.0
                 )
-                satisfaction_value = getattr(character, "satisfaction", None)
-                if satisfaction_value is None and hasattr(character, "happiness"):
-                    satisfaction_value = getattr(character, "happiness", None)
-                state["satisfaction"] = (
-                    _normalize(satisfaction_value, 100.0)
-                    if satisfaction_value is not None
-                    else 0.5
+                # satisfaction and happiness are independent attributes; happiness falls back
+                # to the computed satisfaction value only when the character truly lacks it.
+                state["satisfaction"] = _normalize(
+                    getattr(character, "satisfaction", None), 100.0
                 )
-                happiness_value = getattr(character, "happiness", None)
-                state["happiness"] = (
-                    _normalize(happiness_value, 100.0)
-                    if happiness_value is not None
-                    else state["satisfaction"]
-                )
-                state["job_performance"] = (
-                    _normalize(getattr(character, "job_performance", None), 100.0)
-                    if hasattr(character, "job_performance")
-                    else 0.5
+                if hasattr(character, "happiness"):
+                    state["happiness"] = _normalize(
+                        getattr(character, "happiness", None), 100.0
+                    )
+                else:
+                    state["happiness"] = state["satisfaction"]
+                state["job_performance"] = _normalize(
+                    getattr(character, "job_performance", None), 100.0
                 )
             except (AttributeError, TypeError, ValueError) as e:
                 logger.warning(f"Error extracting character state: {e}, using defaults")
@@ -884,9 +874,44 @@ class StrategyManager:
                 )
         return converted
 
+    def _get_money_value(self, character_state):
+        if isinstance(character_state, State):
+            nested_state = getattr(character_state, "dict_or_obj", None)
+            character_state = nested_state if nested_state is not None else character_state
+
+        if isinstance(character_state, dict):
+            for key in ("money", "wealth_money"):
+                if key in character_state:
+                    try:
+                        return float(character_state.get(key, 0.0))
+                    except (TypeError, ValueError):
+                        return 0.0
+        for key in ("money", "wealth_money"):
+            if hasattr(character_state, key):
+                try:
+                    return float(getattr(character_state, key))
+                except (TypeError, ValueError):
+                    return 0.0
+        return 0.0
+
+    def _select_best_action(self, actions, character, current_goal=None):
+        if not actions:
+            return None
+
+        character_state = self.get_character_state_dict(character)
+
+        def _score(action):
+            try:
+                return calculate_action_utility(character_state, action, current_goal)
+            except (AttributeError, TypeError, ValueError):
+                utility = getattr(action, "utility", None)
+                return utility if isinstance(utility, (int, float)) else float("-inf")
+
+        return max(actions, key=_score)
+
     def _goal_for_event_type(self, event_type, character_state=None):
         character_state = character_state or {}
-        current_money = character_state.get("money", 0.0)
+        current_money = self._get_money_value(character_state)
         current_social = character_state.get("social_wellbeing", 0.5)
         current_satisfaction = character_state.get("satisfaction", 0.5)
         current_energy = character_state.get("energy", 0.5)
@@ -906,7 +931,7 @@ class StrategyManager:
             return Goal(
                 name="economic_opportunity",
                 target_effects={
-                    "money": current_money + 50.0,
+                    "money": current_money + 20.0,
                     "satisfaction": min(1.0, current_satisfaction + 0.15),
                 },
                 priority=0.9,
@@ -1089,9 +1114,15 @@ class StrategyManager:
     def _handle_economic_event(self, event, character):
         """Handle economic events by prioritizing wealth and trade actions."""
         try:
+            character_state = (
+                self.get_character_state_dict(character)
+                if not isinstance(character, str)
+                else {}
+            )
+            current_money = self._get_money_value(character_state)
             goal = Goal(
                 name="economic_opportunity",
-                target_effects={"money": 100.0, "satisfaction": 0.7},
+                target_effects={"money": current_money + 20.0, "satisfaction": 0.7},
                 priority=0.9
             )
             
@@ -1274,16 +1305,15 @@ class StrategyManager:
             if self.goap_planner:
                 plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
                 
-                if plan:
+                if plan is not None:
+                    if not plan:
+                        return None
                     # Evaluate the utility of the plan
                     final_decision = self.goap_planner.evaluate_utility(plan, character)
                     return final_decision
                     
             # Fallback to highest utility action
-            if actions:
-                return actions[0]  # Actions are already sorted by utility
-                
-            return None
+            return self._select_best_action(actions, character, goal)
             
         except Exception as e:
             logger.warning(f"Error in planning with goal and actions: {e}")
@@ -1318,17 +1348,18 @@ class StrategyManager:
             goal = ranked_goals[0]
 
         # Plan using GOAP with correct interface
-        plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
+        if self.goap_planner:
+            plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
 
-        # Evaluate the utility of the plan using the planner's evaluate_utility method
-        if plan:
-            final_decision = self.goap_planner.evaluate_utility(plan, character)
-            return final_decision
-        else:
-            # If no plan found, return the highest utility action as fallback
-            if actions:
-                return max(actions, key=lambda a: self.goap_planner.calculate_utility(a, character))
-            return None
+            # Evaluate the utility of the plan using the planner's evaluate_utility method
+            if plan is not None:
+                if not plan:
+                    return None
+                final_decision = self.goap_planner.evaluate_utility(plan, character)
+                return final_decision
+
+        # Fallback when goap_planner is unavailable or no plan found
+        return self._select_best_action(actions, character, goal)
 
     def get_career_actions(self, character, job_details):
         # This is a placeholder and would need similar utility-based ranking
