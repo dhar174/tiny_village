@@ -1,38 +1,97 @@
 import unittest
+
 from tiny_utility_functions import (
     calculate_action_utility,
     calculate_plan_utility,
 )
-import importlib
 
-# Importing the Goal class from tiny_characters module (but using a mock for testing)
-# Goal = importlib.import_module("tiny_characters").Goal
+try:
+    from tiny_characters import Goal as RealGoal
+except Exception:
+    RealGoal = None
 
 
 # We need mock classes for testing since the real classes have complex dependencies
-class MockGoal:
+class SimplifiedRealGoal:
     """
-    Enhanced MockGoal that more closely mirrors real Goal class attributes.
-    
-    This includes additional attributes that goal systems might use for
-    more comprehensive testing of utility calculations.
+    Simplified Goal implementation that keeps the interface expected by utility tests.
     """
 
-    def __init__(self, name, target_effects=None, priority=0.5, urgency=None, 
-                 deadline=None, description=None):
+    def __init__(
+        self,
+        name,
+        target_effects=None,
+        priority=0.5,
+        urgency=None,
+        deadline=None,
+        description=None,
+        **kwargs,
+    ):
         self.name = name
         self.target_effects = target_effects if target_effects else {}
         self.priority = priority
         self.score = priority  # alias for compatibility
-        
-        # Enhanced attributes that real Goal classes might have
-        self.urgency = urgency if urgency is not None else priority  # Defaults to priority
+
+        self.urgency = urgency if urgency is not None else priority
         self.deadline = deadline
         self.description = description or f"Goal: {name}"
+        self.completed = kwargs.get("completed", False)
+        self.attributes = kwargs.get("attributes", {})
+        self.character = kwargs.get("character")
+        self.target = kwargs.get("target")
+        self.completion_conditions = kwargs.get("completion_conditions", {})
+        self.criteria = kwargs.get("criteria", [])
+        self.required_items = kwargs.get("required_items", [])
+        self.goal_type = kwargs.get("goal_type", "basic")
+
+    def check_completion(self, state=None):
+        return self.completed
+
+    def get_name(self):
+        return self.name
+
+    def get_score(self):
+        return self.score
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "description": self.description,
+            "score": self.score,
+            "target_effects": self.target_effects,
+            "priority": self.priority,
+        }
+
+
+class MockGoal(SimplifiedRealGoal):
+    """
+    Enhanced mock goal used by tests that need a lightweight but realistic goal object.
+    """
+
+    def __init__(
+        self,
+        name,
+        target_effects=None,
+        priority=0.5,
+        urgency=None,
+        deadline=None,
+        description=None,
+        **kwargs,
+    ):
+        kwargs.setdefault("goal_type", "test")
+        super().__init__(
+            name=name,
+            target_effects=target_effects,
+            priority=priority,
+            urgency=urgency,
+            deadline=deadline,
+            description=description or f"Test goal: {name}",
+            **kwargs,
+        )
 
 
 # Alias for test compatibility
-Goal = MockGoal
+Goal = RealGoal if RealGoal is not None else SimplifiedRealGoal
 
 # We need a mock or placeholder for the Action class.
 # If actions.py is too complex to import, we define a simple one here for testing utility.
@@ -47,28 +106,42 @@ class MockAction:
     This includes critical attributes that the real Action class has to ensure
     tests properly validate utility calculations and don't pass with broken implementations.
     """
-    def __init__(self, name, cost, effects=None, preconditions=None, target=None, 
-                 initiator=None, priority=None, related_goal=None, action_id=None,
-                 default_target_is_initiator=False):
+    def __init__(
+        self,
+        name,
+        cost,
+        effects=None,
+        preconditions=None,
+        target=None,
+        initiator=None,
+        priority=None,
+        related_goal=None,
+        action_id=None,
+        default_target_is_initiator=False,
+        satisfaction=None,
+        urgency=None,
+    ):
         self.name = name
         self.cost = float(cost)
         # Effects is a list of dictionaries, e.g., [{'attribute': 'hunger', 'change_value': -0.5}]
         self.effects = effects if effects else []
-        
-        # Enhanced attributes that real Action class has
+
         self.preconditions = preconditions if preconditions else []
+        self.satisfaction = 5.0 if satisfaction is None else satisfaction
+        self.urgency = 1.0 if urgency is None else urgency
         self.target = target
         self.initiator = initiator
         self.priority = priority if priority is not None else 0.5
         self.related_goal = related_goal
-        self.action_id = action_id if action_id else id(self)
+        self.action_id = action_id if action_id is not None else id(self)
         self.default_target_is_initiator = default_target_is_initiator
-        
-        # Set target to initiator if default_target_is_initiator is True and no target provided
+        self.impact_rating_on_target = 1
+        self.impact_rating_on_initiator = 1
+        self.impact_rating_on_other = {}
+
         if self.default_target_is_initiator and self.target is None and self.initiator is not None:
             self.target = self.initiator
-        
-        # Validate effects structure to catch issues early
+
         self._validate_effects()
     
     def _validate_effects(self):
@@ -101,14 +174,48 @@ class MockAction:
         """
         if not self.preconditions:
             return True
-        
-        # Simple validation - in real implementation this would check actual conditions
-        # For now, assume preconditions are met unless they're explicitly set to False
+
         for precondition in self.preconditions:
-            if isinstance(precondition, bool) and not precondition:
+            if isinstance(precondition, bool):
+                if not precondition:
+                    return False
+            elif isinstance(precondition, dict):
+                if character_state is None:
+                    return False
+
+                attribute = precondition.get("attribute")
+                operator = precondition.get("operator", ">=")
+                required_value = precondition.get("value", 0)
+                current_value = (
+                    character_state.get(attribute, 0)
+                    if isinstance(character_state, dict)
+                    else getattr(character_state, attribute, 0)
+                )
+
+                comparisons = {
+                    ">=": current_value >= required_value,
+                    "<=": current_value <= required_value,
+                    "==": current_value == required_value,
+                    ">": current_value > required_value,
+                    "<": current_value < required_value,
+                }
+                if not comparisons.get(operator, False):
+                    return False
+            elif hasattr(precondition, "check_condition"):
+                try:
+                    if not precondition.check_condition(character_state):
+                        return False
+                except Exception:
+                    return False
+            elif callable(precondition):
+                try:
+                    if not precondition(character_state):
+                        return False
+                except Exception:
+                    return False
+            else:
                 return False
-            # Could add more sophisticated checking here if needed for specific tests
-        
+
         return True
     
     def add_precondition(self, precondition):
@@ -126,6 +233,18 @@ class MockAction:
             raise ValueError("Effect change_value must be numeric")
         
         self.effects.append(effect)
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "preconditions": self.preconditions,
+            "effects": self.effects,
+            "cost": self.cost,
+            "target": self.target,
+            "initiator": self.initiator,
+            "priority": self.priority,
+            "action_id": self.action_id,
+        }
 
     def __repr__(self):
         return (
@@ -574,8 +693,6 @@ class TestTinyUtilityFunctions(unittest.TestCase):
         
         # Urgent goal should result in higher utility due to urgency multiplier
         self.assertGreater(utility_with_urgent, utility_with_normal)
-        print(f"Urgent goal utility: {utility_with_urgent}")
-        print(f"Normal goal utility: {utility_with_normal}")
 
     def test_realistic_action_scenario_with_enhanced_mocks(self):
         """Test a realistic scenario using enhanced MockAction and MockGoal."""
@@ -639,11 +756,14 @@ class TestTinyUtilityFunctions(unittest.TestCase):
         
         # Should be higher due to urgency multiplier (urgency 0.95 > 0.8)
         self.assertGreater(advanced_eat_utility, eat_utility)
-        
-        print(f"Basic eat utility: {eat_utility:.2f}")
-        print(f"Advanced eat utility with urgency: {advanced_eat_utility:.2f}")
-        print(f"Sleep utility: {sleep_utility:.2f}")
-        print(f"Urgency multiplier applied: {advanced_eat_utility > eat_utility}")
+
+    def test_mock_action_preserves_explicit_falsy_action_ids(self):
+        """Explicit falsy action IDs should be preserved for stable test fixtures."""
+        zero_id_action = MockAction("ZeroIdAction", cost=0.1, action_id=0)
+        empty_id_action = MockAction("EmptyIdAction", cost=0.1, action_id="")
+
+        self.assertEqual(zero_id_action.action_id, 0)
+        self.assertEqual(empty_id_action.action_id, "")
 
     def test_action_priority_in_goal_contexts(self):
         """Test how action priority interacts with goal-based utility."""
