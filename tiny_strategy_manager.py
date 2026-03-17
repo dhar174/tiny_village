@@ -993,8 +993,13 @@ class StrategyManager:
                     logger.debug(f"Goal importance fallback for {goal.name}: {e}")
             try:
                 goal.priority = importance
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(
+                    "Failed to update priority for goal '%s' (%r): %s",
+                    getattr(goal, "name", type(goal).__name__),
+                    goal,
+                    e,
+                )
             ranked.append((importance, goal))
         ranked.sort(key=lambda item: item[0], reverse=True)
         return [goal for _, goal in ranked]
