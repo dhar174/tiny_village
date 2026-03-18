@@ -20,12 +20,72 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from tiny_utility_functions import calculate_action_utility
 
 
-class MockAction:
-    """Simple mock action for testing."""
-    def __init__(self, name, cost=0.0, effects=None):
+class UtilityTestAction:
+    """Concrete action fixture that mirrors the utility function contract."""
+
+    def __init__(
+        self,
+        name,
+        cost=0.0,
+        effects=None,
+        preconditions=None,
+        priority=0.5,
+        target=None,
+        initiator=None,
+        action_id=None,
+    ):
         self.name = name
-        self.cost = cost
-        self.effects = effects or []
+        self.cost = float(cost)
+        self.effects = [] if effects is None else effects
+        self.preconditions = [] if preconditions is None else preconditions
+        self.priority = priority
+        self.target = target
+        self.initiator = initiator
+        self.action_id = id(self) if action_id is None else action_id
+
+    def preconditions_met(self, state=None):
+        """
+        Evaluate whether all preconditions are met.
+
+        Supports:
+        - bool values
+        - callables (optionally accepting `state`)
+        - objects with a `check_condition` method (optionally accepting `state`)
+
+        Any unsupported precondition type will raise a TypeError to avoid
+        silently treating it as truthy.
+        """
+        if not self.preconditions:
+            return True
+
+        for cond in self.preconditions:
+            # Direct boolean precondition
+            if isinstance(cond, bool):
+                result = cond
+            # Callable precondition (function, lambda, etc.)
+            elif callable(cond):
+                try:
+                    result = cond(state)
+                except TypeError:
+                    # Fallback for callables that do not accept `state`
+                    result = cond()
+            # Condition-like object with `check_condition`
+            elif hasattr(cond, "check_condition"):
+                check = cond.check_condition
+                try:
+                    result = check(state)
+                except TypeError:
+                    # Fallback for `check_condition` without `state` parameter
+                    result = check()
+            else:
+                raise TypeError(
+                    f"Unsupported precondition type: {type(cond)!r} in {self!r}"
+                )
+
+            if not bool(result):
+                return False
+
+        return True
 
 
 class UtilityTestGoal:
@@ -67,7 +127,7 @@ class TestIssue425Fix(unittest.TestCase):
         self.assertIsInstance(goal, Mock)
 
         # Create test action and state
-        action = MockAction(
+        action = UtilityTestAction(
             name="test_action",
             cost=1.0,
             effects=[
@@ -105,7 +165,7 @@ class TestIssue425Fix(unittest.TestCase):
         self.assertEqual(goal.score, 0.7)
 
         # Create test action and state
-        action = MockAction(
+        action = UtilityTestAction(
             name="test_action",
             cost=1.0,
             effects=[
@@ -113,6 +173,10 @@ class TestIssue425Fix(unittest.TestCase):
                 {"attribute": "energy", "change_value": -0.1},
             ],
         )
+
+        self.assertNotIsInstance(action, Mock)
+        self.assertTrue(callable(action.preconditions_met))
+        self.assertEqual(action.priority, 0.5)
 
         char_state = {"hunger": 0.5, "energy": 0.7}
 
@@ -144,7 +208,7 @@ class TestIssue425Fix(unittest.TestCase):
         )
 
         # Test action
-        action = MockAction(
+        action = UtilityTestAction(
             name="eat_food",
             cost=0.1,
             effects=[{"attribute": "hunger", "change_value": -0.4}],
@@ -208,7 +272,7 @@ class TestIssue425Fix(unittest.TestCase):
             self.assertNotIsInstance(goal, Mock)
 
         # Test that all work with utility functions
-        action = MockAction(
+        action = UtilityTestAction(
             name="balanced_meal",
             cost=0.2,
             effects=[
