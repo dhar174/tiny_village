@@ -442,7 +442,7 @@ class TestEnhancedDecisionPrompt(unittest.TestCase):
     def test_dynamic_action_choices_with_real_utility_function(self):
         """Test that action choices include real utility calculations with edge cases."""
         from tiny_utility_functions import calculate_action_utility
-        
+
         # Create mock actions that represent real edge cases
         class MockAction:
             def __init__(self, name, description, cost=0.0, effects=None):
@@ -450,28 +450,57 @@ class TestEnhancedDecisionPrompt(unittest.TestCase):
                 self.description = description
                 self.cost = cost
                 self.effects = effects if effects is not None else []
-        
+
         # Edge case 1: High hunger character with food action
         high_hunger_state = {"hunger": 0.9, "energy": 0.5}
         eat_action = MockAction(
-            "Eat bread", 
+            "Eat bread",
             "Consume bread to reduce hunger",
-            cost=0.1, 
-            effects=[{"attribute": "hunger", "change_value": -0.7}]
+            cost=0.1,
+            effects=[{"attribute": "hunger", "change_value": -0.7}],
         )
-        
+
         utility = calculate_action_utility(high_hunger_state, eat_action)
         self.assertGreater(utility, 0, "High hunger + food should have positive utility")
-        self.assertGreater(utility, 10, "Should be substantial utility for addressing high hunger")
-        
+        self.assertGreater(
+            utility, 10, "Should be substantial utility for addressing high hunger"
+        )
+
         # Edge case 2: Low energy character with rest action
         low_energy_state = {"energy": 0.2, "hunger": 0.3}
         rest_action = MockAction(
             "Rest",
             "Take a rest to restore energy",
             cost=0.05,
-            effects=[{"attribute": "energy", "change_value": 0.6}]
+            effects=[{"attribute": "energy", "change_value": 0.6}],
         )
+
+        rest_utility = calculate_action_utility(low_energy_state, rest_action)
+        self.assertGreater(
+            rest_utility, 0, "Low energy + rest should have positive utility"
+        )
+
+        # Integration check: verify that dynamically generated action-choice strings
+        # (with utility/effects) are actually included in the decision prompt.
+        prompt = self.prompt_builder.generate_decision_prompt(
+            time="afternoon",
+            weather="clear",
+            action_choices=self.test_action_choices,
+        )
+
+        self.assertIsNotNone(prompt)
+
+        # All dynamic action-choice strings should be present in the generated prompt.
+        # action_choices are expected to already be human-readable strings that
+        # incorporate utility/effects information.
+        for choice in self.test_action_choices:
+            choice_str = str(choice)
+            if choice_str:
+                self.assertIn(
+                    choice_str,
+                    prompt,
+                    f"Decision prompt should include action choice: {choice_str!r}",
+                )
         
         utility = calculate_action_utility(low_energy_state, rest_action)
         self.assertGreater(utility, 0, "Low energy + rest should have positive utility")
