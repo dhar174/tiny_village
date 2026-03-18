@@ -82,6 +82,15 @@ class TestActionResolver(unittest.TestCase):
                 result = resolved_action.execute(character=mock_character)
                 # Test 6: Verify execute method returns a boolean result
                 self.assertIsInstance(result, bool, "Execute should return boolean")
+                # Test 6b: Verify effects were actually applied to character state
+                self.assertEqual(
+                    mock_character.energy, 40,
+                    "Energy should decrease by 10 after execution (50 - 10 = 40)"
+                )
+                self.assertEqual(
+                    mock_character.current_satisfaction, 15,
+                    "Satisfaction should increase by 5 after execution (10 + 5 = 15)"
+                )
             except Exception as e:
                 self.fail(f"Action execute should not raise exception: {e}")
         
@@ -244,25 +253,37 @@ class TestActionResolver(unittest.TestCase):
             if result is not None:
                 self.assertTrue(hasattr(result, "execute"), "If result is not None, should have execute method")
         
-        # Test 2: Action.execute failure scenario 
-        valid_action_dict = {"name": "Valid Action", "energy_cost": 5}
-        resolved_action = self.action_resolver.resolve_action(valid_action_dict)
-        
-        # Mock execute to fail
-        if resolved_action:
-            with patch.object(resolved_action, 'execute', side_effect=Exception("Execute failed")):
-                mock_character = Mock()
-                mock_character.energy = 50
-                mock_character.uuid = "test_char"
-                
-                # The actual gameplay controller should handle execute failures gracefully
-                # Here we just verify our resolved action can handle the failure scenario
-                try:
-                    resolved_action.execute(character=mock_character)
-                    self.fail("Expected execute to raise exception due to our mock")
-                except Exception:
-                    # This is expected due to our mock - the key is testing the scenario
-                    pass
+        # Test 2: GameplayController._execute_character_actions recovers when execute() raises
+        # Create a failing action whose execute() always raises to simulate a runtime failure
+        failing_action = Mock()
+        failing_action.name = "Failing Action"
+        failing_action.execute.side_effect = Exception("Simulated execute failure")
+
+        mock_character = Mock()
+        mock_character.energy = 50
+        mock_character.current_satisfaction = 5
+        mock_character.uuid = "test_char"
+        mock_character.name = "Test Char"
+        mock_character.use_llm_decisions = False
+
+        with patch("pygame.init"), patch("pygame.display.set_mode"), \
+                patch("pygame.font.Font", return_value=Mock()):
+            controller = GameplayController(config={})
+            # Override only the strategy_manager so we can inject the failing action
+            controller.strategy_manager = Mock()
+            controller.strategy_manager.get_daily_actions.return_value = [failing_action]
+
+            # The controller must not propagate the exception; it should fall back gracefully
+            try:
+                result = controller._execute_character_actions(mock_character)
+            except Exception as e:
+                self.fail(
+                    f"_execute_character_actions should handle execute failures gracefully, but raised: {e}"
+                )
+
+            # Recovery should produce a boolean result (True via fallback, not an unhandled crash)
+            self.assertIsInstance(result, bool, "Result should be boolean even after execute failure")
+            self.assertTrue(result, "Controller should recover successfully via fallback after execute failure")
         
         # Test 3: Malformed action dictionary scenarios
         malformed_dicts = [
