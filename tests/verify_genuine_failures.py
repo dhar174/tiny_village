@@ -10,7 +10,6 @@ import sys
 import os
 import json
 import tempfile
-from unittest.mock import Mock, patch
 
 # Add the parent directory to the Python path
 test_dir = os.path.dirname(os.path.abspath(__file__))
@@ -247,39 +246,69 @@ class TestThatCanGenuinelyFail(unittest.TestCase):
 
     def test_module_integration_can_fail(self):
         """Test that shows our module integration tests can genuinely fail."""
-        
-        integration_errors = []
-        
-        # Test with a mock that simulates a broken utility function
-        with patch('tiny_utility_functions.calculate_action_utility') as mock_calc:
-            # Simulate a broken calculation function
-            mock_calc.side_effect = ZeroDivisionError("Division by zero in utility calculation")
-            
-            try:
-                import tiny_utility_functions
-                
-                action = Mock()
-                action.cost = 1.0
-                action.effects = [{"attribute": "hunger", "change_value": -0.3}]
-                
-                state = {"hunger": 0.5, "energy": 0.7}
-                goal = Mock()
-                goal.target_effects = {"hunger": 0.2}
-                goal.priority = 0.7
-                
-                # This should fail with our mocked broken function
-                utility = tiny_utility_functions.calculate_action_utility(state, action, goal)
-                integration_errors.append("Utility calculation should have failed with division by zero")
-                
-            except ZeroDivisionError as e:
-                print(f"✓ Integration test correctly caught simulated calculation error: {e}")
-            except Exception as e:
-                integration_errors.append(f"Unexpected error in integration test: {e}")
-        
-        if integration_errors:
-            print(f"✓ Module integration test identified {len(integration_errors)} potential issues:")
-            for error in integration_errors:
-                print(f"   - {error}")
+
+        try:
+            import tiny_utility_functions
+            from actions import Action
+
+            goal = tiny_utility_functions.Goal(
+                name="reduce_hunger",
+                target_effects={"hunger": -0.2},
+                priority=0.7,
+            )
+            eat_action = Action(
+                name="eat_meal",
+                preconditions=[],
+                effects=[{"attribute": "hunger", "change_value": -0.3}],
+                cost=1.0,
+            )
+            work_action = Action(
+                name="work_shift",
+                preconditions=[],
+                effects=[{"attribute": "energy", "change_value": -0.2}],
+                cost=1.0,
+            )
+
+            hungry_state = {"hunger": 0.9, "energy": 0.7, "health": 0.8}
+            satiated_state = {"hunger": 0.1, "energy": 0.7, "health": 0.8}
+
+            hungry_utility = tiny_utility_functions.calculate_action_utility(
+                hungry_state, eat_action, goal
+            )
+            satiated_utility = tiny_utility_functions.calculate_action_utility(
+                satiated_state, eat_action, goal
+            )
+            misaligned_utility = tiny_utility_functions.calculate_action_utility(
+                hungry_state, work_action, goal
+            )
+            plan_utility = tiny_utility_functions.calculate_plan_utility(
+                hungry_state, [eat_action, eat_action], goal, simulate_effects=True
+            )
+
+            self.assertGreater(
+                hungry_utility,
+                satiated_utility,
+                "Hunger-reducing action should be more valuable when hunger is high",
+            )
+            self.assertLess(
+                misaligned_utility,
+                hungry_utility,
+                "An action that does not help the goal should have lower utility",
+            )
+            self.assertLess(
+                plan_utility,
+                hungry_utility * 2,
+                "Simulated repeated actions should have diminishing plan value as state improves",
+            )
+
+            print("✓ Integration test verified genuine utility differences with real Goal and Action objects")
+            print(f"   - hungry utility: {hungry_utility}")
+            print(f"   - satiated utility: {satiated_utility}")
+            print(f"   - misaligned utility: {misaligned_utility}")
+            print(f"   - simulated plan utility: {plan_utility}")
+
+        except Exception as e:
+            self.fail(f"Unexpected error in integration test: {e}")
 
 
 def main():

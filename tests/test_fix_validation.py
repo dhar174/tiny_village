@@ -18,7 +18,6 @@ import sys
 import os
 import json
 import tempfile
-from unittest.mock import Mock, patch, MagicMock
 
 # Add the current directory and parent directory to the Python path
 test_dir = os.path.dirname(os.path.abspath(__file__))
@@ -76,6 +75,7 @@ class TestCountingFix(unittest.TestCase):
         
         # Extract numeric values - this could fail with malformed data, unicode issues, etc.
         numeric_patterns = []
+        parse_errors = []
         for sentence in test_sentences:
             # Complex parsing that could fail with edge cases
             numbers = []
@@ -90,13 +90,14 @@ class TestCountingFix(unittest.TestCase):
                         try:
                             numbers.append(float(num_str))
                         except ValueError:
-                            # This could reveal parsing bugs
-                            self.fail(f"Failed to parse number '{num_str}' from sentence: {sentence}")
+                            parse_errors.append((sentence, num_str))
                 else:
                     i += 1
             numeric_patterns.extend(numbers)
         
         # Verify the parsing worked correctly - this tests complex string processing
+        self.assertEqual(parse_errors, [],
+                         f"Failed to parse numeric tokens extracted from test sentences: {parse_errors}")
         self.assertGreater(len(numeric_patterns), 0, "Should extract numeric values from test sentences")
         self.assertIn(85.0, numeric_patterns, "Should correctly parse percentage value")
         self.assertIn(50.25, numeric_patterns, "Should correctly parse decimal currency value")
@@ -253,6 +254,7 @@ class TestCountingFix(unittest.TestCase):
         try:
             # Test utility calculation functionality that could genuinely fail
             import tiny_utility_functions
+            from actions import Action
             
             # Test edge cases that could reveal calculation bugs
             edge_case_states = [
@@ -262,27 +264,23 @@ class TestCountingFix(unittest.TestCase):
                 {"hunger": 0.999, "energy": 0.001, "happiness": 0.001},  # Extreme values
             ]
             
-            # Create a real Goal object that matches the utility function expectations
-            if hasattr(tiny_utility_functions, 'Goal'):
-                goal = tiny_utility_functions.Goal(
-                    name="test_goal",
-                    target_effects={"hunger": 0.2, "energy": 0.8},
-                    priority=0.7
-                )
-            else:
-                # Fallback to mock if Goal not available
-                goal = Mock()
-                goal.target_effects = {"hunger": 0.2, "energy": 0.8}
-                goal.priority = 0.7
-            
-            # Create action outside the loop so it's properly defined
-            action = Mock()
-            action.cost = 1.0
-            action.effects = [
-                {"attribute": "hunger", "change_value": -0.3},
-                {"attribute": "energy", "change_value": -0.1}
-            ]
-            action.name = "test_action"
+            self.assertTrue(hasattr(tiny_utility_functions, "Goal"),
+                            "tiny_utility_functions should provide a Goal type")
+            goal = tiny_utility_functions.Goal(
+                name="test_goal",
+                target_effects={"hunger": -0.2, "energy": 0.8},
+                priority=0.7
+            )
+
+            action = Action(
+                name="test_action",
+                preconditions=[],
+                effects=[
+                    {"attribute": "hunger", "change_value": -0.3},
+                    {"attribute": "energy", "change_value": -0.1}
+                ],
+                cost=1.0
+            )
             
             # Test utility calculation with edge cases
             for state in edge_case_states:
@@ -306,10 +304,10 @@ class TestCountingFix(unittest.TestCase):
                 # Test utility calculation with extreme edge cases that could reveal division by zero,
                 # overflow, or other numerical issues
                 if hasattr(tiny_utility_functions, 'calculate_plan_utility'):
-                    plan = [action]  # Simple plan with one action
+                    plan = [action]  # Simple plan with one real action
                     try:
                         plan_utility = tiny_utility_functions.calculate_plan_utility(
-                            plan, state, goal
+                            state, plan, goal
                         )
                         
                         # Verify plan utility calculation handles edge cases
