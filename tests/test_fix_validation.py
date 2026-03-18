@@ -7,62 +7,28 @@ This file contains the problematic pattern mentioned in the issue and shows the 
 import unittest
 import sys
 import os
-from unittest.mock import Mock
 
-# Add current directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Add the repo root (parent of tests/) to sys.path so that modules like
+# tiny_utility_functions and actions can be imported directly.
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+if _TESTS_DIR not in sys.path:
+    sys.path.insert(0, _TESTS_DIR)
 
-try:
-    from tiny_utility_functions import calculate_action_utility, Goal
-    from actions import Action
-    from tests.test_tiny_utility_functions import MockAction
-    IMPORTS_AVAILABLE = True
-except ImportError as e:
-    print(f"Warning: Could not import required modules: {e}")
-    IMPORTS_AVAILABLE = False
+from tiny_utility_functions import calculate_action_utility, Goal
+from actions import Action
+from test_tiny_utility_functions import MockAction
 
 
 class TestFixValidation(unittest.TestCase):
-    """Test class that demonstrates the Mock() issue and provides the fix."""
+    """Test class that validates the fix for Mock() usage in utility calculations."""
 
     def setUp(self):
         """Set up test fixtures."""
-        if not IMPORTS_AVAILABLE:
-            self.skipTest("Required modules not available")
-        
         # Common test data
         self.character_state = {"hunger": 0.9, "energy": 0.5}
-    
-    def test_problematic_mock_usage(self):
-        """
-        This test demonstrates the PROBLEMATIC approach using Mock() for action objects.
-        This is the pattern mentioned in the issue that should be avoided.
-        """
-        # Create goal outside the loop so it's properly defined
-        goal = Goal(name="SatisfyHunger", target_effects={"hunger": -0.8})
-        goal.priority = 0.7
-        
-        # Create action outside the loop so it's properly defined
-        action = Mock()
-        action.name = "EatFood"
-        # Note: Mock() will automatically create mock objects for any attribute access
-        # This means action.cost and action.effects will be Mock objects, not real values
-        
-        # This test might pass but doesn't actually validate the behavior
-        try:
-            utility = calculate_action_utility(self.character_state, action, current_goal=goal)
-            # With Mock(), this could pass even if the function expects specific data types
-            # because Mock() returns other Mock() objects for attribute access
-            print(f"Mock utility result: {utility}")
-            print(f"action.cost type: {type(action.cost)}")
-            print(f"action.effects type: {type(action.effects)}")
-            
-            # This test demonstrates the issue - it might fail because Mock() objects
-            # don't behave like real data structures
-            self.fail("Mock() usage should fail or give meaningless results")
-        except (TypeError, AttributeError) as e:
-            # Expected failure due to Mock() not providing proper interface
-            print(f"✓ Mock() correctly failed: {e}")
     
     def test_fixed_with_real_action(self):
         """
@@ -155,10 +121,6 @@ class TestFixValidation(unittest.TestCase):
 
 def run_validation_tests():
     """Run the tests and provide summary."""
-    if not IMPORTS_AVAILABLE:
-        print("❌ Cannot run tests - required modules not available")
-        return False
-    
     # Create test suite
     suite = unittest.TestLoader().loadTestsFromTestCase(TestFixValidation)
     runner = unittest.TextTestRunner(verbosity=2)

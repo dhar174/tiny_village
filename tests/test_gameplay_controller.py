@@ -94,12 +94,15 @@ class TestActionResolver(unittest.TestCase):
         mock_character.energy = 100
 
         # Create a real Action object instead of using Mock()
-        # This ensures the test actually validates how the system works with real action objects
+        # This ensures the test actually validates how the system works with real action objects.
+        # Pass the mock_graph_manager explicitly to avoid triggering global GraphManager
+        # initialization via tiny_globals.get_global_graph_manager().
         test_action = Action(
             name="Test Action",
             preconditions={},
             effects=[{"attribute": "energy", "change_value": -0.1}],
-            cost=0.1
+            cost=0.1,
+            graph_manager=self.mock_graph_manager,
         )
 
         self.action_resolver.track_action_execution(test_action, mock_character, True)

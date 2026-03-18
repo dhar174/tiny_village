@@ -8,8 +8,14 @@ import sys
 import os
 from unittest.mock import Mock
 
-# Add current directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Add the repo root (parent of tests/) so modules like tiny_utility_functions
+# and actions can be imported directly when running this script stand-alone.
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+if _TESTS_DIR not in sys.path:
+    sys.path.insert(0, _TESTS_DIR)
 
 from tiny_utility_functions import calculate_action_utility, Goal
 from actions import Action
@@ -68,7 +74,7 @@ def demonstrate_mock_issue():
     print("-" * 58)
     
     # Import the proper MockAction class
-    from tests.test_tiny_utility_functions import MockAction
+    from test_tiny_utility_functions import MockAction
     
     # Create action using MockAction test class
     test_action = MockAction(
