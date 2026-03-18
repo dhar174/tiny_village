@@ -47,6 +47,8 @@ def test_enhanced_prompt_with_mock():
                         MockGoal(
                             "Prepare engaging lesson plans",
                             "Help students learn better",
+                            priority=0.85,
+                            target_effects={"job_performance": 0.8, "energy": -0.2}
                         ),
                     ),
                     (
@@ -54,6 +56,8 @@ def test_enhanced_prompt_with_mock():
                         MockGoal(
                             "Maintain work-life balance",
                             "Avoid burnout and stay healthy",
+                            priority=0.72,
+                            target_effects={"health": 0.8, "mental_health": 0.7}
                         ),
                     ),
                     (
@@ -61,6 +65,8 @@ def test_enhanced_prompt_with_mock():
                         MockGoal(
                             "Build stronger relationships",
                             "Connect with friends and family",
+                            priority=0.68,
+                            target_effects={"social_wellbeing": 0.8, "happiness": 0.6}
                         ),
                     ),
                 ]
@@ -152,10 +158,35 @@ def test_enhanced_prompt_with_mock():
                     },
                 ]
 
+        # Enhanced MockGoal with proper interface matching real Goal class
         class MockGoal:
-            def __init__(self, name, description):
+            def __init__(self, name, description, priority=0.5, target_effects=None):
                 self.name = name
                 self.description = description
+                self.priority = priority
+                self.score = priority
+                self.target_effects = target_effects if target_effects else {}
+                self.completed = False
+                
+                # Additional attributes for realistic testing
+                self.character = None
+                self.target = None
+                self.completion_conditions = {}
+                self.criteria = []
+                self.required_items = []
+                self.goal_type = "test"
+                
+            def check_completion(self, state=None):
+                """Check goal completion - matches real Goal interface."""
+                return self.completed
+                
+            def get_name(self):
+                """Getter method found in real Goal class."""
+                return self.name
+                
+            def get_score(self):
+                """Getter method found in real Goal class."""
+                return self.score
 
         class MockMotives:
             def __init__(self):

@@ -58,8 +58,64 @@ TinyVillage is a 2D simulation game where AI characters autonomously go about th
 To start the game, run the following command:
 ```bash
 python main.py
+```
 
-Contributing
+The game supports multiple modes:
+
+**Visual Demo** (Full pygame display):
+```bash
+python main.py --mode visual
+```
+
+**Minimal Demo** (Console output, no display):
+```bash
+python main.py --mode minimal
+```
+
+**Integration Tests** (Verify system integration):
+```bash
+python main.py --mode test
+```
+
+**Additional Options**:
+```bash
+python main.py --characters 3      # Create 3 characters
+python main.py --no-llm            # Disable LLM (use fallback logic)
+python main.py --fps 30            # Run at 30 FPS
+python main.py --verbose           # Enable debug logging
+python main.py --help              # Show all options
+```
+
+For more detailed instructions, see the [Quickstart Guide](docs/guides/QUICKSTART.md).
+
+## Documentation
+
+Comprehensive documentation is available in the `docs/` directory:
+
+- **[User Guides](docs/guides/)** - Getting started and usage guides
+  - [Quickstart Guide](docs/guides/QUICKSTART.md) - Get running in under 5 minutes
+  - [Checkpoint System Guide](docs/guides/QUICKSTART_CHECKPOINTS.md) - Save system usage
+  - [LLM Integration Guide](docs/guides/LLM_INTEGRATION_USAGE_GUIDE.md) - Using LLM features
+
+- **[Technical Reference](docs/reference/)** - API and system documentation
+  - [System Integration Status](docs/reference/SYSTEM_INTEGRATION_COMPLETE.md) - Current implementation status
+  - [Developer Agent Guidelines](docs/reference/AGENTS.md) - Architecture and development patterns
+  - [Checkpoint System Documentation](docs/reference/CHECKPOINT_SYSTEM_DOCUMENTATION.md) - Technical details
+  - [Storytelling System](docs/reference/STORYTELLING_DOCUMENTATION.md) - Narrative generation
+  - And more...
+
+- **[Testing Documentation](docs/testing/)** - Testing guidelines and best practices
+  - [Memory Testing Best Practices](docs/testing/MEMORY_TESTING_BEST_PRACTICES.md)
+  - [Randomness Testing Guide](docs/testing/RANDOMNESS_TESTING_GUIDE.md)
+
+- **[Design Documents](design_docs/)** - Architecture and design deep-dives
+  - [High-Level Architecture](design_docs/high_level_architecture.md)
+  - [Graph Manager Deep Dive](design_docs/graph_manager_deep_dive.md)
+  - [Data Flow & Decision Cycle](design_docs/data_flow_decision_cycle.md)
+
+See [docs/README.md](docs/README.md) for a complete documentation index.
+
+## Contributing
 We welcome contributions! Please read our Contributing Guide for details on our code of conduct and the process for submitting pull requests.
 
 License
