@@ -7,9 +7,9 @@ import sys
 import os
 from datetime import datetime, timedelta
 
-# Add the project directory to path
-project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../tiny_village"))
-sys.path.insert(0, project_dir)
+# Add the parent directory to path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 def test_event_creation():
     """Test basic event creation and functionality."""
     print("Testing Event creation...")

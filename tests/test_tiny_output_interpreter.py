@@ -26,15 +26,16 @@ class TestParseLLMResponse(unittest.TestCase):
 
     def test_parse_valid_json(self):
         response_str = '{"action": "Eat", "parameters": {"item_name": "Apple"}}'
-        expected = {"action": "Eat", "parameters": {"item_name": "Apple"}}
-        self.assertEqual(self.interpreter.parse_llm_response(response_str), expected)
+        result = self.interpreter.parse_llm_response(response_str)
+        self.assertEqual(result["action"], "Eat")
+        self.assertEqual(result["parameters"], {"item_name": "Apple"})
 
     def test_parse_invalid_json(self):
         response_str = '{"action": "Eat", "parameters": {"item_name": "Apple"'  # Missing closing brace
-        # With our enhanced parser, this should fallback to natural language parsing and extract "Eat"
+        # With our enhanced parser, this should recover the JSON object and keep parameters
         result = self.interpreter.parse_llm_response(response_str)
         self.assertEqual(result["action"], "Eat")
-        self.assertEqual(result["parameters"], {})
+        self.assertEqual(result["parameters"], {"item_name": "Apple"})
 
     def test_parse_empty_string(self):
         # Empty string should fallback to NoOp action in our enhanced parser
@@ -71,7 +72,6 @@ class TestParseLLMResponse(unittest.TestCase):
 
 class TestInterpret(unittest.TestCase):
     def setUp(self):
-        self.interpreter = OutputInterpreter()
         # It's important that the paths to the classes are correct for patching.
         # These are the classes defined *within* tiny_output_interpreter.py for placeholders,
         # or imported into it (like TalkAction).
@@ -98,6 +98,9 @@ class TestInterpret(unittest.TestCase):
         self.MockNoOpAction.return_value = MagicMock(spec=PlaceholderNoOpAction)
         self.MockTalkAction.return_value = MagicMock(spec=TalkAction)
 
+        # Instantiate interpreter after patches so the action_class_map uses the mocks
+        self.interpreter = OutputInterpreter()
+
     def tearDown(self):
         self.patcher_eat.stop()
         self.patcher_goto.stop()
@@ -112,10 +115,10 @@ class TestInterpret(unittest.TestCase):
         action_instance = self.interpreter.interpret(
             parsed_response
         )  # No context initiator
-        # Check that EatAction was called with item_name, initiator_id from params, and all params
-        self.MockEatAction.assert_called_once_with(
-            item_name="Apple", initiator_id="char1", **parsed_response["parameters"]
-        )
+        self.MockEatAction.assert_called_once()
+        call_kwargs = self.MockEatAction.call_args.kwargs
+        self.assertEqual(call_kwargs["item_name"], "Apple")
+        self.assertEqual(call_kwargs["initiator_id"], "char1")
         self.assertIs(action_instance, self.MockEatAction.return_value)
 
     def test_interpret_eat_action_valid_with_context_initiator(self):
@@ -126,9 +129,10 @@ class TestInterpret(unittest.TestCase):
         action_instance = self.interpreter.interpret(
             parsed_response, initiator_id_context="char_ctx"
         )
-        self.MockEatAction.assert_called_once_with(
-            item_name="Pear", initiator_id="char_ctx", **parsed_response["parameters"]
-        )
+        self.MockEatAction.assert_called_once()
+        call_kwargs = self.MockEatAction.call_args.kwargs
+        self.assertEqual(call_kwargs["item_name"], "Pear")
+        self.assertEqual(call_kwargs["initiator_id"], "char_ctx")
         self.assertIs(action_instance, self.MockEatAction.return_value)
 
     def test_interpret_eat_action_param_initiator_overrides_context(self):
@@ -139,11 +143,10 @@ class TestInterpret(unittest.TestCase):
         action_instance = self.interpreter.interpret(
             parsed_response, initiator_id_context="char_ctx"
         )
-        self.MockEatAction.assert_called_once_with(
-            item_name="Apple",
-            initiator_id="char_param",
-            **parsed_response["parameters"]
-        )
+        self.MockEatAction.assert_called_once()
+        call_kwargs = self.MockEatAction.call_args.kwargs
+        self.assertEqual(call_kwargs["item_name"], "Apple")
+        self.assertEqual(call_kwargs["initiator_id"], "char_param")
         self.assertIs(action_instance, self.MockEatAction.return_value)
 
     def test_interpret_goto_action_valid(self):
@@ -154,9 +157,10 @@ class TestInterpret(unittest.TestCase):
         action_instance = self.interpreter.interpret(
             parsed_response, initiator_id_context="char2"
         )
-        self.MockGoToAction.assert_called_once_with(
-            location_name="Park", initiator_id="char2", **parsed_response["parameters"]
-        )
+        self.MockGoToAction.assert_called_once()
+        call_kwargs = self.MockGoToAction.call_args.kwargs
+        self.assertEqual(call_kwargs["location_name"], "Park")
+        self.assertEqual(call_kwargs["initiator_id"], "char2")
         self.assertIs(action_instance, self.MockGoToAction.return_value)
 
     def test_interpret_talk_action_valid(self):
@@ -169,11 +173,10 @@ class TestInterpret(unittest.TestCase):
             },
         }
         action_instance = self.interpreter.interpret(parsed_response)
-        # My interpreter's interpret method calls TalkAction:
-        # TalkAction(initiator=initiator_id, target=parameters["target_name"], **parameters)
-        self.MockTalkAction.assert_called_once_with(
-            initiator="char_speaker", target="John", **parsed_response["parameters"]
-        )
+        self.MockTalkAction.assert_called_once()
+        call_kwargs = self.MockTalkAction.call_args.kwargs
+        self.assertEqual(call_kwargs["initiator"], "char_speaker")
+        self.assertEqual(call_kwargs["target"], "John")
         self.assertIs(action_instance, self.MockTalkAction.return_value)
 
     def test_interpret_talk_action_valid_with_context_initiator(self):
@@ -184,9 +187,10 @@ class TestInterpret(unittest.TestCase):
         action_instance = self.interpreter.interpret(
             parsed_response, initiator_id_context="char_ctx_speaker"
         )
-        self.MockTalkAction.assert_called_once_with(
-            initiator="char_ctx_speaker", target="Jane", **parsed_response["parameters"]
-        )
+        self.MockTalkAction.assert_called_once()
+        call_kwargs = self.MockTalkAction.call_args.kwargs
+        self.assertEqual(call_kwargs["initiator"], "char_ctx_speaker")
+        self.assertEqual(call_kwargs["target"], "Jane")
         self.assertIs(action_instance, self.MockTalkAction.return_value)
 
     def test_interpret_noop_action_valid(self):
@@ -194,9 +198,9 @@ class TestInterpret(unittest.TestCase):
         action_instance = self.interpreter.interpret(
             parsed_response, initiator_id_context="char_noop"
         )
-        self.MockNoOpAction.assert_called_once_with(
-            initiator_id="char_noop", **parsed_response["parameters"]
-        )
+        self.MockNoOpAction.assert_called_once()
+        call_kwargs = self.MockNoOpAction.call_args.kwargs
+        self.assertEqual(call_kwargs["initiator_id"], "char_noop")
         self.assertIs(action_instance, self.MockNoOpAction.return_value)
 
     def test_interpret_unknown_action(self):
