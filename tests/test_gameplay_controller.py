@@ -238,7 +238,7 @@ class TestActionResolver(unittest.TestCase):
         # Test 1: Action constructor failure scenario
         action_dict = {"name": "Test Action", "energy_cost": 10}
         
-        with patch('tiny_gameplay_controller.Action', side_effect=Exception("Mock Action constructor failure")):
+        with patch('actions.Action', side_effect=Exception("Mock Action constructor failure")):
             result = self.action_resolver.resolve_action(action_dict)
             # Should either return None or a fallback action, but not crash
             if result is not None:
