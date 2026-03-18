@@ -36,13 +36,42 @@ try:
     gm.G.add_node("test_node", type="test", item_type="food")
     print("   ✓ Simple graph created")
 
-    # Mock the required methods for testing
+    # Enhanced Mock Goal that better matches real Goal interface
     class MockGoal:
-        def __init__(self, criteria):
+        def __init__(self, criteria, name="TestGoal", priority=0.5, target_effects=None):
             self.criteria = criteria
+            self.name = name
+            self.priority = priority
+            self.score = priority  # alias for compatibility
+            self.target_effects = target_effects if target_effects else {}
+            self.completed = False
+            self.description = "Test goal for difficulty calculation"
+            
+            # Required attributes for goal difficulty calculation
+            self.character = None
+            self.target = None
+            self.required_items = self._extract_required_items()
+            
+        def _extract_required_items(self):
+            """Extract required items from criteria to match real Goal interface."""
+            required_items = []
+            for criterion in self.criteria:
+                if "node_attributes" in criterion:
+                    if "item_type" in criterion["node_attributes"]:
+                        required_items.append(criterion["node_attributes"])
+            return required_items
+            
+        def check_completion(self, state=None):
+            """Check goal completion - matches real Goal interface."""
+            return self.completed
 
-    # Test a simple scenario
-    goal = MockGoal([{"node_attributes": {"type": "test"}}])
+    # Test a simple scenario with enhanced goal
+    goal = MockGoal(
+        criteria=[{"node_attributes": {"type": "test"}}],
+        name="FindTestItem",
+        priority=0.8,
+        target_effects={"test_completion": 1.0}
+    )
 
     # Define get_filtered_nodes method temporarily
     def mock_get_filtered_nodes(**kwargs):

@@ -34,18 +34,49 @@ def test_unified_goap_planning():
                     'happiness': self.happiness
                 })
 
+        # Enhanced MockGoal that matches real Goal interface
         class MockGoal:
-            def __init__(self, target_state):
+            def __init__(self, target_state, name="TestGoal", priority=0.5):
                 self.target_state = target_state
                 self.completion_conditions = target_state
+                self.name = name
+                self.priority = priority
+                self.score = priority
+                self.target_effects = target_state  # Use target_state as target_effects
+                self.completed = False
+                self.description = f"Achieve target state: {target_state}"
+                
+                # Additional attributes for realistic testing
+                self.character = None
+                self.target = None
+                self.criteria = []
+                self.required_items = []
+                self.goal_type = "state_goal"
                 
             def check_completion(self, state):
                 """Check if the goal is satisfied in the given state."""
-                return all(state.get(k, 0) >= v for k, v in self.target_state.items())
+                if isinstance(state, dict):
+                    return all(state.get(k, 0) >= v for k, v in self.target_state.items())
+                else:
+                    # Handle State objects
+                    return all(getattr(state, 'get', lambda k, d: getattr(state, k, d))(k, 0) >= v 
+                             for k, v in self.target_state.items())
+                             
+            def get_name(self):
+                """Getter method found in real Goal class."""
+                return self.name
+                
+            def get_score(self):
+                """Getter method found in real Goal class."""
+                return self.score
 
         # Create test character and goal
         character = MockCharacter("TestCharacter")
-        goal = MockGoal({'energy': 90, 'happiness': 70})
+        goal = MockGoal(
+            target_state={'energy': 90, 'happiness': 70},
+            name="RestAndEnjoy",
+            priority=0.8
+        )
         current_state = character.get_state()
 
         # Create test actions
@@ -130,15 +161,38 @@ def test_goal_already_satisfied():
                 self.energy = 100
                 self.happiness = 80
                 
+        # Enhanced MockGoal that matches real Goal interface
         class MockGoal:
-            def __init__(self, target_state):
+            def __init__(self, target_state, name="TestGoal", priority=0.5):
                 self.target_state = target_state
+                self.name = name
+                self.priority = priority
+                self.score = priority
+                self.target_effects = target_state
+                self.completed = False
+                self.description = f"Achieve target state: {target_state}"
+                
+                # Additional attributes for realistic testing
+                self.character = None
+                self.target = None
+                self.criteria = []
+                self.required_items = []
+                self.goal_type = "state_goal"
                 
             def check_completion(self, state):
-                return all(state.get(k, 0) >= v for k, v in self.target_state.items())
+                if isinstance(state, dict):
+                    return all(state.get(k, 0) >= v for k, v in self.target_state.items())
+                else:
+                    # Handle State objects
+                    return all(getattr(state, 'get', lambda k, d: getattr(state, k, d))(k, 0) >= v 
+                             for k, v in self.target_state.items())
 
         character = MockCharacter()
-        goal = MockGoal({'energy': 90, 'happiness': 70})  # Already satisfied
+        goal = MockGoal(
+            target_state={'energy': 90, 'happiness': 70},
+            name="AlreadySatisfiedGoal",
+            priority=0.6
+        )  # Already satisfied
         current_state = State({'energy': 100, 'happiness': 80})
         
         dummy_action = Action(
