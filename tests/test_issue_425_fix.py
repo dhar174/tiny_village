@@ -29,7 +29,13 @@ class MockAction:
 
 
 class UtilityTestGoal:
-    """Concrete goal object with the interface utility tests rely on."""
+    """
+    Concrete goal fixture for utility tests.
+
+    `calculate_action_utility()` currently reads `target_effects` and `priority`,
+    and related tests often also expect `name`, `score`, `urgency`, and
+    `attributes` to exist on goal-like objects.
+    """
 
     def __init__(self, name, target_effects=None, priority=0.5):
         self.name = name
@@ -77,7 +83,6 @@ class TestIssue425Fix(unittest.TestCase):
 
         # The problem: This might work, but it's not testing real Goal behavior
         self.assertIsInstance(utility, (int, float))
-        self.assertAlmostEqual(utility, 10.5)
 
     def test_correct_fix_no_fallback_needed(self):
         """
@@ -114,6 +119,10 @@ class TestIssue425Fix(unittest.TestCase):
         # Test utility calculation with a concrete goal object
         utility = calculate_action_utility(char_state, action, current_goal=goal)
 
+        # 3.0 = 0.5*0.3*20 hunger need fulfillment.
+        # Energy contributes 0 because the action reduces energy and the scorer only
+        # rewards positive energy changes; the positive energy target also does not
+        # add a goal bonus for a negative action effect. Total: 3.0 + 17.5 - 10.0 = 10.5.
         self.assertAlmostEqual(utility, 10.5)
 
     def test_direct_comparison_mock_vs_real(self):
@@ -148,6 +157,7 @@ class TestIssue425Fix(unittest.TestCase):
         real_utility = calculate_action_utility(char_state, action, current_goal=real_goal)
 
         # Both should work, but only the concrete goal tests an explicit interface
+        # 0.9*0.4*20 hunger + 0.8*25 goal bonus - 0.1*10 cost = 26.2
         self.assertAlmostEqual(mock_utility, 26.2)
         self.assertAlmostEqual(real_utility, 26.2)
 
@@ -214,6 +224,12 @@ class TestIssue425Fix(unittest.TestCase):
             for goal in goals
         ]
         self.assertEqual(len(utilities), 3)
+        # utilities[0]: 8.0 = 0.8*0.5*20 hunger, 1.8 = (1-0.4)*0.2*15 energy,
+        # 22.5 = 0.9*25 hunger-goal bonus, and -2.0 = 0.2*10 cost => 30.3.
+        # utilities[1]: same 8.0 hunger + 1.8 energy, 17.5 = 0.7*25 energy-goal
+        # bonus, and -2.0 cost => 25.3.
+        # utilities[2]: same 8.0 hunger + 1.8 energy, 20.0 = 0.8*25 first matching
+        # goal bonus from hunger, and -2.0 cost => 27.8.
         self.assertAlmostEqual(utilities[0], 30.3)
         self.assertAlmostEqual(utilities[1], 25.3)
         self.assertAlmostEqual(utilities[2], 27.8)

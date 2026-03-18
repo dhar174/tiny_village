@@ -67,6 +67,7 @@ class TestGoalCreationBestPractices(unittest.TestCase):
         char_state = {"hunger": 0.8, "energy": 0.6}
         utility = calculate_action_utility(char_state, action, current_goal=goal)
 
+        # 0.8*0.4*20 hunger + 0.8*25 goal bonus - 0.1*10 cost = 25.4
         self.assertAlmostEqual(utility, 25.4)
 
     def test_problematic_mock_fallback_pattern(self):
@@ -95,6 +96,7 @@ class TestGoalCreationBestPractices(unittest.TestCase):
         char_state = {"hunger": 0.8, "energy": 0.6}
 
         utility = calculate_action_utility(char_state, action, current_goal=goal)
+        # The Mock path can still produce 25.4, which is why it can mask interface issues.
         self.assertAlmostEqual(utility, 25.4)
 
     def test_correct_goal_creation_multiple_approaches(self):
@@ -153,6 +155,9 @@ class TestGoalCreationBestPractices(unittest.TestCase):
         utility2 = calculate_action_utility(char_state, action, current_goal=adapted_goal)
         utility3 = calculate_action_utility(char_state, action, current_goal=helper_goal)
 
+        # utility1: 0.9*0.3*20 hunger + 0.9*25 goal bonus - 0.2*10 cost = 25.9
+        # utility2: 0.9*0.3*20 hunger + 0.8*25 goal bonus - 0.2*10 cost = 23.4
+        # utility3: 0.9*0.3*20 hunger only - 0.2*10 cost = 3.4
         self.assertAlmostEqual(utility1, 25.9)
         self.assertAlmostEqual(utility2, 23.4)
         self.assertAlmostEqual(utility3, 3.4)
@@ -234,6 +239,12 @@ class TestGoalCreationBestPractices(unittest.TestCase):
         survival_utility = calculate_action_utility(char_state, action, current_goal=survival_goal)
         comfort_utility = calculate_action_utility(char_state, action, current_goal=comfort_goal)
 
+        # survival: 4.2 = (1-0.3)*0.4*15 energy fulfillment; hunger contributes 0
+        # because the action increases hunger, and there is no health effect. No goal
+        # bonus applies because survival_goal wants lower hunger / higher health. Then
+        # subtract 3.0 = 0.3*10 cost => 1.2.
+        # comfort: same 4.2 energy fulfillment + 15.0 = 0.6*25 energy-goal bonus
+        # - 3.0 cost => 16.2.
         self.assertAlmostEqual(survival_utility, 1.2)
         self.assertAlmostEqual(comfort_utility, 16.2)
 
