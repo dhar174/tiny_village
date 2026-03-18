@@ -5,7 +5,9 @@ import traceback
 import json
 import os
 import threading
+import time
 import datetime # Added for time-based achievement
+from collections import deque
 from datetime import timedelta
 
 # Constants for speed control
@@ -204,6 +206,20 @@ class StatsPanel(UIPanel):
             except Exception as e:
                 logging.error(f"Error in action analytics rendering: {e}")
                 logging.error(traceback.format_exc())
+
+        try:
+            performance_summary = controller.get_performance_summary()
+            if performance_summary.get("frames_observed", 0) > 0:
+                performance_text = tiny_font.render(
+                    f"FPS: {performance_summary.get('effective_fps', 0.0):.1f} | "
+                    f"Frame: {performance_summary.get('average_frame_ms', 0.0):.1f}ms | "
+                    f"Peak: {performance_summary.get('peak_frame_ms', 0.0):.1f}ms",
+                    True, (150, 190, 150)
+                )
+                screen.blit(performance_text, (x, current_y))
+                current_y += performance_text.get_height() + 2
+        except Exception as e:
+            logging.error(f"Error rendering performance analytics: {e}")
         
         # System health
         if hasattr(controller, "recovery_manager"):
@@ -1705,6 +1721,26 @@ class GameplayController:
         self.time_scale_factor = 1.0 # Added for time scaling
         self._cached_speed_text = None
         self._last_time_scale_factor = None
+        performance_config = self.config.get("performance_monitoring", {})
+        history_size = max(10, int(performance_config.get("history_size", 120)))
+        self._frame_time_history = deque(maxlen=history_size)
+        self._stage_timing_history = deque(maxlen=history_size)
+        self._frames_since_performance_log = 0
+        self.performance_metrics = {
+            "enabled": performance_config.get("enabled", True),
+            "history_size": history_size,
+            "log_interval_frames": max(
+                1, int(performance_config.get("log_interval_frames", 120))
+            ),
+            "frames_observed": 0,
+            "last_frame_ms": 0.0,
+            "average_frame_ms": 0.0,
+            "peak_frame_ms": 0.0,
+            "effective_fps": 0.0,
+            "target_frame_time_ms": 0.0,
+            "stage_timings_ms": {},
+            "optimization_suggestions": [],
+        }
 
 
         # Initialize recovery manager
@@ -2632,23 +2668,25 @@ class GameplayController:
 
     def game_loop(self):
         """Main game loop with configurable frame rate and performance monitoring."""
-        # TODO: Add performance profiling and optimization
         # TODO: Add frame rate adjustment based on performance
         # TODO: Add network synchronization for multiplayer
         # TODO: Add mod system integration
         # TODO: Add automated testing hooks
         # TODO: Add real-time configuration updates
 
-        target_fps = self.config.get("target_fps", 60)
+        target_fps = max(1, int(self.config.get("target_fps", 60)))
 
         while self.running:
+            frame_cycle_start = time.perf_counter()
             dt = self.clock.tick(target_fps) / 1000.0 * self.time_scale_factor  # Frame time in seconds with time scale factor
-            # TODO: Add performance monitoring
-            # frame_start_time = time.time()
+            after_tick_time = time.perf_counter()
 
             self.handle_events()
+            after_events_time = time.perf_counter()
             self.update_game_state(dt)
+            after_update_time = time.perf_counter()
             self.render()
+            after_render_time = time.perf_counter()
             
             # Automatic checkpointing
             try:
@@ -2661,10 +2699,144 @@ class GameplayController:
                     # Failure notification is handled by CheckpointManager._check_failure_threshold
             except Exception as e:
                 logger.warning(f"Error during automatic checkpointing: {e}")
+            after_checkpoint_time = time.perf_counter()
 
-            # TODO: Add frame time analysis and optimization suggestions
-            # frame_end_time = time.time()
-            # self._analyze_frame_performance(frame_end_time - frame_start_time)
+            stage_timings_ms = {
+                "tick": (after_tick_time - frame_cycle_start) * 1000.0,
+                "events": (after_events_time - after_tick_time) * 1000.0,
+                "update": (after_update_time - after_events_time) * 1000.0,
+                "render": (after_render_time - after_update_time) * 1000.0,
+                "checkpoint": (after_checkpoint_time - after_render_time) * 1000.0,
+            }
+            self._record_performance_sample(
+                (after_checkpoint_time - frame_cycle_start) * 1000.0,
+                stage_timings_ms,
+                target_fps,
+            )
+
+    def _record_performance_sample(
+        self, frame_duration_ms: float, stage_timings_ms: Dict[str, float], target_fps: int
+    ) -> None:
+        """Track rolling frame timings and surface suggestions when performance dips."""
+        if not self.performance_metrics.get("enabled", True):
+            return
+
+        self._frame_time_history.append(frame_duration_ms)
+        self._stage_timing_history.append(stage_timings_ms.copy())
+
+        average_frame_ms = sum(self._frame_time_history) / len(self._frame_time_history)
+        peak_frame_ms = max(self._frame_time_history)
+        averaged_stage_timings = {}
+        if self._stage_timing_history:
+            for stage_name in stage_timings_ms:
+                averaged_stage_timings[stage_name] = sum(
+                    sample.get(stage_name, 0.0) for sample in self._stage_timing_history
+                ) / len(self._stage_timing_history)
+
+        target_frame_time_ms = 1000.0 / max(1, target_fps)
+        self.performance_metrics.update(
+            {
+                "frames_observed": len(self._frame_time_history),
+                "last_frame_ms": frame_duration_ms,
+                "average_frame_ms": average_frame_ms,
+                "peak_frame_ms": peak_frame_ms,
+                "effective_fps": 1000.0 / frame_duration_ms if frame_duration_ms > 0 else 0.0,
+                "target_frame_time_ms": target_frame_time_ms,
+                "stage_timings_ms": averaged_stage_timings,
+                "optimization_suggestions": self._analyze_frame_performance(
+                    average_frame_ms, averaged_stage_timings, target_frame_time_ms
+                ),
+            }
+        )
+        self._frames_since_performance_log += 1
+
+        should_log = (
+            frame_duration_ms > target_frame_time_ms * 1.15
+            and self._frames_since_performance_log
+            >= self.performance_metrics["log_interval_frames"]
+        )
+        if should_log:
+            suggestions = self.performance_metrics["optimization_suggestions"]
+            suggestion_suffix = (
+                f" Suggestions: {'; '.join(suggestions)}" if suggestions else ""
+            )
+            logger.info(
+                "Performance sample: frame %.2fms (avg %.2fms, target %.2fms, fps %.1f).%s",
+                frame_duration_ms,
+                average_frame_ms,
+                target_frame_time_ms,
+                self.performance_metrics["effective_fps"],
+                suggestion_suffix,
+            )
+            self._frames_since_performance_log = 0
+
+    def _analyze_frame_performance(
+        self,
+        average_frame_ms: float,
+        stage_timings_ms: Dict[str, float],
+        target_frame_time_ms: float,
+    ) -> List[str]:
+        suggestions: List[str] = []
+        if average_frame_ms <= 0:
+            return suggestions
+
+        if average_frame_ms > target_frame_time_ms * 1.05:
+            suggestions.append(
+                "Average frame time is above the target budget; profile the dominant stage first."
+            )
+
+        tracked_stage_total = sum(
+            duration for stage, duration in stage_timings_ms.items() if stage != "tick"
+        )
+        if tracked_stage_total <= 0:
+            return suggestions
+
+        dominant_stage = max(
+            (stage for stage in stage_timings_ms if stage != "tick"),
+            key=lambda stage_name: stage_timings_ms.get(stage_name, 0.0),
+            default=None,
+        )
+        if not dominant_stage:
+            return suggestions
+
+        dominant_ratio = stage_timings_ms.get(dominant_stage, 0.0) / tracked_stage_total
+        if dominant_stage == "render" and dominant_ratio >= 0.45:
+            suggestions.append(
+                "Rendering dominates frame time; reduce expensive draw work or visual effects."
+            )
+        elif dominant_stage == "update" and dominant_ratio >= 0.4:
+            suggestions.append(
+                "Game-state updates dominate frame time; profile AI, events, or world updates."
+            )
+        elif dominant_stage == "events" and dominant_ratio >= 0.3:
+            suggestions.append(
+                "Event/input handling is unusually expensive; inspect per-frame event processing."
+            )
+        elif dominant_stage == "checkpoint" and dominant_ratio >= 0.25:
+            suggestions.append(
+                "Checkpoint work is spiking frame cost; consider less frequent or deferred saves."
+            )
+
+        return suggestions
+
+    def get_performance_summary(self) -> Dict[str, Any]:
+        """Expose the latest rolling frame metrics for UI and analytics output."""
+        return {
+            "frames_observed": self.performance_metrics.get("frames_observed", 0),
+            "last_frame_ms": self.performance_metrics.get("last_frame_ms", 0.0),
+            "average_frame_ms": self.performance_metrics.get("average_frame_ms", 0.0),
+            "peak_frame_ms": self.performance_metrics.get("peak_frame_ms", 0.0),
+            "effective_fps": self.performance_metrics.get("effective_fps", 0.0),
+            "target_frame_time_ms": self.performance_metrics.get(
+                "target_frame_time_ms", 0.0
+            ),
+            "stage_timings_ms": dict(
+                self.performance_metrics.get("stage_timings_ms", {})
+            ),
+            "optimization_suggestions": list(
+                self.performance_metrics.get("optimization_suggestions", [])
+            ),
+        }
 
     def handle_events(self):
         """Handle pygame events and user input with improved interaction support."""
@@ -3010,6 +3182,29 @@ class GameplayController:
             logger.info(
                 f"Features: {implemented_features}/{len(feature_status)} implemented"
             )
+
+            performance_summary = self.get_performance_summary()
+            if performance_summary["frames_observed"] > 0:
+                logger.info("Performance:")
+                logger.info(
+                    "  Frame time: %.2fms avg / %.2fms last / %.2fms peak",
+                    performance_summary["average_frame_ms"],
+                    performance_summary["last_frame_ms"],
+                    performance_summary["peak_frame_ms"],
+                )
+                logger.info(
+                    "  Effective FPS: %.1f (target frame budget %.2fms)",
+                    performance_summary["effective_fps"],
+                    performance_summary["target_frame_time_ms"],
+                )
+                if performance_summary["stage_timings_ms"]:
+                    logger.info("  Average stage timings:")
+                    for stage_name, duration_ms in performance_summary[
+                        "stage_timings_ms"
+                    ].items():
+                        logger.info(f"    {stage_name}: {duration_ms:.2f}ms")
+                for suggestion in performance_summary["optimization_suggestions"]:
+                    logger.info(f"  Suggestion: {suggestion}")
 
         except Exception as e:
             logger.error(f"Error showing analytics: {e}")
