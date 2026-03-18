@@ -3,6 +3,8 @@
 """
 Test to demonstrate that TalkAction is now decoupled from hardcoded social_wellbeing values.
 This test shows that the fix for issue #332 is working correctly.
+
+Updated to use the comprehensive MockCharacter for better interface accuracy.
 """
 
 import unittest
@@ -14,21 +16,16 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from actions import TalkAction
-
-
-class MockCharacter:
-    def __init__(self, name="TestCharacter", uuid=None):
-        self.name = name
-        self.uuid = uuid or f"{name}_uuid"
-        self.social_wellbeing = 10.0
+from mock_character import MockCharacter
 
 
 class TestTalkActionDecoupling(unittest.TestCase):
     """Test that TalkAction no longer has hardcoded social_wellbeing increments."""
 
     def setUp(self):
-        self.initiator = MockCharacter(name="Alice", uuid="alice_uuid")
-        self.target = MockCharacter(name="Bob", uuid="bob_uuid")
+        # Using comprehensive MockCharacter instead of simple local mock
+        self.initiator = MockCharacter(name="Alice", uuid="alice_uuid", social_wellbeing=10.0)
+        self.target = MockCharacter(name="Bob", uuid="bob_uuid", social_wellbeing=10.0)
         self.mock_graph_manager = MagicMock()
 
     def test_talk_action_no_hardcoded_social_wellbeing_effects(self):
