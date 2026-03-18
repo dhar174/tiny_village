@@ -266,9 +266,11 @@ class TestCountingFix(unittest.TestCase):
             
             self.assertTrue(hasattr(tiny_utility_functions, "Goal"),
                             "tiny_utility_functions should provide a Goal type")
+            # calculate_action_utility treats target_effects as directional deltas,
+            # so a negative hunger target represents reducing hunger.
             goal = tiny_utility_functions.Goal(
                 name="test_goal",
-                target_effects={"hunger": -0.2, "energy": 0.8},
+                target_effects={"hunger": -0.2},
                 priority=0.7
             )
 

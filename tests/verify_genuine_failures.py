@@ -21,6 +21,8 @@ sys.path.append(parent_dir)
 class TestThatCanGenuinelyFail(unittest.TestCase):
     """Test that demonstrates our enhanced functional tests can genuinely fail."""
 
+    REPEATED_ACTION_COUNT = 2
+
     def test_complex_calculation_edge_cases_can_fail(self):
         """Test that shows our complex calculations can genuinely fail with edge cases."""
         
@@ -251,8 +253,10 @@ class TestThatCanGenuinelyFail(unittest.TestCase):
             import tiny_utility_functions
             from actions import Action
 
+            # calculate_action_utility matches goal progress by sign, so this
+            # hunger target is expressed as a desired reduction delta.
             goal = tiny_utility_functions.Goal(
-                name="reduce_hunger",
+                name="hunger_goal",
                 target_effects={"hunger": -0.2},
                 priority=0.7,
             )
@@ -282,7 +286,10 @@ class TestThatCanGenuinelyFail(unittest.TestCase):
                 hungry_state, work_action, goal
             )
             plan_utility = tiny_utility_functions.calculate_plan_utility(
-                hungry_state, [eat_action, eat_action], goal, simulate_effects=True
+                hungry_state,
+                [eat_action] * self.REPEATED_ACTION_COUNT,
+                goal,
+                simulate_effects=True,
             )
 
             self.assertGreater(
@@ -297,7 +304,7 @@ class TestThatCanGenuinelyFail(unittest.TestCase):
             )
             self.assertLess(
                 plan_utility,
-                hungry_utility * 2,
+                hungry_utility * self.REPEATED_ACTION_COUNT,
                 "Simulated repeated actions should have diminishing plan value as state improves",
             )
 
