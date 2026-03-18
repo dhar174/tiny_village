@@ -27,16 +27,25 @@ from actions import (
     State,
 )  # Assuming Action class is available and has cost & effects
 
+# Try to import the real Goal class first, fall back to simple implementation
+try:
+    from tiny_characters import Goal
+    print("✅ Using real Goal class from tiny_characters")
+except ImportError:
+    # Fallback Goal class for compatibility when real Goal is not available
+    class Goal:
+        """Simple Goal class for utility calculations - fallback implementation."""
 
-# Use a simple Goal class for compatibility
-class Goal:
-    """Simple Goal class for utility calculations."""
-
-    def __init__(self, name=None, target_effects=None, priority=0.5, score=None):
-        self.name = name or "UnnamedGoal"
-        self.target_effects = target_effects if target_effects else {}
-        self.priority = priority
-        self.score = score if score is not None else priority
+        def __init__(self, name=None, target_effects=None, priority=0.5, score=None, **kwargs):
+            self.name = name or "UnnamedGoal"
+            self.target_effects = target_effects if target_effects else {}
+            self.priority = priority
+            self.score = score if score is not None else priority
+            # Additional attributes that may be expected by utility functions
+            self.urgency = kwargs.get('urgency', priority)
+            self.attributes = kwargs.get('attributes', {})
+    
+    print("⚠️  Using fallback Goal implementation in tiny_utility_functions")
 
 
 # === CONSTANTS ===

@@ -8,7 +8,10 @@ from actions import Action, State, ActionSystem
 from tiny_graph_manager import GraphManager
 graph_mrg_instance_for_tests = GraphManager() # Module-level instance
 action_system = ActionSystem(graph_manager=graph_mrg_instance_for_tests) # Pass graph_manager
-from tiny_types import Character, Location, Event
+# Import real classes for proper integration testing
+from tiny_characters import Character
+from tiny_locations import Location
+from tiny_event_handler import Event
 from tiny_items import FoodItem, ItemInventory, ItemObject
 from tiny_jobs import Job
 from tiny_time_manager import GameTimeManager as tiny_time_manager
