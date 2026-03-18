@@ -44,7 +44,48 @@ class UtilityTestAction:
         self.action_id = id(self) if action_id is None else action_id
 
     def preconditions_met(self, state=None):
-        return all(self.preconditions) if self.preconditions else True
+        """
+        Evaluate whether all preconditions are met.
+
+        Supports:
+        - bool values
+        - callables (optionally accepting `state`)
+        - objects with a `check_condition` method (optionally accepting `state`)
+
+        Any unsupported precondition type will raise a TypeError to avoid
+        silently treating it as truthy.
+        """
+        if not self.preconditions:
+            return True
+
+        for cond in self.preconditions:
+            # Direct boolean precondition
+            if isinstance(cond, bool):
+                result = cond
+            # Callable precondition (function, lambda, etc.)
+            elif callable(cond):
+                try:
+                    result = cond(state)
+                except TypeError:
+                    # Fallback for callables that do not accept `state`
+                    result = cond()
+            # Condition-like object with `check_condition`
+            elif hasattr(cond, "check_condition"):
+                check = cond.check_condition
+                try:
+                    result = check(state)
+                except TypeError:
+                    # Fallback for `check_condition` without `state` parameter
+                    result = check()
+            else:
+                raise TypeError(
+                    f"Unsupported precondition type: {type(cond)!r} in {self!r}"
+                )
+
+            if not bool(result):
+                return False
+
+        return True
 
 
 class UtilityTestGoal:
