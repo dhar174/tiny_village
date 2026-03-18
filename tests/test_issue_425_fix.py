@@ -36,8 +36,8 @@ class UtilityTestAction:
     ):
         self.name = name
         self.cost = float(cost)
-        self.effects = effects or []
-        self.preconditions = preconditions or []
+        self.effects = [] if effects is None else effects
+        self.preconditions = [] if preconditions is None else preconditions
         self.priority = priority
         self.target = target
         self.initiator = initiator
