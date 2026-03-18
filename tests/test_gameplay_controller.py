@@ -164,7 +164,7 @@ class TestActionResolver(unittest.TestCase):
                 self.assertTrue(callable(result_action.execute), f"Fallback execute should be callable for input: {invalid_input}")
         
         # Test 9: Verify that if Action constructor itself fails, we handle it gracefully
-        with patch('tiny_gameplay_controller.Action', side_effect=Exception("Action constructor failed")):
+        with patch('actions.Action', side_effect=Exception("Action constructor failed")):
             fallback_with_constructor_error = self.action_resolver.resolve_action({"name": "Test", "energy_cost": 5})
             # Should still return something, possibly None, but shouldn't crash
             # The exact behavior depends on implementation - the key is no unhandled exception
