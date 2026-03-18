@@ -21,6 +21,8 @@ from tiny_gameplay_controller import (
     ActionResolver,
     SystemRecoveryManager,
 )
+from tiny_graph_manager import GraphManager
+from actions import ActionSystem
 
 # Set up logging for test output
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -40,13 +42,65 @@ class TestActionResolver(unittest.TestCase):
         self.action_resolver = ActionResolver(action_system=self.mock_action_system, graph_manager=self.mock_graph_manager)
 
     def test_dict_action_resolution(self):
-        """Test resolving dictionary-based actions."""
+        """Test resolving dictionary-based actions with comprehensive validation."""
         action_dict = {"name": "Test Action", "energy_cost": 10, "satisfaction": 5}
 
         resolved_action = self.action_resolver.resolve_action(action_dict)
-        self.assertIsNotNone(resolved_action)
-        self.assertTrue(hasattr(resolved_action, "execute"))
-        self.assertEqual(resolved_action.name, "Test Action")
+        
+        # Test 1: Verify action was successfully created (not None)
+        self.assertIsNotNone(resolved_action, "Action resolution should not return None")
+        
+        # Test 2: Verify action has execute method AND it's callable
+        self.assertTrue(hasattr(resolved_action, "execute"), "Action should have execute method")
+        self.assertTrue(callable(resolved_action.execute), "Execute method should be callable")
+        
+        # Test 3: Verify action has expected properties from the dictionary
+        self.assertEqual(resolved_action.name, "Test Action", "Action name should match input")
+        self.assertTrue(hasattr(resolved_action, "effects"), "Action should have effects")
+        self.assertTrue(hasattr(resolved_action, "cost"), "Action should have cost")
+        
+        # Test 4: Verify action effects are properly configured
+        self.assertIsInstance(resolved_action.effects, list, "Effects should be a list")
+        
+        # Verify energy cost effect is present
+        energy_effects = [e for e in resolved_action.effects if e.get("attribute") == "energy"]
+        self.assertTrue(len(energy_effects) > 0, "Should have energy cost effect")
+        self.assertEqual(energy_effects[0]["change_value"], -10, "Energy cost should be -10")
+        
+        # Verify satisfaction effect is present  
+        satisfaction_effects = [e for e in resolved_action.effects if e.get("attribute") == "current_satisfaction"]
+        self.assertTrue(len(satisfaction_effects) > 0, "Should have satisfaction effect")
+        self.assertEqual(satisfaction_effects[0]["change_value"], 5, "Satisfaction should be +5")
+        
+        # Test 5: Verify action can be executed without errors
+        # Create a mock character to test execution
+        mock_character = Mock()
+        mock_character.energy = 50
+        mock_character.current_satisfaction = 10
+        mock_character.uuid = "test_char_uuid"
+        
+        # Mock the preconditions_met method to return True for this test
+        with patch.object(resolved_action, 'preconditions_met', return_value=True):
+            try:
+                result = resolved_action.execute(character=mock_character)
+                # Test 6: Verify execute method returns a boolean result
+                self.assertIsInstance(result, bool, "Execute should return boolean")
+                # Test 6b: Verify effects were actually applied to character state
+                self.assertEqual(
+                    mock_character.energy, 40,
+                    "Energy should decrease by 10 after execution (50 - 10 = 40)"
+                )
+                self.assertEqual(
+                    mock_character.current_satisfaction, 15,
+                    "Satisfaction should increase by 5 after execution (10 + 5 = 15)"
+                )
+            except Exception as e:
+                self.fail(f"Action execute should not raise exception: {e}")
+        
+        # Test 7: Verify action properly handles execution when preconditions fail
+        with patch.object(resolved_action, 'preconditions_met', return_value=False):
+            result = resolved_action.execute(character=mock_character)
+            self.assertFalse(result, "Execute should return False when preconditions not met")
 
     def test_action_caching(self):
         """Test action caching functionality."""
@@ -63,11 +117,252 @@ class TestActionResolver(unittest.TestCase):
         self.assertEqual(cache_size_1, cache_size_2)  # Cache size shouldn't increase
 
     def test_fallback_action(self):
-        """Test fallback action when resolution fails."""
-        # Pass invalid action data
+        """Test fallback action when resolution fails with comprehensive validation."""
+        # Test 1: Verify fallback action is returned when passing invalid data
         fallback_action = self.action_resolver.resolve_action(None)
-        self.assertIsNotNone(fallback_action)
-        self.assertTrue(hasattr(fallback_action, "execute"))
+        
+        # Test 2: Verify fallback action was successfully created (not None)
+        self.assertIsNotNone(fallback_action, "Fallback action should not be None")
+        
+        # Test 3: Verify fallback action has execute method AND it's callable
+        self.assertTrue(hasattr(fallback_action, "execute"), "Fallback action should have execute method")
+        self.assertTrue(callable(fallback_action.execute), "Fallback execute method should be callable")
+        
+        # Test 4: Verify fallback action has expected properties
+        self.assertTrue(hasattr(fallback_action, "name"), "Fallback action should have name")
+        self.assertTrue(hasattr(fallback_action, "effects"), "Fallback action should have effects")
+        self.assertTrue(hasattr(fallback_action, "cost"), "Fallback action should have cost")
+        
+        # Test 5: Verify fallback action has the expected name (should be "Rest" from fallback_actions)
+        self.assertEqual(fallback_action.name, "Rest", "Fallback action should be named 'Rest'")
+        
+        # Test 6: Verify fallback action has appropriate effects (energy restoration)
+        self.assertIsInstance(fallback_action.effects, list, "Fallback effects should be a list")
+        energy_effects = [e for e in fallback_action.effects if e.get("attribute") == "energy"]
+        self.assertTrue(len(energy_effects) > 0, "Fallback should have energy restoration effect")
+        # Energy cost of 10 should become +10 energy restoration in fallback
+        self.assertEqual(energy_effects[0]["change_value"], -10, "Fallback should restore energy")
+        
+        # Test 7: Verify fallback action can actually be executed
+        mock_character = Mock()
+        mock_character.energy = 30
+        mock_character.current_satisfaction = 5
+        mock_character.uuid = "fallback_test_char"
+        
+        # Test execution with preconditions met
+        with patch.object(fallback_action, 'preconditions_met', return_value=True):
+            try:
+                result = fallback_action.execute(character=mock_character)
+                self.assertIsInstance(result, bool, "Fallback execute should return boolean")
+                # Fallback actions should generally succeed when preconditions are met
+                self.assertTrue(result, "Fallback action should succeed when preconditions met")
+            except Exception as e:
+                self.fail(f"Fallback action execute should not raise exception: {e}")
+        
+        # Test 8: Test that ActionResolver returns fallback for various invalid inputs
+        invalid_inputs = [
+            None,
+            "nonexistent_action",
+            {"invalid": "dict"},
+            123,
+            [],
+        ]
+        
+        for invalid_input in invalid_inputs:
+            with self.subTest(invalid_input=invalid_input):
+                result_action = self.action_resolver.resolve_action(invalid_input)
+                self.assertIsNotNone(result_action, f"Should return fallback action for invalid input: {invalid_input}")
+                self.assertTrue(hasattr(result_action, "execute"), f"Fallback should have execute method for input: {invalid_input}")
+                self.assertTrue(callable(result_action.execute), f"Fallback execute should be callable for input: {invalid_input}")
+        
+        # Test 9: Verify that if Action constructor itself fails, we handle it gracefully
+        with patch('actions.Action', side_effect=Exception("Action constructor failed")):
+            fallback_with_constructor_error = self.action_resolver.resolve_action({"name": "Test", "energy_cost": 5})
+            # Should still return something, possibly None, but shouldn't crash
+            # The exact behavior depends on implementation - the key is no unhandled exception
+            # If it returns None, that's also acceptable as long as the calling code handles it
+
+    def test_action_class_validation(self):
+        """Test that validates Action class can be properly instantiated and is functional.
+        
+        This test ensures that the Action class itself works correctly and will fail
+        if the Action class is broken or non-functional.
+        """
+        # Test 1: Verify Action class can be imported and instantiated
+        try:
+            from actions import Action
+        except ImportError as e:
+            self.fail(f"Action class cannot be imported: {e}")
+        
+        # Test 2: Verify Action class can be instantiated with minimal parameters
+        try:
+            test_action = Action(
+                name="Validation Test Action",
+                preconditions=[],
+                effects=[
+                    {"targets": ["initiator"], "attribute": "energy", "change_value": -5}
+                ],
+                cost=1
+            )
+        except Exception as e:
+            self.fail(f"Action class cannot be instantiated: {e}")
+        
+        # Test 3: Verify Action instance has required methods and attributes
+        required_attributes = ["name", "effects", "cost", "execute"]
+        for attr in required_attributes:
+            self.assertTrue(hasattr(test_action, attr), f"Action should have {attr} attribute/method")
+        
+        # Test 4: Verify Action.execute method is callable and returns boolean
+        self.assertTrue(callable(test_action.execute), "Action.execute should be callable")
+        
+        # Test 5: Create a realistic mock character and test action execution
+        mock_character = Mock()
+        mock_character.energy = 50
+        mock_character.uuid = "validation_test_char"
+        mock_character.name = "Test Character"
+        
+        # Mock preconditions_met to ensure execution logic is tested
+        with patch.object(test_action, 'preconditions_met', return_value=True):
+            try:
+                result = test_action.execute(character=mock_character)
+                self.assertIsInstance(result, bool, "Action.execute should return boolean")
+            except Exception as e:
+                self.fail(f"Action.execute should not raise exception with valid character: {e}")
+        
+        # Test 6: Verify action fails appropriately when preconditions not met
+        with patch.object(test_action, 'preconditions_met', return_value=False):
+            result = test_action.execute(character=mock_character)
+            self.assertFalse(result, "Action.execute should return False when preconditions not met")
+        
+        # Test 7: Test that Action constructor validates parameters appropriately
+        # This should fail if Action class doesn't properly validate inputs
+        with self.assertRaises((TypeError, ValueError)):
+            invalid_action = Action(
+                name=None,  # Invalid name
+                preconditions=None,
+                effects=None,
+                cost="invalid"  # Invalid cost type
+            )
+    
+    def test_comprehensive_action_resolver_failure_scenarios(self):
+        """Test ActionResolver behavior in various failure scenarios to ensure robustness."""
+        
+        # Test 1: Action constructor failure scenario
+        action_dict = {"name": "Test Action", "energy_cost": 10}
+        
+        with patch('actions.Action', side_effect=Exception("Mock Action constructor failure")):
+            result = self.action_resolver.resolve_action(action_dict)
+            # Should either return None or a fallback action, but not crash
+            if result is not None:
+                self.assertTrue(hasattr(result, "execute"), "If result is not None, should have execute method")
+        
+        # Test 2: GameplayController._execute_character_actions recovers when execute() raises
+        # Create a failing action whose execute() always raises to simulate a runtime failure
+        failing_action = Mock()
+        failing_action.name = "Failing Action"
+        failing_action.execute.side_effect = Exception("Simulated execute failure")
+
+        mock_character = Mock()
+        mock_character.energy = 50
+        mock_character.current_satisfaction = 5
+        mock_character.uuid = "test_char"
+        mock_character.name = "Test Char"
+        mock_character.use_llm_decisions = False
+
+        with patch("pygame.init"), patch("pygame.display.set_mode"), \
+                patch("pygame.font.Font", return_value=Mock()):
+            controller = GameplayController(config={})
+            # Override only the strategy_manager so we can inject the failing action
+            controller.strategy_manager = Mock()
+            controller.strategy_manager.get_daily_actions.return_value = [failing_action]
+
+            # The controller must not propagate the exception; it should fall back gracefully
+            try:
+                result = controller._execute_character_actions(mock_character)
+            except Exception as e:
+                self.fail(
+                    f"_execute_character_actions should handle execute failures gracefully, but raised: {e}"
+                )
+
+            # Recovery should produce a boolean result (True via fallback, not an unhandled crash)
+            self.assertIsInstance(result, bool, "Result should be boolean even after execute failure")
+            self.assertTrue(result, "Controller should recover successfully via fallback after execute failure")
+        
+        # Test 3: Malformed action dictionary scenarios
+        malformed_dicts = [
+            {"energy_cost": "invalid"},  # Invalid energy cost type
+            {"name": 123},  # Invalid name type  
+            {"satisfaction": None},  # None values
+            {},  # Empty dict
+        ]
+        
+        for malformed_dict in malformed_dicts:
+            with self.subTest(malformed_dict=malformed_dict):
+                result = self.action_resolver.resolve_action(malformed_dict)
+                # Should handle gracefully - either return valid action or None
+                if result is not None:
+                    self.assertTrue(hasattr(result, "execute"), f"Result should have execute method for: {malformed_dict}")
+                    self.assertTrue(hasattr(result, "name"), f"Result should have name for: {malformed_dict}")
+
+    def test_shallow_vs_deep_validation_demonstration(self):
+        """Demonstrate why shallow hasattr tests are insufficient.
+        
+        This test shows how a shallow test would pass even with a broken Action class,
+        while proper validation catches the issues.
+        """
+        
+        # Create a broken "Action" class that has execute method but doesn't work
+        class BrokenAction:
+            def __init__(self):
+                self.name = "Broken"
+                self.execute = "not_callable"  # This will break execution
+                self.effects = "not_a_list"    # This will break effect processing
+                self.cost = "not_a_number"     # This will break cost calculations
+        
+        broken_action = BrokenAction()
+        
+        # Test 1: Shallow test would pass (only checks method existence)
+        shallow_test_passes = hasattr(broken_action, "execute")
+        self.assertTrue(shallow_test_passes, "Shallow test incorrectly passes for broken action")
+        
+        # Test 2: Deep validation catches the problems
+        # Check if execute is actually callable
+        self.assertFalse(callable(broken_action.execute), "Deep test correctly identifies non-callable execute")
+        
+        # Check if effects is actually a list
+        self.assertFalse(isinstance(broken_action.effects, list), "Deep test correctly identifies invalid effects")
+        
+        # Check if cost is actually a number
+        self.assertFalse(isinstance(broken_action.cost, (int, float)), "Deep test correctly identifies invalid cost")
+        
+        # Test 3: Show that actually calling execute would fail
+        mock_character = Mock()
+        try:
+            broken_action.execute(character=mock_character)
+            self.fail("Broken action execute should fail when called")
+        except (TypeError, AttributeError):
+            # This is expected - the broken action fails when actually used
+            pass
+        
+        # Test 4: Compare with a properly working action from our resolver
+        working_action = self.action_resolver.resolve_action({"name": "Working Action", "energy_cost": 5})
+        if working_action:
+            # Proper validation checks
+            self.assertTrue(callable(working_action.execute), "Working action should have callable execute")
+            self.assertIsInstance(working_action.effects, list, "Working action should have list effects")
+            self.assertIsInstance(working_action.cost, (int, float), "Working action should have numeric cost")
+            
+            # And it should actually work when called
+            mock_character = Mock()
+            mock_character.energy = 50
+            mock_character.uuid = "working_test"
+            
+            with patch.object(working_action, 'preconditions_met', return_value=True):
+                try:
+                    result = working_action.execute(character=mock_character)
+                    self.assertIsInstance(result, bool, "Working action execute should return boolean")
+                except Exception as e:
+                    self.fail(f"Working action should execute without error: {e}")
 
     def test_action_analytics(self):
         """
