@@ -1,32 +1,38 @@
 ## Why This Project Exists
 
-- Building LangGraph-based multi-agent systems from scratch requires repeated
-  boilerplate for state, nodes, edges, tools, exports, and notebook structure.
-- This repository reduces that setup cost by generating a working scaffold from
-  a user prompt and by shipping reusable pattern generators for common
-  architectures.
+- Building a believable village simulation with autonomous AI characters
+  requires coordinated systems for planning, memory, world state, action
+  execution, time, and character interactions.
+- TinyVillage exists to explore and implement that kind of emergent simulation
+  in a Python codebase where characters can make context-sensitive decisions
+  and interact meaningfully with each other and the environment.
 
 ## Problems It Solves
 
-- Speeds up first-pass creation of LangGraph notebooks and demos.
-- Gives users an offline-friendly path (`stub` mode) for trying the system
-  without live model calls.
-- Centralizes common workflow patterns, export logic, and documentation
-  retrieval so users do not need to wire those pieces manually.
+- Provides a shared simulation framework for characters, locations, jobs,
+  items, and relationships instead of isolated scripts or toy demos.
+- Connects high-level character goals to concrete actions through GOAP,
+  utility-based reasoning, and optional LLM-assisted decision support.
+- Centralizes world knowledge in a graph-based model (`GraphManager`) so
+  multiple systems operate on a common, authoritative source of truth.
+- Preserves room for both lightweight demos and richer feature paths, including
+  persistent memory, storytelling, analytics, and save/checkpoint systems.
 
 ## Intended User Experience
 
-- A user can describe the desired system in plain language and receive a
-  notebook scaffold with code cells, structure, and export artifacts.
-- The same generation flow should be reachable from CLI and API/web interfaces.
-- Users should be able to choose between quick deterministic output and
-  full LLM-backed generation depending on credentials and use case.
+- A developer or player should be able to run `python main.py` and observe
+  characters behaving autonomously inside a living village simulation.
+- The system should produce understandable event → decision → action flows
+  rather than opaque black-box character updates.
+- Optional advanced features such as LLM-backed decision logic should enrich
+  behavior without being mandatory for basic operation.
 
-## UX Goals Reflected in the Code
+## UX Goals Reflected in the Repository
 
-- Fast local onboarding via `python -m venv`, `pip install -r requirements.txt`,
-  installing the package itself (e.g., `pip install -e .` or `pip install -e ".[full]"`),
-  and then using the `lnf`/FastAPI entry points.
-- Clear API and web progress reporting through SSE for long-running generation.
-- Multiple artifact formats so generated systems are easy to run, inspect,
-  share, and download.
+- The README presents `python main.py` as the main entry point, with `visual`,
+  `minimal`, and `test` modes for different usage contexts.
+- The docs tree is organized to support onboarding, technical reference,
+  testing guidance, and design deep-dives.
+- Demo scripts (`demo_*.py`) and integration-oriented test files support
+  showing system behavior without requiring every advanced subsystem to be
+  fully complete.
