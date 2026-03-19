@@ -1,36 +1,43 @@
 ## What Works
 
-- CLI-based generation supports both deterministic stub output and live
-  generator-graph execution.
-- The FastAPI server exposes synchronous generation, async generation startup,
-  health checks, static web UI serving, and SSE progress streaming.
-- Pattern generators for router, subagents, and critique-revise workflows are
-  implemented and covered by dedicated tests.
-- Notebook composition, validation, repair, and export helpers are present.
+- The repository has established architecture and documentation for the core
+  simulation loop: events, strategy updates, GOAP planning, action execution,
+  graph state updates, and memory recording.
+- Current docs describe working integration across core systems: gameplay
+  control, event handling, strategy coordination, graph management,
+  storytelling, checkpoints, and analytics.
+- The repo has current contributor guidance (`AGENTS.md`), organized docs under
+  `docs/`, a `tests/` directory with organized test coverage, and testing
+  guidance that emphasizes realistic test objects over permissive mocking.
+- The `tests/` directory and root-level `test_*.py` files provide integration
+  and regression test coverage across many subsystems.
 
 ## What Is Still Incomplete
 
-- Runtime notebook execution checks are explicitly skipped for now; the current
-  `runtime_qa_node` reports a placeholder success message rather than executing
-  generated notebooks.
-- Several advanced API request fields are tracked in the output manifest but are
-  not yet fully integrated into live generation behavior.
-- The Memory Bank task index exists, but no project-specific task files have
-  been added yet.
+- Several Memory Bank core files contained stale content from an unrelated
+  project (`langgraph_system_generator`) and are being corrected as part of
+  TASK001.
+- Task-level Memory Bank tracking has only just begun with TASK001; the index
+  and task file need to be committed.
+- Some current status docs still describe demo/runtime gaps such as display
+  initialization edge cases or action execution compatibility concerns.
 
 ## Current Status
 
-- The package metadata in `setup.py` marks the project as alpha.
-- The repository already contains substantial scaffolding for CLI, API, RAG,
-  notebook export, QA, and pattern generation workflows.
-- Memory Bank documentation is being brought from template placeholders to
-  verified project-specific context.
+- TinyVillage is documented as a modular Python simulation project with
+  root-level runtime modules and optional advanced AI/LLM features.
+- The Memory Bank is in the process of being corrected from stale template
+  content into repo-specific, TinyVillage-accurate documentation.
+- The current canonical contributor instructions emphasize minimal, reality-
+  based changes and conservative test design.
 
 ## Known Issues and Limitations
 
-- Live mode requires external credentials and can fail if the environment is not
-  configured.
-- RAG retrieval degrades gracefully to empty context when the vector store is
-  unavailable, which keeps generation running but may reduce quality.
-- The SSE/job model uses in-memory queues and is not yet designed for
-  distributed multi-server coordination.
+- Documentation may contain inconsistencies across time; newer docs such as the
+  root `README.md` and root `AGENTS.md` should generally be prioritized over
+  older or archived status notes when they conflict.
+- Optional LLM/NLP features require additional dependencies and should degrade
+  gracefully when those dependencies are absent.
+- Some testing history in the repo shows over-mocking pitfalls, especially
+  around memory-related tests; Memory Bank guidance should preserve the
+  repository preference for tests that fail on real behavior mismatches.
