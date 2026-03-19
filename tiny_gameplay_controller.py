@@ -61,7 +61,7 @@ class UIPanel:
         self.border_color = None
         self.padding = 5
         
-    def render(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def render(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         """
         Render the panel to the screen.
         
@@ -78,7 +78,7 @@ class UIPanel:
             
         return self._render_content(screen, controller, fonts)
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         """Override this method in subclasses to implement specific panel rendering."""
         return 0
     
@@ -90,7 +90,7 @@ class UIPanel:
 class CharacterInfoPanel(UIPanel):
     """Panel for displaying character count and basic info."""
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         font = fonts.get('normal', pygame.font.Font(None, 24))
         x, y = self.position
         
@@ -104,7 +104,7 @@ class CharacterInfoPanel(UIPanel):
 class GameStatusPanel(UIPanel):
     """Panel for displaying game status (pause, time, speed)."""
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         font = fonts.get('normal', pygame.font.Font(None, 24))
         small_font = fonts.get('small', pygame.font.Font(None, 18))
         x, y = self.position
@@ -147,7 +147,7 @@ class GameStatusPanel(UIPanel):
 class WeatherPanel(UIPanel):
     """Panel for displaying weather information."""
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         small_font = fonts.get('small', pygame.font.Font(None, 18))
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         x, y = self.position
@@ -177,7 +177,7 @@ class WeatherPanel(UIPanel):
 class StatsPanel(UIPanel):
     """Panel for displaying game statistics and analytics."""
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         x, y = self.position
         current_y = y
@@ -249,7 +249,7 @@ class StatsPanel(UIPanel):
 class AchievementPanel(UIPanel):
     """Panel for displaying achievements."""
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         x, y = self.position
         current_y = y
@@ -289,7 +289,7 @@ class AchievementPanel(UIPanel):
 class SelectedCharacterPanel(UIPanel):
     """Panel for displaying selected character information with enhanced needs tracking."""
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         small_font = fonts.get('small', pygame.font.Font(None, 18))
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         x, y = self.position
@@ -391,7 +391,7 @@ class SelectedCharacterPanel(UIPanel):
         
         return current_y - y
     
-    def _get_character_goal(self, char, controller):
+    def _get_character_goal(self, char, controller: "GameplayController"):
         """Get character's current primary goal."""
         try:
             # Try to get goal from various sources
@@ -416,7 +416,7 @@ class SelectedCharacterPanel(UIPanel):
         except Exception as e:
             return "Living peacefully"
     
-    def _get_character_action(self, char, controller):
+    def _get_character_action(self, char, controller: "GameplayController"):
         """Get character's current action."""
         try:
             # Try to get current action from various sources
@@ -447,7 +447,7 @@ class SelectedCharacterPanel(UIPanel):
 class VillageOverviewPanel(UIPanel):
     """Panel for displaying village-wide information."""
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         small_font = fonts.get('small', pygame.font.Font(None, 18))
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         x, y = self.position
@@ -497,7 +497,7 @@ class VillageOverviewPanel(UIPanel):
         
         return current_y - y
     
-    def _calculate_homeless(self, controller):
+    def _calculate_homeless(self, controller: "GameplayController"):
         """Calculate number of homeless villagers."""
         try:
             # For now, simulate based on building capacity vs population
@@ -510,7 +510,7 @@ class VillageOverviewPanel(UIPanel):
         except:
             return 0
     
-    def _calculate_village_mood(self, controller):
+    def _calculate_village_mood(self, controller: "GameplayController"):
         """Calculate overall village mood."""
         try:
             if not controller.characters:
@@ -545,7 +545,7 @@ class VillageOverviewPanel(UIPanel):
         except:
             return 50
     
-    def _get_active_events(self, controller):
+    def _get_active_events(self, controller: "GameplayController"):
         """Get list of active major events."""
         try:
             events = []
@@ -617,7 +617,7 @@ class EventNotificationPanel(UIPanel):
         }
         return colors.get(priority, colors['normal'])
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         import pygame
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         x, y = self.position
@@ -664,7 +664,7 @@ class TimeControlPanel(UIPanel):
         self.button_height = 20
         self.button_spacing = 5
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         x, y = self.position
         current_y = y
@@ -710,7 +710,7 @@ class TimeControlPanel(UIPanel):
         
         return current_y - y
     
-    def handle_click(self, position, controller):
+    def handle_click(self, position, controller: "GameplayController"):
         """Handle clicks on time control buttons."""
         x, y = self.position
         button_y = y + 18  # Adjust for header
@@ -738,7 +738,7 @@ class InstructionsPanel(UIPanel):
         self.help_mode = 'basic'  # 'basic', 'advanced', 'tutorial'
         self.tutorial_step = 0
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         x, y = self.position
         current_y = y
@@ -750,7 +750,7 @@ class InstructionsPanel(UIPanel):
         else:
             return self._render_basic_help(screen, controller, fonts, x, current_y)
     
-    def _render_basic_help(self, screen, controller, fonts, x, y):
+    def _render_basic_help(self, screen, controller: "GameplayController", fonts, x, y):
         """Render basic help instructions."""
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         current_y = y
@@ -792,7 +792,7 @@ class InstructionsPanel(UIPanel):
         
         return current_y - y
     
-    def _render_advanced_help(self, screen, controller, fonts, x, y):
+    def _render_advanced_help(self, screen, controller: "GameplayController", fonts, x, y):
         """Render advanced help information."""
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         current_y = y
@@ -835,7 +835,7 @@ class InstructionsPanel(UIPanel):
         
         return current_y - y
     
-    def _render_tutorial(self, screen, controller, fonts, x, y):
+    def _render_tutorial(self, screen, controller: "GameplayController", fonts, x, y):
         """Render interactive tutorial."""
         tiny_font = fonts.get('tiny', pygame.font.Font(None, 16))
         current_y = y
@@ -929,7 +929,7 @@ class BuildingInteractionPanel(UIPanel):
         self.visible = True
         self.interaction_timeout = pygame.time.get_ticks() + 5000  # 5 second timeout
     
-    def _render_content(self, screen: pygame.Surface, controller, fonts: Dict[str, pygame.font.Font]) -> int:
+    def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         import pygame
         if not self.selected_building or pygame.time.get_ticks() > self.interaction_timeout:
             self.visible = False
@@ -1261,7 +1261,7 @@ class ActionResolver:
 class CheckpointManager:
     """Manages automatic game state checkpointing and restoration."""
     
-    def __init__(self, gameplay_controller, checkpoint_dir: str = "saves/checkpoints"):
+    def __init__(self, gameplay_controller: "GameplayController", checkpoint_dir: str = "saves/checkpoints"):
         self.gameplay_controller = gameplay_controller
         self.checkpoint_dir = checkpoint_dir
         self.checkpoint_interval = 300000  # 5 minutes in milliseconds by default
@@ -1520,7 +1520,7 @@ class CheckpointManager:
 class SystemRecoveryManager:
     """Manages system recovery and fallback strategies."""
 
-    def __init__(self, gameplay_controller):
+    def __init__(self, gameplay_controller: "GameplayController"):
         self.gameplay_controller = gameplay_controller
         self.recovery_strategies = {}
         self.recovery_attempts = {}
@@ -2005,7 +2005,20 @@ class GameplayController:
         return default_buildings
 
     def _load_buildings_from_file(self, filepath: str) -> List[Dict]:
-        """Load building configuration from external file."""
+        """
+        Load building configuration from external file with comprehensive validation.
+        
+        Supports all building properties including:
+        - Required: name, x, y
+        - Optional: width (default 40), height (default 40), type, length, stories, num_rooms, address, owner, description, door
+        - Additional custom properties are preserved
+        
+        Args:
+            filepath: Path to JSON file containing building definitions
+            
+        Returns:
+            List of building dictionaries ready for instantiation
+        """
         try:
             import json
             import os
@@ -2017,31 +2030,124 @@ class GameplayController:
             with open(filepath, "r") as f:
                 data = json.load(f)
 
+            # Validate JSON structure
+            if not isinstance(data, dict):
+                logger.error(f"Invalid JSON structure in {filepath}: expected object with 'buildings' array")
+                return []
+                
+            if "buildings" not in data:
+                logger.error(f"No 'buildings' array found in {filepath}")
+                return []
+
             buildings = []
-            for building_data in data.get("buildings", []):
-                # Convert to required format
-                building = {
-                    "name": building_data.get("name", "Unknown Building"),
-                    "type": building_data.get("type", "generic"),
-                    "rect": pygame.Rect(
-                        building_data.get("x", 0),
-                        building_data.get("y", 0),
-                        building_data.get("width", 40),
-                        building_data.get("height", 40),
-                    ),
-                }
+            for idx, building_data in enumerate(data.get("buildings", [])):
+                try:
+                    # Validate required fields
+                    required_fields = ["name", "x", "y"]
+                    missing_fields = [f for f in required_fields if f not in building_data]
+                    if missing_fields:
+                        logger.warning(
+                            f"Building at index {idx} missing required fields: {missing_fields}. Skipping."
+                        )
+                        continue
+                    
+                    # Extract and validate coordinates
+                    x = building_data.get("x", 0)
+                    y = building_data.get("y", 0)
+                    width = building_data.get("width", 40)
+                    height = building_data.get("height", 40)
+                    
+                    # Validate numeric values individually so valid fields are preserved
+                    def safe_int(value, default, field_name):
+                        try:
+                            return int(value)
+                        except (ValueError, TypeError) as e:
+                            logger.warning(
+                                f"Invalid value for '{field_name}' in building '{building_data.get('name')}': {e}. "
+                                f"Using default {default}."
+                            )
+                            return default
 
-                # Add any additional properties
-                for key, value in building_data.items():
-                    if key not in ["x", "y", "width", "height"]:
-                        building[key] = value
+                    x = safe_int(x, 0, "x")
+                    y = safe_int(y, 0, "y")
+                    width = safe_int(width, 40, "width")
+                    height = safe_int(height, 40, "height")
+                    
+                    # Validate building type
+                    building_type = building_data.get("type", "building")
+                    valid_types = [
+                        "residential", "house", "commercial", "shop", "social", "tavern",
+                        "crafting", "workshop", "agricultural", "farm", "educational",
+                        "school", "library", "civic", "office", "building"
+                    ]
+                    if building_type not in valid_types:
+                        logger.info(
+                            f"Building '{building_data.get('name')}' has unrecognized type '{building_type}'. "
+                            f"It will use default 'building' interactions."
+                        )
+                    
+                    # Build the building dict
+                    building = {
+                        "name": building_data.get("name", "Unknown Building"),
+                        "type": building_type,
+                        "rect": pygame.Rect(x, y, width, height),
+                    }
 
-                buildings.append(building)
+                    # Add optional properties with validation
+                    optional_properties = {
+                        "length": (int, height),  # Default length to height if not provided
+                        "stories": (int, 1),
+                        "num_rooms": (int, 1),
+                        "address": (str, ""),
+                        "owner": (str, None),
+                        "description": (str, ""),
+                        "door": (dict, None),
+                    }
+                    
+                    for prop, (prop_type, default) in optional_properties.items():
+                        if prop in building_data:
+                            try:
+                                if prop_type == int:
+                                    building[prop] = int(building_data[prop])
+                                elif prop_type == str:
+                                    building[prop] = str(building_data[prop])
+                                else:
+                                    building[prop] = building_data[prop]
+                            except (ValueError, TypeError) as e:
+                                logger.warning(
+                                    f"Invalid value for property '{prop}' in building '{building['name']}': {e}. Using default."
+                                )
+                                building[prop] = default
+                        elif default is not None:
+                            building[prop] = default
+                    
+                    # Preserve any additional custom properties not explicitly handled
+                    excluded_keys = set(
+                        ["x", "y", "width", "height", "name", "type"]
+                        + list(optional_properties.keys())
+                    )
+                    for key, value in building_data.items():
+                        if key not in excluded_keys and key not in building:
+                            building[key] = value
 
+                    buildings.append(building)
+                    logger.debug(f"Successfully loaded building: {building['name']}")
+                    
+                except Exception as e:
+                    logger.warning(
+                        f"Error processing building at index {idx}: {e}. Skipping this building."
+                    )
+                    continue
+
+            logger.info(f"Successfully loaded {len(buildings)} buildings from {filepath}")
             return buildings
 
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON in file {filepath}: {e}")
+            return []
         except Exception as e:
             logger.error(f"Error loading buildings from file {filepath}: {e}")
+            logger.debug(traceback.format_exc())
             return []
 
     def initialize_game_systems(self):
@@ -3945,7 +4051,7 @@ class GameplayController:
     def _render_legacy_ui(self):
         """Legacy UI rendering method for fallback."""
         try:
-
+ 
             # TODO: Implement modular UI system with panels
             # TODO: Add character relationship visualization
             # TODO: Add village statistics dashboard
@@ -4835,6 +4941,17 @@ class GameplayController:
         except Exception as e:
             logger.error(f"Error notifying major event: {e}")
 
+    def initialize_modular_ui_system(self) -> bool:
+        """
+        Compatibility wrapper around the controller's UI initialization.
+        """
+        try:
+            self._init_ui_system()
+            return bool(getattr(self, "ui_panels", {})) and bool(getattr(self, "ui_fonts", {}))
+        except Exception as e:
+            logger.error(f"Error initializing modular UI system: {e}")
+            return False
+
     def get_feature_implementation_status(self) -> Dict[str, str]:
         """
         Report the implementation status of all planned features.
@@ -4873,6 +4990,7 @@ class GameplayController:
             "performance_optimization": "NOT_STARTED",
             "automated_testing": "NOT_STARTED",
             "configuration_ui": "NOT_STARTED",
+            "modular_ui_system": "BASIC_IMPLEMENTED",
         }
 
     def get_current_stories(self) -> Dict[str, Any]:

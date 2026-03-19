@@ -685,7 +685,12 @@ class Action:
             return
 
         seen_candidates = set()
+        # Start from the location's own visitor tracking if available.
         visitors = list(getattr(initiator_location, "current_visitors", []) or [])
+
+        # Only fall back to scanning all registered characters if the location has
+        # no recorded visitors. This keeps per-action overhead bounded when
+        # current_visitors is maintained correctly.
         if not visitors:
             registered_characters = getattr(self.graph_manager, "characters", None)
             if isinstance(registered_characters, dict):
