@@ -6,8 +6,6 @@ tools:
 - '*'
 target: vscode
 infer: true
-argument-hint: Ask about specific libraries/frameworks (e.g., "Next.js routing", "React
-  hooks", "Tailwind CSS")
 mcp-servers:
   context7:
     type: http
@@ -17,12 +15,6 @@ mcp-servers:
     tools:
     - get-library-docs
     - resolve-library-id
-handoffs:
-- label: Implement with Context7
-  agent: agent
-  prompt: Implement the solution using the Context7 best practices and documentation
-    outlined above.
-  send: false
 ---
 
 
