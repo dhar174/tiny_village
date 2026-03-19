@@ -337,7 +337,8 @@ class StrategyManager:
             decision_metadata['novelty_score'] = novelty_score
             decision_metadata['threshold'] = NOVELTY_THRESHOLD
             self._log_decision(decision_metadata, True)
-            
+            return True
+        
         # Use LLM periodically for variety and emergent behavior (1 in 5 decisions)
         import random
         if random.random() < self.VARIETY_PROBABILITY:  # 20% chance for variety
