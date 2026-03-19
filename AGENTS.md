@@ -6,7 +6,9 @@ Tiny Village is a single-repo Python simulation where contributor work usually t
 ## 2. Folder Structure
 - `.github`: repository automation and GitHub-specific metadata.
     - `agents`: specialized contributor-agent definitions in `.agent.md` format; use these for narrowly scoped task agents.
+    - `instructions`: repository-specific Copilot instructions, memory-bank rules, and file-pattern guidance.
     - `issue_templates`: issue templates and intake structure.
+    - `skills`: reusable agent skills and bundled workflow resources.
 - `assets`: screenshots and other game-facing assets.
 - `docs`: current project documentation.
     - `guides`: end-user and getting-started docs.
@@ -15,6 +17,8 @@ Tiny Village is a single-repo Python simulation where contributor work usually t
     - `archived`: historical or superseded documentation.
 - `design_docs`: architecture deep dives and system-design notes.
 - `critical_analysis`: implementation plans, code analysis, and audit-style writeups.
+- `memory-bank`: resumable project context for contributors and agents.
+    - `tasks`: task registry and per-task progress tracking files.
 - `tests`: organized test suite, migration helpers, fixtures, and focused regression coverage.
 - Repo root Python modules: the main runtime and many project entry points live at the repository root.
     - `main.py`: top-level entry point, logging setup, and demo-mode selection.
@@ -69,7 +73,7 @@ enabled_characters, strategy_manager = setup_full_llm_integration(
 )
 ```
 
-Both examples are examples only; check the current helper signatures and agent front matter before copying them into new work.
+Both examples are illustrative only; verify the current helper signatures and agent front matter in the repository before copying them into new work.
 
 ## 4. Conventions
 - **Naming**: Classes use `PascalCase` (`StrategyManager`, `OutputInterpreter`), functions and variables use `snake_case` (`setup_full_llm_integration`, `get_global_graph_manager`), and constants use `UPPER_SNAKE_CASE` (`MAX_SPEED`, `NOTIFICATION_PRIORITIES`).

@@ -11,16 +11,23 @@ Tiny Village is an agent-based simulation game built around a sophisticated AI a
 ## Repository Structure
 
 The Tiny Village repository is structured as follows:
-tiny_village/ ├── assets/ # Game assets (images, sounds, etc.) ├── maps/ # Map files for the game world ├── design_docs/ # Design documentation ├── tests/ # Test suite ├── .github/ # GitHub configurations (workflows, etc.) ├── main.py # Main entry point for the game └── tiny_*.py # Core modules with the "tiny_" prefix
+
+- `assets/` - Game assets and screenshots
+- `critical_analysis/` - Implementation plans, audits, and code analysis notes
+- `design_docs/` - Architecture and design documentation
+- `docs/` - Current guides, technical reference, testing docs, and archived historical notes
+- `memory-bank/` - Contributor and agent memory files for resumable project context
+- `tests/` - Organized regression and focused test coverage
+- `.github/` - Agent definitions, instructions, issue templates, prompts, and skills
+- `main.py` - Main runtime entry point
+- `actions.py`, `tiny_*.py`, `demo_*.py`, `test_*.py`, `validate_*.py`, `verify_*.py` - Core runtime, demos, tests, and validation scripts at the repository root
+- `llm_integration_utils.py`, `llm_character_utils.py`, and related helpers - LLM integration support modules referenced by demos and guides
 
 ## Environment Setup
 Set up the following environment variables for optimal performance:
 ```bash
 # For TinyLlama cache paths
 export TRANSFORMERS_CACHE=/path/to/cache
-# For pygame window settings (optional)
-export PYGAME_DISPLAY_WIDTH=1024
-export PYGAME_DISPLAY_HEIGHT=768
 ```
 
 NOTE TO AGENT: BE CAREFUL AND CONSERVATIVE about creating fake or mock classes as this may not correctly test the functions. 

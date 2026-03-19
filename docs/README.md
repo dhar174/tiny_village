@@ -109,7 +109,9 @@ GitHub-specific documentation and agent definitions.
 - `.github/copilot-instructions.md` - Copilot agent instructions
 - `.github/IMPLEMENTATION_ISSUES_INDEX.md` - Index of implementation issues
 - `.github/agents/*.agent.md` - Copilot agent definitions
+- `.github/instructions/*.instructions.md` - Repository-specific Copilot instructions and workflow rules
 - `.github/issue_templates/*.md` - Issue templates
+- `.github/skills/**/SKILL.md` - Reusable agent skills and bundled references
 
 ## Quick Links
 
