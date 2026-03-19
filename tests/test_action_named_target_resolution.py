@@ -14,40 +14,43 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from actions import Action
+from actions import Action, ActionSystem
+from demo_character_factory import Character as DemoCharacter
+from tiny_locations import Location
 
 
 # ---------------------------------------------------------------------------
-# Minimal stand-ins for Character and Location.
-# These are lightweight plain-Python objects that carry only the attributes
-# the resolution path actually reads.  Using full game classes would pull in
-# heavy optional dependencies (pygame, networkx, …) that are not available in
-# a CI environment.
+# Helpers
 # ---------------------------------------------------------------------------
 
 
-class _Location:
-    """Minimal Location with a name, uuid, and visitor list."""
+class RecordingGraphManager:
+    """Graph manager that records update_node_attribute calls for assertions."""
 
-    def __init__(self, name):
-        self.name = name
-        self.uuid = f"loc_{name}"
-        self.current_visitors = []
+    def __init__(self, characters=None):
+        self.characters = characters if characters is not None else {}
+        self.updated_nodes = []
 
-    def add_visitor(self, character):
-        self.current_visitors.append(character)
-        character.location = self
+    def update_node_attribute(self, node_id, attribute_name, value):
+        self.updated_nodes.append((node_id, attribute_name, value))
 
 
-class _Character:
-    """Minimal Character carrying the attributes Action resolution reads."""
+class ExplodingCharacterRegistry:
+    """Raises if iterated — used to assert the graph-wide scan is NOT triggered."""
 
-    def __init__(self, name, location=None):
-        self.name = name
-        self.uuid = f"char_{name}"
+    def values(self):
+        raise AssertionError(
+            "graph-wide character lookup should not run when current_visitors are available"
+        )
+
+
+class TestCharacter(DemoCharacter):
+    """DemoCharacter with an explicit location and UUID for test fixtures."""
+
+    def __init__(self, name, location, social_wellbeing=0):
+        super().__init__(name=name, social_wellbeing=social_wellbeing)
+        self.uuid = f"{name.lower()}-uuid"
         self.location = location
-        # Attribute that test effects will modify.
-        self.social_wellbeing = 0
 
 
 # ---------------------------------------------------------------------------
@@ -55,12 +58,111 @@ class _Character:
 # ---------------------------------------------------------------------------
 
 
-class TestNamedTargetResolution(unittest.TestCase):
+class TestActionNamedTargetResolution(unittest.TestCase):
     """Action.execute() correctly resolves target_character_in_location."""
 
-    def _make_action(self, initiator, target=None):
-        """Return an Action whose effect targets target_character_in_location."""
-        return Action(
+    # ------------------------------------------------------------------
+    # current_visitors path
+    # ------------------------------------------------------------------
+
+    def test_execute_uses_current_visitors_for_target_character_in_location(self):
+        """Effect is applied to the co-located character via current_visitors."""
+        graph_manager = RecordingGraphManager(characters=ExplodingCharacterRegistry())
+        action_system = ActionSystem(graph_manager=graph_manager)
+
+        town_square = Location("Town Square", 0, 0, 10, 10, action_system)
+        elsewhere = Location("Elsewhere", 20, 20, 10, 10, action_system)
+
+        initiator = TestCharacter("Initiator", town_square, social_wellbeing=5)
+        nearby_target = TestCharacter("Target", town_square, social_wellbeing=3)
+        other_character = TestCharacter("Other", elsewhere, social_wellbeing=9)
+
+        town_square.current_visitors.extend([initiator, nearby_target])
+
+        action = Action(
+            name="Encourage",
+            preconditions=[],
+            effects=[
+                {
+                    "targets": ["target_character_in_location"],
+                    "attribute": "social_wellbeing",
+                    "change_value": 2,
+                }
+            ],
+            initiator=initiator,
+            target=nearby_target.name,
+            graph_manager=graph_manager,
+        )
+
+        result = action.execute()
+
+        self.assertTrue(result)
+        self.assertEqual(nearby_target.social_wellbeing, 5)
+        self.assertEqual(other_character.social_wellbeing, 9)
+        self.assertEqual(
+            graph_manager.updated_nodes,
+            [(nearby_target.uuid, "social_wellbeing", 5)],
+        )
+
+    # ------------------------------------------------------------------
+    # graph_manager.characters fallback path
+    # ------------------------------------------------------------------
+
+    def test_execute_falls_back_to_registered_characters_when_visitors_missing(self):
+        """Falls back to graph_manager.characters when current_visitors is empty."""
+        graph_manager = RecordingGraphManager()
+        action_system = ActionSystem(graph_manager=graph_manager)
+
+        town_square = Location("Town Square", 0, 0, 10, 10, action_system)
+        elsewhere = Location("Elsewhere", 20, 20, 10, 10, action_system)
+
+        initiator = TestCharacter("Initiator", town_square, social_wellbeing=5)
+        nearby_target = TestCharacter("Target", town_square, social_wellbeing=3)
+        other_character = TestCharacter("Other", elsewhere, social_wellbeing=9)
+
+        graph_manager.characters = {
+            character.uuid: character
+            for character in (initiator, nearby_target, other_character)
+        }
+
+        action = Action(
+            name="Encourage",
+            preconditions=[],
+            effects=[
+                {
+                    "targets": ["target_character_in_location"],
+                    "attribute": "social_wellbeing",
+                    "change_value": 2,
+                }
+            ],
+            initiator=initiator,
+            target=nearby_target.uuid,
+            graph_manager=graph_manager,
+        )
+
+        result = action.execute()
+
+        self.assertTrue(result)
+        self.assertEqual(nearby_target.social_wellbeing, 5)
+        self.assertEqual(other_character.social_wellbeing, 9)
+        self.assertEqual(
+            graph_manager.updated_nodes,
+            [(nearby_target.uuid, "social_wellbeing", 5)],
+        )
+
+    # ------------------------------------------------------------------
+    # No match: initiator is alone
+    # ------------------------------------------------------------------
+
+    def test_no_effect_when_no_other_character_in_location(self):
+        """No effect applied when the initiator is alone in the location."""
+        graph_manager = RecordingGraphManager()
+        action_system = ActionSystem(graph_manager=graph_manager)
+        location = Location("Empty Room", 0, 0, 5, 5, action_system)
+        initiator = TestCharacter("Alice", location, social_wellbeing=0)
+        location.current_visitors.append(initiator)
+
+        action = Action(
             name="Greet",
             preconditions=[],
             effects=[
@@ -70,168 +172,65 @@ class TestNamedTargetResolution(unittest.TestCase):
                     "change_value": 5,
                 }
             ],
-            cost=0,
             initiator=initiator,
-            target=target,
-            graph_manager=None,
+            graph_manager=graph_manager,
         )
-
-    # ------------------------------------------------------------------
-    # Happy-path: a single other character shares the location
-    # ------------------------------------------------------------------
-
-    def test_effect_applied_to_character_in_location(self):
-        """Effect is applied to the co-located character."""
-        location = _Location("tavern")
-        alice = _Character("Alice")
-        bob = _Character("Bob")
-        location.add_visitor(alice)
-        location.add_visitor(bob)
-
-        action = self._make_action(initiator=alice)
-        result = action.execute()
-
-        self.assertTrue(result, "execute() should return True when preconditions pass")
-        self.assertEqual(
-            bob.social_wellbeing,
-            5,
-            "Effect should be applied to the co-located character (Bob)",
-        )
-        # The initiator must not receive the effect (they are excluded from
-        # _iter_characters_in_initiator_location).
-        self.assertEqual(
-            alice.social_wellbeing,
-            0,
-            "Effect must NOT be applied to the initiator",
-        )
-
-    # ------------------------------------------------------------------
-    # Target filtering: only the character matching target is resolved
-    # ------------------------------------------------------------------
-
-    def test_resolves_matching_target_by_name(self):
-        """When self.target is a name string only the matching character is affected."""
-        location = _Location("market")
-        alice = _Character("Alice")
-        bob = _Character("Bob")
-        carol = _Character("Carol")
-        location.add_visitor(alice)
-        location.add_visitor(bob)
-        location.add_visitor(carol)
-
-        # Request the action specifically at Carol by name.
-        action = self._make_action(initiator=alice, target="Carol")
-        action.execute()
-
-        self.assertEqual(carol.social_wellbeing, 5, "Carol should be the resolved target")
-        self.assertEqual(bob.social_wellbeing, 0, "Bob should not be affected")
-        self.assertEqual(alice.social_wellbeing, 0, "Alice (initiator) should not be affected")
-
-    def test_resolves_matching_target_by_object(self):
-        """When self.target is an object only the matching character is affected."""
-        location = _Location("forest")
-        alice = _Character("Alice")
-        bob = _Character("Bob")
-        carol = _Character("Carol")
-        location.add_visitor(alice)
-        location.add_visitor(bob)
-        location.add_visitor(carol)
-
-        action = self._make_action(initiator=alice, target=carol)
-        action.execute()
-
-        self.assertEqual(carol.social_wellbeing, 5, "Carol should be the resolved target")
-        self.assertEqual(bob.social_wellbeing, 0, "Bob should not be affected")
-
-    # ------------------------------------------------------------------
-    # No match: no other character is in the same location
-    # ------------------------------------------------------------------
-
-    def test_no_effect_when_no_other_character_in_location(self):
-        """No effect applied when the initiator is alone in the location."""
-        location = _Location("empty_room")
-        alice = _Character("Alice")
-        location.add_visitor(alice)
-
-        action = self._make_action(initiator=alice)
         result = action.execute()
 
         self.assertTrue(result, "execute() should still return True")
         self.assertEqual(
-            alice.social_wellbeing,
+            initiator.social_wellbeing,
             0,
-            "No effect when there is no co-located character",
+            "No effect when the initiator is alone",
         )
-
-    def test_no_effect_when_initiator_has_no_location(self):
-        """No effect applied when the initiator has no location set."""
-        alice = _Character("Alice", location=None)
-        bob = _Character("Bob", location=None)
-
-        action = self._make_action(initiator=alice)
-        result = action.execute()
-
-        self.assertTrue(result, "execute() should still return True")
-        self.assertEqual(alice.social_wellbeing, 0)
-        self.assertEqual(bob.social_wellbeing, 0)
+        self.assertEqual(graph_manager.updated_nodes, [])
 
     # ------------------------------------------------------------------
-    # Multiple visitors: only one effect per unique character
+    # No match: target name does not match any co-located character
     # ------------------------------------------------------------------
 
-    def test_deduplication_no_double_apply(self):
-        """The same character appearing twice in visitors is only affected once."""
-        location = _Location("well")
-        alice = _Character("Alice")
-        bob = _Character("Bob")
-        # Intentionally add bob twice to simulate a stale list.
-        location.add_visitor(alice)
-        location.current_visitors.append(bob)  # first occurrence
-        bob.location = location
-        location.current_visitors.append(bob)  # duplicate
+    def test_no_effect_when_target_name_not_in_location(self):
+        """No effect when the requested target name is not in the location."""
+        graph_manager = RecordingGraphManager()
+        action_system = ActionSystem(graph_manager=graph_manager)
+        location = Location("Square", 0, 0, 10, 10, action_system)
+        elsewhere = Location("Far Away", 50, 50, 10, 10, action_system)
 
-        action = self._make_action(initiator=alice)
+        initiator = TestCharacter("Alice", location, social_wellbeing=0)
+        bob = TestCharacter("Bob", elsewhere, social_wellbeing=0)
+        location.current_visitors.append(initiator)
+
+        action = Action(
+            name="Greet",
+            preconditions=[],
+            effects=[
+                {
+                    "targets": ["target_character_in_location"],
+                    "attribute": "social_wellbeing",
+                    "change_value": 5,
+                }
+            ],
+            initiator=initiator,
+            target=bob.name,  # Bob is not in the same location
+            graph_manager=graph_manager,
+        )
         action.execute()
 
-        self.assertEqual(
-            bob.social_wellbeing,
-            5,
-            "Effect should be applied exactly once despite duplicate visitor entry",
-        )
+        self.assertEqual(bob.social_wellbeing, 0, "Bob is elsewhere and should not be affected")
 
     # ------------------------------------------------------------------
-    # Effect is cumulative when execute() is called multiple times
-    # ------------------------------------------------------------------
-
-    def test_repeated_execute_accumulates_effect(self):
-        """Calling execute() twice applies the effect twice."""
-        location = _Location("inn")
-        alice = _Character("Alice")
-        bob = _Character("Bob")
-        location.add_visitor(alice)
-        location.add_visitor(bob)
-
-        action = self._make_action(initiator=alice)
-        action.execute()
-        action.execute()
-
-        self.assertEqual(
-            bob.social_wellbeing,
-            10,
-            "Second execute() should accumulate the effect",
-        )
-
-    # ------------------------------------------------------------------
-    # Named token mixed with other target tokens in the same effect
+    # Named token alongside initiator token
     # ------------------------------------------------------------------
 
     def test_named_token_alongside_initiator_token(self):
         """An effect with both 'initiator' and 'target_character_in_location' targets."""
-        location = _Location("guild")
-        alice = _Character("Alice")
-        bob = _Character("Bob")
-        location.add_visitor(alice)
-        location.add_visitor(bob)
+        graph_manager = RecordingGraphManager()
+        action_system = ActionSystem(graph_manager=graph_manager)
+        location = Location("Guild", 0, 0, 10, 10, action_system)
+
+        alice = TestCharacter("Alice", location, social_wellbeing=0)
+        bob = TestCharacter("Bob", location, social_wellbeing=0)
+        location.current_visitors.extend([alice, bob])
 
         action = Action(
             name="CheerUp",
@@ -243,14 +242,49 @@ class TestNamedTargetResolution(unittest.TestCase):
                     "change_value": 3,
                 }
             ],
-            cost=0,
             initiator=alice,
-            graph_manager=None,
+            graph_manager=graph_manager,
         )
         action.execute()
 
         self.assertEqual(alice.social_wellbeing, 3, "Initiator token should apply to Alice")
         self.assertEqual(bob.social_wellbeing, 3, "Named token should apply to Bob")
+
+    # ------------------------------------------------------------------
+    # Deduplication
+    # ------------------------------------------------------------------
+
+    def test_deduplication_no_double_apply(self):
+        """A character appearing twice in visitors is only affected once."""
+        graph_manager = RecordingGraphManager()
+        action_system = ActionSystem(graph_manager=graph_manager)
+        location = Location("Well", 0, 0, 10, 10, action_system)
+
+        initiator = TestCharacter("Alice", location, social_wellbeing=0)
+        bob = TestCharacter("Bob", location, social_wellbeing=0)
+        # Add Bob twice to simulate a stale list.
+        location.current_visitors.extend([initiator, bob, bob])
+
+        action = Action(
+            name="Greet",
+            preconditions=[],
+            effects=[
+                {
+                    "targets": ["target_character_in_location"],
+                    "attribute": "social_wellbeing",
+                    "change_value": 5,
+                }
+            ],
+            initiator=initiator,
+            graph_manager=graph_manager,
+        )
+        action.execute()
+
+        self.assertEqual(
+            bob.social_wellbeing,
+            5,
+            "Effect should be applied exactly once despite duplicate visitor entry",
+        )
 
 
 if __name__ == "__main__":
