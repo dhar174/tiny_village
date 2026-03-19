@@ -4,7 +4,7 @@ description: Perform janitorial tasks on any codebase including cleanup, simplif
 name: Universal Janitor
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

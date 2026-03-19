@@ -4,7 +4,7 @@ description: Guide modern search optimization across SEO, Answer Engine Optimiza
 name: Search & AI Optimization Expert
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

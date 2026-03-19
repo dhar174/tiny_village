@@ -4,7 +4,7 @@ description: Brainstorm and develop new application ideas through fun, interacti
 name: Idea Generator
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

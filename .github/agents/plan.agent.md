@@ -4,7 +4,7 @@ description: Planning and architecture assistant that clarifies requirements, an
 name: Plan Mode - Strategic Planning & Architecture
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

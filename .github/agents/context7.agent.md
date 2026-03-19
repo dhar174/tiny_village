@@ -4,7 +4,7 @@ description: Expert in latest library versions, best practices, and correct synt
 name: Context7-Expert
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 mcp-servers:
   context7:

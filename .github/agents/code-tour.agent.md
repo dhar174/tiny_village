@@ -4,7 +4,7 @@ description: Expert agent for creating and maintaining VSCode CodeTour files wit
 name: VSCode Tour Expert
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

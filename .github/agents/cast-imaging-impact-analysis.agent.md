@@ -4,7 +4,7 @@ description: Specialized agent for comprehensive change impact assessment and ri
 name: CAST Imaging Impact Analysis Agent
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 mcp-servers:
   imaging-impact-analysis:

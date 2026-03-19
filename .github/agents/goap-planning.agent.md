@@ -4,11 +4,8 @@ description: Deliver GOAP planning with efficient search, goal prioritization, v
 name: GOAP Planning Agent
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: false
-metadata:
-  component: goap
-  repo_area: planning
 ---
 
 

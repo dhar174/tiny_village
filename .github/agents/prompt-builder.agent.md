@@ -4,7 +4,7 @@ description: Expert prompt engineering and validation system for creating high-q
 name: Prompt Builder
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

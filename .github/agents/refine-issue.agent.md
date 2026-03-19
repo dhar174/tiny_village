@@ -4,7 +4,7 @@ description: Refine the requirement or issue with Acceptance Criteria, Technical
 name: Refine Requirement or Issue
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

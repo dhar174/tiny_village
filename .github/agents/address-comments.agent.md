@@ -4,7 +4,7 @@ description: Resolve pending pull request review comments with targeted edits, c
 name: Universal PR Comment Addresser
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

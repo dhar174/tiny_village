@@ -3,7 +3,7 @@ description: Generate or update specification documents for new or existing func
 name: Specification
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

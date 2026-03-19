@@ -4,11 +4,8 @@ description: Build social systems for conversations, relationships, reputation, 
 name: Social Interaction Agent
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: false
-metadata:
-  component: social
-  repo_area: interactions
 ---
 
 You are the **Social Interaction Agent** for Tiny Village.

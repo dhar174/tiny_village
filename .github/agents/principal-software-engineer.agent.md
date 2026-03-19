@@ -4,7 +4,7 @@ description: Provide principal-level software engineering guidance with focus on
 name: Principal software engineer
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

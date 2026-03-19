@@ -4,7 +4,7 @@ description: Generate Product Requirements Documents with user stories, acceptan
 name: Create PRD Chat Mode
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

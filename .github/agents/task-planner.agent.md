@@ -4,7 +4,7 @@ description: Task planner for creating actionable implementation plans - Brought
 name: Task Planner Instructions
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

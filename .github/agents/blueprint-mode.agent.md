@@ -4,7 +4,7 @@ description: Execute structured workflows (Debug, Express, Main, Loop) with stri
 name: Blueprint Mode
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

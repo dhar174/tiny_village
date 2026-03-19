@@ -4,7 +4,7 @@ description: Debug applications by reproducing issues, isolating root causes, an
 name: Debug Mode Instructions
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

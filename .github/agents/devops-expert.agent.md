@@ -3,7 +3,7 @@ description: 'DevOps specialist driving continuous delivery—plan, code, build,
 name: DevOps Expert
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

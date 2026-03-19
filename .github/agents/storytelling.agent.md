@@ -4,11 +4,8 @@ description: Implement event-driven storytelling that detects key events, tracks
 name: Storytelling Agent
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: false
-metadata:
-  component: story
-  repo_area: narrative
 ---
 
 

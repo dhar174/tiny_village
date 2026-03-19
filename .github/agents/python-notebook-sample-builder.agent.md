@@ -4,7 +4,7 @@ description: Custom agent for building Python Notebooks in VS Code that demonstr
 name: Python Notebook Sample Builder
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

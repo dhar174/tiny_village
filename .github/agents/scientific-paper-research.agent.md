@@ -4,7 +4,7 @@ description: Research agent that searches scientific papers and retrieves struct
 name: Scientific Paper Research
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 mcp-servers:
   bgpt:

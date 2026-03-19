@@ -4,7 +4,7 @@ description: Product management guidance for creating GitHub issues, aligning bu
 name: 'SE: Product Manager'
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

@@ -4,11 +4,8 @@ description: Wire the Tiny Village decision loop across StrategyManager, prompts
 name: Decision Loop Integration Agent
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: false
-metadata:
-  component: decision_loop
-  repo_area: ai_runtime
 ---
 
 

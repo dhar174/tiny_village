@@ -4,7 +4,7 @@ description: Specialized agent for comprehensive software application discovery 
 name: CAST Imaging Software Discovery Agent
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 mcp-servers:
   imaging-structural-search:

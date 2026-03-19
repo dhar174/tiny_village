@@ -4,7 +4,7 @@ description: Technical writing specialist for creating developer documentation, 
 name: 'SE: Tech Writer'
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

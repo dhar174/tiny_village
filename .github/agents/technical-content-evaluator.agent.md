@@ -4,7 +4,7 @@ description: Review technical training content for accuracy, pedagogy, flow, and
 name: technical-content-evaluator
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

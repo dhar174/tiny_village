@@ -4,7 +4,7 @@ description: Task research specialist for comprehensive project analysis - Broug
 name: Task Researcher Instructions
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

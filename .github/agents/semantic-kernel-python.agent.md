@@ -4,7 +4,7 @@ description: Create, update, refactor, explain or work with code using the Pytho
 name: Semantic Kernel Python
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

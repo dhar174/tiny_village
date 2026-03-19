@@ -3,7 +3,7 @@ description: Generate technical debt remediation plans for code, tests, and docu
 name: Technical Debt Remediation Plan
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

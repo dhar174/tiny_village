@@ -4,7 +4,7 @@ description: Create clear Architectural Decision Records with structured formatt
 name: ADR Generator
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

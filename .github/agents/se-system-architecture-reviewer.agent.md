@@ -4,7 +4,7 @@ description: System architecture review specialist with Well-Architected framewo
 name: 'SE: Architect'
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

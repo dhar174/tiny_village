@@ -3,7 +3,7 @@ description: Help mentor the engineer by providing guidance and support.
 name: Mentor mode
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

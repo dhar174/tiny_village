@@ -3,7 +3,7 @@ description: Expert assistant for generating working applications from OpenAPI s
 name: OpenAPI to Application Generator
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

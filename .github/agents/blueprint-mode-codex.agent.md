@@ -4,7 +4,7 @@ description: Run structured workflows with strict correctness, minimal tool usag
 name: Blueprint Mode Codex
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

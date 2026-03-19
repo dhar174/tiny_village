@@ -4,11 +4,8 @@ description: Convert LLM responses into validated Tiny Village actions with JSON
 name: Output Interpreter Agent
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: false
-metadata:
-  component: output_interpreter
-  repo_area: ai_runtime
 ---
 
 

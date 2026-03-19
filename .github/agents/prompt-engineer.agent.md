@@ -4,7 +4,7 @@ description: Analyze prompts with structured reasoning then produce improved, co
 name: Prompt Engineer
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

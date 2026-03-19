@@ -4,7 +4,7 @@ description: Generate an implementation plan for new features or refactoring exi
 name: Implementation Plan Generation Mode
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

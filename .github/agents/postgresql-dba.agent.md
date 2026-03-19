@@ -3,7 +3,7 @@ description: Work with PostgreSQL databases using the PostgreSQL extension.
 name: PostgreSQL Database Administrator
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

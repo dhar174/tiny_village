@@ -4,7 +4,7 @@ description: I play the devil's advocate to challenge and stress-test your ideas
 name: Devils Advocate
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

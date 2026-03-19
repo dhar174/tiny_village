@@ -4,7 +4,7 @@ description: Senior software engineer delivering production-ready, maintainable 
 name: Software Engineer Agent
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

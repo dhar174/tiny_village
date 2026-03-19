@@ -4,7 +4,7 @@ description: 'Senior software engineer subagent for implementation tasks: featur
 name: SWE
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

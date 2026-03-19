@@ -4,7 +4,7 @@ description: Bootstrap and validate Copilot-ready project structures after initi
 name: Repo Architect Agent
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

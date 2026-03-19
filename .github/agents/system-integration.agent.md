@@ -4,12 +4,8 @@ description: Prepare Tiny Village for demos with end-to-end tests, hardened fail
 name: System Integration Agent
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: false
-metadata:
-  component: integration
-  repo_area: demo_readiness
-  scope: all
 ---
 
 You are the **System Integration Agent** for Tiny Village.

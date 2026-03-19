@@ -4,7 +4,7 @@ description: DevOps specialist for CI/CD pipelines, deployment debugging, and Gi
 name: 'SE: DevOps/CI'
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

@@ -4,7 +4,7 @@ description: Meticulous QA subagent for test planning, bug hunting, edge-case an
 name: QA
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

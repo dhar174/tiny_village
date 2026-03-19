@@ -4,7 +4,7 @@ description: GitHub Actions specialist for secure CI/CD with pinned actions, OID
 name: GitHub Actions Expert
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

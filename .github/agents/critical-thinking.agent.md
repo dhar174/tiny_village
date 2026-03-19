@@ -4,7 +4,7 @@ description: Challenge assumptions and encourage critical thinking to ensure the
 name: Critical thinking mode instructions
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

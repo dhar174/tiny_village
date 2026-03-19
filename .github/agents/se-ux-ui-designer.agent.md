@@ -4,7 +4,7 @@ description: Jobs-to-be-Done analysis, user journey mapping, and UX research art
 name: 'SE: UX Designer'
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

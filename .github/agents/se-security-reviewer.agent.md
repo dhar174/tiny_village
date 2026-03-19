@@ -4,7 +4,7 @@ description: Security-focused code review specialist with OWASP Top 10, Zero Tru
 name: 'SE: Security'
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

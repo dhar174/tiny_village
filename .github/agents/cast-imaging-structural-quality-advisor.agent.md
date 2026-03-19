@@ -4,7 +4,7 @@ description: Specialized agent for identifying, analyzing, and providing remedia
 name: CAST Imaging Structural Quality Advisor Agent
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 mcp-servers:
   imaging-structural-quality:

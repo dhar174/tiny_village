@@ -4,7 +4,7 @@ description: An agent that helps plan and execute multi-file changes by identify
 name: Context Architect
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

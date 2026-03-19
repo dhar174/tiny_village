@@ -3,7 +3,7 @@ description: Improves the accessibility of markdown files using five GitHub best
 name: Markdown Accessibility Assistant
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

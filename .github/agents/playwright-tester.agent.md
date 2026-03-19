@@ -4,7 +4,7 @@ description: Run and debug Playwright UI tests with accessible locators, grouped
 name: Playwright Tester Mode
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 

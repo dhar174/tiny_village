@@ -4,7 +4,7 @@ description: Validate user understanding of code, design patterns, and implement
 name: Demonstrate Understanding mode instructions
 tools:
 - '*'
-target: vscode
+target: github-copilot
 infer: true
 ---
 
