@@ -57,7 +57,7 @@ LLM features — not a LangGraph notebook generator.
 | 1.9 | Replace stale progress.md                       | Complete    | 2026-03-19 | Now reflects TinyVillage current status                       |
 | 1.10| Create first project-specific task file          | Complete    | 2026-03-19 | This file                                                     |
 | 1.11| Register task in tasks/_index.md                | Complete    | 2026-03-19 | TASK001 now listed under In Progress                          |
-| 1.12| Open PR from work branch to main                | Not Started | 2026-03-19 | Pending final commit and PR creation                          |
+| 1.12| Open PR from work branch to main                | Complete    | 2026-03-19 | PR opened including Memory Bank initialization changes        |
 
 ## Progress Log
 
