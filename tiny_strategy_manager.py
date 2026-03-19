@@ -14,7 +14,7 @@ This function should dynamically weigh these factors according to the current pl
 This module integrates the GOAP system and the graph manager to formulate comprehensive strategies based on events.
 """
 
-from tiny_goap_system import GOAPPlanner, ActionWrapper
+from tiny_goap_system import GOAPPlanner
 from tiny_utility_functions import (
     calculate_action_utility,
     Goal,
