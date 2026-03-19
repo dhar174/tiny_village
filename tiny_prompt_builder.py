@@ -2745,8 +2745,9 @@ class PromptBuilder:
             prompt += f"Your long-term aspiration is: {self.character.long_term_goal}. "
 
  
-        # Include short memory descriptions if provided
-        if memories:
+        # Include short memory descriptions if provided, but only when no
+        # other memory integration (e.g. relevant_memories) is active.
+        if memories and not (include_memory_integration or relevant_memories):
             prompt += "\nRecent memories influencing you:\n"
             for mem in memories[:2]:
                 desc = getattr(mem, "description", str(mem))
