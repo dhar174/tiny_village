@@ -300,13 +300,21 @@ class TestActionNamedTargetResolution(unittest.TestCase):
             ],
             initiator=initiator,
             graph_manager=graph_manager,
+            target=bob.uuid,
         )
         action.execute()
 
+        # Bob should receive the effect exactly once despite being listed twice.
         self.assertEqual(
             bob.social_wellbeing,
             5,
             "Effect should be applied exactly once despite duplicate visitor entry",
+        )
+        # And the underlying graph manager should only record a single update.
+        self.assertEqual(
+            len(graph_manager.updated_nodes),
+            1,
+            "update_node_attribute should be called exactly once for the deduplicated target",
         )
 
 
