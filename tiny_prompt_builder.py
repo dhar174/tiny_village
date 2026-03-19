@@ -1763,7 +1763,7 @@ class PromptBuilder:
                         short = desc if len(desc) <= 60 else desc[:57] + "..."
                         prompt += f"- {short}\n"
             except Exception as e:
-                print(f"Warning: Could not retrieve recent memories: {e}")
+                logging.warning(f"Could not retrieve recent memories: {e}")
 
             # Relationship summaries
             try:
