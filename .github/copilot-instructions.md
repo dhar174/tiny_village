@@ -1,3 +1,10 @@
+- 🧠 Read `/memory-bank/memory-bank-instructions.md` first.
+- 🗂 Load all `/memory-bank/*.md` files before each task.
+- 📂 Also load files from the active feature folder (e.g. `/memory-bank/authentication/`).
+- 🚦 Follow the Kiro-Lite workflow: PRD → Design → Tasks → Code.
+- 🔒 Follow rules in `copilot-rules.md`.
+- 📝 On "/update memory bank", refresh activeContext.md & progress.md.
+
 When writing tests, do NOT over-mock or fake classes if avoidable. Write tests so that they will fail if the function does not work as expected, do NOT design tests so that they will pass regardless! Good tests fail when there is an error, NEVER manipulate the test design to make it pass while the tested function does not function as expected!
 
 BE CAREFUL AND CONSERVATIVE about creating fake or mock classes as this may not correctly test the functions.
