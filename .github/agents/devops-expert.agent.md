@@ -1,7 +1,5 @@
 ---
-description: "DevOps specialist driving continuous delivery\u2014plan, code, build,\
-  \ test, release, deploy, operate, monitor\u2014with automation and collaboration\
-  \ focus."
+description: 'DevOps specialist driving continuous delivery—plan, code, build, test, release, deploy, operate, monitor—with automation and collaboration focus.'
 name: DevOps Expert
 tools:
 - '*'
