@@ -109,6 +109,98 @@ class TestStrategyManagerEventPlanning(unittest.TestCase):
         self.assertEqual(len(plans["alice"]), 1)
         self.assertEqual(getattr(plans["alice"][0], "name", None), "planned")
 
+    def test_get_character_state_dict_aliases_wealth_money_for_dict_input(self):
+        manager = self._build_manager()
+
+        state = manager.get_character_state_dict({"name": "Alice", "wealth_money": 75})
+
+        self.assertEqual(state["money"], 75.0)
+        self.assertEqual(state["wealth_money"], 75)
+
+    def test_get_character_state_dict_only_falls_back_to_satisfaction_when_happiness_missing(self):
+        manager = self._build_manager()
+
+        character = SimpleNamespace(
+            hunger_level=5,
+            energy=5,
+            wealth_money=10,
+            social_wellbeing=5,
+            mental_health=5,
+            health_status=100,
+            satisfaction=80,
+            happiness="not-a-number",
+            job_performance=50,
+        )
+
+        state = manager.get_character_state_dict(character)
+
+        self.assertEqual(state["satisfaction"], 0.8)
+        self.assertEqual(state["happiness"], 0.5)
+
+    def test_get_character_state_dict_uses_satisfaction_when_happiness_attribute_is_missing(self):
+        manager = self._build_manager()
+
+        character = SimpleNamespace(
+            hunger_level=5,
+            energy=5,
+            wealth_money=10,
+            social_wellbeing=5,
+            mental_health=5,
+            health_status=100,
+            satisfaction=80,
+            job_performance=50,
+        )
+
+        state = manager.get_character_state_dict(character)
+
+        self.assertEqual(state["satisfaction"], 0.8)
+        self.assertEqual(state["happiness"], 0.8)
+
+    def test_plan_daily_activities_treats_empty_plan_as_already_satisfied(self):
+        manager = self._build_manager()
+        manager.plan_daily_activities = StrategyManager.plan_daily_activities.__get__(
+            manager, StrategyManager
+        )
+        manager.goap_planner.plan_actions.return_value = []
+        manager.goap_planner.evaluate_utility.return_value = ActionWrapper(name="ShouldNotBeUsed")
+        manager.graph_manager.get_possible_actions.return_value = [
+            {"name": "LowUtility", "utility": 1.0, "effects": [], "preconditions": {}, "cost": 1},
+            {"name": "HighUtility", "utility": 5.0, "effects": [], "preconditions": {}, "cost": 1},
+        ]
+
+        result = manager.plan_daily_activities("alice")
+
+        self.assertIsNone(result)
+        manager.goap_planner.evaluate_utility.assert_not_called()
+
+    def test_plan_daily_activities_uses_utility_based_fallback_when_planner_missing(self):
+        manager = self._build_manager()
+        manager.plan_daily_activities = StrategyManager.plan_daily_activities.__get__(
+            manager, StrategyManager
+        )
+        manager.goap_planner = None
+        manager.graph_manager.get_possible_actions.return_value = [
+            {
+                "name": "LowUtility",
+                "utility": 1.0,
+                "effects": [{"attribute": "energy", "change_value": 0.05}],
+                "preconditions": {},
+                "cost": 1,
+            },
+            {
+                "name": "HighUtility",
+                "utility": 9.0,
+                "effects": [{"attribute": "energy", "change_value": 0.25}],
+                "preconditions": {},
+                "cost": 1,
+            },
+        ]
+
+        result = manager.plan_daily_activities("alice")
+
+        self.assertIsNotNone(result)
+        self.assertEqual(result.name, "HighUtility")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -14,7 +14,7 @@ User-facing documentation for getting started and using the system.
 ### 📖 `/reference/` - Technical Reference
 Current technical documentation and API references for the system's components.
 
-- **AGENTS.md** - Developer agent guidelines and architecture overview
+- **AGENTS.md** - Supplemental developer-agent architecture background (see root `/AGENTS.md` for the canonical guide)
 - **SYSTEM_INTEGRATION_COMPLETE.md** - Complete system integration documentation
 - **MINIMUM_DEMO_STATUS.md** - Current implementation status and demo capabilities
 - **CHECKPOINT_SYSTEM_DOCUMENTATION.md** - Checkpoint and save system documentation
@@ -119,7 +119,7 @@ GitHub-specific documentation and agent definitions.
 
 ### For Developers
 - **System architecture**: See [/design_docs/high_level_architecture.md](../design_docs/high_level_architecture.md)
-- **Agent guidelines**: See [/reference/AGENTS.md](reference/AGENTS.md)
+- **Agent guidelines**: Start with [`../AGENTS.md`](../AGENTS.md), then use [/reference/AGENTS.md](reference/AGENTS.md) for supplemental background
 - **Current status**: See [/reference/MINIMUM_DEMO_STATUS.md](reference/MINIMUM_DEMO_STATUS.md)
 
 ### For Testers

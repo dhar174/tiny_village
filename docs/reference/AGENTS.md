@@ -1,5 +1,7 @@
 # Tiny Village - Developer Agent Guidelines
 
+This document is supplemental technical background. Start with the canonical root-level [`/AGENTS.md`](../../AGENTS.md) guide for current contributor-agent expectations, and use this reference for additional architecture detail.
+
 This document provides comprehensive technical guidance for AI agents working on the Tiny Village project. Follow these guidelines carefully to maintain consistency with the existing architecture and code patterns.
 
 ## Project Overview
