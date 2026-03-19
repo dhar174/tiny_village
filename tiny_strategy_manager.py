@@ -1145,7 +1145,8 @@ class StrategyManager:
                 if self.goap_planner:
                     try:
                         plan = self.goap_planner.plan_actions(
-                            character_obj, goal, current_state, available_actions
+                            current_state,
+                            available_actions,
                         )
                     except Exception as planning_error:
                         logger.warning(
