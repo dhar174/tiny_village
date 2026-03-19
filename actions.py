@@ -686,9 +686,10 @@ class Action:
 
         seen_candidates = set()
         visitors = list(getattr(initiator_location, "current_visitors", []) or [])
-        registered_characters = getattr(self.graph_manager, "characters", None)
-        if isinstance(registered_characters, dict):
-            visitors.extend(registered_characters.values())
+        if not visitors:
+            registered_characters = getattr(self.graph_manager, "characters", None)
+            if isinstance(registered_characters, dict):
+                visitors = list(registered_characters.values())
 
         for candidate in visitors:
             if candidate is None or candidate is self.initiator:
