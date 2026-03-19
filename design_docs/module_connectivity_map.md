@@ -85,7 +85,7 @@ graph TD
 
 ## File, Class, and Function Relationship Map
 
-| File | Primary symbols | Reads from | Updates / calls into | Why it matters |
+| File | Primary symbols | Reads from | Updates and calls into | Why it matters |
 | --- | --- | --- | --- | --- |
 | `main.py` | `run_visual_demo()`, `run_minimal_demo()`, `run_tests()` | CLI args, config | `GameplayController`, demo/test entry points | Selects execution surface |
 | `tiny_gameplay_controller.py` | `GameplayController`, `update_game_state()`, `_update_character()` | Strategy, events, graph, map, time, buildings | Character update pipeline, rendering, event/strategy integration | Central runtime orchestrator |
@@ -226,7 +226,7 @@ runtime with a clear coordination pattern:
 - `GameplayController` owns startup and frame cadence
 - `GraphManager`/`WorldState` hold shared simulation truth
 - `StrategyManager` and `GOAPPlanner` choose what to do
-- `Action` objects make world changes concrete
+- `Action` objects execute and persist world-state changes
 - prompt/brain/interpreter modules provide optional text-driven decisions
 - memory, time, and domain entity modules enrich the same shared loop
 
