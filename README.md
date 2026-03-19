@@ -99,7 +99,8 @@ Comprehensive documentation is available in the `docs/` directory:
 
 - **[Technical Reference](docs/reference/)** - API and system documentation
   - [System Integration Status](docs/reference/SYSTEM_INTEGRATION_COMPLETE.md) - Current implementation status
-  - [Developer Agent Guidelines](docs/reference/AGENTS.md) - Architecture and development patterns
+  - [Contributor Agent Guide](AGENTS.md) - Canonical repository guidance for contributor agents
+  - [Supplemental Agent Reference](docs/reference/AGENTS.md) - Additional architecture background
   - [Checkpoint System Documentation](docs/reference/CHECKPOINT_SYSTEM_DOCUMENTATION.md) - Technical details
   - [Storytelling System](docs/reference/STORYTELLING_DOCUMENTATION.md) - Narrative generation
   - And more...

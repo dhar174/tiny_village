@@ -23,7 +23,7 @@ from tiny_locations import Location
 from tiny_prompt_builder import PromptBuilder
 from tiny_graph_manager import GraphManager
 from tiny_goap_system import Goal, Condition, GOAPPlanner
-from actions import ActionSystem
+from actions import Action, ActionSystem
 import tiny_time_manager
 
 logging.basicConfig(level=logging.INFO)
@@ -439,30 +439,68 @@ class TestEnhancedDecisionPrompt(unittest.TestCase):
 
         logger.info("Character state dict parameter test completed!")
 
-    @patch("tiny_prompt_builder.calculate_action_utility")
-    @patch("tiny_prompt_builder.StrategyManager")
-    def test_dynamic_action_choices_included(self, mock_strategy_cls, mock_calc_util):
-        """Prompt includes dynamically generated actions from StrategyManager."""
-        from tiny_strategy_manager import EatAction, SleepAction
+    def test_dynamic_action_choices_included_in_generated_prompt(self):
+        """Test that prioritized action-choice strings are included in the decision prompt."""
+        from tiny_strategy_manager import StrategyManager
+        from tiny_utility_functions import calculate_action_utility
 
-        mock_manager = MagicMock()
-        mock_manager.get_daily_actions.return_value = [EatAction(item_name="bread"), SleepAction()]
-        mock_strategy_cls.return_value = mock_manager
-        mock_calc_util.side_effect = [9.0, 5.0]
+        eat_action = Action(
+            name="eat_food",
+            preconditions={},
+            effects=[{"attribute": "hunger", "change_value": -0.4}],
+            cost=0.1,
+        )
+        eat_action.description = "Eat a filling meal"
 
-        choices = self.prompt_builder.prioritize_actions()
-        self.assertEqual(len(choices), 2)
-        self.assertIn("Eat bread", choices[0])
-        self.assertIn("Utility: 9.0", choices[0])
+        expensive_action = Action(
+            name="waste_time",
+            preconditions={},
+            effects=[],
+            cost=1.5,
+        )
+        expensive_action.description = "Waste time on an expensive distraction"
 
-        prompt = self.prompt_builder.generate_decision_prompt(
-            time="morning", weather="clear", action_choices=choices
+        character_state = self.prompt_builder._get_character_state_dict()
+        expected_choices = [
+            (
+                f"1. {eat_action.description} "
+                f"(Utility: {calculate_action_utility(character_state, eat_action):.1f}) "
+                f"- Effects: hunger: -0.4"
+            ),
+            (
+                f"2. {expensive_action.description} "
+                f"(Utility: {calculate_action_utility(character_state, expensive_action):.1f})"
+            ),
+        ]
+
+        self.assertGreater(
+            calculate_action_utility(character_state, eat_action),
+            calculate_action_utility(character_state, expensive_action),
         )
 
-        self.assertIn("Eat bread", prompt)
-        self.assertIn("Utility: 9.0", prompt)
+        with patch.object(
+            StrategyManager,
+            "get_daily_actions",
+            return_value=[eat_action, expensive_action],
+        ):
+            action_choices = self.prompt_builder.prioritize_actions()
 
-        logger.info("Dynamic action choices included in prompt successfully!")
+        self.assertEqual(action_choices, expected_choices)
+
+        prompt = self.prompt_builder.generate_decision_prompt(
+            time="afternoon",
+            weather="clear",
+            action_choices=action_choices,
+            include_conversation_context=False,
+            include_few_shot_examples=False,
+            include_memory_integration=False,
+        )
+
+        self.assertIsNotNone(prompt)
+        for choice in action_choices:
+            self.assertIn(choice, prompt)
+
+        logger.info("Dynamic action choices are included in the generated prompt.")
 
 
 def print_sample_prompt():
