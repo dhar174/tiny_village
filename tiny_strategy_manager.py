@@ -1830,7 +1830,8 @@ class StrategyManager:
         
         Returns:
             list or None: A list of Action objects forming a plan (potentially multi-step from GOAP,
-                         or a fallback list of utility-sorted actions), or None if no actions available.
+                         or a fallback list containing the single best action), or None if no actions
+                         are available.
         """
         try:
             # Get character state
@@ -1849,19 +1850,19 @@ class StrategyManager:
                         return None
                     # Evaluate the utility of the plan
                     final_decision = self.goap_planner.evaluate_utility(plan, character)
-                    return final_decision
-                    
-            # Fallback to highest utility action
-            return self._select_best_action(actions, character, goal)
-            if plan:
-                return plan
-                    
-            # Fallback: return utility-sorted actions as a simple sequential plan
-            # This maintains consistent return type (list of actions) with GOAP planning
-            # Limit to 5 actions to match reasonable plan lengths and avoid overwhelming downstream systems
-            if actions:
-                return actions[:5]  # Actions are already sorted by utility
-                
+                    # Normalize to always return a list of actions
+                    if final_decision is None:
+                        return None
+                    if isinstance(final_decision, list):
+                        return final_decision
+                    # Assume a single Action instance; wrap it in a list
+                    return [final_decision]
+            
+            # Fallback to highest utility action, wrapped as a single-step plan
+            best_action = self._select_best_action(actions, character, goal)
+            if best_action is not None:
+                return [best_action]
+            
             return None
             
         except Exception as e:
