@@ -1782,7 +1782,7 @@ class PromptBuilder:
                             prompt += f"- {name}: {status} (Strength {strength}/100)\n"
                             count += 1
             except Exception as e:
-                print(f"Warning: Could not retrieve relationship info: {e}")
+                logger.warning(f"Could not retrieve relationship info: {e}")
 
         prompt += f"\n{descriptors.get_routine_question_framing()}"
 
