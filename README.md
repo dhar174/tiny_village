@@ -111,6 +111,7 @@ Comprehensive documentation is available in the `docs/` directory:
 
 - **[Design Documents](design_docs/)** - Architecture and design deep-dives
   - [High-Level Architecture](design_docs/high_level_architecture.md)
+  - [Module Connectivity Map](design_docs/module_connectivity_map.md)
   - [Graph Manager Deep Dive](design_docs/graph_manager_deep_dive.md)
   - [Data Flow & Decision Cycle](design_docs/data_flow_decision_cycle.md)
 
