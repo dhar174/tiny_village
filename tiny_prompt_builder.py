@@ -2453,12 +2453,12 @@ class PromptBuilder:
     def generate_completion_message(self, character, action: str) -> str:
         """Return a short message describing successful completion of ``action``."""
 
-        return f"{character.name} has {DescriptorMatrices.get_action_descriptors(action)} {action}."
+        return f"{character.name} has {descriptors.get_action_descriptors(action)} {action}."
 
     def generate_failure_message(self, character, action: str) -> str:
         """Return a short message describing failure to perform ``action``."""
 
-        return f"{character.name} has failed to {DescriptorMatrices.get_action_descriptors(action)} {action}."
+        return f"{character.name} has failed to {descriptors.get_action_descriptors(action)} {action}."
 
     def _get_character_state_dict(self) -> Dict[str, float]:
         """Return a simplified state dictionary for utility calculations."""
