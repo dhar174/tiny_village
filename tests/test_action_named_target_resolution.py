@@ -199,6 +199,14 @@ class TestActionNamedTargetResolution(unittest.TestCase):
         initiator = TestCharacter("Alice", location, social_wellbeing=0)
         bob = TestCharacter("Bob", elsewhere, social_wellbeing=0)
         location.current_visitors.append(initiator)
+        elsewhere.current_visitors.append(bob)
+
+        # Register both characters in the graph manager so that Bob exists
+        # in the global registry but is not co-located with the initiator.
+        graph_manager.characters = {
+            initiator.name: initiator,
+            bob.name: bob,
+        }
 
         action = Action(
             name="Greet",
@@ -214,9 +222,24 @@ class TestActionNamedTargetResolution(unittest.TestCase):
             target=bob.name,  # Bob is not in the same location
             graph_manager=graph_manager,
         )
-        action.execute()
+        result = action.execute()
 
-        self.assertEqual(bob.social_wellbeing, 0, "Bob is elsewhere and should not be affected")
+        self.assertTrue(result, "execute() should still return True when no target is resolved")
+        self.assertEqual(
+            initiator.social_wellbeing,
+            0,
+            "Initiator should not be affected when the named target is elsewhere",
+        )
+        self.assertEqual(
+            bob.social_wellbeing,
+            0,
+            "Bob is elsewhere and should not be affected",
+        )
+        self.assertEqual(
+            graph_manager.updated_nodes,
+            [],
+            "No graph updates should occur when the named target is not co-located",
+        )
 
     # ------------------------------------------------------------------
     # Named token alongside initiator token
