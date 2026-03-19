@@ -342,6 +342,10 @@ class StrategyManager:
         import random
         if random.random() < self.VARIETY_PROBABILITY:  # 20% chance for variety
             logger.info(f"Using LLM for variety in decision-making for {getattr(character, 'name', 'character')}")
+            decision_metadata['reason'] = 'variety'
+            decision_metadata['variety_probability'] = self.VARIETY_PROBABILITY
+            decision_metadata['trigger'] = 'periodic_variety_check'
+            self._log_decision(decision_metadata, True)
             return True
         
         # Check 5: Complex goals requiring sophisticated planning
