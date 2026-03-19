@@ -1840,7 +1840,8 @@ class StrategyManager:
             
             # Plan using GOAP with the specific goal and actions
             if self.goap_planner:
-                plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
+                # GOAPPlanner.plan_actions expects (state, actions)
+                plan = self.goap_planner.plan_actions(current_state, actions)
                 
                 if plan is not None:
                     if not plan:
