@@ -265,6 +265,7 @@ class TestActionNamedTargetResolution(unittest.TestCase):
                     "change_value": 3,
                 }
             ],
+            target=bob.name,
             initiator=alice,
             graph_manager=graph_manager,
         )
