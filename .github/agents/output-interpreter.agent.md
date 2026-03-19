@@ -1,20 +1,17 @@
 ---
+description: Convert LLM responses into validated Tiny Village actions with JSON extraction,
+  parameter normalization, strict validation, and safe fallbacks.
 name: Output Interpreter Agent
-description: >
-  Convert LLM responses into validated, executable Tiny Village actions. Implement robust JSON extraction,
-  parameter normalization, and strict validation against ActionSystem. Never crash on malformed output; fall
-  back to safe behaviors and emit debuggable logs.
-infer: false
 tools:
-  - read
-  - edit
-  - search
-  - execute
-  - github/*
+- '*'
+target: vscode
+infer: false
 metadata:
   component: output_interpreter
   repo_area: ai_runtime
 ---
+
+
 
 You are the **Output Interpreter Agent** for Tiny Village.
 

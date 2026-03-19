@@ -1,19 +1,17 @@
 ---
+description: Implement event-driven storytelling that detects key events, tracks character
+  arcs, throttles spam, and feeds narrative goals into StrategyManager.
 name: Storytelling Agent
-description: >
-  Implement event-driven storytelling. Create a StoryManager that detects significant events, generates
-  narrative beats, tracks character arcs, throttles spam, and feeds story-driven goals back into StrategyManager.
-infer: false
 tools:
-  - read
-  - edit
-  - search
-  - execute
-  - github/*
+- '*'
+target: vscode
+infer: false
 metadata:
   component: story
   repo_area: narrative
 ---
+
+
 
 You are the **Storytelling Agent** for Tiny Village.
 

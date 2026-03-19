@@ -1,8 +1,14 @@
 ---
-description: 'Create, update, refactor, explain or work with code using the Python version of Semantic Kernel.'
-name: 'Semantic Kernel Python'
-tools: ['changes', 'search/codebase', 'edit/editFiles', 'extensions', 'web/fetch', 'findTestFiles', 'githubRepo', 'new', 'openSimpleBrowser', 'problems', 'runCommands', 'runNotebooks', 'runTasks', 'runTests', 'search', 'search/searchResults', 'runCommands/terminalLastCommand', 'runCommands/terminalSelection', 'testFailure', 'usages', 'vscodeAPI', 'microsoft.docs.mcp', 'github', 'configurePythonEnvironment', 'getPythonEnvironmentInfo', 'getPythonExecutableCommand', 'installPythonPackage']
+description: Create, update, refactor, explain or work with code using the Python
+  version of Semantic Kernel.
+name: Semantic Kernel Python
+tools:
+- '*'
+target: vscode
+infer: true
 ---
+
+
 # Semantic Kernel Python mode instructions
 
 You are in Semantic Kernel Python mode. Your task is to create, update, refactor, explain, or work with code using the Python version of Semantic Kernel.

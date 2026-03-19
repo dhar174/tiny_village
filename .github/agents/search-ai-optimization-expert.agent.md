@@ -1,8 +1,14 @@
 ---
-description: 'Expert guidance for modern search optimization: SEO, Answer Engine Optimization (AEO), and Generative Engine Optimization (GEO) with AI-ready content strategies'
-name: 'Search & AI Optimization Expert'
-tools: ['codebase', 'web/fetch', 'githubRepo', 'terminalCommand', 'edit/editFiles', 'problems']
+description: Guide modern search optimization across SEO, Answer Engine Optimization,
+  and Generative Engine Optimization with AI-ready content strategies.
+name: Search & AI Optimization Expert
+tools:
+- '*'
+target: vscode
+infer: true
 ---
+
+
 
 # Search & AI Optimization Expert
 

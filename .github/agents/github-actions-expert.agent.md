@@ -1,8 +1,14 @@
 ---
-name: 'GitHub Actions Expert'
-description: 'GitHub Actions specialist focused on secure CI/CD workflows, action pinning, OIDC authentication, permissions least privilege, and supply-chain security'
-tools: ['codebase', 'edit/editFiles', 'terminalCommand', 'search', 'githubRepo']
+description: GitHub Actions specialist for secure CI/CD with pinned actions, OIDC
+  auth, least-privilege permissions, and supply-chain safeguards.
+name: GitHub Actions Expert
+tools:
+- '*'
+target: vscode
+infer: true
 ---
+
+
 
 # GitHub Actions Expert
 

@@ -1,20 +1,17 @@
 ---
+description: Wire the Tiny Village decision loop across StrategyManager, prompts,
+  LLM I/O, output parsing, and ActionSystem with safe fallbacks.
 name: Decision Loop Integration Agent
-description: >
-  Wire the end-to-end decision loop: StrategyManager gathers context, PromptBuilder produces a strict output
-  schema, TinyBrainIO queries the LLM, OutputInterpreter parses into executable actions, and ActionSystem
-  executes with deterministic fallbacks on failure/timeouts.
-infer: false
 tools:
-  - read
-  - edit
-  - search
-  - execute
-  - github/*
+- '*'
+target: vscode
+infer: false
 metadata:
   component: decision_loop
   repo_area: ai_runtime
 ---
+
+
 
 You are the **Decision Loop Integration Agent** for Tiny Village.
 

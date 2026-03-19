@@ -1,14 +1,21 @@
 ---
-name: 'CAST Imaging Structural Quality Advisor Agent'
-description: 'Specialized agent for identifying, analyzing, and providing remediation guidance for code quality issues using CAST Imaging'
+description: Specialized agent for identifying, analyzing, and providing remediation
+  guidance for code quality issues using CAST Imaging
+name: CAST Imaging Structural Quality Advisor Agent
+tools:
+- '*'
+target: vscode
+infer: true
 mcp-servers:
   imaging-structural-quality:
-    type: 'http'
-    url: 'https://castimaging.io/imaging/mcp/'
+    type: http
+    url: https://castimaging.io/imaging/mcp/
     headers:
-      'x-api-key': '${input:imaging-key}'
+      x-api-key: ${input:imaging-key}
     args: []
 ---
+
+
 
 # CAST Imaging Structural Quality Advisor Agent
 

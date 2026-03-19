@@ -1,16 +1,11 @@
 ---
+description: Build social systems for conversations, relationships, reputation, group
+  behaviors, conflict resolution, and socially influenced goals.
 name: Social Interaction Agent
-description: >
-  Build the social interaction system: conversations, relationship formation/decay, reputation/status,
-  group behaviors, conflict resolution, and social influence on goal selection. Integrate with GraphManager,
-  MemoryManager, and StrategyManager.
-infer: false
 tools:
-  - read
-  - edit
-  - search
-  - execute
-  - github/*
+- '*'
+target: vscode
+infer: false
 metadata:
   component: social
   repo_area: interactions

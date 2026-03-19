@@ -1,8 +1,14 @@
 ---
-name: 'QA'
-description: 'Meticulous QA subagent for test planning, bug hunting, edge-case analysis, and implementation verification.'
-tools: ['vscode', 'execute', 'read', 'agent', 'edit', 'search', 'web', 'todo']
+description: Meticulous QA subagent for test planning, bug hunting, edge-case analysis,
+  and implementation verification.
+name: QA
+tools:
+- '*'
+target: vscode
+infer: true
 ---
+
+
 
 ## Identity
 

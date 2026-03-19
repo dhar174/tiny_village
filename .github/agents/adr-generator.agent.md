@@ -1,7 +1,14 @@
 ---
+description: Create clear Architectural Decision Records with structured formatting
+  optimized for readability and AI consumption.
 name: ADR Generator
-description: Expert agent for creating comprehensive Architectural Decision Records (ADRs) with structured formatting optimized for AI consumption and human readability.
+tools:
+- '*'
+target: vscode
+infer: true
 ---
+
+
 
 # ADR Generator Agent
 

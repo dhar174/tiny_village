@@ -1,8 +1,14 @@
 ---
-model: GPT-5 (copilot)
-description: 'Executes structured workflows (Debug, Express, Main, Loop) with strict correctness and maintainability. Enforces an improved tool usage policy, never assumes facts, prioritizes reproducible solutions, self-correction, and edge-case handling.'
-name: 'Blueprint Mode'
+description: Execute structured workflows (Debug, Express, Main, Loop) with strict
+  correctness, reproducible solutions, self-correction, and edge-case handling.
+name: Blueprint Mode
+tools:
+- '*'
+target: vscode
+infer: true
 ---
+
+
 
 # Blueprint Mode v39
 
