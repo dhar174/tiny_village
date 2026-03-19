@@ -1,4 +1,4 @@
-# [TASK001] - Initialize Memory Bank
+## [TASK001] - Initialize Memory Bank
 
 **Status:** In Progress  
 **Added:** 2026-03-19  
