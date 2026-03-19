@@ -1,4 +1,4 @@
-# Tasks Index
+## Tasks Index
 
 ## In Progress
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
