@@ -1,36 +1,63 @@
 ## System Architecture
 
-- The package is organized around a LangGraph-based outer generator workflow in `src/langgraph_system_generator/generator/graph.py`.
-- That workflow uses a typed shared state defined in `src/langgraph_system_generator/generator/state.py` and moves through a fixed pipeline of intake, retrieval, architecture selection, workflow design, tooling planning, notebook assembly, QA, optional repair, and packaging.
-- The CLI (`src/langgraph_system_generator/cli.py`) is the main orchestration entry point for local generation and exposes both `stub` mode and `live` mode.
-- The FastAPI layer (`src/langgraph_system_generator/api/server.py`) wraps the same generation flow for web/API access and adds SSE-based progress streaming.
+- TinyVillage uses a modular, root-oriented Python architecture rather than a
+  `src/` package layout.
+- The main application spans `main.py` and `tiny_gameplay_controller.py`,
+  coordinating gameplay flow, time, and system initialization.
+- Core domain state is centralized in `tiny_graph_manager.py`, which acts as
+  the shared world model for characters, relationships, locations, items, and
+  derived simulation data.
+- Character behavior flows through `tiny_strategy_manager.py`,
+  `tiny_goap_system.py`, `actions.py`, prompt generation, optional LLM
+  interaction, output interpretation, and then memory updates.
 
 ## Key Technical Decisions
 
-- The generator uses an outer orchestration graph plus inner code-generation helpers, rather than generating an entire system in one step.
-- Shared workflow data is modeled with Pydantic models plus a `TypedDict` generator state so agents, nodes, QA, and packaging use consistent structures.
-- RAG retrieval is optional and failure-tolerant: if the FAISS/OpenAI-backed vector store cannot load, the graph continues with empty documentation context instead of aborting generation.
-- QA is split into static validation and a bounded repair loop. Repair attempts are capped by `settings.max_repair_attempts`.
-- The API layer constrains untrusted output paths to a trusted base directory and limits concurrent async jobs with a semaphore.
+- **Graph-centered world state:** `GraphManager` is the shared source of truth
+  for simulation entities and relationships, accessed via
+  `tiny_globals.get_global_graph_manager()`. Core systems read and update state
+  through that graph rather than maintaining parallel models.
+- **Hybrid decision system:** Character behavior combines GOAP planning,
+  utility-style evaluation, and optional LLM-assisted reasoning rather than
+  depending on only one method.
+- **Graceful degradation for optional features:** LLM, NLP, and related advanced
+  dependencies are wrapped in `try/except ImportError` fallback patterns so
+  optional features do not break unrelated simulation flows.
+- **Root-level module organization:** Core runtime behavior lives at the
+  repository root in files like `actions.py` and `tiny_*.py`, so docs and
+  contributor guidance should reflect that actual layout.
+- **Event-driven orchestration:** Events trigger strategy updates, which drive
+  GOAP planning, action selection, execution, graph updates, and memory
+  recording.
 
 ## Design Patterns in Use
 
-- **Outer generator graph:** `create_generator_graph()` composes named LangGraph nodes with conditional edges for repair/retry behavior.
-- **Agent-per-step decomposition:** generator nodes delegate LLM work to focused agent classes such as `RequirementsAnalyst`, `ArchitectureSelector`, `GraphDesigner`, `ToolchainEngineer`, and `NotebookComposer`.
-- **Pattern code generation library:** `patterns/router.py`,
-  `patterns/subagents.py`, and `patterns/critique_loops.py` generate reusable LangGraph workflow code as strings for notebook/content assembly.
-- **Notebook-as-artifact assembly:** generated `CellSpec` objects are converted into validated `nbformat` notebooks by `notebook/composer.py`, then exported into multiple formats by `notebook/exporters.py` and related format helpers.
-- **Validation/repair loop:** `qa/validators.py` reports notebook issues and `qa/repair.py` applies localized repairs before re-running validation.
-- **SSE progress streaming:** `api/progress_streaming.py` uses in-memory queues keyed by job ID to stream progress, logs, completion, and error events.
+- **Main loop orchestration:** `main.py` / `tiny_gameplay_controller.py`
+  initialize systems and drive per-tick or per-event progression.
+- **Strategy-to-action pipeline:** `EventHandler` triggers updates that move
+  through `StrategyManager`, GOAP planning, and action execution.
+- **Prompt / model / interpreter pipeline:** Prompt construction
+  (`tiny_prompt_builder.py`), model I/O (`tiny_brain_io.py`), and output
+  interpretation (`tiny_output_interpreter.py`) are separated across dedicated
+  modules instead of being mixed into gameplay orchestration.
+- **Memory integration after action outcomes:** Character experiences are
+  recorded through `tiny_memories.py` after actions and world updates occur.
+- **Fallback paths at every optional boundary:** Each LLM/NLP integration point
+  provides a non-LLM code path so the simulation degrades gracefully.
 
 ## Component Relationships
 
-- `generator/graph.py` wires together node functions from `generator/nodes.py`.
-- `generator/nodes.py` is the bridge layer between graph state and the
-  specialized subsystems:
-  - `generator/agents/*` for LLM-driven planning and code generation
-  - `rag/*` for retrieval and vector store access
-  - `notebook/*` for notebook construction and export
-  - `qa/*` for validation and repair
-- `cli.py` can run a deterministic offline stub path or invoke the compiled generator graph for live generation.
-- `api/server.py` calls the same generation entry points used by the CLI and adds HTTP request validation, output-dir sandboxing, and async progress reporting.
+- `EventHandler` detects or generates game events and routes them into the main
+  application flow.
+- `StrategyManager` gathers character state and action options, prioritizes
+  goals, and invokes `GOAPPlanner`.
+- `GOAPPlanner` evaluates goals and constructs candidate plans using action
+  definitions and graph-derived difficulty/context.
+- `actions.py` defines executable actions with preconditions, effects, and
+  execution behavior.
+- `tiny_prompt_builder.py`, `tiny_brain_io.py`, and `tiny_output_interpreter.py`
+  form the optional LLM decision path.
+- `tiny_memories.py` records and retrieves memory data influenced by character
+  experiences and simulation events.
+- `tiny_map_controller.py` manages visual/map presentation for gameplay flows
+  that use a pygame display.

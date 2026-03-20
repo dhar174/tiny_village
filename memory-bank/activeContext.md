@@ -1,30 +1,34 @@
 ## Current Work Focus
 
-- The repository currently centers on prompt-to-notebook generation with shared
-  CLI and FastAPI entry points, plus a reusable LangGraph pattern library.
-- Current maintenance work includes keeping the Memory Bank aligned with the
-  actual codebase so future sessions do not rely on template placeholders.
+- The current documentation focus is correcting stale Memory Bank files that
+  still describe an unrelated `langgraph_system_generator` project.
+- The active goal is to keep Memory Bank content aligned with TinyVillage's
+  actual architecture: root-level runtime modules, graph-based world state,
+  GOAP planning, memory systems, optional LLM routing, and simulation demos.
 
-## Recent Changes Reflected in the Codebase
+## Recent Changes Reflected in the Repository
 
-- `memory-bank/systemPatterns.md` was updated to document the actual repo
-  architecture instead of template bullets.
-- The API layer includes guarded output-path resolution and bounded async job
-  concurrency.
-- Progress streaming exists through SSE with in-memory job queues.
+- `memory-bank/memory-bank-instructions.md` was updated with TinyVillage-
+  specific guidance and documentation sources.
+- The repository's canonical contributor guidance lives in root `AGENTS.md`,
+  with `docs/reference/AGENTS.md` treated as supplemental background.
+- Current docs distinguish between current documentation and archived historical
+  material under `docs/archived/`.
 
 ## Immediate Next Steps
 
-- Keep the remaining Memory Bank files aligned with verified repository state.
-- Continue improving generation quality and validation without breaking the
-  deterministic stub path.
-- Preserve parity between CLI-driven and API-driven artifact generation flows.
+- Replace stale Memory Bank summaries that still reference
+  `langgraph_system_generator` or unrelated notebook-generation workflows.
+- Create and maintain the first real task record under `memory-bank/tasks/`.
+- Keep the Memory Bank synchronized with the current repo entry points,
+  architecture docs, testing guidance, and known demo/runtime gaps.
 
 ## Active Considerations
 
-- Some advanced API parameters are currently recorded in the manifest but are
-  not yet wired into the live generation pipeline.
-- Runtime QA is intentionally minimal right now; static validation and repair
-  are the primary safeguards before packaging outputs.
-- The SSE implementation is appropriate for single-server development, but not a
-  distributed production event bus.
+- Some current docs may disagree with older status notes; root `README.md` and
+  root `AGENTS.md` should generally be prioritized over older archived docs
+  when they conflict.
+- Optional dependencies for LLM/NLP features should be documented without
+  making them sound mandatory for every workflow.
+- Testing guidance strongly favors realistic objects and conservative use of
+  mocks, especially for memory-related tests.
