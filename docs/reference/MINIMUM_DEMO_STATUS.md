@@ -30,9 +30,9 @@ Based on comprehensive code analysis and testing, the Tiny Village system integr
 - **2 minor failures (mock object configuration)**
 - **0 critical failures**
 
-## What's Missing for Minimum Demo 🔧
+## Minimum Demo Readiness 🔧
 
-### Critical Blockers (Must Fix)
+### Previously Critical Blockers (Now Resolved)
 
 1. **Entry Point**
    - ✅ `main.py` file exists and handles execution.
@@ -85,50 +85,34 @@ python test_integration_minimal.py
 **Shows**: Full turn cycle, failure modes, event integration, analytics  
 **Time**: Runs in 5 seconds  
 
-### Option 3: Full Visual Demo (Needs Fixes)
+### Option 3: Full Visual Demo
 ```bash
-python tiny_gameplay_controller.py
+python main.py --mode visual
 ```
-**Status**: ⚠️  Needs MapController fix  
-**Blockers**: MapController initialization with real pygame display  
-**Estimated fix time**: 1-2 hours  
+**Status**: ✅ Available  
+**Notes**: Visual mode depends on a working local pygame/display environment and the packaged assets. Use minimal mode for headless validation.  
+**Recommended validation**: Run once on the target environment to confirm local display setup.  
 
-## Implementation Plan for Full Demo
+## Implementation Plan for Demo Polish
 
-### Phase 1: Critical Fixes (4 hours)
-1. **Create main.py entry point** (30 min)
-   - Simple wrapper around GameplayController
-   - Command-line options for demo modes
-   - Graceful dependency handling
-
-2. **Fix MapController initialization** (1-2 hours)
-   - Handle pygame display properly
-   - Add null display mode for testing
-   - Ensure map rendering doesn't crash
-
-3. **Standardize Action.execute()** (2 hours)
-   - Update ActionResolver to handle both signatures
-   - Add adapter layer for legacy actions
-   - Test with all action types
-
-### Phase 2: Demo Scenario (2 hours)
-4. **Create repeatable demo setup** (1 hour)
+### Phase 1: Demo Scenario (2 hours)
+1. **Create repeatable demo setup** (1 hour)
    - Seeded random for deterministic behavior
    - 3-5 characters with clear goals
    - Sample events to trigger
 
-5. **Add demo logging** (1 hour)
+2. **Add demo logging** (1 hour)
    - Narrative explanations for actions
    - "Why did character X do Y?"
    - Event→Decision→Action trace
 
-### Phase 3: Integration Tests (2 hours)
-6. **Expand test coverage** (1 hour)
+### Phase 2: Integration Tests (2 hours)
+3. **Expand test coverage** (1 hour)
    - Add LLM timeout test
    - Add invalid JSON handling test
    - Add plan invalidation test
 
-7. **Create smoke test** (1 hour)
+4. **Create smoke test** (1 hour)
    - Run for 30+ minutes
    - Track memory growth
    - Detect stuck characters
@@ -149,16 +133,15 @@ python -m spacy download en_core_web_sm
 ## File Structure for Demo
 
 ```
-tiny_village/
-├── main.py                          # ✅ Main entry point
-├── tiny_gameplay_controller.py      # ✅ Main controller
-├── demo_minimal_integration.py      # ✅ Working demo
-├── test_integration_minimal.py      # ✅ Integration tests
-├── assets/
-│   └── default_map.png              # ✅ Exists
-├── saves/
-│   └── checkpoints/                 # ✅ Auto-created
-└── [core modules]                   # ✅ All present
+main.py                              # ✅ Main entry point
+tiny_gameplay_controller.py          # ✅ Main controller
+demo_minimal_integration.py          # ✅ Working demo
+test_integration_minimal.py          # ✅ Integration tests
+assets/
+└── default_map.png                  # ✅ Exists
+saves/
+└── checkpoints/                     # ✅ Auto-created
+[core modules at repo root]          # ✅ Present
 ```
 
 ## Performance Metrics
@@ -191,15 +174,15 @@ Based on minimal demo run:
 
 ## Conclusion
 
-**The system is ready for a minimum demo with minor fixes.**
+**The system is ready for a minimum demo with minor polish remaining.**
 
-### Immediate Actions (Critical Path)
-1. Create `main.py` wrapper (30 min)
-2. Fix MapController for real display (1-2 hours)
-3. Test full visual demo (30 min)
-4. Document demo usage (30 min)
+### Immediate Actions (Recommended Polish Path)
+1. Create a repeatable seeded demo scenario (1 hour)
+2. Add narrative logging for the demo flow (1 hour)
+3. Run a visual-mode smoke test on the target environment (30 min)
+4. Document recommended demo commands and expected output (30 min)
 
-**Total time to working visual demo: 3-4 hours**
+**Total time to a more polished demo: 2-3 hours**
 
 ### Alternative: Use Minimal Demo Now
 The system **already supports a working minimal demo** via:
@@ -216,9 +199,9 @@ These run successfully right now without any fixes needed.
 3. Create simple test scenario with clear outcomes
 
 **For full visual demo**:
-1. Fix MapController (highest priority)
-2. Create main.py entry point
-3. Add demo scenario with 3 characters
+1. Validate `main.py --mode visual` on the target platform
+2. Add demo scenario with 3 characters
+3. Expand smoke-test coverage for longer visual runs
 
 **For production readiness**:
 1. All of the above

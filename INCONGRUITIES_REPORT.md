@@ -10,15 +10,19 @@ This document outlines the incongruities found between the markdown documentatio
 - **Impact**: Minor. Having multiple test files for the same feature can cause confusion.
 
 ### Issue: Testing Best Practices Tools
-- **Documentation**: `docs/testing/MEMORY_TESTING_BEST_PRACTICES.md` implies certain testing strategies and tools (such as avoiding over-mocking).
-- **Codebase**: Some newer test files use aggressive mocking patterns that contradict the strict guidelines described in the best practices document.
+- **Documentation**: `docs/testing/MEMORY_TESTING_BEST_PRACTICES.md` explicitly warns against `MagicMock`-style stand-ins for memory objects because they can hide attribute and integration bugs.
+- **Codebase**:
+  - `tests/test_enhanced_prompt_builder.py` still uses `MagicMock` objects as memory-like inputs (for example `MagicMock(description="Test memory")` and `MagicMock(description="Legacy memory")`) while also stubbing broader collaborators such as `tiny_characters` and `StrategyManager`.
+  - `tests/test_building_loading_unit.py` replaces `pygame` with `MagicMock` and binds `GameplayController._load_buildings_from_file` onto a `Mock(spec=GameplayController)` instead of exercising a real controller instance, while `tests/test_custom_building_loading.py` covers the same loader through a real `GameplayController` with only display-boundary patching.
+- **Impact**: Moderate. The codebase currently mixes the stricter "realistic object" guidance with heavier mocking patterns, so contributors can get conflicting signals about which testing style the project prefers.
 
 ## 2. Incomplete or Outdated Project Status Claims
 
-### Issue: Minimum Demo Status Outdated
-- **Documentation**: `docs/reference/MINIMUM_DEMO_STATUS.md` claims that `main.py` is missing and needs to be created, and that the `MapController` initialization is broken.
-- **Codebase**: `main.py` clearly exists at the root of the repository and the MapController is fully integrated, making the "Minimum Demo Status" documentation significantly outdated.
-- **Impact**: Major. New developers reading the status document will believe the project is in a more broken state than it actually is.
+### Issue: Minimum Demo Status Was Historically Outdated
+- **Documentation**: Before this PR, `docs/reference/MINIMUM_DEMO_STATUS.md` still described `main.py` as missing, `MapController` display initialization as a blocker, and `Action.execute()` compatibility as unfinished work.
+- **Codebase**: `main.py` exists at the repository root and the related status items are already implemented, so the doc had drifted behind the current code.
+- **Resolution in this PR**: The status document was updated to mark those items as resolved and to remove later sections that still treated them as active blockers.
+- **Impact**: Major before this PR, because new contributors could conclude the runtime was in a more broken state than it actually is.
 
 ### Issue: Archived Docs Referencing Root
 - **Documentation**: Files in `docs/archived/` (e.g., `missing_demo_elements.md`) list `main.py` as missing.
@@ -39,4 +43,4 @@ This document outlines the incongruities found between the markdown documentatio
 
 ## 4. Minor Fixes Applied
 - Verified that `main.py` exists and is the correct entry point.
-- Validated that the public method signatures for `CheckpointManager`, `BuildingManager`, and `StrategyManager` align with their markdown references, though implementation details may differ as noted in this report. No code fixes were necessary for this alignment.
+- Confirmed that the public method names for `CheckpointManager`, `BuildingManager`, and `StrategyManager` remain in sync with their markdown references. The remaining discrepancies noted above are about undocumented behaviors and simplified implementation descriptions rather than missing or renamed methods, so no code changes were necessary for that alignment.
