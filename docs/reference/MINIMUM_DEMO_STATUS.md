@@ -32,7 +32,7 @@ Based on comprehensive code analysis and testing, the Tiny Village system integr
 
 ## Minimum Demo Readiness 🔧
 
-Previously critical blockers are resolved. The optional polish items described later in this document are not requirements for a minimum demo.
+All critical blockers identified in earlier versions of this document (`main.py` entry point, MapController initialization, and `Action.execute()` compatibility) have been resolved. The optional polish items described later are not requirements for a minimum demo.
 
 ### Previously Critical Blockers (Now Resolved)
 
