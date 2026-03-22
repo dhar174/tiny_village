@@ -39,4 +39,4 @@ This document outlines the incongruities found between the markdown documentatio
 
 ## 4. Minor Fixes Applied
 - Verified that `main.py` exists and is the correct entry point.
-- Validated that `CheckpointManager`, `BuildingManager`, and `StrategyManager` methods exactly match their markdown references. No fixes were necessary in the code for these, as they align well.
+- Validated that the public method signatures for `CheckpointManager`, `BuildingManager`, and `StrategyManager` align with their markdown references, though implementation details may differ as noted in this report. No code fixes were necessary for this alignment.
