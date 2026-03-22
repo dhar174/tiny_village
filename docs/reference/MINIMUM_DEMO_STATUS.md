@@ -32,6 +32,8 @@ Based on comprehensive code analysis and testing, the Tiny Village system integr
 
 ## Minimum Demo Readiness 🔧
 
+Previously critical blockers are resolved. The remaining items below are optional polish rather than requirements for a minimum demo.
+
 ### Previously Critical Blockers (Now Resolved)
 
 1. **Entry Point**
@@ -93,7 +95,7 @@ python main.py --mode visual
 **Notes**: Visual mode depends on a working local pygame/display environment and the packaged assets. Use minimal mode for headless validation.  
 **Recommended validation**: Run once on the target environment to confirm local display setup.  
 
-## Implementation Plan for Demo Polish
+## Optional Polish Roadmap
 
 ### Phase 1: Demo Scenario (2 hours)
 1. **Create repeatable demo setup** (1 hour)

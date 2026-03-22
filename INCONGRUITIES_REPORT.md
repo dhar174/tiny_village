@@ -19,10 +19,10 @@ This document outlines the incongruities found between the markdown documentatio
 ## 2. Incomplete or Outdated Project Status Claims
 
 ### Issue: Minimum Demo Status Was Historically Outdated
-- **Documentation**: Before this PR, `docs/reference/MINIMUM_DEMO_STATUS.md` still described `main.py` as missing, `MapController` display initialization as a blocker, and `Action.execute()` compatibility as unfinished work.
+- **Documentation**: Previously, `docs/reference/MINIMUM_DEMO_STATUS.md` still described `main.py` as missing, `MapController` display initialization as a blocker, and `Action.execute()` compatibility as unfinished work.
 - **Codebase**: `main.py` exists at the repository root and the related status items are already implemented, so the doc had drifted behind the current code.
 - **Resolution in this PR**: The status document was updated to mark those items as resolved and to remove later sections that still treated them as active blockers.
-- **Impact**: Major before this PR, because new contributors could conclude the runtime was in a more broken state than it actually is.
+- **Impact**: Major. While this drift remained in place, new contributors could conclude the runtime was in a more broken state than it actually is.
 
 ### Issue: Archived Docs Referencing Root
 - **Documentation**: Files in `docs/archived/` (e.g., `missing_demo_elements.md`) list `main.py` as missing.
