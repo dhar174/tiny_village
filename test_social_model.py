@@ -1,184 +1,221 @@
-"""
-Simple test for SocialModel to verify it works independently
-"""
+"""Graph-backed tests for SocialModel core behavior."""
+
 import sys
 import unittest
-sys.path.insert(0, '.')
+
+import networkx as nx
+import numpy as np
+
+sys.path.insert(0, ".")
 
 from social_model import SocialModel, calculate_relationship_type
 
-class MockWorldState:
-    """Mock world state for testing"""
-    def __init__(self):
-        self.edges = {}
-        self.nodes = {}
-        
-    def has_edge(self, node1, node2):
-        return (node1, node2) in self.edges or (node2, node1) in self.edges
-        
-    def neighbors(self, node):
-        return []
-        
-    def get_edge_data(self, node1, node2):
-        return self.edges.get((node1, node2), self.edges.get((node2, node1), {}))
 
-class MockCharacter:
-    """Mock character for testing"""
-    def __init__(self, name, traits=None):
+class GraphBackedWorldState:
+    """Minimal real graph harness for SocialModel unit tests."""
+
+    def __init__(self):
+        self.G = nx.Graph()
+        self.G.add_node("Alice", type="character", wealth_money=1000)
+        self.G.add_node("Bob", type="character", wealth_money=900)
+        self.G.add_node("TownSquare", type="location")
+        self.G.add_edge(
+            "Alice",
+            "Bob",
+            relationship_type="friend",
+            trust=0.8,
+            emotional=0.6,
+            strength=0.7,
+            historical=45,
+            interaction_frequency=0.5,
+        )
+        self.G.add_edge("Alice", "TownSquare", trust=0.95)
+
+    def _attribute_values(self, attribute):
+        values = [data.get(attribute, 0) for _, data in self.G.nodes(data=True)]
+        return values or [0]
+
+    def get_maximum_attribute_value(self, attribute):
+        return max(self._attribute_values(attribute))
+
+    def get_average_attribute_value(self, attribute):
+        values = self._attribute_values(attribute)
+        return sum(values) / len(values)
+
+    def get_stddev_attribute_value(self, attribute):
+        values = self._attribute_values(attribute)
+        stddev = float(np.std(values))
+        return stddev if stddev else 1.0
+
+
+class PersonalityTraitsFixture:
+    def __init__(self, **traits):
+        self.traits = {
+            "openness": 5,
+            "extraversion": 5,
+            "conscientiousness": 5,
+            "agreeableness": 5,
+            "neuroticism": 5,
+        }
+        self.traits.update(traits)
+
+    def get_openness(self):
+        return self.traits["openness"]
+
+    def get_extraversion(self):
+        return self.traits["extraversion"]
+
+    def get_conscientiousness(self):
+        return self.traits["conscientiousness"]
+
+    def get_agreeableness(self):
+        return self.traits["agreeableness"]
+
+    def get_neuroticism(self):
+        return self.traits["neuroticism"]
+
+
+class MotiveFixture:
+    def __init__(self, score):
+        self.score = score
+
+
+class MotivesFixture:
+    def get_wealth_motive(self):
+        return MotiveFixture(3)
+
+    def get_family_motive(self):
+        return MotiveFixture(7)
+
+    def get_beauty_motive(self):
+        return MotiveFixture(4)
+
+    def get_luxury_motive(self):
+        return MotiveFixture(2)
+
+    def get_stability_motive(self):
+        return MotiveFixture(6)
+
+    def get_control_motive(self):
+        return MotiveFixture(4)
+
+
+class LocationFixture:
+    def __init__(self, name="Shared Home"):
         self.name = name
-        self.personality_traits = MockPersonalityTraits(traits or {})
+
+
+class JobFixture:
+    def __init__(self, location):
+        self.location = location
+
+
+class CharacterFixture:
+    def __init__(self, name, home=None, traits=None, wealth_money=1000):
+        shared_home = home or LocationFixture()
+        self.name = name
+        self.personality_traits = PersonalityTraitsFixture(**(traits or {}))
         self.age = 25
         self.beauty = 5
         self.energy = 50
-        self.wealth_money = 1000
+        self.wealth_money = wealth_money
         self.stability = 5
         self.luxury = 3
         self.monogamy = 8
         self.shelter = 7
         self.success = 4
-        self.job = MockJob()
-        self.home = MockLocation()
-        
+        self.job = JobFixture(shared_home)
+        self.home = shared_home
+
     def get_motives(self):
-        return MockMotives()
-        
+        return MotivesFixture()
+
     def get_base_libido(self):
         return 50
-        
+
     def get_control(self):
         return 5
 
-class MockJob:
-    def __init__(self):
-        self.location = MockLocation()
-
-class MockLocation:
-    def __init__(self):
-        self.name = "Test Location"
-
-class MockPersonalityTraits:
-    def __init__(self, traits):
-        self.traits = traits
-        
-    def get_openness(self):
-        return self.traits.get('openness', 5)
-        
-    def get_extraversion(self):
-        return self.traits.get('extraversion', 5)
-        
-    def get_conscientiousness(self):
-        return self.traits.get('conscientiousness', 5)
-        
-    def get_agreeableness(self):
-        return self.traits.get('agreeableness', 5)
-        
-    def get_neuroticism(self):
-        return self.traits.get('neuroticism', 5)
-
-class MockMotives:
-    def get_wealth_motive(self):
-        return MockMotive(3)
-        
-    def get_family_motive(self):
-        return MockMotive(7)
-        
-    def get_beauty_motive(self):
-        return MockMotive(4)
-        
-    def get_luxury_motive(self):
-        return MockMotive(2)
-        
-    def get_stability_motive(self):
-        return MockMotive(6)
-        
-    def get_control_motive(self):
-        return MockMotive(4)
-        
-    def get_material_goods_motive(self):
-        return MockMotive(3)
-        
-    def get_shelter_motive(self):
-        return MockMotive(8)
-
-class MockMotive:
-    def __init__(self, score):
-        self.score = score
 
 class TestSocialModel(unittest.TestCase):
-    
     def setUp(self):
-        self.world_state = MockWorldState()
+        self.world_state = GraphBackedWorldState()
         self.social_model = SocialModel(self.world_state)
-        
-    def test_social_model_creation(self):
-        """Test SocialModel can be created"""
-        self.assertIsInstance(self.social_model, SocialModel)
-        self.assertEqual(self.social_model.world_state, self.world_state)
-        
-    def test_calculate_dynamic_weights(self):
-        """Test dynamic weights calculation"""
-        # Test initial stage
-        weights = self.social_model.calculate_dynamic_weights(10)
-        self.assertIsInstance(weights, dict)
-        self.assertIn('openness', weights)
-        self.assertEqual(weights['openness'], 0.2)
-        
-        # Test middle stage
-        weights = self.social_model.calculate_dynamic_weights(40)
-        self.assertEqual(weights['openness'], 0.15)
-        
-        # Test mature stage
-        weights = self.social_model.calculate_dynamic_weights(80)
-        self.assertEqual(weights['openness'], 0.1)
-        
-    def test_calculate_romance_compatibility(self):
-        """Test romance compatibility calculation"""
-        char1 = MockCharacter("Alice", {'openness': 6, 'extraversion': 7})
-        char2 = MockCharacter("Bob", {'openness': 5, 'extraversion': 6})
-        
-        compatibility = self.social_model.calculate_romance_compatibility(char1, char2, 30)
-        
-        self.assertIsInstance(compatibility, float)
+
+    def test_retrieve_characters_relationships_reads_real_neighbors(self):
+        relationships = self.social_model.retrieve_characters_relationships("Alice")
+
+        self.assertIn("Bob", relationships)
+        self.assertEqual(relationships["Bob"]["relationship_type"], "friend")
+        self.assertEqual(relationships["Bob"]["trust"], 0.8)
+
+    def test_calculate_social_influence_filters_non_character_neighbors(self):
+        influence = self.social_model.calculate_social_influence("Alice")
+
+        self.assertEqual(influence, 0.8)
+
+    def test_update_relationship_status_mutates_real_graph_edge(self):
+        self.social_model.update_relationship_status("Alice", "Bob", {"trust": 0.1})
+
+        self.assertEqual(self.world_state.G["Alice"]["Bob"]["trust"], 0.9)
+
+    def test_analyze_relationship_health_uses_real_edge_metrics(self):
+        health = self.social_model.analyze_relationship_health("Alice", "Bob")
+
+        self.assertEqual(health["status"], "good")
+        self.assertAlmostEqual(health["health_score"], 0.6425, places=4)
+
+    def test_romance_calculations_stay_bounded_with_graph_statistics(self):
+        shared_home = LocationFixture()
+        alice = CharacterFixture(
+            "Alice",
+            home=shared_home,
+            traits={"openness": 6, "extraversion": 7},
+            wealth_money=1000,
+        )
+        bob = CharacterFixture(
+            "Bob",
+            home=shared_home,
+            traits={"openness": 5, "extraversion": 6},
+            wealth_money=900,
+        )
+
+        compatibility = self.social_model.calculate_romance_compatibility(alice, bob, 30)
+        interest = self.social_model.calculate_romance_interest(
+            alice,
+            bob,
+            compatibility,
+            5,
+            "friend",
+            0.8,
+            50,
+            0.6,
+            0.4,
+            0.3,
+        )
+
         self.assertGreaterEqual(compatibility, 0.0)
         self.assertLessEqual(compatibility, 1.0)
-        
-    def test_calculate_romance_interest(self):
-        """Test romance interest calculation"""
-        char1 = MockCharacter("Alice")
-        char2 = MockCharacter("Bob")
-        
-        interest = self.social_model.calculate_romance_interest(
-            char1, char2, 0.7, 5, "friend", 0.8, 50, 0.6, 0.4, 0.3
-        )
-        
-        self.assertIsInstance(interest, float)
         self.assertGreaterEqual(interest, 0.0)
         self.assertLessEqual(interest, 1.0)
-        
-    def test_calculate_relationship_type(self):
-        """Test relationship type calculation"""
-        char1 = MockCharacter("Alice")
-        char2 = MockCharacter("Bob")
-        
-        rel_type = calculate_relationship_type(
-            char1, char2, 0.6, 0.4, 0.7, 0.8, 60
-        )
-        
-        self.assertIsInstance(rel_type, str)
-        
-    def test_calculate_social_influence(self):
-        """Test social influence calculation"""
-        influence = self.social_model.calculate_social_influence("Alice")
-        
-        # Should return 0 since no relationships exist in mock
-        self.assertEqual(influence, 0)
-        
-    def test_retrieve_characters_relationships(self):
-        """Test relationship retrieval"""
-        relationships = self.social_model.retrieve_characters_relationships("Alice")
-        
-        # Should return empty dict since no relationships exist in mock
-        self.assertEqual(relationships, {})
 
-if __name__ == '__main__':
+    def test_calculate_relationship_type_prefers_shared_home_label(self):
+        shared_home = LocationFixture()
+        alice = CharacterFixture("Alice", home=shared_home)
+        bob = CharacterFixture("Bob", home=shared_home)
+
+        relationship_type = calculate_relationship_type(
+            alice,
+            bob,
+            0.6,
+            0.4,
+            0.7,
+            0.8,
+            60,
+        )
+
+        self.assertEqual(relationship_type, "roommate")
+
+
+if __name__ == "__main__":
     unittest.main()

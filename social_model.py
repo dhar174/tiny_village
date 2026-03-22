@@ -809,10 +809,12 @@ class SocialModel:
         """Get all edge attributes between two nodes."""
         if hasattr(self.world_state, 'get_edge_data'):
             data = self.world_state.get_edge_data(node1, node2)
-            return data if data else {}
+            return self._normalize_edge_attributes(data)
         elif hasattr(self.world_state, 'G'):
             if self.world_state.G.has_edge(node1, node2):
-                return dict(self.world_state.G[node1][node2])
+                return self._normalize_edge_attributes(
+                    self.world_state.G.get_edge_data(node1, node2)
+                )
         return {}
         
     def _get_edge_attribute(self, node1, node2, attr_name):
@@ -823,7 +825,12 @@ class SocialModel:
     def _set_edge_attribute(self, node1, node2, attr_name, value):
         """Set specific edge attribute."""
         if hasattr(self.world_state, 'G') and self.world_state.G.has_edge(node1, node2):
-            self.world_state.G[node1][node2][attr_name] = value
+            edge_data = self.world_state.G.get_edge_data(node1, node2)
+            if edge_data and all(isinstance(v, dict) for v in dict(edge_data).values()):
+                first_key = next(iter(edge_data))
+                self.world_state.G[node1][node2][first_key][attr_name] = value
+            else:
+                self.world_state.G[node1][node2][attr_name] = value
             
     def _get_node_attributes(self, node):
         """Get all node attributes."""
@@ -832,3 +839,23 @@ class SocialModel:
         elif hasattr(self.world_state, 'G'):
             return self.world_state.G.nodes.get(node, {})
         return {}
+
+    def _normalize_edge_attributes(self, edge_data):
+        """Flatten graph edge data across Graph and MultiGraph backends."""
+        if not edge_data:
+            return {}
+
+        try:
+            normalized = dict(edge_data)
+        except Exception:
+            if isinstance(edge_data, dict):
+                normalized = edge_data
+            else:
+                return {}
+
+        if normalized and all(isinstance(value, dict) for value in normalized.values()):
+            first_key = next(iter(normalized))
+            nested = normalized[first_key]
+            return dict(nested) if isinstance(nested, dict) else {}
+
+        return normalized
