@@ -3717,6 +3717,34 @@ class GameplayController:
             fallback_success = self._execute_fallback_action(character)
             return fallback_success
 
+    def _execute_single_action(self, character, action_data) -> bool:
+        """Resolve and execute a single action using the current action pipeline."""
+        try:
+            action = action_data
+            if self.action_resolver:
+                action = self.action_resolver.resolve_action(action_data, character)
+
+            if not action or not hasattr(action, "execute"):
+                logger.warning(f"Unable to execute unresolved action: {action_data}")
+                return False
+
+            try:
+                success = action.execute(character=character, graph_manager=self.graph_manager)
+            except TypeError:
+                # Some older tests and action doubles still use target/initiator.
+                success = action.execute(target=character, initiator=character)
+
+            if success:
+                self._update_character_state_after_action(character, action)
+
+            return bool(success)
+
+        except Exception as e:
+            logger.warning(
+                f"Error executing single action for {getattr(character, 'name', 'Unknown')}: {e}"
+            )
+            return False
+
     def _execute_fallback_action(self, character) -> bool:
         """Execute a safe fallback action when normal actions fail."""
         try:
@@ -3953,50 +3981,6 @@ class GameplayController:
         except Exception as e:
             logger.warning(f"Error applying strategy to character {character.name}: {e}")
 
-    def render(self):
-        """Render all game elements with configurable quality and effects."""
-        # TODO: Add render quality settings (low, medium, high, ultra)
-        # TODO: Add dynamic resolution scaling based on performance
-        # TODO: Add anti-aliasing options
-        # TODO: Add post-processing effects (bloom, shadows, etc.)
-        # TODO: Add level-of-detail (LOD) system for distant objects
-        # TODO: Add particle effects system
-        # TODO: Add lighting and shadow system
-        # TODO: Add weather and atmospheric effects
-        # TODO: Add screenshot and video recording functionality
-        # TODO: Add VR/AR rendering support
-
-        # Get render configuration
-        render_config = self.config.get("render", {})
-        background_color = render_config.get("background_color", (0, 0, 0))
-        enable_vsync = render_config.get("vsync", True)
-
-        # Clear the screen with configurable background
-        self.screen.fill(background_color)
-
-        # Check if overview mode is active
-        if getattr(self, "_overview_mode", False):
-            # Render overview mode instead of normal view
-            self._render_overview()
-        else:
-            # Render the map and game world normally
-            if self.map_controller:
-                try:
-                    self.map_controller.render(self.screen)
-                except Exception as e:
-                    logger.error(f"Error rendering map: {e}")
-                    # TODO: Add fallback rendering for when map fails
-
-            # Render UI elements
-            self._render_ui()
-
-        # TODO: Add render effect layers (lighting, particles, post-processing)
-
-        # Flip the display to show the updated frame
-        if enable_vsync:
-            pygame.display.flip()
-        else:
-            pygame.display.update()
     def _render_ui(self):
         """Render user interface elements using the modular panel system."""
         try:
@@ -4558,15 +4542,21 @@ class GameplayController:
             bg_color = self.config.get("render", {}).get("background_color", [20, 50, 80])
             self.screen.fill(bg_color)
 
-            # Render map controller (characters, buildings, etc.)
-            if self.map_controller:
-                try:
-                    self.map_controller.render(self.screen)
-                except Exception as e:
-                    logger.warning(f"Error rendering map controller: {e}")
+            if getattr(self, "_overview_mode", False):
+                self._render_overview()
+            else:
+                # Render map controller (characters, buildings, etc.)
+                if self.map_controller:
+                    try:
+                        self.map_controller.render(self.screen)
+                    except Exception as e:
+                        logger.warning(f"Error rendering map controller: {e}")
 
-            # Render modular UI panels
-            self._render_ui_panels()
+                # Render modular UI panels
+                self._render_ui_panels()
+
+                if getattr(self, "_minimap_mode", False):
+                    self._render_minimap()
 
             # Render feature status overlay if enabled
             if getattr(self, "_show_feature_status", False):
@@ -4635,6 +4625,102 @@ class GameplayController:
                 
         except Exception as e:
             logger.error(f"Error rendering feature status overlay: {e}")
+
+    def _render_minimap(self):
+        """Render a lightweight minimap overlay from the current map image and metadata."""
+        if not self.screen or not self.map_controller:
+            return
+
+        try:
+            margin = 10
+            inner_padding = 3
+            minimap_rect = pygame.Rect(
+                self.screen.get_width() - MINIMAP_SIZE - margin,
+                margin,
+                MINIMAP_SIZE,
+                MINIMAP_SIZE,
+            )
+            pygame.draw.rect(self.screen, (15, 15, 20), minimap_rect)
+            pygame.draw.rect(self.screen, (220, 220, 220), minimap_rect, 2)
+
+            inner_size = MINIMAP_SIZE - inner_padding * 2
+            map_image = getattr(self.map_controller, "map_image", None)
+            if map_image:
+                scaled_map = pygame.transform.smoothscale(map_image, (inner_size, inner_size))
+                self.screen.blit(
+                    scaled_map,
+                    (minimap_rect.x + inner_padding, minimap_rect.y + inner_padding),
+                )
+
+            map_width = max(1, self.map_controller.map_data.get("width", inner_size))
+            map_height = max(1, self.map_controller.map_data.get("height", inner_size))
+            scale_x = inner_size / map_width
+            scale_y = inner_size / map_height
+
+            for building in self.map_controller.map_data.get("buildings", []):
+                rect = building.get("rect")
+                if not rect:
+                    continue
+
+                scaled_rect = pygame.Rect(
+                    int(minimap_rect.x + inner_padding + rect.x * scale_x),
+                    int(minimap_rect.y + inner_padding + rect.y * scale_y),
+                    max(2, int(rect.width * scale_x)),
+                    max(2, int(rect.height * scale_y)),
+                )
+                pygame.draw.rect(self.screen, (255, 180, 90), scaled_rect)
+
+        except Exception as e:
+            logger.error(f"Error rendering minimap: {e}")
+
+    def _render_overview(self):
+        """Render an overview scene using the map image plus a compact village summary."""
+        if not self.screen:
+            return
+
+        try:
+            self.screen.fill((18, 24, 34))
+
+            margin = 40
+            available_width = max(50, self.screen.get_width() - margin * 2)
+            available_height = max(50, self.screen.get_height() - margin * 2)
+
+            if self.map_controller and getattr(self.map_controller, "map_image", None):
+                scaled_map = pygame.transform.smoothscale(
+                    self.map_controller.map_image,
+                    (available_width, available_height),
+                )
+                self.screen.blit(scaled_map, (margin, margin))
+
+            title_font = self.ui_fonts.get("normal", pygame.font.Font(None, 24))
+            subtitle_font = self.ui_fonts.get("small", pygame.font.Font(None, 18))
+
+            title = title_font.render("Village Overview", True, (255, 255, 255))
+            summary = subtitle_font.render(
+                f"Buildings: {len(getattr(self.map_controller, 'map_data', {}).get('buildings', []))}  Characters: {len(getattr(self, 'characters', {}))}",
+                True,
+                (220, 220, 220),
+            )
+            self.screen.blit(title, (margin, 10))
+            self.screen.blit(summary, (margin, 10 + title.get_height()))
+
+            overview_panel = getattr(self, "ui_panels", {}).get("village_overview")
+            if overview_panel:
+                original_position = overview_panel.position
+                original_visibility = overview_panel.visible
+                try:
+                    overview_panel.position = (margin, self.screen.get_height() - 130)
+                    overview_panel.visible = True
+                    overview_panel.render(self.screen, self, self.ui_fonts)
+                finally:
+                    overview_panel.position = original_position
+                    overview_panel.visible = original_visibility
+
+            if self.map_controller:
+                self._render_minimap()
+
+        except Exception as e:
+            logger.error(f"Error rendering overview: {e}")
 
     def run(self):
         """Main run method to start the game loop."""

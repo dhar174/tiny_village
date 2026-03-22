@@ -866,31 +866,6 @@ class MapController:
         self.context_menu.hide()
         self.info_panel.hide()
 
-    def clear_selections(self):
-        """Clear all selections."""
-        self.selected_character = None
-        self.selected_building = None
-        self.selected_location = None
-        # Check for POI click
-        poi = self.find_poi_at_point(position[0], position[1])
-        if poi:
-            self.select_poi(poi)
-            return
-
-        # Check for location click
-        locations = self.find_location_at_point(position[0], position[1])
-        if locations:
-            self.select_location(locations[0])  # Select first location if multiple
-            return
-
-        # Check for building click
-        if self.is_building(position):
-            self.enter_building(position)
-            return
-
-        # Clear selections if clicking empty space
-        self.clear_selections()
-
     def select_location(self, location):
         """Select a location and show its information"""
         self.selected_location = location
@@ -907,8 +882,39 @@ class MapController:
         self.info_display_time = time.time()
         print(f"Selected POI: {poi.name}")
 
+    def _is_legacy_building(self, building) -> bool:
+        """Return True when the target uses the legacy dict-based building format."""
+        return hasattr(building, "get") and callable(building.get)
+
+    def _get_building_name(self, building) -> str:
+        """Get a display name for either a Building object or legacy building mapping."""
+        if hasattr(building, "name"):
+            return building.name
+        if self._is_legacy_building(building):
+            return building.get("name", "Unknown Building")
+        return "Unknown Building"
+
+    def _get_building_type(self, building) -> str:
+        """Get the normalized building type across Building objects and dicts."""
+        if hasattr(building, "building_type"):
+            return getattr(building, "building_type", "building")
+        if self._is_legacy_building(building):
+            return building.get("type", "building")
+        return "building"
+
+    def _get_building_rect(self, building):
+        """Return a pygame.Rect for either a Building object or legacy building mapping."""
+        if self._is_legacy_building(building):
+            return building.get("rect")
+        if hasattr(building, "get_location"):
+            location = building.get_location()
+            return pygame.Rect(location.x, location.y, location.width, location.height)
+        return None
+
     def clear_selections(self):
         """Clear all selections"""
+        self.selected_character = None
+        self.selected_building = None
         self.selected_location = None
         self.selected_poi = None
         self.show_location_info = False
@@ -939,7 +945,8 @@ class MapController:
                 options.extend(recommended_activities)
 
         if building:
-            options.extend([f"Enter {building['name']}", f"Inspect {building['name']}"])
+            building_name = self._get_building_name(building)
+            options.extend([f"Enter {building_name}", f"Inspect {building_name}"])
 
         if not options:
             options.append("Move here")
@@ -971,13 +978,6 @@ class MapController:
                 return char_id
         return None
 
-    def is_building(self, position):
-        # Check if a building is at the clicked position
-        for building in self.map_data["buildings"]:
-            if building["rect"].collidepoint(position):
-                return building
-        return None
-
     def select_character(self, char_id):
         # Select a character when clicked
         self.selected_character = self.characters[char_id]
@@ -1001,7 +1001,7 @@ class MapController:
         building_info = self.get_building_info(building)
         self.info_panel.show(building_info, position)
         
-        print(f"Selected {building['name']}")
+        print(f"Selected {self._get_building_name(building)}")
 
     def get_character_info(self, character) -> Dict:
         """Get detailed information about a character for the info panel."""
@@ -1026,21 +1026,26 @@ class MapController:
     def get_building_info(self, building) -> Dict:
         """Get detailed information about a building for the info panel."""
         info = {
-            'name': building.get('name', 'Unknown Building'),
-            'type': building.get('type', 'Building'),
+            'name': self._get_building_name(building),
+            'type': self._get_building_type(building).title(),
         }
         
         # Add building-specific information
-        if 'rect' in building:
-            rect = building['rect']
+        rect = self._get_building_rect(building)
+        if rect:
             info['position'] = f"({rect.x}, {rect.y})"
             info['size'] = f"{rect.width} x {rect.height}"
             info['area'] = rect.width * rect.height
             
         # Add additional building attributes if available
-        for key in ['capacity', 'owner', 'value', 'description']:
-            if key in building:
-                info[key] = building[key]
+        if self._is_legacy_building(building):
+            for key in ['capacity', 'owner', 'value', 'description']:
+                if key in building:
+                    info[key] = building[key]
+        else:
+            owner = getattr(building, "owner", None)
+            if owner:
+                info["owner"] = owner
                 
         return info
 
@@ -1053,7 +1058,7 @@ class MapController:
         ]
         
         # Add building-specific options
-        building_type = building.get('type', '')
+        building_type = self._get_building_type(building)
         if building_type == 'shop':
             options.insert(1, {'label': 'Browse Items', 'action': 'browse', 'target': building})
         elif building_type == 'house':
@@ -1090,7 +1095,7 @@ class MapController:
         action = option.get('action')
         target = option.get('target')
         
-        if action == 'enter' and hasattr(target, 'get'):
+        if action == 'enter':
             self.enter_building(target)
         elif action == 'details':
             self.show_target_details(target)
@@ -1119,7 +1124,7 @@ class MapController:
 
     def show_target_details(self, target):
         """Show detailed information about the target."""
-        if hasattr(target, 'get'):  # Building
+        if self._is_legacy_building(target) or hasattr(target, "get_location"):
             info = self.get_building_info(target)
         elif hasattr(target, 'position'):  # Character
             info = self.get_character_info(target)
@@ -1131,25 +1136,26 @@ class MapController:
 
     def show_directions_to_target(self, target):
         """Show directions to the target location."""
-        if hasattr(target, 'get') and 'rect' in target:
-            target_pos = (target['rect'].centerx, target['rect'].centery)
-            print(f"Directions to {target.get('name', 'Unknown')}: {target_pos}")
+        rect = self._get_building_rect(target)
+        if rect:
+            target_pos = (rect.centerx, rect.centery)
+            print(f"Directions to {self._get_building_name(target)}: {target_pos}")
         else:
             print("Cannot provide directions to this target")
 
     def browse_building_items(self, building):
         """Browse items available in a building."""
-        print(f"Browsing items in {building.get('name', 'Unknown Building')}")
+        print(f"Browsing items in {self._get_building_name(building)}")
         # This would integrate with an inventory/shop system
 
     def knock_on_door(self, building):
         """Knock on a building's door."""
-        print(f"Knocking on the door of {building.get('name', 'Unknown Building')}")
+        print(f"Knocking on the door of {self._get_building_name(building)}")
         # This would trigger character interactions
 
     def join_building_activity(self, building):
         """Join an activity at a building."""
-        print(f"Joining activity at {building.get('name', 'Unknown Building')}")
+        print(f"Joining activity at {self._get_building_name(building)}")
         # This would integrate with the activity system
 
     def talk_to_character(self, character):
@@ -1188,12 +1194,6 @@ class MapController:
         print(f"Placing marker at {position}")
         # This would add a visual marker to the map
 
-    def enter_building(self, building):
-        """Enter a building and interact with it."""
-        if building:
-            print(f"Entering {building.get('name', 'Unknown Building')}")
-            # This would trigger building-specific interactions
-
     def is_building(self, position):
         # Check if a building is at the clicked position using Building objects
         buildings_at_pos = self.get_buildings_at_position(position)
@@ -1207,13 +1207,16 @@ class MapController:
         return None
 
 
-    def enter_building(self, position):
-        # Enter a building and interact with it
-        building = self.is_building(position)
+    def enter_building(self, target):
+        """Enter a building using either a direct building target or a clicked position."""
+        building = target
+        if isinstance(target, (tuple, list)) and len(target) == 2:
+            building = self.is_building(target)
+
         if building:
             # Handle Building objects vs legacy building data
             if hasattr(building, 'name'):
-                building_name = building.name
+                building_name = self._get_building_name(building)
                 print(f"Entering {building_name}")
                 
                 # Show available activities
@@ -1229,7 +1232,7 @@ class MapController:
                     print(f"Security level: {security}, Popularity: {popularity}")
             else:
                 # Legacy building data
-                building_name = building.get('name', 'Unknown Building')
+                building_name = self._get_building_name(building)
                 print(f"Entering {building_name}")
     
     def find_safe_locations(self, min_security=7):
