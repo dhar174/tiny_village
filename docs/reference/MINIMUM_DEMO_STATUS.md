@@ -138,9 +138,9 @@ tiny_gameplay_controller.py          # ✅ Main controller
 demo_minimal_integration.py          # ✅ Working demo
 test_integration_minimal.py          # ✅ Integration tests
 assets/
-└── default_map.png                  # ✅ Exists
+    └── default_map.png              # ✅ Exists
 saves/
-└── checkpoints/                     # ✅ Auto-created
+    └── checkpoints/                 # ✅ Auto-created
 [core modules at repo root]          # ✅ Present
 ```
 
