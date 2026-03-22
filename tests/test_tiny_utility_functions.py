@@ -101,13 +101,15 @@ Goal = RealGoal if RealGoal is not None else SimplifiedRealGoal
 
 class MockAction:
     """
-    Enhanced MockAction that more closely mirrors the real Action class attributes.
-    
-    This includes critical attributes that the real Action class has to ensure
-    tests properly validate utility calculations and don't pass with broken implementations.
+    Lightweight action double that preserves the public surface utility tests use.
+
+    The goal is to stay close to the real ``Action`` contract without pulling in
+    the full runtime dependency graph.
     """
+
     DEFAULT_SATISFACTION = 5.0
     DEFAULT_URGENCY = 1.0
+    DEFAULT_PRIORITY = 0.5
 
     def __init__(
         self,
@@ -126,157 +128,50 @@ class MockAction:
     ):
         self.name = name
         self.cost = float(cost)
-        # Effects is a list of dictionaries, e.g., [{'attribute': 'hunger', 'change_value': -0.5}]
-        self.effects = effects if effects else []
-        self.preconditions = preconditions if preconditions else []
-        
-        # Additional attributes to match real Action interface
-        self.satisfaction = satisfaction if satisfaction is not None else 5.0
-        self.urgency = 1.0
-        self.action_id = id(self)
-        self.target = None
-        self.initiator = None
-        self.priority = 1.0
-        self.related_goal = None
-        
-        # Impact ratings found in real Action class
-        self.impact_rating_on_target = 1
-        self.impact_rating_on_initiator = 1
-        self.impact_rating_on_other = {}
+        self.effects = effects if effects is not None else []
+        self._validate_effects(self.effects)
 
-    def preconditions_met(self, state=None):
-        """Check if preconditions are met - matches real Action interface.
-        
-        This implementation provides meaningful precondition checking rather
-        than always returning True, ensuring tests will fail when real
-        precondition logic is broken.
-        
-        Args:
-            state: Optional state object or dict to check preconditions against
-            
-        Returns:
-            bool: True if all preconditions are satisfied, False otherwise
-        """
-        if not self.preconditions:
-            return True
-            
-        # Handle different precondition formats for testing flexibility
-        for precondition in self.preconditions:
-            if isinstance(precondition, dict):
-                # Handle dict-style preconditions: {"attribute": "energy", "operator": ">=", "value": 50}
-                attribute = precondition.get("attribute")
-                operator = precondition.get("operator", ">=")
-                required_value = precondition.get("value", 0)
-                
-                if state is None:
-                    # No state provided - cannot verify preconditions
-                    return False
-                    
-                # Get current value from state
-                if isinstance(state, dict):
-                    current_value = state.get(attribute, 0)
-                else:
-                    current_value = getattr(state, attribute, 0)
-                
-                # Check condition based on operator
-                if operator == ">=":
-                    if current_value < required_value:
-                        return False
-                elif operator == "<=":
-                    if current_value > required_value:
-                        return False
-                elif operator == "==":
-                    if current_value != required_value:
-                        return False
-                elif operator == ">":
-                    if current_value <= required_value:
-                        return False
-                elif operator == "<":
-                    if current_value >= required_value:
-                        return False
-                else:
-                    # Unknown operator - fail safe
-                    return False
-                    
-            elif hasattr(precondition, 'check_condition'):
-                # Handle Condition-like objects
-                try:
-                    if not precondition.check_condition(state):
-                        return False
-                except Exception:
-                    # If condition checking fails, precondition is not met
-                    return False
-            elif callable(precondition):
-                # Handle function-style preconditions
-                try:
-                    if not precondition(state):
-                        return False
-                except Exception:
-                    return False
-            else:
-                # Unknown precondition type - fail safe to catch bugs
-                return False
-                
-        return True
-
-    def to_dict(self):
-        """Serialize action for compatibility with real Action interface."""
-        return {
-            "name": self.name,
-            "preconditions": self.preconditions,
-            "effects": self.effects,
-            "cost": self.cost,
-
-        }
-
-        self.preconditions = preconditions if preconditions else []
+        self.preconditions = preconditions if preconditions is not None else []
         self.satisfaction = (
             self.DEFAULT_SATISFACTION if satisfaction is None else satisfaction
         )
         self.urgency = self.DEFAULT_URGENCY if urgency is None else urgency
-        self.target = target
         self.initiator = initiator
-        self.priority = priority if priority is not None else 0.5
+        self.priority = (
+            self.DEFAULT_PRIORITY if priority is None else priority
+        )
         self.related_goal = related_goal
-        self.action_id = action_id if action_id is not None else id(self)
+        self.action_id = id(self) if action_id is None else action_id
         self.default_target_is_initiator = default_target_is_initiator
+
+        if default_target_is_initiator and target is None and initiator is not None:
+            self.target = initiator
+        else:
+            self.target = target
+
+        # Match the attributes the production Action exposes.
         self.impact_rating_on_target = 1
         self.impact_rating_on_initiator = 1
         self.impact_rating_on_other = {}
 
-        if self.default_target_is_initiator and self.target is None and self.initiator is not None:
-            self.target = self.initiator
-
-        self._validate_effects()
-    
-    def _validate_effects(self):
-        """Validate effects structure similar to real Action class."""
-        if not isinstance(self.effects, list):
+    @staticmethod
+    def _validate_effects(effects):
+        """Validate the simplified effect structure used by utility tests."""
+        if not isinstance(effects, list):
             raise ValueError("Effects must be a list")
-        
-        for i, effect in enumerate(self.effects):
+
+        for index, effect in enumerate(effects):
             if not isinstance(effect, dict):
-                raise ValueError(f"Effect {i} must be a dictionary")
-            
+                raise ValueError(f"Effect {index} must be a dictionary")
             if "attribute" not in effect:
-                raise ValueError(f"Effect {i} must have 'attribute' key")
-            
+                raise ValueError(f"Effect {index} must have 'attribute' key")
             if "change_value" not in effect:
-                raise ValueError(f"Effect {i} must have 'change_value' key")
-            
+                raise ValueError(f"Effect {index} must have 'change_value' key")
             if not isinstance(effect["change_value"], (int, float)):
-                raise ValueError(f"Effect {i} change_value must be numeric")
-    
+                raise ValueError(f"Effect {index} change_value must be numeric")
+
     def preconditions_met(self, character_state=None):
-        """
-        Check if preconditions are met. Simple implementation for testing.
-        
-        Args:
-            character_state: Optional state to check against (for future enhancements)
-        
-        Returns:
-            bool: True if preconditions are met (always True for mock unless explicitly set)
-        """
+        """Evaluate preconditions with enough fidelity to catch interface bugs."""
         if not self.preconditions:
             return True
 
@@ -284,7 +179,9 @@ class MockAction:
             if isinstance(precondition, bool):
                 if not precondition:
                     return False
-            elif isinstance(precondition, dict):
+                continue
+
+            if isinstance(precondition, dict):
                 if character_state is None:
                     return False
 
@@ -306,40 +203,39 @@ class MockAction:
                 }
                 if not comparisons.get(operator, False):
                     return False
-            elif hasattr(precondition, "check_condition"):
+                continue
+
+            if hasattr(precondition, "check_condition"):
                 try:
                     if not precondition.check_condition(character_state):
                         return False
                 except Exception:
                     return False
-            elif callable(precondition):
+                continue
+
+            if callable(precondition):
                 try:
                     if not precondition(character_state):
                         return False
                 except Exception:
                     return False
-            else:
-                return False
+                continue
+
+            return False
 
         return True
-    
+
     def add_precondition(self, precondition):
         """Add a precondition to the action."""
         self.preconditions.append(precondition)
-    
+
     def add_effect(self, effect):
-        """Add an effect to the action."""
-        # Validate the new effect
-        if not isinstance(effect, dict):
-            raise ValueError("Effect must be a dictionary")
-        if "attribute" not in effect or "change_value" not in effect:
-            raise ValueError("Effect must have 'attribute' and 'change_value' keys")
-        if not isinstance(effect["change_value"], (int, float)):
-            raise ValueError("Effect change_value must be numeric")
-        
+        """Add a validated effect to the action."""
+        self._validate_effects([effect])
         self.effects.append(effect)
 
     def to_dict(self):
+        """Serialize the action using the subset of fields tests rely on."""
         return {
             "name": self.name,
             "preconditions": self.preconditions,
