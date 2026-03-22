@@ -11,9 +11,9 @@ This document outlines the incongruities found between the markdown documentatio
 
 ### Issue: Testing Best Practices Tools
 - **Documentation**: `docs/testing/MEMORY_TESTING_BEST_PRACTICES.md` explicitly warns against `MagicMock`-style stand-ins for memory objects because they can hide attribute and integration bugs.
-- **Codebase**:
-  - `tests/test_enhanced_prompt_builder.py` still uses `MagicMock` objects as memory-like inputs (for example `MagicMock(description="Test memory")` and `MagicMock(description="Legacy memory")`) while also stubbing broader collaborators such as `tiny_characters` and `StrategyManager`.
-  - `tests/test_building_loading_unit.py` replaces `pygame` with `MagicMock` and binds `GameplayController._load_buildings_from_file` onto a `Mock(spec=GameplayController)` instead of exercising a real controller instance, while `tests/test_custom_building_loading.py` covers the same loader through a real `GameplayController` with only display-boundary patching.
+- **Codebase**: The following test files contradict this guidance:
+  1. `tests/test_enhanced_prompt_builder.py` still uses `MagicMock` objects as memory-like inputs (for example `MagicMock(description="Test memory")` and `MagicMock(description="Legacy memory")`) while also stubbing broader collaborators such as `tiny_characters` and `StrategyManager`.
+  2. `tests/test_building_loading_unit.py` replaces `pygame` with `MagicMock` and binds `GameplayController._load_buildings_from_file` onto a `Mock(spec=GameplayController)` instead of exercising a real controller instance, while `tests/test_custom_building_loading.py` covers the same loader through a real `GameplayController` with only display-boundary patching.
 - **Impact**: Moderate. The codebase currently mixes the stricter "realistic object" guidance with heavier mocking patterns, so contributors can get conflicting signals about which testing style the project prefers.
 
 ## 2. Incomplete or Outdated Project Status Claims

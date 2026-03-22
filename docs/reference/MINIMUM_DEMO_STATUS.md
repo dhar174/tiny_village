@@ -32,7 +32,7 @@ Based on comprehensive code analysis and testing, the Tiny Village system integr
 
 ## Minimum Demo Readiness 🔧
 
-Previously critical blockers are resolved. The remaining items below are optional polish rather than requirements for a minimum demo.
+Previously critical blockers are resolved. The optional polish items described later in this document are not requirements for a minimum demo.
 
 ### Previously Critical Blockers (Now Resolved)
 
@@ -135,15 +135,16 @@ python -m spacy download en_core_web_sm
 ## File Structure for Demo
 
 ```
-main.py                              # ✅ Main entry point
-tiny_gameplay_controller.py          # ✅ Main controller
-demo_minimal_integration.py          # ✅ Working demo
-test_integration_minimal.py          # ✅ Integration tests
-assets/
-    └── default_map.png              # ✅ Exists
-saves/
-    └── checkpoints/                 # ✅ Auto-created
-[core modules at repo root]          # ✅ Present
+.
+├── main.py                          # ✅ Main entry point
+├── tiny_gameplay_controller.py      # ✅ Main controller
+├── demo_minimal_integration.py      # ✅ Working demo
+├── test_integration_minimal.py      # ✅ Integration tests
+├── assets/
+│   └── default_map.png              # ✅ Exists
+├── saves/
+│   └── checkpoints/                 # ✅ Auto-created
+└── [core modules at repo root]      # ✅ Present
 ```
 
 ## Performance Metrics
