@@ -60,35 +60,23 @@ class TestThatCanGenuinelyFail(unittest.TestCase):
         try:
             # Import an actual module that exists in the codebase
             import actions
-            
-            # Test with an intentionally wrong expectation that should fail
-            # This tests real functionality rather than the import system
-            nonexistent_class = "NonExistentSuperActionClass"
-            
-            # This is a meaningful test that could genuinely fail if someone added this class
-            self.assertFalse(hasattr(actions, nonexistent_class), 
-                           f"actions module unexpectedly contains {nonexistent_class}")
-            
-            # FIXED: Instead of hardcoding class names, dynamically discover actual classes
-            # This prevents brittleness from hardcoded assumptions about what classes should exist
-            actual_classes = [name for name in dir(actions) 
-                             if not name.startswith('_') and isinstance(getattr(actions, name), type)]
-            
-            # Test some classes that we know should exist based on dynamic discovery
-            required_classes = ["Action", "State"]  # Only test classes we're certain exist
-            for required_class in required_classes:
-                self.assertIn(required_class, actual_classes,
-                             f"actions module should contain {required_class} class")
-            
-            # Test that ActionSystem exists (if it's actually there) without hardcoding assumption
-            if "ActionSystem" in actual_classes:
-                self.assertTrue(hasattr(actions, "ActionSystem"), 
-                              "ActionSystem class should be accessible")
-                print("✓ ActionSystem class found and validated")
-            else:
-                print("ℹ ActionSystem class not found - this is acceptable as class structure may vary")
-            
-            print(f"✓ Module content validation test discovered {len(actual_classes)} classes dynamically")
+
+            # Exercise real module functionality rather than checking a brittle list of names.
+            sample_state = actions.State({"energy": 5, "focus": 3})
+            self.assertEqual(sample_state["energy"], 5)
+            self.assertEqual(sample_state.get("focus"), 3)
+            self.assertEqual(sample_state.get("missing_value", 99), 99)
+            sample_state["energy"] = 8
+            self.assertEqual(sample_state["energy"], 8)
+
+            # Test with an intentionally wrong expectation against the real object API.
+            nonexistent_attribute = "impossible_internal_meter"
+            self.assertFalse(
+                hasattr(sample_state, nonexistent_attribute),
+                f"State unexpectedly exposes {nonexistent_attribute}",
+            )
+
+            print("✓ Module content validation test demonstrates genuine testing of real functionality")
                                
         except ImportError as e:
             # Handle import issues gracefully
@@ -101,44 +89,70 @@ class TestThatCanGenuinelyFail(unittest.TestCase):
         """Test actual module functionality with wrong expectations to show genuine failure capability."""
         try:
             import actions
-            
-            # Test that we can create an Action instance (real functionality)
-            if hasattr(actions, 'Action'):
-                # This tests real class functionality, not just imports
-                action_class = actions.Action
-                
-                # FIXED: Test actual instantiation instead of just checking method existence
-                # This provides deeper validation that the class actually works
-                try:
-                    # Try to create an instance with minimal required parameters
-                    # Based on Action class structure, it needs name, preconditions, effects
-                    test_action = action_class(
-                        name="test_action",
-                        preconditions=[],
-                        effects=[]
-                    )
-                    self.assertIsNotNone(test_action, "Action instance should be created successfully")
-                    self.assertEqual(test_action.name, "test_action", "Action name should be set correctly")
-                    print("✓ Action class instantiation test validates actual functionality")
-                    
-                except Exception as e:
-                    # This is a more meaningful test - if instantiation fails, there's a real issue
-                    self.fail(f"Failed to instantiate Action class - genuine functionality issue: {e}")
-                
-                # Verify the class has expected methods (this could genuinely fail if methods are removed)
-                essential_methods = ['__init__']  # Keep this minimal but essential
-                for method in essential_methods:
-                    self.assertTrue(hasattr(action_class, method),
-                                  f"Action class should have {method} method")
-                
-                # Test with wrong expectation about a method that shouldn't exist
-                nonexistent_method = "perform_impossible_action_that_should_not_exist"
-                self.assertFalse(hasattr(action_class, nonexistent_method),
-                               f"Action class unexpectedly has {nonexistent_method} method")
-                
-                print("✓ Class functionality test demonstrates real validation of class structure and behavior")
-            else:
-                self.fail("Action class not found in actions module - genuine functionality issue")
+
+            # Condition.check_condition() resolves state through target.get_state()
+            # when Action.preconditions_met() calls it without an explicit state.
+            class StatefulTarget:
+                def __init__(self, state):
+                    self._state = state
+
+                def get_state(self):
+                    return self._state
+
+            action = actions.Action(
+                name="test_rest",
+                preconditions=[],
+                effects=[{"attribute": "energy", "change_value": 2}],
+                cost=1,
+            )
+            initial_state = actions.State({"energy": 5})
+
+            # Validate real behavior that should fail if Action is broken.
+            self.assertTrue(action.preconditions_met())
+
+            updated_state = action.apply_effects(initial_state)
+            self.assertEqual(updated_state["energy"], 7)
+
+            met_precondition_target = StatefulTarget(actions.State({"energy": 12}))
+            met_precondition = actions.Condition(
+                "has_enough_energy",
+                "energy",
+                met_precondition_target,
+                10,
+                ">=",
+            )
+            ready_action = actions.Action(
+                name="ready_rest",
+                preconditions=[met_precondition],
+                effects=[{"attribute": "energy", "change_value": 1}],
+                cost=1,
+            )
+            self.assertTrue(ready_action.preconditions_met())
+
+            unmet_precondition_target = StatefulTarget(actions.State({"energy": 5}))
+            unmet_precondition = actions.Condition(
+                "needs_high_energy",
+                "energy",
+                unmet_precondition_target,
+                10,
+                ">=",
+            )
+            blocked_action = actions.Action(
+                name="blocked_rest",
+                preconditions=[unmet_precondition],
+                effects=[{"attribute": "energy", "change_value": 1}],
+                cost=1,
+            )
+            self.assertFalse(blocked_action.preconditions_met())
+
+            # Test with wrong expectation about a method that shouldn't exist
+            nonexistent_method = "perform_impossible_action_that_should_not_exist"
+            self.assertFalse(
+                hasattr(action, nonexistent_method),
+                f"Action instance unexpectedly has {nonexistent_method} method",
+            )
+
+            print("✓ Class functionality test demonstrates real validation of Action behavior")
                 
         except ImportError as e:
             if "numpy" in str(e) or "networkx" in str(e):
@@ -150,7 +164,7 @@ class TestThatCanGenuinelyFail(unittest.TestCase):
         """Test file structure with wrong expectations to demonstrate genuine testing."""
         # Test that expected files exist (real functionality test)
         expected_files = ["actions.py", "tiny_characters.py"]
-        # FIXED: Use existing parent_dir variable for consistency
+        parent_dir = os.path.dirname(test_dir)
         
         for filename in expected_files:
             file_path = os.path.join(parent_dir, filename)
