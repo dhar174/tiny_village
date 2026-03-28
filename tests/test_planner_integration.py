@@ -17,6 +17,7 @@ def test_dynamic_state_retrieval():
     
     try:
         from tiny_goap_system import GOAPPlanner
+        from tests.mock_graph_manager import create_mock_graph_manager
         
         # Create a mock character for testing
         class MockCharacter:
@@ -29,9 +30,10 @@ def test_dynamic_state_retrieval():
                 from actions import State
                 return State({'energy': self.energy, 'hunger': self.hunger, 'name': self.name})
         
-        # Test with no graph manager (should still work)
-        planner = GOAPPlanner(None)
+        # Test with minimal mock graph manager for better test coverage
         character = MockCharacter()
+        mock_graph_manager = create_mock_graph_manager(character)
+        planner = GOAPPlanner(mock_graph_manager)
         
         world_state = planner.get_current_world_state(character)
         print("✓ Dynamic world state retrieval successful")
@@ -50,6 +52,7 @@ def test_dynamic_action_retrieval():
     
     try:
         from tiny_goap_system import GOAPPlanner
+        from tests.mock_graph_manager import create_mock_graph_manager
         
         class MockCharacter:
             def __init__(self, name="TestChar"):
@@ -60,8 +63,9 @@ def test_dynamic_action_retrieval():
                 from actions import State
                 return State({'energy': self.energy, 'name': self.name})
         
-        planner = GOAPPlanner(None)
         character = MockCharacter()
+        mock_graph_manager = create_mock_graph_manager(character)
+        planner = GOAPPlanner(mock_graph_manager)
         
         available_actions = planner.get_available_actions(character)
         print("✓ Dynamic action retrieval successful")
@@ -83,6 +87,7 @@ def test_enhanced_planning():
     
     try:
         from tiny_goap_system import GOAPPlanner
+        from tests.mock_graph_manager import create_mock_graph_manager
         
         class MockCharacter:
             def __init__(self, name="TestChar"):
@@ -102,8 +107,9 @@ def test_enhanced_planning():
                     return state.get('energy', 0) >= 50
                 return False
         
-        planner = GOAPPlanner(None)
         character = MockCharacter()
+        mock_graph_manager = create_mock_graph_manager(character)
+        planner = GOAPPlanner(mock_graph_manager)
         goal = MockGoal()
         
         # Test planning with automatic state/action retrieval
