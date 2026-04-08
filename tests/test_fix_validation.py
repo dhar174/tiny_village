@@ -9,7 +9,6 @@ This test file demonstrates proper testing practices by creating tests that:
 """
 
 import unittest
-from unittest.mock import Mock, MagicMock, patch
 import logging
 
 # Configure logging to reduce noise during testing
@@ -58,49 +57,77 @@ class TestValidationExamples(unittest.TestCase):
         self.assertNotIn(2, test_list, "Removed element should not be in list")
 
 
-class TestProperMockingPatterns(unittest.TestCase):
-    """Examples of proper mocking that still validates functionality."""
+class UserRepository:
+    """Simple repository used to validate caller logic with a real dependency."""
+
+    def __init__(self, users):
+        self._users = users
+
+    def get_user(self, user_key):
+        """Return a stored user dictionary or None when missing."""
+        return self._users.get(user_key)
+
+
+class DataProcessingService:
+    """Small service with real success and error paths for validation tests."""
+
+    def process_data(self, raw_value):
+        """Normalize input and return a structured result."""
+        cleaned_value = raw_value.strip()
+        if not cleaned_value:
+            return {"status": "error", "message": "Input cannot be empty"}
+        return {"status": "success", "data": cleaned_value.upper()}
+
+
+def build_user_summary(user_repository, user_key):
+    """Return a normalized user summary or a missing-user message."""
+    user = user_repository.get_user(user_key)
+    if user is None:
+        return "User not found"
+    return f"{user['id']}:{user['name'].upper()}"
+
+
+def collect_processing_results(service, raw_values):
+    """Collect successful outputs and error messages from a real service."""
+    summary = {"successes": [], "errors": []}
+    for raw_value in raw_values:
+        result = service.process_data(raw_value)
+        if result["status"] == "success":
+            summary["successes"].append(result["data"])
+        else:
+            summary["errors"].append(result["message"])
+    return summary
+
+
+class TestRealDependencyValidation(unittest.TestCase):
+    """Examples of validation patterns that exercise real logic."""
     
-    def test_mock_with_validation(self):
-        """Test that uses mocks but still validates the logic being tested."""
-        # Create a mock that simulates real behavior
-        mock_database = Mock()
-        mock_database.get_user.return_value = {"id": 1, "name": "Test User"}
-        
-        # Test the actual logic that uses the mock
-        user = mock_database.get_user("test")
-        
-        # Validate the mock was called correctly
-        mock_database.get_user.assert_called_once_with("test")
-        
-        # Validate the returned data structure
-        self.assertIsInstance(user, dict, "User should be returned as dictionary")
-        self.assertIn("id", user, "User should have id field")
-        self.assertIn("name", user, "User should have name field")
-        self.assertEqual(user["id"], 1, "User ID should match expected value")
-    
-    def test_mock_behavior_validation(self):
-        """Test that validates mock behavior patterns."""
-        mock_service = Mock()
-        
-        # Configure mock to simulate different behaviors
-        mock_service.process_data.side_effect = [
-            {"status": "success", "data": "result1"},
-            {"status": "error", "message": "Something went wrong"}
-        ]
-        
-        # Test successful case
-        result1 = mock_service.process_data("input1")
-        self.assertEqual(result1["status"], "success", "First call should succeed")
-        self.assertIn("data", result1, "Success response should contain data")
-        
-        # Test error case
-        result2 = mock_service.process_data("input2")
-        self.assertEqual(result2["status"], "error", "Second call should return error")
-        self.assertIn("message", result2, "Error response should contain message")
-        
-        # Validate call count
-        self.assertEqual(mock_service.process_data.call_count, 2, "Service should have been called twice")
+    def test_dependency_validation_uses_real_logic(self):
+        """Test business logic with a real repository instead of a mock-only call."""
+        user_repository = UserRepository({"test": {"id": 1, "name": "Test User"}})
+
+        summary = build_user_summary(user_repository, "test")
+        missing_summary = build_user_summary(user_repository, "missing")
+
+        self.assertEqual(summary, "1:TEST USER", "User summaries should normalize real repository data")
+        self.assertEqual(missing_summary, "User not found", "Missing users should produce a fallback message")
+
+    def test_service_behavior_validation(self):
+        """Test success and failure handling against a real service implementation."""
+        service = DataProcessingService()
+
+        results = collect_processing_results(service, ["input1", "   ", "input2"])
+
+        self.assertEqual(
+            results["successes"],
+            ["INPUT1", "INPUT2"],
+            "Only non-empty inputs should produce normalized successful results",
+        )
+        self.assertEqual(
+            results["errors"],
+            ["Input cannot be empty"],
+            "Blank input should surface the service error path",
+        )
 
 
 class TestErrorConditionValidation(unittest.TestCase):
@@ -215,7 +242,7 @@ if __name__ == "__main__":
     # Run tests with proper validation
     test_classes = [
         (TestValidationExamples, "Basic Validation Examples"),
-        (TestProperMockingPatterns, "Proper Mocking Patterns"),
+        (TestRealDependencyValidation, "Real Dependency Validation"),
         (TestErrorConditionValidation, "Error Condition Validation"),
         (TestImportValidation, "Import Validation"),
     ]
