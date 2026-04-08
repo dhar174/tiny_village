@@ -8,23 +8,8 @@ that go beyond the basic 'Enter Building' action.
 
 import unittest
 from unittest.mock import Mock, MagicMock
-import sys
-import types
 from tiny_buildings import Building, BUILDING_TYPE_INTERACTIONS
-from actions import Skill
-
-
-def build_character_skills(**skill_levels):
-    if "tiny_graph_manager" not in sys.modules:
-        stub = types.ModuleType("tiny_graph_manager")
-        stub.GraphManager = object
-        sys.modules["tiny_graph_manager"] = stub
-
-    from tiny_characters import CharacterSkills
-
-    return CharacterSkills(
-        [Skill(skill_name, level) for skill_name, level in skill_levels.items()]
-    )
+from tests.skill_test_utils import build_character_skills
 
 
 class MockCharacter:

@@ -8,31 +8,17 @@ import unittest
 from unittest.mock import Mock, MagicMock, patch
 import sys
 import os
-import types
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from tiny_building_manager import BuildingManager, ResourceType
 from tiny_buildings import Building
-from actions import Skill
+from tests.skill_test_utils import build_character_skills
 try:
     from actions import ActionSystem
 except ImportError:
     ActionSystem = Mock
-
-
-def build_character_skills(**skill_levels):
-    if "tiny_graph_manager" not in sys.modules:
-        stub = types.ModuleType("tiny_graph_manager")
-        stub.GraphManager = object
-        sys.modules["tiny_graph_manager"] = stub
-
-    from tiny_characters import CharacterSkills
-
-    return CharacterSkills(
-        [Skill(skill_name, level) for skill_name, level in skill_levels.items()]
-    )
 
 
 class MockCharacter:

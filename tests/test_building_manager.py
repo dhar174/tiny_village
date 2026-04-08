@@ -6,28 +6,13 @@ Tests resource production, consumption, and service functionality.
 
 import unittest
 from unittest.mock import Mock
-import sys
-import types
 from tiny_building_manager import (
     BuildingManager,
     ResourceType,
     ResourcePool,
     BuildingService
 )
-from actions import Skill
-
-
-def build_character_skills(**skill_levels):
-    if "tiny_graph_manager" not in sys.modules:
-        stub = types.ModuleType("tiny_graph_manager")
-        stub.GraphManager = object
-        sys.modules["tiny_graph_manager"] = stub
-
-    from tiny_characters import CharacterSkills
-
-    return CharacterSkills(
-        [Skill(skill_name, level) for skill_name, level in skill_levels.items()]
-    )
+from tests.skill_test_utils import build_character_skills
 
 
 class MockCharacter:
@@ -377,6 +362,16 @@ class TestBuildingManager(unittest.TestCase):
         self.assertTrue(success, message)
         self.assertEqual(crafter.skills.crafting, initial_crafting + 1)
         self.assertEqual(crafter.skills.get("crafting"), initial_crafting + 1)
+
+    def test_character_skills_direct_assignment_updates_skill_level(self):
+        """Test direct skill assignment updates the matching Skill object."""
+        crafter = MockCharacter(wealth_money=50, crafting_skill=20)
+
+        crafter.skills.crafting = 27
+
+        self.assertEqual(crafter.skills.crafting, 27)
+        self.assertEqual(crafter.skills.get("crafting"), 27)
+        self.assertEqual(crafter.skills._get_skill_by_name("crafting").level, 27)
     
     def test_provide_service_invalid_service(self):
         """Test providing invalid service name."""

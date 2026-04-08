@@ -1624,6 +1624,7 @@ class CharacterSkills:
         self.action_skills = []
         self.job_skills = []
         self.other_skills = []
+        self._skill_dict = {}
         self.skills = []
         self.set_skills(skills)
 
@@ -1718,10 +1719,7 @@ class CharacterSkills:
         return [skill.name for skill in self.skills]
 
     def _get_skill_by_name(self, skill_name):
-        for skill in self.skills:
-            if getattr(skill, "name", None) == skill_name:
-                return skill
-        return None
+        return self._skill_dict.get(skill_name)
 
     def get(self, skill_name, default=None):
         skill = self._get_skill_by_name(skill_name)
@@ -1740,20 +1738,30 @@ class CharacterSkills:
         return self._get_skill_by_name(skill_name) is not None
 
     def __getattr__(self, skill_name):
+        if skill_name.startswith("_"):
+            raise AttributeError(
+                f"{self.__class__.__name__} object has no attribute {skill_name!r}"
+            )
+
         skill = self._get_skill_by_name(skill_name)
         if skill is not None:
             return skill.level
         raise AttributeError(
-            f"{self.__class__.__name__!s} object has no attribute {skill_name!r}"
+            f"{self.__class__.__name__} object has no attribute {skill_name!r}"
         )
 
     def __setattr__(self, name, value):
-        if name in {"action_skills", "job_skills", "other_skills", "skills"}:
+        if name.startswith("_") or name in {
+            "action_skills",
+            "job_skills",
+            "other_skills",
+            "_skill_dict",
+            "skills",
+        }:
             object.__setattr__(self, name, value)
             return
 
-        skills = self.__dict__.get("skills")
-        if isinstance(skills, list):
+        if "skills" in self.__dict__:
             skill = self._get_skill_by_name(name)
             if skill is not None:
                 skill.level = value
@@ -1761,18 +1769,22 @@ class CharacterSkills:
 
         object.__setattr__(self, name, value)
 
+    def _register_skill(self, skill):
+        self.skills.append(skill)
+        self._skill_dict[skill.name] = skill
+        if isinstance(skill, JobSkill):
+            self.job_skills.append(skill)
+        elif isinstance(skill, ActionSkill):
+            self.action_skills.append(skill)
+        else:
+            self.other_skills.append(skill)
+
     def set_skills(self, skills):
         for skill in skills:
-            self.skills.append(skill)
-            if isinstance(skill, JobSkill):
-                self.job_skills.append(skill)
-            elif isinstance(skill, ActionSkill):
-                self.action_skills.append(skill)
-            else:
-                self.other_skills.append(skill)
+            self._register_skill(skill)
 
     def add_skill(self, skill):
-        self.skills.append(skill)
+        self._register_skill(skill)
         return self.skills
 
 
