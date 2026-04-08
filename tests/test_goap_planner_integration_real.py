@@ -96,7 +96,8 @@ class EnergyAction(ActionWrapper):
         actor = initiator or self.actor
         if actor.energy < self.required_energy:
             return False
-        actor.energy = actor.energy - self.required_energy + self.effects[0]["change_value"]
+        energy_gain = next((effect.get("change_value", 0) for effect in self.effects if effect.get("attribute") == "energy"), 0)
+        actor.energy = actor.energy - self.required_energy + energy_gain
         return True
 
 
