@@ -1027,7 +1027,14 @@ class MapController:
         return info
 
     def _is_building_target(self, building) -> bool:
-        """Return True when the target looks like a building dict or Building-style object."""
+        """Return True for building dicts/objects based on building-specific shape.
+
+        Legacy map-data buildings are dicts with a ``rect`` entry. Object-backed
+        buildings expose attributes such as ``building_type`` or geometric
+        dimensions like ``length`` and ``width``. Character objects may expose
+        location-style helpers, but they typically do not have these
+        building-specific attributes.
+        """
         if isinstance(building, dict):
             return 'rect' in building
 
@@ -1289,7 +1296,13 @@ class MapController:
         # This would add a visual marker to the map
 
     def enter_building_target(self, building):
-        """Enter a known building object or legacy building dict and interact with it."""
+        """Enter a known building target directly.
+
+        This is the preferred entry point for context-menu actions where the
+        selected building object/dict is already known. Use ``enter_building()``
+        when starting from a click position that still needs to be resolved to a
+        building.
+        """
         if not building:
             return
 

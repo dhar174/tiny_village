@@ -90,15 +90,15 @@ class TestMapControllerBuildingInfo(unittest.TestCase):
             },
         )
         cls._module_patcher.start()
-        cls._previous_map_module = sys.modules.pop("tiny_map_controller", None)
+        cls._original_map_controller_module = sys.modules.pop("tiny_map_controller", None)
         cls._map_module = importlib.import_module("tiny_map_controller")
         cls.MapController = cls._map_module.MapController
 
     @classmethod
     def tearDownClass(cls):
         sys.modules.pop("tiny_map_controller", None)
-        if cls._previous_map_module is not None:
-            sys.modules["tiny_map_controller"] = cls._previous_map_module
+        if cls._original_map_controller_module is not None:
+            sys.modules["tiny_map_controller"] = cls._original_map_controller_module
         cls._module_patcher.stop()
 
     def setUp(self):
@@ -140,7 +140,7 @@ class TestMapControllerBuildingInfo(unittest.TestCase):
         self.assertEqual(info["value"], 1200)
         self.assertEqual(info["description"], "Village administration building")
 
-    def test_show_target_details_does_not_misclassify_character_like_object(self):
+    def test_show_target_details_with_character_object(self):
         character = FakeCharacter()
 
         def mock_show(content, _pos):
@@ -165,10 +165,10 @@ class TestMapControllerBuildingInfo(unittest.TestCase):
             height=60,
             owner="City Council",
         )
-        recorded = {}
+        entry_call_record = {}
 
         def record_entry(target):
-            recorded["target"] = target
+            entry_call_record["target"] = target
 
         self.controller.enter_building_target = record_entry
         self.controller.enter_building = lambda position: self.fail(
@@ -177,7 +177,7 @@ class TestMapControllerBuildingInfo(unittest.TestCase):
 
         self.controller.execute_context_action({"action": "enter", "target": building})
 
-        self.assertIs(recorded["target"], building)
+        self.assertIs(entry_call_record["target"], building)
 
 
 if __name__ == "__main__":
