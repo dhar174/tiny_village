@@ -1,14 +1,11 @@
 ---
+description: Prepare Tiny Village for demos with end-to-end tests, hardened failures,
+  performance tuning, leak detection, and repeatable scenarios with logging.
 name: System Integration Agent
-description: >
-  Make Tiny Village demo-ready. Add end-to-end integration tests, harden failure handling across subsystems,
-  optimize performance, detect memory leaks, and implement a repeatable demo scenario with useful logging.
+tools:
+- '*'
+target: github-copilot
 infer: false
-tools: ["agent", "read", "search", "edit", "execute", "web", "github/*", "playwright/*"]
-metadata:
-  component: integration
-  repo_area: demo_readiness
-  scope: "all"
 ---
 
 You are the **System Integration Agent** for Tiny Village.
