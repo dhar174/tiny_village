@@ -4352,9 +4352,12 @@ class GameplayController:
 
         if getattr(self, "characters", None):
             try:
-                _, character = next(iter(self.characters.items()))
+                _, character = sorted(
+                    self.characters.items(),
+                    key=lambda item: str(item[0]),
+                )[0]
                 return character
-            except StopIteration:
+            except (IndexError, StopIteration):
                 return None
 
         return None
@@ -4363,30 +4366,23 @@ class GameplayController:
         """Yield likely subject candidates from an event payload."""
         for attr in ("participants", "characters", "targets"):
             candidates = self._read_event_value(event, attr)
-            if not candidates or self._is_mock_strategy_subject(candidates):
+            if not candidates:
                 continue
             if isinstance(candidates, (list, tuple, set)):
                 for candidate in candidates:
-                    if self._is_mock_strategy_subject(candidate):
-                        continue
                     yield candidate
             else:
                 yield candidates
 
         for attr in ("character", "subject"):
             candidate = self._read_event_value(event, attr)
-            if candidate and not self._is_mock_strategy_subject(candidate):
+            if candidate:
                 yield candidate
 
     def _read_event_value(self, event, attr):
         if isinstance(event, dict):
             return event.get(attr)
         return getattr(event, attr, None)
-
-    def _is_mock_strategy_subject(self, value):
-        value_class = getattr(value, "__class__", None)
-        module_name = getattr(value_class, "__module__", "") if value_class else ""
-        return module_name.startswith("unittest.mock")
 
     def _resolve_strategy_character(self, reference):
         """Resolve a strategy reference to a controller character when possible."""
@@ -4414,7 +4410,7 @@ class GameplayController:
 
     def _get_character_registry_key(self, character, fallback=None):
         characters = getattr(self, "characters", {}) or {}
-        if fallback in characters:
+        if fallback in characters and characters[fallback] is character:
             return fallback
 
         for key, candidate in characters.items():
@@ -4435,6 +4431,17 @@ class GameplayController:
 
         return fallback
 
+    def _enrich_decision_with_character_id(self, decision, character, fallback=None):
+        if character is None or "character_id" in decision:
+            return decision
+
+        enriched = decision.copy()
+        enriched["character_id"] = self._get_character_registry_key(
+            character,
+            fallback=fallback,
+        )
+        return enriched
+
     def _apply_strategy_sequence(self, decisions, update_errors, character):
         """Apply a list of strategic decisions/actions for a character."""
         for index, decision in enumerate(decisions):
@@ -4444,10 +4451,13 @@ class GameplayController:
                     continue
 
                 if isinstance(decision, dict) and "type" in decision:
-                    if character is not None and "character_id" not in decision:
-                        decision = decision.copy()
-                        decision["character_id"] = self._get_character_registry_key(character)
-                    self.apply_decision(decision, None)
+                    self.apply_decision(
+                        self._enrich_decision_with_character_id(
+                            decision,
+                            character,
+                        ),
+                        None,
+                    )
                     logger.debug(
                         f"Applied strategic decision {index + 1}/{len(decisions)}"
                     )
@@ -4455,8 +4465,7 @@ class GameplayController:
 
                 if character is None:
                     logger.warning(
-                        "Skipping character-bound strategy item because no character could be resolved: %r",
-                        decision,
+                        "Skipping character-bound strategy item because no character could be resolved.",
                     )
                     update_errors.append("Strategy character resolution failed")
                     continue
@@ -4477,21 +4486,24 @@ class GameplayController:
     def _apply_strategy_mapping_entry(self, char_id, decision, character, update_errors):
         """Apply one per-character strategy mapping entry."""
         if isinstance(decision, dict) and "type" in decision:
-            if character is not None and "character_id" not in decision:
-                decision = decision.copy()
-                decision["character_id"] = self._get_character_registry_key(
-                    character, fallback=char_id
-                )
-            self.apply_decision(decision, None)
+            self.apply_decision(
+                self._enrich_decision_with_character_id(
+                    decision,
+                    character,
+                    fallback=char_id,
+                ),
+                None,
+            )
             return
 
         if isinstance(decision, list):
             self._apply_strategy_sequence(decision, update_errors, character)
             return
 
-        if hasattr(decision, "actions"):
+        decision_actions = getattr(decision, "actions", None)
+        if decision_actions is not None:
             self._apply_strategy_sequence(
-                list(getattr(decision, "actions", [])),
+                list(decision_actions),
                 update_errors,
                 character,
             )

@@ -3,6 +3,7 @@ import sys
 import types
 import unittest
 from collections import defaultdict
+from types import SimpleNamespace
 from unittest.mock import MagicMock, Mock, patch
 
 
@@ -147,7 +148,7 @@ class TestEventHandlerLoopIntegration(unittest.TestCase):
         controller.characters = {"alice": alice}
 
         queued_event = Mock(name="queued_event")
-        triggered_event = Mock(name="triggered_event")
+        triggered_event = SimpleNamespace(name="triggered_event")
         controller.events = [queued_event]
         controller.event_handler.check_events.return_value = [triggered_event]
 
