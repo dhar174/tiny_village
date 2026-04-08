@@ -68,7 +68,7 @@ logger = logging.getLogger(__name__)
 
 
 class TinyBrainIO:
-    def __init__(self, model_name, model_special_args=None):
+    def __init__(self, model_name=None, model_special_args=None):
         self.model_name = model_name
         self.model_special_args = model_special_args or {}
         self.model = None
@@ -82,7 +82,7 @@ class TinyBrainIO:
         self.use_mlock = True
         self.device = "cuda" if (TORCH_AVAILABLE and torch.cuda.is_available()) else "cpu"
         self.load_error = None
-        self.load_model()
+        self.load_model(model_name)
 
     def load_model(self, model_name="alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2"):
         if model_name is not None:
