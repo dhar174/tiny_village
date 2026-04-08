@@ -5,6 +5,7 @@ from tiny_goap_system import ActionWrapper, GOAPPlanner, Plan
 from tiny_strategy_manager import StrategyManager
 
 
+# Matches GOAPPlanner._goal_satisfied's floating-point slack for target_effect checks.
 COMPLETION_TOLERANCE = 0.1
 
 
@@ -123,6 +124,13 @@ def apply_plan(planner, plan, initial_state):
     for action in plan:
         state = planner._apply_action_effects(action, state)
     return state
+
+
+def test_planner_goal_check_completion_respects_completion_tolerance():
+    goal = PlannerGoal(name="restore_energy", target_effects={"energy": 0.6})
+
+    assert goal.check_completion(State({"energy": 0.5})) is True
+    assert goal.check_completion(State({"energy": 0.49})) is False
 
 
 def test_plan_actions_uses_graph_manager_state_and_actions_to_reach_goal():
