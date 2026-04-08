@@ -325,11 +325,14 @@ class EventHandler:
         self.effect_dispatcher = EffectDispatcher(self.graph_manager)
 
     def add_event(self, event):
-        """Add an event to the handler and register it in the graph."""
+        """Add an event or event-like payload to the handler and register it in the graph."""
         self.events.append(event)
-        if self.graph_manager:
+
+        event_name = self._event_name(event)
+        if self.graph_manager and isinstance(event, Event):
             self.graph_manager.add_event_node(event)
-        logging.info(f"Added event: {event.name}")
+
+        logging.info(f"Added event: {event_name}")
 
     def remove_event(self, event_name: str) -> bool:
         """Remove an event by name."""
@@ -360,7 +363,7 @@ class EventHandler:
                 return event
         return None
 
-    def check_events(self, current_time: datetime = None) -> List["Event"]:
+    def check_events(self, current_time: datetime = None) -> List[Any]:
         """Check for and return any relevant game events that should trigger."""
         if current_time is None:
             current_time = datetime.now()
@@ -368,8 +371,22 @@ class EventHandler:
         triggered_events = []
 
         for event in self.events:
-            if event.should_trigger(current_time):
+            if isinstance(event, Event):
+                if event.should_trigger(current_time):
+                    triggered_events.append(event)
+                continue
+
+            # Event-like payloads (dicts or custom objects) are treated as immediate triggers
+            # so the gameplay loop can dispatch consequences in the same update tick.
+            if (
+                isinstance(event, dict)
+                or hasattr(event, "type")
+                or hasattr(event, "event_type")
+            ):
                 triggered_events.append(event)
+                continue
+
+            logging.debug("Skipping unsupported event payload type: %s", type(event))
 
         return triggered_events
 
@@ -387,22 +404,64 @@ class EventHandler:
         }
 
         for event in triggered_events:
+            event_name = self._event_name(event)
             try:
-                if self._process_single_event(event, current_time):
-                    results["processed_events"].append(event.name)
+                if isinstance(event, Event):
+                    processed = self._process_single_event(event, current_time)
+                else:
+                    processed = self._process_event_payload(event)
+
+                if processed:
+                    results["processed_events"].append(event_name)
                     self.processed_events.append(event)
 
-                    # Handle cascading events
-                    cascading = self._trigger_cascading_events(event)
-                    results["cascading_events"].extend(cascading)
+                    # Handle cascading events where available.
+                    if isinstance(event, Event):
+                        cascading = self._trigger_cascading_events(event)
+                        results["cascading_events"].extend(cascading)
+                    else:
+                        if event in self.events:
+                            self.events.remove(event)
                 else:
-                    results["failed_events"].append(event.name)
+                    results["failed_events"].append(event_name)
 
             except Exception as e:
-                logging.error(f"Error processing event {event.name}: {e}")
-                results["failed_events"].append(event.name)
+                logging.error(f"Error processing event {event_name}: {e}")
+                results["failed_events"].append(event_name)
 
         return results
+
+    def _event_name(self, event: Any) -> str:
+        """Resolve a human-readable event name from Event or event-like payloads."""
+        if isinstance(event, Event):
+            return event.name
+        if isinstance(event, dict):
+            return str(event.get("name", event.get("type", "unnamed_event")))
+        return str(getattr(event, "name", getattr(event, "type", "unnamed_event")))
+
+    def _process_event_payload(self, event: Any) -> bool:
+        """Process non-Event payloads from gameplay systems as immediate events."""
+        if isinstance(event, dict):
+            for effect in event.get("effects", []):
+                try:
+                    effect_v2 = (
+                        EffectV2.from_dict(effect)
+                        if isinstance(effect, dict)
+                        else effect
+                    )
+                    if isinstance(effect_v2, EffectV2):
+                        self.effect_dispatcher.apply_effect(effect_v2, event)
+                except Exception as effect_error:
+                    logging.warning(
+                        "Failed applying payload effect for %s: %s",
+                        self._event_name(event),
+                        effect_error,
+                    )
+                    return False
+            return True
+
+        # Unknown event-like objects are treated as processed once for dispatch/strategy sync.
+        return True
 
     def _process_single_event(self, event: "Event", current_time: datetime) -> bool:
         """Process a single event and apply its effects."""
