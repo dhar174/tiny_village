@@ -113,7 +113,7 @@ documentation should distinguish between:
 
 ## Conclusion
 
-The minimum-demo story is **partially aligned** rather than "done":
+The minimum-demo story is **partially verified** rather than "done":
 
 - ✅ The repo now contains the documented entry point and packaged map asset.
 - ✅ The CLI surface is present and discoverable.

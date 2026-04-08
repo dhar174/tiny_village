@@ -86,6 +86,9 @@ Defines services that buildings can provide to characters:
 `GameplayController.initialize_game_systems()` treats the building manager as an
 optional enhancement. Initialization is wrapped in `try/except`, registration is
 best-effort, and `self.building_manager` is left as `None` if startup fails.
+This fallback is triggered by the same kinds of problems visible in the code:
+import failures, `BuildingManager()` construction errors, or per-building
+registration problems while iterating the current map data.
 
 ```python
 try:
