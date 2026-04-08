@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from tiny_building_manager import BuildingManager, ResourceType
 from tiny_buildings import Building
+from tests.skill_test_utils import build_character_skills
 try:
     from actions import ActionSystem
 except ImportError:
@@ -35,9 +36,9 @@ class MockCharacter:
         self.intelligence = attributes.get('intelligence', 50)
         self.knowledge = attributes.get('knowledge', 50)
         
-        # Mock skills
-        self.skills = Mock()
-        self.skills.crafting = attributes.get('crafting_skill', 20)
+        self.skills = build_character_skills(
+            crafting=attributes.get("crafting_skill", 20)
+        )
 
 
 class TestBuildingIntegration(unittest.TestCase):
@@ -255,6 +256,24 @@ class TestBuildingIntegration(unittest.TestCase):
         
         after_production_food = tavern.get_resource_levels()['food']
         self.assertGreater(after_production_food, after_consumption_food)
+
+    def test_workshop_service_uses_real_character_skills(self):
+        """Test workshop services update the real CharacterSkills interface."""
+        workshop = Building(
+            name="Busy Workshop",
+            x=10, y=20, height=10, width=20, length=15,
+            building_type="workshop",
+            building_manager=self.building_manager
+        )
+
+        craftsperson = MockCharacter("Craftsperson", 100, crafting_skill=20)
+        initial_crafting = craftsperson.skills.crafting
+
+        success, message = workshop.provide_service("craft_item", craftsperson)
+
+        self.assertTrue(success, message)
+        self.assertEqual(craftsperson.skills.crafting, initial_crafting + 1)
+        self.assertEqual(craftsperson.skills.get("crafting"), initial_crafting + 1)
     
     def test_economic_transaction_flow(self):
         """Test complete economic flow: character buys and sells at market."""
