@@ -1,7 +1,7 @@
 import logging
-from typing import Dict, Iterable, List, Optional, TypedDict
+from typing import Dict, Iterable, List, Optional, Protocol, TypedDict
 
-from tiny_building_manager import ResourceType
+from tiny_building_manager import BuildingManager, ResourceType
 from tiny_items import ItemInventory
 
 
@@ -91,6 +91,14 @@ class JobOutputConfig(TypedDict, total=False):
     calories: int
 
 
+class EconomicActor(Protocol):
+    name: str
+    job: object
+    wealth_money: int
+    hunger_level: int
+    inventory: ItemInventory
+
+
 class EconomicSimulation:
     """Lightweight economic bridge for jobs, needs, and trading."""
 
@@ -164,7 +172,11 @@ class EconomicSimulation:
         ResourceType.KNOWLEDGE: "misc",
     }
 
-    def __init__(self, building_manager=None, production_interval: int = 10):
+    def __init__(
+        self,
+        building_manager: Optional[BuildingManager] = None,
+        production_interval: int = 10,
+    ):
         self.building_manager = building_manager
         self.production_interval = production_interval
         self.item_availability: Dict[str, int] = {}
@@ -193,16 +205,20 @@ class EconomicSimulation:
 
     def process_economy(
         self,
-        characters: Iterable,
+        characters: Iterable[EconomicActor],
         current_tick: int,
-        building_manager=None,
+        building_manager: Optional[BuildingManager] = None,
     ) -> Dict[str, int]:
         for character in characters:
             self.produce_items_for_job(character, current_tick=current_tick)
             self.consume_items_for_needs(character)
         return self.sync_item_availability(building_manager=building_manager, characters=characters)
 
-    def produce_items_for_job(self, character, current_tick: Optional[int] = None) -> List[EconomicItem]:
+    def produce_items_for_job(
+        self,
+        character: EconomicActor,
+        current_tick: Optional[int] = None,
+    ) -> List[EconomicItem]:
         job_key = self._get_job_key(getattr(character, "job", None))
         if not job_key:
             return []
@@ -236,7 +252,7 @@ class EconomicSimulation:
         )
         return [produced_item]
 
-    def consume_items_for_needs(self, character) -> Optional[EconomicItem]:
+    def consume_items_for_needs(self, character: EconomicActor) -> Optional[EconomicItem]:
         inventory = self._get_or_create_inventory(character)
 
         for need_name, rule in self.need_rules.items():
@@ -270,12 +286,12 @@ class EconomicSimulation:
 
     def trade_item(
         self,
-        seller,
-        buyer,
+        seller: EconomicActor,
+        buyer: EconomicActor,
         item_name: str,
         quantity: int = 1,
         unit_price: Optional[int] = None,
-    ):
+    ) -> tuple[bool, str]:
         if quantity <= 0:
             return False, "Quantity must be positive"
 
@@ -313,8 +329,8 @@ class EconomicSimulation:
 
     def sync_item_availability(
         self,
-        building_manager=None,
-        characters: Optional[Iterable] = None,
+        building_manager: Optional[BuildingManager] = None,
+        characters: Optional[Iterable[EconomicActor]] = None,
     ) -> Dict[str, int]:
         availability: Dict[str, int] = {}
         manager = building_manager or self.building_manager

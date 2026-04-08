@@ -29,6 +29,14 @@ class TestEconomicSimulation(unittest.TestCase):
         self.assertEqual(farmer.inventory.count_food_items_total(), 2)
         self.assertEqual(farmer.inventory.count_total_items_by_name("Farm Produce"), 2)
 
+    def test_unmapped_job_produces_no_items(self):
+        character = StubCharacter(name="Clerk", job="accountant")
+
+        produced_items = self.economic_simulation.produce_items_for_job(character, current_tick=10)
+
+        self.assertEqual(produced_items, [])
+        self.assertEqual(character.inventory.count_total_items(), 0)
+
     def test_job_production_is_rate_limited_per_character(self):
         farmer = StubCharacter(name="Farmer", job="farmer")
 
@@ -49,6 +57,14 @@ class TestEconomicSimulation(unittest.TestCase):
         self.assertLess(farmer.hunger_level, 8)
         self.assertEqual(farmer.inventory.count_food_items_total(), 1)
 
+    def test_need_consumption_skips_when_food_missing(self):
+        hungry_character = StubCharacter(name="Hungry", hunger_level=8)
+
+        consumed_item = self.economic_simulation.consume_items_for_needs(hungry_character)
+
+        self.assertIsNone(consumed_item)
+        self.assertEqual(hungry_character.hunger_level, 8)
+
     def test_trade_transfers_item_and_wealth(self):
         seller = StubCharacter(name="Seller", job="merchant", wealth_money=10)
         buyer = StubCharacter(name="Buyer", wealth_money=30)
@@ -67,6 +83,40 @@ class TestEconomicSimulation(unittest.TestCase):
         self.assertEqual(buyer.wealth_money, 23)
         self.assertEqual(seller.inventory.count_total_items_by_name("Trade Goods"), 1)
         self.assertEqual(buyer.inventory.count_total_items_by_name("Trade Goods"), 1)
+
+    def test_trade_fails_when_buyer_cannot_afford_item(self):
+        seller = StubCharacter(name="Seller", job="merchant", wealth_money=10)
+        buyer = StubCharacter(name="Buyer", wealth_money=2)
+        self.economic_simulation.produce_items_for_job(seller, current_tick=10)
+
+        success, message = self.economic_simulation.trade_item(
+            seller,
+            buyer,
+            "Trade Goods",
+            quantity=1,
+            unit_price=5,
+        )
+
+        self.assertFalse(success)
+        self.assertEqual(message, "Buyer cannot afford trade")
+        self.assertEqual(seller.inventory.count_total_items_by_name("Trade Goods"), 2)
+        self.assertEqual(buyer.inventory.count_total_items(), 0)
+
+    def test_trade_fails_when_seller_lacks_quantity(self):
+        seller = StubCharacter(name="Seller", job="merchant", wealth_money=10)
+        buyer = StubCharacter(name="Buyer", wealth_money=30)
+        self.economic_simulation.produce_items_for_job(seller, current_tick=10)
+
+        success, message = self.economic_simulation.trade_item(
+            seller,
+            buyer,
+            "Trade Goods",
+            quantity=5,
+            unit_price=5,
+        )
+
+        self.assertFalse(success)
+        self.assertEqual(message, "Seller lacks 5 Trade Goods")
 
     def test_sync_item_availability_includes_buildings_and_characters(self):
         building_manager = BuildingManager()
