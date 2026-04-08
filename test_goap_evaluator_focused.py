@@ -88,10 +88,14 @@ class StubCondition:
 
     def check_condition(self, state):
         current_value = state.get(self.attribute, 0)
-        if self.operator in ("ge", "gt"):
+        if self.operator == "ge":
             return current_value >= self.satisfy_value
-        if self.operator in ("le", "lt"):
+        if self.operator == "gt":
+            return current_value > self.satisfy_value
+        if self.operator == "le":
             return current_value <= self.satisfy_value
+        if self.operator == "lt":
+            return current_value < self.satisfy_value
         return current_value == self.satisfy_value
 
 
