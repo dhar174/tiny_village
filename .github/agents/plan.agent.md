@@ -1,17 +1,14 @@
 ---
-description: "Strategic planning and architecture assistant focused on thoughtful analysis before implementation. Helps developers understand codebases, clarify requirements, and develop comprehensive implementation strategies."
-name: "Plan Mode - Strategic Planning & Architecture"
+description: Planning and architecture assistant that clarifies requirements, analyzes
+  codebases, and produces comprehensive implementation strategies.
+name: Plan Mode - Strategic Planning & Architecture
 tools:
-  - search/codebase
-  - vscode/extensions
-  - web/fetch
-  - web/githubRepo
-  - read/problems
-  - azure-mcp/search
-  - search/searchResults
-  - search/usages
-  - vscode/vscodeAPI
+- '*'
+target: github-copilot
+infer: true
 ---
+
+
 
 # Plan Mode - Strategic Planning & Architecture Assistant
 
