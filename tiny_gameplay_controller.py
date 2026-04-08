@@ -4204,6 +4204,7 @@ class GameplayController:
             events = []
             try:
                 events = self.event_handler.check_events()
+                events = self._normalize_and_prioritize_events(events, update_errors)
                 logger.debug(f"EventHandler found {len(events)} events to process")
             except Exception as e:
                 logger.warning(f"Error checking events via EventHandler: {e}")
@@ -4221,6 +4222,10 @@ class GameplayController:
                     if event_results.get('failed_events'):
                         logger.warning(f"Some events failed processing: {event_results['failed_events']}")
                         update_errors.append(f"Event processing failures: {len(event_results['failed_events'])}")
+
+                    # Apply controller-level consequences so event outcomes
+                    # can immediately influence world and AI runtime state.
+                    self._apply_event_consequences(events, event_results, update_errors)
                         
                 except Exception as e:
                     logger.warning(f"Error processing events: {e}")
@@ -4246,6 +4251,94 @@ class GameplayController:
         except Exception as e:
             logger.error(f"Critical error in event-driven strategy processing: {e}")
             update_errors.append(f"Event-driven strategy system failure: {str(e)}")
+
+    def _normalize_and_prioritize_events(self, events, update_errors):
+        """Normalize events into a consistent shape and prioritize higher-impact items first."""
+        if not events:
+            return []
+
+        normalized_events = []
+        for event in events:
+            try:
+                event_type = getattr(event, "type", None)
+                importance = getattr(event, "importance", None)
+                impact = getattr(event, "impact", None)
+                if isinstance(event, dict):
+                    event_type = event_type or event.get("type", "general")
+                    importance = importance if importance is not None else event.get("importance", 5)
+                    impact = impact if impact is not None else event.get("impact", 0)
+                else:
+                    event_type = event_type or "general"
+                    importance = 5 if importance is None else importance
+                    impact = 0 if impact is None else impact
+
+                # Ensure normalized numeric values for stable sorting/dispatch.
+                importance = max(0, int(importance))
+                impact = int(impact)
+
+                if isinstance(event, dict):
+                    normalized_event = dict(event)
+                    normalized_event["_normalized_event_type"] = event_type
+                    normalized_event["_normalized_importance"] = importance
+                    normalized_event["_normalized_impact"] = impact
+                else:
+                    setattr(event, "_normalized_event_type", event_type)
+                    setattr(event, "_normalized_importance", importance)
+                    setattr(event, "_normalized_impact", impact)
+                    normalized_event = event
+
+                normalized_events.append(normalized_event)
+            except Exception as e:
+                logger.warning(f"Failed to normalize event {event}: {e}")
+                update_errors.append("Event normalization failed")
+
+        # Prioritize more important and impactful events first, then by type/name for deterministic order.
+        normalized_events.sort(
+            key=lambda event: (
+                -(event.get("_normalized_importance", 0) if isinstance(event, dict) else getattr(event, "_normalized_importance", 0)),
+                -abs(event.get("_normalized_impact", 0) if isinstance(event, dict) else getattr(event, "_normalized_impact", 0)),
+                str(event.get("_normalized_event_type", "general") if isinstance(event, dict) else getattr(event, "_normalized_event_type", "general")),
+                str(event.get("name", "event") if isinstance(event, dict) else getattr(event, "name", "event")),
+            )
+        )
+        return normalized_events
+
+    def _apply_event_consequences(self, events, event_results, update_errors):
+        """Apply lightweight event consequences and dispatch bookkeeping by event type."""
+        try:
+            if not hasattr(self, "game_state") or self.game_state is None:
+                self.game_state = {}
+
+            processed_count = len(event_results.get("processed_events", []))
+            if processed_count:
+                self.game_statistics["events_processed"] += processed_count
+
+            for event in events:
+                if isinstance(event, dict):
+                    event_type = event.get("_normalized_event_type") or event.get("type", "general")
+                    impact = event.get("_normalized_impact", event.get("impact", 0))
+                else:
+                    event_type = getattr(event, "_normalized_event_type", None) or getattr(event, "type", "general")
+                    impact = getattr(event, "_normalized_impact", None)
+                    if impact is None:
+                        impact = getattr(event, "impact", 0)
+
+                # Track event type distribution for downstream systems/analytics.
+                self.game_statistics[f"events_{event_type}"] += 1
+
+                # Lightweight world-state ripple hooks.
+                if event_type == "economic":
+                    self.game_state["economy_stability"] = self.game_state.get("economy_stability", 50) + impact
+                elif event_type == "social":
+                    self.game_state["social_cohesion"] = self.game_state.get("social_cohesion", 50) + impact
+                elif event_type in ("weather", "environmental"):
+                    self.game_state["environment_pressure"] = self.game_state.get("environment_pressure", 0) + abs(impact)
+                elif event_type in ("work", "career"):
+                    self.game_state["job_market_activity"] = self.game_state.get("job_market_activity", 50) + impact
+
+        except Exception as e:
+            logger.warning(f"Error applying event consequences: {e}")
+            update_errors.append("Event consequence application failed")
 
     def _apply_strategy_result(self, strategy_result, update_errors):
         """Apply strategy result from the strategy manager, handling different return types."""
