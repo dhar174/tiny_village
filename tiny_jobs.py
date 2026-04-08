@@ -3,6 +3,15 @@ import logging
 import os
 import re
 
+JOB_TITLE_TOKEN_EXCLUSIONS = {
+    "junior",
+    "senior",
+    "lead",
+    "assistant",
+    "associate",
+    "manager",
+}
+
 
 class JobRoles:
     def __init__(
@@ -177,8 +186,17 @@ class JobRoles:
 class JobRules:
     def __init__(self):
         job_roles_path = os.path.join(os.path.dirname(__file__), "job_roles.json")
-        with open(job_roles_path, encoding="utf-8") as job_roles_file:
-            job_roles = json.load(job_roles_file)
+        try:
+            with open(job_roles_path, encoding="utf-8") as job_roles_file:
+                job_roles = json.load(job_roles_file)
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(
+                f"Unable to load job roles because the file does not exist: {job_roles_path}"
+            ) from exc
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                f"Unable to parse job roles JSON from {job_roles_path}: {exc}"
+            ) from exc
         job_count = len([job_roles["jobs"][job_role] for job_role in job_roles["jobs"]])
         logging.debug(f"Job count: {job_count}")
         if job_count != len(
@@ -277,18 +295,29 @@ class JobRules:
         if not isinstance(job_name, str):
             return None
         normalized_job_name = job_name.strip().lower()
+        exact_matches = []
+        partial_matches = []
         for job_role in self.ValidJobRoles:
             role_name = job_role.get_job_name().strip().lower()
             role_title = job_role.job_title.strip().lower()
+            if normalized_job_name == role_name or normalized_job_name == role_title:
+                exact_matches.append(job_role)
+                continue
+
+            if len(normalized_job_name) < 4:
+                continue
+
             if (
-                normalized_job_name == role_name
-                or normalized_job_name == role_title
-                or normalized_job_name in role_name
+                normalized_job_name in role_name
                 or normalized_job_name in role_title
                 or role_name in normalized_job_name
                 or role_title in normalized_job_name
             ):
-                return job_role
+                partial_matches.append(job_role)
+        if exact_matches:
+            return exact_matches[0]
+        if partial_matches:
+            return partial_matches[0]
         return None
 
 
@@ -704,7 +733,11 @@ class JobManager:
         else:
             fit_score = 40.0 + (len(matching_skills) / len(job_skills)) * 60.0
 
-        qualified = not job_skills or not character_skills or len(matching_skills) >= max(1, len(job_skills) // 3)
+        no_skills_required = not job_skills
+        character_has_no_skills = not character_skills
+        minimum_matching_skills = max(1, len(job_skills) // 3) if job_skills else 0
+        meets_skill_threshold = len(matching_skills) >= minimum_matching_skills
+        qualified = no_skills_required or character_has_no_skills or meets_skill_threshold
         return {
             "qualified": qualified,
             "score": round(fit_score, 2),
@@ -867,8 +900,13 @@ class JobManager:
             "economic_value": round(base_value, 2),
             "skill_focus": list(job.get_job_skills()),
         }
+        stable_job_name = re.sub(
+            r"[^A-Za-z0-9]+",
+            "",
+            job.get_job_name().title(),
+        ) or "Job"
         skill_action = {
-            "name": f"Improve{re.sub(r'[^A-Za-z0-9]+', '', title.title()) or 'Job'}Skills",
+            "name": f"Improve{stable_job_name}Skills",
             "description": f"Study and practice skills related to {title}.",
             "time_cost": 2,
             "energy_cost": 1,
@@ -1032,7 +1070,7 @@ class JobManager:
             for token in self._normalize_skill_name(title).split()
             if token
             and token
-            not in {"junior", "senior", "lead", "assistant", "associate", "manager"}
+            not in JOB_TITLE_TOKEN_EXCLUSIONS
         }
         return tokens
 
@@ -1086,7 +1124,8 @@ class JobManager:
         if not candidates:
             return None
         candidates.sort(reverse=True)
-        return candidates[0][-1]
+        _, _, _, candidate_role = candidates[0]
+        return candidate_role
 
     def progress_career(self, character, auto_promote=True):
         current_job = self.get_character_job(character)

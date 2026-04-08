@@ -34,7 +34,7 @@ class TestTinyJobs(unittest.TestCase):
         self.manager = JobManager()
         self.blacksmith = JobRoles(
             "Blacksmith",
-            "Blacksmith",
+            "Village Blacksmith",
             "Forge tools for the village.",
             "$52,000",
             ["Metalworking", "Craftsmanship"],
@@ -44,7 +44,7 @@ class TestTinyJobs(unittest.TestCase):
         )
         self.farmer = JobRoles(
             "Farmer",
-            "Farmer",
+            "Field Farmer",
             "Grow crops and maintain fields.",
             "$36,000",
             ["Farming", "Stamina"],
@@ -54,7 +54,7 @@ class TestTinyJobs(unittest.TestCase):
         )
         self.junior_smith = JobRoles(
             "Junior Smith",
-            "Junior Smith",
+            "Junior Smith Apprentice",
             "Entry-level metalworker.",
             "$32,000",
             ["Metalworking"],
@@ -64,7 +64,7 @@ class TestTinyJobs(unittest.TestCase):
         )
         self.senior_smith = JobRoles(
             "Senior Smith",
-            "Senior Smith",
+            "Senior Smith Foreman",
             "Lead the smithing workshop.",
             "$65,000",
             ["Metalworking", "Leadership"],
