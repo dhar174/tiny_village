@@ -672,7 +672,7 @@ class Building:
         return sum(
             amount
             for amount in config.get("produces", {}).values()
-            if isinstance(amount, (int, float))
+            if isinstance(amount, (int, float)) and amount > 0
         )
 
     def _get_service_income_delta(self, service_name):
@@ -687,7 +687,10 @@ class Building:
         service = services_config.get(normalized_name)
         if service is None:
             return 0
-        return service.cost
+        cost = getattr(service, "cost", 0)
+        if not isinstance(cost, (int, float)):
+            return 0
+        return cost
 
     def volume(self):
         return self.length * self.width * self.height

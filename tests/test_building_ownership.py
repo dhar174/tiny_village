@@ -98,6 +98,23 @@ def tearDownModule():
 
 
 class TestBuildingOwnership(unittest.TestCase):
+    def test_private_building_allows_owner_identity_match(self):
+        owner = SimpleNamespace(name="Alice", uuid="owner-identity", wealth_money=100, energy=100)
+        house = Building(
+            "Alice House",
+            0,
+            0,
+            10,
+            10,
+            10,
+            building_type="house",
+            owner=owner,
+        )
+
+        interactions = house.get_possible_interactions(owner)
+        self.assertGreater(len(interactions), 1)
+        self.assertIn("Enter Building", [action.name for action in interactions])
+
     def test_private_building_blocks_non_owner_interactions(self):
         owner = SimpleNamespace(name="Alice", uuid="owner-1", wealth_money=100)
         visitor = SimpleNamespace(name="Bob", uuid="visitor-2", energy=100)
