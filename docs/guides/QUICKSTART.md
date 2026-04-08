@@ -21,8 +21,9 @@ python3.12 -m pip install -r requirements.txt
 ```
 
 **Note**: Tiny Village now targets Python 3.12. The full `requirements.txt` is the
-supported dependency set; optional dependencies (transformers, spacy) add
-advanced features but aren't required for the minimal demo paths.
+supported dependency set for this quickstart; packages such as `transformers`
+and `spacy` are included for advanced features, but the minimal demo paths do
+not depend on those features being exercised.
 
 ## Running Your First Demo
 
