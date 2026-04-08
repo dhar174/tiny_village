@@ -28,29 +28,29 @@ class GraphManagerHarness:
 
     def add_event_node(self, event):
         self.event_nodes[event.name] = event
-        self.G.add_node(event.name, type="event", event=event)
+        self.G.add_node(event, type="event", event=event)
 
     def get_node(self, node_name):
         return self.event_nodes.get(node_name)
 
     def add_character_event_edge(self, character, event, **attributes):
         character_name = getattr(character, "name", str(character))
-        self.G.add_node(character_name, type="character")
-        self.G.add_edge(character_name, event.name, **attributes)
+        self.G.add_node(character, type="character")
+        self.G.add_edge(character, event, **attributes)
         self.character_event_edges.append((character_name, event.name, attributes))
 
     def add_location_event_edge(self, location, event, **attributes):
         location_name = getattr(location, "name", str(location))
-        self.G.add_node(location_name, type="location")
-        self.G.add_edge(location_name, event.name, **attributes)
+        self.G.add_node(location, type="location")
+        self.G.add_edge(location, event, **attributes)
         self.location_event_edges.append((location_name, event.name, attributes))
 
     def update_character_character_edge(self, source, target, **attributes):
         source_name = getattr(source, "name", str(source))
         target_name = getattr(target, "name", str(target))
-        self.G.add_node(source_name, type="character")
-        self.G.add_node(target_name, type="character")
-        self.G.add_edge(source_name, target_name, **attributes)
+        self.G.add_node(source, type="character")
+        self.G.add_node(target, type="character")
+        self.G.add_edge(source, target, **attributes)
         self.relationship_updates.append((source_name, target_name, attributes))
 
 
@@ -90,8 +90,9 @@ def test_storytelling_integration_processes_events_into_story_arcs():
     controller.events = [festival]
     controller._process_pending_events()
 
-    assert len(controller.storytelling_system.arc_manager.active_arcs) >= initial_story_count
+    assert len(controller.storytelling_system.arc_manager.active_arcs) > initial_story_count
     assert "Village Festival" in graph_manager.event_nodes
+    assert graph_manager.G.has_edge(alice, festival)
     assert any(edge[0] == "Alice" and edge[1] == "Village Festival" for edge in graph_manager.character_event_edges)
 
 
