@@ -887,6 +887,9 @@ class SocialModel:
         def edge_score(item):
             edge_key, attrs = item
             field_count = sum(1 for field in self.RELATIONSHIP_EDGE_FIELDS if field in attrs)
+            # A relationship edge in this codebase is most often the production
+            # character_character edge, but older or ad hoc graph fixtures may
+            # only expose the same intent through relationship-shaped fields.
             probable_relationship_edge = (
                 edge_key == "character_character"
                 or attrs.get("type") == "character_character"
