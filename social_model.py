@@ -892,6 +892,11 @@ class SocialModel:
                 or attrs.get("type") == "character_character"
                 or field_count > 0
             )
+            # Prefer edges that look like relationship storage first, then
+            # production's character_character type/key, then richer
+            # relationship metadata, and finally fall back to the edge key so
+            # ties resolve deterministically instead of depending on insertion
+            # order.
             return (
                 probable_relationship_edge,
                 attrs.get("type") == "character_character",
