@@ -70,12 +70,12 @@ class GraphManagerStub:
 class PlannerGoal:
     """Minimal GOAP goal fixture that checks target effects against planner state."""
 
-    def __init__(self, name, target_effects, priority=1.0):
+    def __init__(self, name: str, target_effects: dict[str, float], priority: float = 1.0):
         self.name = name
         self.target_effects = target_effects
         self.priority = priority
 
-    def check_completion(self, state):
+    def check_completion(self, state: State) -> bool:
         return all(
             state.get(attribute, 0) >= target_value - COMPLETION_TOLERANCE
             for attribute, target_value in self.target_effects.items()
@@ -131,6 +131,8 @@ def test_planner_goal_check_completion_respects_completion_tolerance():
 
     assert goal.check_completion(State({"energy": 0.5})) is True
     assert goal.check_completion(State({"energy": 0.49})) is False
+    assert goal.check_completion(State({"energy": 0.6})) is True
+    assert goal.check_completion(State({"energy": 0.7})) is True
 
 
 def test_plan_actions_uses_graph_manager_state_and_actions_to_reach_goal():
