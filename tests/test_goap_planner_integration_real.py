@@ -1,9 +1,8 @@
 import pytest
 
-from actions import Action, State
+from actions import State
 from tiny_goap_system import ActionWrapper, GOAPPlanner, Plan
 from tiny_strategy_manager import StrategyManager
-from tiny_utility_functions import Goal
 
 
 class HomeLocation:
@@ -64,6 +63,16 @@ class GraphManagerStub:
         return self._actions_by_name[name]
 
 
+class PlannerGoal:
+    def __init__(self, name, target_effects, priority=1.0):
+        self.name = name
+        self.target_effects = target_effects
+        self.priority = priority
+
+    def check_completion(self, state):
+        return all(state.get(attribute, 0) >= target_value - 0.1 for attribute, target_value in self.target_effects.items())
+
+
 class EnergyGoal:
     def __init__(self, actor, target_energy):
         self.actor = actor
@@ -112,18 +121,18 @@ def test_plan_actions_uses_graph_manager_state_and_actions_to_reach_goal():
     character = CharacterStub(name="GraphAlice", energy=20)
     graph_actions = {
         character.name: [
-            Action(
-                name="Rest",
-                preconditions=[],
-                effects=[{"attribute": "energy", "change_value": 10}],
-                cost=1,
-            ),
-            Action(
-                name="Sleep",
-                preconditions=[],
-                effects=[{"attribute": "energy", "change_value": 30}],
-                cost=2,
-            ),
+            {
+                "name": "Rest",
+                "preconditions": [],
+                "effects": [{"attribute": "energy", "change_value": 10}],
+                "cost": 1,
+            },
+            {
+                "name": "Sleep",
+                "preconditions": [],
+                "effects": [{"attribute": "energy", "change_value": 30}],
+                "cost": 2,
+            },
         ]
     }
     planner = GOAPPlanner(
@@ -132,7 +141,7 @@ def test_plan_actions_uses_graph_manager_state_and_actions_to_reach_goal():
             graph_actions,
         )
     )
-    goal = Goal(name="restore_energy", target_effects={"energy": 50}, priority=1.0)
+    goal = PlannerGoal(name="restore_energy", target_effects={"energy": 50}, priority=1.0)
 
     plan = planner.plan_actions(character, goal)
 
@@ -145,7 +154,7 @@ def test_plan_actions_uses_graph_manager_state_and_actions_to_reach_goal():
 def test_plan_for_character_without_graph_manager_uses_fallback_actions_meaningfully():
     character = CharacterStub(name="FallbackBob", energy=20, job=None)
     planner = GOAPPlanner(None)
-    goal = Goal(name="recover", target_effects={"energy": 30}, priority=1.0)
+    goal = PlannerGoal(name="recover", target_effects={"energy": 30}, priority=1.0)
 
     fallback_actions = planner.get_available_actions(character)
     plan = planner.plan_for_character(character, goal)
@@ -159,7 +168,7 @@ def test_plan_for_character_without_graph_manager_uses_fallback_actions_meaningf
 def test_strategy_manager_generated_energy_plan_actually_raises_energy_to_goal():
     character = CharacterStub(name="Strategist", energy=2, hunger=8, wealth_money=10)
     manager = StrategyManager(use_llm=False)
-    goal = Goal(name="restore_energy", target_effects={"energy": 0.6}, priority=0.9)
+    goal = PlannerGoal(name="restore_energy", target_effects={"energy": 0.6}, priority=0.9)
     current_state = State(manager.get_character_state_dict(character))
     actions = manager.get_daily_actions(character)
 
