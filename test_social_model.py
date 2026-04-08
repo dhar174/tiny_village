@@ -157,7 +157,7 @@ class TestSocialModel(unittest.TestCase):
     def test_update_relationship_status_mutates_real_graph_edge(self):
         self.social_model.update_relationship_status("Alice", "Bob", {"trust": 0.1})
 
-        self.assertEqual(self.world_state.G["Alice"]["Bob"]["trust"], 0.9)
+        self.assertEqual(self.world_state.G["Alice"]["Bob"][0]["trust"], 0.9)
 
     def test_analyze_relationship_health_uses_real_edge_metrics(self):
         health = self.social_model.analyze_relationship_health("Alice", "Bob")
