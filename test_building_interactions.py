@@ -39,10 +39,11 @@ class MockCharacter:
         
         # Use strict value objects so missing attribute access fails.
         self.personality_traits = PersonalityTraits(
-            extraversion=extraversion,
-            openness=attributes.get('openness', 50),
-            conscientiousness=attributes.get('conscientiousness', 50),
-            agreeableness=attributes.get('agreeableness', 50),
+            extraversion=float(extraversion),
+            openness=float(attributes.get('openness', 50)),
+            conscientiousness=float(attributes.get('conscientiousness', 50)),
+            agreeableness=float(attributes.get('agreeableness', 50)),
+            neuroticism=float(attributes.get('neuroticism', 50))
         )
         
         self.skills = CharacterSkills(
