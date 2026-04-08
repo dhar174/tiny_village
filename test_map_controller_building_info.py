@@ -116,7 +116,7 @@ class TestMapControllerBuildingInfo(unittest.TestCase):
             height=60,
             owner="City Council",
         )
-        def mock_show(content, pos):
+        def mock_show(content, _pos):
             self.shown_content = content
 
         self.controller.info_panel = types.SimpleNamespace(show=mock_show)

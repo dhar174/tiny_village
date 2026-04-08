@@ -1026,7 +1026,7 @@ class MapController:
             
         return info
 
-    def _is_building_like(self, building) -> bool:
+    def _is_building_or_dict(self, building) -> bool:
         """Return True when the target looks like legacy building data or a Building object."""
         return hasattr(building, 'get') or hasattr(building, 'get_location') or hasattr(building, 'coordinates_location')
 
@@ -1047,8 +1047,14 @@ class MapController:
         if rect is None:
             return None
 
-        x = getattr(rect, 'x', getattr(rect, 'left', None))
-        y = getattr(rect, 'y', getattr(rect, 'top', None))
+        x = getattr(rect, 'x', None)
+        if x is None:
+            x = getattr(rect, 'left', None)
+
+        y = getattr(rect, 'y', None)
+        if y is None:
+            y = getattr(rect, 'top', None)
+
         width = getattr(rect, 'width', None)
         height = getattr(rect, 'height', None)
 
@@ -1067,6 +1073,7 @@ class MapController:
             try:
                 location = building.get_location()
             except (AttributeError, TypeError):
+                logging.debug("Building object did not provide a usable location", exc_info=True)
                 location = None
 
         if location is not None:
@@ -1116,16 +1123,15 @@ class MapController:
                     info[key] = building[key]
         else:
             original_data = self._get_original_building_data(building)
-            if original_data:
-                for key in BUILDING_INFO_METADATA_KEYS:
-                    if key in original_data:
-                        info[key] = original_data[key]
-
             for key in BUILDING_INFO_METADATA_KEYS:
-                if key not in info and hasattr(building, key):
+                value = None
+                if original_data and key in original_data:
+                    value = original_data[key]
+                elif hasattr(building, key):
                     value = getattr(building, key)
-                    if value is not None:
-                        info[key] = value
+
+                if value is not None:
+                    info[key] = value
                  
         return info
 
@@ -1175,7 +1181,7 @@ class MapController:
         action = option.get('action')
         target = option.get('target')
         
-        if action == 'enter' and self._is_building_like(target):
+        if action == 'enter' and self._is_building_or_dict(target):
             self.enter_building(target)
         elif action == 'details':
             self.show_target_details(target)
@@ -1204,7 +1210,7 @@ class MapController:
 
     def show_target_details(self, target):
         """Show detailed information about the target."""
-        if self._is_building_like(target):
+        if self._is_building_or_dict(target):
             info = self.get_building_info(target)
         elif hasattr(target, 'position'):  # Character
             info = self.get_character_info(target)
