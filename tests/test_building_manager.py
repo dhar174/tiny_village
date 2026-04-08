@@ -6,12 +6,28 @@ Tests resource production, consumption, and service functionality.
 
 import unittest
 from unittest.mock import Mock
+import sys
+import types
 from tiny_building_manager import (
     BuildingManager,
     ResourceType,
     ResourcePool,
     BuildingService
 )
+from actions import Skill
+
+
+def build_character_skills(**skill_levels):
+    if "tiny_graph_manager" not in sys.modules:
+        stub = types.ModuleType("tiny_graph_manager")
+        stub.GraphManager = object
+        sys.modules["tiny_graph_manager"] = stub
+
+    from tiny_characters import CharacterSkills
+
+    return CharacterSkills(
+        [Skill(skill_name, level) for skill_name, level in skill_levels.items()]
+    )
 
 
 class MockCharacter:
@@ -28,9 +44,9 @@ class MockCharacter:
         self.intelligence = attributes.get('intelligence', 50)
         self.knowledge = attributes.get('knowledge', 50)
         
-        # Mock skills
-        self.skills = Mock()
-        self.skills.crafting = attributes.get('crafting_skill', 20)
+        self.skills = build_character_skills(
+            crafting=attributes.get("crafting_skill", 20)
+        )
 
 
 class TestResourcePool(unittest.TestCase):
@@ -346,6 +362,21 @@ class TestBuildingManager(unittest.TestCase):
         
         self.assertTrue(success)
         self.assertGreater(self.mock_character.intelligence, initial_intelligence)
+
+    def test_provide_service_updates_real_character_skills(self):
+        """Test crafting services update the real CharacterSkills container."""
+        self.manager.register_building("workshop_1", "workshop")
+
+        crafter = MockCharacter(wealth_money=50, crafting_skill=20)
+        initial_crafting = crafter.skills.crafting
+
+        success, message = self.manager.provide_service(
+            "workshop_1", "workshop", "craft_item", crafter
+        )
+
+        self.assertTrue(success, message)
+        self.assertEqual(crafter.skills.crafting, initial_crafting + 1)
+        self.assertEqual(crafter.skills.get("crafting"), initial_crafting + 1)
     
     def test_provide_service_invalid_service(self):
         """Test providing invalid service name."""

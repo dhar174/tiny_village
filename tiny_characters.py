@@ -1717,6 +1717,50 @@ class CharacterSkills:
     def get_skills_as_list_of_strings(self):
         return [skill.name for skill in self.skills]
 
+    def _get_skill_by_name(self, skill_name):
+        for skill in self.skills:
+            if getattr(skill, "name", None) == skill_name:
+                return skill
+        return None
+
+    def get(self, skill_name, default=None):
+        skill = self._get_skill_by_name(skill_name)
+        return skill.level if skill is not None else default
+
+    def keys(self):
+        return [skill.name for skill in self.skills]
+
+    def values(self):
+        return [skill.level for skill in self.skills]
+
+    def items(self):
+        return [(skill.name, skill.level) for skill in self.skills]
+
+    def __contains__(self, skill_name):
+        return self._get_skill_by_name(skill_name) is not None
+
+    def __getattr__(self, skill_name):
+        skill = self._get_skill_by_name(skill_name)
+        if skill is not None:
+            return skill.level
+        raise AttributeError(
+            f"{self.__class__.__name__!s} object has no attribute {skill_name!r}"
+        )
+
+    def __setattr__(self, name, value):
+        if name in {"action_skills", "job_skills", "other_skills", "skills"}:
+            object.__setattr__(self, name, value)
+            return
+
+        skills = self.__dict__.get("skills")
+        if isinstance(skills, list):
+            skill = self._get_skill_by_name(name)
+            if skill is not None:
+                skill.level = value
+                return
+
+        object.__setattr__(self, name, value)
+
     def set_skills(self, skills):
         for skill in skills:
             self.skills.append(skill)
