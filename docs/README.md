@@ -83,6 +83,7 @@ Deep-dive documentation on system architecture and design decisions.
 - gui_display_analysis.md
 - high_level_architecture.md
 - memory_manager_deep_dive.md
+- module_connectivity_map.md
 - strategy_management_architecture.md
 
 ### `/critical_analysis/` - Critical Analysis
@@ -121,6 +122,7 @@ GitHub-specific documentation and agent definitions.
 
 ### For Developers
 - **System architecture**: See [/design_docs/high_level_architecture.md](../design_docs/high_level_architecture.md)
+- **Module connectivity**: See [/design_docs/module_connectivity_map.md](../design_docs/module_connectivity_map.md)
 - **Agent guidelines**: Start with [`../AGENTS.md`](../AGENTS.md), then use [/reference/AGENTS.md](reference/AGENTS.md) for supplemental background
 - **Current status**: See [/reference/MINIMUM_DEMO_STATUS.md](reference/MINIMUM_DEMO_STATUS.md)
 
