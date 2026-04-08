@@ -1,10 +1,10 @@
-# Tiny Village - System Integration Status
+# Tiny Village - System Integration Complete (Status Notes)
 
 ## Summary
 
-This file is a high-level integration reference. Earlier revisions described the
-system as fully demo-ready, but current verification shows that conclusion was
-too strong.
+This file is a high-level integration reference. Its filename is retained for
+link stability, but earlier revisions described the system as fully demo-ready
+more strongly than current verification supports.
 
 ## What Is Verified
 

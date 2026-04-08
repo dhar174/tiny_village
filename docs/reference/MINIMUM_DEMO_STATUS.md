@@ -2,8 +2,8 @@
 
 ## Executive Summary
 
-This document tracks **verified demo-readiness facts** rather than a percentage
-estimate.
+This document tracks **verified repository artifacts and command results**
+rather than a percentage estimate.
 
 On 2026-04-08, the following checks were run in a fresh clone of the repository:
 
