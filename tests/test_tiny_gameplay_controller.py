@@ -111,6 +111,65 @@ class TestGameplayController(unittest.TestCase):
         )
         update_state.assert_called_once_with(self.mock_character, self.mock_action)
 
+    def test_execute_single_action_uses_legacy_execute_signature_when_needed(self):
+        class LegacyAction:
+            def __init__(self):
+                self.name = "LegacyAction"
+                self.calls = []
+
+            def execute(self, target=None, initiator=None):
+                self.calls.append((target, initiator))
+                return True
+
+        legacy_action = LegacyAction()
+        self.controller.action_resolver.resolve_action.return_value = legacy_action
+
+        with patch.object(
+            self.controller,
+            "_update_character_state_after_action",
+        ) as update_state:
+            result = self.controller._execute_single_action(
+                self.mock_character,
+                {"name": "LegacyActionData"},
+            )
+
+        self.assertTrue(result)
+        self.assertEqual(legacy_action.calls, [(self.mock_character, self.mock_character)])
+        update_state.assert_called_once_with(self.mock_character, legacy_action)
+
+    def test_execute_single_action_does_not_retry_internal_type_errors(self):
+        execute_calls = []
+
+        def raising_execute(*, character=None, graph_manager=None):
+            execute_calls.append((character, graph_manager))
+            raise TypeError("action body failure")
+
+        self.controller.action_resolver.resolve_action.return_value = self.mock_action
+        self.mock_action.execute = MagicMock(side_effect=raising_execute)
+
+        with self.assertLogs("tiny_gameplay_controller", level="WARNING") as captured_logs, patch.object(
+            self.controller,
+            "_update_character_state_after_action",
+        ) as update_state:
+            result = self.controller._execute_single_action(
+                self.mock_character,
+                {"name": "BrokenActionData"},
+            )
+
+        self.assertFalse(result)
+        self.assertEqual(
+            execute_calls,
+            [(self.mock_character, self.controller.graph_manager)],
+        )
+        self.mock_action.execute.assert_called_once_with(
+            character=self.mock_character,
+            graph_manager=self.controller.graph_manager,
+        )
+        update_state.assert_not_called()
+        self.assertTrue(
+            any("action body failure" in message for message in captured_logs.output)
+        )
+
     def test_update_character_state_records_memory_without_graph_update(self):
         specific_graph_manager = MagicMock()
         self.controller.graph_manager = specific_graph_manager
@@ -259,6 +318,50 @@ class TestGameplayController(unittest.TestCase):
 
         self.assertNotEqual(before, after)
 
+    def test_render_minimap_caches_scaled_map(self):
+        real_map_controller = self.create_map_controller(
+            buildings=[
+                {"name": "Town Hall", "type": "government", "rect": pygame.Rect(20, 20, 20, 20)},
+            ]
+        )
+        self.controller.map_controller = real_map_controller
+
+        with patch(
+            "tiny_gameplay_controller.pygame.transform.smoothscale",
+            wraps=pygame.transform.smoothscale,
+        ) as smoothscale:
+            self.controller._render_minimap()
+            self.controller._render_minimap()
+
+        self.assertEqual(smoothscale.call_count, 1)
+
+    def test_render_minimap_handles_building_objects(self):
+        class ObjectBackedBuilding:
+            def __init__(self, rect):
+                self._rect = rect
+
+            def get_location(self):
+                return self._rect
+
+        real_map_controller = self.create_map_controller(
+            buildings=[
+                {"name": "Town Hall", "type": "government", "rect": pygame.Rect(20, 20, 20, 20)},
+            ]
+        )
+        real_map_controller.map_data["buildings"] = [
+            {"name": "Town Hall", "type": "government", "rect": pygame.Rect(20, 20, 20, 20)},
+            ObjectBackedBuilding(pygame.Rect(60, 60, 15, 15)),
+            object(),
+        ]
+        self.controller.map_controller = real_map_controller
+
+        self.controller.screen.fill((0, 0, 0))
+        before = pygame.image.tostring(self.controller.screen, "RGB")
+        self.controller._render_minimap()
+        after = pygame.image.tostring(self.controller.screen, "RGB")
+
+        self.assertNotEqual(before, after)
+
     def test_render_overview_draws_summary_with_real_map_controller(self):
         real_map_controller = self.create_map_controller(
             buildings=[
@@ -275,6 +378,19 @@ class TestGameplayController(unittest.TestCase):
         after = pygame.image.tostring(self.controller.screen, "RGB")
 
         self.assertNotEqual(before, after)
+
+    def test_render_overview_caches_scaled_map_between_frames(self):
+        real_map_controller = self.create_map_controller(fill=(0, 100, 200))
+        self.controller.map_controller = real_map_controller
+
+        with patch.object(self.controller, "_render_minimap"), patch(
+            "tiny_gameplay_controller.pygame.transform.smoothscale",
+            wraps=pygame.transform.smoothscale,
+        ) as smoothscale:
+            self.controller._render_overview()
+            self.controller._render_overview()
+
+        self.assertEqual(smoothscale.call_count, 1)
 
     def test_render_dispatches_to_overview_mode(self):
         with patch.object(self.controller, "_render_overview") as render_overview:

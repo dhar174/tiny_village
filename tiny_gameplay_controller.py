@@ -1,14 +1,16 @@
-import pygame
-import random
+import datetime  # Added for time-based achievement
+import inspect
 import logging
-import traceback
 import json
 import os
+import random
 import threading
 import time
-import datetime # Added for time-based achievement
+import traceback
 from collections import deque
 from datetime import timedelta
+
+import pygame
 
 # Constants for speed control
 MAX_SPEED = 5.0
@@ -1721,6 +1723,10 @@ class GameplayController:
         self.time_scale_factor = 1.0 # Added for time scaling
         self._cached_speed_text = None
         self._last_time_scale_factor = None
+        self._minimap_scaled_surface = None
+        self._minimap_cache_key = None
+        self._overview_scaled_surface = None
+        self._overview_cache_key = None
         performance_config = self.config.get("performance_monitoring", {})
         history_size = max(10, int(performance_config.get("history_size", 120)))
         self._frame_time_history = deque(maxlen=history_size)
@@ -3728,11 +3734,7 @@ class GameplayController:
                 logger.warning(f"Unable to execute unresolved action: {action_data}")
                 return False
 
-            try:
-                success = action.execute(character=character, graph_manager=self.graph_manager)
-            except TypeError:
-                # Some older tests and action doubles still use target/initiator.
-                success = action.execute(target=character, initiator=character)
+            success = self._invoke_action_execute(action, character)
 
             if success:
                 self._update_character_state_after_action(character, action)
@@ -3744,6 +3746,39 @@ class GameplayController:
                 f"Error executing single action for {getattr(character, 'name', 'Unknown')}: {e}"
             )
             return False
+
+    def _invoke_action_execute(self, action, character):
+        """Call ``action.execute`` using the signature it actually exposes."""
+        execute = action.execute
+
+        try:
+            parameters = inspect.signature(execute).parameters
+        except (TypeError, ValueError):
+            parameters = {}
+
+        accepts_kwargs = any(
+            parameter.kind == inspect.Parameter.VAR_KEYWORD
+            for parameter in parameters.values()
+        )
+        parameter_names = set(parameters)
+
+        if accepts_kwargs or ({"character", "graph_manager"} & parameter_names):
+            execute_kwargs = {}
+            if accepts_kwargs or "character" in parameter_names:
+                execute_kwargs["character"] = character
+            if accepts_kwargs or "graph_manager" in parameter_names:
+                execute_kwargs["graph_manager"] = self.graph_manager
+            return execute(**execute_kwargs)
+
+        if accepts_kwargs or ({"target", "initiator"} & parameter_names):
+            legacy_kwargs = {}
+            if accepts_kwargs or "target" in parameter_names:
+                legacy_kwargs["target"] = character
+            if accepts_kwargs or "initiator" in parameter_names:
+                legacy_kwargs["initiator"] = character
+            return execute(**legacy_kwargs)
+
+        return execute()
 
     def _execute_fallback_action(self, character) -> bool:
         """Execute a safe fallback action when normal actions fail."""
@@ -4646,7 +4681,12 @@ class GameplayController:
             inner_size = MINIMAP_SIZE - inner_padding * 2
             map_image = getattr(self.map_controller, "map_image", None)
             if map_image:
-                scaled_map = pygame.transform.smoothscale(map_image, (inner_size, inner_size))
+                scaled_map = self._get_cached_scaled_surface(
+                    map_image,
+                    (inner_size, inner_size),
+                    "_minimap_scaled_surface",
+                    "_minimap_cache_key",
+                )
                 self.screen.blit(
                     scaled_map,
                     (minimap_rect.x + inner_padding, minimap_rect.y + inner_padding),
@@ -4658,17 +4698,22 @@ class GameplayController:
             scale_y = inner_size / map_height
 
             for building in self.map_controller.map_data.get("buildings", []):
-                rect = building.get("rect")
-                if not rect:
-                    continue
+                try:
+                    rect = self._get_minimap_building_rect(building)
+                    if not rect:
+                        continue
 
-                scaled_rect = pygame.Rect(
-                    int(minimap_rect.x + inner_padding + rect.x * scale_x),
-                    int(minimap_rect.y + inner_padding + rect.y * scale_y),
-                    max(2, int(rect.width * scale_x)),
-                    max(2, int(rect.height * scale_y)),
-                )
-                pygame.draw.rect(self.screen, (255, 180, 90), scaled_rect)
+                    scaled_rect = pygame.Rect(
+                        int(minimap_rect.x + inner_padding + rect.x * scale_x),
+                        int(minimap_rect.y + inner_padding + rect.y * scale_y),
+                        max(2, int(rect.width * scale_x)),
+                        max(2, int(rect.height * scale_y)),
+                    )
+                    pygame.draw.rect(self.screen, (255, 180, 90), scaled_rect)
+                except Exception as building_error:
+                    logger.warning(
+                        f"Skipping invalid minimap building entry: {building_error}"
+                    )
 
         except Exception as e:
             logger.error(f"Error rendering minimap: {e}")
@@ -4686,9 +4731,11 @@ class GameplayController:
             available_height = max(50, self.screen.get_height() - margin * 2)
 
             if self.map_controller and getattr(self.map_controller, "map_image", None):
-                scaled_map = pygame.transform.smoothscale(
+                scaled_map = self._get_cached_scaled_surface(
                     self.map_controller.map_image,
                     (available_width, available_height),
+                    "_overview_scaled_surface",
+                    "_overview_cache_key",
                 )
                 self.screen.blit(scaled_map, (margin, margin))
 
@@ -4721,6 +4768,59 @@ class GameplayController:
 
         except Exception as e:
             logger.error(f"Error rendering overview: {e}")
+
+    def _get_cached_scaled_surface(
+        self,
+        source_surface,
+        target_size,
+        cache_surface_attr,
+        cache_key_attr,
+    ):
+        """Return a cached scaled surface for the given source image and target size."""
+        normalized_size = (int(target_size[0]), int(target_size[1]))
+        cache_key = (source_surface, source_surface.get_size(), normalized_size)
+
+        if getattr(self, cache_key_attr, None) != cache_key:
+            setattr(
+                self,
+                cache_surface_attr,
+                pygame.transform.smoothscale(source_surface, normalized_size),
+            )
+            setattr(self, cache_key_attr, cache_key)
+
+        return getattr(self, cache_surface_attr)
+
+    def _get_minimap_building_rect(self, building):
+        """Resolve a rect-like building shape for minimap rendering."""
+        map_controller = getattr(self, "map_controller", None)
+        if map_controller and hasattr(map_controller, "get_building_rect"):
+            rect = map_controller.get_building_rect(building)
+            if rect is not None:
+                return rect
+
+        if hasattr(building, "get"):
+            return building.get("rect")
+
+        rect = getattr(building, "rect", None)
+        if rect is not None:
+            return rect
+
+        location = getattr(building, "location", None)
+        if location is None and hasattr(building, "get_location"):
+            location = building.get_location()
+
+        if isinstance(location, pygame.Rect):
+            return location
+
+        if location is not None:
+            x = getattr(location, "x", getattr(location, "left", None))
+            y = getattr(location, "y", getattr(location, "top", None))
+            width = getattr(location, "width", None)
+            height = getattr(location, "height", None)
+            if None not in (x, y, width, height):
+                return pygame.Rect(x, y, width, height)
+
+        return None
 
     def run(self):
         """Main run method to start the game loop."""

@@ -884,35 +884,6 @@ class MapController:
         self.info_display_time = time.time()
         print(f"Selected POI: {poi.name}")
 
-    def _is_legacy_building(self, building) -> bool:
-        """Return True when the target uses the legacy dict-based building format."""
-        return hasattr(building, "get") and callable(building.get)
-
-    def _get_building_name(self, building) -> str:
-        """Get a display name for either a Building object or legacy building mapping."""
-        if hasattr(building, "name"):
-            return building.name
-        if self._is_legacy_building(building):
-            return building.get("name", "Unknown Building")
-        return "Unknown Building"
-
-    def _get_building_type(self, building) -> str:
-        """Get the normalized building type across Building objects and dicts."""
-        if hasattr(building, "building_type"):
-            return getattr(building, "building_type", "building")
-        if self._is_legacy_building(building):
-            return building.get("type", "building")
-        return "building"
-
-    def _get_building_rect(self, building):
-        """Return a pygame.Rect for either a Building object or legacy building mapping."""
-        if self._is_legacy_building(building):
-            return building.get("rect")
-        if hasattr(building, "get_location"):
-            location = building.get_location()
-            return pygame.Rect(location.x, location.y, location.width, location.height)
-        return None
-
     def clear_selections(self):
         """Clear all selections"""
         self.selected_character = None
@@ -1052,8 +1023,53 @@ class MapController:
     def _get_building_type(self, building) -> str:
         """Get a building type from either legacy dict data or a Building object."""
         if hasattr(building, 'get'):
-            return building.get('type', 'Building')
-        return getattr(building, 'building_type', getattr(building, 'type', 'Building'))
+            return building.get('building_type') or building.get('type', 'building')
+        return getattr(
+            building,
+            'building_type',
+            getattr(building, 'type', 'building'),
+        )
+
+    def get_building_rect(self, building) -> Optional[pygame.Rect]:
+        """Return a pygame.Rect for either a Building object or legacy building mapping."""
+        rect = None
+        if hasattr(building, 'get'):
+            rect = building.get('rect')
+            if isinstance(rect, pygame.Rect):
+                return rect
+
+        location = getattr(building, 'location', None)
+        if location is None and hasattr(building, 'get_location'):
+            try:
+                location = building.get_location()
+            except (AttributeError, TypeError):
+                logging.debug(
+                    "Building object did not provide a usable location",
+                    exc_info=True,
+                )
+                location = None
+
+        if isinstance(location, pygame.Rect):
+            return location
+
+        rect_signature = self._get_rect_signature(location)
+        if rect_signature is None:
+            coordinates = getattr(building, 'coordinates_location', None)
+            width = getattr(building, 'width', None)
+            height = getattr(building, 'length', None)
+            if height is None:
+                height = getattr(building, 'height', None)
+            if coordinates and width is not None and height is not None:
+                rect_signature = (coordinates[0], coordinates[1], width, height)
+
+        if rect_signature is None:
+            return None
+
+        return pygame.Rect(*rect_signature)
+
+    def _get_building_rect(self, building) -> Optional[pygame.Rect]:
+        """Backward-compatible private alias for building rect resolution."""
+        return self.get_building_rect(building)
 
     def _get_rect_signature(self, rect) -> Optional[Tuple[int, int, int, int]]:
         """Return a comparable `(x, y, width, height)` tuple for a rect-like object."""
@@ -1078,29 +1094,7 @@ class MapController:
 
     def _get_building_rect_signature(self, building) -> Optional[Tuple[int, int, int, int]]:
         """Get a rect signature from either legacy dict data or a Building object."""
-        if hasattr(building, 'get'):
-            return self._get_rect_signature(building.get('rect'))
-
-        location = getattr(building, 'location', None)
-        if location is None and hasattr(building, 'get_location'):
-            try:
-                location = building.get_location()
-            except (AttributeError, TypeError):
-                logging.debug("Building object did not provide a usable location", exc_info=True)
-                location = None
-
-        if location is not None:
-            return self._get_rect_signature(location)
-
-        coordinates = getattr(building, 'coordinates_location', None)
-        width = getattr(building, 'width', None)
-        height = getattr(building, 'length', None)
-        if height is None:
-            height = getattr(building, 'height', None)
-        if coordinates and width is not None and height is not None:
-            return (coordinates[0], coordinates[1], width, height)
-
-        return None
+        return self._get_rect_signature(self.get_building_rect(building))
 
     def _get_original_building_data(self, building):
         """Look up the legacy building dictionary that matches a Building object's rect."""
@@ -1341,26 +1335,6 @@ class MapController:
             building = self.is_building(target)
 
         if building:
-            # Handle Building objects vs legacy building data
-            if hasattr(building, 'name'):
-                building_name = self._get_building_name(building)
-                print(f"Entering {building_name}")
-                
-                # Show available activities
-                if hasattr(building, 'get_available_activities'):
-                    activities = building.get_available_activities()
-                    if activities:
-                        print(f"Available activities: {', '.join(activities)}")
-                        
-                # Show location properties
-                if hasattr(building, 'get_security_level'):
-                    security = building.get_security_level()
-                    popularity = building.get_popularity_level()
-                    print(f"Security level: {security}, Popularity: {popularity}")
-            else:
-                # Legacy building data
-                building_name = self._get_building_name(building)
-                print(f"Entering {building_name}")
             self.enter_building_target(building)
     
     def find_safe_locations(self, min_security=7):

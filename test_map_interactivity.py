@@ -155,7 +155,7 @@ class TestMapControllerInteractivity(BaseMapControllerTestCase):
         info = self.controller.get_building_info(building)
 
         self.assertEqual(info["name"], "Town Hall")
-        self.assertEqual(info["type"], "Government")
+        self.assertEqual(info["type"], "government")
         self.assertEqual(info["position"], "(100, 100)")
         self.assertEqual(info["size"], "50 x 50")
         self.assertEqual(info["area"], 2500)
