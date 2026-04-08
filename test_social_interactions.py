@@ -5,35 +5,14 @@
 import unittest
 from unittest.mock import MagicMock
 
-from actions import Condition, GreetAction, OfferComplimentAction, ShareNewsAction, State, TalkAction
-from tests.mock_character import MockCharacter, MockPersonalityTraits
-
-
-class CharacterWithState(MockCharacter):
-    """Shared character double that supports real Condition evaluation."""
-
-    def get_state(self):
-        return State(self)
-
-
-def build_character(name, **overrides):
-    defaults = {
-        "name": name,
-        "energy": 8.0,
-        "friendship_grid": {},
-        "personality_traits": MockPersonalityTraits(
-            agreeableness=5,
-            extraversion=5,
-        ),
-    }
-    defaults.update(overrides)
-    return CharacterWithState(**defaults)
+from actions import Condition, GreetAction, OfferComplimentAction, ShareNewsAction, TalkAction
+from tests.social_action_test_utils import build_character
 
 
 class TestSocialInteractions(unittest.TestCase):
     def setUp(self):
-        self.alice = build_character("Alice")
-        self.bob = build_character("Bob")
+        self.alice = build_character("Alice", default_energy=8.0)
+        self.bob = build_character("Bob", default_energy=8.0)
         self.graph_manager = MagicMock()
         self.graph_manager.characters = {
             self.alice.name: self.alice,

@@ -1,29 +1,8 @@
 import unittest
 from unittest.mock import MagicMock
 
-from actions import Action, ActionTemplate, Condition, State, TalkAction
-from tests.mock_character import MockCharacter, MockPersonalityTraits
-
-
-class CharacterWithState(MockCharacter):
-    """MockCharacter variant that can participate in real Condition checks."""
-
-    def get_state(self):
-        return State(self)
-
-
-def build_character(name, **overrides):
-    defaults = {
-        "name": name,
-        "energy": 10.0,
-        "friendship_grid": {},
-        "personality_traits": MockPersonalityTraits(
-            agreeableness=5,
-            extraversion=5,
-        ),
-    }
-    defaults.update(overrides)
-    return CharacterWithState(**defaults)
+from actions import Action, ActionTemplate, Condition, TalkAction
+from tests.social_action_test_utils import build_character
 
 
 class TestActionExecution(unittest.TestCase):
