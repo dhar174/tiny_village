@@ -24,6 +24,7 @@ sys.modules["tiny_characters"] = mock_characters
 
 from social_model import SocialModel
 from tiny_graph_manager import GraphManager
+from tiny_globals import reset_global_graph_manager
 
 
 def seed_character_relationship(graph_manager):
@@ -32,6 +33,8 @@ def seed_character_relationship(graph_manager):
     graph_manager.G.add_edge(
         "Alice",
         "Bob",
+        key="character_character",
+        type="character_character",
         relationship_type="friend",
         trust=0.8,
         emotional=0.6,
@@ -39,14 +42,25 @@ def seed_character_relationship(graph_manager):
         historical=45,
         interaction_frequency=0.5,
     )
+    graph_manager.G.add_edge(
+        "Alice",
+        "Bob",
+        key="character_event",
+        type="character_event",
+        trust=0.05,
+        event_id="festival",
+    )
 
 
 class TestSocialModelIntegration(unittest.TestCase):
     def setUp(self):
+        reset_global_graph_manager()
         self.graph_manager = GraphManager()
-        self.graph_manager.G.clear()
         seed_character_relationship(self.graph_manager)
         self.graph_manager.social_model.set_world_state(self.graph_manager)
+
+    def tearDown(self):
+        reset_global_graph_manager()
 
     def test_graph_manager_has_social_model(self):
         self.assertIsInstance(self.graph_manager.social_model, SocialModel)
@@ -73,6 +87,14 @@ class TestSocialModelIntegration(unittest.TestCase):
 
         relationships = self.graph_manager.retrieve_characters_relationships("Alice")
         self.assertEqual(relationships["Bob"]["trust"], 0.9)
+        self.assertEqual(
+            self.graph_manager.G["Alice"]["Bob"]["character_character"]["trust"],
+            0.9,
+        )
+        self.assertEqual(
+            self.graph_manager.G["Alice"]["Bob"]["character_event"]["trust"],
+            0.05,
+        )
 
     def test_analyze_relationship_health_uses_flattened_edge_attributes(self):
         health = self.graph_manager.analyze_relationship_health("Alice", "Bob")

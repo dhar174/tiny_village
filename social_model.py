@@ -826,9 +826,10 @@ class SocialModel:
         """Set specific edge attribute."""
         if hasattr(self.world_state, 'G') and self.world_state.G.has_edge(node1, node2):
             edge_data = self.world_state.G.get_edge_data(node1, node2)
-            if edge_data and all(isinstance(v, dict) for v in dict(edge_data).values()):
-                first_key = next(iter(edge_data))
-                self.world_state.G[node1][node2][first_key][attr_name] = value
+            normalized = self._coerce_edge_mapping(edge_data)
+            edge_key, _ = self._select_relationship_edge(normalized)
+            if edge_key is not None:
+                self.world_state.G[node1][node2][edge_key][attr_name] = value
             else:
                 self.world_state.G[node1][node2][attr_name] = value
             
@@ -842,20 +843,63 @@ class SocialModel:
 
     def _normalize_edge_attributes(self, edge_data):
         """Flatten graph edge data across Graph and MultiGraph backends."""
+        normalized = self._coerce_edge_mapping(edge_data)
+        if not normalized:
+            return {}
+
+        edge_key, nested = self._select_relationship_edge(normalized)
+        if edge_key is not None:
+            return nested
+
+        return normalized
+
+    def _coerce_edge_mapping(self, edge_data):
+        """Convert graph edge data to a plain dictionary when possible."""
         if not edge_data:
             return {}
 
         try:
-            normalized = dict(edge_data)
+            return dict(edge_data)
         except Exception:
             if isinstance(edge_data, dict):
-                normalized = edge_data
-            else:
-                return {}
+                return edge_data
+        return {}
 
-        if normalized and all(isinstance(value, dict) for value in normalized.values()):
-            first_key = next(iter(normalized))
-            nested = normalized[first_key]
-            return dict(nested) if isinstance(nested, dict) else {}
+    def _select_relationship_edge(self, edge_data):
+        """Select the most likely relationship edge from multigraph edge data."""
+        if not edge_data or not all(isinstance(value, dict) for value in edge_data.values()):
+            return None, {}
 
-        return normalized
+        relationship_fields = {
+            "relationship_type",
+            "trust",
+            "emotional",
+            "strength",
+            "historical",
+            "interaction_frequency",
+            "interaction_count",
+            "romance_compatibility",
+            "romanceable",
+            "romance_interest",
+            "romance_value",
+        }
+
+        def edge_score(item):
+            edge_key, attrs = item
+            field_count = sum(1 for field in relationship_fields if field in attrs)
+            probable_relationship_edge = (
+                edge_key == "character_character"
+                or attrs.get("type") == "character_character"
+                or field_count > 0
+            )
+            return (
+                probable_relationship_edge,
+                attrs.get("type") == "character_character",
+                edge_key == "character_character",
+                "relationship_type" in attrs,
+                field_count,
+                str(edge_key),
+            )
+
+        edge_key, attrs = max(edge_data.items(), key=edge_score)
+        return edge_key, dict(attrs)
