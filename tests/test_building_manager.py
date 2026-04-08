@@ -371,7 +371,13 @@ class TestBuildingManager(unittest.TestCase):
 
         self.assertEqual(crafter.skills.crafting, 27)
         self.assertEqual(crafter.skills.get("crafting"), 27)
-        self.assertEqual(crafter.skills._get_skill_by_name("crafting").level, 27)
+
+    def test_character_skills_unknown_assignment_raises_attribute_error(self):
+        """Test unknown skill assignment is rejected once skills are initialized."""
+        crafter = MockCharacter(wealth_money=50, crafting_skill=20)
+
+        with self.assertRaises(AttributeError):
+            crafter.skills.crafitng = 27
     
     def test_provide_service_invalid_service(self):
         """Test providing invalid service name."""

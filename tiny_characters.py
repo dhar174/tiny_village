@@ -1766,6 +1766,9 @@ class CharacterSkills:
             if skill is not None:
                 skill.level = value
                 return
+            raise AttributeError(
+                f"{self.__class__.__name__} object has no attribute {name!r}"
+            )
 
         object.__setattr__(self, name, value)
 
