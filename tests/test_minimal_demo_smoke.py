@@ -2,18 +2,26 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_minimal_demo_runs_and_reports_progress():
-    result = subprocess.run(
-        [sys.executable, "main.py", "--mode", "minimal", "--headless"],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-        timeout=120,
-    )
+    try:
+        result = subprocess.run(
+            [sys.executable, "main.py", "--mode", "minimal", "--headless"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+    except subprocess.TimeoutExpired as e:
+        output = (e.stdout or "") + (e.stderr or "")
+        pytest.fail(
+            "minimal demo timed out after 120 seconds.\n\nPartial output:\n" + output
+        )
 
     output = result.stdout + result.stderr
 
