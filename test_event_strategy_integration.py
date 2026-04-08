@@ -324,11 +324,9 @@ class TestUpdateGameStateEventHandlerUsage(unittest.TestCase):
 
             def update_strategy(self, events):
                 self.received_events.append(list(events))
-                return {
-                    "handler_event": [
-                        {"type": "character_action", "action": {"name": "wait", "cost": 0}}
-                    ]
-                }
+                # Return no decisions to avoid triggering apply_decision() when
+                # controller.action_resolver is None in this test setup.
+                return None
 
         controller = GameplayController.__new__(GameplayController)
         controller.paused = False
