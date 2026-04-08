@@ -121,8 +121,8 @@ def check_happiness_implementation():
         else:
             print(f"⚠ {remaining_todos} TODO items still remain")
 
-        # Check for implementation features
-        implementation_features = [
+        # Check for implemented features
+        implemented_features = [
             "motive_satisfaction",
             "social_happiness",
             "romantic_happiness",
@@ -133,10 +133,10 @@ def check_happiness_implementation():
         ]
 
         found_features = sum(
-            1 for feature in implementation_features if feature in content
+            1 for feature in implemented_features if feature in content
         )
         print(
-            f"✓ Found {found_features}/{len(implementation_features)} happiness features implemented"
+            f"✓ Found {found_features}/{len(implemented_features)} happiness features implemented"
         )
 
         return remaining_todos == 0 and found_features >= 4

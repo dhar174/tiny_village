@@ -12,6 +12,7 @@ For instance, if a new technology is discovered in the game, related actions (li
 import importlib
 
 import json
+import logging
 import operator
 
 from pyparsing import Char
@@ -28,6 +29,8 @@ from tiny_util_funcs import is_numeric
 # from tiny_graph_manager import GraphManager
 
 # self.graph_manager = GraphManager()
+
+logger = logging.getLogger(__name__)
 
 
 class State:
@@ -351,11 +354,10 @@ class Action:
         if graph_manager is not None:
             self.graph_manager = graph_manager
         else:
-            # Fallback to the singleton instance if no graph_manager is explicitly passed.
-            # This maintains some backward compatibility but explicit passing is preferred.
+            # Use the global GraphManager instance from tiny_globals
             try:
-                GraphManager_module = importlib.import_module("tiny_graph_manager")
-                self.graph_manager = GraphManager_module.GraphManager()
+                from tiny_globals import get_global_graph_manager
+                self.graph_manager = get_global_graph_manager()
             except ImportError:
                 # Graph manager is optional for core Action functionality
                 self.graph_manager = None
@@ -637,6 +639,104 @@ class Action:
 
     #         return True
     #     return False
+    def _same_location(self, left, right):
+        if left is None or right is None:
+            return False
+        if left is right:
+            return True
+
+        for attribute in ("uuid", "name"):
+            left_value = getattr(left, attribute, None)
+            right_value = getattr(right, attribute, None)
+            if left_value is not None and left_value == right_value:
+                return True
+
+        left_coordinates = getattr(left, "coordinates_location", None)
+        right_coordinates = getattr(right, "coordinates_location", None)
+        return (
+            left_coordinates is not None
+            and right_coordinates is not None
+            and left_coordinates == right_coordinates
+        )
+
+    def _matches_requested_target(self, candidate):
+        if candidate is None:
+            return False
+        if self.target is None:
+            return True
+        if candidate is self.target:
+            return True
+        if isinstance(self.target, str):
+            return self.target in {
+                getattr(candidate, "name", None),
+                getattr(candidate, "uuid", None),
+            }
+
+        for attribute in ("uuid", "name"):
+            target_value = getattr(self.target, attribute, None)
+            candidate_value = getattr(candidate, attribute, None)
+            if target_value is not None and target_value == candidate_value:
+                return True
+        return False
+
+    def _iter_characters_in_initiator_location(self):
+        initiator_location = getattr(self.initiator, "location", None)
+        if initiator_location is None:
+            return
+
+        seen_candidates = set()
+        # Start from the location's own visitor tracking if available.
+        visitors = list(getattr(initiator_location, "current_visitors", []) or [])
+
+        # Only fall back to scanning all registered characters if the location has
+        # no recorded visitors. This keeps per-action overhead bounded when
+        # current_visitors is maintained correctly.
+        if not visitors:
+            registered_characters = getattr(self.graph_manager, "characters", None)
+            if isinstance(registered_characters, dict):
+                visitors = list(registered_characters.values())
+
+        for candidate in visitors:
+            if candidate is None or candidate is self.initiator:
+                continue
+
+            candidate_key = getattr(candidate, "uuid", None) or id(candidate)
+            if candidate_key in seen_candidates:
+                continue
+
+            if not self._same_location(
+                getattr(candidate, "location", None), initiator_location
+            ):
+                continue
+
+            seen_candidates.add(candidate_key)
+            yield candidate
+
+    def _resolve_named_targets(self, effect):
+        resolved_targets = []
+        for target_name in effect.get("targets", []):
+            if target_name != "target_character_in_location":
+                continue
+
+            resolved_target = next(
+                (
+                    candidate
+                    for candidate in self._iter_characters_in_initiator_location()
+                    if self._matches_requested_target(candidate)
+                ),
+                None,
+            )
+            if resolved_target is not None:
+                resolved_targets.append(resolved_target)
+            else:
+                logger.debug(
+                    "Action '%s' could not resolve named target '%s'.",
+                    self.name,
+                    target_name,
+                )
+
+        return resolved_targets
+
     def execute(self, character=None, graph_manager=None):
         """
         Executes the action, applying its effects to the involved entities
@@ -659,8 +759,8 @@ class Action:
 
         if not self.graph_manager:
             try:
-                GraphManager_module = importlib.import_module("tiny_graph_manager")
-                self.graph_manager = GraphManager_module.GraphManager()
+                from tiny_globals import get_global_graph_manager
+                self.graph_manager = get_global_graph_manager()
             except ImportError:
                 # Graph manager is optional for core Action functionality
                 self.graph_manager = None
@@ -689,9 +789,18 @@ class Action:
                         # else:
                             # print(f"Warning: Effect for action '{self.name}' specifies 'target' but action has no target and default_target_is_initiator is false or initiator is None.")
 
-                # TODO: Add logic for other named targets if effects can specify them (e.g. "target_character_in_location")
+                targets_to_update.extend(self._resolve_named_targets(effect))
 
+                deduplicated_targets = []
+                seen_target_keys = set()
                 for target_obj in targets_to_update:
+                    target_key = getattr(target_obj, "uuid", None) or id(target_obj)
+                    if target_key in seen_target_keys:
+                        continue
+                    seen_target_keys.add(target_key)
+                    deduplicated_targets.append(target_obj)
+
+                for target_obj in deduplicated_targets:
                     if not target_obj: # Skip if a target resolved to None
                         continue
 
@@ -852,7 +961,56 @@ class Action:
         )
 
 
-class TalkAction(Action):
+class SocialAction(Action):
+    """Base class for social actions that interact with the social graph"""
+    
+    def __init__(self, name, preconditions, effects, cost, target=None, initiator=None, **kwargs):
+        super().__init__(name, preconditions, effects, cost, target=target, initiator=initiator, **kwargs)
+    
+    def execute(self, character=None, graph_manager=None):
+        """Execute the social action with graph updates"""
+        base_execution_successful = super().execute(character=character, graph_manager=graph_manager)
+        
+        if base_execution_successful and self.initiator and self.target:
+            # Handle social graph updates
+            self._handle_social_interaction()
+            return True
+        return False
+    
+    def _handle_social_interaction(self):
+        """Handle social graph updates for the interaction"""
+        if not self.graph_manager:
+            return
+            
+        # Get character objects
+        initiator_char = self.initiator
+        target_char = self.target
+        
+        # If we have strings instead of character objects, try to resolve them
+        if isinstance(initiator_char, str) and hasattr(self.graph_manager, 'characters'):
+            initiator_char = self.graph_manager.characters.get(initiator_char)
+        if isinstance(target_char, str) and hasattr(self.graph_manager, 'characters'):
+            target_char = self.graph_manager.characters.get(target_char)
+            
+        if initiator_char and target_char:
+            # Update or create character-character relationship edge
+            if hasattr(self.graph_manager, 'add_character_character_edge'):
+                # Get impact value based on action type
+                impact_value = self._get_social_impact()
+                self.graph_manager.add_character_character_edge(
+                    initiator_char, 
+                    target_char,
+                    impact_factor=1.0,
+                    impact_value=impact_value
+                )
+    
+    def _get_social_impact(self):
+        """Get the social impact value for this action type"""
+        # Default impact for social actions
+        return 0.1
+
+
+class TalkAction(SocialAction):
     def __init__(
         self,
         initiator,
@@ -903,30 +1061,48 @@ class TalkAction(Action):
         )
 
     def execute(self, character=None, graph_manager=None):
-        # self.initiator and self.target are resolved by the base execute method
-        # self.graph_manager is also set by the base class __init__ or execute
+        # Call parent SocialAction execute which handles graph updates
+        success = super().execute(character=character, graph_manager=graph_manager)
+        
+        if success and self.initiator and self.target:
+            initiator_name = getattr(self.initiator, "name", str(self.initiator))
+            target_name = getattr(self.target, "name", str(self.target))
+            print(f"{initiator_name} is talking to {target_name}")
 
-        # Call the base class execute to apply generic effects and update graph
-        base_execution_successful = super().execute(character=character, graph_manager=graph_manager)
+            if hasattr(self.target, "respond_to_talk"):
+                response = self.target.respond_to_talk(self.initiator)
+                
+                # Store conversation in memory if memory manager is available
+                self._record_conversation(response)
+        
+        return success
 
-        if base_execution_successful:
-            # Specific logic for TalkAction after generic effects are applied
-            if self.initiator and self.target:
-                initiator_name = getattr(self.initiator, "name", str(self.initiator))
-                target_name = getattr(self.target, "name", str(self.target))
-                print(f"{initiator_name} is talking to {target_name}")
+    def _get_social_impact(self):
+        """Talk has a small positive social impact"""
+        return 0.1
 
-                if hasattr(self.target, "respond_to_talk"):
-                    # Assuming respond_to_talk might have its own effects or direct graph interactions
-                    # if it has access to the graph_manager.
-                    # If respond_to_talk purely modifies attributes that are NOT part of self.effects,
-                    # and these need to be in the graph, manual graph updates would be needed here.
-                    self.target.respond_to_talk(self.initiator)
-            # else:
-                # This case should ideally be handled by preconditions or base class logic if initiator/target are mandatory
-                # print(f"Warning: Initiator or target not available for TalkAction {self.name}")
-            return True
-        return False
+    def _record_conversation(self, response=None):
+        """Record the conversation in the memory system"""
+        if not self.graph_manager or not hasattr(self.graph_manager, 'flat_access'):
+            return
+            
+        try:
+            # Create memory of the conversation
+            initiator_name = getattr(self.initiator, "name", str(self.initiator))
+            target_name = getattr(self.target, "name", str(self.target))
+            
+            conversation_description = f"{initiator_name} talked with {target_name}"
+            if response:
+                conversation_description += f". {response}"
+                
+            # Add to memory manager if available
+            memory_manager = getattr(self.graph_manager, 'memory_manager', None)
+            if memory_manager and hasattr(memory_manager, 'add_memory'):
+                memory_manager.add_memory(conversation_description, importance_score=3)
+                
+        except Exception as e:
+            # Don't fail the action if memory recording fails
+            print(f"Warning: Could not record conversation memory: {e}")
 
 
 class ExploreAction(Action):
@@ -1049,7 +1225,15 @@ class CompositeAction(Action):
 class ActionGenerator:
     def __init__(self, graph_manager=None):
         self.templates = []
-        self.graph_manager = graph_manager
+        if graph_manager is not None:
+            self.graph_manager = graph_manager
+        else:
+            # Use global GraphManager instance
+            try:
+                from tiny_globals import get_global_graph_manager
+                self.graph_manager = get_global_graph_manager()
+            except ImportError:
+                self.graph_manager = None
 
     def add_template(self, template):
         self.templates.append(template)
@@ -1638,7 +1822,7 @@ class VisitDoctorAction(Action):
     # No execute override needed
 
 
-class GreetAction(Action):
+class GreetAction(SocialAction):
     def __init__(self, initiator, target, **kwargs):
         # Filter kwargs to only include parameters that Action.__init__ accepts
         base_action_params = {
@@ -1679,9 +1863,31 @@ class GreetAction(Action):
             initiator=initiator,
             **filtered_kwargs,
         )
+    
+    def _get_social_impact(self):
+        """Greeting has a small positive social impact"""
+        return 0.05
+
+    def execute(self, character=None, graph_manager=None):
+        """Execute greeting with special response"""
+        success = super().execute(character=character, graph_manager=graph_manager)
+        
+        if success and self.initiator and self.target:
+            initiator_name = getattr(self.initiator, "name", str(self.initiator))
+            target_name = getattr(self.target, "name", str(self.target))
+            print(f"{initiator_name} greets {target_name}")
+            
+            # Greeting-specific response if target has the method
+            if hasattr(self.target, "respond_to_greeting"):
+                self.target.respond_to_greeting(self.initiator)
+            elif hasattr(self.target, "respond_to_talk"):
+                # Fallback to general talk response
+                self.target.respond_to_talk(self.initiator)
+        
+        return success
 
 
-class ShareNewsAction(Action):
+class ShareNewsAction(SocialAction):
     def __init__(self, initiator, target, news_item, **kwargs):
         # Filter kwargs to only include parameters that Action.__init__ accepts
         base_action_params = {
@@ -1728,9 +1934,46 @@ class ShareNewsAction(Action):
             **filtered_kwargs,
         )
         self.news_item = news_item
+    
+    def _get_social_impact(self):
+        """Sharing news has a moderate positive social impact"""
+        return 0.15
+
+    def execute(self, character=None, graph_manager=None):
+        """Execute news sharing with memory recording"""
+        success = super().execute(character=character, graph_manager=graph_manager)
+        
+        if success and self.initiator and self.target:
+            initiator_name = getattr(self.initiator, "name", str(self.initiator))
+            target_name = getattr(self.target, "name", str(self.target))
+            print(f"{initiator_name} shares news with {target_name}: {self.news_item}")
+            
+            # Record news sharing in memory if available
+            self._record_news_sharing()
+        
+        return success
+    
+    def _record_news_sharing(self):
+        """Record the news sharing in memory"""
+        if not self.graph_manager:
+            return
+            
+        try:
+            initiator_name = getattr(self.initiator, "name", str(self.initiator))
+            target_name = getattr(self.target, "name", str(self.target))
+            
+            memory_description = f"{initiator_name} shared news with {target_name}: {self.news_item}"
+            
+            # Add to memory manager if available
+            memory_manager = getattr(self.graph_manager, 'memory_manager', None)
+            if memory_manager and hasattr(memory_manager, 'add_memory'):
+                memory_manager.add_memory(memory_description, importance_score=4)
+                
+        except Exception as e:
+            print(f"Warning: Could not record news sharing memory: {e}")
 
 
-class OfferComplimentAction(Action):
+class OfferComplimentAction(SocialAction):
     def __init__(self, initiator, target, compliment_topic, **kwargs):
         # Filter kwargs to only include parameters that Action.__init__ accepts
         base_action_params = {
@@ -1777,3 +2020,27 @@ class OfferComplimentAction(Action):
             **filtered_kwargs,
         )
         self.compliment_topic = compliment_topic
+
+    def _get_social_impact(self):
+        """Compliments have a strong positive social impact"""
+        return 0.2
+
+    def execute(self, character=None, graph_manager=None):
+        """Execute compliment with special response handling"""
+        success = super().execute(character=character, graph_manager=graph_manager)
+        
+        if success and self.initiator and self.target:
+            initiator_name = getattr(self.initiator, "name", str(self.initiator))
+            target_name = getattr(self.target, "name", str(self.target))
+            print(f"{initiator_name} compliments {target_name} about {self.compliment_topic}")
+            
+            # Compliment-specific response if target has the method
+            if hasattr(self.target, "respond_to_compliment"):
+                self.target.respond_to_compliment(self.initiator, self.compliment_topic)
+            elif hasattr(self.target, "respond_to_talk"):
+                # Fallback to general talk response
+                response = self.target.respond_to_talk(self.initiator)
+                if response:
+                    print(f"Response: {response}")
+        
+        return success

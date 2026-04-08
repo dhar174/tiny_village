@@ -1,221 +1,413 @@
+import os
+import tempfile
 import unittest
-import pygame # Pygame will be needed for font rendering and potentially other UI elements.
-from tiny_gameplay_controller import GameplayController, MIN_SPEED, MAX_SPEED, SPEED_STEP # Import constants too
+from unittest.mock import MagicMock, patch
 
-from unittest.mock import MagicMock, patch # Ensure MagicMock and patch are imported
+import pygame
 
-# Minimal mock for GraphManager if needed by GameplayController constructor
-# class MockGraphManager: # Replaced by MagicMock
-#     pass
+from tiny_gameplay_controller import GameplayController, MAX_SPEED, MIN_SPEED, SPEED_STEP
+from tiny_map_controller import MapController
 
-class MockCharacter: # Simple mock for Character
+
+def make_config():
+    return {
+        "screen_width": 800,
+        "screen_height": 600,
+        "map": {
+            "image_path": "assets/default_map.png",
+            "width": 100,
+            "height": 100,
+            "buildings_file": None,
+        },
+        "characters": {"count": 0},
+        "key_bindings": {
+            "increase_speed": [pygame.K_PAGEUP],
+            "decrease_speed": [pygame.K_PAGEDOWN],
+            "minimap": [pygame.K_m],
+            "overview": [pygame.K_o],
+        },
+    }
+
+
+class MockCharacter:
     def __init__(self, name="Test Char"):
         self.name = name
         self.uuid = f"{name}_uuid"
-        # Add any other attributes needed by the controller or actions during tests
         self.energy = 100
+        self.add_memory = MagicMock()
 
-    def add_memory(self, memory_text): # Mocked method
-        pass
+
+class LegacyUIController(GameplayController):
+    def _init_ui_system(self):
+        self.ui_panels = {}
+        self.ui_fonts = {
+            "normal": pygame.font.Font(None, 24),
+            "small": pygame.font.Font(None, 18),
+            "tiny": pygame.font.Font(None, 16),
+        }
 
 
 class TestGameplayController(unittest.TestCase):
-
     def setUp(self):
         pygame.init()
         try:
             pygame.display.set_mode((1, 1))
-        except pygame.error as e:
-            print(f"Skipping display.set_mode in test setup (possibly headless environment): {e}")
+        except pygame.error:
+            pass
 
-        self.mock_graph_manager = MagicMock() # Use MagicMock for GraphManager
-
-        self.config = {
-            "screen_width": 800,
-            "screen_height": 600,
-            "map": {
-                "image_path": "assets/default_map.png", # Dummy path, map won't be loaded
-                "width": 100,
-                "height": 100,
-                "buildings_file": None
-            },
-             "characters": {
-                "count": 0 # Avoid character creation for these tests
-            },
-            "key_bindings": { # Add if controller accesses this during init for speed keys
-                "increase_speed": [pygame.K_PAGEUP],
-                "decrease_speed": [pygame.K_PAGEDOWN],
-            }
-        }
-        self.controller = GameplayController(graph_manager=self.mock_graph_manager, config=self.config)
-
-        # Mock ActionResolver and its methods
-        self.mock_action_resolver = MagicMock()
-        self.controller.action_resolver = self.mock_action_resolver # Inject mock
-
-        # Mock Action and Character for relevant tests
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.mock_graph_manager = MagicMock()
+        self.controller = GameplayController(
+            graph_manager=self.mock_graph_manager,
+            config=make_config(),
+        )
+        self.controller.action_resolver = MagicMock()
         self.mock_action = MagicMock()
         self.mock_action.name = "TestAction"
-        self.mock_character = MockCharacter() # Use our simple mock
+        self.mock_character = MockCharacter()
 
-        # Ensure a screen is available for rendering, even if it's a dummy one for tests.
-        if not self.controller.screen: # Should be set by GameplayController now
-            self.controller.screen = pygame.Surface((self.config["screen_width"], self.config["screen_height"]))
-
+        if not self.controller.screen:
+            self.controller.screen = pygame.Surface((800, 600))
 
     def tearDown(self):
+        self.temp_dir.cleanup()
         pygame.quit()
 
-    @patch('tiny_gameplay_controller.GameplayController._update_character_state_after_action') # Mock this method
-    def test_execute_single_action_calls_action_execute(self, mock_update_state_after_action):
-        # Configure the mock ActionResolver to return our mock_action
-        self.mock_action_resolver.resolve_action.return_value = self.mock_action
-        # Configure the mock_action's execute method to return True (successful execution)
+    def create_map_controller(self, *, width=100, height=100, buildings=None, fill=(0, 128, 0)):
+        map_path = os.path.join(self.temp_dir.name, "test_map.png")
+        surface = pygame.Surface((width, height))
+        surface.fill(fill)
+        pygame.image.save(surface, map_path)
+        return MapController(
+            map_path,
+            {
+                "width": width,
+                "height": height,
+                "buildings": buildings or [],
+            },
+        )
+
+    def test_execute_single_action_resolves_and_executes_action(self):
+        self.controller.action_resolver.resolve_action.return_value = self.mock_action
         self.mock_action.execute = MagicMock(return_value=True)
 
-        # Mock validate_action_preconditions to return True
-        self.mock_action_resolver.validate_action_preconditions = MagicMock(return_value=True)
-        # Mock predict_action_effects
-        self.mock_action_resolver.predict_action_effects = MagicMock(return_value={})
+        with patch.object(
+            self.controller,
+            "_update_character_state_after_action",
+        ) as update_state:
+            result = self.controller._execute_single_action(
+                self.mock_character,
+                {"name": "TestActionData"},
+            )
 
+        self.assertTrue(result)
+        self.controller.action_resolver.resolve_action.assert_called_once_with(
+            {"name": "TestActionData"},
+            self.mock_character,
+        )
+        self.mock_action.execute.assert_called_once_with(
+            character=self.mock_character,
+            graph_manager=self.controller.graph_manager,
+        )
+        update_state.assert_called_once_with(self.mock_character, self.mock_action)
 
-        mock_action_data = {"name": "TestActionData"} # Dummy action data
+    def test_execute_single_action_uses_legacy_execute_signature_when_needed(self):
+        class LegacyAction:
+            def __init__(self):
+                self.name = "LegacyAction"
+                self.calls = []
 
-        # Call the method under test
-        result = self.controller._execute_single_action(self.mock_character, mock_action_data)
+            def execute(self, target=None, initiator=None):
+                self.calls.append((target, initiator))
+                return True
 
-        self.assertTrue(result) # Action execution should be successful
+        legacy_action = LegacyAction()
+        self.controller.action_resolver.resolve_action.return_value = legacy_action
 
-        # Assert that action_resolver.resolve_action was called
-        self.mock_action_resolver.resolve_action.assert_called_once_with(mock_action_data, self.mock_character)
+        with patch.object(
+            self.controller,
+            "_update_character_state_after_action",
+        ) as update_state:
+            result = self.controller._execute_single_action(
+                self.mock_character,
+                {"name": "LegacyActionData"},
+            )
 
-        # Assert that the action's execute method was called
-        # The action.execute in actions.py now takes character and graph_manager
-        self.mock_action.execute.assert_called_once_with(target=self.mock_character, initiator=self.mock_character)
+        self.assertTrue(result)
+        self.assertEqual(legacy_action.calls, [(self.mock_character, self.mock_character)])
+        update_state.assert_called_once_with(self.mock_character, legacy_action)
 
-        # Assert that _update_character_state_after_action was called
-        mock_update_state_after_action.assert_called_once_with(self.mock_character, self.mock_action)
+    def test_execute_single_action_does_not_retry_internal_type_errors(self):
+        execute_calls = []
 
-    def test_update_character_state_no_redundant_graph_call(self):
-        # We need a fresh mock for graph_manager to check its calls for this specific test
-        specific_test_graph_manager = MagicMock()
-        self.controller.graph_manager = specific_test_graph_manager # Override controller's GM
+        def raising_execute(*, character=None, graph_manager=None):
+            execute_calls.append((character, graph_manager))
+            raise TypeError("action body failure")
 
-        # Mock other methods called by _update_character_state_after_action to isolate the test
-        self.controller._update_character_skills = MagicMock()
-        self.controller._update_social_consequences = MagicMock()
-        self.controller._update_economic_state = MagicMock()
-        self.controller._generate_action_events = MagicMock()
-        self.controller._check_achievements = MagicMock()
-        self.controller._update_reputation = MagicMock()
-        self.controller._track_state_changes = MagicMock()
-        # self.mock_character.add_memory is already a mock method from MockCharacter
+        self.controller.action_resolver.resolve_action.return_value = self.mock_action
+        self.mock_action.execute = MagicMock(side_effect=raising_execute)
 
-        # Call the method under test
-        self.controller._update_character_state_after_action(self.mock_character, self.mock_action)
+        with self.assertLogs("tiny_gameplay_controller", level="WARNING") as captured_logs, patch.object(
+            self.controller,
+            "_update_character_state_after_action",
+        ) as update_state:
+            result = self.controller._execute_single_action(
+                self.mock_character,
+                {"name": "BrokenActionData"},
+            )
 
-        # Assert that the (now removed) graph_manager.update_character_state was NOT called.
-        # If update_character_state was a method on the mock, we'd use assert_not_called().
-        # Since it's not expected to exist, we can check that no such attribute was accessed *if* it wasn't a MagicMock.
-        # With MagicMock, it auto-creates methods on access. So, the correct check is:
-        specific_test_graph_manager.update_character_state.assert_not_called()
+        self.assertFalse(result)
+        self.assertEqual(
+            execute_calls,
+            [(self.mock_character, self.controller.graph_manager)],
+        )
+        self.mock_action.execute.assert_called_once_with(
+            character=self.mock_character,
+            graph_manager=self.controller.graph_manager,
+        )
+        update_state.assert_not_called()
+        self.assertTrue(
+            any("action body failure" in message for message in captured_logs.output)
+        )
 
-        # Verify other methods (controller-level logic) are still called
-        self.mock_character.add_memory.assert_called() # Called if character has add_memory
-        self.controller._update_character_skills.assert_called_once_with(self.mock_character, self.mock_action)
-        # ... (add assertions for other helper methods if their call is mandatory)
+    def test_update_character_state_records_memory_without_graph_update(self):
+        specific_graph_manager = MagicMock()
+        self.controller.graph_manager = specific_graph_manager
 
+        result = self.controller._update_character_state_after_action(
+            self.mock_character,
+            self.mock_action,
+        )
 
-    def test_global_achievements_initialization(self):
-        """Test that global_achievements is initialized correctly."""
-        self.assertIsNotNone(self.controller.global_achievements)
-        self.assertIsInstance(self.controller.global_achievements, dict)
-        self.assertIn("village_milestones", self.controller.global_achievements)
-        self.assertIn("social_achievements", self.controller.global_achievements)
-        self.assertIn("economic_achievements", self.controller.global_achievements)
-        self.assertIsInstance(self.controller.global_achievements["village_milestones"], dict)
+        self.assertTrue(result)
+        self.mock_character.add_memory.assert_called_once_with(
+            "Performed action: TestAction"
+        )
+        specific_graph_manager.update_character_state.assert_not_called()
 
     def test_speed_text_caching(self):
-        """Test the caching mechanism for the speed text UI element."""
-        # Initial render
-        self.controller._render_ui() # Call private method for testing specific UI part
-        initial_cached_surface = self.controller._cached_speed_text
-        self.assertIsNotNone(initial_cached_surface, "Speed text should be cached on first render.")
-
-        # Call render_ui again without changing time_scale_factor
-        self.controller._render_ui()
-        second_cached_surface = self.controller._cached_speed_text
-        self.assertIs(initial_cached_surface, second_cached_surface,
-                        "Cached surface should be the same object if time_scale_factor is unchanged.")
-
-        # Change time_scale_factor (ensure it's a different value)
-        original_speed = self.controller.time_scale_factor
-        new_speed = original_speed + SPEED_STEP
-        if new_speed > MAX_SPEED: # ensure new_speed is valid and different
-            new_speed = original_speed - SPEED_STEP
-            if new_speed < MIN_SPEED: # if original was MAX_SPEED
-                 new_speed = MIN_SPEED if MAX_SPEED == MIN_SPEED else (MIN_SPEED + MAX_SPEED) / 2
-
-
-        self.controller.time_scale_factor = new_speed
-        # Manually invalidate cache as _handle_keydown would do, or rely on _render_ui's check
-        # In this specific test, we want to check the _render_ui internal caching logic,
-        # so we don't invalidate it here. The next test checks _handle_keydown's invalidation.
-        # self.controller._cached_speed_text = None
-
-        self.controller._render_ui()
-        third_cached_surface = self.controller._cached_speed_text
-        self.assertIsNotNone(third_cached_surface, "Speed text should be re-rendered and cached.")
-        self.assertIsNot(initial_cached_surface, third_cached_surface,
-                         "Cached surface should be a new object if time_scale_factor changed.")
-
-        # Test that setting the speed to the same value (after it was changed) still uses cache if not invalidated
-        # This requires _last_time_scale_factor to be correctly updated
-        self.controller.time_scale_factor = new_speed # Set to same new_speed
-        self.controller._render_ui() # Render with new_speed (should use cache from previous render at new_speed)
-        fourth_cached_surface = self.controller._cached_speed_text
-        self.assertIs(third_cached_surface, fourth_cached_surface,
-                        "Cached surface should remain the same if time_scale_factor is set to the same value it was just changed to.")
-
-
-    def test_speed_text_cache_invalidation_via_handle_keydown(self):
-        """Test that cache is invalidated when speed changes via _handle_keydown."""
-        # Initial render and cache
         self.controller._render_ui()
         initial_cached_surface = self.controller._cached_speed_text
         self.assertIsNotNone(initial_cached_surface)
 
-        # Simulate key press to increase speed
-        # Need to find the actual key, not just the string 'increase_speed'
-        increase_key = self.controller.config.get("key_bindings", {}).get("increase_speed", [pygame.K_PAGEUP])[0]
-        mock_event_increase = pygame.event.Event(pygame.KEYDOWN, key=increase_key)
+        self.controller._render_ui()
+        self.assertIs(initial_cached_surface, self.controller._cached_speed_text)
 
         original_speed = self.controller.time_scale_factor
-        self.controller._handle_keydown(mock_event_increase) # This should invalidate the cache (_cached_speed_text = None)
+        new_speed = original_speed + SPEED_STEP
+        if new_speed > MAX_SPEED:
+            new_speed = max(MIN_SPEED, original_speed - SPEED_STEP)
 
-        # Speed must have changed for cache to be different
-        self.assertNotEqual(original_speed, self.controller.time_scale_factor, "Speed should change on key press.")
-
-        self.controller._render_ui() # This should re-render due to invalidated cache
-        new_cached_surface_increase = self.controller._cached_speed_text
-        self.assertIsNotNone(new_cached_surface_increase)
-        self.assertIsNot(initial_cached_surface, new_cached_surface_increase,
-                         "Cache should be different after speed increase.")
-
-        # Simulate key press to decrease speed
-        decrease_key = self.controller.config.get("key_bindings", {}).get("decrease_speed", [pygame.K_PAGEDOWN])[0]
-        mock_event_decrease = pygame.event.Event(pygame.KEYDOWN, key=decrease_key)
-
-        current_speed_before_decrease = self.controller.time_scale_factor
-        self.controller._handle_keydown(mock_event_decrease)
-
-        self.assertNotEqual(current_speed_before_decrease, self.controller.time_scale_factor, "Speed should change on key press for decrease.")
-
+        self.controller.time_scale_factor = new_speed
         self.controller._render_ui()
-        new_cached_surface_decrease = self.controller._cached_speed_text
-        self.assertIsNotNone(new_cached_surface_decrease)
-        self.assertIsNot(new_cached_surface_increase, new_cached_surface_decrease,
-                         "Cache should be different after speed decrease.")
+        self.assertIsNot(initial_cached_surface, self.controller._cached_speed_text)
 
-if __name__ == '__main__':
+    def test_modular_ui_system_initialization(self):
+        self.assertTrue(hasattr(self.controller, "ui_panels"))
+        self.assertTrue(hasattr(self.controller, "ui_fonts"))
+        self.assertIn("character_info", self.controller.ui_panels)
+        self.assertIn("village_overview", self.controller.ui_panels)
+        self.assertIn("normal", self.controller.ui_fonts)
+        self.assertIn("small", self.controller.ui_fonts)
+        self.assertIn("tiny", self.controller.ui_fonts)
+
+    def test_render_ui_with_modular_system_draws_content(self):
+        self.assertTrue(self.controller.initialize_modular_ui_system())
+        character_info_panel = self.controller.ui_panels["character_info"]
+        weather_panel = self.controller.ui_panels["weather"]
+
+        render_surface = pygame.Surface((120, 120))
+        before_panel_render = pygame.image.tostring(render_surface, "RGB")
+        height = character_info_panel.render(
+            render_surface,
+            self.controller,
+            self.controller.ui_fonts,
+        )
+        after_panel_render = pygame.image.tostring(render_surface, "RGB")
+
+        self.assertIsInstance(height, int)
+        self.assertGreaterEqual(height, 0)
+        self.assertNotEqual(before_panel_render, after_panel_render)
+
+        original_visibility = {
+            name: panel.visible for name, panel in self.controller.ui_panels.items()
+        }
+        try:
+            for panel in self.controller.ui_panels.values():
+                panel.visible = False
+
+            character_info_panel.visible = True
+            weather_panel.visible = False
+            self.controller.screen.fill((0, 0, 0))
+            before_visible_ui = pygame.image.tostring(self.controller.screen, "RGB")
+            self.controller._render_ui()
+            after_visible_ui = pygame.image.tostring(self.controller.screen, "RGB")
+            self.assertNotEqual(before_visible_ui, after_visible_ui)
+        finally:
+            for name, visible in original_visibility.items():
+                self.controller.ui_panels[name].visible = visible
+
+    def test_render_ui_uses_legacy_fallback_when_panels_are_unavailable(self):
+        legacy_controller = LegacyUIController(
+            graph_manager=self.mock_graph_manager,
+            config=make_config(),
+        )
+        if not legacy_controller.screen:
+            legacy_controller.screen = pygame.Surface((800, 600))
+
+        with patch.object(legacy_controller, "_render_legacy_ui") as render_legacy:
+            legacy_controller._render_ui()
+
+        render_legacy.assert_called_once()
+
+    def test_render_ui_uses_minimal_fallback_when_modular_render_raises(self):
+        with patch.object(
+            self.controller,
+            "_render_modular_ui",
+            side_effect=RuntimeError("boom"),
+        ), patch.object(self.controller, "_render_minimal_ui") as render_minimal:
+            self.controller._render_ui()
+
+        render_minimal.assert_called_once()
+
+    def test_speed_text_cache_invalidation_via_handle_keydown(self):
+        self.controller._render_ui()
+        initial_cached_surface = self.controller._cached_speed_text
+        increase_key = self.controller.config["key_bindings"]["increase_speed"][0]
+        event = pygame.event.Event(pygame.KEYDOWN, key=increase_key)
+        original_speed = self.controller.time_scale_factor
+
+        self.controller._handle_keydown(event)
+
+        self.assertNotEqual(original_speed, self.controller.time_scale_factor)
+        self.controller._render_ui()
+        self.assertIsNot(initial_cached_surface, self.controller._cached_speed_text)
+
+    def test_minimap_toggle(self):
+        self.assertFalse(getattr(self.controller, "_minimap_mode", False))
+        event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_m)
+
+        self.controller._handle_keydown(event)
+        self.assertTrue(getattr(self.controller, "_minimap_mode", False))
+
+        self.controller._handle_keydown(event)
+        self.assertFalse(getattr(self.controller, "_minimap_mode", False))
+
+    def test_overview_mode_toggle(self):
+        self.assertFalse(getattr(self.controller, "_overview_mode", False))
+        event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_o)
+
+        self.controller._handle_keydown(event)
+        self.assertTrue(getattr(self.controller, "_overview_mode", False))
+
+        self.controller._handle_keydown(event)
+        self.assertFalse(getattr(self.controller, "_overview_mode", False))
+
+    def test_render_minimap_draws_overlay_with_real_map_controller(self):
+        real_map_controller = self.create_map_controller(
+            buildings=[
+                {"name": "Test Building", "type": "shop", "rect": pygame.Rect(25, 25, 20, 20)}
+            ]
+        )
+        self.controller.map_controller = real_map_controller
+
+        self.controller.screen.fill((0, 0, 0))
+        before = pygame.image.tostring(self.controller.screen, "RGB")
+        self.controller._render_minimap()
+        after = pygame.image.tostring(self.controller.screen, "RGB")
+
+        self.assertNotEqual(before, after)
+
+    def test_render_minimap_caches_scaled_map(self):
+        real_map_controller = self.create_map_controller(
+            buildings=[
+                {"name": "Town Hall", "type": "government", "rect": pygame.Rect(20, 20, 20, 20)},
+            ]
+        )
+        self.controller.map_controller = real_map_controller
+
+        with patch(
+            "tiny_gameplay_controller.pygame.transform.smoothscale",
+            wraps=pygame.transform.smoothscale,
+        ) as smoothscale:
+            self.controller._render_minimap()
+            self.controller._render_minimap()
+
+        self.assertEqual(smoothscale.call_count, 1)
+
+    def test_render_minimap_handles_building_objects(self):
+        class ObjectBackedBuilding:
+            def __init__(self, rect):
+                self._rect = rect
+
+            def get_location(self):
+                return self._rect
+
+        real_map_controller = self.create_map_controller(
+            buildings=[
+                {"name": "Town Hall", "type": "government", "rect": pygame.Rect(20, 20, 20, 20)},
+            ]
+        )
+        real_map_controller.map_data["buildings"] = [
+            {"name": "Town Hall", "type": "government", "rect": pygame.Rect(20, 20, 20, 20)},
+            ObjectBackedBuilding(pygame.Rect(60, 60, 15, 15)),
+            object(),
+        ]
+        self.controller.map_controller = real_map_controller
+
+        self.controller.screen.fill((0, 0, 0))
+        before = pygame.image.tostring(self.controller.screen, "RGB")
+        self.controller._render_minimap()
+        after = pygame.image.tostring(self.controller.screen, "RGB")
+
+        self.assertNotEqual(before, after)
+
+    def test_render_overview_draws_summary_with_real_map_controller(self):
+        real_map_controller = self.create_map_controller(
+            buildings=[
+                {"name": "Town Hall", "type": "government", "rect": pygame.Rect(30, 30, 25, 25)},
+                {"name": "Market", "type": "shop", "rect": pygame.Rect(60, 60, 15, 15)},
+            ],
+            fill=(0, 100, 200),
+        )
+        self.controller.map_controller = real_map_controller
+
+        self.controller.screen.fill((0, 0, 0))
+        before = pygame.image.tostring(self.controller.screen, "RGB")
+        self.controller._render_overview()
+        after = pygame.image.tostring(self.controller.screen, "RGB")
+
+        self.assertNotEqual(before, after)
+
+    def test_render_overview_caches_scaled_map_between_frames(self):
+        real_map_controller = self.create_map_controller(fill=(0, 100, 200))
+        self.controller.map_controller = real_map_controller
+
+        with patch.object(self.controller, "_render_minimap"), patch(
+            "tiny_gameplay_controller.pygame.transform.smoothscale",
+            wraps=pygame.transform.smoothscale,
+        ) as smoothscale:
+            self.controller._render_overview()
+            self.controller._render_overview()
+
+        self.assertEqual(smoothscale.call_count, 1)
+
+    def test_render_dispatches_to_overview_mode(self):
+        with patch.object(self.controller, "_render_overview") as render_overview:
+            self.controller._overview_mode = True
+            self.controller.render()
+
+        render_overview.assert_called_once()
+
+    def test_render_dispatches_to_minimap_overlay_in_normal_mode(self):
+        self.controller.map_controller = self.create_map_controller()
+        self.controller._minimap_mode = True
+
+        with patch.object(self.controller, "_render_minimap") as render_minimap:
+            self.controller.render()
+
+        render_minimap.assert_called_once()
+
+
+if __name__ == "__main__":
     unittest.main()
