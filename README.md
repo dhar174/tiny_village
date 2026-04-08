@@ -35,7 +35,7 @@ TinyVillage is a 2D simulation game where AI characters autonomously go about th
 
 ### Prerequisites
 
-- Python 3.8+
+- Python 3.12
 - Required Python packages (listed in `requirements.txt`)
 
 ### Installation
@@ -48,9 +48,9 @@ TinyVillage is a 2D simulation game where AI characters autonomously go about th
     ```bash
     cd tinyvillage
     ```
-3. Install the required packages:
+3. Install the required packages with Python 3.12:
     ```bash
-    pip install -r requirements.txt
+    python3.12 -m pip install -r requirements.txt
     ```
 
 ### Running the Game

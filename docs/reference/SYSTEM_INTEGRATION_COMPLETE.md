@@ -92,7 +92,7 @@ The Tiny Village minimum demo requirements have been **successfully completed**.
 ### Quick Start
 ```bash
 # Install dependencies
-pip install pygame networkx numpy nltk pydantic faiss-cpu scikit-learn pandas
+python3.12 -m pip install -r requirements.txt
 
 # Run minimal demo (recommended)
 python main.py --mode minimal

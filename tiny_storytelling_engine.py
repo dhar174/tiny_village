@@ -96,6 +96,7 @@ class StorytellingEventHandler(EventHandler):
         self.active_story_threads: Dict[str, Dict[str, Any]] = {}
         self.character_story_arcs: Dict[str, List[str]] = {}
         self.narrative_memory: Dict[str, Any] = {}
+        self._current_narrative_context = None
         
         # Cooldown tracking
         self.trigger_cooldowns: Dict[str, datetime] = {}
