@@ -14,7 +14,7 @@ Components:
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 # Local imports
@@ -71,6 +71,7 @@ class StoryArc:
     importance: int  # 1-10
     expected_duration: Optional[timedelta] = None
     completion_conditions: Optional[Dict[str, Any]] = None
+    character_roles: Dict[str, Any] = field(default_factory=dict)
     
     def add_element(self, element: StoryElement):
         """Add a new story element to this arc."""
@@ -588,11 +589,15 @@ class StorytellingSystem:
         
         for arc in self.arc_manager.active_arcs.values():
             if character_name in arc.participants:
+                role = arc.character_roles.get(character_name, "participant")
+                if hasattr(role, "value"):
+                    role = role.value
+
                 involvement["active_arcs"].append({
                     "arc_id": arc.arc_id,
                     "title": arc.title,
                     "status": arc.status.value,
-                    "role": arc.character_roles.get(character_name, CharacterRole.PARTICIPANT).value
+                    "role": role
                 })
                 
                 # Count elements involving this character

@@ -18,6 +18,7 @@ Expected Data Structures:
 """
 
 import time
+import logging
 from functools import lru_cache, wraps
 from typing import Dict, List, Optional, Tuple, Union
 from collections import defaultdict
@@ -27,10 +28,12 @@ from actions import (
     State,
 )  # Assuming Action class is available and has cost & effects
 
+logger = logging.getLogger(__name__)
+
 # Try to import the real Goal class first, fall back to simple implementation
 try:
     from tiny_characters import Goal
-    print("✅ Using real Goal class from tiny_characters")
+    logger.debug("Using real Goal class from tiny_characters")
 except ImportError:
     # Fallback Goal class for compatibility when real Goal is not available
     class Goal:
@@ -45,7 +48,7 @@ except ImportError:
             self.urgency = kwargs.get('urgency', priority)
             self.attributes = kwargs.get('attributes', {})
     
-    print("⚠️  Using fallback Goal implementation in tiny_utility_functions")
+    logger.warning("Using fallback Goal implementation in tiny_utility_functions")
 
 
 # === CONSTANTS ===
