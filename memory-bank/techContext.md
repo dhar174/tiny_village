@@ -1,6 +1,6 @@
 ## Technology Stack
 
-- Python-only repository (Python 3.8+) with code primarily in root-level
+- Python-only repository targeting Python 3.12 with code primarily in root-level
   modules and a `tests/` subdirectory for organized test coverage.
 - Core simulation and planning technologies include:
   - `networkx.MultiDiGraph` for graph-based world state in `tiny_graph_manager.py`
@@ -11,7 +11,8 @@
 
 ## Development Setup
 
-- The README describes standard Python setup via `pip install -r requirements.txt`.
+- The README describes standard Python setup via
+  `python3.12 -m pip install -r requirements.txt`.
 - The main documented runtime entry point is:
   ```
   python main.py

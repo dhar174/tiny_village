@@ -4,7 +4,7 @@ This guide will get you running a Tiny Village demo in under 5 minutes.
 
 ## Prerequisites
 
-- Python 3.8 or higher
+- Python 3.12
 - pip package manager
 
 ## Installation
@@ -17,10 +17,12 @@ cd tiny_village
 
 ### 2. Install Minimum Dependencies
 ```bash
-pip install pygame networkx numpy nltk pydantic faiss-cpu scikit-learn pandas
+python3.12 -m pip install -r requirements.txt
 ```
 
-**Note**: This is all you need for a working demo. Optional dependencies (transformers, spacy) add advanced features but aren't required.
+**Note**: Tiny Village now targets Python 3.12. The full `requirements.txt` is the
+supported dependency set; optional dependencies (transformers, spacy) add
+advanced features but aren't required for the minimal demo paths.
 
 ## Running Your First Demo
 
@@ -78,7 +80,7 @@ python main.py --mode visual
 ### "No module named 'pygame'"
 **Solution**: Install dependencies
 ```bash
-pip install pygame networkx numpy nltk pydantic faiss-cpu scikit-learn pandas
+python3.12 -m pip install -r requirements.txt
 ```
 
 ### "Failed to initialize MapController"
@@ -178,7 +180,7 @@ python main.py --mode visual --characters 3 --no-llm --fps 30
 ## Troubleshooting
 
 ### Demo doesn't start
-1. Check Python version: `python --version` (need 3.8+)
+1. Check Python version: `python --version` (need 3.12)
 2. Check dependencies: `pip list | grep -E "pygame|networkx|numpy"`
 3. Run minimal demo: `python main.py --mode minimal`
 4. Check error messages carefully
