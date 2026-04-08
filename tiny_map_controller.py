@@ -1026,7 +1026,7 @@ class MapController:
             
         return info
 
-    def _is_building_or_dict(self, building) -> bool:
+    def _looks_like_building(self, building) -> bool:
         """Return True when the target looks like legacy building data or a Building object."""
         return hasattr(building, 'get') or hasattr(building, 'get_location') or hasattr(building, 'coordinates_location')
 
@@ -1081,7 +1081,9 @@ class MapController:
 
         coordinates = getattr(building, 'coordinates_location', None)
         width = getattr(building, 'width', None)
-        height = getattr(building, 'length', getattr(building, 'height', None))
+        height = getattr(building, 'length', None)
+        if height is None:
+            height = getattr(building, 'height', None)
         if coordinates and width is not None and height is not None:
             return (coordinates[0], coordinates[1], width, height)
 
@@ -1124,14 +1126,12 @@ class MapController:
         else:
             original_data = self._get_original_building_data(building)
             for key in BUILDING_INFO_METADATA_KEYS:
-                value = None
                 if original_data and key in original_data:
-                    value = original_data[key]
+                    info[key] = original_data[key]
                 elif hasattr(building, key):
                     value = getattr(building, key)
-
-                if value is not None:
-                    info[key] = value
+                    if value is not None:
+                        info[key] = value
                  
         return info
 
@@ -1181,7 +1181,7 @@ class MapController:
         action = option.get('action')
         target = option.get('target')
         
-        if action == 'enter' and self._is_building_or_dict(target):
+        if action == 'enter' and self._looks_like_building(target):
             self.enter_building(target)
         elif action == 'details':
             self.show_target_details(target)
@@ -1210,7 +1210,7 @@ class MapController:
 
     def show_target_details(self, target):
         """Show detailed information about the target."""
-        if self._is_building_or_dict(target):
+        if self._looks_like_building(target):
             info = self.get_building_info(target)
         elif hasattr(target, 'position'):  # Character
             info = self.get_character_info(target)
