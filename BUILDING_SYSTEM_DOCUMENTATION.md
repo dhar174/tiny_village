@@ -83,29 +83,64 @@ Defines services that buildings can provide to characters:
 
 ### GameplayController Integration
 
-The BuildingManager is initialized in `GameplayController.initialize_game_systems()`:
+`GameplayController.initialize_game_systems()` treats the building manager as an
+optional enhancement. Initialization is wrapped in `try/except`, registration is
+best-effort, and `self.building_manager` is left as `None` if startup fails.
 
 ```python
-self.building_manager = BuildingManager()
+try:
+    self.building_manager = BuildingManager()
 
-# Register existing buildings
-for building in self.map_controller.buildings:
-    building_id = str(building.get('uuid', building.get('name', 'unknown')))
-    building_type = building.get('type', 'building')
-    self.building_manager.register_building(building_id, building_type)
+    if self.map_controller and hasattr(self.map_controller, "buildings"):
+        for building in self.map_controller.buildings:
+            if isinstance(building, dict):
+                building_id = str(
+                    building.get("uuid") or building.get("name") or "unknown"
+                )
+                building_type = building.get("type") or "building"
+            else:
+                building_id = str(
+                    getattr(building, "uuid", None)
+                    or getattr(building, "name", None)
+                    or "unknown"
+                )
+                building_type = getattr(building, "type", None) or "building"
+
+            self.building_manager.register_building(building_id, building_type)
+except Exception:
+    self.building_manager = None
 ```
 
 ### Update Loop Integration
 
-Building production is processed in `GameplayController.update_game_state()`:
+Building production in `GameplayController.update_game_state()` is also guarded
+so that building-management failures do not abort the broader simulation loop:
 
 ```python
-# Process production for all buildings each update
-current_tick = pygame.time.get_ticks()
-for building in self.map_controller.buildings:
-    building_id = str(building.get('uuid'))
-    building_type = building.get('type')
-    self.building_manager.process_production(building_id, building_type, current_tick)
+if hasattr(self, "building_manager") and self.building_manager:
+    current_tick = pygame.time.get_ticks()
+
+    if self.map_controller and hasattr(self.map_controller, "buildings"):
+        for building in self.map_controller.buildings:
+            if isinstance(building, dict):
+                building_id = str(
+                    building.get("uuid", building.get("name", "unknown"))
+                )
+                building_type = building.get("type", "building")
+            else:
+                building_id = str(
+                    getattr(building, "uuid", None)
+                    or getattr(building, "name", "unknown")
+                )
+                building_type = getattr(
+                    building,
+                    "building_type",
+                    getattr(building, "type", "building"),
+                )
+
+            self.building_manager.process_production(
+                building_id, building_type, current_tick
+            )
 ```
 
 ### Building Class Integration
