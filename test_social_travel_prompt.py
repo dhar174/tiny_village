@@ -1,15 +1,30 @@
 import importlib
 import sys
 import unittest
+from contextlib import contextmanager
+from pathlib import Path
 from types import ModuleType
 from unittest.mock import patch
 
-sys.path.insert(0, "tests")
-from mock_character import MockCharacter as RealisticMockCharacter
+
+@contextmanager
+def temporary_test_path():
+    previous_sys_path = list(sys.path)
+    sys.path.insert(0, str(Path(__file__).resolve().parent / "tests"))
+    try:
+        yield
+    finally:
+        sys.path[:] = previous_sys_path
 
 
-def build_character():
-    return RealisticMockCharacter(
+def load_realistic_mock_character():
+    with temporary_test_path():
+        mock_character = importlib.import_module("mock_character")
+        return mock_character.MockCharacter
+
+
+def build_character(mock_character_class):
+    return mock_character_class(
         name="Tom",
         age=31,
         job="Carpenter",
@@ -24,18 +39,28 @@ def build_character():
 
 
 def render_prompt(prompt_factory):
+    realistic_mock_character = load_realistic_mock_character()
     stub_tiny_characters = ModuleType("tiny_characters")
-    stub_tiny_characters.Character = RealisticMockCharacter
+    stub_tiny_characters.Character = realistic_mock_character
     stub_attr = ModuleType("attr")
+    previous_prompt_builder = sys.modules.get("tiny_prompt_builder")
 
-    with patch.dict(
-        sys.modules,
-        {"tiny_characters": stub_tiny_characters, "attr": stub_attr},
-    ):
-        sys.modules.pop("tiny_prompt_builder", None)
-        tiny_prompt_builder = importlib.import_module("tiny_prompt_builder")
-        builder = tiny_prompt_builder.PromptBuilder(build_character())
-        return prompt_factory(builder)
+    try:
+        with patch.dict(
+            sys.modules,
+            {"tiny_characters": stub_tiny_characters, "attr": stub_attr},
+        ):
+            sys.modules.pop("tiny_prompt_builder", None)
+            tiny_prompt_builder = importlib.import_module("tiny_prompt_builder")
+            builder = tiny_prompt_builder.PromptBuilder(
+                build_character(realistic_mock_character)
+            )
+            return prompt_factory(builder)
+    finally:
+        if previous_prompt_builder is not None:
+            sys.modules["tiny_prompt_builder"] = previous_prompt_builder
+        else:
+            sys.modules.pop("tiny_prompt_builder", None)
 
 
 class ScenarioPromptTests(unittest.TestCase):
