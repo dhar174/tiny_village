@@ -57,10 +57,7 @@ class TestEnhancedPromptBuilder(unittest.TestCase):
         """Set up test fixtures."""
         self.character = MockCharacter()
         self.mock_memory_manager = MagicMock()
-        
-        # Mock strategy manager to avoid import issues
-        with patch('tiny_prompt_builder.StrategyManager'):
-            self.prompt_builder = PromptBuilder(self.character, self.mock_memory_manager)
+        self.prompt_builder = PromptBuilder(self.character, self.mock_memory_manager)
             
     def test_initialization_with_memory_manager(self):
         """Test PromptBuilder initialization with memory manager."""
@@ -107,10 +104,9 @@ class TestEnhancedPromptBuilder(unittest.TestCase):
         
     def test_format_memories_different_object_types(self):
         """Test memory formatting with different object types."""
-        # Memory with content attribute instead of description
-        mock_memory1 = MagicMock()
-        mock_memory1.content = "Memory content"
-        del mock_memory1.description  # Remove description attribute
+        # Use a concrete object with only a content attribute instead of deleting
+        # dynamically generated mock attributes.
+        mock_memory1 = types.SimpleNamespace(content="Memory content")
         
         # Memory that's just a string
         mock_memory2 = "Simple string memory"
@@ -185,11 +181,8 @@ class TestEnhancedPromptBuilder(unittest.TestCase):
             return_value=mock_context
         )
         
-        # Mock action options to avoid import issues
-        self.prompt_builder.action_options.prioritize_actions = MagicMock(return_value=[])
-        
         prompt = self.prompt_builder.generate_daily_routine_prompt(
-            "morning", "sunny", include_memories=True
+            "morning", "sunny", actions=[], include_memories=True
         )
         
         # Check that version metadata is included
@@ -219,10 +212,8 @@ class TestEnhancedPromptBuilder(unittest.TestCase):
         self.prompt_builder.context_manager.assemble_complete_context = MagicMock(
             return_value=mock_context
         )
-        self.prompt_builder.action_options.prioritize_actions = MagicMock(return_value=[])
-        
         prompt = self.prompt_builder.generate_daily_routine_prompt(
-            "morning", "sunny", include_memories=False
+            "morning", "sunny", actions=[], include_memories=False
         )
         
         # Context manager should be called with no memory query
