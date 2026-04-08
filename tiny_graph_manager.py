@@ -2602,7 +2602,7 @@ class GraphManager:
         Usage example:
             graph_manager.update_node_attribute('char1', 'mood', 'happy')
         """
-        if not self.G.has_node(node):
+        if isinstance(node, str):
             node = self._resolve_node_reference(node)
         # Delegate to WorldState
         self.world_state.update_node_attribute(node, attribute, value)
@@ -4550,6 +4550,8 @@ class GraphManager:
                     for effect in action.effects:
                         if "attribute" in effect and "change_value" in effect:
                             raw_attr = effect["attribute"]
+                            # AttributeMapper returns:
+                            # (actual_attribute_name, min_value, max_value, default_value)
                             attr, _, _, _ = AttributeMapper.map_attribute(raw_attr)
                             change_val = effect["change_value"]
 

@@ -168,6 +168,8 @@ class TestConcreteActionDefaults(unittest.TestCase):
         for action_name, action in cases.items():
             with self.subTest(action=action_name):
                 self.assertTrue(action.preconditions, f"{action_name} should have default preconditions")
+                # Talk delegates its concrete state change to the target's talk-response path,
+                # so the catalog only guarantees a default precondition for it here.
                 self.assertTrue(action.effects or action_name == "Talk", f"{action_name} should have defined effects")
 
         self.assertEqual(
@@ -175,12 +177,24 @@ class TestConcreteActionDefaults(unittest.TestCase):
             ["hunger_level", "energy"],
         )
         self.assertEqual(
+            [(condition.attribute, condition.operator, condition.satisfy_value) for condition in EatAction("bread", initiator_id=self.alice).preconditions],
+            [("hunger_level", "ge", 1), ("energy", "ge", 1)],
+        )
+        self.assertEqual(
             [effect["attribute"] for effect in WorkAction("baker", initiator_id=self.alice).effects],
             ["wealth_money", "energy", "job_performance"],
         )
         self.assertEqual(
+            [(condition.attribute, condition.operator, condition.satisfy_value) for condition in WorkAction("baker", initiator_id=self.alice).preconditions],
+            [("energy", "ge", 2), ("health_status", "ge", 3)],
+        )
+        self.assertEqual(
             [effect["attribute"] for effect in VisitDoctorAction(initiator_id=self.alice).effects],
             ["health_status", "wealth_money"],
+        )
+        self.assertEqual(
+            [(condition.attribute, condition.operator, condition.satisfy_value) for condition in VisitDoctorAction(initiator_id=self.alice).preconditions],
+            [("wealth_money", "ge", 10), ("health_status", "le", 9)],
         )
 
 

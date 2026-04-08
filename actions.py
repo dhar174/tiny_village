@@ -65,6 +65,11 @@ def _resolve_graph_entity(entity_ref, graph_manager):
 def _build_condition(name, attribute, target, satisfy_value, op):
     """Create a concrete Condition only when the target can be evaluated."""
     if target is None or isinstance(target, str):
+        logger.debug(
+            "Skipping default condition '%s' because target %r could not be resolved.",
+            name,
+            target,
+        )
         return None
     return Condition(name, attribute, target, satisfy_value, op)
 
