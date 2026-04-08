@@ -208,6 +208,10 @@ Character Turn → StrategyManager.decide_action()
 → EventHandler.process_consequences()
 ```
 
+### EventHandler Integration Note
+- `GameplayController.update_game_state()` must treat `EventHandler.check_events()` as the central event trigger for the strategy loop, pass an explicit character subject into `StrategyManager.update_strategy(...)`, and execute returned per-character plans through the controller's character-aware action path rather than calling bare `action.execute()`.
+- This keeps the EventHandler → StrategyManager → Action execution chain aligned with controller-side memory updates and loop-safe fallbacks.
+
 ### Error Handling Strategy
 - **LLM Failures**: Fallback to rule-based decisions
 - **Action Validation**: Reject invalid actions, request clarification

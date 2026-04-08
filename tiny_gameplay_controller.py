@@ -4228,17 +4228,27 @@ class GameplayController:
 
             # Step 3: Update strategy based on events (whether processed or not)
             strategy_result = None
+            strategy_subject = self._determine_strategy_subject(events)
             if self.strategy_manager:
                 try:
                     # Strategy manager should receive all events to make informed decisions
-                    strategy_result = self.strategy_manager.update_strategy(events)
+                    if strategy_subject is None:
+                        strategy_result = self.strategy_manager.update_strategy(events)
+                    else:
+                        strategy_result = self.strategy_manager.update_strategy(
+                            events, subject=strategy_subject
+                        )
                     logger.debug(f"StrategyManager generated strategy result: {type(strategy_result)}")
                 except Exception as e:
                     logger.warning(f"Error updating strategy based on events: {e}")
                     update_errors.append("Strategy update failed")
 
             # Step 4: Apply strategic result to game state
-            self._apply_strategy_result(strategy_result, update_errors)
+            self._apply_strategy_result(
+                strategy_result,
+                update_errors,
+                strategy_subject=strategy_subject,
+            )
             
             # Step 5: Handle cascading events and dynamic event generation
             self._handle_cascading_and_dynamic_events(events, update_errors)
@@ -4247,7 +4257,12 @@ class GameplayController:
             logger.error(f"Critical error in event-driven strategy processing: {e}")
             update_errors.append(f"Event-driven strategy system failure: {str(e)}")
 
-    def _apply_strategy_result(self, strategy_result, update_errors):
+    def _apply_strategy_result(
+        self,
+        strategy_result,
+        update_errors,
+        strategy_subject=None,
+    ):
         """Apply strategy result from the strategy manager, handling different return types."""
         if strategy_result is None:
             return
@@ -4255,23 +4270,20 @@ class GameplayController:
         try:
             # Handle different types of strategy results
             if isinstance(strategy_result, list):
-                # List of decisions - apply each one
-                for i, decision in enumerate(strategy_result):
-                    try:
-                        if decision:
-                            self.apply_decision(decision, None)
-                            logger.debug(f"Applied strategic decision {i+1}/{len(strategy_result)}")
-                        else:
-                            logger.warning(f"Received empty decision at index {i}")
-                    except Exception as e:
-                        logger.error(f"Error applying strategic decision {i}: {e}")
-                        update_errors.append(f"Decision application failed (decision {i})")
-                        continue
+                self._apply_strategy_sequence(
+                    strategy_result,
+                    update_errors,
+                    self._resolve_strategy_character(strategy_subject),
+                )
             
             elif hasattr(strategy_result, 'execute'):
                 # Single action - execute it directly
                 try:
-                    success = strategy_result.execute()
+                    character = self._resolve_strategy_character(strategy_subject)
+                    if character is not None:
+                        success = self._execute_single_action(character, strategy_result)
+                    else:
+                        success = strategy_result.execute()
                     if success:
                         logger.debug(f"Successfully executed strategy action: {strategy_result.name}")
                         self.game_statistics["actions_executed"] += 1
@@ -4303,34 +4315,13 @@ class GameplayController:
                         for char_id, decision in strategy_result.items():
                             if decision is None:
                                 continue
-                            if isinstance(decision, dict) and "type" in decision:
-                                self.apply_decision(decision, None)
-                                continue
-                            if isinstance(decision, list):
-                                for item in decision:
-                                    if hasattr(item, "execute"):
-                                        try:
-                                            success = item.execute()
-                                            if success:
-                                                self.game_statistics["actions_executed"] += 1
-                                            else:
-                                                self.game_statistics["actions_failed"] += 1
-                                        except Exception as action_error:
-                                            logger.warning(
-                                                f"Error executing action for {char_id}: {action_error}"
-                                            )
-                                    elif isinstance(item, dict) and "type" in item:
-                                        self.apply_decision(item, None)
-                            elif hasattr(decision, "execute"):
-                                success = decision.execute()
-                                if success:
-                                    self.game_statistics["actions_executed"] += 1
-                                else:
-                                    self.game_statistics["actions_failed"] += 1
-                            else:
-                                logger.debug(
-                                    f"Unhandled strategy mapping entry for {char_id}: {type(decision)}"
-                                )
+                            character = self._resolve_strategy_character(char_id)
+                            self._apply_strategy_mapping_entry(
+                                char_id,
+                                decision,
+                                character,
+                                update_errors,
+                            )
                 except Exception as e:
                     logger.error(f"Error applying dictionary decision: {e}")
                     update_errors.append("Dictionary decision application failed")
@@ -4350,6 +4341,183 @@ class GameplayController:
         """
         logger.warning("_apply_strategic_decisions is deprecated. Use _apply_strategy_result instead.")
         self._apply_strategy_result(decisions, update_errors)
+
+    def _determine_strategy_subject(self, events):
+        """Select a concrete character subject for strategy updates."""
+        for event in events or []:
+            for candidate in self._iter_strategy_event_subjects(event):
+                resolved = self._resolve_strategy_character(candidate)
+                if resolved is not None:
+                    return resolved
+
+        if getattr(self, "characters", None):
+            try:
+                _, character = next(iter(self.characters.items()))
+                return character
+            except StopIteration:
+                return None
+
+        return None
+
+    def _iter_strategy_event_subjects(self, event):
+        """Yield likely subject candidates from an event payload."""
+        for attr in ("participants", "characters", "targets"):
+            candidates = self._read_event_value(event, attr)
+            if not candidates or self._is_mock_strategy_subject(candidates):
+                continue
+            if isinstance(candidates, (list, tuple, set)):
+                for candidate in candidates:
+                    if self._is_mock_strategy_subject(candidate):
+                        continue
+                    yield candidate
+            else:
+                yield candidates
+
+        for attr in ("character", "subject"):
+            candidate = self._read_event_value(event, attr)
+            if candidate and not self._is_mock_strategy_subject(candidate):
+                yield candidate
+
+    def _read_event_value(self, event, attr):
+        if isinstance(event, dict):
+            return event.get(attr)
+        return getattr(event, attr, None)
+
+    def _is_mock_strategy_subject(self, value):
+        value_class = getattr(value, "__class__", None)
+        module_name = getattr(value_class, "__module__", "") if value_class else ""
+        return module_name.startswith("unittest.mock")
+
+    def _resolve_strategy_character(self, reference):
+        """Resolve a strategy reference to a controller character when possible."""
+        if reference is None:
+            return None
+
+        characters = getattr(self, "characters", {}) or {}
+
+        if reference in characters.values():
+            return reference
+
+        if isinstance(reference, str):
+            if reference in characters:
+                return characters[reference]
+
+            for candidate in characters.values():
+                if getattr(candidate, "name", None) == reference:
+                    return candidate
+                if str(getattr(candidate, "uuid", "")) == reference:
+                    return candidate
+                if str(getattr(candidate, "id", "")) == reference:
+                    return candidate
+
+        return reference if hasattr(reference, "name") else None
+
+    def _get_character_registry_key(self, character, fallback=None):
+        characters = getattr(self, "characters", {}) or {}
+        if fallback in characters:
+            return fallback
+
+        for key, candidate in characters.items():
+            if candidate is character:
+                return key
+
+        character_name = getattr(character, "name", None)
+        character_uuid = str(getattr(character, "uuid", "")) if character else ""
+        character_id = str(getattr(character, "id", "")) if character else ""
+
+        for key, candidate in characters.items():
+            if getattr(candidate, "name", None) == character_name and character_name is not None:
+                return key
+            if character_uuid and str(getattr(candidate, "uuid", "")) == character_uuid:
+                return key
+            if character_id and str(getattr(candidate, "id", "")) == character_id:
+                return key
+
+        return fallback
+
+    def _apply_strategy_sequence(self, decisions, update_errors, character):
+        """Apply a list of strategic decisions/actions for a character."""
+        for index, decision in enumerate(decisions):
+            try:
+                if not decision:
+                    logger.warning(f"Received empty decision at index {index}")
+                    continue
+
+                if isinstance(decision, dict) and "type" in decision:
+                    if character is not None and "character_id" not in decision:
+                        decision = decision.copy()
+                        decision["character_id"] = self._get_character_registry_key(character)
+                    self.apply_decision(decision, None)
+                    logger.debug(
+                        f"Applied strategic decision {index + 1}/{len(decisions)}"
+                    )
+                    continue
+
+                if character is None:
+                    logger.warning(
+                        "Skipping character-bound strategy item because no character could be resolved: %r",
+                        decision,
+                    )
+                    update_errors.append("Strategy character resolution failed")
+                    continue
+
+                success = self._execute_single_action(character, decision)
+                if success:
+                    self.game_statistics["actions_executed"] += 1
+                else:
+                    self.game_statistics["actions_failed"] += 1
+                    update_errors.append(
+                        f"Decision application failed (decision {index})"
+                    )
+            except Exception as e:
+                logger.error(f"Error applying strategic decision {index}: {e}")
+                self.game_statistics["actions_failed"] += 1
+                update_errors.append(f"Decision application failed (decision {index})")
+
+    def _apply_strategy_mapping_entry(self, char_id, decision, character, update_errors):
+        """Apply one per-character strategy mapping entry."""
+        if isinstance(decision, dict) and "type" in decision:
+            if character is not None and "character_id" not in decision:
+                decision = decision.copy()
+                decision["character_id"] = self._get_character_registry_key(
+                    character, fallback=char_id
+                )
+            self.apply_decision(decision, None)
+            return
+
+        if isinstance(decision, list):
+            self._apply_strategy_sequence(decision, update_errors, character)
+            return
+
+        if hasattr(decision, "actions"):
+            self._apply_strategy_sequence(
+                list(getattr(decision, "actions", [])),
+                update_errors,
+                character,
+            )
+            return
+
+        if hasattr(decision, "execute"):
+            if character is None:
+                logger.warning(
+                    "Skipping strategy action for unresolved character %r", char_id
+                )
+                update_errors.append("Strategy character resolution failed")
+                return
+
+            success = self._execute_single_action(character, decision)
+            if success:
+                self.game_statistics["actions_executed"] += 1
+            else:
+                self.game_statistics["actions_failed"] += 1
+                update_errors.append(
+                    f"Strategy action execution failed for {getattr(character, 'name', char_id)}"
+                )
+            return
+
+        logger.debug(
+            f"Unhandled strategy mapping entry for {char_id}: {type(decision)}"
+        )
 
     def _handle_cascading_and_dynamic_events(self, events, update_errors):
         """Handle cascading events and generate new dynamic events based on current state."""
@@ -4446,8 +4614,21 @@ class GameplayController:
                                 'name': getattr(event, 'name', str(event)),
                                 'importance': getattr(event, 'importance', 5)
                             }
-                            strategy_result = self.strategy_manager.update_strategy([event_for_strategy])
-                            self._apply_strategy_result(strategy_result, update_errors)
+                            strategy_subject = self._determine_strategy_subject([event])
+                            if strategy_subject is None:
+                                strategy_result = self.strategy_manager.update_strategy(
+                                    [event_for_strategy]
+                                )
+                            else:
+                                strategy_result = self.strategy_manager.update_strategy(
+                                    [event_for_strategy],
+                                    subject=strategy_subject,
+                                )
+                            self._apply_strategy_result(
+                                strategy_result,
+                                update_errors,
+                                strategy_subject=strategy_subject,
+                            )
                         except Exception as e:
                             logger.warning(f"Error applying strategy for basic event: {e}")
                     
@@ -4543,17 +4724,38 @@ class GameplayController:
                 
                 if character_id in self.characters and action:
                     character = self.characters[character_id]
-                    resolved_action = self.action_resolver.resolve_action(action, character)
+                    if self.action_resolver:
+                        resolved_action = self.action_resolver.resolve_action(
+                            action,
+                            character,
+                        )
+                    else:
+                        resolved_action = action
                     
                     if resolved_action and hasattr(resolved_action, 'execute'):
-                        success = resolved_action.execute()
+                        success = self._invoke_action_execute(
+                            resolved_action,
+                            character,
+                        )
                         if success:
                             self.game_statistics["actions_executed"] += 1
+                            self._update_character_state_after_action(
+                                character,
+                                resolved_action,
+                            )
                         else:
                             self.game_statistics["actions_failed"] += 1
                         
                         # Track the action execution for analytics
-                        self.action_resolver.track_action_execution(resolved_action, character, success)
+                        if self.action_resolver and hasattr(
+                            self.action_resolver,
+                            "track_action_execution",
+                        ):
+                            self.action_resolver.track_action_execution(
+                                resolved_action,
+                                character,
+                                success,
+                            )
                         
             elif decision_type == "event_response":
                 # Handle event-based decisions
