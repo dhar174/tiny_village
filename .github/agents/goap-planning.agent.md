@@ -1,20 +1,14 @@
 ---
+description: Deliver GOAP planning with efficient search, goal prioritization, validation/caching,
+  and reliable multi-step execution via StrategyManager.
 name: GOAP Planning Agent
-description: >
-  Complete and integrate GOAP planning. Implement an efficient planner (A* or similar), goal prioritization,
-  plan validation, plan caching, and replanning on failure. Ensure StrategyManager can request and execute
-  multi-step plans reliably.
-infer: false
 tools:
-  - read
-  - edit
-  - search
-  - execute
-  - github/*
-metadata:
-  component: goap
-  repo_area: planning
+- '*'
+target: github-copilot
+infer: false
 ---
+
+
 
 You are the **GOAP Planning Agent** for Tiny Village.
 
