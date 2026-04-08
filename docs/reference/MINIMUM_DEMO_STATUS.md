@@ -26,9 +26,9 @@ Based on comprehensive code analysis and testing, the Tiny Village system integr
 
 ### Test Results
 - **11 integration tests created**
-- **9 tests passing (82%)**
-- **2 minor failures (mock object configuration)**
-- **0 critical failures**
+- **Current lightweight run of `python test_integration_minimal.py`: 7 passing, 2 failing, 1 error, 1 skipped**
+- **Remaining red tests are concentrated in the mocked/dependency-limited integration harness**
+- **No evidence in this suite that the earlier `Action.execute()` signature blocker has returned**
 
 ## Minimum Demo Readiness 🔧
 
@@ -83,7 +83,7 @@ python demo_minimal_integration.py
 ```bash
 python test_integration_minimal.py
 ```
-**Status**: ✅ 82% passing  
+**Status**: ⚠️  Currently reports failures in the lightweight local harness  
 **Shows**: Full turn cycle, failure modes, event integration, analytics  
 **Time**: Runs in 5 seconds  
 
@@ -158,22 +158,24 @@ Based on minimal demo run:
 
 ## Integration Test Results Detail
 
-### Passing Tests (9/11)
+### Passing Tests (7/11)
 1. ✅ Turn cycle with fallback action
 2. ✅ Action resolution (dictionary)
 3. ✅ Action resolution (string)
 4. ✅ Invalid action handling
 5. ✅ Error recovery
-6. ✅ Event handler initialization
-7. ✅ Event processing
-8. ✅ Strategy update from events
-9. ✅ Performance analytics
+6. ✅ Strategy update from events
+7. ✅ Performance analytics and game statistics
 
-### Failing Tests (2/11)
-1. ❌ Turn cycle with strategy manager (mock object issue)
-2. ❌ Fallback action execution (returns False instead of True)
+### Skipped Test (1/11)
+1. ⚠️  Event processing (skipped because `event_handler` was not initialized in the lightweight test harness)
 
-**Both failures are non-critical**: They're due to mock configuration, not actual system failures. Real character objects would pass.
+### Remaining Failing/Error Cases (3/11)
+1. ❌ Turn cycle with strategy manager (`Mock` inventory data becomes non-subscriptable inside `StrategyManager.get_daily_actions`)
+2. ❌ Fallback action execution (`_execute_fallback_character_action` returns `False` for the simplified mocked character used by the harness)
+3. ❌ Event handler initialization (`event_handler` is `None` in the current lightweight run)
+
+**Why this does not reopen the earlier blocker**: the resolved compatibility item above was about standardizing runtime `Action.execute()` handling in `ActionResolver`. The remaining fallback-action failure is coming from the lightweight mocked integration harness, not from a known production mismatch in `Action.execute()` signatures.
 
 ## Conclusion
 

@@ -9,19 +9,22 @@ This document outlines the incongruities found between the markdown documentatio
 - **Codebase**: Both `tests/test_building_loading_unit.py` and `tests/test_custom_building_loading.py` exist in the repository, containing redundant or conflicting test coverage for building loading.
 - **Impact**: Minor. Having multiple test files for the same feature can cause confusion.
 
-### Issue: Testing Best Practices Tools
+### Issue: Memory-Object Mocking Still Conflicts with PromptBuilder Guidance
 - **Documentation**: `docs/testing/MEMORY_TESTING_BEST_PRACTICES.md` explicitly warns against `MagicMock`-style stand-ins for memory objects because they can hide attribute and integration bugs.
-- **Codebase**: The following test files contradict this guidance:
-  1. `tests/test_enhanced_prompt_builder.py` still uses `MagicMock` objects as memory-like inputs (for example `MagicMock(description="Test memory")` and `MagicMock(description="Legacy memory")`) while also stubbing broader collaborators such as `tiny_characters` and `StrategyManager`.
-  2. `tests/test_building_loading_unit.py` replaces `pygame` with `MagicMock` and binds `GameplayController._load_buildings_from_file` onto a `Mock(spec=GameplayController)` instead of exercising a real controller instance, while `tests/test_custom_building_loading.py` covers the same loader through a real `GameplayController` with only display-boundary patching.
-- **Impact**: Moderate. The codebase currently mixes the stricter "realistic object" guidance with heavier mocking patterns, so contributors can get conflicting signals about which testing style the project prefers.
+- **Codebase**: `tests/test_enhanced_prompt_builder.py` uses `MagicMock` objects as memory-like inputs (for example `MagicMock(description="Test memory")` and `MagicMock(description="Legacy memory")`) instead of lightweight classes or realistic memory objects.
+- **Impact**: Moderate. This directly contradicts the memory-specific guidance and can let PromptBuilder memory-formatting tests pass without validating real memory-object behavior.
+
+### Issue: General Over-Mocking Guidance Is Inconsistent Across Building-Loader Tests
+- **Documentation**: `MOCK_USAGE_BEST_PRACTICES.md` says to use real objects for the main component under test where possible and reserve `Mock()`/`MagicMock()` for boundaries or external dependencies.
+- **Codebase**: `tests/test_building_loading_unit.py` replaces `pygame` with `MagicMock` and binds `GameplayController._load_buildings_from_file` onto a `Mock(spec=GameplayController)` instead of exercising a real controller instance, while `tests/test_custom_building_loading.py` covers the same loader through a real `GameplayController` with only display-boundary patching.
+- **Impact**: Moderate. The repository currently offers two conflicting examples for the same feature area, which makes it harder for contributors to tell whether the preferred pattern is a real controller with patched boundaries or a partially mocked controller shell.
 
 ## 2. Incomplete or Outdated Project Status Claims
 
 ### Issue: Minimum Demo Status Was Historically Outdated
 - **Documentation**: Previously, `docs/reference/MINIMUM_DEMO_STATUS.md` still described `main.py` as missing, `MapController` display initialization as a blocker, and `Action.execute()` compatibility as unfinished work.
 - **Codebase**: `main.py` exists at the repository root and the related status items are already implemented, so the doc had drifted behind the current code.
-- **Resolution**: As of 2026-03-22, the status document has been updated to mark those items as resolved and to remove later sections that still treated them as active blockers.
+- **Resolution**: The status document has been updated to mark those items as resolved and to remove later sections that still treated them as active blockers.
 - **Impact**: Major. While this drift remained in place, new contributors could conclude the runtime was in a more broken state than it actually is.
 
 ### Issue: Archived Docs Referencing Root
