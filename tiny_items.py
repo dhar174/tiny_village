@@ -13,10 +13,36 @@ from tiny_locations import Location
 from tiny_types import Action, ActionSystem, GraphManager
 
 
+TOOL_CLASSIFIERS = {"tool", "tools", "weapon"}
+CLOTHING_CLASSIFIERS = {"clothing", "armor", "apparel", "wearable"}
+RESOURCE_CLASSIFIERS = {
+    "resource",
+    "resources",
+    "material",
+    "materials",
+    "ingredient",
+    "ingredients",
+    "crafting_resource",
+    "crafting-resource",
+}
+_ACTION_CLASS = None
+
+
 def _normalize_item_classifier(value):
     if value is None:
         return ""
     return str(value).strip().lower()
+
+
+def _get_action_class():
+    global _ACTION_CLASS
+    if _ACTION_CLASS is None:
+        _ACTION_CLASS = importlib.import_module("actions").Action
+    return _ACTION_CLASS
+
+
+def _matches_item_classifier(normalized_type, normalized_subtype, classifiers):
+    return normalized_type in classifiers or normalized_subtype in classifiers
 
 
 def _create_default_item_interactions(item_type, item_subtype):
@@ -24,47 +50,24 @@ def _create_default_item_interactions(item_type, item_subtype):
     normalized_subtype = _normalize_item_classifier(item_subtype)
     interaction_names = []
 
-    if normalized_type in {"tool", "tools", "weapon"} or normalized_subtype in {
-        "tool",
-        "tools",
-        "weapon",
-    }:
+    if _matches_item_classifier(normalized_type, normalized_subtype, TOOL_CLASSIFIERS):
         interaction_names.append("Equip Tool")
 
-    if normalized_type in {"clothing", "armor", "apparel"} or normalized_subtype in {
-        "clothing",
-        "armor",
-        "apparel",
-        "wearable",
-    }:
+    if _matches_item_classifier(
+        normalized_type, normalized_subtype, CLOTHING_CLASSIFIERS
+    ):
         interaction_names.append("Wear Clothing")
 
-    if normalized_type in {
-        "resource",
-        "resources",
-        "material",
-        "materials",
-        "ingredient",
-        "ingredients",
-        "crafting_resource",
-        "crafting-resource",
-    } or normalized_subtype in {
-        "resource",
-        "resources",
-        "material",
-        "materials",
-        "ingredient",
-        "ingredients",
-        "crafting_resource",
-        "crafting-resource",
-    }:
+    if _matches_item_classifier(
+        normalized_type, normalized_subtype, RESOURCE_CLASSIFIERS
+    ):
         interaction_names.append("Use Resource for Crafting")
 
     if not interaction_names:
         return []
 
-    Action = importlib.import_module("actions").Action
-    return [Action(name, [], [], cost=1) for name in interaction_names]
+    action_class = _get_action_class()
+    return [action_class(name, [], [], cost=1) for name in interaction_names]
 
 
 class Stock:
@@ -367,6 +370,7 @@ class ItemObject:
         return self.location.get_coordinates()
 
     def get_possible_interactions(self):
+        """Return the actions currently available for this item."""
         return self.possible_interactions
 
     def set_coordinate_location(self, *coordinates):

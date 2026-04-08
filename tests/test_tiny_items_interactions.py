@@ -5,17 +5,17 @@ import unittest
 from unittest.mock import patch
 
 
-_module_patcher = None
-_original_modules = {}
+MODULE_PATCHER = None
+ORIGINAL_MODULES = {}
 
 
 def setUpModule():
-    global _module_patcher
-    global _original_modules
+    global MODULE_PATCHER
+    global ORIGINAL_MODULES
 
     for module_name in ("actions", "tiny_locations", "tiny_items"):
         if module_name in sys.modules:
-            _original_modules[module_name] = sys.modules.pop(module_name)
+            ORIGINAL_MODULES[module_name] = sys.modules.pop(module_name)
 
     fake_actions = types.ModuleType("actions")
 
@@ -37,18 +37,18 @@ def setUpModule():
     fake_actions.ActionSystem = FakeActionSystem
     fake_actions.State = FakeState
 
-    _module_patcher = patch.dict(sys.modules, {"actions": fake_actions})
-    _module_patcher.start()
+    MODULE_PATCHER = patch.dict(sys.modules, {"actions": fake_actions})
+    MODULE_PATCHER.start()
 
 
 def tearDownModule():
-    if _module_patcher is not None:
-        _module_patcher.stop()
+    if MODULE_PATCHER is not None:
+        MODULE_PATCHER.stop()
 
     for module_name in ("tiny_locations", "tiny_items"):
         sys.modules.pop(module_name, None)
 
-    for module_name, original_module in _original_modules.items():
+    for module_name, original_module in ORIGINAL_MODULES.items():
         sys.modules[module_name] = original_module
 
 
@@ -122,4 +122,3 @@ class TestItemInteractions(unittest.TestCase):
         )
 
         self.assertEqual(item.get_possible_interactions(), [custom_interaction])
-
