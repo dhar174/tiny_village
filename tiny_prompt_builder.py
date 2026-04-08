@@ -60,6 +60,7 @@ class ContextManager:
             try:
                 inventory = self.character.get_inventory()
             except Exception:
+                logger.exception("Failed to retrieve character inventory")
                 inventory = None
 
         if inventory is None:

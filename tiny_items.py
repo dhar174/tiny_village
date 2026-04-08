@@ -650,6 +650,7 @@ class Door(ItemObject):
 
 class ItemInventory:
     ITEM_TYPE_KEYS = ("food", "clothing", "tools", "weapons", "medicine", "misc")
+    ESSENTIAL_ITEM_TYPES = {"food", "medicine"}
 
     def __init__(
         self,
@@ -732,6 +733,11 @@ class ItemInventory:
         if isinstance(item_type, (list, tuple, set)):
             return [entry for entry in item_type if isinstance(entry, str)]
         return [str(item_type)]
+
+    def _resolve_item_type(self, item_type):
+        if not isinstance(item_type, str):
+            return "misc"
+        return item_type if item_type in self.ITEM_TYPE_KEYS else "misc"
 
     def _serialize_item(self, item):
         if hasattr(item, "to_dict") and callable(item.to_dict):
@@ -830,7 +836,7 @@ class ItemInventory:
 
     def add_item(self, item: ItemObject):
         item_lists = self._get_item_lists()
-        target_list = item_lists.get(item.item_type, self.misc_items)
+        target_list = item_lists[self._resolve_item_type(getattr(item, "item_type", "misc"))]
 
         for existing_item in target_list:
             if existing_item.get_name() == item.get_name():
@@ -845,7 +851,7 @@ class ItemInventory:
 
     def remove_item(self, item: ItemObject):
         item_lists = self._get_item_lists()
-        target_list = item_lists.get(item.item_type, self.misc_items)
+        target_list = item_lists[self._resolve_item_type(getattr(item, "item_type", "misc"))]
 
         for existing_item in target_list:
             if existing_item.get_name() == item.get_name():
@@ -864,6 +870,11 @@ class ItemInventory:
     def transfer_item_to(self, item: ItemObject, other_inventory: "ItemInventory"):
         if not isinstance(other_inventory, ItemInventory):
             raise TypeError("other_inventory must be an ItemInventory instance")
+        available_quantity = self.count_total_items_by_name(item.get_name())
+        if available_quantity < item.get_quantity():
+            raise ValueError(
+                f"Cannot transfer {item.get_quantity()} of {item.get_name()}; only {available_quantity} available"
+            )
 
         self.remove_item(item)
         other_inventory.add_item(item)
@@ -1110,7 +1121,7 @@ class ItemInventory:
             return False
 
         total = sum(self.count_total_items_by_type(entry) for entry in item_types)
-        return bool(self.ops[oper](total, amount))
+        return self.ops[oper](total, amount)
 
     def check_has_item_by_attribute_value(self, attribute, value, oper="ge"):
         if oper not in self.ops:
@@ -1137,11 +1148,11 @@ class ItemInventory:
         return [item for item in self.get_all_items() if item.get_quantity() > 1]
 
     def get_trade_candidates(self):
-        essential_types = {"food", "medicine"}
         return [
             item
             for item in self.get_all_items()
-            if item.get_quantity() > 1 or getattr(item, "item_type", "misc") not in essential_types
+            if item.get_quantity() > 1
+            or getattr(item, "item_type", "misc") not in self.ESSENTIAL_ITEM_TYPES
         ]
 
     def get_drop_candidates(self):

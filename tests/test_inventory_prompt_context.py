@@ -53,6 +53,12 @@ class MockCharacter:
         return []
 
 
+class NoInventoryCharacter(MockCharacter):
+    def __init__(self):
+        super().__init__()
+        del self.inventory
+
+
 tc_stub.Character = MockCharacter
 sys.modules["tiny_characters"] = tc_stub
 
@@ -73,6 +79,18 @@ class TestInventoryPromptContext(unittest.TestCase):
         self.assertIn("Inventory overview: 4 total items across 2 stacks", prompt)
         self.assertIn("Potential trade items: Apple x3, Hammer x1.", prompt)
         self.assertIn("Potential drop candidates: Apple x3.", prompt)
+
+    def test_decision_prompt_handles_missing_inventory(self):
+        prompt = PromptBuilder(NoInventoryCharacter()).generate_decision_prompt(
+            "morning",
+            "sunny",
+            action_choices=["1. Trade goods (Utility: 0.8)"],
+            include_memory_integration=False,
+            include_conversation_context=False,
+            include_few_shot_examples=False,
+        )
+
+        self.assertIn("Your inventory is currently empty.", prompt)
 
 
 if __name__ == "__main__":

@@ -86,6 +86,17 @@ class TestInventoryManagement(unittest.TestCase):
         self.assertEqual(source.count_total_items_by_name("Apple"), 1)
         self.assertEqual(target.count_total_items_by_name("Apple"), 2)
 
+    def test_transfer_item_to_raises_when_quantity_is_unavailable(self):
+        source = ItemInventory(
+            food_items=[build_item("Apple", 1, item_type="food", value=2, weight=1)]
+        )
+        target = ItemInventory()
+
+        with self.assertRaises(ValueError):
+            source.transfer_item_to(
+                build_item("Apple", 2, item_type="food", value=2, weight=1), target
+            )
+
     def test_prompt_context_exposes_trade_and_drop_candidates(self):
         inventory = ItemInventory(
             food_items=[build_item("Apple", 3, item_type="food", value=2, weight=1)],
