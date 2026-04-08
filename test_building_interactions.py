@@ -10,6 +10,7 @@ import unittest
 from dataclasses import dataclass
 
 from tiny_buildings import Building, BUILDING_TYPE_INTERACTIONS
+from tests.skill_test_utils import build_character_skills
 
 
 @dataclass(slots=True)
