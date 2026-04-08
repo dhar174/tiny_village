@@ -217,7 +217,8 @@ class MockAction:
                 try:
                     if not precondition(character_state):
                         return False
-                except Exception:
+                except Exception as e:
+                    logging.warning(f"Callable precondition failed with an exception: {e}")
                     return False
                 continue
 
