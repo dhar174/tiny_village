@@ -594,6 +594,10 @@ class GOAPPlanner:
             
         self.graph_manager = graph_manager
         self.plans = {}
+        self.plan_cache = {}
+        self.cache_hits = 0
+        self.cache_misses = 0
+        self.failure_history = {}
 
     def get_current_world_state(self, character):
         """
@@ -712,7 +716,288 @@ class GOAPPlanner:
             
         return available_actions
 
-    def plan_actions(self, character, goal, current_state=None, actions=None):
+    def _coerce_state(self, state):
+        if isinstance(state, State):
+            return state
+        if isinstance(state, dict):
+            return State(state.copy())
+        if hasattr(state, "dict_or_obj"):
+            data = getattr(state, "dict_or_obj", {})
+            if isinstance(data, dict):
+                return State(data.copy())
+        if hasattr(state, "__dict__"):
+            return State(dict(vars(state)))
+        return State({})
+
+    def _state_to_dict(self, state):
+        state = self._coerce_state(state)
+        data = getattr(state, "dict_or_obj", {})
+        if isinstance(data, dict):
+            return data.copy()
+        if hasattr(data, "__dict__"):
+            return dict(vars(data))
+        return {}
+
+    def _normalize_signature_value(self, value):
+        if isinstance(value, float):
+            return round(value, 2)
+        if isinstance(value, (list, tuple)):
+            return tuple(self._normalize_signature_value(item) for item in value)
+        if isinstance(value, dict):
+            return tuple(
+                sorted(
+                    (key, self._normalize_signature_value(val))
+                    for key, val in value.items()
+                )
+            )
+        return value
+
+    def _character_signature(self, character):
+        for attr in ("id", "uuid", "name"):
+            value = getattr(character, attr, None)
+            if value not in (None, ""):
+                return value
+        if isinstance(character, dict):
+            return (
+                character.get("id")
+                or character.get("uuid")
+                or character.get("name")
+                or str(character)
+            )
+        return str(character)
+
+    def _goal_signature(self, goal):
+        target_effects = getattr(goal, "target_effects", {}) or {}
+        return (
+            getattr(goal, "name", type(goal).__name__),
+            tuple(
+                sorted(
+                    (key, self._normalize_signature_value(value))
+                    for key, value in target_effects.items()
+                )
+            ),
+        )
+
+    def _world_signature(self, state):
+        state_dict = self._state_to_dict(state)
+        return tuple(
+            sorted(
+                (key, self._normalize_signature_value(value))
+                for key, value in state_dict.items()
+            )
+        )
+
+    def _cache_key(self, character, goal, current_state):
+        return (
+            self._character_signature(character),
+            self._goal_signature(goal),
+            self._world_signature(current_state),
+        )
+
+    def _action_identifier(self, action):
+        return getattr(action, "action_id", None) or getattr(action, "name", str(id(action)))
+
+    def _iter_plan_cache_keys(self, character=None, goal=None):
+        character_sig = (
+            self._character_signature(character) if character is not None else None
+        )
+        goal_sig = self._goal_signature(goal) if goal is not None else None
+        for key in list(self.plan_cache.keys()):
+            if character_sig is not None and key[0] != character_sig:
+                continue
+            if goal_sig is not None and key[1] != goal_sig:
+                continue
+            yield key
+
+    def invalidate_plan_cache(self, character=None, goal=None):
+        for key in list(self._iter_plan_cache_keys(character=character, goal=goal)):
+            self.plan_cache.pop(key, None)
+
+    def _call_with_optional_state(self, func, state):
+        try:
+            return func(state)
+        except TypeError:
+            return func()
+
+    def _precondition_matches(self, state, attribute, expected):
+        state = self._coerce_state(state)
+        current = state.get(attribute, 0)
+        if isinstance(expected, dict):
+            target_value = expected.get("value", expected.get("target", 0))
+            operator_name = expected.get("operator", expected.get("op", "ge"))
+            try:
+                if operator_name in state.ops:
+                    return state.ops[operator_name](current, target_value)
+                return state.ops[state.symb_map[operator_name]](current, target_value)
+            except Exception:
+                return current == target_value
+        if isinstance(expected, (int, float)):
+            return current >= expected
+        return current == expected
+
+    def _action_applicable_to_state(self, action, state):
+        state = self._coerce_state(state)
+        preconditions = getattr(action, "preconditions", None)
+        if isinstance(preconditions, dict) and preconditions:
+            return all(
+                self._precondition_matches(state, attribute, expected)
+                for attribute, expected in preconditions.items()
+            )
+        if isinstance(preconditions, (list, tuple)) and preconditions:
+            for precondition in preconditions:
+                if hasattr(precondition, "check_condition"):
+                    if not self._call_with_optional_state(precondition.check_condition, state):
+                        return False
+                elif callable(precondition):
+                    if not self._call_with_optional_state(precondition, state):
+                        return False
+                elif isinstance(precondition, dict):
+                    attribute = precondition.get("attribute")
+                    if attribute and not self._precondition_matches(
+                        state,
+                        attribute,
+                        precondition.get("value", precondition.get("satisfy_value", 0)),
+                    ):
+                        return False
+            return True
+        required_energy = getattr(action, "required_energy", None)
+        if required_energy is not None:
+            return state.get("energy", 0) >= required_energy
+        if hasattr(action, "preconditions_met"):
+            try:
+                return self._call_with_optional_state(action.preconditions_met, state)
+            except Exception:
+                return False
+        return True
+
+    def validate_plan(self, plan, current_state):
+        if plan is None:
+            return False
+        simulated_state = self._coerce_state(current_state)
+        for action in plan:
+            if not self._action_applicable_to_state(action, simulated_state):
+                return False
+            simulated_state = self._apply_action_effects(action, simulated_state)
+        return True
+
+    def _first_invalid_plan_step(self, plan, current_state):
+        simulated_state = self._coerce_state(current_state)
+        for index, action in enumerate(plan):
+            if not self._action_applicable_to_state(action, simulated_state):
+                return index, action, simulated_state
+            simulated_state = self._apply_action_effects(action, simulated_state)
+        return None, None, simulated_state
+
+    def _select_safe_action(self, actions, current_state):
+        if not actions:
+            return None
+        safe_names = ("rest", "idle", "noop", "sleep", "wait")
+        current_state = self._coerce_state(current_state)
+        applicable = [
+            action
+            for action in actions
+            if self._action_applicable_to_state(action, current_state)
+        ]
+        if not applicable:
+            return None
+        for action in applicable:
+            if any(token in getattr(action, "name", "").lower() for token in safe_names):
+                return action
+        return min(applicable, key=lambda action: getattr(action, "cost", 1.0))
+
+    def _record_memory_note(self, character, note):
+        for method_name in ("add_memory", "remember", "record_memory"):
+            method = getattr(character, method_name, None)
+            if callable(method):
+                try:
+                    method(note)
+                    return
+                except Exception:
+                    return
+
+    def handle_action_failure(self, character, goal, failed_action=None):
+        failure_key = (
+            self._character_signature(character),
+            self._goal_signature(goal),
+        )
+        self.failure_history[failure_key] = self.failure_history.get(failure_key, 0) + 1
+        self.invalidate_plan_cache(character=character, goal=goal)
+        if failed_action is not None:
+            action_failures = self.failure_history.setdefault(("action", failure_key), {})
+            action_id = self._action_identifier(failed_action)
+            action_failures[action_id] = action_failures.get(action_id, 0) + 1
+        return self.failure_history[failure_key]
+
+    def _failed_action_ids(self, character, goal):
+        failure_key = (
+            self._character_signature(character),
+            self._goal_signature(goal),
+        )
+        return set(
+            self.failure_history.get(("action", failure_key), {}).keys()
+        )
+
+    def _fallback_plan(self, actions, current_state):
+        safe_action = self._select_safe_action(actions, current_state)
+        return [safe_action] if safe_action is not None else None
+
+    def replan_after_failure(
+        self,
+        character,
+        goal,
+        current_state=None,
+        actions=None,
+        failed_action=None,
+    ):
+        current_state = (
+            self.get_current_world_state(character)
+            if current_state is None
+            else self._coerce_state(current_state)
+        )
+        actions = self.get_available_actions(character) if actions is None else list(actions)
+        failure_count = self.handle_action_failure(character, goal, failed_action)
+        replanned = self.plan_actions(
+            character,
+            goal,
+            current_state=current_state,
+            actions=actions,
+            force_replan=True,
+        )
+        if replanned:
+            return replanned
+        if failure_count >= 3:
+            note = (
+                f"Planning fallback used for goal {getattr(goal, 'name', 'unknown')} "
+                f"after repeated failures."
+            )
+            self._record_memory_note(character, note)
+        return self._fallback_plan(actions, current_state)
+
+    def monitor_plan_execution(
+        self,
+        character,
+        goal,
+        plan,
+        current_state=None,
+        actions=None,
+        failed_action=None,
+    ):
+        current_state = (
+            self.get_current_world_state(character)
+            if current_state is None
+            else self._coerce_state(current_state)
+        )
+        if plan is not None and self.validate_plan(plan, current_state):
+            return plan
+        return self.replan_after_failure(
+            character,
+            goal,
+            current_state=current_state,
+            actions=actions,
+            failed_action=failed_action,
+        )
+
+    def plan_actions(self, character, goal, current_state=None, actions=None, force_replan=False):
         """
 
         Generates a plan of actions to achieve a goal from the current state using GOAP algorithm.
@@ -730,95 +1015,133 @@ class GOAPPlanner:
         """
  
         import heapq
-        
-        # Dynamically retrieve current world state if not provided
+
         if current_state is None:
             current_state = self.get_current_world_state(character)
-            logging.info(f"Dynamically retrieved world state for {getattr(character, 'name', 'character')}")
-        
-        # Dynamically retrieve available actions if not provided
+            logging.info(
+                f"Dynamically retrieved world state for {getattr(character, 'name', 'character')}"
+            )
+        current_state = self._coerce_state(current_state)
+
         if actions is None:
             actions = self.get_available_actions(character)
-            logging.info(f"Dynamically retrieved {len(actions)} available actions for {getattr(character, 'name', 'character')}")
-        
-        # Initialize the open list as a priority queue with (cost, counter, state, plan)
-        # Counter ensures unique comparison for items with same cost
-        open_list = [(0.0, 0, current_state, [])]
-        visited_states = set()
-        counter = 1  # Unique counter for each entry
-        max_iterations = 1000  # Prevent infinite loops
+            logging.info(
+                f"Dynamically retrieved {len(actions)} available actions for {getattr(character, 'name', 'character')}"
+            )
+        actions = list(actions or [])
+
+        if self._goal_satisfied(goal, current_state):
+            return []
+
+        cache_key = self._cache_key(character, goal, current_state)
+        if not force_replan:
+            cached_plan = self.plan_cache.get(cache_key)
+            if cached_plan is not None and self.validate_plan(cached_plan, current_state):
+                self.cache_hits += 1
+                return list(cached_plan)
+
+        self.cache_misses += 1
+        self.invalidate_plan_cache(character=character, goal=goal)
+
+        open_list = [
+            (
+                self._estimate_cost_to_goal(current_state, goal, character),
+                0.0,
+                0,
+                current_state,
+                [],
+            )
+        ]
+        best_cost_by_state = {}
+        counter = 1
+        max_iterations = 1000
         iteration_count = 0
+        failed_action_ids = self._failed_action_ids(character, goal)
 
         while open_list and iteration_count < max_iterations:
             iteration_count += 1
-            current_cost, _, state, current_plan = heapq.heappop(open_list)
- 
+            _, path_cost, _, state, current_plan = heapq.heappop(open_list)
 
-            # Check if the current state satisfies the goal
             if self._goal_satisfied(goal, state):
-                logging.info(f"Goal achieved with plan of {len(current_plan)} actions")
+                self.plan_cache[cache_key] = list(current_plan)
+                logging.info(
+                    f"Goal achieved with plan of {len(current_plan)} actions"
+                )
                 return current_plan
 
-
-        
-            # Convert state to hashable format for visited check
             state_hash = self._hash_state(state)
-            if state_hash in visited_states:
+            existing_best = best_cost_by_state.get(state_hash)
+            if existing_best is not None and existing_best <= path_cost:
                 continue
-            visited_states.add(state_hash)
+            best_cost_by_state[state_hash] = path_cost
 
-            # Limit plan length to prevent overly complex plans
             if len(current_plan) >= self.MAX_PLAN_LENGTH:
                 continue
- 
 
             for action in actions:
-                # Check if action preconditions are met
-                if self._action_applicable(action, state):
-                    # Create new state by applying action effects
-                    new_state = self._apply_action_effects(action, state)
-                    new_plan = current_plan + [action]
-                    
-                    # Calculate cost using utility functions
-                    action_cost = self._calculate_action_cost(action, state, character, goal)
-                    total_cost = current_cost + action_cost
-                    
-                    # Add heuristic cost estimate to goal
-                    heuristic_cost = self._estimate_cost_to_goal(new_state, goal, character)
-                    priority_cost = total_cost + heuristic_cost
-                    
-                    heapq.heappush(open_list, (priority_cost, counter, new_state, new_plan))
-                    counter += 1
+                if self._action_identifier(action) in failed_action_ids:
+                    continue
+                if not self._action_applicable_to_state(action, state):
+                    continue
 
- 
-        logging.warning(f"No plan found to achieve goal for {getattr(character, 'name', 'character')}")
+                new_state = self._apply_action_effects(action, state)
+                new_plan = current_plan + [action]
+                action_cost = self._calculate_action_cost(action, state, character, goal)
+                new_path_cost = path_cost + action_cost
+                heuristic_cost = self._estimate_cost_to_goal(new_state, goal, character)
+                heapq.heappush(
+                    open_list,
+                    (
+                        new_path_cost + heuristic_cost,
+                        new_path_cost,
+                        counter,
+                        new_state,
+                        new_plan,
+                    ),
+                )
+                counter += 1
 
-        # If we exceeded max iterations or couldn't find a plan
+        logging.warning(
+            f"No plan found to achieve goal for {getattr(character, 'name', 'character')}"
+        )
         if iteration_count >= max_iterations:
             print(f"Warning: GOAP planning exceeded max iterations ({max_iterations})")
-        
- 
-        return None  # If no plan is found
+        return None
 
     def _goal_satisfied(self, goal, state):
         """Check if the goal is satisfied in the given state."""
         try:
             if hasattr(goal, 'check_completion'):
-                return goal.check_completion(state)
+                return self._call_with_optional_state(goal.check_completion, state)
             elif hasattr(goal, 'completion_conditions'):
                 # Handle different types of completion conditions
                 conditions = goal.completion_conditions
                 if isinstance(conditions, dict):
-                    return all(state.get(k, 0) >= v for k, v in conditions.items())
+                    flattened = []
+                    for value in conditions.values():
+                        if isinstance(value, (list, tuple)):
+                            flattened.extend(value)
+                        else:
+                            flattened.append(value)
+                    return all(
+                        self._call_with_optional_state(condition.check_condition, self._coerce_state(state))
+                        if hasattr(condition, "check_condition")
+                        else bool(condition)
+                        for condition in flattened
+                    )
                 elif isinstance(conditions, list):
-                    return all(condition(state) if callable(condition) else True for condition in conditions)
+                    return all(
+                        self._call_with_optional_state(condition, self._coerce_state(state))
+                        if callable(condition)
+                        else True
+                        for condition in conditions
+                    )
             elif hasattr(goal, 'target_effects'):
- 
                 # Handle target_effects format - goal is satisfied when state reaches target values
                 target_effects = goal.target_effects
                 if isinstance(target_effects, dict):
                     for attribute, target_value in target_effects.items():
-                        current_value = state.get(attribute, 0)
+                        current_value = self._coerce_state(state).get(attribute, 0)
                         # Check if current value has reached or exceeded the target
                         # Goals are satisfied when we reach at least the target value
                         if current_value < target_value - 0.1:  # Allow small tolerance for floating point
@@ -832,53 +1155,35 @@ class GOAPPlanner:
 
     def _action_applicable(self, action, state):
         """Check if an action's preconditions are met in the given state."""
-        try:
-            if hasattr(action, 'preconditions_met'):
-                return action.preconditions_met()
-            elif hasattr(action, 'preconditions'):
-                # Handle different precondition formats
-                preconditions = action.preconditions
-                if isinstance(preconditions, list):
-                    return all(
-                        precond.check_condition(state) if hasattr(precond, 'check_condition')
-                        else True for precond in preconditions
-                    )
-                elif isinstance(preconditions, dict):
-                    return all(state.get(k, 0) >= v for k, v in preconditions.items())
-            return True  # No preconditions means always applicable
-        except Exception as e:
-            print(f"Warning: Error checking action preconditions for {action.name}: {e}")
-            return False
+        return self._action_applicable_to_state(action, state)
 
     def _apply_action_effects(self, action, state):
         """Apply action effects to create a new state."""
         try:
-            # Create a copy of the current state
-            new_state = State(state.dict_or_obj.copy() if hasattr(state, 'dict_or_obj') else state.copy())
-            
+            new_state = self._coerce_state(self._state_to_dict(state))
             if hasattr(action, 'effects'):
                 for effect in action.effects:
                     if isinstance(effect, dict):
                         attribute = effect.get('attribute')
                         change_value = effect.get('change_value', 0)
-                        targets = effect.get('targets', [])
-                        
-                        # Apply all effects to the current state during planning
-                        # The "targets" field is ignored during planning and is handled during actual execution
-                        # This ensures that all potential effects are considered for state transitions
-                        if attribute:
-                            current_value = new_state.get(attribute, 0)
-                            if isinstance(change_value, (int, float)):
-                                new_state[attribute] = current_value + change_value
-                            elif isinstance(change_value, str) and change_value.startswith('set:'):
-                                new_state[attribute] = change_value[4:]  # Remove 'set:' prefix
-                            else:
-                                new_state[attribute] = change_value
-            
+                        if not attribute:
+                            continue
+                        current_value = new_state.get(attribute, 0)
+                        if callable(change_value):
+                            new_state[attribute] = change_value(current_value)
+                        elif isinstance(change_value, (int, float)):
+                            new_state[attribute] = current_value + change_value
+                        elif (
+                            isinstance(change_value, str)
+                            and change_value.startswith('set:')
+                        ):
+                            new_state[attribute] = change_value[4:]
+                        else:
+                            new_state[attribute] = change_value
             return new_state
         except Exception as e:
             print(f"Warning: Error applying action effects for {action.name}: {e}")
-            return state  # Return original state if effects can't be applied
+            return self._coerce_state(state)
 
     def _calculate_action_cost(self, action, state, character, goal):
         """
@@ -948,48 +1253,33 @@ class GOAPPlanner:
         try:
             if not goal or not hasattr(goal, 'target_effects') or not goal.target_effects:
                 return 0.0
-                
-            # Convert state to dictionary format
-            if hasattr(state, 'dict_or_obj'):
-                state_dict = state.dict_or_obj if isinstance(state.dict_or_obj, dict) else {}
-            elif hasattr(state, '__dict__'):
-                state_dict = state.__dict__
-            else:
-                state_dict = {}
-            
-            # Calculate distance to goal based on target effects
+            state_dict = self._state_to_dict(state)
             total_distance = 0.0
+            unsatisfied_conditions = 0.0
             for attribute, target_value in goal.target_effects.items():
                 current_value = state_dict.get(attribute, 0.0)
-                distance = abs(target_value - current_value)
+                distance = max(0.0, target_value - current_value)
                 total_distance += distance
-                
-            # Simple heuristic: assume average action cost * rough number of actions needed
-            if total_distance <= 0.1:  # Very close to goal
+                if distance > 0.1:
+                    unsatisfied_conditions += 1.0
+            if total_distance <= 0.1:
                 return 0.0
-                
-            estimated_actions = max(1.0, total_distance / 0.5)  # Assume actions change ~0.5 per attribute
-            average_action_cost = 1.0  # Conservative estimate
-            
-            return estimated_actions * average_action_cost
-            
+            return total_distance + unsatisfied_conditions
         except Exception:
             return 0.0  # Conservative fallback
 
     def _hash_state(self, state):
         """Convert state to a hashable format for visited state tracking."""
         try:
-            if hasattr(state, '__hash__'):
-                return hash(state)
-            elif hasattr(state, 'dict_or_obj'):
-                # For State objects, hash the underlying dict/object
-                state_data = state.dict_or_obj
-                if isinstance(state_data, dict):
-                    return hash(tuple(sorted(state_data.items())))
-                else:
-                    return hash(str(state_data))  # Fallback to string representation
-            else:
-                return hash(str(state))  # Fallback to string representation
+            state_dict = self._state_to_dict(state)
+            return hash(
+                tuple(
+                    sorted(
+                        (key, self._normalize_signature_value(value))
+                        for key, value in state_dict.items()
+                    )
+                )
+            )
         except Exception as e:
             print(f"Warning: Error hashing state: {e}")
             return hash(str(state))  # Ultimate fallback
@@ -1062,164 +1352,136 @@ class GOAPPlanner:
         :param graph_manager: GraphManager object to access the game graph.
         :return: A float value representing the importance of the goal.
         """
-        Character = importlib.import_module("tiny_characters").Character
-        Goal = importlib.import_module("tiny_characters").Goal
-        GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
         logging.info(
-            f"Evaluating importance of goal {goal.name} for character {character.name}"
+            "Evaluating importance of goal %s for character %s",
+            getattr(goal, "name", goal),
+            getattr(character, "name", character),
         )
-        # logging.debug(f"Character:\n {character}\n")
-        # logging.debug(f"Goal:\n {goal}\n")
-        for arg in kwargs:
-            logging.debug(
-                f"\nAdditional argument:\n {arg} \nof type {type(kwargs[arg])}"
+
+        current_state = self.get_current_world_state(character)
+        state_dict = self._state_to_dict(current_state)
+        target_effects = getattr(goal, "target_effects", {}) or {}
+        base_priority = float(getattr(goal, "priority", 0.5) or 0.5)
+        importance_score = base_priority * 10.0
+
+        needs_weight = {
+            "energy": 1.6,
+            "hunger": 1.8,
+            "health": 1.6,
+            "satisfaction": 1.2,
+            "happiness": 1.2,
+            "social_wellbeing": 1.3,
+            "money": 0.8,
+            "job_performance": 0.7,
+        }
+        deficit = 0.0
+        for attribute, target_value in target_effects.items():
+            current_value = state_dict.get(attribute, 0.0)
+            if attribute == "hunger":
+                distance = max(0.0, current_value - target_value)
+            else:
+                distance = max(0.0, target_value - current_value)
+            deficit += distance * needs_weight.get(attribute, 1.0)
+        importance_score += deficit * 12.0
+
+        motives = getattr(character, "motives", None)
+        if motives is not None:
+            motive_values = {}
+            if hasattr(motives, "__dict__"):
+                motive_values = dict(vars(motives))
+            elif isinstance(motives, dict):
+                motive_values = motives
+            for attribute in target_effects:
+                for key, value in motive_values.items():
+                    numeric_value = getattr(value, "value", value)
+                    if not isinstance(numeric_value, (int, float)):
+                        continue
+                    lowered_key = key.lower()
+                    if attribute in lowered_key:
+                        importance_score += float(numeric_value)
+
+        personality = getattr(character, "personality", None)
+        if personality is not None:
+            personality_values = (
+                dict(vars(personality))
+                if hasattr(personality, "__dict__")
+                else personality if isinstance(personality, dict) else {}
             )
-        # TODO: We need Machine Learning here
-        # For now, implement a comprehensive heuristic-based approach
+            goal_name = getattr(goal, "name", "").lower()
+            for key, value in personality_values.items():
+                numeric_value = getattr(value, "value", value)
+                if not isinstance(numeric_value, (int, float)):
+                    continue
+                lowered_key = key.lower()
+                if "social" in goal_name and lowered_key in {"extroversion", "agreeableness"}:
+                    importance_score += float(numeric_value)
+                elif "work" in goal_name or "career" in goal_name:
+                    if lowered_key in {"conscientiousness", "ambition"}:
+                        importance_score += float(numeric_value)
 
-        # Fetch character attributes
-        health = character.health_status
-        hunger = character.hunger_level
-        social_needs = character.social_wellbeing
-        current_activity = (
-            character.current_activity
-        )  # Action class object of the current activity
-        financial_status = character.wealth_money
-
-        # Fetch goal attributes
-        goal_benefit = goal.completion_reward
-        goal_consequence = goal.failure_penalty
-        goal_type = goal.goal_type  # Added to differentiate goal types
-
-        # Fetch personal motives
-        motives = character.motives
-        social_factor = 0
-        event_participation_factor = 0
-
-        # Analyze character relationships if the character has been fully initialized
-        if character._initialized:
-            relationships = graph_manager.analyze_character_relationships(character)
-            social_factor = sum(
-                graph_manager.evaluate_relationship_strength(character, rel)
-                for rel in relationships.keys()
-            )
-
-            # Implement the relationship analysis
+        if graph_manager is not None:
             try:
-                for rel_name, rel_data in relationships.items():
-                    # Calculate how this goal impacts each relationship
-                    if hasattr(graph_manager, "calculate_how_goal_impacts_character"):
-                        impact = graph_manager.calculate_how_goal_impacts_character(
-                            character, rel_name, goal
-                        )
+                possible_actions = []
+                if hasattr(graph_manager, "get_possible_actions"):
+                    possible_actions = graph_manager.get_possible_actions(
+                        self._character_signature(character)
+                    )
+                matched_effects = 0
+                for action in possible_actions or []:
+                    effects = action.get("effects", []) if isinstance(action, dict) else getattr(action, "effects", [])
+                    for effect in effects:
+                        attribute = effect.get("attribute") if isinstance(effect, dict) else None
+                        if attribute in target_effects:
+                            matched_effects += 1
+                            break
+                importance_score += min(matched_effects, 3) * 2.5
+                if matched_effects == 0 and target_effects:
+                    importance_score -= 3.0
+            except Exception:
+                pass
 
-                        # Weight the impact by relationship strength
-                        rel_strength = graph_manager.evaluate_relationship_strength(
-                            character, rel_name
-                        )
-                        weighted_impact = impact * rel_strength
+            try:
+                if hasattr(graph_manager, "calculate_goal_difficulty"):
+                    difficulty = graph_manager.calculate_goal_difficulty(goal, character)
+                    if isinstance(difficulty, dict):
+                        difficulty = difficulty.get("difficulty", 0.0)
+                    if isinstance(difficulty, (int, float)):
+                        importance_score -= min(float(difficulty), 10.0) * 0.5
+            except Exception:
+                pass
 
-                        # Add to social factor (positive or negative)
-                        social_factor += weighted_impact
+            try:
+                if hasattr(graph_manager, "analyze_character_relationships"):
+                    relationships = graph_manager.analyze_character_relationships(character) or {}
+                    relationship_bonus = 0.0
+                    for relation_name, relation_data in relationships.items():
+                        try:
+                            strength = 0.0
+                            if hasattr(graph_manager, "evaluate_relationship_strength"):
+                                strength = graph_manager.evaluate_relationship_strength(
+                                    character, relation_name
+                                )
+                            elif hasattr(relation_data, "strength"):
+                                strength = relation_data.strength
+                            if any(
+                                attribute in target_effects
+                                for attribute in ("social_wellbeing", "happiness", "satisfaction")
+                            ):
+                                relationship_bonus += float(strength)
+                        except Exception:
+                            continue
+                    importance_score += relationship_bonus * 0.5
+            except Exception:
+                pass
 
-                    # Consider relationship type and goals
-                    if hasattr(rel_data, "relationship_type"):
-                        rel_type = rel_data.relationship_type
-                        if rel_type in ["family", "romantic"]:
-                            # Family and romantic relationships have higher impact
-                            social_factor *= 1.5
-                        elif rel_type in ["friend", "colleague"]:
-                            social_factor *= 1.2
-                        elif rel_type in ["enemy", "rival"]:
-                            # Negative relationships might actually motivate certain goals
-                            if goal_type in ["competitive", "achievement"]:
-                                social_factor += 10  # Boost competitive goals
-            except Exception as e:
-                logging.warning(
-                    f"Error in relationship analysis for goal evaluation: {e}"
-                )
-                # Continue with basic social factor calculation
-            #         goal, character
-            #     )
+        recent_failures = kwargs.get("recent_failures", 0)
+        recent_successes = kwargs.get("recent_successes", 0)
+        if recent_failures:
+            importance_score -= float(recent_failures) * 1.5
+        if recent_successes:
+            importance_score += float(recent_successes)
 
-            # Analyze location relevance and safety
-            # location = graph_manager.G.nodes[character.name].get(
-            #     "coordinates_location", None
-            # )
-            # location_factor = 0
-            # safety_factor = 0
-            # if location and goal.target_location:
-            #     path = graph_manager.find_shortest_path(location, goal.target_location)
-            #     location_factor = (
-            #         1 / (len(path) + 1) if path else 0
-            #     )  # Simplified proximity impact
-            #     safety_factor = (
-            #         1
-            #         if graph_manager.check_safety_of_locations(goal.target_location)
-            #         else 0
-            #     )
-
-            # Analyze event impact and participation
-            current_events = [
-                event for event in graph_manager.events.values() if event.is_active()
-            ]
-            event_participation_factor = sum(
-                event.importance
-                for event in current_events
-                if self.graph_manager.G[character.name][event.name][
-                    "participation_status"
-                ]
-                == True
-            )
-
-        # # Check if the path will achieve the goal
-        # path_achieves_goal = graph_manager.will_path_achieve_goal(character.name, goal)
-
-        # Add specific criteria based on goal type and personal motives
-        goal_importance = 0
-        if goal_type == "Basic Needs":
-            goal_importance = self.calculate_basic_needs_importance(
-                health, hunger, motives
-            )
-        elif goal_type == "Social":
-            goal_importance = self.calculate_social_goal_importance(
-                social_needs, social_factor, motives
-            )
-        elif goal_type == "Career":
-            goal_importance = self.calculate_career_goal_importance(
-                character, goal, graph_manager, motives
-            )
-        elif goal_type == "Personal Development":
-            goal_importance = self.calculate_personal_development_importance(
-                character, goal, graph_manager, motives
-            )
-        elif goal_type == "Economic":
-            goal_importance = self.calculate_economic_goal_importance(
-                financial_status, goal, graph_manager, motives
-            )
-        elif goal_type == "Health":
-            goal_importance = self.calculate_health_goal_importance(
-                health, goal, graph_manager, motives
-            )
-        elif goal_type == "Safety":
-            goal_importance = self.calculate_safety_goal_importance(goal, motives)
-        elif goal_type == "Long-term Aspiration":
-            goal_importance = self.calculate_long_term_goal_importance(
-                character, goal, graph_manager, motives
-            )
-
-        # Combine general and specific criteria
-        importance_score = util_funcs.calculate_importance(
-            health=health,
-            hunger=hunger,
-            social_needs=social_needs,
-            current_activity=current_activity,
-            social_factor=social_factor,
-            event_participation_factor=event_participation_factor,
-            goal_importance=goal_importance,  # Specific to the goal type
-        )
-
-        return importance_score
+        return max(0.0, importance_score)
 
     def calculate_basic_needs_importance(self, health, hunger, motives):
         # Calculate the importance of basic needs goals
@@ -1497,5 +1759,3 @@ class GOAPPlanner:
         priority = base_priority - utility_adjustment
         
         return max(priority, 0.1)  # Ensure priority is not negative
-
-
