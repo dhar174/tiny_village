@@ -141,13 +141,13 @@ python tiny_gameplay_controller.py
 
 ### Minimum Required (Installed)
 ```bash
-pip install pygame networkx numpy nltk pydantic faiss-cpu scikit-learn pandas
+python3.12 -m pip install -r requirements.txt
 ```
 
 ### Optional (For Full Features)
 ```bash
-pip install transformers sentence-transformers spacy
-python -m spacy download en_core_web_sm
+python3.12 -m pip install transformers sentence-transformers spacy
+python3.12 -m spacy download en_core_web_sm
 ```
 
 ## File Structure for Demo
