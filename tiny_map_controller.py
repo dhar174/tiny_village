@@ -1026,9 +1026,16 @@ class MapController:
             
         return info
 
-    def _looks_like_building(self, building) -> bool:
-        """Return True when the target looks like legacy building data or a Building object."""
-        return hasattr(building, 'get') or hasattr(building, 'get_location') or hasattr(building, 'coordinates_location')
+    def _is_building_target(self, building) -> bool:
+        """Return True when the target looks like a building dict or Building-style object."""
+        if isinstance(building, dict):
+            return 'rect' in building
+
+        return (
+            hasattr(building, 'rect')
+            or hasattr(building, 'building_type')
+            or (hasattr(building, 'length') and hasattr(building, 'width'))
+        )
 
     def _get_building_name(self, building) -> str:
         """Get a building name from either legacy dict data or a Building object."""
@@ -1181,8 +1188,8 @@ class MapController:
         action = option.get('action')
         target = option.get('target')
         
-        if action == 'enter' and self._looks_like_building(target):
-            self.enter_building(target)
+        if action == 'enter' and self._is_building_target(target):
+            self.enter_building_target(target)
         elif action == 'details':
             self.show_target_details(target)
         elif action == 'directions':
@@ -1210,7 +1217,7 @@ class MapController:
 
     def show_target_details(self, target):
         """Show detailed information about the target."""
-        if self._looks_like_building(target):
+        if self._is_building_target(target):
             info = self.get_building_info(target)
         elif hasattr(target, 'position'):  # Character
             info = self.get_character_info(target)
@@ -1281,11 +1288,26 @@ class MapController:
         print(f"Placing marker at {position}")
         # This would add a visual marker to the map
 
-    def enter_building(self, building):
-        """Enter a building and interact with it."""
-        if building:
+    def enter_building_target(self, building):
+        """Enter a known building object or legacy building dict and interact with it."""
+        if not building:
+            return
+
+        if hasattr(building, 'name'):
+            building_name = building.name
+            print(f"Entering {building_name}")
+
+            if hasattr(building, 'get_available_activities'):
+                activities = building.get_available_activities()
+                if activities:
+                    print(f"Available activities: {', '.join(activities)}")
+
+            if hasattr(building, 'get_security_level'):
+                security = building.get_security_level()
+                popularity = building.get_popularity_level()
+                print(f"Security level: {security}, Popularity: {popularity}")
+        else:
             print(f"Entering {building.get('name', 'Unknown Building')}")
-            # This would trigger building-specific interactions
 
     def is_building(self, position):
         # Check if a building is at the clicked position using Building objects
@@ -1304,26 +1326,7 @@ class MapController:
         # Enter a building and interact with it
         building = self.is_building(position)
         if building:
-            # Handle Building objects vs legacy building data
-            if hasattr(building, 'name'):
-                building_name = building.name
-                print(f"Entering {building_name}")
-                
-                # Show available activities
-                if hasattr(building, 'get_available_activities'):
-                    activities = building.get_available_activities()
-                    if activities:
-                        print(f"Available activities: {', '.join(activities)}")
-                        
-                # Show location properties
-                if hasattr(building, 'get_security_level'):
-                    security = building.get_security_level()
-                    popularity = building.get_popularity_level()
-                    print(f"Security level: {security}, Popularity: {popularity}")
-            else:
-                # Legacy building data
-                building_name = building.get('name', 'Unknown Building')
-                print(f"Entering {building_name}")
+            self.enter_building_target(building)
     
     def find_safe_locations(self, min_security=7):
         """Find locations with high security for characters seeking safety"""

@@ -1,6 +1,8 @@
+import importlib
 import sys
 import types
 import unittest
+from unittest.mock import patch
 
 
 class MockRect:
@@ -21,26 +23,26 @@ class MockRect:
         return self.x <= px <= self.right and self.y <= py <= self.bottom
 
 
-pygame_stub = types.ModuleType("pygame")
-pygame_stub.Rect = MockRect
-pygame_stub.error = Exception
-pygame_stub.image = types.SimpleNamespace(load=lambda path: object())
-pygame_stub.font = types.SimpleNamespace(
-    Font=lambda *args, **kwargs: object(),
-    SysFont=lambda *args, **kwargs: object(),
-)
-pygame_stub.mouse = types.SimpleNamespace(get_pos=lambda: (25, 35))
-pygame_stub.draw = types.SimpleNamespace(rect=lambda *args, **kwargs: None)
-pygame_stub.Surface = lambda *args, **kwargs: object()
+def build_pygame_stub():
+    pygame_stub = types.ModuleType("pygame")
+    pygame_stub.Rect = MockRect
+    pygame_stub.error = Exception
+    pygame_stub.image = types.SimpleNamespace(load=lambda path: object())
+    pygame_stub.font = types.SimpleNamespace(
+        Font=lambda *args, **kwargs: object(),
+        SysFont=lambda *args, **kwargs: object(),
+    )
+    pygame_stub.mouse = types.SimpleNamespace(get_pos=lambda: (25, 35))
+    pygame_stub.draw = types.SimpleNamespace(rect=lambda *args, **kwargs: None)
+    pygame_stub.Surface = lambda *args, **kwargs: object()
+    return pygame_stub
 
-tiny_locations_stub = types.ModuleType("tiny_locations")
-tiny_locations_stub.LocationManager = lambda: None
-tiny_locations_stub.PointOfInterest = object
 
-sys.modules["pygame"] = pygame_stub
-sys.modules["tiny_locations"] = tiny_locations_stub
-
-from tiny_map_controller import MapController
+def build_tiny_locations_stub():
+    tiny_locations_stub = types.ModuleType("tiny_locations")
+    tiny_locations_stub.LocationManager = lambda: None
+    tiny_locations_stub.PointOfInterest = object
+    return tiny_locations_stub
 
 
 class FakeLocation:
@@ -66,9 +68,41 @@ class FakeBuilding:
         return self.location
 
 
+class FakeCharacter:
+    def __init__(self):
+        self.name = "Jordan"
+        self.position = types.SimpleNamespace(x=10, y=20)
+        self.energy = 80
+        self.coordinates_location = (10, 20)
+
+    def get_location(self):
+        return FakeLocation(10, 20, 1, 1)
+
+
 class TestMapControllerBuildingInfo(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls._module_patcher = patch.dict(
+            sys.modules,
+            {
+                "pygame": build_pygame_stub(),
+                "tiny_locations": build_tiny_locations_stub(),
+            },
+        )
+        cls._module_patcher.start()
+        cls._previous_map_module = sys.modules.pop("tiny_map_controller", None)
+        cls._map_module = importlib.import_module("tiny_map_controller")
+        cls.MapController = cls._map_module.MapController
+
+    @classmethod
+    def tearDownClass(cls):
+        sys.modules.pop("tiny_map_controller", None)
+        if cls._previous_map_module is not None:
+            sys.modules["tiny_map_controller"] = cls._previous_map_module
+        cls._module_patcher.stop()
+
     def setUp(self):
-        self.controller = MapController.__new__(MapController)
+        self.controller = self.MapController.__new__(self.MapController)
         self.controller.map_data = {
             "buildings": [
                 {
@@ -106,7 +140,22 @@ class TestMapControllerBuildingInfo(unittest.TestCase):
         self.assertEqual(info["value"], 1200)
         self.assertEqual(info["description"], "Village administration building")
 
-    def test_show_target_details_treats_building_objects_as_buildings(self):
+    def test_show_target_details_does_not_misclassify_character_like_object(self):
+        character = FakeCharacter()
+
+        def mock_show(content, _pos):
+            self.shown_content = content
+
+        self.controller.info_panel = types.SimpleNamespace(show=mock_show)
+
+        self.controller.show_target_details(character)
+
+        self.assertEqual(self.shown_content["name"], "Jordan")
+        self.assertEqual(self.shown_content["type"], "Character")
+        self.assertEqual(self.shown_content["position"], "(10, 20)")
+        self.assertEqual(self.shown_content["energy"], 80)
+
+    def test_execute_context_action_uses_building_target_entry_path(self):
         building = FakeBuilding(
             name="Town Hall",
             building_type="civic",
@@ -116,15 +165,19 @@ class TestMapControllerBuildingInfo(unittest.TestCase):
             height=60,
             owner="City Council",
         )
-        def mock_show(content, _pos):
-            self.shown_content = content
+        recorded = {}
 
-        self.controller.info_panel = types.SimpleNamespace(show=mock_show)
+        def record_entry(target):
+            recorded["target"] = target
 
-        self.controller.show_target_details(building)
+        self.controller.enter_building_target = record_entry
+        self.controller.enter_building = lambda position: self.fail(
+            "execute_context_action should not call the position-based enter_building path"
+        )
 
-        self.assertEqual(self.shown_content["name"], "Town Hall")
-        self.assertEqual(self.shown_content["description"], "Village administration building")
+        self.controller.execute_context_action({"action": "enter", "target": building})
+
+        self.assertIs(recorded["target"], building)
 
 
 if __name__ == "__main__":
