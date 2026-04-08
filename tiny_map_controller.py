@@ -8,6 +8,8 @@ from typing import Dict, List, Tuple, Optional, Set
 from functools import lru_cache
 from tiny_locations import LocationManager, PointOfInterest
 
+BUILDING_INFO_METADATA_KEYS = ('capacity', 'owner', 'value', 'description')
+
 
 class InfoPanel:
     """Information panel for displaying detailed information about locations and buildings."""
@@ -1023,30 +1025,127 @@ class MapController:
             
         return info
 
+    def _is_building_target(self, building) -> bool:
+        """Return True for building dicts/objects based on building-specific shape.
+
+        Legacy map-data buildings are dicts with a ``rect`` entry. Object-backed
+        buildings expose attributes such as ``building_type`` or geometric
+        dimensions like ``length`` and ``width``. Character objects may expose
+        location-style helpers, but they typically do not have these
+        building-specific attributes.
+        """
+        if isinstance(building, dict):
+            return 'rect' in building
+
+        return (
+            hasattr(building, 'rect')
+            or hasattr(building, 'building_type')
+            or (hasattr(building, 'length') and hasattr(building, 'width'))
+        )
+
+    def _get_building_name(self, building) -> str:
+        """Get a building name from either legacy dict data or a Building object."""
+        if hasattr(building, 'get'):
+            return building.get('name', 'Unknown Building')
+        return getattr(building, 'name', 'Unknown Building')
+
+    def _get_building_type(self, building) -> str:
+        """Get a building type from either legacy dict data or a Building object."""
+        if hasattr(building, 'get'):
+            return building.get('type', 'Building')
+        return getattr(building, 'building_type', getattr(building, 'type', 'Building'))
+
+    def _get_rect_signature(self, rect) -> Optional[Tuple[int, int, int, int]]:
+        """Return a comparable `(x, y, width, height)` tuple for a rect-like object."""
+        if rect is None:
+            return None
+
+        x = getattr(rect, 'x', None)
+        if x is None:
+            x = getattr(rect, 'left', None)
+
+        y = getattr(rect, 'y', None)
+        if y is None:
+            y = getattr(rect, 'top', None)
+
+        width = getattr(rect, 'width', None)
+        height = getattr(rect, 'height', None)
+
+        if None in (x, y, width, height):
+            return None
+
+        return (x, y, width, height)
+
+    def _get_building_rect_signature(self, building) -> Optional[Tuple[int, int, int, int]]:
+        """Get a rect signature from either legacy dict data or a Building object."""
+        if hasattr(building, 'get'):
+            return self._get_rect_signature(building.get('rect'))
+
+        location = getattr(building, 'location', None)
+        if location is None and hasattr(building, 'get_location'):
+            try:
+                location = building.get_location()
+            except (AttributeError, TypeError):
+                logging.debug("Building object did not provide a usable location", exc_info=True)
+                location = None
+
+        if location is not None:
+            return self._get_rect_signature(location)
+
+        coordinates = getattr(building, 'coordinates_location', None)
+        width = getattr(building, 'width', None)
+        height = getattr(building, 'length', None)
+        if height is None:
+            height = getattr(building, 'height', None)
+        if coordinates and width is not None and height is not None:
+            return (coordinates[0], coordinates[1], width, height)
+
+        return None
+
+    def _get_original_building_data(self, building):
+        """Look up the legacy building dictionary that matches a Building object's rect."""
+        building_rect = self._get_building_rect_signature(building)
+        if building_rect is None:
+            return None
+
+        for original_data in self.map_data.get("buildings", []):
+            if not isinstance(original_data, dict):
+                continue
+            if self._get_rect_signature(original_data.get("rect")) == building_rect:
+                return original_data
+
+        return None
+
     def get_building_info(self, building) -> Dict:
         """Get detailed information about a building for the info panel."""
         info = {
             'name': self._get_building_name(building),
-            'type': self._get_building_type(building).title(),
+            'type': self._get_building_type(building),
         }
         
         # Add building-specific information
-        rect = self._get_building_rect(building)
-        if rect:
-            info['position'] = f"({rect.x}, {rect.y})"
-            info['size'] = f"{rect.width} x {rect.height}"
-            info['area'] = rect.width * rect.height
-            
+        building_rect = self._get_building_rect_signature(building)
+        if building_rect is not None:
+            x, y, width, height = building_rect
+            info['position'] = f"({x}, {y})"
+            info['size'] = f"{width} x {height}"
+            info['area'] = width * height
+             
         # Add additional building attributes if available
-        if self._is_legacy_building(building):
-            for key in ['capacity', 'owner', 'value', 'description']:
+        if hasattr(building, 'get'):
+            for key in BUILDING_INFO_METADATA_KEYS:
                 if key in building:
                     info[key] = building[key]
         else:
-            owner = getattr(building, "owner", None)
-            if owner:
-                info["owner"] = owner
-                
+            original_data = self._get_original_building_data(building)
+            for key in BUILDING_INFO_METADATA_KEYS:
+                if original_data and key in original_data:
+                    info[key] = original_data[key]
+                elif hasattr(building, key):
+                    value = getattr(building, key)
+                    if value is not None:
+                        info[key] = value
+                 
         return info
 
     def show_building_context_menu(self, building, position):
@@ -1095,8 +1194,8 @@ class MapController:
         action = option.get('action')
         target = option.get('target')
         
-        if action == 'enter':
-            self.enter_building(target)
+        if action == 'enter' and self._is_building_target(target):
+            self.enter_building_target(target)
         elif action == 'details':
             self.show_target_details(target)
         elif action == 'directions':
@@ -1124,7 +1223,7 @@ class MapController:
 
     def show_target_details(self, target):
         """Show detailed information about the target."""
-        if self._is_legacy_building(target) or hasattr(target, "get_location"):
+        if self._is_building_target(target):
             info = self.get_building_info(target)
         elif hasattr(target, 'position'):  # Character
             info = self.get_character_info(target)
@@ -1136,9 +1235,10 @@ class MapController:
 
     def show_directions_to_target(self, target):
         """Show directions to the target location."""
-        rect = self._get_building_rect(target)
-        if rect:
-            target_pos = (rect.centerx, rect.centery)
+        target_rect = self._get_building_rect_signature(target)
+        if target_rect is not None:
+            x, y, width, height = target_rect
+            target_pos = (x + width // 2, y + height // 2)
             print(f"Directions to {self._get_building_name(target)}: {target_pos}")
         else:
             print("Cannot provide directions to this target")
@@ -1194,6 +1294,33 @@ class MapController:
         print(f"Placing marker at {position}")
         # This would add a visual marker to the map
 
+    def enter_building_target(self, building):
+        """Enter a known building target directly.
+
+        This is the preferred entry point for context-menu actions where the
+        selected building object/dict is already known. Use ``enter_building()``
+        when starting from a click position that still needs to be resolved to a
+        building.
+        """
+        if not building:
+            return
+
+        if hasattr(building, 'name'):
+            building_name = building.name
+            print(f"Entering {building_name}")
+
+            if hasattr(building, 'get_available_activities'):
+                activities = building.get_available_activities()
+                if activities:
+                    print(f"Available activities: {', '.join(activities)}")
+
+            if hasattr(building, 'get_security_level'):
+                security = building.get_security_level()
+                popularity = building.get_popularity_level()
+                print(f"Security level: {security}, Popularity: {popularity}")
+        else:
+            print(f"Entering {building.get('name', 'Unknown Building')}")
+
     def is_building(self, position):
         # Check if a building is at the clicked position using Building objects
         buildings_at_pos = self.get_buildings_at_position(position)
@@ -1234,6 +1361,7 @@ class MapController:
                 # Legacy building data
                 building_name = self._get_building_name(building)
                 print(f"Entering {building_name}")
+            self.enter_building_target(building)
     
     def find_safe_locations(self, min_security=7):
         """Find locations with high security for characters seeking safety"""

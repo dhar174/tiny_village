@@ -7,6 +7,7 @@ import os
 import math
 import re
 import time
+import logging
 
 from collections import deque
 
@@ -318,7 +319,6 @@ if NETWORKX_AVAILABLE:
 else:
     class_interaction_graph = None
     call_flow_diagram = None
-from nltk.stem import PorterStemmer
 
 
 # Additional nltk imports
