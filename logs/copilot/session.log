@@ -1,8 +1,0 @@
-{"timestamp":"2026-04-08T05:12:51Z","event":"sessionEnd"}
-{"timestamp":"2026-04-08T06:49:54Z","event":"sessionEnd"}
-{"timestamp":"2026-04-08T07:45:49Z","event":"sessionEnd"}
-{
-  "timestamp": "2026-04-08T08:01:22Z",
-  "event": "sessionStart",
-  "cwd": "/home/runner/work/tiny_village/tiny_village"
-}

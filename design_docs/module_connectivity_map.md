@@ -114,10 +114,10 @@ The most important execution path is the character update loop:
    `ActionSystem`, calls `setup_actions()`, and creates an `ActionResolver`.
 4. `update_game_state()` (`tiny_gameplay_controller.py:3382`) processes events
    and loops over `self.characters`.
-5. `_update_character()` (`tiny_gameplay_controller.py:3594`) calls:
-   - `_update_character_memory()` (`3627`)
-   - `_update_character_goals()` (`3637`)
-   - `_execute_character_actions()` (`3647`)
+5. `_update_character()` (`tiny_gameplay_controller.py:3600`) calls:
+   - `_update_character_memory()`
+   - `_update_character_goals()`
+   - `_execute_character_actions()`
 6. In the non-LLM path, `_execute_character_actions()` asks
    `StrategyManager.get_daily_actions()` (`tiny_strategy_manager.py:789`) for
    sorted actions and executes the top action if it exposes `execute()`.
@@ -150,14 +150,14 @@ The intended LLM path is distributed across three files plus the strategy layer:
    - `gather_character_context()` (`tiny_prompt_builder.py:40`)
    - `gather_environmental_context()` (`78`)
    - `gather_memory_context()` (`95`)
-4. `TinyBrainIO.input_to_model()` (`tiny_brain_io.py:114`) submits the prompt.
+4. `TinyBrainIO.input_to_model()` (`tiny_brain_io.py:138`) submits the prompt.
 5. `OutputInterpreter.interpret_response()` at
    `tiny_output_interpreter.py:405` parses text into `StructuredLLMOutput`,
    tries to match one of the offered actions first, then falls back to the
    interpreter's broader `action_class_map`.
 
 One implementation nuance is important for contributors: the controller's
-`process_character_turn()` (`tiny_gameplay_controller.py:3806`) initializes the
+`process_character_turn()` (`tiny_gameplay_controller.py:3869`) initializes the
 same LLM-related components, gathers potential actions, and currently returns
 `_execute_fallback_character_action(character)` instead of completing the full
 prompt → model → interpreter → execute loop. The strategy-layer LLM pipeline is
@@ -169,10 +169,11 @@ The main cross-file synchronization mechanism is the global graph manager.
 
 - `tiny_globals.get_global_graph_manager()` (`tiny_globals.py:212`) lazily
   creates a singleton `GraphManager`.
-- `Character.__init__()` (`tiny_characters.py:2040`) falls back to that global
-  instance when one is not injected.
+- `Character.__init__()` (`tiny_characters.py:2099`) falls back to that global
+  instance when one is not injected; the `GraphManager` fallback logic is
+  currently around `tiny_characters.py:2149`.
 - `StrategyManager.__init__()` (`tiny_strategy_manager.py:122`) does the same.
-- `Action.__init__()` (`actions.py:302`) also falls back to the global graph
+- `Action.__init__()` (`actions.py:303`) also falls back to the global graph
   manager when no instance is passed.
 
 Inside `GraphManager.__init__()` (`tiny_graph_manager.py:723`), the manager
