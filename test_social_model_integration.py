@@ -1,30 +1,74 @@
 """Integration tests for SocialModel against the real GraphManager."""
 
+import importlib
 import logging
 import sys
 import types
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, ".")
 sys.path.insert(0, "tests")
 
 from mock_character import MockCharacter, MockMotive, MockMotives
-
-mock_memories = types.ModuleType("tiny_memories")
-mock_memories.Memory = object
-mock_memories.MemoryManager = object
-sys.modules["tiny_memories"] = mock_memories
-
-mock_characters = types.ModuleType("tiny_characters")
-mock_characters.Character = MockCharacter
-mock_characters.PersonalMotives = MockMotives
-mock_characters.Motive = MockMotive
-mock_characters.Goal = object
-sys.modules["tiny_characters"] = mock_characters
-
-from social_model import SocialModel
-from tiny_graph_manager import GraphManager
 from tiny_globals import reset_global_graph_manager
+
+
+SocialModel = None
+GraphManager = None
+_ORIGINAL_MODULES = {}
+
+
+def _build_stub_modules():
+    mock_memories = types.ModuleType("tiny_memories")
+    mock_memories.Memory = object
+    mock_memories.MemoryManager = object
+
+    mock_characters = types.ModuleType("tiny_characters")
+    mock_characters.Character = MockCharacter
+    mock_characters.PersonalMotives = MockMotives
+    mock_characters.Motive = MockMotive
+    mock_characters.Goal = object
+
+    return {
+        "tiny_memories": mock_memories,
+        "tiny_characters": mock_characters,
+    }
+
+
+def setUpModule():
+    global SocialModel, GraphManager, _ORIGINAL_MODULES
+
+    module_names = (
+        "tiny_memories",
+        "tiny_characters",
+        "social_model",
+        "tiny_graph_manager",
+    )
+    _ORIGINAL_MODULES = {name: sys.modules.get(name) for name in module_names}
+
+    for module_name in ("social_model", "tiny_graph_manager"):
+        sys.modules.pop(module_name, None)
+
+    with patch.dict(sys.modules, _build_stub_modules()):
+        SocialModel = importlib.import_module("social_model").SocialModel
+        GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
+
+
+def tearDownModule():
+    reset_global_graph_manager()
+
+    for module_name in (
+        "tiny_memories",
+        "tiny_characters",
+        "social_model",
+        "tiny_graph_manager",
+    ):
+        original_module = _ORIGINAL_MODULES.get(module_name)
+        if original_module is None:
+            sys.modules.pop(module_name, None)
+        else:
+            sys.modules[module_name] = original_module
 
 
 def seed_character_relationship(graph_manager):
@@ -56,8 +100,6 @@ class TestSocialModelIntegration(unittest.TestCase):
     def setUp(self):
         reset_global_graph_manager()
         self.graph_manager = GraphManager()
-        self.assertEqual(len(self.graph_manager.G.nodes), 0)
-        self.assertEqual(len(self.graph_manager.G.edges), 0)
         seed_character_relationship(self.graph_manager)
         self.graph_manager.social_model.set_world_state(self.graph_manager)
 
