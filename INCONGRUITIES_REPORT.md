@@ -9,7 +9,7 @@ This document outlines the incongruities found between the markdown documentatio
 - **Codebase**: Both `tests/test_building_loading_unit.py` and `tests/test_custom_building_loading.py` exist in the repository, containing redundant or conflicting test coverage for building loading.
 - **Impact**: Minor. Having multiple test files for the same feature can cause confusion.
 
-### Issue: Memory-Object Mocking Still Conflicts with PromptBuilder Guidance
+### Issue: Memory-Object Mocking in PromptBuilder Tests Conflicts with Memory Testing Best Practices
 - **Documentation**: `docs/testing/MEMORY_TESTING_BEST_PRACTICES.md` explicitly warns against `MagicMock`-style stand-ins for memory objects because they can hide attribute and integration bugs.
 - **Codebase**: `tests/test_enhanced_prompt_builder.py` uses `MagicMock` objects as memory-like inputs (for example `MagicMock(description="Test memory")` and `MagicMock(description="Legacy memory")`) instead of lightweight classes or realistic memory objects.
 - **Impact**: Moderate. This directly contradicts the memory-specific guidance and can let PromptBuilder memory-formatting tests pass without validating real memory-object behavior.

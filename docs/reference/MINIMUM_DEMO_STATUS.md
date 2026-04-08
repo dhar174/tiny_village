@@ -26,7 +26,7 @@ Based on comprehensive code analysis and testing, the Tiny Village system integr
 
 ### Test Results
 - **11 integration tests created**
-- **Current lightweight run of `python test_integration_minimal.py`: 7 passing, 2 failing, 1 error, 1 skipped**
+- **Current lightweight run of `python test_integration_minimal.py` shows: 7 passing, 2 failing, 1 error, 1 skipped**
 - **Remaining red tests are concentrated in the mocked/dependency-limited integration harness**
 - **No evidence in this suite that the earlier `Action.execute()` signature blocker has returned**
 
