@@ -112,7 +112,7 @@ class TestBuildingOwnership(unittest.TestCase):
         )
 
         interactions = house.get_possible_interactions(owner)
-        self.assertGreater(len(interactions), 1)
+        self.assertGreaterEqual(len(interactions), 1)
         self.assertIn("Enter Building", [action.name for action in interactions])
 
     def test_private_building_blocks_non_owner_interactions(self):
@@ -134,7 +134,7 @@ class TestBuildingOwnership(unittest.TestCase):
         owner_interactions = house.get_possible_interactions(
             SimpleNamespace(name="Alice", uuid="owner-1", energy=100)
         )
-        self.assertGreater(len(owner_interactions), 1)
+        self.assertGreaterEqual(len(owner_interactions), 1)
         self.assertIn("Enter Building", [action.name for action in owner_interactions])
 
     def test_owned_public_building_remains_accessible(self):

@@ -34,6 +34,7 @@ BUILDING_TYPE_INTERACTIONS = {
 }
 
 PRIVATE_OWNER_ONLY_BUILDING_TYPES = {"house", "residential"}
+OWNER_INCOME_RESOURCE_TYPES = {"goods", "food", "services", "tools", "knowledge"}
 
 effect_dict = {
     "Enter Building": [
@@ -634,15 +635,13 @@ class Building:
         """Return True when the requester matches the current owner."""
         if self.owner is None or requester is None:
             return False
-        if requester is self.owner:
-            return True
 
         owner_uuid = getattr(self.owner, "uuid", None)
         requester_uuid = getattr(requester, "uuid", None)
-        if owner_uuid is not None and requester_uuid is not None:
-            return owner_uuid == requester_uuid
+        if owner_uuid is not None or requester_uuid is not None:
+            return owner_uuid is not None and owner_uuid == requester_uuid
 
-        return False
+        return requester is self.owner
 
     def is_private_property(self):
         """Return True when the building restricts access to its owner."""
@@ -657,13 +656,15 @@ class Building:
         if self.owner is None or amount == 0 or not hasattr(self.owner, "wealth_money"):
             return 0
 
-        new_wealth = max(0, self.owner.wealth_money + amount)
+        previous_wealth = self.owner.wealth_money
+        new_wealth = max(0, previous_wealth + amount)
         self.owner.wealth_money = new_wealth
-        self.owner_income_generated += amount
-        return amount
+        actual_delta = new_wealth - previous_wealth
+        self.owner_income_generated += actual_delta
+        return actual_delta
 
     def _calculate_production_income(self):
-        """Estimate owner income from the building manager production configuration."""
+        """Estimate owner income from saleable resources produced by the building."""
         if not self.building_manager:
             return 0
 
@@ -671,8 +672,10 @@ class Building:
         config = production_config.get(self.building_type, {})
         return sum(
             amount
-            for amount in config.get("produces", {}).values()
-            if isinstance(amount, (int, float)) and amount > 0
+            for resource_type, amount in config.get("produces", {}).items()
+            if getattr(resource_type, "value", resource_type) in OWNER_INCOME_RESOURCE_TYPES
+            and isinstance(amount, (int, float))
+            and amount > 0
         )
 
     def _get_service_income_delta(self, service_name):
