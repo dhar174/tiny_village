@@ -96,8 +96,8 @@ class StubCondition:
 
 
 class StableConditionsDict(dict):
-    def items(self):
-        return list(super().items())
+    """Test helper alias for dict; uses standard dict iteration semantics."""
+    pass
 
 
 class StubGoalImpl(StubGoal):
