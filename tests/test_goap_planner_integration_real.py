@@ -5,6 +5,9 @@ from tiny_goap_system import ActionWrapper, GOAPPlanner, Plan
 from tiny_strategy_manager import StrategyManager
 
 
+COMPLETION_TOLERANCE = 0.1
+
+
 class HomeLocation:
     def __init__(self, name="Home"):
         self.name = name
@@ -64,13 +67,18 @@ class GraphManagerStub:
 
 
 class PlannerGoal:
+    """Minimal GOAP goal fixture that checks target effects against planner state."""
+
     def __init__(self, name, target_effects, priority=1.0):
         self.name = name
         self.target_effects = target_effects
         self.priority = priority
 
     def check_completion(self, state):
-        return all(state.get(attribute, 0) >= target_value - 0.1 for attribute, target_value in self.target_effects.items())
+        return all(
+            state.get(attribute, 0) >= target_value - COMPLETION_TOLERANCE
+            for attribute, target_value in self.target_effects.items()
+        )
 
 
 class EnergyGoal:
