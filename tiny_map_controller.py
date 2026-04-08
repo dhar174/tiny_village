@@ -8,6 +8,8 @@ from typing import Dict, List, Tuple, Optional, Set
 from functools import lru_cache
 from tiny_locations import LocationManager, PointOfInterest
 
+BUILDING_INFO_METADATA_KEYS = ('capacity', 'owner', 'value', 'description')
+
 
 class InfoPanel:
     """Information panel for displaying detailed information about locations and buildings."""
@@ -1024,8 +1026,8 @@ class MapController:
             
         return info
 
-    def _is_building_reference(self, building) -> bool:
-        """Return True when the target looks like building data or a Building object."""
+    def _is_building_like(self, building) -> bool:
+        """Return True when the target looks like legacy building data or a Building object."""
         return hasattr(building, 'get') or hasattr(building, 'get_location') or hasattr(building, 'coordinates_location')
 
     def _get_building_name(self, building) -> str:
@@ -1064,7 +1066,7 @@ class MapController:
         if location is None and hasattr(building, 'get_location'):
             try:
                 location = building.get_location()
-            except Exception:
+            except (AttributeError, TypeError):
                 location = None
 
         if location is not None:
@@ -1109,17 +1111,17 @@ class MapController:
              
         # Add additional building attributes if available
         if hasattr(building, 'get'):
-            for key in ['capacity', 'owner', 'value', 'description']:
+            for key in BUILDING_INFO_METADATA_KEYS:
                 if key in building:
                     info[key] = building[key]
         else:
             original_data = self._get_original_building_data(building)
             if original_data:
-                for key in ['capacity', 'owner', 'value', 'description']:
+                for key in BUILDING_INFO_METADATA_KEYS:
                     if key in original_data:
                         info[key] = original_data[key]
 
-            for key in ['capacity', 'owner', 'value', 'description']:
+            for key in BUILDING_INFO_METADATA_KEYS:
                 if key not in info and hasattr(building, key):
                     value = getattr(building, key)
                     if value is not None:
@@ -1173,7 +1175,7 @@ class MapController:
         action = option.get('action')
         target = option.get('target')
         
-        if action == 'enter' and self._is_building_reference(target):
+        if action == 'enter' and self._is_building_like(target):
             self.enter_building(target)
         elif action == 'details':
             self.show_target_details(target)
@@ -1202,7 +1204,7 @@ class MapController:
 
     def show_target_details(self, target):
         """Show detailed information about the target."""
-        if self._is_building_reference(target):
+        if self._is_building_like(target):
             info = self.get_building_info(target)
         elif hasattr(target, 'position'):  # Character
             info = self.get_character_info(target)
