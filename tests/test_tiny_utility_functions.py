@@ -141,7 +141,7 @@ class MockAction:
             self.DEFAULT_PRIORITY if priority is None else priority
         )
         self.related_goal = related_goal
-        self.action_id = id(self) if action_id is None else action_id
+        self.action_id = action_id if action_id else id(self)
         self.default_target_is_initiator = default_target_is_initiator
 
         if default_target_is_initiator and target is None and initiator is not None:
