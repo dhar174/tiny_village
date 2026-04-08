@@ -9,13 +9,13 @@ ensuring that the storytelling engine and system work together properly.
 import unittest
 import logging
 from datetime import datetime, timedelta
-from unittest.mock import Mock, MagicMock
+from types import SimpleNamespace
 
 # Suppress logging during tests
 logging.disable(logging.CRITICAL)
 
 from tiny_storytelling_engine import StorytellingEventHandler, NarrativeImpact
-from tiny_storytelling_system import StorytellingSystem, StoryArc, StoryArcStatus
+from tiny_storytelling_system import StoryElement, StorytellingSystem, StoryArc, StoryArcStatus
 from tiny_event_handler import Event
 
 
@@ -76,9 +76,9 @@ class TestStoryIntegration(unittest.TestCase):
     
     def test_importance_scaling_with_narrative_impact(self):
         """Test that narrative impact scales importance correctly."""
-        # Create mock narrative context
-        self.handler._current_narrative_context = Mock()
-        self.handler._current_narrative_context.narrative_impact = NarrativeImpact.MAJOR  # value = 4
+        self.handler._current_narrative_context = SimpleNamespace(
+            narrative_impact=NarrativeImpact.MAJOR,
+        )
         
         # Create story event from template
         story_event = self.handler.create_story_event_from_template(
@@ -141,12 +141,14 @@ class TestStoryIntegration(unittest.TestCase):
         
         # Add elements to trigger progression
         for i in range(StoryArc.STARTING_THRESHOLD + 1):
-            element = Mock()
-            element.timestamp = datetime.now()
-            element.narrative_text = f"Story element {i}"
-            element.significance = 5
-            element.character_impact = {}
-            element.emotional_tone = "positive"
+            element = StoryElement(
+                event_name=f"Story event {i}",
+                timestamp=datetime.now(),
+                significance=5,
+                narrative_text=f"Story element {i}",
+                character_impact={},
+                emotional_tone="positive",
+            )
             arc.add_element(element)
         
         # Update arcs to trigger status advancement
