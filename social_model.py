@@ -178,6 +178,20 @@ class SocialModel:
     This class operates on WorldState (graph data) provided as a dependency and is 
     designed to be independent of the GraphManager's internal structure.
     """
+
+    RELATIONSHIP_EDGE_FIELDS = {
+        "relationship_type",
+        "trust",
+        "emotional",
+        "strength",
+        "historical",
+        "interaction_frequency",
+        "interaction_count",
+        "romance_compatibility",
+        "romanceable",
+        "romance_interest",
+        "romance_value",
+    }
     
     def __init__(self, world_state=None):
         """
@@ -870,23 +884,9 @@ class SocialModel:
         if not edge_data or not all(isinstance(value, dict) for value in edge_data.values()):
             return None, {}
 
-        relationship_fields = {
-            "relationship_type",
-            "trust",
-            "emotional",
-            "strength",
-            "historical",
-            "interaction_frequency",
-            "interaction_count",
-            "romance_compatibility",
-            "romanceable",
-            "romance_interest",
-            "romance_value",
-        }
-
         def edge_score(item):
             edge_key, attrs = item
-            field_count = sum(1 for field in relationship_fields if field in attrs)
+            field_count = sum(1 for field in self.RELATIONSHIP_EDGE_FIELDS if field in attrs)
             probable_relationship_edge = (
                 edge_key == "character_character"
                 or attrs.get("type") == "character_character"

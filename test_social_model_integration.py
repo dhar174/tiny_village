@@ -56,6 +56,8 @@ class TestSocialModelIntegration(unittest.TestCase):
     def setUp(self):
         reset_global_graph_manager()
         self.graph_manager = GraphManager()
+        self.assertEqual(len(self.graph_manager.G.nodes), 0)
+        self.assertEqual(len(self.graph_manager.G.edges), 0)
         seed_character_relationship(self.graph_manager)
         self.graph_manager.social_model.set_world_state(self.graph_manager)
 
