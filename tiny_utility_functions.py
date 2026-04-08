@@ -17,8 +17,8 @@ Expected Data Structures:
 - goal.priority (float): Importance weight for goal completion
 """
 
-import time
 import logging
+import time
 from functools import lru_cache, wraps
 from typing import Dict, List, Optional, Tuple, Union
 from collections import defaultdict
@@ -36,7 +36,9 @@ try:
     from tiny_characters import Goal
 except Exception:
     logger.warning(
-        "Using fallback Goal implementation in tiny_utility_functions",
+        "Using fallback Goal implementation in tiny_utility_functions; "
+        "goal-scoring utilities will use a simplified Goal shape until "
+        "the full tiny_characters import path is available.",
         exc_info=True,
     )
 

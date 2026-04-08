@@ -140,7 +140,7 @@ class TestStrategyManagerEventPlanning(unittest.TestCase):
         self.assertEqual(state["satisfaction"], 0.8)
         self.assertEqual(state["happiness"], 0.8)
 
-    def test_plan_daily_activities_treats_empty_plan_as_already_satisfied(self):
+    def test_plan_daily_activities_returns_empty_plan_when_goal_is_already_satisfied(self):
         manager = self._build_manager()
         manager.plan_daily_activities = StrategyManager.plan_daily_activities.__get__(
             manager, StrategyManager

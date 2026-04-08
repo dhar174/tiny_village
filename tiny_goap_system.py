@@ -27,6 +27,8 @@ Where it happens: goap_system.py and graph_manager.py
 What happens: The GOAP planner uses the graph to analyze relationships and preferences, and formulates a plan consisting of a sequence of actions that maximize the character’s utility for the day.
 """
 
+import copy
+
 from tiny_types import Goal, Character, GraphManager
 from actions import Action, State
 
@@ -720,13 +722,13 @@ class GOAPPlanner:
         if isinstance(state, State):
             return state
         if isinstance(state, dict):
-            return State(state.copy())
+            return State(copy.deepcopy(state))
         if hasattr(state, "dict_or_obj"):
             data = getattr(state, "dict_or_obj", {})
             if isinstance(data, dict):
-                return State(data.copy())
+                return State(copy.deepcopy(data))
         if hasattr(state, "__dict__"):
-            return State(dict(vars(state)))
+            return State(copy.deepcopy(dict(vars(state))))
         return State({})
 
     def _state_to_dict(self, state):
@@ -912,7 +914,12 @@ class GOAPPlanner:
                 try:
                     method(note)
                     return
-                except Exception:
+                except Exception as exc:
+                    logging.debug(
+                        "Failed to record planning memory note via %s: %s",
+                        method_name,
+                        exc,
+                    )
                     return
 
     def handle_action_failure(self, character, goal, failed_action=None):
@@ -1057,6 +1064,11 @@ class GOAPPlanner:
         max_iterations = 1000
         iteration_count = 0
         failed_action_ids = self._failed_action_ids(character, goal)
+        candidate_actions = [
+            action
+            for action in actions
+            if self._action_identifier(action) not in failed_action_ids
+        ]
 
         while open_list and iteration_count < max_iterations:
             iteration_count += 1
@@ -1078,9 +1090,7 @@ class GOAPPlanner:
             if len(current_plan) >= self.MAX_PLAN_LENGTH:
                 continue
 
-            for action in actions:
-                if self._action_identifier(action) in failed_action_ids:
-                    continue
+            for action in candidate_actions:
                 if not self._action_applicable_to_state(action, state):
                     continue
 
@@ -1258,7 +1268,10 @@ class GOAPPlanner:
             unsatisfied_conditions = 0.0
             for attribute, target_value in goal.target_effects.items():
                 current_value = state_dict.get(attribute, 0.0)
-                distance = max(0.0, target_value - current_value)
+                if attribute in {"hunger", "fatigue", "stress"}:
+                    distance = max(0.0, current_value - target_value)
+                else:
+                    distance = max(0.0, target_value - current_value)
                 total_distance += distance
                 if distance > 0.1:
                     unsatisfied_conditions += 1.0
