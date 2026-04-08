@@ -1,9 +1,14 @@
 ---
-description: "Testing mode for Playwright tests"
-name: "Playwright Tester Mode"
-tools: ["changes", "codebase", "edit/editFiles", "fetch", "findTestFiles", "problems", "runCommands", "runTasks", "runTests", "search", "searchResults", "terminalLastCommand", "terminalSelection", "testFailure", "playwright"]
-model: Claude Sonnet 4
+description: Run and debug Playwright UI tests with accessible locators, grouped steps,
+  retries, and clear assertions.
+name: Playwright Tester Mode
+tools:
+- '*'
+target: github-copilot
+infer: true
 ---
+
+
 
 ## Core Responsibilities
 
