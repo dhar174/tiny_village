@@ -837,14 +837,18 @@ class ItemInventory:
     def add_item(self, item: ItemObject):
         item_lists = self._get_item_lists()
         target_list = item_lists[self._resolve_item_type(getattr(item, "item_type", "misc"))]
+        item_updated = False
 
         for existing_item in target_list:
             if existing_item.get_name() == item.get_name():
                 existing_item.quantity += item.quantity
-                self.get_all_items()
+                item_updated = True
                 break
         else:
             target_list.append(item)
+            item_updated = True
+
+        if item_updated:
             self.get_all_items()
 
         return item
@@ -852,14 +856,18 @@ class ItemInventory:
     def remove_item(self, item: ItemObject):
         item_lists = self._get_item_lists()
         target_list = item_lists[self._resolve_item_type(getattr(item, "item_type", "misc"))]
+        item_updated = False
 
         for existing_item in target_list:
             if existing_item.get_name() == item.get_name():
                 existing_item.quantity -= item.quantity
                 if existing_item.quantity <= 0:
                     target_list.remove(existing_item)
-                self.get_all_items()
+                item_updated = True
                 break
+
+        if item_updated:
+            self.get_all_items()
 
         return item
 
@@ -869,7 +877,9 @@ class ItemInventory:
 
     def transfer_item_to(self, item: ItemObject, other_inventory: "ItemInventory"):
         if not isinstance(other_inventory, ItemInventory):
-            raise TypeError("other_inventory must be an ItemInventory instance")
+            raise TypeError(
+                f"other_inventory must be an ItemInventory instance, got {type(other_inventory).__name__}"
+            )
         available_quantity = self.count_total_items_by_name(item.get_name())
         if available_quantity < item.get_quantity():
             raise ValueError(

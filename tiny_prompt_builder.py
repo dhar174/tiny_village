@@ -60,7 +60,10 @@ class ContextManager:
             try:
                 inventory = self.character.get_inventory()
             except Exception:
-                logger.exception("Failed to retrieve character inventory")
+                logger.exception(
+                    "Failed to retrieve inventory for character %s",
+                    getattr(self.character, "name", "unknown"),
+                )
                 inventory = None
 
         if inventory is None:
@@ -70,7 +73,11 @@ class ContextManager:
             try:
                 return inventory.to_prompt_context()
             except Exception:
-                logger.exception("Failed to build prompt context from character inventory")
+                logger.exception(
+                    "Failed to build prompt context from inventory type %s for character %s",
+                    type(inventory).__name__,
+                    getattr(self.character, "name", "unknown"),
+                )
 
         total_items = (
             inventory.count_total_items()
