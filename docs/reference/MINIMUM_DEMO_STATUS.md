@@ -83,7 +83,7 @@ python demo_minimal_integration.py
 ```bash
 python test_integration_minimal.py
 ```
-**Status**: ⚠️  Currently reports failures in the lightweight local harness  
+**Status**: ⚠️ Currently reports failures in the lightweight local harness  
 **Shows**: Full turn cycle, failure modes, event integration, analytics  
 **Time**: Runs in 5 seconds  
 
@@ -175,7 +175,9 @@ Based on minimal demo run:
 2. ❌ Fallback action execution (`_execute_fallback_character_action` returns `False` for the simplified mocked character used by the harness)
 3. ❌ Event handler initialization (`event_handler` is `None` in the current lightweight run)
 
-**Why this does not reopen the earlier blocker**: the resolved compatibility item above was about standardizing runtime `Action.execute()` handling in `ActionResolver`. The remaining fallback-action failure is coming from the lightweight mocked integration harness, not from a known production mismatch in `Action.execute()` signatures.
+### Clarification on Earlier `Action.execute()` Blocker
+
+The resolved compatibility item above was about standardizing runtime `Action.execute()` handling in `ActionResolver`. The remaining fallback-action failure is coming from the lightweight mocked integration harness, not from a known production mismatch in `Action.execute()` signatures.
 
 ## Conclusion
 
