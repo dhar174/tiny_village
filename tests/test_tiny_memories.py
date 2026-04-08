@@ -43,6 +43,10 @@ class TestImport(unittest.TestCase):
         """Test that we can import tiny_memories and use its sigmoid function."""
         try:
             import tiny_memories
+            # Verify that the module has expected attributes/classes
+            self.assertTrue(hasattr(tiny_memories, 'MemoryManager'), "Module should have MemoryManager class")
+            self.assertTrue(hasattr(tiny_memories, 'SpecificMemory'), "Module should have SpecificMemory class")
+            self.assertTrue(hasattr(tiny_memories, 'GeneralMemory'), "Module should have GeneralMemory class")
             # Test the sigmoid function which should work without dependencies
             result = tiny_memories.sigmoid(0)
             self.assertEqual(result, 0.5, "sigmoid(0) should return 0.5")
