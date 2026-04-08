@@ -9,16 +9,23 @@ This document outlines the incongruities found between the markdown documentatio
 - **Codebase**: Both `tests/test_building_loading_unit.py` and `tests/test_custom_building_loading.py` exist in the repository, containing redundant or conflicting test coverage for building loading.
 - **Impact**: Minor. Having multiple test files for the same feature can cause confusion.
 
-### Issue: Testing Best Practices Tools
-- **Documentation**: `docs/testing/MEMORY_TESTING_BEST_PRACTICES.md` implies certain testing strategies and tools (such as avoiding over-mocking).
-- **Codebase**: Some newer test files use aggressive mocking patterns that contradict the strict guidelines described in the best practices document.
+### Issue: Memory-Object Mocking in PromptBuilder Tests Conflicts with Memory Testing Best Practices
+- **Documentation**: `docs/testing/MEMORY_TESTING_BEST_PRACTICES.md` explicitly warns against `MagicMock`-style stand-ins for memory objects because they can hide attribute and integration bugs.
+- **Codebase**: `tests/test_enhanced_prompt_builder.py` uses `MagicMock` objects as memory-like inputs (for example `MagicMock(description="Test memory")` and `MagicMock(description="Legacy memory")`) instead of lightweight classes or realistic memory objects.
+- **Impact**: Moderate. This directly contradicts the memory-specific guidance and can let PromptBuilder memory-formatting tests pass without validating real memory-object behavior.
+
+### Issue: General Over-Mocking Guidance Is Inconsistent Across Building-Loader Tests
+- **Documentation**: `MOCK_USAGE_BEST_PRACTICES.md` says to use real objects for the main component under test where possible and reserve `Mock()`/`MagicMock()` for boundaries or external dependencies.
+- **Codebase**: `tests/test_building_loading_unit.py` replaces `pygame` with `MagicMock` and binds `GameplayController._load_buildings_from_file` onto a `Mock(spec=GameplayController)` instead of exercising a real controller instance, while `tests/test_custom_building_loading.py` covers the same loader through a real `GameplayController` with only display-boundary patching.
+- **Impact**: Moderate. The repository currently offers two conflicting examples for the same feature area, which makes it harder for contributors to tell whether the preferred pattern is a real controller with patched boundaries or a partially mocked controller shell.
 
 ## 2. Incomplete or Outdated Project Status Claims
 
-### Issue: Minimum Demo Status Outdated
-- **Documentation**: `docs/reference/MINIMUM_DEMO_STATUS.md` claims that `main.py` is missing and needs to be created, and that the `MapController` initialization is broken.
-- **Codebase**: `main.py` clearly exists at the root of the repository and the MapController is fully integrated, making the "Minimum Demo Status" documentation significantly outdated.
-- **Impact**: Major. New developers reading the status document will believe the project is in a more broken state than it actually is.
+### Issue: Minimum Demo Status Was Historically Outdated
+- **Documentation**: Previously, `docs/reference/MINIMUM_DEMO_STATUS.md` still described `main.py` as missing, `MapController` display initialization as a blocker, and `Action.execute()` compatibility as unfinished work.
+- **Codebase**: `main.py` exists at the repository root and the related status items are already implemented, so the doc had drifted behind the current code.
+- **Resolution**: The status document has been updated to mark those items as resolved and to remove later sections that still treated them as active blockers.
+- **Impact**: Major. While this drift remained in place, new contributors could conclude the runtime was in a more broken state than it actually is.
 
 ### Issue: Archived Docs Referencing Root
 - **Documentation**: Files in `docs/archived/` (e.g., `missing_demo_elements.md`) list `main.py` as missing.
@@ -39,4 +46,4 @@ This document outlines the incongruities found between the markdown documentatio
 
 ## 4. Minor Fixes Applied
 - Verified that `main.py` exists and is the correct entry point.
-- Validated that `CheckpointManager`, `BuildingManager`, and `StrategyManager` methods exactly match their markdown references. No fixes were necessary in the code for these, as they align well.
+- Confirmed that the public method names for `CheckpointManager`, `BuildingManager`, and `StrategyManager` remain in sync with their markdown references. The remaining discrepancies noted above are about undocumented behaviors and simplified implementation descriptions rather than missing or renamed methods, so no code changes were necessary for that alignment.
