@@ -868,31 +868,6 @@ class MapController:
         self.context_menu.hide()
         self.info_panel.hide()
 
-    def clear_selections(self):
-        """Clear all selections."""
-        self.selected_character = None
-        self.selected_building = None
-        self.selected_location = None
-        # Check for POI click
-        poi = self.find_poi_at_point(position[0], position[1])
-        if poi:
-            self.select_poi(poi)
-            return
-
-        # Check for location click
-        locations = self.find_location_at_point(position[0], position[1])
-        if locations:
-            self.select_location(locations[0])  # Select first location if multiple
-            return
-
-        # Check for building click
-        if self.is_building(position):
-            self.enter_building(position)
-            return
-
-        # Clear selections if clicking empty space
-        self.clear_selections()
-
     def select_location(self, location):
         """Select a location and show its information"""
         self.selected_location = location
@@ -911,6 +886,8 @@ class MapController:
 
     def clear_selections(self):
         """Clear all selections"""
+        self.selected_character = None
+        self.selected_building = None
         self.selected_location = None
         self.selected_poi = None
         self.show_location_info = False
@@ -972,13 +949,6 @@ class MapController:
         for char_id, char_info in self.characters.items():
             if char_info.position.distance_to(pygame.math.Vector2(position)) < 10:
                 return char_id
-        return None
-
-    def is_building(self, position):
-        # Check if a building is at the clicked position
-        for building in self.map_data["buildings"]:
-            if building["rect"].collidepoint(position):
-                return building
         return None
 
     def select_character(self, char_id):
@@ -1053,8 +1023,53 @@ class MapController:
     def _get_building_type(self, building) -> str:
         """Get a building type from either legacy dict data or a Building object."""
         if hasattr(building, 'get'):
-            return building.get('type', 'Building')
-        return getattr(building, 'building_type', getattr(building, 'type', 'Building'))
+            return building.get('building_type') or building.get('type', 'building')
+        return getattr(
+            building,
+            'building_type',
+            getattr(building, 'type', 'building'),
+        )
+
+    def get_building_rect(self, building) -> Optional[pygame.Rect]:
+        """Return a pygame.Rect for either a Building object or legacy building mapping."""
+        rect = None
+        if hasattr(building, 'get'):
+            rect = building.get('rect')
+            if isinstance(rect, pygame.Rect):
+                return rect
+
+        location = getattr(building, 'location', None)
+        if location is None and hasattr(building, 'get_location'):
+            try:
+                location = building.get_location()
+            except (AttributeError, TypeError):
+                logging.debug(
+                    "Building object did not provide a usable location",
+                    exc_info=True,
+                )
+                location = None
+
+        if isinstance(location, pygame.Rect):
+            return location
+
+        rect_signature = self._get_rect_signature(location)
+        if rect_signature is None:
+            coordinates = getattr(building, 'coordinates_location', None)
+            width = getattr(building, 'width', None)
+            height = getattr(building, 'length', None)
+            if height is None:
+                height = getattr(building, 'height', None)
+            if coordinates and width is not None and height is not None:
+                rect_signature = (coordinates[0], coordinates[1], width, height)
+
+        if rect_signature is None:
+            return None
+
+        return pygame.Rect(*rect_signature)
+
+    def _get_building_rect(self, building) -> Optional[pygame.Rect]:
+        """Backward-compatible private alias for building rect resolution."""
+        return self.get_building_rect(building)
 
     def _get_rect_signature(self, rect) -> Optional[Tuple[int, int, int, int]]:
         """Return a comparable `(x, y, width, height)` tuple for a rect-like object."""
@@ -1079,29 +1094,7 @@ class MapController:
 
     def _get_building_rect_signature(self, building) -> Optional[Tuple[int, int, int, int]]:
         """Get a rect signature from either legacy dict data or a Building object."""
-        if hasattr(building, 'get'):
-            return self._get_rect_signature(building.get('rect'))
-
-        location = getattr(building, 'location', None)
-        if location is None and hasattr(building, 'get_location'):
-            try:
-                location = building.get_location()
-            except (AttributeError, TypeError):
-                logging.debug("Building object did not provide a usable location", exc_info=True)
-                location = None
-
-        if location is not None:
-            return self._get_rect_signature(location)
-
-        coordinates = getattr(building, 'coordinates_location', None)
-        width = getattr(building, 'width', None)
-        height = getattr(building, 'length', None)
-        if height is None:
-            height = getattr(building, 'height', None)
-        if coordinates and width is not None and height is not None:
-            return (coordinates[0], coordinates[1], width, height)
-
-        return None
+        return self._get_rect_signature(self.get_building_rect(building))
 
     def _get_original_building_data(self, building):
         """Look up the legacy building dictionary that matches a Building object's rect."""
@@ -1335,9 +1328,12 @@ class MapController:
         return None
 
 
-    def enter_building(self, position):
-        # Enter a building and interact with it
-        building = self.is_building(position)
+    def enter_building(self, target):
+        """Enter a building using either a direct building target or a clicked position."""
+        building = target
+        if isinstance(target, (tuple, list)) and len(target) == 2:
+            building = self.is_building(target)
+
         if building:
             self.enter_building_target(building)
     
