@@ -14,11 +14,22 @@ from tests.skill_test_utils import build_character_skills
 
 
 @dataclass(slots=True)
-class PersonalityTraits:
-    extraversion: int
-    openness: int
-    conscientiousness: int
-    agreeableness: int
+from tests.mock_character import MockPersonalityTraits, MockCharacterSkills
+
+# ... inside MockCharacter __init__ ...
+        self.personality_traits = MockPersonalityTraits(
+            extraversion=extraversion,
+            openness=attributes.get('openness', 50.0),
+            conscientiousness=attributes.get('conscientiousness', 50.0),
+            agreeableness=attributes.get('agreeableness', 50.0),
+            neuroticism=attributes.get('neuroticism', 50.0),
+        )
+        
+        self.skills = MockCharacterSkills(
+            crafting=attributes.get('crafting_skill', 20),
+            farming=attributes.get('farming_skill', 15),
+            animal_care=attributes.get('animal_care_skill', 10),
+        )
 
 
 @dataclass(slots=True)
