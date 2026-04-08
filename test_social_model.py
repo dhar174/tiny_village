@@ -15,7 +15,7 @@ class GraphBackedWorldState:
     """Minimal real graph harness for SocialModel unit tests."""
 
     def __init__(self):
-        self.G = nx.Graph()
+        self.G = nx.MultiGraph()
         self.G.add_node("Alice", type="character", wealth_money=1000)
         self.G.add_node("Bob", type="character", wealth_money=900)
         self.G.add_node("TownSquare", type="location")
