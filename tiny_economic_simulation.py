@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional, TypedDict
 
 from tiny_building_manager import ResourceType
 from tiny_items import ItemInventory
@@ -80,6 +80,15 @@ class EconomicFoodItem(EconomicItem):
 
     def get_calories(self):
         return self.calories
+
+
+class JobOutputConfig(TypedDict, total=False):
+    resource_type: ResourceType
+    item_name: str
+    quantity: int
+    value: int
+    weight: int
+    calories: int
 
 
 class EconomicSimulation:
@@ -324,7 +333,7 @@ class EconomicSimulation:
         self.item_availability = availability
         return availability
 
-    def _resolve_job_output(self, job_key: str) -> Optional[Dict[str, int]]:
+    def _resolve_job_output(self, job_key: str) -> Optional[JobOutputConfig]:
         if job_key in self.job_outputs:
             return self.job_outputs[job_key]
 
@@ -342,20 +351,18 @@ class EconomicSimulation:
         return inventory
 
     def _find_first_item_of_type(self, inventory: ItemInventory, item_type: str) -> Optional[EconomicItem]:
-        inventory.get_all_items()
-        for item in inventory.all_items:
+        for item in self._refresh_inventory(inventory):
             if getattr(item, "item_type", None) == item_type and item.get_quantity() > 0:
                 return item
         return None
 
     def _find_item_by_name(self, inventory: ItemInventory, item_name: str) -> Optional[EconomicItem]:
-        inventory.get_all_items()
-        for item in inventory.all_items:
+        for item in self._refresh_inventory(inventory):
             if item.get_name() == item_name and item.get_quantity() > 0:
                 return item
         return None
 
-    def _create_item(self, config: Dict[str, int], action_system=None) -> EconomicItem:
+    def _create_item(self, config: JobOutputConfig, action_system=None) -> EconomicItem:
         quantity = config["quantity"]
         item_name = config["item_name"]
         resource_type = config["resource_type"]
@@ -434,10 +441,10 @@ class EconomicSimulation:
         for existing_item in item_list:
             if existing_item.get_name() == item.get_name():
                 existing_item.quantity += item.get_quantity()
-                inventory.get_all_items()
+                self._refresh_inventory(inventory)
                 return
         item_list.append(item)
-        inventory.get_all_items()
+        self._refresh_inventory(inventory)
 
     def _inventory_remove(self, inventory: ItemInventory, item: EconomicItem) -> bool:
         item_list = self._get_inventory_list(inventory, getattr(item, "item_type", "misc"))
@@ -446,7 +453,7 @@ class EconomicSimulation:
                 existing_item.quantity -= item.get_quantity()
                 if existing_item.quantity <= 0:
                     item_list.remove(existing_item)
-                inventory.get_all_items()
+                self._refresh_inventory(inventory)
                 return True
         return False
 
@@ -460,3 +467,6 @@ class EconomicSimulation:
             "misc": inventory.misc_items,
         }
         return item_lists.get(item_type, inventory.misc_items)
+
+    def _refresh_inventory(self, inventory: ItemInventory) -> List[EconomicItem]:
+        return inventory.get_all_items()
