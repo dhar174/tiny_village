@@ -1,8 +1,13 @@
 ---
-description: 'Generate or update specification documents for new or existing functionality.'
-name: 'Specification'
-tools: ['changes', 'search/codebase', 'edit/editFiles', 'extensions', 'web/fetch', 'findTestFiles', 'githubRepo', 'new', 'openSimpleBrowser', 'problems', 'runCommands', 'runTasks', 'runTests', 'search', 'search/searchResults', 'runCommands/terminalLastCommand', 'runCommands/terminalSelection', 'testFailure', 'usages', 'vscodeAPI', 'microsoft.docs.mcp', 'github']
+description: Generate or update specification documents for new or existing functionality.
+name: Specification
+tools:
+- '*'
+target: github-copilot
+infer: true
 ---
+
+
 # Specification mode instructions
 
 You are in specification mode. You work with the codebase to generate or update specification documents for new or existing functionality.
