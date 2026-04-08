@@ -34,7 +34,8 @@ logger = logging.getLogger(__name__)
 try:
     from tiny_characters import Goal
     logger.info("Using real Goal class from tiny_characters")
-except ImportError:
+except ImportError as e:
+    logger.warning("Using fallback Goal implementation in tiny_utility_functions", exc_info=True)
     # Fallback Goal class for compatibility when real Goal is not available
     class Goal:
         """Simple Goal class for utility calculations - fallback implementation."""
