@@ -9,6 +9,7 @@ that go beyond the basic 'Enter Building' action.
 import unittest
 from unittest.mock import Mock, MagicMock
 from tiny_buildings import Building, BUILDING_TYPE_INTERACTIONS
+from tests.skill_test_utils import build_character_skills
 
 
 class MockCharacter:
@@ -27,11 +28,11 @@ class MockCharacter:
         self.personality_traits.conscientiousness = attributes.get('conscientiousness', 50)
         self.personality_traits.agreeableness = attributes.get('agreeableness', 50)
         
-        # Mock skills
-        self.skills = Mock()
-        self.skills.crafting = attributes.get('crafting_skill', 20)
-        self.skills.farming = attributes.get('farming_skill', 15)
-        self.skills.animal_care = attributes.get('animal_care_skill', 10)
+        self.skills = build_character_skills(
+            crafting=attributes.get("crafting_skill", 20),
+            farming=attributes.get("farming_skill", 15),
+            animal_care=attributes.get("animal_care_skill", 10),
+        )
 
 
 class TestBuildingInteractions(unittest.TestCase):
