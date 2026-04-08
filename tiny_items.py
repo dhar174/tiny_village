@@ -12,6 +12,8 @@ from tiny_locations import Location
 
 from tiny_types import Action, ActionSystem, GraphManager
 
+logger = logging.getLogger(__name__)
+
 
 class Stock:
     def __init__(self, name, value, quantity, stock_description=None):
@@ -161,7 +163,7 @@ class ItemObject:
         self.item_type = item_type
         self.item_subtype = item_subtype
         if action_system is None:
-            action_system = _NullActionSystem()
+            action_system = NullActionSystem()
         self.location = Location(name, 0, 0, 0, 0, action_system)
         self.coordinates_location = coordinates_location
         self.possible_interactions = possible_interactions
@@ -373,19 +375,73 @@ preconditions_dict = {
             "operator": "gt",
         }
     ],
+    "Wear": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "satisfy_value": 10,
+            "target": "initiator",
+            "operator": "gt",
+        }
+    ],
+    "Use Tool": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "satisfy_value": 10,
+            "target": "initiator",
+            "operator": "gt",
+        }
+    ],
+    "Gather": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "satisfy_value": 10,
+            "target": "initiator",
+            "operator": "gt",
+        }
+    ],
+    "Heal": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "satisfy_value": 10,
+            "target": "initiator",
+            "operator": "gt",
+        }
+    ],
+    "Wield": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "satisfy_value": 10,
+            "target": "initiator",
+            "operator": "gt",
+        }
+    ],
+    "Inspect": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "satisfy_value": 10,
+            "target": "initiator",
+            "operator": "gt",
+        }
+    ],
 }
 
 
-class _NullActionSystem:
+class NullActionSystem:
     def instantiate_conditions(self, conditions):
         return conditions or []
 
 
-def _build_item_interaction(
+def build_item_interaction(
     action_system, action_name, precondition_key, effects, cost=1
 ):
     if action_system is None:
-        action_system = _NullActionSystem()
+        action_system = NullActionSystem()
     Action = importlib.import_module("actions").Action
     return [
         Action(
@@ -416,7 +472,7 @@ class FoodItem(ItemObject):
     ):
         effect = effect_dict["Eat"]
         effect[0]["change_value"] = calories
-        possible_interactions = _build_item_interaction(
+        possible_interactions = build_item_interaction(
             action_system, "Eat Food", "Eat", effect_dict["Eat"]
         )
         super().__init__(
@@ -576,7 +632,7 @@ class Door(ItemObject):
         action_system: ActionSystem,
     ):
         effect = effect_dict["Open"]
-        possible_interactions = _build_item_interaction(
+        possible_interactions = build_item_interaction(
             action_system, "Open Door", "Open", effect_dict["Open"]
         )
         super().__init__(
@@ -683,8 +739,8 @@ class ClothingItem(ItemObject):
         wear_effects = [
             {"targets": ["initiator"], "method": "play_animation", "method_args": ["wearing"]},
         ]
-        possible_interactions = _build_item_interaction(
-            action_system, "Wear Clothing", "Open", wear_effects
+        possible_interactions = build_item_interaction(
+            action_system, "Wear Clothing", "Wear", wear_effects
         )
         super().__init__(
             name,
@@ -728,8 +784,8 @@ class ToolItem(ItemObject):
         use_tool_effects = [
             {"targets": ["initiator"], "method": "play_animation", "method_args": ["working"]},
         ]
-        possible_interactions = _build_item_interaction(
-            action_system, "Use Tool", "Open", use_tool_effects
+        possible_interactions = build_item_interaction(
+            action_system, "Use Tool", "Use Tool", use_tool_effects
         )
         super().__init__(
             name,
@@ -773,8 +829,8 @@ class ResourceItem(ItemObject):
         gather_effects = [
             {"targets": ["initiator"], "method": "play_animation", "method_args": ["gathering"]},
         ]
-        possible_interactions = _build_item_interaction(
-            action_system, "Gather Resource", "Open", gather_effects
+        possible_interactions = build_item_interaction(
+            action_system, "Gather Resource", "Gather", gather_effects
         )
         super().__init__(
             name,
@@ -817,8 +873,8 @@ class MedicineItem(ItemObject):
         use_medicine_effects = [
             {"targets": ["initiator"], "method": "play_animation", "method_args": ["healing"]},
         ]
-        possible_interactions = _build_item_interaction(
-            action_system, "Use Medicine", "Open", use_medicine_effects
+        possible_interactions = build_item_interaction(
+            action_system, "Use Medicine", "Heal", use_medicine_effects
         )
         super().__init__(
             name,
@@ -857,8 +913,8 @@ class WeaponItem(ItemObject):
         wield_effects = [
             {"targets": ["initiator"], "method": "play_animation", "method_args": ["wielding"]},
         ]
-        possible_interactions = _build_item_interaction(
-            action_system, "Wield Weapon", "Open", wield_effects
+        possible_interactions = build_item_interaction(
+            action_system, "Wield Weapon", "Wield", wield_effects
         )
         super().__init__(
             name,
@@ -902,8 +958,8 @@ class QuestItem(ItemObject):
         inspect_effects = [
             {"targets": ["initiator"], "method": "play_animation", "method_args": ["examining"]},
         ]
-        possible_interactions = _build_item_interaction(
-            action_system, "Inspect Quest Item", "Open", inspect_effects
+        possible_interactions = build_item_interaction(
+            action_system, "Inspect Quest Item", "Inspect", inspect_effects
         )
         super().__init__(
             name,
@@ -1044,9 +1100,13 @@ class ItemInventory:
     def _normalize_item_type(self, item_type):
         if item_type is None:
             return "misc"
-        return self.ITEM_TYPE_ALIASES.get(str(item_type).lower(), "misc")
+        normalized_type = self.ITEM_TYPE_ALIASES.get(str(item_type).lower())
+        if normalized_type is None:
+            logger.debug("Unrecognized item type '%s'; defaulting to misc", item_type)
+            return "misc"
+        return normalized_type
 
-    def _normalize_item_types(self, item_type):
+    def _normalize_item_type_list(self, item_type):
         if isinstance(item_type, (list, tuple, set)):
             return [self._normalize_item_type(single_type) for single_type in item_type]
         return [self._normalize_item_type(item_type)]
@@ -1307,7 +1367,7 @@ class ItemInventory:
     def count_total_items_by_type(self, item_type):
         total = 0
         item_lists = self._get_item_collections()
-        for normalized_type in self._normalize_item_types(item_type):
+        for normalized_type in self._normalize_item_type_list(item_type):
             total += self._count_items_in_collection(item_lists[normalized_type])
         return total
 
@@ -1345,11 +1405,7 @@ class ItemInventory:
     def check_has_item_by_type(self, item_type, amount=1, oper="ge"):
         if oper not in self.ops:
             oper = self.symb_map[oper]
-        return bool(
-            True
-            if self.ops[oper](self.count_total_items_by_type(item_type), amount)
-            else False
-        )
+        return self.ops[oper](self.count_total_items_by_type(item_type), amount)
 
     def check_has_item_by_attribute_value(self, attribute, value, oper="ge"):
         if oper not in self.ops:

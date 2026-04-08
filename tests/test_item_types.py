@@ -16,7 +16,7 @@ from tiny_items import (
 )
 
 
-class DummyActionSystem:
+class FakeActionSystem:
     def instantiate_conditions(self, conditions):
         return list(conditions or [])
 
@@ -64,7 +64,7 @@ class FakeLocation:
 
 class TestItemTypes(unittest.TestCase):
     def setUp(self):
-        self.action_system = DummyActionSystem()
+        self.action_system = FakeActionSystem()
         self.location_patch = patch.object(tiny_items, "Location", FakeLocation)
         self.import_patch = patch.object(
             tiny_items.importlib,
@@ -80,7 +80,7 @@ class TestItemTypes(unittest.TestCase):
 
     def _fake_import_module(self, module_name):
         if module_name == "actions":
-            return SimpleNamespace(Action=FakeAction, ActionSystem=DummyActionSystem)
+            return SimpleNamespace(Action=FakeAction, ActionSystem=FakeActionSystem)
         return stdlib_importlib.import_module(module_name)
 
     def test_specialized_items_define_specific_attributes_and_interactions(self):
