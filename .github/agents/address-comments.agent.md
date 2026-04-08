@@ -1,32 +1,14 @@
 ---
-description: "Address PR comments"
-name: 'Universal PR Comment Addresser'
+description: Resolve pending pull request review comments with targeted edits, clear
+  replies, and updated evidence.
+name: Universal PR Comment Addresser
 tools:
-  [
-    "changes",
-    "codebase",
-    "editFiles",
-    "extensions",
-    "fetch",
-    "findTestFiles",
-    "githubRepo",
-    "new",
-    "openSimpleBrowser",
-    "problems",
-    "runCommands",
-    "runTasks",
-    "runTests",
-    "search",
-    "searchResults",
-    "terminalLastCommand",
-    "terminalSelection",
-    "testFailure",
-    "usages",
-    "vscodeAPI",
-    "microsoft.docs.mcp",
-    "github",
-  ]
+- '*'
+target: github-copilot
+infer: true
 ---
+
+
 
 # Universal PR Comment Addresser
 
