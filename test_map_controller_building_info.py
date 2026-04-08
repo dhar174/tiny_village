@@ -179,6 +179,22 @@ class TestMapControllerBuildingInfo(unittest.TestCase):
 
         self.assertIs(entry_call_record["target"], building)
 
+    def test_enter_building_prints_entry_message_once(self):
+        building = FakeBuilding(
+            name="Town Hall",
+            building_type="civic",
+            x=100,
+            y=150,
+            width=50,
+            height=60,
+            owner="City Council",
+        )
+
+        with patch("builtins.print") as mock_print:
+            self.controller.enter_building(building)
+
+        mock_print.assert_called_once_with("Entering Town Hall")
+
 
 if __name__ == "__main__":
     unittest.main()
