@@ -28,18 +28,14 @@ What happens: The GOAP planner uses the graph to analyze relationships and prefe
 """
 
 import copy
-
-from tiny_types import Goal, Character, GraphManager
-from actions import Action, State
-
-# from tiny_graph_manager import GraphManager
-
+import importlib
+import logging
 from heapq import heappush, heappop
 
-import tiny_utility_functions as util_funcs
+from actions import Action, State
+from tiny_types import Goal, Character, GraphManager
 
-import logging
-import importlib
+import tiny_utility_functions as util_funcs
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -47,6 +43,7 @@ logging.basicConfig(level=logging.DEBUG)
 UTILITY_SCALING_FACTOR = 0.1
 UTILITY_INFLUENCE_FACTOR = 0.05
 HEURISTIC_SCALING_FACTOR = 0.1
+NEGATIVE_GOAL_ATTRIBUTES = {"hunger", "fatigue", "stress"}
 
 
 class ActionWrapper:
@@ -1180,6 +1177,8 @@ class GOAPPlanner:
                             continue
                         current_value = new_state.get(attribute, 0)
                         if callable(change_value):
+                            # Callable effects are treated as deterministic state transforms
+                            # during planning, receiving the current attribute value.
                             new_state[attribute] = change_value(current_value)
                         elif isinstance(change_value, (int, float)):
                             new_state[attribute] = current_value + change_value
@@ -1268,7 +1267,7 @@ class GOAPPlanner:
             unsatisfied_conditions = 0.0
             for attribute, target_value in goal.target_effects.items():
                 current_value = state_dict.get(attribute, 0.0)
-                if attribute in {"hunger", "fatigue", "stress"}:
+                if attribute in NEGATIVE_GOAL_ATTRIBUTES:
                     distance = max(0.0, current_value - target_value)
                 else:
                     distance = max(0.0, target_value - current_value)

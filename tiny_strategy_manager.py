@@ -1363,13 +1363,6 @@ class StrategyManager:
 
         return max(actions, key=_score)
 
-    def _as_plan(self, actions_or_action):
-        if actions_or_action is None:
-            return None
-        if isinstance(actions_or_action, list):
-            return actions_or_action
-        return [actions_or_action]
-
     def _fallback_plan(self, actions, character, current_goal=None):
         best_action = self._select_best_action(actions, character, current_goal)
         return [best_action] if best_action is not None else None

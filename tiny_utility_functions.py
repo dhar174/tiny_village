@@ -30,7 +30,7 @@ from actions import (
 
 logger = logging.getLogger(__name__)
 
-# Try to import the real Goal class first, but degrade cleanly when circular
+# Try to import the real Goal class first, but fall back cleanly when circular
 # imports or optional dependencies make it unavailable during module import.
 try:
     from tiny_characters import Goal
