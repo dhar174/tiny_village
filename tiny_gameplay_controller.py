@@ -27,6 +27,7 @@ PANEL_SPACING = 8
 INSTRUCTIONS_BOTTOM_MARGIN = 150
 MINIMAP_SIZE = 120
 DEFAULT_COLOR = (100, 150, 200)
+DEFAULT_EVENT_TYPE = "general"
 
 # Notification priorities for the event system
 NOTIFICATION_PRIORITIES = {
@@ -4246,8 +4247,10 @@ class GameplayController:
             strategy_result = None
             if self.strategy_manager:
                 try:
-                    # Strategy manager should receive all events to make informed decisions
-                    strategy_result = self.strategy_manager.update_strategy(events)
+                    # StrategyManager overwrites per-character plans while iterating,
+                    # so lower-priority events are applied first and highest-priority
+                    # events win when they target the same character.
+                    strategy_result = self.strategy_manager.update_strategy(list(reversed(events)))
                     logger.debug(f"StrategyManager generated strategy result: {type(strategy_result)}")
                 except Exception as e:
                     logger.warning(f"Error updating strategy based on events: {e}")
@@ -4275,16 +4278,16 @@ class GameplayController:
                 importance = getattr(event, "importance", None)
                 impact = getattr(event, "impact", None)
                 if isinstance(event, dict):
-                    event_type = event_type or event.get("type", "general")
+                    event_type = event_type or event.get("type", DEFAULT_EVENT_TYPE)
                     importance = importance if importance is not None else event.get("importance", 5)
                     impact = impact if impact is not None else event.get("impact", 0)
                 else:
-                    event_type = event_type or "general"
+                    event_type = event_type or DEFAULT_EVENT_TYPE
                     importance = 5 if importance is None else importance
                     impact = 0 if impact is None else impact
 
                 # Ensure normalized numeric values for stable sorting/dispatch.
-                normalized_event_type = str(event_type or "general")
+                normalized_event_type = str(event_type or DEFAULT_EVENT_TYPE).strip().lower()
                 importance = max(0, int(importance))
                 impact = int(impact)
 
@@ -4309,12 +4312,12 @@ class GameplayController:
             if isinstance(event, dict):
                 importance = event.get("_normalized_importance", 0)
                 impact = event.get("_normalized_impact", 0)
-                event_type = str(event.get("_normalized_event_type", "general"))
+                event_type = str(event.get("_normalized_event_type", DEFAULT_EVENT_TYPE))
                 name = str(event.get("name", "event"))
             else:
                 importance = getattr(event, "_normalized_importance", 0)
                 impact = getattr(event, "_normalized_impact", 0)
-                event_type = str(getattr(event, "_normalized_event_type", "general"))
+                event_type = str(getattr(event, "_normalized_event_type", DEFAULT_EVENT_TYPE))
                 name = str(getattr(event, "name", "event"))
 
             return (-importance, -abs(impact), event_type, name)
@@ -4334,13 +4337,32 @@ class GameplayController:
             processed_count = len(processed_events)
             if processed_count:
                 self.game_statistics["events_processed"] = self.game_statistics.get("events_processed", 0) + processed_count
+            elif isinstance(event_results, dict):
+                return
+
+            processed_event_names = set()
+            for processed_event in processed_events:
+                if isinstance(processed_event, str):
+                    processed_event_names.add(processed_event)
+                elif isinstance(processed_event, dict):
+                    processed_name = processed_event.get("name")
+                    if processed_name:
+                        processed_event_names.add(processed_name)
+                else:
+                    processed_name = getattr(processed_event, "name", None)
+                    if processed_name:
+                        processed_event_names.add(processed_name)
 
             for event in events:
+                event_name = event.get("name") if isinstance(event, dict) else getattr(event, "name", None)
+                if processed_event_names and event_name not in processed_event_names:
+                    continue
+
                 if isinstance(event, dict):
-                    event_type = str(event.get("_normalized_event_type", "general"))
+                    event_type = str(event.get("_normalized_event_type", DEFAULT_EVENT_TYPE)).strip().lower()
                     impact = event.get("_normalized_impact", 0)
                 else:
-                    event_type = str(getattr(event, "_normalized_event_type", "general"))
+                    event_type = str(getattr(event, "_normalized_event_type", DEFAULT_EVENT_TYPE)).strip().lower()
                     impact = getattr(event, "_normalized_impact", 0)
 
                 # Track event type distribution for downstream systems/analytics.
