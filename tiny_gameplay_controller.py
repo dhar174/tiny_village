@@ -45,6 +45,16 @@ WEATHER_UI_MESSAGES = {
     'rainy': ("Rainfall is tiring the villagers.", (180, 180, 220)),
     # 'snowy': ("Snow is exhausting the villagers.", (220, 220, 255)),
 }
+
+EVENT_CONSEQUENCE_DISPATCH = {
+    "economic": ("economy_stability", 50, False),
+    "social": ("social_cohesion", 50, False),
+    "weather": ("environment_pressure", 0, True),
+    "environmental": ("environment_pressure", 0, True),
+    "work": ("job_market_activity", 50, False),
+    "career": ("job_market_activity", 50, False),
+}
+
 from typing import Dict, List, Any, Union, Optional
 from tiny_strategy_manager import StrategyManager
 from tiny_event_handler import EventHandler, Event
@@ -4273,17 +4283,17 @@ class GameplayController:
                     impact = 0 if impact is None else impact
 
                 # Ensure normalized numeric values for stable sorting/dispatch.
-                event_type = str(event_type or "general")
+                normalized_event_type = str(event_type or "general")
                 importance = max(0, int(importance))
                 impact = int(impact)
 
                 if isinstance(event, dict):
                     normalized_event = dict(event)
-                    normalized_event["_normalized_event_type"] = event_type
+                    normalized_event["_normalized_event_type"] = normalized_event_type
                     normalized_event["_normalized_importance"] = importance
                     normalized_event["_normalized_impact"] = impact
                 else:
-                    setattr(event, "_normalized_event_type", event_type)
+                    setattr(event, "_normalized_event_type", normalized_event_type)
                     setattr(event, "_normalized_importance", importance)
                     setattr(event, "_normalized_impact", impact)
                     normalized_event = event
@@ -4324,15 +4334,6 @@ class GameplayController:
             if processed_count:
                 self.game_statistics["events_processed"] = self.game_statistics.get("events_processed", 0) + processed_count
 
-            consequence_dispatch = {
-                "economic": ("economy_stability", 50, False),
-                "social": ("social_cohesion", 50, False),
-                "weather": ("environment_pressure", 0, True),
-                "environmental": ("environment_pressure", 0, True),
-                "work": ("job_market_activity", 50, False),
-                "career": ("job_market_activity", 50, False),
-            }
-
             for event in events:
                 if isinstance(event, dict):
                     event_type = str(event.get("_normalized_event_type", "general"))
@@ -4345,7 +4346,7 @@ class GameplayController:
                 self.game_statistics[f"events_{event_type}"] = self.game_statistics.get(f"events_{event_type}", 0) + 1
 
                 # Lightweight world-state ripple hooks.
-                consequence = consequence_dispatch.get(event_type)
+                consequence = EVENT_CONSEQUENCE_DISPATCH.get(event_type)
                 if consequence:
                     state_key, default_value, use_abs_impact = consequence
                     impact_value = abs(impact) if use_abs_impact else impact

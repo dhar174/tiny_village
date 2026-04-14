@@ -60,7 +60,7 @@ class TestGameplayControllerEventProcessing(unittest.TestCase):
         }
         self.controller.game_state = {}
 
-    def test_normalize_and_prioritize_events_preserves_shapes_and_sorts_deterministically(self):
+    def test_normalize_and_prioritize_events_deterministic_sort(self):
         social_event = SimpleNamespace(
             name="social-object",
             type="social",
