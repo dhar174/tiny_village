@@ -5,13 +5,12 @@ import unittest
 from types import SimpleNamespace
 
 
-_ORIGINAL_MODULES = {}
-_ORIGINAL_GAMEPLAY_CONTROLLER = None
+_ORIGINAL_MODULE_SNAPSHOTS = {}
 GameplayController = None
 
 
 def setUpModule():
-    global GameplayController, _ORIGINAL_GAMEPLAY_CONTROLLER
+    global GameplayController
 
     stub_modules = {
         "tiny_strategy_manager": types.ModuleType("tiny_strategy_manager"),
@@ -27,22 +26,19 @@ def setUpModule():
     stub_modules["tiny_map_controller"].MapController = type("MapController", (), {})
 
     for module_name, module in stub_modules.items():
-        _ORIGINAL_MODULES[module_name] = sys.modules.get(module_name)
+        _ORIGINAL_MODULE_SNAPSHOTS[module_name] = sys.modules.get(module_name)
         sys.modules[module_name] = module
 
-    _ORIGINAL_GAMEPLAY_CONTROLLER = sys.modules.get("tiny_gameplay_controller")
+    _ORIGINAL_MODULE_SNAPSHOTS["tiny_gameplay_controller"] = sys.modules.get(
+        "tiny_gameplay_controller"
+    )
     sys.modules.pop("tiny_gameplay_controller", None)
 
     GameplayController = importlib.import_module("tiny_gameplay_controller").GameplayController
 
 
 def tearDownModule():
-    if _ORIGINAL_GAMEPLAY_CONTROLLER is not None:
-        sys.modules["tiny_gameplay_controller"] = _ORIGINAL_GAMEPLAY_CONTROLLER
-    else:
-        sys.modules.pop("tiny_gameplay_controller", None)
-
-    for module_name, original_module in _ORIGINAL_MODULES.items():
+    for module_name, original_module in _ORIGINAL_MODULE_SNAPSHOTS.items():
         if original_module is None:
             sys.modules.pop(module_name, None)
         else:
@@ -51,14 +47,15 @@ def tearDownModule():
 
 class TestGameplayControllerEventProcessing(unittest.TestCase):
     def setUp(self):
-        self.controller = GameplayController.__new__(GameplayController)
-        self.controller.game_statistics = {
-            "actions_executed": 0,
-            "actions_failed": 0,
-            "characters_created": 0,
-            "errors_recovered": 0,
-        }
-        self.controller.game_state = {}
+        self.controller = SimpleNamespace(
+            game_statistics={
+                "actions_executed": 0,
+                "actions_failed": 0,
+                "characters_created": 0,
+                "errors_recovered": 0,
+            },
+            game_state={},
+        )
 
     def test_normalize_and_prioritize_events_deterministic_sort(self):
         social_event = SimpleNamespace(
@@ -81,7 +78,8 @@ class TestGameplayControllerEventProcessing(unittest.TestCase):
         }
 
         update_errors = []
-        normalized_events = self.controller._normalize_and_prioritize_events(
+        normalized_events = GameplayController._normalize_and_prioritize_events(
+            self.controller,
             [social_event, economic_event, career_event],
             update_errors,
         )
@@ -129,7 +127,8 @@ class TestGameplayControllerEventProcessing(unittest.TestCase):
         ]
 
         update_errors = []
-        self.controller._apply_event_consequences(
+        GameplayController._apply_event_consequences(
+            self.controller,
             normalized_events,
             {"processed_events": normalized_events},
             update_errors,
@@ -149,7 +148,8 @@ class TestGameplayControllerEventProcessing(unittest.TestCase):
     def test_apply_event_consequences_tracks_new_event_type_without_preseeded_counter(self):
         update_errors = []
 
-        self.controller._apply_event_consequences(
+        GameplayController._apply_event_consequences(
+            self.controller,
             [{"name": "harvest-fair", "_normalized_event_type": "festival", "_normalized_impact": 1}],
             {"processed_events": []},
             update_errors,

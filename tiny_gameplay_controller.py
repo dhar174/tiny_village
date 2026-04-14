@@ -47,6 +47,7 @@ WEATHER_UI_MESSAGES = {
 }
 
 EVENT_CONSEQUENCE_DISPATCH = {
+    # Maps event_type -> (game_state_key, default_state_value, use_abs_impact)
     "economic": ("economy_stability", 50, False),
     "social": ("social_cohesion", 50, False),
     "weather": ("environment_pressure", 0, True),
