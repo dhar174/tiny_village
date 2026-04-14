@@ -4324,7 +4324,7 @@ class GameplayController:
                         impact = getattr(event, "impact", 0)
 
                 # Track event type distribution for downstream systems/analytics.
-                self.game_statistics[f"events_{event_type}"] += 1
+                self.game_statistics[f"events_{event_type}"] = self.game_statistics.get(f"events_{event_type}", 0) + 1
 
                 # Lightweight world-state ripple hooks.
                 if event_type == "economic":
