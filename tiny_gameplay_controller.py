@@ -4337,7 +4337,9 @@ class GameplayController:
             processed_count = len(processed_events)
             if processed_count:
                 self.game_statistics["events_processed"] = self.game_statistics.get("events_processed", 0) + processed_count
-            elif isinstance(event_results, dict):
+            elif isinstance(event_results, dict) and (
+                "processed_events" not in event_results or not event_results["processed_events"]
+            ):
                 return
 
             processed_event_names = set()

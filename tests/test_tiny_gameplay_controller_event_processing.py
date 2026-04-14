@@ -3,16 +3,15 @@ import sys
 import types
 import unittest
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 
 _ORIGINAL_MODULE_SNAPSHOTS = {}
-_MODULE_PATCHER = None
 GameplayController = None
 
 
 def setUpModule():
-    global GameplayController, _MODULE_PATCHER
+    global GameplayController
 
     stub_modules = {
         "pygame": types.ModuleType("pygame"),
@@ -36,20 +35,15 @@ def setUpModule():
     _ORIGINAL_MODULE_SNAPSHOTS["tiny_gameplay_controller"] = sys.modules.get(
         "tiny_gameplay_controller"
     )
-    for module_name in stub_modules:
+    for module_name, module in stub_modules.items():
         _ORIGINAL_MODULE_SNAPSHOTS[module_name] = sys.modules.get(module_name)
-
-    _MODULE_PATCHER = patch.dict(sys.modules, stub_modules)
-    _MODULE_PATCHER.start()
+        sys.modules[module_name] = module
     sys.modules.pop("tiny_gameplay_controller", None)
 
     GameplayController = importlib.import_module("tiny_gameplay_controller").GameplayController
 
 
 def tearDownModule():
-    if _MODULE_PATCHER is not None:
-        _MODULE_PATCHER.stop()
-
     for module_name, original_module in _ORIGINAL_MODULE_SNAPSHOTS.items():
         if original_module is None:
             sys.modules.pop(module_name, None)
