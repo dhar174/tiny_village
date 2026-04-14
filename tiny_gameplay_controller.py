@@ -4273,6 +4273,7 @@ class GameplayController:
                     impact = 0 if impact is None else impact
 
                 # Ensure normalized numeric values for stable sorting/dispatch.
+                event_type = str(event_type or "general")
                 importance = max(0, int(importance))
                 impact = int(impact)
 
@@ -4293,14 +4294,21 @@ class GameplayController:
                 update_errors.append("Event normalization failed")
 
         # Prioritize more important and impactful events first, then by type/name for deterministic order.
-        normalized_events.sort(
-            key=lambda event: (
-                -(event.get("_normalized_importance", 0) if isinstance(event, dict) else getattr(event, "_normalized_importance", 0)),
-                -abs(event.get("_normalized_impact", 0) if isinstance(event, dict) else getattr(event, "_normalized_impact", 0)),
-                str(event.get("_normalized_event_type", "general") if isinstance(event, dict) else getattr(event, "_normalized_event_type", "general")),
-                str(event.get("name", "event") if isinstance(event, dict) else getattr(event, "name", "event")),
-            )
-        )
+        def get_sort_key(event):
+            if isinstance(event, dict):
+                importance = event.get("_normalized_importance", 0)
+                impact = event.get("_normalized_impact", 0)
+                event_type = str(event.get("_normalized_event_type", "general"))
+                name = str(event.get("name", "event"))
+            else:
+                importance = getattr(event, "_normalized_importance", 0)
+                impact = getattr(event, "_normalized_impact", 0)
+                event_type = str(getattr(event, "_normalized_event_type", "general"))
+                name = str(getattr(event, "name", "event"))
+
+            return (-importance, -abs(impact), event_type, name)
+
+        normalized_events.sort(key=get_sort_key)
         return normalized_events
 
     def _apply_event_consequences(self, events, event_results, update_errors):
@@ -4308,33 +4316,40 @@ class GameplayController:
         try:
             if not hasattr(self, "game_state") or self.game_state is None:
                 self.game_state = {}
+            if not hasattr(self, "game_statistics") or self.game_statistics is None:
+                self.game_statistics = {}
 
-            processed_count = len(event_results.get("processed_events", []))
+            processed_events = event_results.get("processed_events", []) if isinstance(event_results, dict) else []
+            processed_count = len(processed_events)
             if processed_count:
-                self.game_statistics["events_processed"] += processed_count
+                self.game_statistics["events_processed"] = self.game_statistics.get("events_processed", 0) + processed_count
+
+            consequence_dispatch = {
+                "economic": ("economy_stability", 50, False),
+                "social": ("social_cohesion", 50, False),
+                "weather": ("environment_pressure", 0, True),
+                "environmental": ("environment_pressure", 0, True),
+                "work": ("job_market_activity", 50, False),
+                "career": ("job_market_activity", 50, False),
+            }
 
             for event in events:
                 if isinstance(event, dict):
-                    event_type = event.get("_normalized_event_type") or event.get("type", "general")
-                    impact = event.get("_normalized_impact", event.get("impact", 0))
+                    event_type = str(event.get("_normalized_event_type", "general"))
+                    impact = event.get("_normalized_impact", 0)
                 else:
-                    event_type = getattr(event, "_normalized_event_type", None) or getattr(event, "type", "general")
-                    impact = getattr(event, "_normalized_impact", None)
-                    if impact is None:
-                        impact = getattr(event, "impact", 0)
+                    event_type = str(getattr(event, "_normalized_event_type", "general"))
+                    impact = getattr(event, "_normalized_impact", 0)
 
                 # Track event type distribution for downstream systems/analytics.
                 self.game_statistics[f"events_{event_type}"] = self.game_statistics.get(f"events_{event_type}", 0) + 1
 
                 # Lightweight world-state ripple hooks.
-                if event_type == "economic":
-                    self.game_state["economy_stability"] = self.game_state.get("economy_stability", 50) + impact
-                elif event_type == "social":
-                    self.game_state["social_cohesion"] = self.game_state.get("social_cohesion", 50) + impact
-                elif event_type in ("weather", "environmental"):
-                    self.game_state["environment_pressure"] = self.game_state.get("environment_pressure", 0) + abs(impact)
-                elif event_type in ("work", "career"):
-                    self.game_state["job_market_activity"] = self.game_state.get("job_market_activity", 50) + impact
+                consequence = consequence_dispatch.get(event_type)
+                if consequence:
+                    state_key, default_value, use_abs_impact = consequence
+                    impact_value = abs(impact) if use_abs_impact else impact
+                    self.game_state[state_key] = self.game_state.get(state_key, default_value) + impact_value
 
         except Exception as e:
             logger.warning(f"Error applying event consequences: {e}")
