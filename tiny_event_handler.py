@@ -440,29 +440,29 @@ class EventHandler:
         """Resolve a human-readable event name from Event or event-like payloads."""
         if isinstance(event, Event):
             return event.name
+
+        event_type = self._event_type(event)
         if isinstance(event, dict):
-            return str(
-                event.get(
-                    "name",
-                    event.get("type", event.get("event_type", "unnamed_event")),
-                )
-            )
-        return str(
-            getattr(
-                event,
-                "name",
-                getattr(event, "type", getattr(event, "event_type", "unnamed_event")),
-            )
-        )
+            return str(event.get("name") or event_type or "unnamed_event")
+        return str(getattr(event, "name", None) or event_type or "unnamed_event")
+
+    def _event_type(self, event: Any) -> Optional[str]:
+        """Resolve the canonical event type for Event and event-like payloads."""
+        if isinstance(event, Event):
+            return event.type
+        if isinstance(event, dict):
+            return event.get("type") or event.get("event_type")
+        return getattr(event, "type", None) or getattr(event, "event_type", None)
 
     def _event_context(self, event: Any) -> Any:
         """Provide object-style access for event-like payloads used by the effect dispatcher."""
         if isinstance(event, dict):
+            event_type = self._event_type(event)
             return SimpleNamespace(
                 name=self._event_name(event),
-                type=event.get("type", event.get("event_type")),
-                event_type=event.get("event_type", event.get("type")),
-                participants=list(event.get("participants", []) or []),
+                type=event_type,
+                event_type=event_type,
+                participants=list(event.get("participants") or []),
                 location=event.get("location"),
             )
         return event
@@ -480,7 +480,12 @@ class EventHandler:
         return False
 
     def _process_event_payload(self, event: Any) -> bool:
-        """Process non-Event payloads from gameplay systems as immediate events."""
+        """Process non-Event payloads from gameplay systems as immediate events.
+
+        Payload effects are applied fail-fast: if any effect is invalid or cannot
+        be applied, the payload is treated as failed for the tick so the handler
+        does not report ambiguous partial success for one-shot payloads.
+        """
         effects = (
             event.get("effects", [])
             if isinstance(event, dict)

@@ -41,7 +41,7 @@ class TestEventHandlerPayloads(unittest.TestCase):
         self.assertIn(payload, triggered_events)
         self.assertEqual(self.event_handler._event_name(payload), "payload_trigger")
 
-    def test_successful_payload_processing_removes_payload_and_wraps_context(self):
+    def test_successful_payload_cleanup_and_context_wrapping(self):
         participant = SimpleNamespace(happiness=0)
         location = SimpleNamespace(name="Town Square")
         payload = {
@@ -68,7 +68,10 @@ class TestEventHandlerPayloads(unittest.TestCase):
         self.assertEqual(len(self.event_handler.processed_events), 0)
 
         self.event_handler.effect_dispatcher.apply_effect.assert_called_once()
-        _, payload_context = self.event_handler.effect_dispatcher.apply_effect.call_args.args
+        effect_arg, payload_context = (
+            self.event_handler.effect_dispatcher.apply_effect.call_args.args
+        )
+        self.assertIsNotNone(effect_arg)
         self.assertEqual(payload_context.participants, [participant])
         self.assertIs(payload_context.location, location)
 
