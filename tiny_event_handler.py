@@ -386,7 +386,7 @@ class EventHandler:
                 triggered_events.append(event)
                 continue
 
-            logging.debug("Skipping unsupported event payload type: %s", type(event))
+            pass # Validation should be handled in add_event to avoid per-tick log spam
 
         return triggered_events
 
