@@ -1,0 +1,31 @@
+sequenceDiagram
+    participant EH as tiny_event_handler.py
+    participant Main as main.py
+    participant GC as tiny_gameplay_controller.py
+    participant SM as tiny_strategy_manager.py
+    participant GM as tiny_graph_manager.py
+    participant GOAP as tiny_goap_system.py
+    participant PB as tiny_prompt_builder.py
+    participant IO as tiny_brain_io.py
+    participant OI as tiny_output_interpreter.py
+    participant ACT as actions.py
+    participant MEM as tiny_memories.py
+
+    EH->>Main: New day or gameplay event
+    Main->>GC: Advance simulation tick
+    GC->>SM: Refresh character strategy
+    SM->>GM: Read character state and world context
+    GM-->>SM: Current graph-backed state
+    SM->>GOAP: Evaluate goals and candidate plans
+    GOAP->>GM: Query difficulty and dependencies
+    GM-->>GOAP: Graph-derived constraints
+    GOAP-->>SM: Prioritized plan or action options
+    SM->>PB: Build prompt/context package
+    PB->>IO: Send optional model request
+    IO-->>OI: Raw model response
+    OI-->>GC: Executable action choices
+    GC->>ACT: Execute selected action
+    ACT->>GM: Apply state changes
+    ACT->>MEM: Record outcome memory
+    MEM-->>GC: Updated memory context
+    

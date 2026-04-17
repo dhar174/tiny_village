@@ -1,0 +1,1993 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd"><key id="d7" for="edge" attr.name="relation" attr.type="string"/>
+<key id="d6" for="node" attr.name="is_runtime_core" attr.type="long"/>
+<key id="d5" for="node" attr.name="total_degree" attr.type="long"/>
+<key id="d4" for="node" attr.name="out_degree" attr.type="long"/>
+<key id="d3" for="node" attr.name="in_degree" attr.type="long"/>
+<key id="d2" for="node" attr.name="shape_family" attr.type="string"/>
+<key id="d1" for="node" attr.name="family" attr.type="string"/>
+<key id="d0" for="node" attr.name="path" attr.type="string"/>
+<graph edgedefault="directed"><node id="actions">
+  <data key="d0">actions.py</data>
+  <data key="d1">actions</data>
+  <data key="d2">other</data>
+  <data key="d3">27</data>
+  <data key="d4">3</data>
+  <data key="d5">30</data>
+  <data key="d6">1</data>
+</node>
+<node id="binary_to_decimal">
+  <data key="d0">binary_to_decimal.py</data>
+  <data key="d1">support</data>
+  <data key="d2">other</data>
+  <data key="d3">0</data>
+  <data key="d4">0</data>
+  <data key="d5">0</data>
+  <data key="d6">0</data>
+</node>
+<node id="character_attribute_mapper">
+  <data key="d0">character_attribute_mapper.py</data>
+  <data key="d1">support</data>
+  <data key="d2">other</data>
+  <data key="d3">1</data>
+  <data key="d4">0</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="cosine_threshold_query">
+  <data key="d0">cosine_threshold_query.py</data>
+  <data key="d1">support</data>
+  <data key="d2">other</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_advanced_utility">
+  <data key="d0">demo_advanced_utility.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_architecture_aligned">
+  <data key="d0">demo_architecture_aligned.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">4</data>
+  <data key="d5">4</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_building_functionality">
+  <data key="d0">demo_building_functionality.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">2</data>
+  <data key="d5">2</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_character_factory">
+  <data key="d0">demo_character_factory.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">5</data>
+  <data key="d4">0</data>
+  <data key="d5">5</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_character_state_effects">
+  <data key="d0">demo_character_state_effects.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">4</data>
+  <data key="d5">4</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_cost_integration">
+  <data key="d0">demo_cost_integration.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">3</data>
+  <data key="d5">3</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_custom_building_loading">
+  <data key="d0">demo_custom_building_loading.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">2</data>
+  <data key="d5">2</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_enhanced_building_interactions">
+  <data key="d0">demo_enhanced_building_interactions.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_enhanced_llm_interface">
+  <data key="d0">demo_enhanced_llm_interface.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">6</data>
+  <data key="d5">6</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_error_handling">
+  <data key="d0">demo_error_handling.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">0</data>
+  <data key="d5">0</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_event_system">
+  <data key="d0">demo_event_system.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_global_graph_manager">
+  <data key="d0">demo_global_graph_manager.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">4</data>
+  <data key="d5">4</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_goap_integration">
+  <data key="d0">demo_goap_integration.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">3</data>
+  <data key="d5">3</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_llm_integration">
+  <data key="d0">demo_llm_integration.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">1</data>
+  <data key="d4">2</data>
+  <data key="d5">3</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_llm_integration_features">
+  <data key="d0">demo_llm_integration_features.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">0</data>
+  <data key="d5">0</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_llm_strategic_integration">
+  <data key="d0">demo_llm_strategic_integration.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">2</data>
+  <data key="d5">2</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_location_integration">
+  <data key="d0">demo_location_integration.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">4</data>
+  <data key="d5">4</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_map_interactivity">
+  <data key="d0">demo_map_interactivity.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_map_location_integration">
+  <data key="d0">demo_map_location_integration.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">5</data>
+  <data key="d5">5</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_minimal_integration">
+  <data key="d0">demo_minimal_integration.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">1</data>
+  <data key="d4">3</data>
+  <data key="d5">4</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_mock_stock_antipattern">
+  <data key="d0">demo_mock_stock_antipattern.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">0</data>
+  <data key="d5">0</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_social_interactions">
+  <data key="d0">demo_social_interactions.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">2</data>
+  <data key="d5">2</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_storytelling_system">
+  <data key="d0">demo_storytelling_system.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">4</data>
+  <data key="d5">4</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_system_integration_old">
+  <data key="d0">demo_system_integration_old.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_talk_action_fix">
+  <data key="d0">demo_talk_action_fix.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="demo_unified_goap">
+  <data key="d0">demo_unified_goap.py</data>
+  <data key="d1">demo</data>
+  <data key="d2">demo_*</data>
+  <data key="d3">0</data>
+  <data key="d4">2</data>
+  <data key="d5">2</data>
+  <data key="d6">0</data>
+</node>
+<node id="effect_dispatcher">
+  <data key="d0">effect_dispatcher.py</data>
+  <data key="d1">support</data>
+  <data key="d2">other</data>
+  <data key="d3">2</data>
+  <data key="d4">2</data>
+  <data key="d5">4</data>
+  <data key="d6">1</data>
+</node>
+<node id="effect_schema">
+  <data key="d0">effect_schema.py</data>
+  <data key="d1">support</data>
+  <data key="d2">other</data>
+  <data key="d3">3</data>
+  <data key="d4">0</data>
+  <data key="d5">3</data>
+  <data key="d6">1</data>
+</node>
+<node id="goap_evaluator">
+  <data key="d0">goap_evaluator.py</data>
+  <data key="d1">support</data>
+  <data key="d2">other</data>
+  <data key="d3">5</data>
+  <data key="d4">1</data>
+  <data key="d5">6</data>
+  <data key="d6">1</data>
+</node>
+<node id="graph_analytics">
+  <data key="d0">graph_analytics.py</data>
+  <data key="d1">support</data>
+  <data key="d2">other</data>
+  <data key="d3">3</data>
+  <data key="d4">0</data>
+  <data key="d5">3</data>
+  <data key="d6">1</data>
+</node>
+<node id="integration_test_map_interactivity">
+  <data key="d0">integration_test_map_interactivity.py</data>
+  <data key="d1">support</data>
+  <data key="d2">other</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="langchain_docs_mcp_proxy">
+  <data key="d0">langchain_docs_mcp_proxy.py</data>
+  <data key="d1">support</data>
+  <data key="d2">other</data>
+  <data key="d3">0</data>
+  <data key="d4">0</data>
+  <data key="d5">0</data>
+  <data key="d6">0</data>
+</node>
+<node id="llm_character_utils">
+  <data key="d0">llm_character_utils.py</data>
+  <data key="d1">support</data>
+  <data key="d2">other</data>
+  <data key="d3">1</data>
+  <data key="d4">3</data>
+  <data key="d5">4</data>
+  <data key="d6">1</data>
+</node>
+<node id="llm_integration_utils">
+  <data key="d0">llm_integration_utils.py</data>
+  <data key="d1">support</data>
+  <data key="d2">other</data>
+  <data key="d3">2</data>
+  <data key="d4">1</data>
+  <data key="d5">3</data>
+  <data key="d6">1</data>
+</node>
+<node id="main">
+  <data key="d0">main.py</data>
+  <data key="d1">entrypoint</data>
+  <data key="d2">other</data>
+  <data key="d3">0</data>
+  <data key="d4">3</data>
+  <data key="d5">3</data>
+  <data key="d6">1</data>
+</node>
+<node id="recent_event_list">
+  <data key="d0">recent_event_list.py</data>
+  <data key="d1">support</data>
+  <data key="d2">other</data>
+  <data key="d3">0</data>
+  <data key="d4">0</data>
+  <data key="d5">0</data>
+  <data key="d6">1</data>
+</node>
+<node id="simple_character_for_testing">
+  <data key="d0">simple_character_for_testing.py</data>
+  <data key="d1">support</data>
+  <data key="d2">other</data>
+  <data key="d3">3</data>
+  <data key="d4">0</data>
+  <data key="d5">3</data>
+  <data key="d6">0</data>
+</node>
+<node id="social_model">
+  <data key="d0">social_model.py</data>
+  <data key="d1">support</data>
+  <data key="d2">other</data>
+  <data key="d3">3</data>
+  <data key="d4">0</data>
+  <data key="d5">3</data>
+  <data key="d6">1</data>
+</node>
+<node id="sort_faiss_results">
+  <data key="d0">sort_faiss_results.py</data>
+  <data key="d1">support</data>
+  <data key="d2">other</data>
+  <data key="d3">0</data>
+  <data key="d4">0</data>
+  <data key="d5">0</data>
+  <data key="d6">0</data>
+</node>
+<node id="storytelling_integration">
+  <data key="d0">storytelling_integration.py</data>
+  <data key="d1">support</data>
+  <data key="d2">other</data>
+  <data key="d3">1</data>
+  <data key="d4">2</data>
+  <data key="d5">3</data>
+  <data key="d6">1</data>
+</node>
+<node id="test_acceptance_criteria">
+  <data key="d0">test_acceptance_criteria.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_building_interactions">
+  <data key="d0">test_building_interactions.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_character_ai_locations">
+  <data key="d0">test_character_ai_locations.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">3</data>
+  <data key="d5">3</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_character_location_fix_demo">
+  <data key="d0">test_character_location_fix_demo.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_core_global_graph_manager">
+  <data key="d0">test_core_global_graph_manager.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">4</data>
+  <data key="d5">4</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_core_llm_integration">
+  <data key="d0">test_core_llm_integration.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">3</data>
+  <data key="d5">3</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_error_handling">
+  <data key="d0">test_error_handling.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">2</data>
+  <data key="d5">2</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_error_handling_simple">
+  <data key="d0">test_error_handling_simple.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">0</data>
+  <data key="d5">0</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_event_integration">
+  <data key="d0">test_event_integration.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">3</data>
+  <data key="d5">3</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_event_strategy_integration">
+  <data key="d0">test_event_strategy_integration.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">3</data>
+  <data key="d5">3</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_global_graph_manager">
+  <data key="d0">test_global_graph_manager.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">5</data>
+  <data key="d5">5</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_goap_evaluator">
+  <data key="d0">test_goap_evaluator.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">2</data>
+  <data key="d5">2</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_goap_evaluator_focused">
+  <data key="d0">test_goap_evaluator_focused.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_goap_simple">
+  <data key="d0">test_goap_simple.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_graph_analytics">
+  <data key="d0">test_graph_analytics.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">2</data>
+  <data key="d5">2</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_graph_manager_analytics_integration">
+  <data key="d0">test_graph_manager_analytics_integration.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">2</data>
+  <data key="d5">2</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_graph_manager_integration">
+  <data key="d0">test_graph_manager_integration.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_graphmanager_single_source">
+  <data key="d0">test_graphmanager_single_source.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">2</data>
+  <data key="d5">2</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_integration">
+  <data key="d0">test_integration.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_integration_global_graph_manager">
+  <data key="d0">test_integration_global_graph_manager.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">5</data>
+  <data key="d5">5</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_integration_minimal">
+  <data key="d0">test_integration_minimal.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">1</data>
+  <data key="d4">2</data>
+  <data key="d5">3</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_llm_decision_integration">
+  <data key="d0">test_llm_decision_integration.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">5</data>
+  <data key="d5">5</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_llm_integration_pipeline">
+  <data key="d0">test_llm_integration_pipeline.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">3</data>
+  <data key="d5">3</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_llm_interface_integration">
+  <data key="d0">test_llm_interface_integration.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">6</data>
+  <data key="d5">6</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_location_integration">
+  <data key="d0">test_location_integration.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">4</data>
+  <data key="d5">4</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_map_interactivity">
+  <data key="d0">test_map_interactivity.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_map_location_integration">
+  <data key="d0">test_map_location_integration.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">2</data>
+  <data key="d5">2</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_memory_antipattern_demo">
+  <data key="d0">test_memory_antipattern_demo.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">0</data>
+  <data key="d5">0</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_memory_fixes_validation">
+  <data key="d0">test_memory_fixes_validation.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">0</data>
+  <data key="d5">0</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_memory_magicmock_issue">
+  <data key="d0">test_memory_magicmock_issue.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">0</data>
+  <data key="d5">0</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_node_fixes_validation">
+  <data key="d0">test_node_fixes_validation.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">0</data>
+  <data key="d5">0</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_output_interpreter_social">
+  <data key="d0">test_output_interpreter_social.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_pathfinding_robustness">
+  <data key="d0">test_pathfinding_robustness.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_quick_memory_fixes">
+  <data key="d0">test_quick_memory_fixes.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">0</data>
+  <data key="d5">0</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_real_character_correct_approach">
+  <data key="d0">test_real_character_correct_approach.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_simple_integration">
+  <data key="d0">test_simple_integration.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_social_integration">
+  <data key="d0">test_social_integration.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_social_interactions">
+  <data key="d0">test_social_interactions.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_social_model">
+  <data key="d0">test_social_model.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_social_model_integration">
+  <data key="d0">test_social_model_integration.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_social_travel_prompt">
+  <data key="d0">test_social_travel_prompt.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_story_arc_implementation">
+  <data key="d0">test_story_arc_implementation.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_storytelling_comprehensive">
+  <data key="d0">test_storytelling_comprehensive.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">2</data>
+  <data key="d5">2</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_storytelling_engine">
+  <data key="d0">test_storytelling_engine.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">2</data>
+  <data key="d5">2</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_storytelling_integration">
+  <data key="d0">test_storytelling_integration.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">3</data>
+  <data key="d5">3</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_storytelling_system">
+  <data key="d0">test_storytelling_system.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">2</data>
+  <data key="d5">2</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_system_integration">
+  <data key="d0">test_system_integration.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="test_ui_enhancements">
+  <data key="d0">test_ui_enhancements.py</data>
+  <data key="d1">test</data>
+  <data key="d2">test_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="tiny_animation_system">
+  <data key="d0">tiny_animation_system.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">2</data>
+  <data key="d4">0</data>
+  <data key="d5">2</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_brain_io">
+  <data key="d0">tiny_brain_io.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">6</data>
+  <data key="d4">0</data>
+  <data key="d5">6</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_brain_io_fixed">
+  <data key="d0">tiny_brain_io_fixed.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">0</data>
+  <data key="d4">0</data>
+  <data key="d5">0</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_building_manager">
+  <data key="d0">tiny_building_manager.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">2</data>
+  <data key="d4">0</data>
+  <data key="d5">2</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_buildings">
+  <data key="d0">tiny_buildings.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">11</data>
+  <data key="d4">3</data>
+  <data key="d5">14</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_characters">
+  <data key="d0">tiny_characters.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">8</data>
+  <data key="d4">16</data>
+  <data key="d5">24</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_event_handler">
+  <data key="d0">tiny_event_handler.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">21</data>
+  <data key="d4">7</data>
+  <data key="d5">28</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_gameplay_controller">
+  <data key="d0">tiny_gameplay_controller.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">15</data>
+  <data key="d4">14</data>
+  <data key="d5">29</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_globals">
+  <data key="d0">tiny_globals.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">10</data>
+  <data key="d4">2</data>
+  <data key="d5">12</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_goap_system">
+  <data key="d0">tiny_goap_system.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">8</data>
+  <data key="d4">3</data>
+  <data key="d5">11</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_graph_manager">
+  <data key="d0">tiny_graph_manager.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">12</data>
+  <data key="d4">12</data>
+  <data key="d5">24</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_items">
+  <data key="d0">tiny_items.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">5</data>
+  <data key="d4">2</data>
+  <data key="d5">7</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_jobs">
+  <data key="d0">tiny_jobs.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">2</data>
+  <data key="d4">0</data>
+  <data key="d5">2</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_locations">
+  <data key="d0">tiny_locations.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">11</data>
+  <data key="d4">2</data>
+  <data key="d5">13</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_map_controller">
+  <data key="d0">tiny_map_controller.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">8</data>
+  <data key="d4">2</data>
+  <data key="d5">10</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_memories">
+  <data key="d0">tiny_memories.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">4</data>
+  <data key="d4">4</data>
+  <data key="d5">8</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_memories_alpha">
+  <data key="d0">tiny_memories_alpha.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">0</data>
+  <data key="d4">2</data>
+  <data key="d5">2</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_output_interpreter">
+  <data key="d0">tiny_output_interpreter.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">10</data>
+  <data key="d4">1</data>
+  <data key="d5">11</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_prompt_builder">
+  <data key="d0">tiny_prompt_builder.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">7</data>
+  <data key="d4">4</data>
+  <data key="d5">11</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_sr_mapping">
+  <data key="d0">tiny_sr_mapping.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">1</data>
+  <data key="d4">0</data>
+  <data key="d5">1</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_story_arc">
+  <data key="d0">tiny_story_arc.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">1</data>
+  <data key="d4">0</data>
+  <data key="d5">1</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_storytelling_engine">
+  <data key="d0">tiny_storytelling_engine.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">5</data>
+  <data key="d4">1</data>
+  <data key="d5">6</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_storytelling_system">
+  <data key="d0">tiny_storytelling_system.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">7</data>
+  <data key="d4">1</data>
+  <data key="d5">8</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_strategy_manager">
+  <data key="d0">tiny_strategy_manager.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">18</data>
+  <data key="d4">9</data>
+  <data key="d5">27</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_tart_reasoning">
+  <data key="d0">tiny_tart_reasoning.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">0</data>
+  <data key="d4">0</data>
+  <data key="d5">0</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_time_manager">
+  <data key="d0">tiny_time_manager.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">6</data>
+  <data key="d4">0</data>
+  <data key="d5">6</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_types">
+  <data key="d0">tiny_types.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">9</data>
+  <data key="d4">0</data>
+  <data key="d5">9</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_util_funcs">
+  <data key="d0">tiny_util_funcs.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">2</data>
+  <data key="d4">0</data>
+  <data key="d5">2</data>
+  <data key="d6">1</data>
+</node>
+<node id="tiny_utility_functions">
+  <data key="d0">tiny_utility_functions.py</data>
+  <data key="d1">tiny</data>
+  <data key="d2">tiny_*</data>
+  <data key="d3">9</data>
+  <data key="d4">2</data>
+  <data key="d5">11</data>
+  <data key="d6">1</data>
+</node>
+<node id="validate_event_strategy_integration">
+  <data key="d0">validate_event_strategy_integration.py</data>
+  <data key="d1">validation</data>
+  <data key="d2">validate_/verify_*</data>
+  <data key="d3">0</data>
+  <data key="d4">2</data>
+  <data key="d5">2</data>
+  <data key="d6">0</data>
+</node>
+<node id="validate_implementations">
+  <data key="d0">validate_implementations.py</data>
+  <data key="d1">validation</data>
+  <data key="d2">validate_/verify_*</data>
+  <data key="d3">0</data>
+  <data key="d4">0</data>
+  <data key="d5">0</data>
+  <data key="d6">0</data>
+</node>
+<node id="validate_refactoring">
+  <data key="d0">validate_refactoring.py</data>
+  <data key="d1">validation</data>
+  <data key="d2">validate_/verify_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="validate_storytelling_integration">
+  <data key="d0">validate_storytelling_integration.py</data>
+  <data key="d1">validation</data>
+  <data key="d2">validate_/verify_*</data>
+  <data key="d3">0</data>
+  <data key="d4">3</data>
+  <data key="d5">3</data>
+  <data key="d6">0</data>
+</node>
+<node id="verify_fixes">
+  <data key="d0">verify_fixes.py</data>
+  <data key="d1">validation</data>
+  <data key="d2">validate_/verify_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="verify_improvements">
+  <data key="d0">verify_improvements.py</data>
+  <data key="d1">validation</data>
+  <data key="d2">validate_/verify_*</data>
+  <data key="d3">0</data>
+  <data key="d4">0</data>
+  <data key="d5">0</data>
+  <data key="d6">0</data>
+</node>
+<node id="verify_real_character_fix">
+  <data key="d0">verify_real_character_fix.py</data>
+  <data key="d1">validation</data>
+  <data key="d2">validate_/verify_*</data>
+  <data key="d3">0</data>
+  <data key="d4">3</data>
+  <data key="d5">3</data>
+  <data key="d6">0</data>
+</node>
+<node id="verify_single_source_of_truth">
+  <data key="d0">verify_single_source_of_truth.py</data>
+  <data key="d1">validation</data>
+  <data key="d2">validate_/verify_*</data>
+  <data key="d3">0</data>
+  <data key="d4">2</data>
+  <data key="d5">2</data>
+  <data key="d6">0</data>
+</node>
+<node id="verify_storytelling_implementation">
+  <data key="d0">verify_storytelling_implementation.py</data>
+  <data key="d1">validation</data>
+  <data key="d2">validate_/verify_*</data>
+  <data key="d3">0</data>
+  <data key="d4">1</data>
+  <data key="d5">1</data>
+  <data key="d6">0</data>
+</node>
+<node id="visual_demo_map_interactivity">
+  <data key="d0">visual_demo_map_interactivity.py</data>
+  <data key="d1">support</data>
+  <data key="d2">other</data>
+  <data key="d3">0</data>
+  <data key="d4">0</data>
+  <data key="d5">0</data>
+  <data key="d6">0</data>
+</node>
+<node id="world_state">
+  <data key="d0">world_state.py</data>
+  <data key="d1">support</data>
+  <data key="d2">other</data>
+  <data key="d3">3</data>
+  <data key="d4">0</data>
+  <data key="d5">3</data>
+  <data key="d6">1</data>
+</node>
+<node id="write_job_details">
+  <data key="d0">write_job_details.py</data>
+  <data key="d1">support</data>
+  <data key="d2">other</data>
+  <data key="d3">0</data>
+  <data key="d4">0</data>
+  <data key="d5">0</data>
+  <data key="d6">0</data>
+</node>
+<edge source="actions" target="tiny_globals">
+  <data key="d7">imports</data>
+</edge>
+<edge source="actions" target="tiny_types">
+  <data key="d7">imports</data>
+</edge>
+<edge source="actions" target="tiny_util_funcs">
+  <data key="d7">imports</data>
+</edge>
+<edge source="cosine_threshold_query" target="tiny_memories">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_advanced_utility" target="tiny_utility_functions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_architecture_aligned" target="tiny_characters">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_architecture_aligned" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_architecture_aligned" target="tiny_goap_system">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_architecture_aligned" target="tiny_strategy_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_building_functionality" target="tiny_building_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_building_functionality" target="tiny_buildings">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_character_state_effects" target="demo_character_factory">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_character_state_effects" target="effect_dispatcher">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_character_state_effects" target="effect_schema">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_character_state_effects" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_cost_integration" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_cost_integration" target="tiny_goap_system">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_cost_integration" target="tiny_utility_functions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_custom_building_loading" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_custom_building_loading" target="tiny_buildings">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_enhanced_building_interactions" target="tiny_buildings">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_enhanced_llm_interface" target="demo_character_factory">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_enhanced_llm_interface" target="tiny_characters">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_enhanced_llm_interface" target="tiny_items">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_enhanced_llm_interface" target="tiny_output_interpreter">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_enhanced_llm_interface" target="tiny_prompt_builder">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_enhanced_llm_interface" target="tiny_strategy_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_event_system" target="tiny_strategy_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_global_graph_manager" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_global_graph_manager" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_global_graph_manager" target="tiny_globals">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_global_graph_manager" target="tiny_strategy_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_goap_integration" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_goap_integration" target="tiny_strategy_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_goap_integration" target="tiny_utility_functions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_llm_integration" target="demo_character_factory">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_llm_integration" target="tiny_strategy_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_llm_strategic_integration" target="llm_integration_utils">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_llm_strategic_integration" target="tiny_strategy_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_location_integration" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_location_integration" target="simple_character_for_testing">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_location_integration" target="tiny_buildings">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_location_integration" target="tiny_locations">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_map_interactivity" target="tiny_map_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_map_location_integration" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_map_location_integration" target="simple_character_for_testing">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_map_location_integration" target="tiny_buildings">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_map_location_integration" target="tiny_locations">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_map_location_integration" target="tiny_map_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_minimal_integration" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_minimal_integration" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_minimal_integration" target="tiny_gameplay_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_social_interactions" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_social_interactions" target="tiny_graph_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_storytelling_system" target="storytelling_integration">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_storytelling_system" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_storytelling_system" target="tiny_storytelling_engine">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_storytelling_system" target="tiny_storytelling_system">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_system_integration_old" target="tiny_gameplay_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_talk_action_fix" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_unified_goap" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="demo_unified_goap" target="tiny_goap_system">
+  <data key="d7">imports</data>
+</edge>
+<edge source="effect_dispatcher" target="character_attribute_mapper">
+  <data key="d7">imports</data>
+</edge>
+<edge source="effect_dispatcher" target="effect_schema">
+  <data key="d7">imports</data>
+</edge>
+<edge source="goap_evaluator" target="tiny_utility_functions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="integration_test_map_interactivity" target="tiny_map_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="llm_character_utils" target="demo_character_factory">
+  <data key="d7">imports</data>
+</edge>
+<edge source="llm_character_utils" target="tiny_brain_io">
+  <data key="d7">imports</data>
+</edge>
+<edge source="llm_character_utils" target="tiny_output_interpreter">
+  <data key="d7">imports</data>
+</edge>
+<edge source="llm_integration_utils" target="tiny_strategy_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="main" target="demo_minimal_integration">
+  <data key="d7">imports</data>
+</edge>
+<edge source="main" target="test_integration_minimal">
+  <data key="d7">imports</data>
+</edge>
+<edge source="main" target="tiny_gameplay_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="storytelling_integration" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="storytelling_integration" target="tiny_storytelling_engine">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_acceptance_criteria" target="goap_evaluator">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_building_interactions" target="tiny_buildings">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_character_ai_locations" target="tiny_buildings">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_character_ai_locations" target="tiny_characters">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_character_ai_locations" target="tiny_locations">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_character_location_fix_demo" target="tiny_characters">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_core_global_graph_manager" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_core_global_graph_manager" target="tiny_globals">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_core_global_graph_manager" target="tiny_graph_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_core_global_graph_manager" target="world_state">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_core_llm_integration" target="tiny_goap_system">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_core_llm_integration" target="tiny_output_interpreter">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_core_llm_integration" target="tiny_strategy_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_error_handling" target="tiny_map_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_error_handling" target="tiny_memories">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_event_integration" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_event_integration" target="tiny_gameplay_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_event_integration" target="tiny_strategy_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_event_strategy_integration" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_event_strategy_integration" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_event_strategy_integration" target="tiny_gameplay_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_global_graph_manager" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_global_graph_manager" target="tiny_characters">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_global_graph_manager" target="tiny_globals">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_global_graph_manager" target="tiny_graph_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_global_graph_manager" target="tiny_items">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_goap_evaluator" target="goap_evaluator">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_goap_evaluator" target="tiny_graph_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_goap_evaluator_focused" target="goap_evaluator">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_goap_simple" target="goap_evaluator">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_graph_analytics" target="graph_analytics">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_graph_analytics" target="world_state">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_graph_manager_analytics_integration" target="graph_analytics">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_graph_manager_analytics_integration" target="tiny_graph_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_graph_manager_integration" target="tiny_graph_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_graphmanager_single_source" target="tiny_gameplay_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_graphmanager_single_source" target="tiny_graph_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_integration" target="tiny_graph_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_integration_global_graph_manager" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_integration_global_graph_manager" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_integration_global_graph_manager" target="tiny_gameplay_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_integration_global_graph_manager" target="tiny_globals">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_integration_global_graph_manager" target="tiny_strategy_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_integration_minimal" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_integration_minimal" target="tiny_gameplay_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_llm_decision_integration" target="tiny_gameplay_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_llm_decision_integration" target="tiny_goap_system">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_llm_decision_integration" target="tiny_output_interpreter">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_llm_decision_integration" target="tiny_prompt_builder">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_llm_decision_integration" target="tiny_strategy_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_llm_integration_pipeline" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_llm_integration_pipeline" target="llm_integration_utils">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_llm_integration_pipeline" target="tiny_strategy_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_llm_interface_integration" target="tiny_brain_io">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_llm_interface_integration" target="tiny_gameplay_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_llm_interface_integration" target="tiny_memories">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_llm_interface_integration" target="tiny_output_interpreter">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_llm_interface_integration" target="tiny_prompt_builder">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_llm_interface_integration" target="tiny_strategy_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_location_integration" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_location_integration" target="tiny_buildings">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_location_integration" target="tiny_locations">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_location_integration" target="tiny_map_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_map_interactivity" target="tiny_map_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_map_location_integration" target="tiny_buildings">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_map_location_integration" target="tiny_locations">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_output_interpreter_social" target="tiny_output_interpreter">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_pathfinding_robustness" target="tiny_map_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_real_character_correct_approach" target="simple_character_for_testing">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_simple_integration" target="tiny_strategy_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_social_integration" target="tiny_output_interpreter">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_social_interactions" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_social_model" target="social_model">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_social_model_integration" target="social_model">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_social_travel_prompt" target="tiny_prompt_builder">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_story_arc_implementation" target="tiny_story_arc">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_storytelling_comprehensive" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_storytelling_comprehensive" target="tiny_storytelling_system">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_storytelling_engine" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_storytelling_engine" target="tiny_storytelling_engine">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_storytelling_integration" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_storytelling_integration" target="tiny_gameplay_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_storytelling_integration" target="tiny_storytelling_system">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_storytelling_system" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_storytelling_system" target="tiny_storytelling_system">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_system_integration" target="tiny_gameplay_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="test_ui_enhancements" target="tiny_gameplay_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_buildings" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_buildings" target="tiny_locations">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_buildings" target="tiny_types">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_characters" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_characters" target="tiny_animation_system">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_characters" target="tiny_buildings">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_characters" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_characters" target="tiny_globals">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_characters" target="tiny_goap_system">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_characters" target="tiny_graph_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_characters" target="tiny_items">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_characters" target="tiny_jobs">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_characters" target="tiny_locations">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_characters" target="tiny_memories">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_characters" target="tiny_prompt_builder">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_characters" target="tiny_time_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_characters" target="tiny_types">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_characters" target="tiny_util_funcs">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_characters" target="tiny_utility_functions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_event_handler" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_event_handler" target="effect_dispatcher">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_event_handler" target="effect_schema">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_event_handler" target="tiny_globals">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_event_handler" target="tiny_locations">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_event_handler" target="tiny_time_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_event_handler" target="tiny_types">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_gameplay_controller" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_gameplay_controller" target="tiny_animation_system">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_gameplay_controller" target="tiny_brain_io">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_gameplay_controller" target="tiny_building_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_gameplay_controller" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_gameplay_controller" target="tiny_globals">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_gameplay_controller" target="tiny_goap_system">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_gameplay_controller" target="tiny_map_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_gameplay_controller" target="tiny_output_interpreter">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_gameplay_controller" target="tiny_prompt_builder">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_gameplay_controller" target="tiny_storytelling_engine">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_gameplay_controller" target="tiny_storytelling_system">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_gameplay_controller" target="tiny_strategy_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_gameplay_controller" target="tiny_types">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_globals" target="tiny_graph_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_globals" target="tiny_time_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_goap_system" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_goap_system" target="tiny_types">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_goap_system" target="tiny_utility_functions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_graph_manager" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_graph_manager" target="goap_evaluator">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_graph_manager" target="graph_analytics">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_graph_manager" target="social_model">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_graph_manager" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_graph_manager" target="tiny_items">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_graph_manager" target="tiny_jobs">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_graph_manager" target="tiny_locations">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_graph_manager" target="tiny_time_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_graph_manager" target="tiny_types">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_graph_manager" target="tiny_utility_functions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_graph_manager" target="world_state">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_items" target="tiny_locations">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_items" target="tiny_types">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_locations" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_locations" target="tiny_types">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_map_controller" target="tiny_buildings">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_map_controller" target="tiny_locations">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_memories" target="tiny_brain_io">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_memories" target="tiny_globals">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_memories" target="tiny_sr_mapping">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_memories" target="tiny_time_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_memories_alpha" target="tiny_brain_io">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_memories_alpha" target="tiny_time_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_output_interpreter" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_prompt_builder" target="tiny_characters">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_prompt_builder" target="tiny_output_interpreter">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_prompt_builder" target="tiny_strategy_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_prompt_builder" target="tiny_utility_functions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_storytelling_engine" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_storytelling_system" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_strategy_manager" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_strategy_manager" target="tiny_brain_io">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_strategy_manager" target="tiny_characters">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_strategy_manager" target="tiny_globals">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_strategy_manager" target="tiny_goap_system">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_strategy_manager" target="tiny_graph_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_strategy_manager" target="tiny_output_interpreter">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_strategy_manager" target="tiny_prompt_builder">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_strategy_manager" target="tiny_utility_functions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_utility_functions" target="actions">
+  <data key="d7">imports</data>
+</edge>
+<edge source="tiny_utility_functions" target="tiny_characters">
+  <data key="d7">imports</data>
+</edge>
+<edge source="validate_event_strategy_integration" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="validate_event_strategy_integration" target="tiny_strategy_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="validate_refactoring" target="tiny_gameplay_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="validate_storytelling_integration" target="tiny_event_handler">
+  <data key="d7">imports</data>
+</edge>
+<edge source="validate_storytelling_integration" target="tiny_storytelling_engine">
+  <data key="d7">imports</data>
+</edge>
+<edge source="validate_storytelling_integration" target="tiny_storytelling_system">
+  <data key="d7">imports</data>
+</edge>
+<edge source="verify_fixes" target="tiny_items">
+  <data key="d7">imports</data>
+</edge>
+<edge source="verify_real_character_fix" target="demo_character_factory">
+  <data key="d7">imports</data>
+</edge>
+<edge source="verify_real_character_fix" target="demo_llm_integration">
+  <data key="d7">imports</data>
+</edge>
+<edge source="verify_real_character_fix" target="llm_character_utils">
+  <data key="d7">imports</data>
+</edge>
+<edge source="verify_single_source_of_truth" target="tiny_gameplay_controller">
+  <data key="d7">imports</data>
+</edge>
+<edge source="verify_single_source_of_truth" target="tiny_graph_manager">
+  <data key="d7">imports</data>
+</edge>
+<edge source="verify_storytelling_implementation" target="tiny_storytelling_system">
+  <data key="d7">imports</data>
+</edge>
+</graph></graphml>

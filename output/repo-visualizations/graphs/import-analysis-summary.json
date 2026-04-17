@@ -1,0 +1,1480 @@
+{
+  "generated_at": "2026-04-17 03:49:05 UTC",
+  "module_count": 133,
+  "edge_count": 262,
+  "core_runtime_node_count": 38,
+  "shape_counts": {
+    "other": 21,
+    "demo_*": 26,
+    "test_*": 48,
+    "tiny_*": 29,
+    "validate_/verify_*": 9
+  },
+  "top_inbound": [
+    {
+      "module": "actions",
+      "count": 27
+    },
+    {
+      "module": "tiny_event_handler",
+      "count": 21
+    },
+    {
+      "module": "tiny_strategy_manager",
+      "count": 18
+    },
+    {
+      "module": "tiny_gameplay_controller",
+      "count": 15
+    },
+    {
+      "module": "tiny_graph_manager",
+      "count": 12
+    },
+    {
+      "module": "tiny_buildings",
+      "count": 11
+    },
+    {
+      "module": "tiny_locations",
+      "count": 11
+    },
+    {
+      "module": "tiny_globals",
+      "count": 10
+    },
+    {
+      "module": "tiny_output_interpreter",
+      "count": 10
+    },
+    {
+      "module": "tiny_types",
+      "count": 9
+    },
+    {
+      "module": "tiny_utility_functions",
+      "count": 9
+    },
+    {
+      "module": "tiny_characters",
+      "count": 8
+    },
+    {
+      "module": "tiny_goap_system",
+      "count": 8
+    },
+    {
+      "module": "tiny_map_controller",
+      "count": 8
+    },
+    {
+      "module": "tiny_prompt_builder",
+      "count": 7
+    }
+  ],
+  "top_outbound": [
+    {
+      "module": "tiny_characters",
+      "count": 16
+    },
+    {
+      "module": "tiny_gameplay_controller",
+      "count": 14
+    },
+    {
+      "module": "tiny_graph_manager",
+      "count": 12
+    },
+    {
+      "module": "tiny_strategy_manager",
+      "count": 9
+    },
+    {
+      "module": "tiny_event_handler",
+      "count": 7
+    },
+    {
+      "module": "demo_enhanced_llm_interface",
+      "count": 6
+    },
+    {
+      "module": "test_llm_interface_integration",
+      "count": 6
+    },
+    {
+      "module": "demo_map_location_integration",
+      "count": 5
+    },
+    {
+      "module": "test_global_graph_manager",
+      "count": 5
+    },
+    {
+      "module": "test_integration_global_graph_manager",
+      "count": 5
+    },
+    {
+      "module": "test_llm_decision_integration",
+      "count": 5
+    },
+    {
+      "module": "demo_architecture_aligned",
+      "count": 4
+    },
+    {
+      "module": "demo_character_state_effects",
+      "count": 4
+    },
+    {
+      "module": "demo_global_graph_manager",
+      "count": 4
+    },
+    {
+      "module": "demo_location_integration",
+      "count": 4
+    }
+  ],
+  "orchestration_hubs": [
+    "tiny_event_handler",
+    "tiny_strategy_manager",
+    "tiny_gameplay_controller",
+    "tiny_graph_manager"
+  ],
+  "key_insights": [
+    "`actions.py` is the strongest inbound dependency hub across the root-level Python modules.",
+    "`tiny_event_handler.py`, `tiny_strategy_manager.py`, and `tiny_gameplay_controller.py` form the clearest event-to-plan orchestration spine in the runtime slice.",
+    "The repository root is unusually flat: tests and demos outnumber the core `tiny_*` modules, which makes topology views more useful than a plain file tree."
+  ],
+  "hotspots": [
+    {
+      "module": "actions",
+      "path": "actions.py",
+      "family": "actions",
+      "shape_family": "other",
+      "is_runtime_core": true,
+      "inbound": 27,
+      "outbound": 3,
+      "total": 30
+    },
+    {
+      "module": "tiny_gameplay_controller",
+      "path": "tiny_gameplay_controller.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 15,
+      "outbound": 14,
+      "total": 29
+    },
+    {
+      "module": "tiny_event_handler",
+      "path": "tiny_event_handler.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 21,
+      "outbound": 7,
+      "total": 28
+    },
+    {
+      "module": "tiny_strategy_manager",
+      "path": "tiny_strategy_manager.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 18,
+      "outbound": 9,
+      "total": 27
+    },
+    {
+      "module": "tiny_graph_manager",
+      "path": "tiny_graph_manager.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 12,
+      "outbound": 12,
+      "total": 24
+    },
+    {
+      "module": "tiny_characters",
+      "path": "tiny_characters.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 8,
+      "outbound": 16,
+      "total": 24
+    },
+    {
+      "module": "tiny_buildings",
+      "path": "tiny_buildings.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 11,
+      "outbound": 3,
+      "total": 14
+    },
+    {
+      "module": "tiny_locations",
+      "path": "tiny_locations.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 11,
+      "outbound": 2,
+      "total": 13
+    },
+    {
+      "module": "tiny_globals",
+      "path": "tiny_globals.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 10,
+      "outbound": 2,
+      "total": 12
+    },
+    {
+      "module": "tiny_output_interpreter",
+      "path": "tiny_output_interpreter.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 10,
+      "outbound": 1,
+      "total": 11
+    },
+    {
+      "module": "tiny_utility_functions",
+      "path": "tiny_utility_functions.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 9,
+      "outbound": 2,
+      "total": 11
+    },
+    {
+      "module": "tiny_goap_system",
+      "path": "tiny_goap_system.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 8,
+      "outbound": 3,
+      "total": 11
+    },
+    {
+      "module": "tiny_prompt_builder",
+      "path": "tiny_prompt_builder.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 7,
+      "outbound": 4,
+      "total": 11
+    },
+    {
+      "module": "tiny_map_controller",
+      "path": "tiny_map_controller.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 8,
+      "outbound": 2,
+      "total": 10
+    },
+    {
+      "module": "tiny_types",
+      "path": "tiny_types.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 9,
+      "outbound": 0,
+      "total": 9
+    },
+    {
+      "module": "tiny_storytelling_system",
+      "path": "tiny_storytelling_system.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 7,
+      "outbound": 1,
+      "total": 8
+    },
+    {
+      "module": "tiny_memories",
+      "path": "tiny_memories.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 4,
+      "outbound": 4,
+      "total": 8
+    },
+    {
+      "module": "tiny_items",
+      "path": "tiny_items.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 5,
+      "outbound": 2,
+      "total": 7
+    },
+    {
+      "module": "tiny_brain_io",
+      "path": "tiny_brain_io.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 6,
+      "outbound": 0,
+      "total": 6
+    },
+    {
+      "module": "tiny_time_manager",
+      "path": "tiny_time_manager.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 6,
+      "outbound": 0,
+      "total": 6
+    },
+    {
+      "module": "goap_evaluator",
+      "path": "goap_evaluator.py",
+      "family": "support",
+      "shape_family": "other",
+      "is_runtime_core": true,
+      "inbound": 5,
+      "outbound": 1,
+      "total": 6
+    },
+    {
+      "module": "tiny_storytelling_engine",
+      "path": "tiny_storytelling_engine.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 5,
+      "outbound": 1,
+      "total": 6
+    },
+    {
+      "module": "demo_enhanced_llm_interface",
+      "path": "demo_enhanced_llm_interface.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 6,
+      "total": 6
+    },
+    {
+      "module": "test_llm_interface_integration",
+      "path": "test_llm_interface_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 6,
+      "total": 6
+    },
+    {
+      "module": "demo_character_factory",
+      "path": "demo_character_factory.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 5,
+      "outbound": 0,
+      "total": 5
+    },
+    {
+      "module": "demo_map_location_integration",
+      "path": "demo_map_location_integration.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 5,
+      "total": 5
+    },
+    {
+      "module": "test_global_graph_manager",
+      "path": "test_global_graph_manager.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 5,
+      "total": 5
+    },
+    {
+      "module": "test_integration_global_graph_manager",
+      "path": "test_integration_global_graph_manager.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 5,
+      "total": 5
+    },
+    {
+      "module": "test_llm_decision_integration",
+      "path": "test_llm_decision_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 5,
+      "total": 5
+    },
+    {
+      "module": "effect_dispatcher",
+      "path": "effect_dispatcher.py",
+      "family": "support",
+      "shape_family": "other",
+      "is_runtime_core": true,
+      "inbound": 2,
+      "outbound": 2,
+      "total": 4
+    },
+    {
+      "module": "demo_minimal_integration",
+      "path": "demo_minimal_integration.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 1,
+      "outbound": 3,
+      "total": 4
+    },
+    {
+      "module": "llm_character_utils",
+      "path": "llm_character_utils.py",
+      "family": "support",
+      "shape_family": "other",
+      "is_runtime_core": true,
+      "inbound": 1,
+      "outbound": 3,
+      "total": 4
+    },
+    {
+      "module": "demo_architecture_aligned",
+      "path": "demo_architecture_aligned.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 4,
+      "total": 4
+    },
+    {
+      "module": "demo_character_state_effects",
+      "path": "demo_character_state_effects.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 4,
+      "total": 4
+    },
+    {
+      "module": "demo_global_graph_manager",
+      "path": "demo_global_graph_manager.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 4,
+      "total": 4
+    },
+    {
+      "module": "demo_location_integration",
+      "path": "demo_location_integration.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 4,
+      "total": 4
+    },
+    {
+      "module": "demo_storytelling_system",
+      "path": "demo_storytelling_system.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 4,
+      "total": 4
+    },
+    {
+      "module": "test_core_global_graph_manager",
+      "path": "test_core_global_graph_manager.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 4,
+      "total": 4
+    },
+    {
+      "module": "test_location_integration",
+      "path": "test_location_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 4,
+      "total": 4
+    },
+    {
+      "module": "effect_schema",
+      "path": "effect_schema.py",
+      "family": "support",
+      "shape_family": "other",
+      "is_runtime_core": true,
+      "inbound": 3,
+      "outbound": 0,
+      "total": 3
+    },
+    {
+      "module": "graph_analytics",
+      "path": "graph_analytics.py",
+      "family": "support",
+      "shape_family": "other",
+      "is_runtime_core": true,
+      "inbound": 3,
+      "outbound": 0,
+      "total": 3
+    },
+    {
+      "module": "simple_character_for_testing",
+      "path": "simple_character_for_testing.py",
+      "family": "support",
+      "shape_family": "other",
+      "is_runtime_core": false,
+      "inbound": 3,
+      "outbound": 0,
+      "total": 3
+    },
+    {
+      "module": "social_model",
+      "path": "social_model.py",
+      "family": "support",
+      "shape_family": "other",
+      "is_runtime_core": true,
+      "inbound": 3,
+      "outbound": 0,
+      "total": 3
+    },
+    {
+      "module": "world_state",
+      "path": "world_state.py",
+      "family": "support",
+      "shape_family": "other",
+      "is_runtime_core": true,
+      "inbound": 3,
+      "outbound": 0,
+      "total": 3
+    },
+    {
+      "module": "llm_integration_utils",
+      "path": "llm_integration_utils.py",
+      "family": "support",
+      "shape_family": "other",
+      "is_runtime_core": true,
+      "inbound": 2,
+      "outbound": 1,
+      "total": 3
+    },
+    {
+      "module": "demo_llm_integration",
+      "path": "demo_llm_integration.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 1,
+      "outbound": 2,
+      "total": 3
+    },
+    {
+      "module": "storytelling_integration",
+      "path": "storytelling_integration.py",
+      "family": "support",
+      "shape_family": "other",
+      "is_runtime_core": true,
+      "inbound": 1,
+      "outbound": 2,
+      "total": 3
+    },
+    {
+      "module": "test_integration_minimal",
+      "path": "test_integration_minimal.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 1,
+      "outbound": 2,
+      "total": 3
+    },
+    {
+      "module": "demo_cost_integration",
+      "path": "demo_cost_integration.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 3,
+      "total": 3
+    },
+    {
+      "module": "demo_goap_integration",
+      "path": "demo_goap_integration.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 3,
+      "total": 3
+    },
+    {
+      "module": "main",
+      "path": "main.py",
+      "family": "entrypoint",
+      "shape_family": "other",
+      "is_runtime_core": true,
+      "inbound": 0,
+      "outbound": 3,
+      "total": 3
+    },
+    {
+      "module": "test_character_ai_locations",
+      "path": "test_character_ai_locations.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 3,
+      "total": 3
+    },
+    {
+      "module": "test_core_llm_integration",
+      "path": "test_core_llm_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 3,
+      "total": 3
+    },
+    {
+      "module": "test_event_integration",
+      "path": "test_event_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 3,
+      "total": 3
+    },
+    {
+      "module": "test_event_strategy_integration",
+      "path": "test_event_strategy_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 3,
+      "total": 3
+    },
+    {
+      "module": "test_llm_integration_pipeline",
+      "path": "test_llm_integration_pipeline.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 3,
+      "total": 3
+    },
+    {
+      "module": "test_storytelling_integration",
+      "path": "test_storytelling_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 3,
+      "total": 3
+    },
+    {
+      "module": "validate_storytelling_integration",
+      "path": "validate_storytelling_integration.py",
+      "family": "validation",
+      "shape_family": "validate_/verify_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 3,
+      "total": 3
+    },
+    {
+      "module": "verify_real_character_fix",
+      "path": "verify_real_character_fix.py",
+      "family": "validation",
+      "shape_family": "validate_/verify_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 3,
+      "total": 3
+    },
+    {
+      "module": "tiny_animation_system",
+      "path": "tiny_animation_system.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 2,
+      "outbound": 0,
+      "total": 2
+    },
+    {
+      "module": "tiny_building_manager",
+      "path": "tiny_building_manager.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 2,
+      "outbound": 0,
+      "total": 2
+    },
+    {
+      "module": "tiny_jobs",
+      "path": "tiny_jobs.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 2,
+      "outbound": 0,
+      "total": 2
+    },
+    {
+      "module": "tiny_util_funcs",
+      "path": "tiny_util_funcs.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 2,
+      "outbound": 0,
+      "total": 2
+    },
+    {
+      "module": "demo_building_functionality",
+      "path": "demo_building_functionality.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 2,
+      "total": 2
+    },
+    {
+      "module": "demo_custom_building_loading",
+      "path": "demo_custom_building_loading.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 2,
+      "total": 2
+    },
+    {
+      "module": "demo_llm_strategic_integration",
+      "path": "demo_llm_strategic_integration.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 2,
+      "total": 2
+    },
+    {
+      "module": "demo_social_interactions",
+      "path": "demo_social_interactions.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 2,
+      "total": 2
+    },
+    {
+      "module": "demo_unified_goap",
+      "path": "demo_unified_goap.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 2,
+      "total": 2
+    },
+    {
+      "module": "test_error_handling",
+      "path": "test_error_handling.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 2,
+      "total": 2
+    },
+    {
+      "module": "test_goap_evaluator",
+      "path": "test_goap_evaluator.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 2,
+      "total": 2
+    },
+    {
+      "module": "test_graph_analytics",
+      "path": "test_graph_analytics.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 2,
+      "total": 2
+    },
+    {
+      "module": "test_graph_manager_analytics_integration",
+      "path": "test_graph_manager_analytics_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 2,
+      "total": 2
+    },
+    {
+      "module": "test_graphmanager_single_source",
+      "path": "test_graphmanager_single_source.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 2,
+      "total": 2
+    },
+    {
+      "module": "test_map_location_integration",
+      "path": "test_map_location_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 2,
+      "total": 2
+    },
+    {
+      "module": "test_storytelling_comprehensive",
+      "path": "test_storytelling_comprehensive.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 2,
+      "total": 2
+    },
+    {
+      "module": "test_storytelling_engine",
+      "path": "test_storytelling_engine.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 2,
+      "total": 2
+    },
+    {
+      "module": "test_storytelling_system",
+      "path": "test_storytelling_system.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 2,
+      "total": 2
+    },
+    {
+      "module": "tiny_memories_alpha",
+      "path": "tiny_memories_alpha.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 0,
+      "outbound": 2,
+      "total": 2
+    },
+    {
+      "module": "validate_event_strategy_integration",
+      "path": "validate_event_strategy_integration.py",
+      "family": "validation",
+      "shape_family": "validate_/verify_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 2,
+      "total": 2
+    },
+    {
+      "module": "verify_single_source_of_truth",
+      "path": "verify_single_source_of_truth.py",
+      "family": "validation",
+      "shape_family": "validate_/verify_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 2,
+      "total": 2
+    },
+    {
+      "module": "character_attribute_mapper",
+      "path": "character_attribute_mapper.py",
+      "family": "support",
+      "shape_family": "other",
+      "is_runtime_core": false,
+      "inbound": 1,
+      "outbound": 0,
+      "total": 1
+    },
+    {
+      "module": "tiny_sr_mapping",
+      "path": "tiny_sr_mapping.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 1,
+      "outbound": 0,
+      "total": 1
+    },
+    {
+      "module": "tiny_story_arc",
+      "path": "tiny_story_arc.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 1,
+      "outbound": 0,
+      "total": 1
+    },
+    {
+      "module": "cosine_threshold_query",
+      "path": "cosine_threshold_query.py",
+      "family": "support",
+      "shape_family": "other",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "demo_advanced_utility",
+      "path": "demo_advanced_utility.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "demo_enhanced_building_interactions",
+      "path": "demo_enhanced_building_interactions.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "demo_event_system",
+      "path": "demo_event_system.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "demo_map_interactivity",
+      "path": "demo_map_interactivity.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "demo_system_integration_old",
+      "path": "demo_system_integration_old.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "demo_talk_action_fix",
+      "path": "demo_talk_action_fix.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "integration_test_map_interactivity",
+      "path": "integration_test_map_interactivity.py",
+      "family": "support",
+      "shape_family": "other",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "test_acceptance_criteria",
+      "path": "test_acceptance_criteria.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "test_building_interactions",
+      "path": "test_building_interactions.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "test_character_location_fix_demo",
+      "path": "test_character_location_fix_demo.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "test_goap_evaluator_focused",
+      "path": "test_goap_evaluator_focused.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "test_goap_simple",
+      "path": "test_goap_simple.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "test_graph_manager_integration",
+      "path": "test_graph_manager_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "test_integration",
+      "path": "test_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "test_map_interactivity",
+      "path": "test_map_interactivity.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "test_output_interpreter_social",
+      "path": "test_output_interpreter_social.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "test_pathfinding_robustness",
+      "path": "test_pathfinding_robustness.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "test_real_character_correct_approach",
+      "path": "test_real_character_correct_approach.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "test_simple_integration",
+      "path": "test_simple_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "test_social_integration",
+      "path": "test_social_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "test_social_interactions",
+      "path": "test_social_interactions.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "test_social_model",
+      "path": "test_social_model.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "test_social_model_integration",
+      "path": "test_social_model_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "test_social_travel_prompt",
+      "path": "test_social_travel_prompt.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "test_story_arc_implementation",
+      "path": "test_story_arc_implementation.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "test_system_integration",
+      "path": "test_system_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "test_ui_enhancements",
+      "path": "test_ui_enhancements.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "validate_refactoring",
+      "path": "validate_refactoring.py",
+      "family": "validation",
+      "shape_family": "validate_/verify_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "verify_fixes",
+      "path": "verify_fixes.py",
+      "family": "validation",
+      "shape_family": "validate_/verify_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "verify_storytelling_implementation",
+      "path": "verify_storytelling_implementation.py",
+      "family": "validation",
+      "shape_family": "validate_/verify_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 1,
+      "total": 1
+    },
+    {
+      "module": "binary_to_decimal",
+      "path": "binary_to_decimal.py",
+      "family": "support",
+      "shape_family": "other",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 0,
+      "total": 0
+    },
+    {
+      "module": "demo_error_handling",
+      "path": "demo_error_handling.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 0,
+      "total": 0
+    },
+    {
+      "module": "demo_llm_integration_features",
+      "path": "demo_llm_integration_features.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 0,
+      "total": 0
+    },
+    {
+      "module": "demo_mock_stock_antipattern",
+      "path": "demo_mock_stock_antipattern.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 0,
+      "total": 0
+    },
+    {
+      "module": "langchain_docs_mcp_proxy",
+      "path": "langchain_docs_mcp_proxy.py",
+      "family": "support",
+      "shape_family": "other",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 0,
+      "total": 0
+    },
+    {
+      "module": "recent_event_list",
+      "path": "recent_event_list.py",
+      "family": "support",
+      "shape_family": "other",
+      "is_runtime_core": true,
+      "inbound": 0,
+      "outbound": 0,
+      "total": 0
+    },
+    {
+      "module": "sort_faiss_results",
+      "path": "sort_faiss_results.py",
+      "family": "support",
+      "shape_family": "other",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 0,
+      "total": 0
+    },
+    {
+      "module": "test_error_handling_simple",
+      "path": "test_error_handling_simple.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 0,
+      "total": 0
+    },
+    {
+      "module": "test_memory_antipattern_demo",
+      "path": "test_memory_antipattern_demo.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 0,
+      "total": 0
+    },
+    {
+      "module": "test_memory_fixes_validation",
+      "path": "test_memory_fixes_validation.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 0,
+      "total": 0
+    },
+    {
+      "module": "test_memory_magicmock_issue",
+      "path": "test_memory_magicmock_issue.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 0,
+      "total": 0
+    },
+    {
+      "module": "test_node_fixes_validation",
+      "path": "test_node_fixes_validation.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 0,
+      "total": 0
+    },
+    {
+      "module": "test_quick_memory_fixes",
+      "path": "test_quick_memory_fixes.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 0,
+      "total": 0
+    },
+    {
+      "module": "tiny_brain_io_fixed",
+      "path": "tiny_brain_io_fixed.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 0,
+      "outbound": 0,
+      "total": 0
+    },
+    {
+      "module": "tiny_tart_reasoning",
+      "path": "tiny_tart_reasoning.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "is_runtime_core": true,
+      "inbound": 0,
+      "outbound": 0,
+      "total": 0
+    },
+    {
+      "module": "validate_implementations",
+      "path": "validate_implementations.py",
+      "family": "validation",
+      "shape_family": "validate_/verify_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 0,
+      "total": 0
+    },
+    {
+      "module": "verify_improvements",
+      "path": "verify_improvements.py",
+      "family": "validation",
+      "shape_family": "validate_/verify_*",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 0,
+      "total": 0
+    },
+    {
+      "module": "visual_demo_map_interactivity",
+      "path": "visual_demo_map_interactivity.py",
+      "family": "support",
+      "shape_family": "other",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 0,
+      "total": 0
+    },
+    {
+      "module": "write_job_details",
+      "path": "write_job_details.py",
+      "family": "support",
+      "shape_family": "other",
+      "is_runtime_core": false,
+      "inbound": 0,
+      "outbound": 0,
+      "total": 0
+    }
+  ]
+}
