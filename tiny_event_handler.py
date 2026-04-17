@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import importlib
 import logging
 import random
+from types import SimpleNamespace
 from typing import List, Dict, Any, Optional, Callable
 
 # from tiny_graph_manager import GraphManager as graph_manager
@@ -325,19 +326,21 @@ class EventHandler:
         self.effect_dispatcher = EffectDispatcher(self.graph_manager)
 
     def add_event(self, event):
-        """Add an event to the handler and register it in the graph."""
+        """Add an event or event-like payload to the handler and register it in the graph."""
         self.events.append(event)
-        if self.graph_manager:
+
+        event_name = self._event_name(event)
+        if self.graph_manager and isinstance(event, Event):
             self.graph_manager.add_event_node(event)
-        logging.info(f"Added event: {event.name}")
+
+        logging.info(f"Added event: {event_name}")
 
     def remove_event(self, event_name: str) -> bool:
         """Remove an event by name."""
         for event in self.events:
-            if event.name == event_name:
-                self.events.remove(event)
-                if event in self.active_events:
-                    self.active_events.remove(event)
+            if self._event_name(event) == event_name:
+                self._discard_event_reference(self.events, event)
+                self._discard_event_reference(self.active_events, event)
                 logging.info(f"Removed event: {event_name}")
                 return True
         return False
@@ -345,10 +348,13 @@ class EventHandler:
     def update_event(self, event_name: str, **kwargs) -> bool:
         """Update an existing event with new properties."""
         for event in self.events:
-            if event.name == event_name:
-                for key, value in kwargs.items():
-                    if hasattr(event, key):
-                        setattr(event, key, value)
+            if self._event_name(event) == event_name:
+                if isinstance(event, dict):
+                    event.update(kwargs)
+                else:
+                    for key, value in kwargs.items():
+                        if hasattr(event, key):
+                            setattr(event, key, value)
                 logging.info(f"Updated event: {event_name}")
                 return True
         return False
@@ -356,11 +362,11 @@ class EventHandler:
     def get_event(self, event_name: str) -> Optional["Event"]:
         """Get an event by name."""
         for event in self.events:
-            if event.name == event_name:
+            if self._event_name(event) == event_name:
                 return event
         return None
 
-    def check_events(self, current_time: datetime = None) -> List["Event"]:
+    def check_events(self, current_time: datetime = None) -> List[Any]:
         """Check for and return any relevant game events that should trigger."""
         if current_time is None:
             current_time = datetime.now()
@@ -368,8 +374,22 @@ class EventHandler:
         triggered_events = []
 
         for event in self.events:
-            if event.should_trigger(current_time):
+            if isinstance(event, Event):
+                if event.should_trigger(current_time):
+                    triggered_events.append(event)
+                continue
+
+            # Event-like payloads (dicts or custom objects) are treated as immediate triggers
+            # so the gameplay loop can dispatch consequences in the same update tick.
+            if (
+                isinstance(event, dict)
+                or hasattr(event, "type")
+                or hasattr(event, "event_type")
+            ):
                 triggered_events.append(event)
+                continue
+
+            pass # Validation should be handled in add_event to avoid per-tick log spam
 
         return triggered_events
 
@@ -387,22 +407,119 @@ class EventHandler:
         }
 
         for event in triggered_events:
+            event_name = self._event_name(event)
+            is_payload = not isinstance(event, Event)
             try:
-                if self._process_single_event(event, current_time):
-                    results["processed_events"].append(event.name)
-                    self.processed_events.append(event)
-
-                    # Handle cascading events
-                    cascading = self._trigger_cascading_events(event)
-                    results["cascading_events"].extend(cascading)
+                if isinstance(event, Event):
+                    processed = self._process_single_event(event, current_time)
                 else:
-                    results["failed_events"].append(event.name)
+                    processed = self._process_event_payload(event)
+
+                if processed:
+                    results["processed_events"].append(event_name)
+                    if isinstance(event, Event):
+                        self.processed_events.append(event)
+
+                    # Handle cascading events where available.
+                    if isinstance(event, Event):
+                        cascading = self._trigger_cascading_events(event)
+                        results["cascading_events"].extend(cascading)
+                else:
+                    results["failed_events"].append(event_name)
 
             except Exception as e:
-                logging.error(f"Error processing event {event.name}: {e}")
-                results["failed_events"].append(event.name)
+                logging.error(f"Error processing event {event_name}: {e}")
+                results["failed_events"].append(event_name)
+            finally:
+                if is_payload:
+                    self._discard_event_reference(self.events, event)
 
         return results
+
+    def _event_name(self, event: Any) -> str:
+        """Resolve a human-readable event name from Event or event-like payloads."""
+        if isinstance(event, Event):
+            return event.name
+
+        event_type = self._event_type(event)
+        if isinstance(event, dict):
+            return str(event.get("name") or event_type or "unnamed_event")
+        return str(getattr(event, "name", None) or event_type or "unnamed_event")
+
+    def _event_type(self, event: Any) -> Optional[str]:
+        """Resolve the canonical event type for Event and event-like payloads."""
+        if isinstance(event, Event):
+            return event.type
+        if isinstance(event, dict):
+            return event.get("type") or event.get("event_type")
+        return getattr(event, "type", None) or getattr(event, "event_type", None)
+
+    def _event_context(self, event: Any) -> Any:
+        """Provide object-style access for event-like payloads used by the effect dispatcher."""
+        if isinstance(event, dict):
+            event_type = self._event_type(event)
+            return SimpleNamespace(
+                name=self._event_name(event),
+                type=event_type,
+                event_type=event_type,
+                participants=list(event.get("participants") or []),
+                location=event.get("location"),
+            )
+        return event
+
+    def _iter_events(self) -> List["Event"]:
+        """Return only canonical Event instances from the mixed event queue."""
+        return [event for event in self.events if isinstance(event, Event)]
+
+    def _discard_event_reference(self, events: List[Any], target: Any) -> bool:
+        """Remove a queued event by identity instead of equality semantics."""
+        for index, event in enumerate(events):
+            if event is target:
+                del events[index]
+                return True
+        return False
+
+    def _process_event_payload(self, event: Any) -> bool:
+        """Process non-Event payloads from gameplay systems as immediate events.
+
+        Payload effects are applied fail-fast: if any effect is invalid or cannot
+        be applied, the payload is treated as failed for the tick so the handler
+        does not report ambiguous partial success for one-shot payloads.
+        """
+        effects = (
+            event.get("effects", [])
+            if isinstance(event, dict)
+            else getattr(event, "effects", [])
+        )
+        if effects is None:
+            effects = []
+
+        payload_context = self._event_context(event)
+        for effect in effects:
+            try:
+                effect_v2 = EffectV2.from_dict(effect) if isinstance(effect, dict) else effect
+                if not isinstance(effect_v2, EffectV2):
+                    logging.warning(
+                        "Failed applying payload effect for %s: unsupported effect %r",
+                        self._event_name(event),
+                        effect,
+                    )
+                    return False
+                if not self.effect_dispatcher.apply_effect(effect_v2, payload_context):
+                    logging.warning(
+                        "Failed applying payload effect for %s: no effect was applied",
+                        self._event_name(event),
+                    )
+                    return False
+            except Exception as effect_error:
+                logging.warning(
+                    "Failed applying payload effect for %s: %s",
+                    self._event_name(event),
+                    effect_error,
+                )
+                return False
+
+        return True
 
     def _process_single_event(self, event: "Event", current_time: datetime) -> bool:
         """Process a single event and apply its effects."""
@@ -647,7 +764,7 @@ class EventHandler:
         daily_events = []
 
         # Check for recurring events that should trigger today
-        for event in self.events:
+        for event in self._iter_events():
             if event.is_recurring():
                 next_occurrence = event.get_next_occurrence(current_time)
                 if (
@@ -1315,7 +1432,7 @@ class EventHandler:
 
         scheduled_count = 0
 
-        for event in self.events:
+        for event in self._iter_events():
             if event.is_recurring():
                 next_occurrence = event.get_next_occurrence(current_time)
 
@@ -1346,11 +1463,11 @@ class EventHandler:
 
     def get_events_by_type(self, event_type: str) -> List["Event"]:
         """Get all events of a specific type."""
-        return [event for event in self.events if event.type == event_type]
+        return [event for event in self._iter_events() if event.type == event_type]
 
     def get_events_by_location(self, location) -> List["Event"]:
         """Get all events at a specific location."""
-        return [event for event in self.events if event.location == location]
+        return [event for event in self._iter_events() if event.location == location]
 
     def get_events_in_timeframe(
         self, start_time: datetime, end_time: datetime
@@ -1358,7 +1475,7 @@ class EventHandler:
         """Get all events within a specific timeframe."""
         events_in_timeframe = []
 
-        for event in self.events:
+        for event in self._iter_events():
             event_date = (
                 datetime.strptime(event.date, "%Y-%m-%d")
                 if isinstance(event.date, str)
@@ -1383,7 +1500,7 @@ class EventHandler:
             "total_events": len(self.events),
             "active_events": len(self.active_events),
             "processed_events": len(self.processed_events),
-            "recurring_events": len([e for e in self.events if e.is_recurring()]),
+            "recurring_events": len([e for e in self._iter_events() if e.is_recurring()]),
             "events_by_type": {},
             "events_by_importance": {},
             "average_importance": 0,
@@ -1391,7 +1508,8 @@ class EventHandler:
         }
 
         # Count by type
-        for event in self.events:
+        event_objects = self._iter_events()
+        for event in event_objects:
             stats["events_by_type"][event.type] = (
                 stats["events_by_type"].get(event.type, 0) + 1
             )
@@ -1400,9 +1518,9 @@ class EventHandler:
             )
 
         # Calculate average importance
-        if self.events:
-            stats["average_importance"] = sum(e.importance for e in self.events) / len(
-                self.events
+        if event_objects:
+            stats["average_importance"] = sum(e.importance for e in event_objects) / len(
+                event_objects
             )
 
         return stats
