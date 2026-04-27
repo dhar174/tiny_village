@@ -1,104 +1,299 @@
 # Project Folder Structure Blueprint
 
-## Configuration Variables
-* **Project Type:** Python Application (Simulation/AI Environment)
-* **Monorepo:** `false`
-* **Microservices:** `false`
-* **Frontend Included:** `false` (Terminal/CLI and script-based visual outputs)
-* **Visualization Format:** `markdown_list`
-* **Max Depth:** `2` (adjusted dynamically for key areas)
-* **Include Templates:** `false`
+## Configuration Summary
 
-## Generated Prompt
+- **Project Type:** Python simulation / AI environment
+- **Monorepo:** `false`
+- **Microservices:** `false`
+- **Frontend Included:** `false` (pygame-backed visual mode rather than a
+  separate web frontend)
+- **Visualization Style:** Markdown list with targeted tables
+- **Depth Level:** 2 for the primary tree, with deeper notes for important areas
+- **Generated Folders Included:** only when they are committed and relevant
 
-### Initial Auto-detection Phase
-The system detected a single-module Python repository focused on a simulation environment (`tiny_village`). It heavily utilizes AI integrations (LLM agents, vector embeddings), graph-based spatial relationships, goal-oriented action planning (GOAP), and diverse character implementations. The project contains an extensive test suite, substantial documentation, and custom GitHub skill configurations for Copilot.
+## Structural Overview
 
-### 1. Structural Overview
-The `tiny_village` repository uses a **flat monolithic structure** at the root for core Python modules, supported by highly organized secondary directories for documentation, testing, and continuous integration.
+TinyVillage uses a root-oriented modular-monolith layout:
 
-- **Primary Paradigm:** Monolithic Python application.
-- **Architectural Style:** Modular monolith where distinct gameplay/simulation systems (e.g., memory, graph management, GOAP, storytelling) are defined in separate `tiny_*.py` files, while `main.py` and `world_state.py` orchestrate them.
-- **Testing Approach:** Comprehensive external test suite (`/tests`) containing unit, integration, mock-validation, and specialized feature tests.
-- **Documentation:** Multi-tiered documentation separating design (`/design_docs`), active development contexts (`/memory-bank`), and technical reference (`/docs`).
+- Core runtime modules live directly at the repository root.
+- Important non-code material is grouped into dedicated top-level directories:
+  `.github/`, `assets/`, `critical_analysis/`, `design_docs/`, `docs/`,
+  `memory-bank/`, and `tests/`.
+- The root is intentionally mixed: production modules, demos, regression tests,
+  validation scripts, screenshots, serialized data, and runtime artifacts all
+  coexist there.
+- Current documentation is split between:
+  - `docs/` for living guides, reference, and testing guidance
+  - `design_docs/` for architecture deep dives and point-in-time analysis
+  - `memory-bank/` for persistent contributor/agent context
 
-### 2. Directory Visualization
+## Directory Visualization
 
-- **`/`** (Root: Core Application Logic)
-  - **`.github/`** (CI/CD Workflows, Prompts, and Copilot Skills)
-  - **`assets/`** (Static assets like maps, e.g., `default_map.png`)
-  - **`critical_analysis/`** (Analytical reports, logs, and evaluation metrics)
-  - **`design_docs/`** (Design specifications and architecture documents)
-  - **`docs/`** (Project reference, guides, and testing documentation)
+- **`/`** (root runtime and support surface)
+  - **`.github/`** — repository automation and Copilot configuration
+    - `agents/`
+    - `hooks/`
+    - `instructions/`
+    - `issue_templates/`
+    - `prompts/`
+    - `skills/`
+  - **`assets/`** — game-facing assets
+  - **`critical_analysis/`** — implementation and code analysis snapshots
+  - **`design_docs/`** — architecture and connectivity documents
+  - **`docs/`** — curated current documentation
     - `archived/`
     - `guides/`
     - `reference/`
     - `testing/`
-  - **`memory-bank/`** (Active development context, rules, and task states)
-  - **`tests/`** (Test suites for modules, integration, and mocking)
-  - *Core Python Modules* (`main.py`, `tiny_*.py`, `actions.py`, `world_state.py`, `demo_*.py`)
-  - *Configuration & Data Files* (`*.json`, `*.txt`, `*.csv`)
+  - **`memory-bank/`** — persistent repo context and task tracking
+    - `tasks/`
+  - **`tests/`** — organized regression suite plus helpers and fixtures
+  - **Root Python/runtime files**
+    - `main.py`
+    - `actions.py`
+    - `world_state.py`
+    - `tiny_*.py`
+    - `demo_*.py`
+    - `test_*.py`
+    - `validate_*.py`
+    - `verify_*.py`
+  - **Root data and artifacts**
+    - `*.json`
+    - `*.txt`
+    - `*.csv`
+    - `*.bin`
+    - `*.pkl`
+    - `*.png`
 
-### 3. Key Directory Analysis
+## Key Directory Analysis
 
-#### `/` (Root Directory)
-**Purpose:** Hosts the core domain logic, simulation engine, LLM integration utilities, and entry points.
-- `tiny_*.py`: Modular domain implementations (e.g., `tiny_characters.py`, `tiny_buildings.py`, `tiny_goap_system.py`, `tiny_memories.py`).
-- `main.py` / `tiny_gameplay_controller.py`: Entry points and primary game loop orchestration.
-- `demo_*.py`: Specialized implementation proofs and interactive demonstrations.
-- `actions.py` / `social_model.py` / `world_state.py`: Core simulation state and logic.
+### `/` (repository root)
 
-#### `/.github/`
-**Purpose:** Automation, workflows, and AI assistance configuration.
-- Holds GitHub Actions CI/CD workflows.
-- Contains `.github/prompts/` and `.github/skills/` tailored for custom Copilot interactions, workflow enforcement, and project planning (e.g., `breakdown-plan`, `folder-structure-blueprint-generator`, `context-map`).
+**Purpose:** Hosts the runtime entry points, core simulation modules, demos,
+top-level tests, validation scripts, and committed data/artifacts.
 
-#### `/tests/`
-**Purpose:** Quality assurance and system verification.
-- Extensive test coverage including `test_goap_*.py`, `test_llm_*.py`, `test_tiny_*.py`.
-- Incorporates specific integration tests, mock setups (e.g., `mock_character.py`), and issue-specific regression validation scripts.
+**Current shape:**
 
-#### `/docs/` & `/design_docs/`
-**Purpose:** Developer onboarding, architecture reference, and structural decisions.
-- `/docs/guides/` & `/docs/reference/`: Technical usage and implementation guides.
-- `/design_docs/`: Pre-implementation architectural choices and conceptual blueprints.
+- 183 root files
+- 29 `tiny_*.py` modules
+- 26 `demo_*.py` scripts
+- 49 root `test_*.py` files
+- 9 `validate_*.py` / `verify_*.py` scripts
 
-#### `/memory-bank/`
-**Purpose:** Context retention for AI coding assistants and strict adherence to the Kiro-Lite workflow.
-- Houses standard operating procedures (`copilot-rules.md`), active context (`activeContext.md`), and progress states.
+**Key conventions:**
 
-### 4. File Placement Patterns
-- **Entry Points:** `main.py` and top-level scripts (e.g., `demo_*.py`) reside directly in the root to facilitate immediate execution from the terminal.
-- **Domain Logic:** Core modules prefixed with `tiny_` to prevent namespace collisions and quickly identify internal library elements.
-- **Data Stores:** Flat file data (`.json`, `.txt`, `.csv`, `.pkl`, `.bin`) required at runtime are stored in root (e.g., `random_characters.json`, `l2.bin`) alongside their respective parsers.
-- **Test Files:** Strictly segregated into `/tests/` with a `test_` prefix mirroring the source file they validate (e.g., `test_tiny_graph_manager.py`).
+- Runtime and domain modules use `tiny_` prefixes.
+- Demo and issue-verification scripts stay at the root for direct execution.
+- Not all root files are source code; many are reference data or committed
+  runtime artifacts.
 
-### 5. Naming and Organization Conventions
-- **Files:** `snake_case` is universally applied to Python files. Prefixing (e.g., `tiny_`, `demo_`, `test_`) groups related files naturally when sorted alphabetically.
-- **Directories:** `snake_case` or `kebab-case` (e.g., `memory-bank`, `design_docs`).
-- **Classes/Interfaces:** Standard Python `PascalCase` definitions within the modules.
-- **Test Suites:** Named descriptively `test_[module]_[focus].py` to clarify test intent without opening the file (e.g., `test_strategy_manager_event_planning.py`).
+### `/.github/`
 
-### 6. Navigation and Development Workflow
-- **Getting Started:** Begin with `/README.md` and `/memory-bank/memory-bank-instructions.md` to initialize project context.
-- **Finding Implementation:** Domain specific logic resides in the respective `tiny_{domain}.py` file. System orchestration lives in `tiny_gameplay_controller.py` and `world_state.py`.
-- **Testing:** Navigate to `/tests/`. Tests can be executed using `pytest` test discovery from the root. Observe the rule: *Do not over-mock or fake classes if avoidable. Good tests fail when there is an error.*
-- **Adding Features:** Follow the Kiro-Lite workflow: `PRD` → `Design (/design_docs)` → `Tasks` → `Code (Root)`. Register context updates in `/memory-bank/`.
+**Purpose:** Repository automation, agent configuration, reusable skills, and
+workflow instructions.
 
-### 7. Build and Output Organization
-- **Dependencies:** Managed via standard Python `requirements.txt` in the root.
-- **Artifacts:** Output models, `.pkl` memory dumps (e.g., `flat_access_memories.pkl`), and `.bin` embeddings are generated at runtime and generally ignored from source control via `.gitignore` (unless utilized as specific seed data).
-- **Build Process:** No distinct compilation step as it is a standard interpreted Python environment.
+**Observed structure:**
 
-### 8. Technology-Specific Organization
-- **LLM/AI Assets:** Contains raw `.bin` files for FAISS vector embeddings (e.g., `ip_norm.bin`, `l2.bin`), and integration logic scripts like `llm_integration_utils.py` and `tiny_prompt_builder.py`.
-- **Data Serialization:** Pickled cache files and JSON files are utilized extensively for state serialization and hydration efficiency across agent sessions.
+- `agents/` contains contributor-agent definitions
+- `instructions/` contains repository-specific Copilot rules and workflows
+- `skills/` contains reusable skills plus bundled assets/templates/examples
+- `prompts/`, `hooks/`, and `issue_templates/` support repository workflows
 
-### 9. Extension and Evolution
-- **Refactoring Opportunity:** Moving root `.py` source modules into a `src/` or `tiny_village/` python package directory would clean up the root structure, clearly separating the application package from configurations, tests, and active scripts.
-- **Asset/Data Segregation:** The root currently contains a significant number of raw static data files (`.txt`, `.json`, `.csv`). Consolidating these into a `data/` or `config/` directory would substantially improve root directory readability.
+**Caveat:** This directory has many nested files because skills bundle example
+assets and templates; raw file counts here are not a signal of runtime
+complexity in the main application.
 
-### 10. Structure Enforcement
-- Review `.gitignore` periodically to ensure `.pkl`, `.bin`, and log `.txt` files do not inadvertently commit unnecessary binary bloat to the repository.
-- Utilize the `.github/skills/context-map` and other GitHub skills strictly before introducing new architectural directories to ensure parity with the monolithic, context-aware design paradigm. Update `/memory-bank/` accordingly.
+### `/assets/`
 
+**Purpose:** Static game assets.
+
+**Observed contents:** currently small and focused, with `default_map.png` as
+the primary committed asset.
+
+### `/critical_analysis/`
+
+**Purpose:** Point-in-time audits, implementation summaries, and analysis
+documents.
+
+**Observed contents:** controller/graph/utility analyses and issue-oriented
+implementation summaries.
+
+**Usage guidance:** helpful for historical reasoning, but should not override
+current runtime and current docs when conflicts appear.
+
+### `/design_docs/`
+
+**Purpose:** System-level architecture and design deep dives.
+
+**Representative files:**
+
+- `high_level_architecture.md`
+- `module_connectivity_map.md`
+- `graph_manager_deep_dive.md`
+- `memory_manager_deep_dive.md`
+- `project_folder_blueprint.md`
+
+**Usage guidance:** best location for architecture analysis and structural
+blueprints; however, these documents are still analysis artifacts and should be
+cross-checked against live code.
+
+### `/docs/`
+
+**Purpose:** Current documentation intended for ongoing use.
+
+**Subdirectories:**
+
+- `guides/` — end-user and getting-started documents
+- `reference/` — current technical reference
+- `testing/` — testing practices and anti-pattern guidance
+- `archived/` — historical, superseded, or issue-completion writeups
+
+**Placement rule:** new living navigational documentation belongs here before
+it belongs in `critical_analysis/` or `docs/archived/`.
+
+### `/memory-bank/`
+
+**Purpose:** Persistent context layer for contributors and coding agents.
+
+**Observed contents:**
+
+- core repo summaries (`projectbrief.md`, `productContext.md`, etc.)
+- `memory-bank-instructions.md`
+- `tasks/` for task-level tracking
+
+**Usage guidance:** keep task tracking and resumability context synchronized with
+current repository state.
+
+### `/tests/`
+
+**Purpose:** Organized regression coverage, subsystem tests, smoke tests,
+fixtures, and helper utilities.
+
+**Current shape:**
+
+- 98 committed files
+- 83 `test_*.py` files
+- helper/support files such as `mock_character.py`,
+  `social_action_test_utils.py`, `skill_test_utils.py`, test JSON/NPY/TXT
+  artifacts, and migration/demo helpers
+
+**Important caveat:** this is not the repo's only test surface. Many active
+regressions also live at the repository root as `test_*.py`.
+
+## File Placement Patterns
+
+### Runtime and domain logic
+
+- `main.py` is the documented top-level entry point.
+- Core domain/runtime modules remain at the root and typically use `tiny_`
+  prefixes.
+- Shared world-state and orchestration code stays near the root rather than in a
+  nested Python package.
+
+### Demos and validations
+
+- `demo_*.py` files live at the root and are intended for direct execution.
+- `validate_*.py` and `verify_*.py` files provide issue-focused verification and
+  smoke-check paths.
+
+### Tests
+
+- Root `test_*.py` files often cover integration flows, issue regressions, or
+  quick validation scripts.
+- `tests/` contains broader subsystem coverage plus support files and fixtures.
+- Test helpers may live in `tests/` even when they are not named `test_*.py`.
+
+### Documentation
+
+- User-facing usage docs go under `docs/guides/`.
+- Current technical reference belongs in `docs/reference/`.
+- Testing guidance belongs in `docs/testing/`.
+- Historical summaries or superseded reports belong in `docs/archived/`.
+- Architecture deep dives and analysis-driven structural documents belong in
+  `design_docs/`.
+
+## Naming and Organization Conventions
+
+| Surface | Convention | Examples |
+| --- | --- | --- |
+| Root runtime modules | `tiny_*.py` | `tiny_graph_manager.py`, `tiny_prompt_builder.py` |
+| Demo scripts | `demo_*.py` | `demo_goap_integration.py` |
+| Root tests | `test_*.py` | `test_storytelling_integration.py` |
+| Validation scripts | `validate_*` / `verify_*` | `validate_storytelling_integration.py`, `verify_fixes.py` |
+| Directories | `snake_case` or `kebab-case` | `design_docs`, `memory-bank` |
+| Python symbols | standard Python style | `PascalCase` classes, `snake_case` functions/variables |
+
+## Navigation and Development Workflow
+
+### Entry points
+
+- Start with `README.md` for run commands.
+- Use `AGENTS.md` for the canonical contributor-facing folder map.
+- Use `design_docs/module_connectivity_map.md` when tracing subsystem
+  relationships.
+- Use `docs/README.md` to decide where new documentation should live.
+
+### Common development tasks
+
+| Task | Best starting point |
+| --- | --- |
+| Change startup or mode selection | `main.py` |
+| Change game-loop cadence or system orchestration | `tiny_gameplay_controller.py` |
+| Change shared world-state behavior | `tiny_graph_manager.py`, `world_state.py` |
+| Add or modify actions | `actions.py`, then relevant strategy/interpreter files |
+| Change planning heuristics | `tiny_strategy_manager.py`, `tiny_goap_system.py`, `tiny_utility_functions.py` |
+| Change prompt or LLM behavior | `tiny_prompt_builder.py`, `tiny_brain_io.py`, `tiny_output_interpreter.py` |
+| Add current technical documentation | `docs/reference/` |
+| Add architecture analysis | `design_docs/` |
+| Add regression tests | either root `test_*.py` or `tests/`, depending on neighboring patterns |
+
+## Build and Output Organization
+
+- Python version target is documented as 3.12.
+- Dependency installation is driven by root `requirements.txt`.
+- No canonical repo-wide build step is documented; this is an interpreted Python
+  project.
+- The dependency set includes optional, heavyweight AI/NLP/GPU-adjacent
+  packages, so environment compatibility should be treated carefully.
+- The repository includes committed `.bin`, `.pkl`, `.png`, and dataset files,
+  so output-like files are not universally disposable or ignored.
+
+## Technology-Specific Organization Notes
+
+- Graph-backed simulation state is centered on `tiny_graph_manager.py` and
+  `world_state.py`.
+- GOAP and action-selection logic are split across `actions.py`,
+  `tiny_strategy_manager.py`, `tiny_goap_system.py`, and utility modules.
+- The optional LLM path is distributed across prompt, model-I/O, and output
+  interpretation modules rather than a single adapter file.
+- Narrative and memory systems have their own top-level modules rather than
+  nested packages.
+
+## Extension and Evolution Guidance
+
+- Prefer extending the existing root-oriented module layout before introducing
+  new cross-cutting directories.
+- When adding documentation, follow the `docs/README.md` taxonomy instead of
+  creating new ad hoc top-level doc folders.
+- When adding tests, first inspect neighboring files to decide whether the new
+  test belongs in the root or in `tests/`.
+- Any future structural cleanup should preserve current import and execution
+  patterns until a deliberate package-migration plan exists.
+
+## Structure Enforcement and Review
+
+- Re-check structure documents against the live tree before using them as the
+  basis for broad refactors.
+- Avoid claiming that `/tests` is the only test location; include root tests in
+  future analyses.
+- Treat `docs/archived/` and many `critical_analysis/` documents as historical
+  context rather than canonical structure references.
+
+## Maintenance
+
+- **Last updated:** 2026-04-08
+- Revisit this blueprint whenever:
+  - a new top-level directory is introduced
+  - runtime modules move out of the repository root
+  - test organization changes materially
+  - documentation taxonomy changes in `docs/README.md`
