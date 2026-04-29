@@ -1147,7 +1147,7 @@ class StrategyManager:
                             f"GOAP planning failed for {char_id}: {planning_error}"
                         )
 
-                if plan:
+                if plan is not None:
                     plans[char_id] = plan
                 else:
                     plans[char_id] = self.plan_daily_activities(character_obj)
@@ -1362,6 +1362,10 @@ class StrategyManager:
                 return utility if isinstance(utility, (int, float)) else float("-inf")
 
         return max(actions, key=_score)
+
+    def _fallback_plan(self, actions, character, current_goal=None):
+        best_action = self._select_best_action(actions, character, current_goal)
+        return [best_action] if best_action is not None else None
 
     def _goal_for_event_type(self, event_type, character_state=None):
         character_state = character_state or {}
@@ -1828,39 +1832,26 @@ class StrategyManager:
                          or a fallback list of utility-sorted actions), or None if no actions available.
         """
         try:
-            # Get character state
-            if isinstance(character, str):
-                current_state = State({"satisfaction": 50, "energy": 50, "happiness": 50})
-            else:
-                current_state = self._get_current_state_for_character(character)
-            
-            # Plan using GOAP with the specific goal and actions
+            current_state = self._get_current_state_for_character(character)
             if self.goap_planner:
-                plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
-                
-                if plan is not None:
-                    if not plan:
-                        return None
-                    # Evaluate the utility of the plan
-                    final_decision = self.goap_planner.evaluate_utility(plan, character)
-                    return final_decision
-                    
-            # Fallback to highest utility action
-            return self._select_best_action(actions, character, goal)
-            if plan:
-                return plan
-                    
-            # Fallback: return utility-sorted actions as a simple sequential plan
-            # This maintains consistent return type (list of actions) with GOAP planning
-            # Limit to 5 actions to match reasonable plan lengths and avoid overwhelming downstream systems
-            if actions:
-                return actions[:5]  # Actions are already sorted by utility
-                
-            return None
-            
+                plan = self.goap_planner.plan_actions(
+                    character, goal, current_state, actions
+                )
+                monitored_plan = plan
+                if isinstance(self.goap_planner, GOAPPlanner):
+                    monitored_plan = self.goap_planner.monitor_plan_execution(
+                        character,
+                        goal,
+                        plan,
+                        current_state=current_state,
+                        actions=actions,
+                    )
+                if monitored_plan is not None:
+                    return monitored_plan
+            return self._fallback_plan(actions, character, goal)
         except Exception as e:
             logger.warning(f"Error in planning with goal and actions: {e}")
-            return None
+            return self._fallback_plan(actions, character, goal)
 
     def plan_daily_activities(self, character):
         """
@@ -1872,68 +1863,39 @@ class StrategyManager:
             list or None: A list of Action objects forming a plan (potentially multi-step from GOAP,
                          or a fallback list of utility-sorted actions), or None if no actions available.
         """
-        # Get potential actions from the utility-based action generator
-        actions = self.get_daily_actions(character)
-        
-        # If GOAP planner is not available, return utility-sorted actions
-        if not self.goap_planner:
-            logger.debug("GOAP planner not available, using utility-based action selection")
-            # Actions are already sorted by utility from get_daily_actions()
-            return actions[0] if actions else None
-        
-        # Define a proper Goal object for daily activities
+        actions = self._get_actions_for_character(character)
         goal = Goal(
             name="daily_wellbeing",
-            target_effects={"satisfaction": SATISFACTION_TARGET, "energy": ENERGY_TARGET},
+            target_effects={
+                "satisfaction": SATISFACTION_TARGET,
+                "energy": ENERGY_TARGET,
+            },
             priority=0.8,
         )
-
-        # Get potential actions from the utility-based action generator
-        actions = self._get_actions_for_character(character)
-
-        # Create current state - handle both Character objects and string names
-        if isinstance(character, str):
-            # If character is a string, create a simple state
-            current_state = State({"satisfaction": 0.5, "energy": 0.5, "hunger": 0.5})
-        else:
-            # If character is a Character object, get its state
-            character_state_dict = self.get_character_state_dict(character)
-            current_state = State(character_state_dict)
-
-        # Plan using GOAP with correct interface
-        try:
-            plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
-
-            # Evaluate the utility of the plan using the planner's evaluate_utility method
-            if plan:
-                final_decision = self.goap_planner.evaluate_utility(plan, character)
-                return final_decision
-            else:
-                # If no plan found, return the highest utility action as fallback
-                if actions:
-                    return max(actions, key=lambda a: self.goap_planner.calculate_utility(a, character))
-                return None
-        except Exception as e:
-            logger.warning(f"GOAP planning failed, falling back to utility-based selection: {e}")
-            # Fallback to utility-sorted actions
-            return actions[0] if actions else None
         ranked_goals = self._rank_goals(character, [goal])
         if ranked_goals:
             goal = ranked_goals[0]
+        return self._plan_with_goal_and_actions(character, goal, actions)
 
-        # Plan using GOAP with correct interface
-        if self.goap_planner:
-            plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
-
-            # Evaluate the utility of the plan using the planner's evaluate_utility method
-            if plan is not None:
-                if not plan:
-                    return None
-                final_decision = self.goap_planner.evaluate_utility(plan, character)
-                return final_decision
-
-        # Fallback when goap_planner is unavailable or no plan found
-        return self._select_best_action(actions, character, goal)
+    def handle_plan_execution_failure(
+        self,
+        character,
+        goal,
+        failed_action=None,
+        actions=None,
+        current_state=None,
+    ):
+        actions = actions or self._get_actions_for_character(character)
+        current_state = current_state or self._get_current_state_for_character(character)
+        if not self.goap_planner:
+            return self._fallback_plan(actions, character, goal)
+        return self.goap_planner.replan_after_failure(
+            character,
+            goal,
+            current_state=current_state,
+            actions=actions,
+            failed_action=failed_action,
+        )
 
     def get_career_actions(self, character, job_details):
         # This is a placeholder and would need similar utility-based ranking
@@ -1998,12 +1960,10 @@ class StrategyManager:
             plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
 
             # Evaluate the utility of the plan
-            if plan:
-                final_decision = self.goap_planner.evaluate_utility(plan, character)
-                return final_decision
-            else:
-                # Fallback to first action if no plan found
-                return actions[0] if actions else None
+            if plan is not None:
+                return plan
+            # Fallback to first action if no plan found
+            return actions[0] if actions else None
         except Exception as e:
             logger.warning(f"GOAP planning failed for job offer, using fallback: {e}")
             return actions[0] if actions else None
