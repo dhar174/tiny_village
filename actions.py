@@ -18,6 +18,7 @@ import operator
 from pyparsing import Char
 # Removed unused torch import that was causing import errors
 
+from character_attribute_mapper import AttributeMapper
 
 # from tiny_characters import Character
 
@@ -31,6 +32,46 @@ from tiny_util_funcs import is_numeric
 # self.graph_manager = GraphManager()
 
 logger = logging.getLogger(__name__)
+
+
+def _resolve_graph_entity(entity_ref, graph_manager):
+    """Resolve string identifiers to graph-backed entities when possible."""
+    if entity_ref is None or not isinstance(entity_ref, str) or graph_manager is None:
+        return entity_ref
+
+    resolver_names = ("get_character", "get_location", "get_item", "get_event", "get_job")
+    for resolver_name in resolver_names:
+        resolver = getattr(graph_manager, resolver_name, None)
+        if callable(resolver):
+            resolved = resolver(entity_ref)
+            if resolved is not None:
+                return resolved
+
+    for collection_name in ("characters", "locations", "objects", "events", "jobs", "activities"):
+        collection = getattr(graph_manager, collection_name, None)
+        if not isinstance(collection, dict):
+            continue
+
+        if entity_ref in collection:
+            return collection[entity_ref]
+
+        for entity in collection.values():
+            if getattr(entity, "uuid", None) == entity_ref or getattr(entity, "name", None) == entity_ref:
+                return entity
+
+    return entity_ref
+
+
+def _build_condition(name, attribute, target, satisfy_value, op):
+    """Create a concrete Condition only when the target can be evaluated."""
+    if target is None or isinstance(target, str):
+        logger.debug(
+            "Skipping default condition '%s' because target %r could not be resolved.",
+            name,
+            target,
+        )
+        return None
+    return Condition(name, attribute, target, satisfy_value, op)
 
 
 class State:
@@ -388,6 +429,67 @@ class Action:
                 f"Warning: Precondition for action {self.name} is not a Condition object or check_condition failed."
             )
             return False  # Or handle differently
+
+    def _apply_effect_to_target(self, target_obj, effect):
+        attribute_name = effect.get("attribute")
+        change_value = effect.get("change_value")
+        method_name = effect.get("method")
+        method_args = effect.get("method_args", [])
+
+        if attribute_name:
+            current_value = AttributeMapper.get_attribute_value(target_obj, attribute_name)
+            if current_value is None:
+                current_value = getattr(target_obj, attribute_name, 0)
+
+            new_value = None
+            if isinstance(change_value, (int, float)):
+                new_value = current_value + change_value
+            elif isinstance(change_value, str):
+                if change_value.startswith("add:") and is_numeric(change_value[4:]):
+                    new_value = current_value + float(change_value[4:])
+                elif change_value.startswith("set:"):
+                    set_val_str = change_value[4:]
+                    if is_numeric(set_val_str):
+                        new_value = float(set_val_str)
+                    else:
+                        new_value = set_val_str
+                elif hasattr(target_obj, change_value) and callable(getattr(target_obj, change_value)):
+                    getattr(target_obj, change_value)()
+                    new_value = AttributeMapper.get_attribute_value(target_obj, attribute_name)
+                else:
+                    new_value = change_value
+            elif callable(change_value):
+                new_value = change_value(current_value)
+            else:
+                new_value = change_value
+
+            if new_value is not None:
+                AttributeMapper.set_attribute_value(target_obj, attribute_name, new_value)
+                actual_attribute_name, _, _, _ = AttributeMapper.map_attribute(attribute_name)
+                final_value = AttributeMapper.get_attribute_value(target_obj, attribute_name)
+
+                if self.graph_manager:
+                    graph_node_id = getattr(target_obj, "uuid", None) or getattr(target_obj, "name", None)
+                    if graph_node_id:
+                        try:
+                            self.graph_manager.update_node_attribute(
+                                graph_node_id,
+                                actual_attribute_name,
+                                final_value,
+                            )
+
+                            if actual_attribute_name.startswith("relationship_"):
+                                related_char_name = actual_attribute_name.split("_with_")[-1]
+                                # Placeholder for future relationship edge updates.
+                                _ = related_char_name
+                        except Exception as e:
+                            print(
+                                f"Error updating graph for node '{graph_node_id}', "
+                                f"attribute '{actual_attribute_name}': {e}"
+                            )
+
+        if method_name and hasattr(target_obj, method_name):
+            getattr(target_obj, method_name)(*method_args)
 
     def apply_single_effect(self, effect, state: State, change_value=None):
         if change_value is None:
@@ -766,6 +868,8 @@ class Action:
                 self.graph_manager = None
             # print("Warning: Action.execute called without graph_manager, using fallback.")
 
+        self.initiator = _resolve_graph_entity(self.initiator, self.graph_manager)
+        self.target = _resolve_graph_entity(self.target, self.graph_manager)
 
         if self.preconditions_met():
             for effect in self.effects:
@@ -803,72 +907,7 @@ class Action:
                 for target_obj in deduplicated_targets:
                     if not target_obj: # Skip if a target resolved to None
                         continue
-
-                    attribute_name = effect['attribute']
-                    change_value = effect['change_value']
-
-                    # 1. Apply effect to Python object
-                    current_value = getattr(target_obj, attribute_name, 0)
-                    new_value = None
-
-                    if isinstance(change_value, (int, float)):
-                        new_value = current_value + change_value
-                    elif isinstance(change_value, str):
-                        if change_value.startswith("add:") and is_numeric(change_value[4:]): # e.g. "add:5"
-                             new_value = current_value + float(change_value[4:])
-                        elif change_value.startswith("set:"): # e.g. "set:new_value_string" or "set:50"
-                            set_val_str = change_value[4:]
-                            if is_numeric(set_val_str):
-                                new_value = float(set_val_str)
-                            else:
-                                new_value = set_val_str # Direct assignment for strings
-                        elif hasattr(target_obj, change_value) and callable(getattr(target_obj, change_value)):
-                            # If change_value is a method name of the target_obj
-                            method_to_call = getattr(target_obj, change_value)
-                            # This assumes methods for effects don't require arguments or handle them internally
-                            # Or, we might need a way to specify arguments in the effect definition
-                            method_to_call()
-                            # After method call, re-fetch the attribute value if it's supposed to change it
-                            new_value = getattr(target_obj, attribute_name, current_value)
-                        else: # Direct assignment if not a special string command
-                            new_value = change_value
-                    elif callable(change_value): # If change_value is a function
-                        new_value = change_value(current_value)
-                    else: # Default to direct assignment if type is not recognized for operation
-                        new_value = change_value
-
-                    if new_value is not None:
-                        setattr(target_obj, attribute_name, new_value)
-
-                    # 2. Propagate to GraphManager
-                    if self.graph_manager:
-                        # Assuming target_obj.uuid or target_obj.name is the graph node ID
-                        # Prefer uuid if available
-                        graph_node_id = getattr(target_obj, 'uuid', None)
-                        if not graph_node_id: # Fallback to name if uuid is not present
-                            graph_node_id = getattr(target_obj, 'name', None)
-
-                        if graph_node_id:
-                            try:
-                                # Ensure the node exists in the graph before updating
-                                # This might be implicitly handled by graph_manager or require a check
-                                # For now, assume update_node_attribute handles non-existent nodes gracefully or node exists
-                                self.graph_manager.update_node_attribute(graph_node_id, attribute_name, new_value)
-                                # print(f"GraphManager: Updated '{attribute_name}' for node '{graph_node_id}' to '{new_value}'")
-
-                                # Example for relationship updates (conceptual, adjust based on actual effect structure)
-                                if attribute_name.startswith("relationship_"): # e.g. "relationship_strength_with_Alice"
-                                    related_char_name = attribute_name.split("_with_")[-1] # Extracts "Alice"
-                                    # We need the ID of the related character. Assume it can be fetched or is known.
-                                    # This part is highly dependent on how relationships are structured and identified.
-                                    # For simplicity, let's assume related_char_name is a valid ID for now.
-                                    # In a real scenario, you'd need to resolve related_char_name to its graph ID.
-                                    # self.graph_manager.update_edge_attribute(graph_node_id, related_char_name, 'strength', new_value)
-
-                            except Exception as e:
-                                print(f"Error updating graph for node '{graph_node_id}', attribute '{attribute_name}': {e}")
-                        # else:
-                            # print(f"Could not determine graph node ID for target object: {target_obj}")
+                    self._apply_effect_to_target(target_obj, effect)
             return True
         return False
 
@@ -1021,8 +1060,17 @@ class TalkAction(SocialAction):
         cost=0.1,
         **kwargs,
     ):
-        # Ensure preconditions and effects are lists if provided, or default to empty lists
-        _preconditions = preconditions if preconditions is not None else []
+        graph_manager = kwargs.get("graph_manager")
+        resolved_initiator = _resolve_graph_entity(initiator, graph_manager)
+        default_preconditions = [
+            condition
+            for condition in (
+                _build_condition("HasEnergyToTalk", "energy", resolved_initiator, 1, ">="),
+            )
+            if condition is not None
+        ]
+        # Ensure preconditions and effects are lists if provided, or default to action-specific conditions
+        _preconditions = preconditions if preconditions is not None else default_preconditions
         _effects = (
             effects
             if effects is not None
@@ -1107,12 +1155,19 @@ class TalkAction(SocialAction):
 
 class ExploreAction(Action):
     def __init__(self, initiator, target, name="Explore", preconditions=None, effects=None, cost=0.2, **kwargs):
-        _preconditions = preconditions if preconditions is not None else []
+        graph_manager = kwargs.get("graph_manager")
+        resolved_initiator = _resolve_graph_entity(initiator, graph_manager)
+        default_preconditions = [
+            condition
+            for condition in (
+                _build_condition("HasEnergyToExplore", "energy", resolved_initiator, 2, ">="),
+            )
+            if condition is not None
+        ]
+        _preconditions = preconditions if preconditions is not None else default_preconditions
         # Define effects if 'discover' method is expected to change specific attributes
         _effects = effects if effects is not None else [
-            # Example effects (uncomment and adjust if needed):
-            # {"targets": ["initiator"], "attribute": "energy", "change_value": -5},
-            # {"targets": ["target"], "attribute": "is_explored", "change_value": "set:True"}, # Example for setting a flag
+            {"targets": ["initiator"], "attribute": "energy", "change_value": -1},
         ]
         # Ensure graph_manager is passed to super()__init__
         # Base Action.__init__ handles assigning self.graph_manager
@@ -1441,19 +1496,30 @@ class EatAction(Action):
             "completed_at",
             "priority",
             "related_goal",
+            "graph_manager",
         }
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+        graph_manager = kwargs.get("graph_manager")
+        resolved_initiator = _resolve_graph_entity(initiator_id, graph_manager)
+        default_preconditions = [
+            condition
+            for condition in (
+                _build_condition("NeedsFood", "hunger_level", resolved_initiator, 1, ">="),
+                _build_condition("HasEnergyToEat", "energy", resolved_initiator, 1, ">="),
+            )
+            if condition is not None
+        ]
 
         super().__init__(
             name="Eat",
             initiator=initiator_id,
             target=item_name,
             cost=kwargs.get("cost", 0.1),
-            preconditions=kwargs.get("preconditions", []),
+            preconditions=kwargs.get("preconditions", default_preconditions),
             effects=kwargs.get(
                 "effects",
                 [
-                    {"targets": ["initiator"], "attribute": "hunger", "change_value": -2},
+                    {"targets": ["initiator"], "attribute": "hunger_level", "change_value": -5},
                     {"targets": ["initiator"], "attribute": "energy", "change_value": 1},
                 ],
             ),
@@ -1478,15 +1544,25 @@ class GoToLocationAction(Action):
             "completed_at",
             "priority",
             "related_goal",
+            "graph_manager",
         }
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+        graph_manager = kwargs.get("graph_manager")
+        resolved_initiator = _resolve_graph_entity(initiator_id, graph_manager)
+        default_preconditions = [
+            condition
+            for condition in (
+                _build_condition("HasEnergyToTravel", "energy", resolved_initiator, 1, ">="),
+            )
+            if condition is not None
+        ]
 
         super().__init__(
             name="GoToLocation",
             initiator=initiator_id,
             target=location_name,
             cost=kwargs.get("cost", 0.2),
-            preconditions=kwargs.get("preconditions", []),
+            preconditions=kwargs.get("preconditions", default_preconditions),
             effects=kwargs.get(
                 "effects",
                 [
@@ -1495,7 +1571,8 @@ class GoToLocationAction(Action):
                         "attribute": "location",
                         "change_value": f"set:{location_name}", # Use "set:" for direct assignment
                         "targets": ["initiator"],
-                    }
+                    },
+                    {"targets": ["initiator"], "attribute": "energy", "change_value": -1},
                 ],
             ),
             **filtered_kwargs,
@@ -1519,6 +1596,7 @@ class NoOpAction(Action):
             "completed_at",
             "priority",
             "related_goal",
+            "graph_manager",
         }
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
 
@@ -1547,24 +1625,30 @@ class BuyFoodAction(Action):
             "completed_at",
             "priority",
             "related_goal",
+            "graph_manager",
         }
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+        graph_manager = kwargs.get("graph_manager")
+        resolved_initiator = _resolve_graph_entity(initiator_id, graph_manager)
+        default_preconditions = [
+            condition
+            for condition in (
+                _build_condition("CanAffordFood", "wealth_money", resolved_initiator, 5, ">="),
+                _build_condition("HasEnergyToShop", "energy", resolved_initiator, 1, ">="),
+            )
+            if condition is not None
+        ]
 
         super().__init__(
             name="BuyFood",
             initiator=initiator_id,
             target=food_type,
             cost=kwargs.get("cost", 0.3),
-            preconditions=kwargs.get("preconditions", []),
+            preconditions=kwargs.get("preconditions", default_preconditions),
             effects=kwargs.get(
                 "effects",
                 [
-                    {"targets": ["initiator"], "attribute": "money", "change_value": -5},
-                    {
-                        "targets": ["initiator"],
-                        "attribute": "inventory",
-                        "change_value": f"add:{food_type}", # Base execute handles "add:"
-                    },
+                    {"targets": ["initiator"], "attribute": "wealth_money", "change_value": -5},
                 ],
             ),
             **filtered_kwargs,
@@ -1588,19 +1672,30 @@ class WorkAction(Action):
             "completed_at",
             "priority",
             "related_goal",
+            "graph_manager",
         }
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+        graph_manager = kwargs.get("graph_manager")
+        resolved_initiator = _resolve_graph_entity(initiator_id, graph_manager)
+        default_preconditions = [
+            condition
+            for condition in (
+                _build_condition("HasEnergyToWork", "energy", resolved_initiator, 2, ">="),
+                _build_condition("HealthyEnoughToWork", "health_status", resolved_initiator, 3, ">="),
+            )
+            if condition is not None
+        ]
 
         super().__init__(
             name="Work",
             initiator=initiator_id,
             target=job_type,
             cost=kwargs.get("cost", 0.4),
-            preconditions=kwargs.get("preconditions", []),
+            preconditions=kwargs.get("preconditions", default_preconditions),
             effects=kwargs.get(
                 "effects",
                 [
-                    {"targets": ["initiator"], "attribute": "money", "change_value": 20},
+                    {"targets": ["initiator"], "attribute": "wealth_money", "change_value": 20},
                     {"targets": ["initiator"], "attribute": "energy", "change_value": -2},
                     {
                         "targets": ["initiator"],
@@ -1630,19 +1725,29 @@ class SleepAction(Action):
             "completed_at",
             "priority",
             "related_goal",
+            "graph_manager",
         }
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+        graph_manager = kwargs.get("graph_manager")
+        resolved_initiator = _resolve_graph_entity(initiator_id, graph_manager)
+        default_preconditions = [
+            condition
+            for condition in (
+                _build_condition("NeedsRest", "energy", resolved_initiator, 8, "<="),
+            )
+            if condition is not None
+        ]
 
         super().__init__(
             name="Sleep",
             initiator=initiator_id,
             cost=kwargs.get("cost", 0.0),
-            preconditions=kwargs.get("preconditions", []),
+            preconditions=kwargs.get("preconditions", default_preconditions),
             effects=kwargs.get(
                 "effects",
                 [
                     {"targets": ["initiator"], "attribute": "energy", "change_value": 5},
-                    {"targets": ["initiator"], "attribute": "health", "change_value": 1},
+                    {"targets": ["initiator"], "attribute": "health_status", "change_value": 1},
                 ],
             ),
             **filtered_kwargs,
@@ -1666,15 +1771,25 @@ class SocialVisitAction(Action):
             "completed_at",
             "priority",
             "related_goal",
+            "graph_manager",
         }
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+        graph_manager = kwargs.get("graph_manager")
+        resolved_initiator = _resolve_graph_entity(initiator_id, graph_manager)
+        default_preconditions = [
+            condition
+            for condition in (
+                _build_condition("HasEnergyToVisit", "energy", resolved_initiator, 1, ">="),
+            )
+            if condition is not None
+        ]
 
         super().__init__(
             name="SocialVisit",
             initiator=initiator_id,
             target=target_person,
             cost=kwargs.get("cost", 0.3),
-            preconditions=kwargs.get("preconditions", []),
+            preconditions=kwargs.get("preconditions", default_preconditions),
             effects=kwargs.get(
                 "effects",
                 [
@@ -1685,12 +1800,12 @@ class SocialVisitAction(Action):
                     },
                     {
                         "targets": ["initiator"],
-                        "attribute": "happiness",
+                        "attribute": "mental_health",
                         "change_value": 1,
                     },
                     {
                         "targets": ["target"], # self.target will be target_person object
-                        "attribute": "friendship", # Assuming target Character object has 'friendship'
+                        "attribute": "social_wellbeing",
                         "change_value": 1,
                     },
                 ],
@@ -1716,14 +1831,24 @@ class ImproveJobPerformanceAction(Action):
             "completed_at",
             "priority",
             "related_goal",
+            "graph_manager",
         }
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+        graph_manager = kwargs.get("graph_manager")
+        resolved_initiator = _resolve_graph_entity(initiator_id, graph_manager)
+        default_preconditions = [
+            condition
+            for condition in (
+                _build_condition("HasEnergyToImproveSkills", "energy", resolved_initiator, 1, ">="),
+            )
+            if condition is not None
+        ]
 
         super().__init__(
             name="ImproveJobPerformance",
             initiator=initiator_id,
             cost=kwargs.get("cost", 0.5),
-            preconditions=kwargs.get("preconditions", []),
+            preconditions=kwargs.get("preconditions", default_preconditions),
             effects=kwargs.get(
                 "effects",
                 [
@@ -1756,21 +1881,31 @@ class PursueHobbyAction(Action):
             "completed_at",
             "priority",
             "related_goal",
+            "graph_manager",
         }
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+        graph_manager = kwargs.get("graph_manager")
+        resolved_initiator = _resolve_graph_entity(initiator_id, graph_manager)
+        default_preconditions = [
+            condition
+            for condition in (
+                _build_condition("HasEnergyForHobby", "energy", resolved_initiator, 1, ">="),
+            )
+            if condition is not None
+        ]
 
         super().__init__(
             name="PursueHobby",
             initiator=initiator_id,
             target=hobby_type,
             cost=kwargs.get("cost", 0.2),
-            preconditions=kwargs.get("preconditions", []),
+            preconditions=kwargs.get("preconditions", default_preconditions),
             effects=kwargs.get(
                 "effects",
                 [
                     {
                         "targets": ["initiator"],
-                        "attribute": "happiness",
+                        "attribute": "social_wellbeing",
                         "change_value": 2,
                     },
                     {
@@ -1778,6 +1913,7 @@ class PursueHobbyAction(Action):
                         "attribute": "mental_health",
                         "change_value": 1,
                     },
+                    {"targets": ["initiator"], "attribute": "energy", "change_value": -1},
                 ],
             ),
             **filtered_kwargs,
@@ -1801,19 +1937,30 @@ class VisitDoctorAction(Action):
             "completed_at",
             "priority",
             "related_goal",
+            "graph_manager",
         }
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
+        graph_manager = kwargs.get("graph_manager")
+        resolved_initiator = _resolve_graph_entity(initiator_id, graph_manager)
+        default_preconditions = [
+            condition
+            for condition in (
+                _build_condition("CanAffordDoctor", "wealth_money", resolved_initiator, 10, ">="),
+                _build_condition("NeedsMedicalAttention", "health_status", resolved_initiator, 9, "<="),
+            )
+            if condition is not None
+        ]
 
         super().__init__(
             name="VisitDoctor",
             initiator=initiator_id,
             cost=kwargs.get("cost", 0.6),
-            preconditions=kwargs.get("preconditions", []),
+            preconditions=kwargs.get("preconditions", default_preconditions),
             effects=kwargs.get(
                 "effects",
                 [
-                    {"targets": ["initiator"], "attribute": "health", "change_value": 3},
-                    {"targets": ["initiator"], "attribute": "money", "change_value": -10},
+                    {"targets": ["initiator"], "attribute": "health_status", "change_value": 3},
+                    {"targets": ["initiator"], "attribute": "wealth_money", "change_value": -10},
                 ],
             ),
             **filtered_kwargs,
@@ -1840,7 +1987,16 @@ class GreetAction(SocialAction):
         }
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
 
-        _preconditions = kwargs.get("preconditions", [])
+        graph_manager = kwargs.get("graph_manager")
+        resolved_initiator = _resolve_graph_entity(initiator, graph_manager)
+        default_preconditions = [
+            condition
+            for condition in (
+                _build_condition("HasEnergyToGreet", "energy", resolved_initiator, 1, ">="),
+            )
+            if condition is not None
+        ]
+        _preconditions = kwargs.get("preconditions", default_preconditions)
         _effects = kwargs.get(
             "effects",
             [
@@ -1905,7 +2061,16 @@ class ShareNewsAction(SocialAction):
         }
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
 
-        _preconditions = kwargs.get("preconditions", [])
+        graph_manager = kwargs.get("graph_manager")
+        resolved_initiator = _resolve_graph_entity(initiator, graph_manager)
+        default_preconditions = [
+            condition
+            for condition in (
+                _build_condition("HasEnergyToShareNews", "energy", resolved_initiator, 1, ">="),
+            )
+            if condition is not None
+        ]
+        _preconditions = kwargs.get("preconditions", default_preconditions)
         _effects = kwargs.get(
             "effects",
             [
@@ -1991,7 +2156,16 @@ class OfferComplimentAction(SocialAction):
         }
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
 
-        _preconditions = kwargs.get("preconditions", [])
+        graph_manager = kwargs.get("graph_manager")
+        resolved_initiator = _resolve_graph_entity(initiator, graph_manager)
+        default_preconditions = [
+            condition
+            for condition in (
+                _build_condition("HasEnergyToCompliment", "energy", resolved_initiator, 1, ">="),
+            )
+            if condition is not None
+        ]
+        _preconditions = kwargs.get("preconditions", default_preconditions)
         _effects = kwargs.get(
             "effects",
             [
