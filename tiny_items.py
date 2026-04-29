@@ -12,6 +12,8 @@ from tiny_locations import Location
 
 from tiny_types import Action, ActionSystem, GraphManager
 
+logger = logging.getLogger(__name__)
+
 
 class Stock:
     def __init__(self, name, value, quantity, stock_description=None):
@@ -152,8 +154,6 @@ class ItemObject:
         action_system: ActionSystem = None,
         coordinates_location=(0, 0),
     ):
-        ActionSystem = importlib.import_module("actions").ActionSystem
-        Action = importlib.import_module("actions").Action
         self.name = name
         self.description = description
         self.value = value
@@ -162,7 +162,9 @@ class ItemObject:
         self.uuid = uuid.uuid4()
         self.item_type = item_type
         self.item_subtype = item_subtype
-        self.location = Location(name, 0, 0, 0, 0, ActionSystem())
+        if action_system is None:
+            action_system = NullActionSystem()
+        self.location = Location(name, 0, 0, 0, 0, action_system)
         self.coordinates_location = coordinates_location
         self.possible_interactions = possible_interactions
         self.usability = True
@@ -337,7 +339,14 @@ effect_dict = {
             "method": "play_animation",
             "method_args": ["eating"],
         },
-    ]
+    ],
+    "Open": [
+        {
+            "targets": ["initiator"],
+            "method": "play_animation",
+            "method_args": ["opening"],
+        }
+    ],
 }
 
 preconditions_dict = {
@@ -366,7 +375,84 @@ preconditions_dict = {
             "operator": "gt",
         }
     ],
+    "Wear": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "satisfy_value": 10,
+            "target": "initiator",
+            "operator": "gt",
+        }
+    ],
+    "Use Tool": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "satisfy_value": 10,
+            "target": "initiator",
+            "operator": "gt",
+        }
+    ],
+    "Gather": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "satisfy_value": 10,
+            "target": "initiator",
+            "operator": "gt",
+        }
+    ],
+    "Heal": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "satisfy_value": 10,
+            "target": "initiator",
+            "operator": "gt",
+        }
+    ],
+    "Wield": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "satisfy_value": 10,
+            "target": "initiator",
+            "operator": "gt",
+        }
+    ],
+    "Inspect": [
+        {
+            "name": "energy",
+            "attribute": "energy",
+            "satisfy_value": 10,
+            "target": "initiator",
+            "operator": "gt",
+        }
+    ],
 }
+
+
+class NullActionSystem:
+    def instantiate_conditions(self, conditions):
+        return conditions or []
+
+
+def build_item_interaction(
+    action_system, action_name, precondition_key, effects, cost=1
+):
+    if action_system is None:
+        action_system = NullActionSystem()
+    Action = importlib.import_module("actions").Action
+    return [
+        Action(
+            action_name,
+            action_system.instantiate_conditions(
+                preconditions_dict.get(precondition_key, [])
+            ),
+            effects=effects,
+            cost=cost,
+        )
+    ]
 
 
 class FoodItem(ItemObject):
@@ -384,18 +470,11 @@ class FoodItem(ItemObject):
         cooked=False,
         coordinates_location=(0, 0),
     ):
-        ActionSystem = importlib.import_module("actions").ActionSystem
-        Action = importlib.import_module("actions").Action
         effect = effect_dict["Eat"]
         effect[0]["change_value"] = calories
-        possible_interactions = [
-            Action(
-                "Eat Food",
-                action_system.instantiate_conditions(preconditions_dict["Eat"]),
-                effects=effect_dict["Eat"],
-                cost=1,
-            ),
-        ]
+        possible_interactions = build_item_interaction(
+            action_system, "Eat Food", "Eat", effect_dict["Eat"]
+        )
         super().__init__(
             name,
             description,
@@ -405,6 +484,7 @@ class FoodItem(ItemObject):
             item_type="food",
             item_subtype=name,
             possible_interactions=possible_interactions,
+            action_system=action_system,
             coordinates_location=coordinates_location,
         )
         self.calories = calories
@@ -551,17 +631,10 @@ class Door(ItemObject):
         quantity,
         action_system: ActionSystem,
     ):
-        ActionSystem = importlib.import_module("actions").ActionSystem
-        Action = importlib.import_module("actions").Action
         effect = effect_dict["Open"]
-        possible_interactions = [
-            Action(
-                "Open Door",
-                action_system.instantiate_conditions(preconditions_dict["Open"]),
-                effects=effect_dict["Open"],
-                cost=1,
-            ),
-        ]
+        possible_interactions = build_item_interaction(
+            action_system, "Open Door", "Open", effect_dict["Open"]
+        )
         super().__init__(
             name,
             description,
@@ -570,6 +643,7 @@ class Door(ItemObject):
             quantity,
             item_type="door",
             possible_interactions=possible_interactions,
+            action_system=action_system,
         )
         self.item_type = "door"
         self.possible_interactions = possible_interactions
@@ -648,7 +722,294 @@ class Door(ItemObject):
         }
 
 
+class ClothingItem(ItemObject):
+    def __init__(
+        self,
+        name,
+        description,
+        value,
+        weight,
+        quantity,
+        action_system: ActionSystem = None,
+        clothing_type="general",
+        insulation=0,
+        durability=100,
+        coordinates_location=(0, 0),
+    ):
+        wear_effects = [
+            {"targets": ["initiator"], "method": "play_animation", "method_args": ["wearing"]},
+        ]
+        possible_interactions = build_item_interaction(
+            action_system, "Wear Clothing", "Wear", wear_effects
+        )
+        super().__init__(
+            name,
+            description,
+            value,
+            weight,
+            quantity,
+            item_type="clothing",
+            item_subtype=clothing_type,
+            possible_interactions=possible_interactions,
+            action_system=action_system,
+            coordinates_location=coordinates_location,
+        )
+        self.clothing_type = clothing_type
+        self.insulation = insulation
+        self.durability = durability
+        self.type_specific_attributes = True
+
+    def get_type_specific_attributes(self):
+        return {
+            "clothing_type": self.clothing_type,
+            "insulation": self.insulation,
+            "durability": self.durability,
+        }
+
+
+class ToolItem(ItemObject):
+    def __init__(
+        self,
+        name,
+        description,
+        value,
+        weight,
+        quantity,
+        action_system: ActionSystem = None,
+        tool_type="general",
+        durability=100,
+        efficiency=1.0,
+        coordinates_location=(0, 0),
+    ):
+        use_tool_effects = [
+            {"targets": ["initiator"], "method": "play_animation", "method_args": ["working"]},
+        ]
+        possible_interactions = build_item_interaction(
+            action_system, "Use Tool", "Use Tool", use_tool_effects
+        )
+        super().__init__(
+            name,
+            description,
+            value,
+            weight,
+            quantity,
+            item_type="tools",
+            item_subtype=tool_type,
+            possible_interactions=possible_interactions,
+            action_system=action_system,
+            coordinates_location=coordinates_location,
+        )
+        self.tool_type = tool_type
+        self.durability = durability
+        self.efficiency = efficiency
+        self.type_specific_attributes = True
+
+    def get_type_specific_attributes(self):
+        return {
+            "tool_type": self.tool_type,
+            "durability": self.durability,
+            "efficiency": self.efficiency,
+        }
+
+
+class ResourceItem(ItemObject):
+    def __init__(
+        self,
+        name,
+        description,
+        value,
+        weight,
+        quantity,
+        action_system: ActionSystem = None,
+        resource_type="material",
+        renewable=False,
+        quality=1,
+        coordinates_location=(0, 0),
+    ):
+        gather_effects = [
+            {"targets": ["initiator"], "method": "play_animation", "method_args": ["gathering"]},
+        ]
+        possible_interactions = build_item_interaction(
+            action_system, "Gather Resource", "Gather", gather_effects
+        )
+        super().__init__(
+            name,
+            description,
+            value,
+            weight,
+            quantity,
+            item_type="resources",
+            item_subtype=resource_type,
+            possible_interactions=possible_interactions,
+            action_system=action_system,
+            coordinates_location=coordinates_location,
+        )
+        self.resource_type = resource_type
+        self.renewable = renewable
+        self.quality = quality
+        self.type_specific_attributes = True
+
+    def get_type_specific_attributes(self):
+        return {
+            "resource_type": self.resource_type,
+            "renewable": self.renewable,
+            "quality": self.quality,
+        }
+
+
+class MedicineItem(ItemObject):
+    def __init__(
+        self,
+        name,
+        description,
+        value,
+        weight,
+        quantity,
+        action_system: ActionSystem = None,
+        potency=0,
+        cure_type="general",
+        coordinates_location=(0, 0),
+    ):
+        use_medicine_effects = [
+            {"targets": ["initiator"], "method": "play_animation", "method_args": ["healing"]},
+        ]
+        possible_interactions = build_item_interaction(
+            action_system, "Use Medicine", "Heal", use_medicine_effects
+        )
+        super().__init__(
+            name,
+            description,
+            value,
+            weight,
+            quantity,
+            item_type="medicine",
+            item_subtype=cure_type,
+            possible_interactions=possible_interactions,
+            action_system=action_system,
+            coordinates_location=coordinates_location,
+        )
+        self.potency = potency
+        self.cure_type = cure_type
+        self.type_specific_attributes = True
+
+    def get_type_specific_attributes(self):
+        return {"potency": self.potency, "cure_type": self.cure_type}
+
+
+class WeaponItem(ItemObject):
+    def __init__(
+        self,
+        name,
+        description,
+        value,
+        weight,
+        quantity,
+        action_system: ActionSystem = None,
+        damage=0,
+        weapon_type="general",
+        durability=100,
+        coordinates_location=(0, 0),
+    ):
+        wield_effects = [
+            {"targets": ["initiator"], "method": "play_animation", "method_args": ["wielding"]},
+        ]
+        possible_interactions = build_item_interaction(
+            action_system, "Wield Weapon", "Wield", wield_effects
+        )
+        super().__init__(
+            name,
+            description,
+            value,
+            weight,
+            quantity,
+            item_type="weapons",
+            item_subtype=weapon_type,
+            possible_interactions=possible_interactions,
+            action_system=action_system,
+            coordinates_location=coordinates_location,
+        )
+        self.damage = damage
+        self.weapon_type = weapon_type
+        self.durability = durability
+        self.type_specific_attributes = True
+
+    def get_type_specific_attributes(self):
+        return {
+            "damage": self.damage,
+            "weapon_type": self.weapon_type,
+            "durability": self.durability,
+        }
+
+
+class QuestItem(ItemObject):
+    def __init__(
+        self,
+        name,
+        description,
+        value,
+        weight,
+        quantity,
+        action_system: ActionSystem = None,
+        quest_name=None,
+        objective=None,
+        key_item=False,
+        coordinates_location=(0, 0),
+    ):
+        inspect_effects = [
+            {"targets": ["initiator"], "method": "play_animation", "method_args": ["examining"]},
+        ]
+        possible_interactions = build_item_interaction(
+            action_system, "Inspect Quest Item", "Inspect", inspect_effects
+        )
+        super().__init__(
+            name,
+            description,
+            value,
+            weight,
+            quantity,
+            item_type="quest",
+            item_subtype=quest_name or name,
+            possible_interactions=possible_interactions,
+            action_system=action_system,
+            coordinates_location=coordinates_location,
+        )
+        self.quest_name = quest_name
+        self.objective = objective
+        self.key_item = key_item
+        self.type_specific_attributes = True
+
+    def get_type_specific_attributes(self):
+        return {
+            "quest_name": self.quest_name,
+            "objective": self.objective,
+            "key_item": self.key_item,
+        }
+
+
 class ItemInventory:
+    ITEM_TYPE_ALIASES = {
+        "food": "food",
+        "clothing": "clothing",
+        "clothes": "clothing",
+        "armor": "clothing",
+        "tool": "tools",
+        "tools": "tools",
+        "weapon": "weapons",
+        "weapons": "weapons",
+        "medicine": "medicine",
+        "medical": "medicine",
+        "resource": "resources",
+        "resources": "resources",
+        "material": "resources",
+        "materials": "resources",
+        "quest": "quest",
+        "quest_item": "quest",
+        "quest_items": "quest",
+        "misc": "misc",
+        "miscellaneous": "misc",
+        "door": "misc",
+    }
+
     def __init__(
         self,
         food_items: List[FoodItem] = [],
@@ -657,6 +1018,8 @@ class ItemInventory:
         weapons_items: List[ItemObject] = [],
         medicine_items: List[ItemObject] = [],
         misc_items: List[ItemObject] = [],
+        resources_items: List[ItemObject] = [],
+        quest_items: List[ItemObject] = [],
     ):
         self.all_items = []
         self.food_items = []
@@ -665,6 +1028,8 @@ class ItemInventory:
         self.weapons_items = []
         self.medicine_items = []
         self.misc_items = []
+        self.resources_items = []
+        self.quest_items = []
         if food_items is not None:
             self.food_items = self.set_food_items(food_items)
         if clothing_items is not None:
@@ -677,6 +1042,10 @@ class ItemInventory:
             self.medicine_items = self.set_medicine_items(medicine_items)
         if misc_items is not None:
             self.misc_items = self.set_misc_items(misc_items)
+        if resources_items is not None:
+            self.resources_items = self.set_resources_items(resources_items)
+        if quest_items is not None:
+            self.quest_items = self.set_quest_items(quest_items)
         # make one list of all items
         if self.all_items == [] and (
             self.food_items
@@ -685,6 +1054,8 @@ class ItemInventory:
             or self.weapons_items
             or self.medicine_items
             or self.misc_items
+            or self.resources_items
+            or self.quest_items
         ):
             self.all_items = (
                 self.food_items
@@ -693,6 +1064,8 @@ class ItemInventory:
                 + self.weapons_items
                 + self.medicine_items
                 + self.misc_items
+                + self.resources_items
+                + self.quest_items
             )
 
         self.ops = {
@@ -712,6 +1085,38 @@ class ItemInventory:
             "!=": "ne",
         }
 
+    def _get_item_collections(self):
+        return {
+            "food": self.food_items,
+            "clothing": self.clothing_items,
+            "tools": self.tools_items,
+            "weapons": self.weapons_items,
+            "medicine": self.medicine_items,
+            "misc": self.misc_items,
+            "resources": self.resources_items,
+            "quest": self.quest_items,
+        }
+
+    def _normalize_item_type(self, item_type):
+        if item_type is None:
+            return "misc"
+        normalized_type = self.ITEM_TYPE_ALIASES.get(str(item_type).lower())
+        if normalized_type is None:
+            logger.debug("Unrecognized item type '%s'; defaulting to misc", item_type)
+            return "misc"
+        return normalized_type
+
+    def _normalize_item_type_list(self, item_type):
+        if isinstance(item_type, (list, tuple, set)):
+            return [self._normalize_item_type(single_type) for single_type in item_type]
+        return [self._normalize_item_type(item_type)]
+
+    def _count_items_in_collection(self, collection):
+        total = 0
+        for item in collection:
+            total += item.get_quantity()
+        return total
+
     def report_inventory(self):
         report = {}
         self.get_all_items()
@@ -720,10 +1125,10 @@ class ItemInventory:
         return report
 
     def __repr__(self):
-        return f"ItemInventory({self.food_items}, {self.clothing_items}, {self.tools_items}, {self.weapons_items}, {self.medicine_items}, {self.misc_items})"
+        return f"ItemInventory({self.food_items}, {self.clothing_items}, {self.tools_items}, {self.weapons_items}, {self.medicine_items}, {self.misc_items}, {self.resources_items}, {self.quest_items})"
 
     def __str__(self):
-        return f"ItemInventory with food items {self.food_items}, clothing items {self.clothing_items}, tools items {self.tools_items}, weapons items {self.weapons_items}, medicine items {self.medicine_items}, misc items {self.misc_items}."
+        return f"ItemInventory with food items {self.food_items}, clothing items {self.clothing_items}, tools items {self.tools_items}, weapons items {self.weapons_items}, medicine items {self.medicine_items}, misc items {self.misc_items}, resources items {self.resources_items}, quest items {self.quest_items}."
 
     def __eq__(self, other):
         if not isinstance(other, ItemInventory):
@@ -735,6 +1140,8 @@ class ItemInventory:
             and self.weapons_items == other.weapons_items
             and self.medicine_items == other.medicine_items
             and self.misc_items == other.misc_items
+            and self.resources_items == other.resources_items
+            and self.quest_items == other.quest_items
         )
 
     def get_all_items(self):
@@ -745,6 +1152,8 @@ class ItemInventory:
             + self.weapons_items
             + self.medicine_items
             + self.misc_items
+            + self.resources_items
+            + self.quest_items
         )
         return self.all_items
 
@@ -782,26 +1191,22 @@ class ItemInventory:
                     make_hashable(self.weapons_items),
                     make_hashable(self.medicine_items),
                     make_hashable(self.misc_items),
+                    make_hashable(self.resources_items),
+                    make_hashable(self.quest_items),
                 ]
             )
         )
 
     def add_item(self, item: ItemObject):
-        item_lists = {
-            "food": self.food_items,
-            "clothing": self.clothing_items,
-            "tools": self.tools_items,
-            "weapons": self.weapons_items,
-            "medicine": self.medicine_items,
-            "misc": self.misc_items,
-        }
+        item_lists = self._get_item_collections()
+        item_type = self._normalize_item_type(item.item_type)
 
-        for existing_item in item_lists[item.item_type]:
+        for existing_item in item_lists[item_type]:
             if existing_item.get_name() == item.get_name():
                 existing_item.quantity += item.quantity
                 break
         else:
-            item_lists[item.item_type].append(item)
+            item_lists[item_type].append(item)
 
         for existing_item in self.all_items:
             if existing_item.get_name() == item.get_name():
@@ -813,20 +1218,14 @@ class ItemInventory:
         return item
 
     def remove_item(self, item: ItemObject):
-        item_lists = {
-            "food": self.food_items,
-            "clothing": self.clothing_items,
-            "tools": self.tools_items,
-            "weapons": self.weapons_items,
-            "medicine": self.medicine_items,
-            "misc": self.misc_items,
-        }
+        item_lists = self._get_item_collections()
+        item_type = self._normalize_item_type(item.item_type)
 
-        for existing_item in item_lists[item.item_type]:
+        for existing_item in item_lists[item_type]:
             if existing_item.get_name() == item.get_name():
                 existing_item.quantity -= item.quantity
                 if existing_item.quantity <= 0:
-                    item_lists[item.item_type].remove(existing_item)
+                    item_lists[item_type].remove(existing_item)
                 break
 
         for existing_item in self.all_items:
@@ -869,10 +1268,7 @@ class ItemInventory:
         return self.clothing_items
 
     def count_clothing_items_total(self):
-        total = 0
-        for item in self.clothing_items:
-            total += item.get_quantity()
-        return total
+        return self._count_items_in_collection(self.clothing_items)
 
     def set_clothing_items(self, clothing_items: List[ItemObject]):
         self.clothing_items = clothing_items
@@ -888,19 +1284,13 @@ class ItemInventory:
         return self.tools_items
 
     def count_tools_items_total(self):
-        total = 0
-        for item in self.tools_items:
-            total += item.get_quantity()
-        return total
+        return self._count_items_in_collection(self.tools_items)
 
     def get_weapons_items(self):
         return self.weapons_items
 
     def count_weapons_items_total(self):
-        total = 0
-        for item in self.weapons_items:
-            total += item.get_quantity()
-        return total
+        return self._count_items_in_collection(self.weapons_items)
 
     def set_weapons_items(self, weapons_items: List[ItemObject]):
         self.weapons_items = weapons_items
@@ -916,10 +1306,7 @@ class ItemInventory:
         return self.medicine_items
 
     def count_medicine_items_total(self):
-        total = 0
-        for item in self.medicine_items:
-            total += item.get_quantity()
-        return total
+        return self._count_items_in_collection(self.medicine_items)
 
     def get_misc_items(self):
         return self.misc_items
@@ -930,114 +1317,58 @@ class ItemInventory:
         return self.misc_items
 
     def count_misc_items_total(self):
-        total = 0
-        for item in self.misc_items:
-            total += item.get_quantity()
-        return total
+        return self._count_items_in_collection(self.misc_items)
+
+    def get_resources_items(self):
+        return self.resources_items
+
+    def set_resources_items(self, resources_items: List[ItemObject]):
+        self.resources_items = resources_items
+        self.all_items += resources_items
+        return self.resources_items
+
+    def count_resources_items_total(self):
+        return self._count_items_in_collection(self.resources_items)
+
+    def get_quest_items(self):
+        return self.quest_items
+
+    def set_quest_items(self, quest_items: List[ItemObject]):
+        self.quest_items = quest_items
+        self.all_items += quest_items
+        return self.quest_items
+
+    def count_quest_items_total(self):
+        return self._count_items_in_collection(self.quest_items)
 
     def get_total_value(self):
         total = 0
-        if self.food_items:
-            for item in self.food_items:
-                total += item.get_value() * item.get_quantity()
-        if self.clothing_items:
-            for item in self.clothing_items:
-                total += item.get_value() * item.get_quantity()
-        if self.tools_items:
-            for item in self.tools_items:
-                total += item.get_value() * item.get_quantity()
-        if self.weapons_items:
-            for item in self.weapons_items:
-                total += item.get_value() * item.get_quantity()
-        if self.medicine_items:
-            for item in self.medicine_items:
-                total += item.get_value() * item.get_quantity()
-        if self.misc_items:
-            for item in self.misc_items:
+        for item_collection in self._get_item_collections().values():
+            for item in item_collection:
                 total += item.get_value() * item.get_quantity()
         return total
 
     def get_total_weight(self):
         total = 0
-        for item in self.food_items:
-            total += item.get_weight() * item.get_quantity()
-        for item in self.clothing_items:
-            total += item.get_weight() * item.get_quantity()
-        for item in self.tools_items:
-            total += item.get_weight() * item.get_quantity()
-        for item in self.weapons_items:
-            total += item.get_weight() * item.get_quantity()
-        for item in self.medicine_items:
-            total += item.get_weight() * item.get_quantity()
-        for item in self.misc_items:
-            total += item.get_weight() * item.get_quantity()
+        for item_collection in self._get_item_collections().values():
+            for item in item_collection:
+                total += item.get_weight() * item.get_quantity()
         return total
 
     def get_total_quantity(self):
         total = 0
-
-        if self.food_items:
-            for item in self.food_items:
-                total += item.get_quantity()
-        if self.clothing_items:
-            for item in self.clothing_items:
-                total += item.get_quantity()
-        if self.tools_items:
-            for item in self.tools_items:
-                total += item.get_quantity()
-        if self.weapons_items:
-            for item in self.weapons_items:
-                total += item.get_quantity()
-        if self.medicine_items:
-            for item in self.medicine_items:
-                total += item.get_quantity()
-        if self.misc_items:
-            for item in self.misc_items:
-                total += item.get_quantity()
+        for item_collection in self._get_item_collections().values():
+            total += self._count_items_in_collection(item_collection)
         return total
 
     def count_total_items(self):
-        total = 0
-        if self.food_items:
-            for item in self.food_items:
-                total += item.get_quantity()
-        if self.clothing_items:
-            for item in self.clothing_items:
-                total += item.get_quantity()
-        if self.tools_items:
-            for item in self.tools_items:
-                total += item.get_quantity()
-        if self.weapons_items:
-            for item in self.weapons_items:
-                total += item.get_quantity()
-        if self.medicine_items:
-            for item in self.medicine_items:
-                total += item.get_quantity()
-        if self.misc_items:
-            for item in self.misc_items:
-                total += item.get_quantity()
-        return total
+        return self.get_total_quantity()
 
     def count_total_items_by_type(self, item_type):
         total = 0
-        if item_type == "food":
-            for item in self.food_items:
-                total += item.get_quantity()
-        elif item_type == "clothing":
-            for item in self.clothing_items:
-                total += item.get_quantity()
-        elif item_type == "tools":
-            for item in self.tools_items:
-                total += item.get_quantity()
-        elif item_type == "weapons":
-            for item in self.weapons_items:
-                total += item.get_quantity()
-        elif item_type == "medicine":
-            for item in self.medicine_items:
-                total += item.get_quantity()
-        elif item_type == "misc":
-            for item in self.misc_items:
-                total += item.get_quantity()
+        item_lists = self._get_item_collections()
+        for normalized_type in self._normalize_item_type_list(item_type):
+            total += self._count_items_in_collection(item_lists[normalized_type])
         return total
 
     def count_total_items_by_name(self, name):
@@ -1074,45 +1405,7 @@ class ItemInventory:
     def check_has_item_by_type(self, item_type, amount=1, oper="ge"):
         if oper not in self.ops:
             oper = self.symb_map[oper]
-
-        if item_type == "food":
-            return bool(
-                True
-                if self.ops[oper](sum(self.count_food_items_total()), amount)
-                else False
-            )
-        elif item_type == "clothing":
-            return bool(
-                True
-                if self.ops[oper](sum(self.count_clothing_items_total()), amount)
-                else False
-            )
-        elif item_type == "tools":
-            return bool(
-                True
-                if self.ops[oper](sum(self.count_tools_items_total()), amount)
-                else False
-            )
-        elif item_type == "weapons":
-            return bool(
-                True
-                if self.ops[oper](sum(self.count_weapons_items_total()), amount)
-                else False
-            )
-        elif item_type == "medicine":
-            return bool(
-                True
-                if self.ops[oper](sum(self.count_medicine_items_total()), amount)
-                else False
-            )
-        elif item_type == "misc":
-            return bool(
-                True
-                if self.ops[oper](sum(self.count_misc_items_total()), amount)
-                else False
-            )
-        else:
-            return False
+        return self.ops[oper](self.count_total_items_by_type(item_type), amount)
 
     def check_has_item_by_attribute_value(self, attribute, value, oper="ge"):
         if oper not in self.ops:
@@ -1133,4 +1426,6 @@ class ItemInventory:
             "weapons": self.weapons_items,
             "medicine": self.medicine_items,
             "misc": self.misc_items,
+            "resources": self.resources_items,
+            "quest": self.quest_items,
         }
