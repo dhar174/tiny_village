@@ -649,6 +649,9 @@ class Door(ItemObject):
 
 
 class ItemInventory:
+    ITEM_TYPE_KEYS = ("food", "clothing", "tools", "weapons", "medicine", "misc")
+    ESSENTIAL_ITEM_TYPES = {"food", "medicine"}
+
     def __init__(
         self,
         food_items: List[FoodItem] = [],
@@ -711,6 +714,51 @@ class ItemInventory:
             "<=": "le",
             "!=": "ne",
         }
+
+    def _get_item_lists(self):
+        return {
+            "food": self.food_items,
+            "clothing": self.clothing_items,
+            "tools": self.tools_items,
+            "weapons": self.weapons_items,
+            "medicine": self.medicine_items,
+            "misc": self.misc_items,
+        }
+
+    def _normalize_item_types(self, item_type):
+        if item_type is None:
+            return []
+        if isinstance(item_type, str):
+            return [item_type]
+        if isinstance(item_type, (list, tuple, set)):
+            return [entry for entry in item_type if isinstance(entry, str)]
+        return [str(item_type)]
+
+    def _resolve_item_type(self, item_type):
+        if not isinstance(item_type, str):
+            return "misc"
+        return item_type if item_type in self.ITEM_TYPE_KEYS else "misc"
+
+    def _serialize_item(self, item):
+        if hasattr(item, "to_dict") and callable(item.to_dict):
+            item_data = dict(item.to_dict())
+        else:
+            item_data = {
+                "name": getattr(item, "name", str(item)),
+                "quantity": getattr(item, "quantity", 0),
+            }
+
+        item_data["item_type"] = getattr(item, "item_type", "misc")
+        item_data["item_subtype"] = getattr(item, "item_subtype", None)
+
+        if hasattr(item, "calories"):
+            item_data["calories"] = item.calories
+        if hasattr(item, "perishable"):
+            item_data["perishable"] = item.perishable
+        if hasattr(item, "cooked"):
+            item_data["cooked"] = item.cooked
+
+        return item_data
 
     def report_inventory(self):
         report = {}
@@ -787,55 +835,59 @@ class ItemInventory:
         )
 
     def add_item(self, item: ItemObject):
-        item_lists = {
-            "food": self.food_items,
-            "clothing": self.clothing_items,
-            "tools": self.tools_items,
-            "weapons": self.weapons_items,
-            "medicine": self.medicine_items,
-            "misc": self.misc_items,
-        }
+        item_lists = self._get_item_lists()
+        target_list = item_lists[self._resolve_item_type(getattr(item, "item_type", "misc"))]
+        item_updated = False
 
-        for existing_item in item_lists[item.item_type]:
+        for existing_item in target_list:
             if existing_item.get_name() == item.get_name():
                 existing_item.quantity += item.quantity
+                item_updated = True
                 break
         else:
-            item_lists[item.item_type].append(item)
+            target_list.append(item)
+            item_updated = True
 
-        for existing_item in self.all_items:
-            if existing_item.get_name() == item.get_name():
-                existing_item.quantity += item.quantity
-                break
-        else:
-            self.all_items.append(item)
+        if item_updated:
+            self.get_all_items()
 
         return item
 
     def remove_item(self, item: ItemObject):
-        item_lists = {
-            "food": self.food_items,
-            "clothing": self.clothing_items,
-            "tools": self.tools_items,
-            "weapons": self.weapons_items,
-            "medicine": self.medicine_items,
-            "misc": self.misc_items,
-        }
+        item_lists = self._get_item_lists()
+        target_list = item_lists[self._resolve_item_type(getattr(item, "item_type", "misc"))]
+        item_updated = False
 
-        for existing_item in item_lists[item.item_type]:
+        for existing_item in target_list:
             if existing_item.get_name() == item.get_name():
                 existing_item.quantity -= item.quantity
                 if existing_item.quantity <= 0:
-                    item_lists[item.item_type].remove(existing_item)
+                    target_list.remove(existing_item)
+                item_updated = True
                 break
 
-        for existing_item in self.all_items:
-            if existing_item.get_name() == item.get_name():
-                existing_item.quantity -= item.quantity
-                if existing_item.quantity <= 0:
-                    self.all_items.remove(existing_item)
-                break
+        if item_updated:
+            self.get_all_items()
 
+        return item
+
+    def drop_item(self, item: ItemObject):
+        self.remove_item(item)
+        return item
+
+    def transfer_item_to(self, item: ItemObject, other_inventory: "ItemInventory"):
+        if not isinstance(other_inventory, ItemInventory):
+            raise TypeError(
+                f"other_inventory must be an ItemInventory instance, got {type(other_inventory).__name__}"
+            )
+        available_quantity = self.count_total_items_by_name(item.get_name())
+        if available_quantity < item.get_quantity():
+            raise ValueError(
+                f"Cannot transfer {item.get_quantity()} of {item.get_name()}; only {available_quantity} available"
+            )
+
+        self.remove_item(item)
+        other_inventory.add_item(item)
         return item
 
     def get_food_items(self):
@@ -843,7 +895,7 @@ class ItemInventory:
 
     def set_food_items(self, food_items: List[FoodItem]):
         self.food_items = food_items
-        self.all_items += food_items
+        self.get_all_items()
         return self.food_items
 
     def count_food_items_total(self):
@@ -876,7 +928,7 @@ class ItemInventory:
 
     def set_clothing_items(self, clothing_items: List[ItemObject]):
         self.clothing_items = clothing_items
-        self.all_items += clothing_items
+        self.get_all_items()
         return self.clothing_items
 
     def get_tools_items(self):
@@ -884,7 +936,7 @@ class ItemInventory:
 
     def set_tools_items(self, tools_items: List[ItemObject]):
         self.tools_items = tools_items
-        self.all_items += tools_items
+        self.get_all_items()
         return self.tools_items
 
     def count_tools_items_total(self):
@@ -904,7 +956,7 @@ class ItemInventory:
 
     def set_weapons_items(self, weapons_items: List[ItemObject]):
         self.weapons_items = weapons_items
-        self.all_items += weapons_items
+        self.get_all_items()
         return self.weapons_items
 
     def get_medicine_items(self):
@@ -912,7 +964,7 @@ class ItemInventory:
 
     def set_medicine_items(self, medicine_items: List[ItemObject]):
         self.medicine_items = medicine_items
-        self.all_items += medicine_items
+        self.get_all_items()
         return self.medicine_items
 
     def count_medicine_items_total(self):
@@ -926,7 +978,7 @@ class ItemInventory:
 
     def set_misc_items(self, misc_items: List[ItemObject]):
         self.misc_items = misc_items
-        self.all_items += misc_items
+        self.get_all_items()
         return self.misc_items
 
     def count_misc_items_total(self):
@@ -1074,45 +1126,12 @@ class ItemInventory:
     def check_has_item_by_type(self, item_type, amount=1, oper="ge"):
         if oper not in self.ops:
             oper = self.symb_map[oper]
-
-        if item_type == "food":
-            return bool(
-                True
-                if self.ops[oper](sum(self.count_food_items_total()), amount)
-                else False
-            )
-        elif item_type == "clothing":
-            return bool(
-                True
-                if self.ops[oper](sum(self.count_clothing_items_total()), amount)
-                else False
-            )
-        elif item_type == "tools":
-            return bool(
-                True
-                if self.ops[oper](sum(self.count_tools_items_total()), amount)
-                else False
-            )
-        elif item_type == "weapons":
-            return bool(
-                True
-                if self.ops[oper](sum(self.count_weapons_items_total()), amount)
-                else False
-            )
-        elif item_type == "medicine":
-            return bool(
-                True
-                if self.ops[oper](sum(self.count_medicine_items_total()), amount)
-                else False
-            )
-        elif item_type == "misc":
-            return bool(
-                True
-                if self.ops[oper](sum(self.count_misc_items_total()), amount)
-                else False
-            )
-        else:
+        item_types = self._normalize_item_types(item_type)
+        if not item_types:
             return False
+
+        total = sum(self.count_total_items_by_type(entry) for entry in item_types)
+        return self.ops[oper](total, amount)
 
     def check_has_item_by_attribute_value(self, attribute, value, oper="ge"):
         if oper not in self.ops:
@@ -1133,4 +1152,50 @@ class ItemInventory:
             "weapons": self.weapons_items,
             "medicine": self.medicine_items,
             "misc": self.misc_items,
+        }
+
+    def get_surplus_items(self):
+        return [item for item in self.get_all_items() if item.get_quantity() > 1]
+
+    def get_trade_candidates(self):
+        return [
+            item
+            for item in self.get_all_items()
+            if item.get_quantity() > 1
+            or getattr(item, "item_type", "misc") not in self.ESSENTIAL_ITEM_TYPES
+        ]
+
+    def get_drop_candidates(self):
+        return [
+            item
+            for item in self.get_all_items()
+            if getattr(item, "item_type", "misc") == "misc" or item.get_quantity() > 1
+        ]
+
+    def to_prompt_context(self):
+        items_by_type = {
+            item_type: [self._serialize_item(item) for item in self._get_item_lists()[item_type]]
+            for item_type in self.ITEM_TYPE_KEYS
+        }
+        summary = {
+            "total_items": self.count_total_items(),
+            "total_stacks": len(self.get_all_items()),
+            "total_value": self.get_total_value(),
+            "total_weight": self.get_total_weight(),
+            "counts_by_type": {
+                item_type: self.count_total_items_by_type(item_type)
+                for item_type in self.ITEM_TYPE_KEYS
+            },
+        }
+        return {
+            "summary": summary,
+            "items_by_type": items_by_type,
+            "all_items": [self._serialize_item(item) for item in self.get_all_items()],
+            "surplus_items": [self._serialize_item(item) for item in self.get_surplus_items()],
+            "trade_candidates": [
+                self._serialize_item(item) for item in self.get_trade_candidates()
+            ],
+            "drop_candidates": [
+                self._serialize_item(item) for item in self.get_drop_candidates()
+            ],
         }
