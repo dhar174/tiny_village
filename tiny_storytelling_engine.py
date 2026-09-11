@@ -118,8 +118,12 @@ class StorytellingEventHandler(EventHandler):
         # Forward to storytelling system for narrative processing
         if hasattr(self, 'storytelling_system') and self.storytelling_system:
             try:
-                self.storytelling_system.process_event_for_stories(event)
-                logging.debug(f"Forwarded event '{event.name}' to storytelling system for narrative processing")
+                storytelling_event = self._event_context(event)
+                self.storytelling_system.process_event_for_stories(storytelling_event)
+                logging.debug(
+                    f"Forwarded event '{storytelling_event.name}' to storytelling "
+                    "system for narrative processing"
+                )
             except Exception as e:
                 logging.error(f"Error forwarding event to storytelling system: {e}")
     

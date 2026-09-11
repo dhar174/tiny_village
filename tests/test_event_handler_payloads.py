@@ -9,6 +9,7 @@ from unittest.mock import Mock
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from tiny_event_handler import Event, EventHandler
+from tiny_storytelling_engine import StorytellingEventHandler
 
 
 class TestEventHandlerPayloads(unittest.TestCase):
@@ -101,6 +102,28 @@ class TestEventHandlerPayloads(unittest.TestCase):
         self.assertEqual(stats["total_events"], 2)
         self.assertEqual(stats["events_by_type"]["test"], 1)
         self.assertEqual(stats["average_importance"], self.event.importance)
+
+    def test_storytelling_receives_object_context_for_dict_payload(self):
+        handler = StorytellingEventHandler(self.mock_graph_manager)
+        handler.storytelling_system = Mock()
+        payload = {
+            "name": "Payload Story",
+            "type": "social",
+            "importance": 7,
+            "impact": 2,
+            "participants": ["Alice"],
+        }
+
+        handler.add_event(payload)
+
+        forwarded_event = (
+            handler.storytelling_system.process_event_for_stories.call_args.args[0]
+        )
+        self.assertEqual(forwarded_event.name, "Payload Story")
+        self.assertEqual(forwarded_event.type, "social")
+        self.assertEqual(forwarded_event.importance, 7)
+        self.assertEqual(forwarded_event.impact, 2)
+        self.assertEqual(forwarded_event.participants, ["Alice"])
 
 
 if __name__ == "__main__":

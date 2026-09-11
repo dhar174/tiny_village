@@ -462,6 +462,8 @@ class EventHandler:
                 name=self._event_name(event),
                 type=event_type,
                 event_type=event_type,
+                importance=event.get("importance", 0),
+                impact=event.get("impact", 0),
                 participants=list(event.get("participants") or []),
                 location=event.get("location"),
             )
