@@ -18,6 +18,7 @@ Expected Data Structures:
 """
 
 import time
+import logging
 from functools import lru_cache, wraps
 from typing import Dict, List, Optional, Tuple, Union
 from collections import defaultdict
@@ -27,16 +28,30 @@ from actions import (
     State,
 )  # Assuming Action class is available and has cost & effects
 
+logger = logging.getLogger(__name__)
 
-# Use a simple Goal class for compatibility
-class Goal:
-    """Simple Goal class for utility calculations."""
+# Try to import the real Goal class first, fall back to simple implementation
+try:
+    from tiny_characters import Goal
+    
+except ImportError as e:
+    logger.warning("Using fallback Goal implementation in tiny_utility_functions", exc_info=True)
+    logger.debug("Using real Goal class from tiny_characters")
+except ImportError:
+    # Fallback Goal class for compatibility when real Goal is not available
+    class Goal:
+        """Simple Goal class for utility calculations - fallback implementation."""
 
-    def __init__(self, name=None, target_effects=None, priority=0.5, score=None):
-        self.name = name or "UnnamedGoal"
-        self.target_effects = target_effects if target_effects else {}
-        self.priority = priority
-        self.score = score if score is not None else priority
+        def __init__(self, name=None, target_effects=None, priority=0.5, score=None, **kwargs):
+            self.name = name or "UnnamedGoal"
+            self.target_effects = target_effects if target_effects else {}
+            self.priority = priority
+            self.score = score if score is not None else priority
+            # Additional attributes that may be expected by utility functions
+            self.urgency = kwargs.get('urgency', priority)
+            self.attributes = kwargs.get('attributes', {})
+    
+    logger.warning("Using fallback Goal implementation in tiny_utility_functions")
 
 
 # === CONSTANTS ===

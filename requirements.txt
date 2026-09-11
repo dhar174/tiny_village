@@ -1,3 +1,5 @@
+# TinyVillage targets Python 3.12.
+# Install with: python3.12 -m pip install -r requirements.txt
 absl-py>=2.1.0
 accelerate>=0.33.0
 aiohttp==3.9.5

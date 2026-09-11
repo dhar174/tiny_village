@@ -67,8 +67,8 @@ class GameCalendar:
         self.current_second %= len(self.seconds)
         self.current_minute %= len(self.minutes)
         self.current_hour %= len(self.hours)
-        self.current_day %= len(self.days)
-        self.current_month %= len(self.months)
+        self.current_day = (self.current_day - 1) % len(self.days) + 1
+        self.current_month = (self.current_month - 1) % len(self.months) + 1
         self.current_year %= len(self.years)
 
         self.game_time = datetime.datetime(self.current_year, self.current_month, self.current_day, self.current_hour, self.current_minute, self.current_second)

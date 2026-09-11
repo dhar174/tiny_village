@@ -6,6 +6,7 @@ Test script to verify the completed implementations work correctly.
 import sys
 import os
 import unittest
+from unittest.mock import patch
 
 # Add the current directory to the Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -31,45 +32,51 @@ class TestCompletedImplementations(unittest.TestCase):
 
         builder = CreateBuilding(map_data)
 
-        # Test creating a house
-        house = builder.create_house(
-            "Test House",
-            height=20,
-            width=15,
-            length=15,
-            address="123 Test St",
-            stories=2,
-            bedrooms=3,
-            bathrooms=2,
-        )
+        with patch(
+            "tiny_buildings.random.randint",
+            side_effect=[10, 10, 10, 10, 20, 20],
+        ):
+            # Test creating a house
+            house = builder.create_house(
+                "Test House",
+                height=20,
+                width=15,
+                length=15,
+                address="123 Test St",
+                stories=2,
+                bedrooms=3,
+                bathrooms=2,
+            )
 
-        # Verify house was created with correct properties
-        self.assertIsNotNone(house)
-        self.assertEqual(house.name, "Test House")
-        self.assertEqual(house.width, 15)
-        self.assertEqual(house.length, 15)
-        self.assertTrue(hasattr(house, 'x'))
-        self.assertTrue(hasattr(house, 'y'))
+            # Verify house was created with correct properties
+            self.assertIsNotNone(house)
+            self.assertEqual(house.name, "Test House")
+            self.assertEqual(house.width, 15)
+            self.assertEqual(house.length, 15)
+            self.assertTrue(hasattr(house, 'x'))
+            self.assertTrue(hasattr(house, 'y'))
+            self.assertEqual((house.x, house.y), (10, 10))
 
-        # Test creating multiple houses to verify collision detection
-        house2 = builder.create_house(
-            "Test House 2",
-            height=25,
-            width=12,
-            length=12,
-            address="456 Test Ave",
-            stories=1,
-            bedrooms=2,
-            bathrooms=1,
-        )
+            # Test creating multiple houses to verify collision detection
+            house2 = builder.create_house(
+                "Test House 2",
+                height=25,
+                width=12,
+                length=12,
+                address="456 Test Ave",
+                stories=1,
+                bedrooms=2,
+                bathrooms=1,
+            )
 
-        # Verify second house was created
-        self.assertIsNotNone(house2)
-        self.assertEqual(house2.name, "Test House 2")
-        
-        # Verify they don't overlap (collision detection working)
-        self.assertNotEqual((house.x, house.y), (house2.x, house2.y),
-                          "Houses should not be placed at the same coordinates")
+            # Verify second house was created
+            self.assertIsNotNone(house2)
+            self.assertEqual(house2.name, "Test House 2")
+            self.assertEqual((house2.x, house2.y), (20, 20))
+            
+            # Verify they don't overlap (collision detection working)
+            self.assertNotEqual((house.x, house.y), (house2.x, house2.y),
+                              "Houses should not be placed at the same coordinates")
 
 
     def test_pause_functionality(self):

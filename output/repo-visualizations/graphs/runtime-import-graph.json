@@ -1,0 +1,2649 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "path": "actions.py",
+      "family": "actions",
+      "shape_family": "other",
+      "in_degree": 27,
+      "out_degree": 3,
+      "total_degree": 30,
+      "is_runtime_core": 1,
+      "id": "actions"
+    },
+    {
+      "path": "binary_to_decimal.py",
+      "family": "support",
+      "shape_family": "other",
+      "in_degree": 0,
+      "out_degree": 0,
+      "total_degree": 0,
+      "is_runtime_core": 0,
+      "id": "binary_to_decimal"
+    },
+    {
+      "path": "character_attribute_mapper.py",
+      "family": "support",
+      "shape_family": "other",
+      "in_degree": 1,
+      "out_degree": 0,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "character_attribute_mapper"
+    },
+    {
+      "path": "cosine_threshold_query.py",
+      "family": "support",
+      "shape_family": "other",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "cosine_threshold_query"
+    },
+    {
+      "path": "demo_advanced_utility.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "demo_advanced_utility"
+    },
+    {
+      "path": "demo_architecture_aligned.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 4,
+      "total_degree": 4,
+      "is_runtime_core": 0,
+      "id": "demo_architecture_aligned"
+    },
+    {
+      "path": "demo_building_functionality.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 2,
+      "total_degree": 2,
+      "is_runtime_core": 0,
+      "id": "demo_building_functionality"
+    },
+    {
+      "path": "demo_character_factory.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 5,
+      "out_degree": 0,
+      "total_degree": 5,
+      "is_runtime_core": 0,
+      "id": "demo_character_factory"
+    },
+    {
+      "path": "demo_character_state_effects.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 4,
+      "total_degree": 4,
+      "is_runtime_core": 0,
+      "id": "demo_character_state_effects"
+    },
+    {
+      "path": "demo_cost_integration.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 3,
+      "total_degree": 3,
+      "is_runtime_core": 0,
+      "id": "demo_cost_integration"
+    },
+    {
+      "path": "demo_custom_building_loading.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 2,
+      "total_degree": 2,
+      "is_runtime_core": 0,
+      "id": "demo_custom_building_loading"
+    },
+    {
+      "path": "demo_enhanced_building_interactions.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "demo_enhanced_building_interactions"
+    },
+    {
+      "path": "demo_enhanced_llm_interface.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 6,
+      "total_degree": 6,
+      "is_runtime_core": 0,
+      "id": "demo_enhanced_llm_interface"
+    },
+    {
+      "path": "demo_error_handling.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 0,
+      "total_degree": 0,
+      "is_runtime_core": 0,
+      "id": "demo_error_handling"
+    },
+    {
+      "path": "demo_event_system.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "demo_event_system"
+    },
+    {
+      "path": "demo_global_graph_manager.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 4,
+      "total_degree": 4,
+      "is_runtime_core": 0,
+      "id": "demo_global_graph_manager"
+    },
+    {
+      "path": "demo_goap_integration.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 3,
+      "total_degree": 3,
+      "is_runtime_core": 0,
+      "id": "demo_goap_integration"
+    },
+    {
+      "path": "demo_llm_integration.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 1,
+      "out_degree": 2,
+      "total_degree": 3,
+      "is_runtime_core": 0,
+      "id": "demo_llm_integration"
+    },
+    {
+      "path": "demo_llm_integration_features.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 0,
+      "total_degree": 0,
+      "is_runtime_core": 0,
+      "id": "demo_llm_integration_features"
+    },
+    {
+      "path": "demo_llm_strategic_integration.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 2,
+      "total_degree": 2,
+      "is_runtime_core": 0,
+      "id": "demo_llm_strategic_integration"
+    },
+    {
+      "path": "demo_location_integration.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 4,
+      "total_degree": 4,
+      "is_runtime_core": 0,
+      "id": "demo_location_integration"
+    },
+    {
+      "path": "demo_map_interactivity.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "demo_map_interactivity"
+    },
+    {
+      "path": "demo_map_location_integration.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 5,
+      "total_degree": 5,
+      "is_runtime_core": 0,
+      "id": "demo_map_location_integration"
+    },
+    {
+      "path": "demo_minimal_integration.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 1,
+      "out_degree": 3,
+      "total_degree": 4,
+      "is_runtime_core": 0,
+      "id": "demo_minimal_integration"
+    },
+    {
+      "path": "demo_mock_stock_antipattern.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 0,
+      "total_degree": 0,
+      "is_runtime_core": 0,
+      "id": "demo_mock_stock_antipattern"
+    },
+    {
+      "path": "demo_social_interactions.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 2,
+      "total_degree": 2,
+      "is_runtime_core": 0,
+      "id": "demo_social_interactions"
+    },
+    {
+      "path": "demo_storytelling_system.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 4,
+      "total_degree": 4,
+      "is_runtime_core": 0,
+      "id": "demo_storytelling_system"
+    },
+    {
+      "path": "demo_system_integration_old.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "demo_system_integration_old"
+    },
+    {
+      "path": "demo_talk_action_fix.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "demo_talk_action_fix"
+    },
+    {
+      "path": "demo_unified_goap.py",
+      "family": "demo",
+      "shape_family": "demo_*",
+      "in_degree": 0,
+      "out_degree": 2,
+      "total_degree": 2,
+      "is_runtime_core": 0,
+      "id": "demo_unified_goap"
+    },
+    {
+      "path": "effect_dispatcher.py",
+      "family": "support",
+      "shape_family": "other",
+      "in_degree": 2,
+      "out_degree": 2,
+      "total_degree": 4,
+      "is_runtime_core": 1,
+      "id": "effect_dispatcher"
+    },
+    {
+      "path": "effect_schema.py",
+      "family": "support",
+      "shape_family": "other",
+      "in_degree": 3,
+      "out_degree": 0,
+      "total_degree": 3,
+      "is_runtime_core": 1,
+      "id": "effect_schema"
+    },
+    {
+      "path": "goap_evaluator.py",
+      "family": "support",
+      "shape_family": "other",
+      "in_degree": 5,
+      "out_degree": 1,
+      "total_degree": 6,
+      "is_runtime_core": 1,
+      "id": "goap_evaluator"
+    },
+    {
+      "path": "graph_analytics.py",
+      "family": "support",
+      "shape_family": "other",
+      "in_degree": 3,
+      "out_degree": 0,
+      "total_degree": 3,
+      "is_runtime_core": 1,
+      "id": "graph_analytics"
+    },
+    {
+      "path": "integration_test_map_interactivity.py",
+      "family": "support",
+      "shape_family": "other",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "integration_test_map_interactivity"
+    },
+    {
+      "path": "langchain_docs_mcp_proxy.py",
+      "family": "support",
+      "shape_family": "other",
+      "in_degree": 0,
+      "out_degree": 0,
+      "total_degree": 0,
+      "is_runtime_core": 0,
+      "id": "langchain_docs_mcp_proxy"
+    },
+    {
+      "path": "llm_character_utils.py",
+      "family": "support",
+      "shape_family": "other",
+      "in_degree": 1,
+      "out_degree": 3,
+      "total_degree": 4,
+      "is_runtime_core": 1,
+      "id": "llm_character_utils"
+    },
+    {
+      "path": "llm_integration_utils.py",
+      "family": "support",
+      "shape_family": "other",
+      "in_degree": 2,
+      "out_degree": 1,
+      "total_degree": 3,
+      "is_runtime_core": 1,
+      "id": "llm_integration_utils"
+    },
+    {
+      "path": "main.py",
+      "family": "entrypoint",
+      "shape_family": "other",
+      "in_degree": 0,
+      "out_degree": 3,
+      "total_degree": 3,
+      "is_runtime_core": 1,
+      "id": "main"
+    },
+    {
+      "path": "recent_event_list.py",
+      "family": "support",
+      "shape_family": "other",
+      "in_degree": 0,
+      "out_degree": 0,
+      "total_degree": 0,
+      "is_runtime_core": 1,
+      "id": "recent_event_list"
+    },
+    {
+      "path": "simple_character_for_testing.py",
+      "family": "support",
+      "shape_family": "other",
+      "in_degree": 3,
+      "out_degree": 0,
+      "total_degree": 3,
+      "is_runtime_core": 0,
+      "id": "simple_character_for_testing"
+    },
+    {
+      "path": "social_model.py",
+      "family": "support",
+      "shape_family": "other",
+      "in_degree": 3,
+      "out_degree": 0,
+      "total_degree": 3,
+      "is_runtime_core": 1,
+      "id": "social_model"
+    },
+    {
+      "path": "sort_faiss_results.py",
+      "family": "support",
+      "shape_family": "other",
+      "in_degree": 0,
+      "out_degree": 0,
+      "total_degree": 0,
+      "is_runtime_core": 0,
+      "id": "sort_faiss_results"
+    },
+    {
+      "path": "storytelling_integration.py",
+      "family": "support",
+      "shape_family": "other",
+      "in_degree": 1,
+      "out_degree": 2,
+      "total_degree": 3,
+      "is_runtime_core": 1,
+      "id": "storytelling_integration"
+    },
+    {
+      "path": "test_acceptance_criteria.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "test_acceptance_criteria"
+    },
+    {
+      "path": "test_building_interactions.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "test_building_interactions"
+    },
+    {
+      "path": "test_character_ai_locations.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 3,
+      "total_degree": 3,
+      "is_runtime_core": 0,
+      "id": "test_character_ai_locations"
+    },
+    {
+      "path": "test_character_location_fix_demo.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "test_character_location_fix_demo"
+    },
+    {
+      "path": "test_core_global_graph_manager.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 4,
+      "total_degree": 4,
+      "is_runtime_core": 0,
+      "id": "test_core_global_graph_manager"
+    },
+    {
+      "path": "test_core_llm_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 3,
+      "total_degree": 3,
+      "is_runtime_core": 0,
+      "id": "test_core_llm_integration"
+    },
+    {
+      "path": "test_error_handling.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 2,
+      "total_degree": 2,
+      "is_runtime_core": 0,
+      "id": "test_error_handling"
+    },
+    {
+      "path": "test_error_handling_simple.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 0,
+      "total_degree": 0,
+      "is_runtime_core": 0,
+      "id": "test_error_handling_simple"
+    },
+    {
+      "path": "test_event_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 3,
+      "total_degree": 3,
+      "is_runtime_core": 0,
+      "id": "test_event_integration"
+    },
+    {
+      "path": "test_event_strategy_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 3,
+      "total_degree": 3,
+      "is_runtime_core": 0,
+      "id": "test_event_strategy_integration"
+    },
+    {
+      "path": "test_global_graph_manager.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 5,
+      "total_degree": 5,
+      "is_runtime_core": 0,
+      "id": "test_global_graph_manager"
+    },
+    {
+      "path": "test_goap_evaluator.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 2,
+      "total_degree": 2,
+      "is_runtime_core": 0,
+      "id": "test_goap_evaluator"
+    },
+    {
+      "path": "test_goap_evaluator_focused.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "test_goap_evaluator_focused"
+    },
+    {
+      "path": "test_goap_simple.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "test_goap_simple"
+    },
+    {
+      "path": "test_graph_analytics.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 2,
+      "total_degree": 2,
+      "is_runtime_core": 0,
+      "id": "test_graph_analytics"
+    },
+    {
+      "path": "test_graph_manager_analytics_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 2,
+      "total_degree": 2,
+      "is_runtime_core": 0,
+      "id": "test_graph_manager_analytics_integration"
+    },
+    {
+      "path": "test_graph_manager_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "test_graph_manager_integration"
+    },
+    {
+      "path": "test_graphmanager_single_source.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 2,
+      "total_degree": 2,
+      "is_runtime_core": 0,
+      "id": "test_graphmanager_single_source"
+    },
+    {
+      "path": "test_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "test_integration"
+    },
+    {
+      "path": "test_integration_global_graph_manager.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 5,
+      "total_degree": 5,
+      "is_runtime_core": 0,
+      "id": "test_integration_global_graph_manager"
+    },
+    {
+      "path": "test_integration_minimal.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 1,
+      "out_degree": 2,
+      "total_degree": 3,
+      "is_runtime_core": 0,
+      "id": "test_integration_minimal"
+    },
+    {
+      "path": "test_llm_decision_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 5,
+      "total_degree": 5,
+      "is_runtime_core": 0,
+      "id": "test_llm_decision_integration"
+    },
+    {
+      "path": "test_llm_integration_pipeline.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 3,
+      "total_degree": 3,
+      "is_runtime_core": 0,
+      "id": "test_llm_integration_pipeline"
+    },
+    {
+      "path": "test_llm_interface_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 6,
+      "total_degree": 6,
+      "is_runtime_core": 0,
+      "id": "test_llm_interface_integration"
+    },
+    {
+      "path": "test_location_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 4,
+      "total_degree": 4,
+      "is_runtime_core": 0,
+      "id": "test_location_integration"
+    },
+    {
+      "path": "test_map_interactivity.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "test_map_interactivity"
+    },
+    {
+      "path": "test_map_location_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 2,
+      "total_degree": 2,
+      "is_runtime_core": 0,
+      "id": "test_map_location_integration"
+    },
+    {
+      "path": "test_memory_antipattern_demo.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 0,
+      "total_degree": 0,
+      "is_runtime_core": 0,
+      "id": "test_memory_antipattern_demo"
+    },
+    {
+      "path": "test_memory_fixes_validation.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 0,
+      "total_degree": 0,
+      "is_runtime_core": 0,
+      "id": "test_memory_fixes_validation"
+    },
+    {
+      "path": "test_memory_magicmock_issue.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 0,
+      "total_degree": 0,
+      "is_runtime_core": 0,
+      "id": "test_memory_magicmock_issue"
+    },
+    {
+      "path": "test_node_fixes_validation.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 0,
+      "total_degree": 0,
+      "is_runtime_core": 0,
+      "id": "test_node_fixes_validation"
+    },
+    {
+      "path": "test_output_interpreter_social.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "test_output_interpreter_social"
+    },
+    {
+      "path": "test_pathfinding_robustness.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "test_pathfinding_robustness"
+    },
+    {
+      "path": "test_quick_memory_fixes.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 0,
+      "total_degree": 0,
+      "is_runtime_core": 0,
+      "id": "test_quick_memory_fixes"
+    },
+    {
+      "path": "test_real_character_correct_approach.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "test_real_character_correct_approach"
+    },
+    {
+      "path": "test_simple_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "test_simple_integration"
+    },
+    {
+      "path": "test_social_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "test_social_integration"
+    },
+    {
+      "path": "test_social_interactions.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "test_social_interactions"
+    },
+    {
+      "path": "test_social_model.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "test_social_model"
+    },
+    {
+      "path": "test_social_model_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "test_social_model_integration"
+    },
+    {
+      "path": "test_social_travel_prompt.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "test_social_travel_prompt"
+    },
+    {
+      "path": "test_story_arc_implementation.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "test_story_arc_implementation"
+    },
+    {
+      "path": "test_storytelling_comprehensive.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 2,
+      "total_degree": 2,
+      "is_runtime_core": 0,
+      "id": "test_storytelling_comprehensive"
+    },
+    {
+      "path": "test_storytelling_engine.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 2,
+      "total_degree": 2,
+      "is_runtime_core": 0,
+      "id": "test_storytelling_engine"
+    },
+    {
+      "path": "test_storytelling_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 3,
+      "total_degree": 3,
+      "is_runtime_core": 0,
+      "id": "test_storytelling_integration"
+    },
+    {
+      "path": "test_storytelling_system.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 2,
+      "total_degree": 2,
+      "is_runtime_core": 0,
+      "id": "test_storytelling_system"
+    },
+    {
+      "path": "test_system_integration.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "test_system_integration"
+    },
+    {
+      "path": "test_ui_enhancements.py",
+      "family": "test",
+      "shape_family": "test_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "test_ui_enhancements"
+    },
+    {
+      "path": "tiny_animation_system.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 2,
+      "out_degree": 0,
+      "total_degree": 2,
+      "is_runtime_core": 1,
+      "id": "tiny_animation_system"
+    },
+    {
+      "path": "tiny_brain_io.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 6,
+      "out_degree": 0,
+      "total_degree": 6,
+      "is_runtime_core": 1,
+      "id": "tiny_brain_io"
+    },
+    {
+      "path": "tiny_brain_io_fixed.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 0,
+      "out_degree": 0,
+      "total_degree": 0,
+      "is_runtime_core": 1,
+      "id": "tiny_brain_io_fixed"
+    },
+    {
+      "path": "tiny_building_manager.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 2,
+      "out_degree": 0,
+      "total_degree": 2,
+      "is_runtime_core": 1,
+      "id": "tiny_building_manager"
+    },
+    {
+      "path": "tiny_buildings.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 11,
+      "out_degree": 3,
+      "total_degree": 14,
+      "is_runtime_core": 1,
+      "id": "tiny_buildings"
+    },
+    {
+      "path": "tiny_characters.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 8,
+      "out_degree": 16,
+      "total_degree": 24,
+      "is_runtime_core": 1,
+      "id": "tiny_characters"
+    },
+    {
+      "path": "tiny_event_handler.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 21,
+      "out_degree": 7,
+      "total_degree": 28,
+      "is_runtime_core": 1,
+      "id": "tiny_event_handler"
+    },
+    {
+      "path": "tiny_gameplay_controller.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 15,
+      "out_degree": 14,
+      "total_degree": 29,
+      "is_runtime_core": 1,
+      "id": "tiny_gameplay_controller"
+    },
+    {
+      "path": "tiny_globals.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 10,
+      "out_degree": 2,
+      "total_degree": 12,
+      "is_runtime_core": 1,
+      "id": "tiny_globals"
+    },
+    {
+      "path": "tiny_goap_system.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 8,
+      "out_degree": 3,
+      "total_degree": 11,
+      "is_runtime_core": 1,
+      "id": "tiny_goap_system"
+    },
+    {
+      "path": "tiny_graph_manager.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 12,
+      "out_degree": 12,
+      "total_degree": 24,
+      "is_runtime_core": 1,
+      "id": "tiny_graph_manager"
+    },
+    {
+      "path": "tiny_items.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 5,
+      "out_degree": 2,
+      "total_degree": 7,
+      "is_runtime_core": 1,
+      "id": "tiny_items"
+    },
+    {
+      "path": "tiny_jobs.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 2,
+      "out_degree": 0,
+      "total_degree": 2,
+      "is_runtime_core": 1,
+      "id": "tiny_jobs"
+    },
+    {
+      "path": "tiny_locations.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 11,
+      "out_degree": 2,
+      "total_degree": 13,
+      "is_runtime_core": 1,
+      "id": "tiny_locations"
+    },
+    {
+      "path": "tiny_map_controller.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 8,
+      "out_degree": 2,
+      "total_degree": 10,
+      "is_runtime_core": 1,
+      "id": "tiny_map_controller"
+    },
+    {
+      "path": "tiny_memories.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 4,
+      "out_degree": 4,
+      "total_degree": 8,
+      "is_runtime_core": 1,
+      "id": "tiny_memories"
+    },
+    {
+      "path": "tiny_memories_alpha.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 0,
+      "out_degree": 2,
+      "total_degree": 2,
+      "is_runtime_core": 1,
+      "id": "tiny_memories_alpha"
+    },
+    {
+      "path": "tiny_output_interpreter.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 10,
+      "out_degree": 1,
+      "total_degree": 11,
+      "is_runtime_core": 1,
+      "id": "tiny_output_interpreter"
+    },
+    {
+      "path": "tiny_prompt_builder.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 7,
+      "out_degree": 4,
+      "total_degree": 11,
+      "is_runtime_core": 1,
+      "id": "tiny_prompt_builder"
+    },
+    {
+      "path": "tiny_sr_mapping.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 1,
+      "out_degree": 0,
+      "total_degree": 1,
+      "is_runtime_core": 1,
+      "id": "tiny_sr_mapping"
+    },
+    {
+      "path": "tiny_story_arc.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 1,
+      "out_degree": 0,
+      "total_degree": 1,
+      "is_runtime_core": 1,
+      "id": "tiny_story_arc"
+    },
+    {
+      "path": "tiny_storytelling_engine.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 5,
+      "out_degree": 1,
+      "total_degree": 6,
+      "is_runtime_core": 1,
+      "id": "tiny_storytelling_engine"
+    },
+    {
+      "path": "tiny_storytelling_system.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 7,
+      "out_degree": 1,
+      "total_degree": 8,
+      "is_runtime_core": 1,
+      "id": "tiny_storytelling_system"
+    },
+    {
+      "path": "tiny_strategy_manager.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 18,
+      "out_degree": 9,
+      "total_degree": 27,
+      "is_runtime_core": 1,
+      "id": "tiny_strategy_manager"
+    },
+    {
+      "path": "tiny_tart_reasoning.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 0,
+      "out_degree": 0,
+      "total_degree": 0,
+      "is_runtime_core": 1,
+      "id": "tiny_tart_reasoning"
+    },
+    {
+      "path": "tiny_time_manager.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 6,
+      "out_degree": 0,
+      "total_degree": 6,
+      "is_runtime_core": 1,
+      "id": "tiny_time_manager"
+    },
+    {
+      "path": "tiny_types.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 9,
+      "out_degree": 0,
+      "total_degree": 9,
+      "is_runtime_core": 1,
+      "id": "tiny_types"
+    },
+    {
+      "path": "tiny_util_funcs.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 2,
+      "out_degree": 0,
+      "total_degree": 2,
+      "is_runtime_core": 1,
+      "id": "tiny_util_funcs"
+    },
+    {
+      "path": "tiny_utility_functions.py",
+      "family": "tiny",
+      "shape_family": "tiny_*",
+      "in_degree": 9,
+      "out_degree": 2,
+      "total_degree": 11,
+      "is_runtime_core": 1,
+      "id": "tiny_utility_functions"
+    },
+    {
+      "path": "validate_event_strategy_integration.py",
+      "family": "validation",
+      "shape_family": "validate_/verify_*",
+      "in_degree": 0,
+      "out_degree": 2,
+      "total_degree": 2,
+      "is_runtime_core": 0,
+      "id": "validate_event_strategy_integration"
+    },
+    {
+      "path": "validate_implementations.py",
+      "family": "validation",
+      "shape_family": "validate_/verify_*",
+      "in_degree": 0,
+      "out_degree": 0,
+      "total_degree": 0,
+      "is_runtime_core": 0,
+      "id": "validate_implementations"
+    },
+    {
+      "path": "validate_refactoring.py",
+      "family": "validation",
+      "shape_family": "validate_/verify_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "validate_refactoring"
+    },
+    {
+      "path": "validate_storytelling_integration.py",
+      "family": "validation",
+      "shape_family": "validate_/verify_*",
+      "in_degree": 0,
+      "out_degree": 3,
+      "total_degree": 3,
+      "is_runtime_core": 0,
+      "id": "validate_storytelling_integration"
+    },
+    {
+      "path": "verify_fixes.py",
+      "family": "validation",
+      "shape_family": "validate_/verify_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "verify_fixes"
+    },
+    {
+      "path": "verify_improvements.py",
+      "family": "validation",
+      "shape_family": "validate_/verify_*",
+      "in_degree": 0,
+      "out_degree": 0,
+      "total_degree": 0,
+      "is_runtime_core": 0,
+      "id": "verify_improvements"
+    },
+    {
+      "path": "verify_real_character_fix.py",
+      "family": "validation",
+      "shape_family": "validate_/verify_*",
+      "in_degree": 0,
+      "out_degree": 3,
+      "total_degree": 3,
+      "is_runtime_core": 0,
+      "id": "verify_real_character_fix"
+    },
+    {
+      "path": "verify_single_source_of_truth.py",
+      "family": "validation",
+      "shape_family": "validate_/verify_*",
+      "in_degree": 0,
+      "out_degree": 2,
+      "total_degree": 2,
+      "is_runtime_core": 0,
+      "id": "verify_single_source_of_truth"
+    },
+    {
+      "path": "verify_storytelling_implementation.py",
+      "family": "validation",
+      "shape_family": "validate_/verify_*",
+      "in_degree": 0,
+      "out_degree": 1,
+      "total_degree": 1,
+      "is_runtime_core": 0,
+      "id": "verify_storytelling_implementation"
+    },
+    {
+      "path": "visual_demo_map_interactivity.py",
+      "family": "support",
+      "shape_family": "other",
+      "in_degree": 0,
+      "out_degree": 0,
+      "total_degree": 0,
+      "is_runtime_core": 0,
+      "id": "visual_demo_map_interactivity"
+    },
+    {
+      "path": "world_state.py",
+      "family": "support",
+      "shape_family": "other",
+      "in_degree": 3,
+      "out_degree": 0,
+      "total_degree": 3,
+      "is_runtime_core": 1,
+      "id": "world_state"
+    },
+    {
+      "path": "write_job_details.py",
+      "family": "support",
+      "shape_family": "other",
+      "in_degree": 0,
+      "out_degree": 0,
+      "total_degree": 0,
+      "is_runtime_core": 0,
+      "id": "write_job_details"
+    }
+  ],
+  "edges": [
+    {
+      "relation": "imports",
+      "source": "actions",
+      "target": "tiny_globals"
+    },
+    {
+      "relation": "imports",
+      "source": "actions",
+      "target": "tiny_types"
+    },
+    {
+      "relation": "imports",
+      "source": "actions",
+      "target": "tiny_util_funcs"
+    },
+    {
+      "relation": "imports",
+      "source": "cosine_threshold_query",
+      "target": "tiny_memories"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_advanced_utility",
+      "target": "tiny_utility_functions"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_architecture_aligned",
+      "target": "tiny_characters"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_architecture_aligned",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_architecture_aligned",
+      "target": "tiny_goap_system"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_architecture_aligned",
+      "target": "tiny_strategy_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_building_functionality",
+      "target": "tiny_building_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_building_functionality",
+      "target": "tiny_buildings"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_character_state_effects",
+      "target": "demo_character_factory"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_character_state_effects",
+      "target": "effect_dispatcher"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_character_state_effects",
+      "target": "effect_schema"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_character_state_effects",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_cost_integration",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_cost_integration",
+      "target": "tiny_goap_system"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_cost_integration",
+      "target": "tiny_utility_functions"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_custom_building_loading",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_custom_building_loading",
+      "target": "tiny_buildings"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_enhanced_building_interactions",
+      "target": "tiny_buildings"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_enhanced_llm_interface",
+      "target": "demo_character_factory"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_enhanced_llm_interface",
+      "target": "tiny_characters"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_enhanced_llm_interface",
+      "target": "tiny_items"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_enhanced_llm_interface",
+      "target": "tiny_output_interpreter"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_enhanced_llm_interface",
+      "target": "tiny_prompt_builder"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_enhanced_llm_interface",
+      "target": "tiny_strategy_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_event_system",
+      "target": "tiny_strategy_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_global_graph_manager",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_global_graph_manager",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_global_graph_manager",
+      "target": "tiny_globals"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_global_graph_manager",
+      "target": "tiny_strategy_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_goap_integration",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_goap_integration",
+      "target": "tiny_strategy_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_goap_integration",
+      "target": "tiny_utility_functions"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_llm_integration",
+      "target": "demo_character_factory"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_llm_integration",
+      "target": "tiny_strategy_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_llm_strategic_integration",
+      "target": "llm_integration_utils"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_llm_strategic_integration",
+      "target": "tiny_strategy_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_location_integration",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_location_integration",
+      "target": "simple_character_for_testing"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_location_integration",
+      "target": "tiny_buildings"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_location_integration",
+      "target": "tiny_locations"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_map_interactivity",
+      "target": "tiny_map_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_map_location_integration",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_map_location_integration",
+      "target": "simple_character_for_testing"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_map_location_integration",
+      "target": "tiny_buildings"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_map_location_integration",
+      "target": "tiny_locations"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_map_location_integration",
+      "target": "tiny_map_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_minimal_integration",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_minimal_integration",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_minimal_integration",
+      "target": "tiny_gameplay_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_social_interactions",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_social_interactions",
+      "target": "tiny_graph_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_storytelling_system",
+      "target": "storytelling_integration"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_storytelling_system",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_storytelling_system",
+      "target": "tiny_storytelling_engine"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_storytelling_system",
+      "target": "tiny_storytelling_system"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_system_integration_old",
+      "target": "tiny_gameplay_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_talk_action_fix",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_unified_goap",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "demo_unified_goap",
+      "target": "tiny_goap_system"
+    },
+    {
+      "relation": "imports",
+      "source": "effect_dispatcher",
+      "target": "character_attribute_mapper"
+    },
+    {
+      "relation": "imports",
+      "source": "effect_dispatcher",
+      "target": "effect_schema"
+    },
+    {
+      "relation": "imports",
+      "source": "goap_evaluator",
+      "target": "tiny_utility_functions"
+    },
+    {
+      "relation": "imports",
+      "source": "integration_test_map_interactivity",
+      "target": "tiny_map_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "llm_character_utils",
+      "target": "demo_character_factory"
+    },
+    {
+      "relation": "imports",
+      "source": "llm_character_utils",
+      "target": "tiny_brain_io"
+    },
+    {
+      "relation": "imports",
+      "source": "llm_character_utils",
+      "target": "tiny_output_interpreter"
+    },
+    {
+      "relation": "imports",
+      "source": "llm_integration_utils",
+      "target": "tiny_strategy_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "main",
+      "target": "demo_minimal_integration"
+    },
+    {
+      "relation": "imports",
+      "source": "main",
+      "target": "test_integration_minimal"
+    },
+    {
+      "relation": "imports",
+      "source": "main",
+      "target": "tiny_gameplay_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "storytelling_integration",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "storytelling_integration",
+      "target": "tiny_storytelling_engine"
+    },
+    {
+      "relation": "imports",
+      "source": "test_acceptance_criteria",
+      "target": "goap_evaluator"
+    },
+    {
+      "relation": "imports",
+      "source": "test_building_interactions",
+      "target": "tiny_buildings"
+    },
+    {
+      "relation": "imports",
+      "source": "test_character_ai_locations",
+      "target": "tiny_buildings"
+    },
+    {
+      "relation": "imports",
+      "source": "test_character_ai_locations",
+      "target": "tiny_characters"
+    },
+    {
+      "relation": "imports",
+      "source": "test_character_ai_locations",
+      "target": "tiny_locations"
+    },
+    {
+      "relation": "imports",
+      "source": "test_character_location_fix_demo",
+      "target": "tiny_characters"
+    },
+    {
+      "relation": "imports",
+      "source": "test_core_global_graph_manager",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "test_core_global_graph_manager",
+      "target": "tiny_globals"
+    },
+    {
+      "relation": "imports",
+      "source": "test_core_global_graph_manager",
+      "target": "tiny_graph_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "test_core_global_graph_manager",
+      "target": "world_state"
+    },
+    {
+      "relation": "imports",
+      "source": "test_core_llm_integration",
+      "target": "tiny_goap_system"
+    },
+    {
+      "relation": "imports",
+      "source": "test_core_llm_integration",
+      "target": "tiny_output_interpreter"
+    },
+    {
+      "relation": "imports",
+      "source": "test_core_llm_integration",
+      "target": "tiny_strategy_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "test_error_handling",
+      "target": "tiny_map_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "test_error_handling",
+      "target": "tiny_memories"
+    },
+    {
+      "relation": "imports",
+      "source": "test_event_integration",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "test_event_integration",
+      "target": "tiny_gameplay_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "test_event_integration",
+      "target": "tiny_strategy_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "test_event_strategy_integration",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "test_event_strategy_integration",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "test_event_strategy_integration",
+      "target": "tiny_gameplay_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "test_global_graph_manager",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "test_global_graph_manager",
+      "target": "tiny_characters"
+    },
+    {
+      "relation": "imports",
+      "source": "test_global_graph_manager",
+      "target": "tiny_globals"
+    },
+    {
+      "relation": "imports",
+      "source": "test_global_graph_manager",
+      "target": "tiny_graph_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "test_global_graph_manager",
+      "target": "tiny_items"
+    },
+    {
+      "relation": "imports",
+      "source": "test_goap_evaluator",
+      "target": "goap_evaluator"
+    },
+    {
+      "relation": "imports",
+      "source": "test_goap_evaluator",
+      "target": "tiny_graph_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "test_goap_evaluator_focused",
+      "target": "goap_evaluator"
+    },
+    {
+      "relation": "imports",
+      "source": "test_goap_simple",
+      "target": "goap_evaluator"
+    },
+    {
+      "relation": "imports",
+      "source": "test_graph_analytics",
+      "target": "graph_analytics"
+    },
+    {
+      "relation": "imports",
+      "source": "test_graph_analytics",
+      "target": "world_state"
+    },
+    {
+      "relation": "imports",
+      "source": "test_graph_manager_analytics_integration",
+      "target": "graph_analytics"
+    },
+    {
+      "relation": "imports",
+      "source": "test_graph_manager_analytics_integration",
+      "target": "tiny_graph_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "test_graph_manager_integration",
+      "target": "tiny_graph_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "test_graphmanager_single_source",
+      "target": "tiny_gameplay_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "test_graphmanager_single_source",
+      "target": "tiny_graph_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "test_integration",
+      "target": "tiny_graph_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "test_integration_global_graph_manager",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "test_integration_global_graph_manager",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "test_integration_global_graph_manager",
+      "target": "tiny_gameplay_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "test_integration_global_graph_manager",
+      "target": "tiny_globals"
+    },
+    {
+      "relation": "imports",
+      "source": "test_integration_global_graph_manager",
+      "target": "tiny_strategy_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "test_integration_minimal",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "test_integration_minimal",
+      "target": "tiny_gameplay_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "test_llm_decision_integration",
+      "target": "tiny_gameplay_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "test_llm_decision_integration",
+      "target": "tiny_goap_system"
+    },
+    {
+      "relation": "imports",
+      "source": "test_llm_decision_integration",
+      "target": "tiny_output_interpreter"
+    },
+    {
+      "relation": "imports",
+      "source": "test_llm_decision_integration",
+      "target": "tiny_prompt_builder"
+    },
+    {
+      "relation": "imports",
+      "source": "test_llm_decision_integration",
+      "target": "tiny_strategy_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "test_llm_integration_pipeline",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "test_llm_integration_pipeline",
+      "target": "llm_integration_utils"
+    },
+    {
+      "relation": "imports",
+      "source": "test_llm_integration_pipeline",
+      "target": "tiny_strategy_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "test_llm_interface_integration",
+      "target": "tiny_brain_io"
+    },
+    {
+      "relation": "imports",
+      "source": "test_llm_interface_integration",
+      "target": "tiny_gameplay_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "test_llm_interface_integration",
+      "target": "tiny_memories"
+    },
+    {
+      "relation": "imports",
+      "source": "test_llm_interface_integration",
+      "target": "tiny_output_interpreter"
+    },
+    {
+      "relation": "imports",
+      "source": "test_llm_interface_integration",
+      "target": "tiny_prompt_builder"
+    },
+    {
+      "relation": "imports",
+      "source": "test_llm_interface_integration",
+      "target": "tiny_strategy_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "test_location_integration",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "test_location_integration",
+      "target": "tiny_buildings"
+    },
+    {
+      "relation": "imports",
+      "source": "test_location_integration",
+      "target": "tiny_locations"
+    },
+    {
+      "relation": "imports",
+      "source": "test_location_integration",
+      "target": "tiny_map_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "test_map_interactivity",
+      "target": "tiny_map_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "test_map_location_integration",
+      "target": "tiny_buildings"
+    },
+    {
+      "relation": "imports",
+      "source": "test_map_location_integration",
+      "target": "tiny_locations"
+    },
+    {
+      "relation": "imports",
+      "source": "test_output_interpreter_social",
+      "target": "tiny_output_interpreter"
+    },
+    {
+      "relation": "imports",
+      "source": "test_pathfinding_robustness",
+      "target": "tiny_map_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "test_real_character_correct_approach",
+      "target": "simple_character_for_testing"
+    },
+    {
+      "relation": "imports",
+      "source": "test_simple_integration",
+      "target": "tiny_strategy_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "test_social_integration",
+      "target": "tiny_output_interpreter"
+    },
+    {
+      "relation": "imports",
+      "source": "test_social_interactions",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "test_social_model",
+      "target": "social_model"
+    },
+    {
+      "relation": "imports",
+      "source": "test_social_model_integration",
+      "target": "social_model"
+    },
+    {
+      "relation": "imports",
+      "source": "test_social_travel_prompt",
+      "target": "tiny_prompt_builder"
+    },
+    {
+      "relation": "imports",
+      "source": "test_story_arc_implementation",
+      "target": "tiny_story_arc"
+    },
+    {
+      "relation": "imports",
+      "source": "test_storytelling_comprehensive",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "test_storytelling_comprehensive",
+      "target": "tiny_storytelling_system"
+    },
+    {
+      "relation": "imports",
+      "source": "test_storytelling_engine",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "test_storytelling_engine",
+      "target": "tiny_storytelling_engine"
+    },
+    {
+      "relation": "imports",
+      "source": "test_storytelling_integration",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "test_storytelling_integration",
+      "target": "tiny_gameplay_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "test_storytelling_integration",
+      "target": "tiny_storytelling_system"
+    },
+    {
+      "relation": "imports",
+      "source": "test_storytelling_system",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "test_storytelling_system",
+      "target": "tiny_storytelling_system"
+    },
+    {
+      "relation": "imports",
+      "source": "test_system_integration",
+      "target": "tiny_gameplay_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "test_ui_enhancements",
+      "target": "tiny_gameplay_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_buildings",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_buildings",
+      "target": "tiny_locations"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_buildings",
+      "target": "tiny_types"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_characters",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_characters",
+      "target": "tiny_animation_system"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_characters",
+      "target": "tiny_buildings"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_characters",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_characters",
+      "target": "tiny_globals"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_characters",
+      "target": "tiny_goap_system"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_characters",
+      "target": "tiny_graph_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_characters",
+      "target": "tiny_items"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_characters",
+      "target": "tiny_jobs"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_characters",
+      "target": "tiny_locations"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_characters",
+      "target": "tiny_memories"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_characters",
+      "target": "tiny_prompt_builder"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_characters",
+      "target": "tiny_time_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_characters",
+      "target": "tiny_types"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_characters",
+      "target": "tiny_util_funcs"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_characters",
+      "target": "tiny_utility_functions"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_event_handler",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_event_handler",
+      "target": "effect_dispatcher"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_event_handler",
+      "target": "effect_schema"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_event_handler",
+      "target": "tiny_globals"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_event_handler",
+      "target": "tiny_locations"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_event_handler",
+      "target": "tiny_time_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_event_handler",
+      "target": "tiny_types"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_gameplay_controller",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_gameplay_controller",
+      "target": "tiny_animation_system"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_gameplay_controller",
+      "target": "tiny_brain_io"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_gameplay_controller",
+      "target": "tiny_building_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_gameplay_controller",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_gameplay_controller",
+      "target": "tiny_globals"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_gameplay_controller",
+      "target": "tiny_goap_system"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_gameplay_controller",
+      "target": "tiny_map_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_gameplay_controller",
+      "target": "tiny_output_interpreter"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_gameplay_controller",
+      "target": "tiny_prompt_builder"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_gameplay_controller",
+      "target": "tiny_storytelling_engine"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_gameplay_controller",
+      "target": "tiny_storytelling_system"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_gameplay_controller",
+      "target": "tiny_strategy_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_gameplay_controller",
+      "target": "tiny_types"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_globals",
+      "target": "tiny_graph_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_globals",
+      "target": "tiny_time_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_goap_system",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_goap_system",
+      "target": "tiny_types"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_goap_system",
+      "target": "tiny_utility_functions"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_graph_manager",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_graph_manager",
+      "target": "goap_evaluator"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_graph_manager",
+      "target": "graph_analytics"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_graph_manager",
+      "target": "social_model"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_graph_manager",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_graph_manager",
+      "target": "tiny_items"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_graph_manager",
+      "target": "tiny_jobs"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_graph_manager",
+      "target": "tiny_locations"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_graph_manager",
+      "target": "tiny_time_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_graph_manager",
+      "target": "tiny_types"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_graph_manager",
+      "target": "tiny_utility_functions"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_graph_manager",
+      "target": "world_state"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_items",
+      "target": "tiny_locations"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_items",
+      "target": "tiny_types"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_locations",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_locations",
+      "target": "tiny_types"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_map_controller",
+      "target": "tiny_buildings"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_map_controller",
+      "target": "tiny_locations"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_memories",
+      "target": "tiny_brain_io"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_memories",
+      "target": "tiny_globals"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_memories",
+      "target": "tiny_sr_mapping"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_memories",
+      "target": "tiny_time_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_memories_alpha",
+      "target": "tiny_brain_io"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_memories_alpha",
+      "target": "tiny_time_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_output_interpreter",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_prompt_builder",
+      "target": "tiny_characters"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_prompt_builder",
+      "target": "tiny_output_interpreter"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_prompt_builder",
+      "target": "tiny_strategy_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_prompt_builder",
+      "target": "tiny_utility_functions"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_storytelling_engine",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_storytelling_system",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_strategy_manager",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_strategy_manager",
+      "target": "tiny_brain_io"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_strategy_manager",
+      "target": "tiny_characters"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_strategy_manager",
+      "target": "tiny_globals"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_strategy_manager",
+      "target": "tiny_goap_system"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_strategy_manager",
+      "target": "tiny_graph_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_strategy_manager",
+      "target": "tiny_output_interpreter"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_strategy_manager",
+      "target": "tiny_prompt_builder"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_strategy_manager",
+      "target": "tiny_utility_functions"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_utility_functions",
+      "target": "actions"
+    },
+    {
+      "relation": "imports",
+      "source": "tiny_utility_functions",
+      "target": "tiny_characters"
+    },
+    {
+      "relation": "imports",
+      "source": "validate_event_strategy_integration",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "validate_event_strategy_integration",
+      "target": "tiny_strategy_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "validate_refactoring",
+      "target": "tiny_gameplay_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "validate_storytelling_integration",
+      "target": "tiny_event_handler"
+    },
+    {
+      "relation": "imports",
+      "source": "validate_storytelling_integration",
+      "target": "tiny_storytelling_engine"
+    },
+    {
+      "relation": "imports",
+      "source": "validate_storytelling_integration",
+      "target": "tiny_storytelling_system"
+    },
+    {
+      "relation": "imports",
+      "source": "verify_fixes",
+      "target": "tiny_items"
+    },
+    {
+      "relation": "imports",
+      "source": "verify_real_character_fix",
+      "target": "demo_character_factory"
+    },
+    {
+      "relation": "imports",
+      "source": "verify_real_character_fix",
+      "target": "demo_llm_integration"
+    },
+    {
+      "relation": "imports",
+      "source": "verify_real_character_fix",
+      "target": "llm_character_utils"
+    },
+    {
+      "relation": "imports",
+      "source": "verify_single_source_of_truth",
+      "target": "tiny_gameplay_controller"
+    },
+    {
+      "relation": "imports",
+      "source": "verify_single_source_of_truth",
+      "target": "tiny_graph_manager"
+    },
+    {
+      "relation": "imports",
+      "source": "verify_storytelling_implementation",
+      "target": "tiny_storytelling_system"
+    }
+  ]
+}
