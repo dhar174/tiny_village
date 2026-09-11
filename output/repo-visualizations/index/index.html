@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TinyVillage Repo Visualization Bundle</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --line: #dbe4ee;
+      --text: #0f172a;
+      --muted: #475569;
+      --accent: #0284c7;
+    }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(180deg, #eef6ff 0%, var(--bg) 240px);
+      color: var(--text);
+    }
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    h1, h2, h3 {
+      line-height: 1.2;
+    }
+    p, li {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    a {
+      color: var(--accent);
+    }
+    .grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      margin: 1rem 0 2rem;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 1rem 1.1rem;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+    }
+    .card img {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+      margin-top: 0.75rem;
+    }
+    ul {
+      padding-left: 1.25rem;
+    }
+    .hero {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 1.5rem;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+    }
+    .metrics {
+      display: grid;
+      gap: 0.75rem;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      margin-top: 1rem;
+    }
+    .metric {
+      background: #f8fbff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 0.9rem;
+    }
+    .metric strong {
+      display: block;
+      color: var(--text);
+      font-size: 1.35rem;
+      margin-bottom: 0.2rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <h1>TinyVillage Repo Visualization Bundle</h1>
+      <p>Generated on 2026-04-17 03:49:05 UTC from docs plus static import analysis. This bundle is architecture-first: it highlights the decision loop, the runtime topology, and the flat root-level module landscape.</p>
+      <div class="metrics">
+        <div class="metric"><strong>133</strong>root Python modules analyzed</div>
+        <div class="metric"><strong>262</strong>repo-local import edges</div>
+        <div class="metric"><strong>actions</strong>top inbound hub</div>
+        <div class="metric"><strong>48</strong>root test modules</div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Key insights</h2>
+      <ul>
+        <li>`actions.py` is the strongest inbound dependency hub across the root-level Python modules.</li>
+        <li>`tiny_event_handler.py`, `tiny_strategy_manager.py`, and `tiny_gameplay_controller.py` form the clearest event-to-plan orchestration spine in the runtime slice.</li>
+        <li>The repository root is unusually flat: tests and demos outnumber the core `tiny_*` modules, which makes topology views more useful than a plain file tree.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Markdown mindmaps</h2>
+      <ul>
+        <li><a href="../markmap/README.html">README.md</a><p>Project framing, run modes, and the high-level runtime surface.</p></li><li><a href="../markmap/AGENTS.html">AGENTS.md</a><p>Contributor-oriented map of the root layout, core systems, and working agreements.</p></li><li><a href="../markmap/design_docs/high_level_architecture.html">design_docs/high_level_architecture.md</a><p>Conceptual component map showing how orchestration, planning, graph state, memory, and map control fit together.</p></li><li><a href="../markmap/design_docs/data_flow_decision_cycle.html">design_docs/data_flow_decision_cycle.md</a><p>Detailed event-to-decision-to-action sequence for a character&#x27;s daily behavior loop.</p></li><li><a href="../markmap/docs/README.html">docs/README.md</a><p>Documentation taxonomy showing how guides, reference material, analysis, and archived docs are organized.</p></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Mermaid diagrams</h2>
+      <div class="grid">
+        <section class="card"><h3>runtime-topology</h3><p>The runtime is organized around an orchestration spine: entrypoint to gameplay controller to event handling to strategy to actions and graph state, with the optional LLM path hanging off strategy selection.</p><p><a href="../mermaid/runtime-topology.svg">Open SVG</a> | <a href="../mermaid/runtime-topology.mmd">Open source</a></p><img src="../mermaid/runtime-topology.svg" alt="runtime-topology diagram"></section><section class="card"><h3>decision-cycle-sequence</h3><p>The character decision loop is event-triggered and only reaches memory updates after state changes, which keeps planning, execution, and recollection as distinct phases.</p><p><a href="../mermaid/decision-cycle-sequence.svg">Open SVG</a> | <a href="../mermaid/decision-cycle-sequence.mmd">Open source</a></p><img src="../mermaid/decision-cycle-sequence.svg" alt="decision-cycle-sequence diagram"></section><section class="card"><h3>repo-shape</h3><p>The root directory is dominated by tests and demos around a smaller `tiny_*` runtime core, which explains why topology diagrams are more revealing than a simple tree listing.</p><p><a href="../mermaid/repo-shape.svg">Open SVG</a> | <a href="../mermaid/repo-shape.mmd">Open source</a></p><img src="../mermaid/repo-shape.svg" alt="repo-shape diagram"></section><section class="card"><h3>artifact-map</h3><p>The repo&#x27;s docs and validation artifacts mirror the runtime subsystems closely, so the most useful visual bundle needs both documentation-derived and code-derived views.</p><p><a href="../mermaid/artifact-map.svg">Open SVG</a> | <a href="../mermaid/artifact-map.mmd">Open source</a></p><img src="../mermaid/artifact-map.svg" alt="artifact-map diagram"></section>
+      </div>
+    </section>
+
+    <section>
+      <h2>Data-derived graph views</h2>
+      <div class="grid">
+        <section class="card">
+          <h3>Runtime import graph</h3>
+          <p>Filtered to the entrypoint, action catalog, <code>tiny_*</code> modules, and direct runtime support modules so the rendered graph stays readable.</p>
+          <p><a href="../graphs/runtime-import-graph.png">Open PNG</a> | <a href="../graphs/import-analysis-summary.json">Summary JSON</a></p>
+          <img src="../graphs/runtime-import-graph.png" alt="Runtime import graph">
+        </section>
+        <section class="card">
+          <h3>Machine-readable exports</h3>
+          <p>Use the CSV, JSON, and GraphML artifacts for deeper analysis or to import the graph into other tools.</p>
+          <ul>
+            <li><a href="../graphs/module-hotspots.csv">module-hotspots.csv</a></li>
+            <li><a href="../graphs/runtime-import-graph.json">runtime-import-graph.json</a></li>
+            <li><a href="../graphs/runtime-import-graph.graphml">runtime-import-graph.graphml</a></li>
+          </ul>
+        </section>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
