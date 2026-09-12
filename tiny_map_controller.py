@@ -1396,12 +1396,14 @@ class AStarPathfinder:
         # Implement A* algorithm to find path from start to goal
         open_set = []
         heapq.heappush(open_set, (0, start))
+        open_set_hash = {start}  # Paired set for O(1) membership checks
         came_from = {}
         g_score = {start: 0}
         f_score = {start: self.heuristic(start, goal)}
 
         while open_set:
             _, current = heapq.heappop(open_set)
+            open_set_hash.discard(current)
 
             if current == goal:
                 return self.reconstruct_path(came_from, current)
@@ -1414,7 +1416,9 @@ class AStarPathfinder:
                     f_score[neighbor] = g_score[neighbor] + self.heuristic(
                         neighbor, goal
                     )
-                    heapq.heappush(open_set, (f_score[neighbor], neighbor))
+                    if neighbor not in open_set_hash:
+                        heapq.heappush(open_set, (f_score[neighbor], neighbor))
+                        open_set_hash.add(neighbor)
 
         return []
 
@@ -1506,6 +1510,7 @@ class EnhancedAStarPathfinder:
         """Jump Point Search implementation for faster pathfinding"""
         open_set = []
         heapq.heappush(open_set, (0, start))
+        open_set_hash = {start}  # Paired set for O(1) membership checks
         came_from = {}
         g_score = {start: 0}
         f_score = {start: self.heuristic(start, goal)}
@@ -1514,6 +1519,7 @@ class EnhancedAStarPathfinder:
 
         while open_set:
             _, current = heapq.heappop(open_set)
+            open_set_hash.discard(current)
 
             if current == goal:
                 path = self.reconstruct_path(came_from, current)
@@ -1529,7 +1535,9 @@ class EnhancedAStarPathfinder:
                         came_from[jump_point] = current
                         g_score[jump_point] = new_cost
                         f_score[jump_point] = new_cost + self.heuristic(jump_point, goal)
-                        heapq.heappush(open_set, (f_score[jump_point], jump_point))
+                        if jump_point not in open_set_hash:
+                            heapq.heappush(open_set, (f_score[jump_point], jump_point))
+                            open_set_hash.add(jump_point)
 
         return []
 
@@ -1579,12 +1587,14 @@ class EnhancedAStarPathfinder:
         """Standard A* algorithm with terrain costs"""
         open_set = []
         heapq.heappush(open_set, (0, start))
+        open_set_hash = {start}  # Paired set for O(1) membership checks
         came_from = {}
         g_score = {start: 0}
         f_score = {start: self.heuristic(start, goal)}
 
         while open_set:
             _, current = heapq.heappop(open_set)
+            open_set_hash.discard(current)
 
             if current == goal:
                 path = self.reconstruct_path(came_from, current)
@@ -1599,7 +1609,9 @@ class EnhancedAStarPathfinder:
                     came_from[neighbor] = current
                     g_score[neighbor] = tentative_g_score
                     f_score[neighbor] = g_score[neighbor] + self.heuristic(neighbor, goal)
-                    heapq.heappush(open_set, (f_score[neighbor], neighbor))
+                    if neighbor not in open_set_hash:
+                        heapq.heappush(open_set, (f_score[neighbor], neighbor))
+                        open_set_hash.add(neighbor)
 
         return []
 
