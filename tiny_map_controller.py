@@ -1,5 +1,6 @@
 # tiny_map_controller.py
 import pygame
+from pygame import gfxdraw
 import heapq
 import time
 import logging
@@ -596,7 +597,7 @@ class MapController:
                             return check_point
         return None
 
-    def render(self, surface):
+    def render(self, surface, anti_alias=True):
         # Render the map image with error handling
         try:
             if self.map_image is not None:
@@ -623,9 +624,17 @@ class MapController:
         # Render points of interest
         for poi in self.points_of_interest:
             color = self._get_poi_render_color(poi)
-            pygame.draw.circle(surface, color, (poi.x, poi.y), poi.interaction_radius, 2)
+            if anti_alias:
+                pygame.gfxdraw.aacircle(surface, int(poi.x), int(poi.y), int(poi.interaction_radius), color)
+                pygame.gfxdraw.aacircle(surface, int(poi.x), int(poi.y), int(poi.interaction_radius) - 1, color)
+            else:
+                pygame.draw.circle(surface, color, (poi.x, poi.y), poi.interaction_radius, 2)
             # Draw POI center
-            pygame.draw.circle(surface, (255, 255, 255), (poi.x, poi.y), 3)
+            if anti_alias:
+                pygame.gfxdraw.aacircle(surface, int(poi.x), int(poi.y), 3, (255, 255, 255))
+                pygame.gfxdraw.filled_circle(surface, int(poi.x), int(poi.y), 3, (255, 255, 255))
+            else:
+                pygame.draw.circle(surface, (255, 255, 255), (poi.x, poi.y), 3)
 
 #         # Render buildings on the map
 #         for building in self.map_data["buildings"]:
@@ -659,13 +668,21 @@ class MapController:
 
         # Render characters on the map
         for character in self.characters.values():
-            pygame.draw.circle(surface, character.color, character.position, 5)
+            if anti_alias:
+                pygame.gfxdraw.aacircle(surface, int(character.position.x), int(character.position.y), 5, character.color)
+                pygame.gfxdraw.filled_circle(surface, int(character.position.x), int(character.position.y), 5, character.color)
+            else:
+                pygame.draw.circle(surface, character.color, character.position, 5)
 
         # Render selected character indicator
         if self.selected_character:
-            pygame.draw.circle(
-                surface, (255, 0, 0), self.selected_character.position, 10, 2
-            )
+            if anti_alias:
+                pygame.gfxdraw.aacircle(surface, int(self.selected_character.position.x), int(self.selected_character.position.y), 10, (255, 0, 0))
+                pygame.gfxdraw.aacircle(surface, int(self.selected_character.position.x), int(self.selected_character.position.y), 9, (255, 0, 0))
+            else:
+                pygame.draw.circle(
+                    surface, (255, 0, 0), self.selected_character.position, 10, 2
+                )
             
         # Render interactive UI components
         self.context_menu.render(surface)

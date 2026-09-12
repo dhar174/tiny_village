@@ -95,7 +95,7 @@ class CharacterInfoPanel(UIPanel):
         x, y = self.position
         
         # Character count
-        char_count_text = font.render(f"Characters: {len(controller.characters)}", True, (255, 255, 255))
+        char_count_text = font.render(f"Characters: {len(controller.characters)}", controller.anti_aliasing, (255, 255, 255))
         screen.blit(char_count_text, (x, y))
         
         return char_count_text.get_height() + self.padding
@@ -112,14 +112,14 @@ class GameStatusPanel(UIPanel):
         
         # Pause status
         if getattr(controller, "paused", False):
-            pause_text = font.render("PAUSED", True, (255, 255, 0))
+            pause_text = font.render("PAUSED", controller.anti_aliasing, (255, 255, 0))
             screen.blit(pause_text, (screen.get_width() - 100, 10))
         
         # Game time
         if hasattr(controller, "gametime_manager") and controller.gametime_manager:
             try:
                 game_time = controller.gametime_manager.get_calendar().get_game_time_string()
-                time_text = small_font.render(f"Time: {game_time}", True, (255, 255, 255))
+                time_text = small_font.render(f"Time: {game_time}", controller.anti_aliasing, (255, 255, 255))
                 screen.blit(time_text, (x, current_y))
                 current_y += time_text.get_height() + 2
 
@@ -167,7 +167,7 @@ class WeatherPanel(UIPanel):
                 current_weather = controller.weather_system.get('current_weather')
             if current_weather in WEATHER_UI_MESSAGES:
                 message, color = WEATHER_UI_MESSAGES[current_weather]
-                weather_effect_text = tiny_font.render(message, True, color)
+                weather_effect_text = tiny_font.render(message, controller.anti_aliasing, color)
                 screen.blit(weather_effect_text, (x, current_y))
                 current_y += weather_effect_text.get_height() + 2
         
@@ -271,7 +271,7 @@ class AchievementPanel(UIPanel):
         # All achievements
         milestones = controller.global_achievements.get("village_milestones", {})
         if milestones:
-            header = tiny_font.render("Achievements:", True, (240, 240, 200))
+            header = tiny_font.render("Achievements:", controller.anti_aliasing, (240, 240, 200))
             screen.blit(header, (x, current_y))
             current_y += header.get_height() + 5
             
@@ -279,7 +279,7 @@ class AchievementPanel(UIPanel):
                 title = key.replace("_", " ").title()
                 status = "✓" if achieved else "✗"
                 color = (180, 220, 180) if achieved else (200, 180, 180)
-                text = tiny_font.render(f"{status} {title}", True, color)
+                text = tiny_font.render(f"{status} {title}", controller.anti_aliasing, color)
                 screen.blit(text, (x, current_y))
                 current_y += text.get_height() + 2
         
@@ -301,7 +301,7 @@ class SelectedCharacterPanel(UIPanel):
             char = controller.map_controller.selected_character
             
             # Character basic info
-            name_text = small_font.render(f"Selected: {char.name}", True, (255, 255, 0))
+            name_text = small_font.render(f"Selected: {char.name}", controller.anti_aliasing, (255, 255, 0))
             screen.blit(name_text, (x, current_y))
             current_y += name_text.get_height() + 2
             
@@ -311,45 +311,45 @@ class SelectedCharacterPanel(UIPanel):
             
             # Enhanced Needs Display
             current_y += 5  # Add spacing
-            needs_header = small_font.render("Crucial Needs:", True, (200, 255, 200))
+            needs_header = small_font.render("Crucial Needs:", controller.anti_aliasing, (200, 255, 200))
             screen.blit(needs_header, (x, current_y))
             current_y += needs_header.get_height() + 2
             
             # Energy with color coding
             energy = getattr(char, 'energy', 0)
             energy_color = (0, 255, 0) if energy > 60 else (255, 255, 0) if energy > 30 else (255, 100, 100)
-            energy_text = tiny_font.render(f"  Energy: {energy}/100", True, energy_color)
+            energy_text = tiny_font.render(f"  Energy: {energy}/100", controller.anti_aliasing, energy_color)
             screen.blit(energy_text, (x, current_y))
             current_y += energy_text.get_height() + 1
             
             # Hunger (simulated based on energy for now)
             hunger = max(0, 100 - energy - HUNGER_OFFSET)  # Simple hunger simulation
             hunger_color = (0, 255, 0) if hunger < 30 else (255, 255, 0) if hunger < 60 else (255, 100, 100)
-            hunger_text = tiny_font.render(f"  Hunger: {hunger}/100", True, hunger_color)
+            hunger_text = tiny_font.render(f"  Hunger: {hunger}/100", controller.anti_aliasing, hunger_color)
             screen.blit(hunger_text, (x, current_y))
             current_y += hunger_text.get_height() + 1
             
             # Health with color coding
             health = getattr(char, 'health_status', 0)
             health_color = (0, 255, 0) if health > 70 else (255, 255, 0) if health > 40 else (255, 100, 100)
-            health_text = tiny_font.render(f"  Health: {health}/100", True, health_color)
+            health_text = tiny_font.render(f"  Health: {health}/100", controller.anti_aliasing, health_color)
             screen.blit(health_text, (x, current_y))
             current_y += health_text.get_height() + 3
             
             # Current Goal and Action
-            goal_header = small_font.render("Current Status:", True, (200, 200, 255))
+            goal_header = small_font.render("Current Status:", controller.anti_aliasing, (200, 200, 255))
             screen.blit(goal_header, (x, current_y))
             current_y += goal_header.get_height() + 2
             
             # Try to get current goal from various sources
             current_goal = self._get_character_goal(char, controller)
-            goal_text = tiny_font.render(f"  Goal: {current_goal}", True, (220, 220, 220))
+            goal_text = tiny_font.render(f"  Goal: {current_goal}", controller.anti_aliasing, (220, 220, 220))
             screen.blit(goal_text, (x, current_y))
             current_y += goal_text.get_height() + 1
             
             # Try to get current action
             current_action = self._get_character_action(char, controller)
-            action_text = tiny_font.render(f"  Action: {current_action}", True, (220, 220, 220))
+            action_text = tiny_font.render(f"  Action: {current_action}", controller.anti_aliasing, (220, 220, 220))
             screen.blit(action_text, (x, current_y))
             current_y += action_text.get_height() + 3
             
@@ -362,7 +362,7 @@ class SelectedCharacterPanel(UIPanel):
                         avg_relationship = sum(
                             rel_data.get('strength', 50) for rel_data in relationships.values()
                         ) / len(relationships)
-                        social_text = tiny_font.render(f"Social: {avg_relationship:.0f}/100", True, (180, 180, 180))
+                        social_text = tiny_font.render(f"Social: {avg_relationship:.0f}/100", controller.anti_aliasing, (180, 180, 180))
                         screen.blit(social_text, (x, current_y))
                         current_y += social_text.get_height() + 1
                 except Exception as e:
@@ -382,7 +382,7 @@ class SelectedCharacterPanel(UIPanel):
             # Character achievements (condensed)
             try:
                 if hasattr(char, 'achievements') and char.achievements:
-                    ach_text = tiny_font.render(f"Achievements: {len(char.achievements)}", True, (200, 200, 150))
+                    ach_text = tiny_font.render(f"Achievements: {len(char.achievements)}", controller.anti_aliasing, (200, 200, 150))
                     screen.blit(ach_text, (x, current_y))
                     current_y += ach_text.get_height() + 1
 
@@ -454,44 +454,44 @@ class VillageOverviewPanel(UIPanel):
         current_y = y
         
         # Header
-        header_text = small_font.render("Village Overview", True, (255, 200, 100))
+        header_text = small_font.render("Village Overview", controller.anti_aliasing, (255, 200, 100))
         screen.blit(header_text, (x, current_y))
         current_y += header_text.get_height() + 3
         
         # Population info
         total_chars = len(controller.characters)
-        pop_text = tiny_font.render(f"Population: {total_chars}", True, (200, 200, 200))
+        pop_text = tiny_font.render(f"Population: {total_chars}", controller.anti_aliasing, (200, 200, 200))
         screen.blit(pop_text, (x, current_y))
         current_y += pop_text.get_height() + 1
         
         # Homeless count (simulated for now)
         homeless_count = self._calculate_homeless(controller)
         homeless_color = (0, 255, 0) if homeless_count == 0 else (255, 255, 0) if homeless_count < 3 else (255, 100, 100)
-        homeless_text = tiny_font.render(f"Homeless: {homeless_count}", True, homeless_color)
+        homeless_text = tiny_font.render(f"Homeless: {homeless_count}", controller.anti_aliasing, homeless_color)
         screen.blit(homeless_text, (x, current_y))
         current_y += homeless_text.get_height() + 1
         
         # General mood
         village_mood = self._calculate_village_mood(controller)
         mood_color = (0, 255, 0) if village_mood > 70 else (255, 255, 0) if village_mood > 40 else (255, 100, 100)
-        mood_text = tiny_font.render(f"General Mood: {village_mood}/100", True, mood_color)
+        mood_text = tiny_font.render(f"General Mood: {village_mood}/100", controller.anti_aliasing, mood_color)
         screen.blit(mood_text, (x, current_y))
         current_y += mood_text.get_height() + 1
         
         # Active major events
         current_y += 3
-        events_header = tiny_font.render("Active Events:", True, (200, 255, 200))
+        events_header = tiny_font.render("Active Events:", controller.anti_aliasing, (200, 255, 200))
         screen.blit(events_header, (x, current_y))
         current_y += events_header.get_height() + 1
         
         active_events = self._get_active_events(controller)
         if active_events:
             for event_name in active_events[:3]:  # Show max 3 events
-                event_text = tiny_font.render(f"• {event_name}", True, (220, 220, 180))
+                event_text = tiny_font.render(f"• {event_name}", controller.anti_aliasing, (220, 220, 180))
                 screen.blit(event_text, (x + 5, current_y))
                 current_y += event_text.get_height() + 1
         else:
-            no_events_text = tiny_font.render("  No major events", True, (150, 150, 150))
+            no_events_text = tiny_font.render("  No major events", controller.anti_aliasing, (150, 150, 150))
             screen.blit(no_events_text, (x, current_y))
             current_y += no_events_text.get_height() + 1
         
@@ -634,7 +634,7 @@ class EventNotificationPanel(UIPanel):
             return 0
         
         # Header
-        header_text = tiny_font.render("Events", True, (255, 200, 100))
+        header_text = tiny_font.render("Events", controller.anti_aliasing, (255, 200, 100))
         screen.blit(header_text, (x, current_y))
         current_y += header_text.get_height() + 2
         
@@ -648,7 +648,7 @@ class EventNotificationPanel(UIPanel):
             notif_surface = pygame.Surface((300, 15), pygame.SRCALPHA)
             color = (*notification['color'], alpha)
             
-            notif_text = tiny_font.render(f"• {notification['message']}", True, notification['color'])
+            notif_text = tiny_font.render(f"• {notification['message']}", controller.anti_aliasing, notification['color'])
             screen.blit(notif_text, (x, current_y))
             current_y += notif_text.get_height() + 1
         
@@ -670,7 +670,7 @@ class TimeControlPanel(UIPanel):
         current_y = y
         
         # Header
-        header_text = tiny_font.render("Time Controls", True, (200, 255, 200))
+        header_text = tiny_font.render("Time Controls", controller.anti_aliasing, (200, 255, 200))
         screen.blit(header_text, (x, current_y))
         current_y += header_text.get_height() + 3
         
@@ -697,14 +697,14 @@ class TimeControlPanel(UIPanel):
                 pygame.draw.rect(screen, color, button_rect, 1)
             
             # Button text
-            text_surface = tiny_font.render(label, True, color)
+            text_surface = tiny_font.render(label, controller.anti_aliasing, color)
             text_rect = text_surface.get_rect(center=button_rect.center)
             screen.blit(text_surface, text_rect)
         
         current_y += self.button_height + 5
         
         # Current speed display
-        speed_text = tiny_font.render(f"Current: {current_speed:.1f}x", True, (200, 200, 200))
+        speed_text = tiny_font.render(f"Current: {current_speed:.1f}x", controller.anti_aliasing, (200, 200, 200))
         screen.blit(speed_text, (x, current_y))
         current_y += speed_text.get_height()
         
@@ -756,7 +756,7 @@ class InstructionsPanel(UIPanel):
         current_y = y
         
         # Header
-        header_text = tiny_font.render("Controls & Help", True, (255, 255, 100))
+        header_text = tiny_font.render("Controls & Help", controller.anti_aliasing, (255, 255, 100))
         screen.blit(header_text, (x, current_y))
         current_y += header_text.get_height() + 2
         
@@ -786,7 +786,7 @@ class InstructionsPanel(UIPanel):
                 continue
             
             color = (200, 255, 200) if instruction.endswith(":") else (200, 200, 200)
-            inst_text = tiny_font.render(instruction, True, color)
+            inst_text = tiny_font.render(instruction, controller.anti_aliasing, color)
             screen.blit(inst_text, (x, current_y))
             current_y += inst_text.get_height() + 1
         
@@ -798,7 +798,7 @@ class InstructionsPanel(UIPanel):
         current_y = y
         
         # Header
-        header_text = tiny_font.render("Advanced Help", True, (255, 255, 100))
+        header_text = tiny_font.render("Advanced Help", controller.anti_aliasing, (255, 255, 100))
         screen.blit(header_text, (x, current_y))
         current_y += header_text.get_height() + 2
         
@@ -829,7 +829,7 @@ class InstructionsPanel(UIPanel):
                 continue
             
             color = (200, 255, 200) if info.endswith(":") else (200, 200, 200)
-            info_text = tiny_font.render(info, True, color)
+            info_text = tiny_font.render(info, controller.anti_aliasing, color)
             screen.blit(info_text, (x, current_y))
             current_y += info_text.get_height() + 1
         
@@ -841,7 +841,7 @@ class InstructionsPanel(UIPanel):
         current_y = y
         
         # Header
-        header_text = tiny_font.render(f"Tutorial Step {self.tutorial_step + 1}", True, (255, 255, 100))
+        header_text = tiny_font.render(f"Tutorial Step {self.tutorial_step + 1}", controller.anti_aliasing, (255, 255, 100))
         screen.blit(header_text, (x, current_y))
         current_y += header_text.get_height() + 2
         
@@ -893,7 +893,7 @@ class InstructionsPanel(UIPanel):
                     continue
                 
                 color = (255, 255, 100) if line.endswith("!") else (200, 200, 200)
-                line_text = tiny_font.render(line, True, color)
+                line_text = tiny_font.render(line, controller.anti_aliasing, color)
                 screen.blit(line_text, (x, current_y))
                 current_y += line_text.get_height() + 1
         
@@ -949,14 +949,14 @@ class BuildingInteractionPanel(UIPanel):
         
         # Building name
         building_name = self.selected_building.get('name', 'Unknown Building')
-        name_text = small_font.render(building_name, True, (255, 255, 100))
+        name_text = small_font.render(building_name, controller.anti_aliasing, (255, 255, 100))
         screen.blit(name_text, (x + 5, current_y + 5))
         current_y += name_text.get_height() + 8
         
         # Available actions
         actions = self._get_building_actions(self.selected_building)
         for action in actions:
-            action_text = tiny_font.render(f"• {action}", True, (200, 200, 200))
+            action_text = tiny_font.render(f"• {action}", controller.anti_aliasing, (200, 200, 200))
             screen.blit(action_text, (x + 8, current_y))
             current_y += action_text.get_height() + 2
         
@@ -1718,6 +1718,7 @@ class GameplayController:
         self.initialization_errors = []
         self.running = True
         self.paused = False
+        self.anti_aliasing = self.config.get("render", {}).get("anti_aliasing", True)
         self.time_scale_factor = 1.0 # Added for time scaling
         self._cached_speed_text = None
         self._last_time_scale_factor = None
@@ -3056,6 +3057,7 @@ class GameplayController:
                 "decrease_speed": [pygame.K_PAGEDOWN], # Added for time scaling
                 "minimap": [pygame.K_m], # Added for mini-map toggle
                 "overview": [pygame.K_o], # Added for overview mode toggle
+                "anti_aliasing": [pygame.K_F2], # Added for anti-aliasing toggle
             },
         )
 
@@ -3102,6 +3104,11 @@ class GameplayController:
             else:
                 logger.error("Failed to restore checkpoint")
                 self.add_event_notification("Restore failed", "high")
+        elif event.key in key_bindings.get("anti_aliasing", [pygame.K_F2]):
+            # Toggle anti-aliasing
+            self.anti_aliasing = not self.anti_aliasing
+            logger.info(f"Anti-aliasing {'enabled' if self.anti_aliasing else 'disabled'}")
+            self.add_event_notification(f"Anti-aliasing: {'Enabled' if self.anti_aliasing else 'Disabled'}")
         elif event.key in key_bindings.get("help", [pygame.K_h, pygame.K_F1]):
             # Cycle help modes
             self.cycle_help_mode()
@@ -3957,7 +3964,7 @@ class GameplayController:
         """Render all game elements with configurable quality and effects."""
         # TODO: Add render quality settings (low, medium, high, ultra)
         # TODO: Add dynamic resolution scaling based on performance
-        # TODO: Add anti-aliasing options
+        # TODO: Add anti-aliasing options - IMPLEMENTED: Toggle with 'F2' key
         # TODO: Add post-processing effects (bloom, shadows, etc.)
         # TODO: Add level-of-detail (LOD) system for distant objects
         # TODO: Add particle effects system
@@ -3982,7 +3989,7 @@ class GameplayController:
             # Render the map and game world normally
             if self.map_controller:
                 try:
-                    self.map_controller.render(self.screen)
+                    self.map_controller.render(self.screen, anti_alias=self.anti_aliasing)
                 except Exception as e:
                     logger.error(f"Error rendering map: {e}")
                     # TODO: Add fallback rendering for when map fails
@@ -4076,11 +4083,11 @@ class GameplayController:
 
             # Render pause status
             if getattr(self, "paused", False):
-                pause_text = font.render("PAUSED", True, (255, 255, 0))
+                pause_text = font.render("PAUSED", self.anti_aliasing, (255, 255, 0))
                 self.screen.blit(pause_text, (self.screen.get_width() - 100, 10))
 
             # Show basic error message
-            error_text = small_font.render("Using legacy UI (panels unavailable)", True, (255, 200, 0))
+            error_text = small_font.render("Using legacy UI (panels unavailable)", self.anti_aliasing, (255, 200, 0))
             self.screen.blit(error_text, (10, 40))
             
         except Exception as e:
@@ -4088,7 +4095,7 @@ class GameplayController:
             # Display minimal error state
             try:
                 font = pygame.font.Font(None, 24)
-                error_text = font.render("UI Error - Basic mode active", True, (255, 0, 0))
+                error_text = font.render("UI Error - Basic mode active", self.anti_aliasing, (255, 0, 0))
                 self.screen.blit(error_text, (10, 10))
             except:
                 pass  # If even basic rendering fails, just continue
@@ -4097,7 +4104,7 @@ class GameplayController:
         """Ultimate fallback UI rendering when all else fails."""
         try:
             font = pygame.font.Font(None, 24)
-            text = font.render("Tiny Village (Safe Mode)", True, (255, 255, 255))
+            text = font.render("Tiny Village (Safe Mode)", self.anti_aliasing, (255, 255, 255))
             self.screen.blit(text, (10, 10))
         except Exception as e:
             logger.error(f"Even minimal UI rendering failed: {e}")
@@ -4561,7 +4568,7 @@ class GameplayController:
             # Render map controller (characters, buildings, etc.)
             if self.map_controller:
                 try:
-                    self.map_controller.render(self.screen)
+                    self.map_controller.render(self.screen, anti_alias=self.anti_aliasing)
                 except Exception as e:
                     logger.warning(f"Error rendering map controller: {e}")
 
@@ -4630,7 +4637,7 @@ class GameplayController:
                     "FULLY_IMPLEMENTED": (100, 255, 200)
                 }.get(status, (255, 255, 255))
                 
-                text = font.render(f"{feature}: {status}", True, color)
+                text = font.render(f"{feature}: {status}", self.anti_aliasing, color)
                 self.screen.blit(text, (overlay_x, overlay_y + i * 20))
                 
         except Exception as e:
