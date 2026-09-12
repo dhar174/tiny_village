@@ -3985,7 +3985,7 @@ class GameplayController:
                     self.map_controller.render(self.screen)
                 except Exception as e:
                     logger.error(f"Error rendering map: {e}")
-                    # TODO: Add fallback rendering for when map fails
+                    self._render_map_fallback(e)
 
             # Render UI elements
             self._render_ui()
@@ -3997,6 +3997,37 @@ class GameplayController:
             pygame.display.flip()
         else:
             pygame.display.update()
+    def _render_map_fallback(self, error):
+        """Render a fallback screen when map rendering fails."""
+        if not self.screen:
+            return
+
+        try:
+            # Fill screen with error background color (dark gray)
+            self.screen.fill((40, 40, 40))
+
+            # Use available fonts or create a temporary one
+            font = getattr(self, "ui_fonts", {}).get("normal", pygame.font.Font(None, 24))
+
+            # Render error message
+            error_msg = f"Map Rendering Error: {str(error)}"
+            error_surface = font.render(error_msg, True, (255, 100, 100))
+
+            # Center the error message
+            screen_rect = self.screen.get_rect()
+            text_rect = error_surface.get_rect(center=screen_rect.center)
+
+            self.screen.blit(error_surface, text_rect)
+
+            # Add a hint about checking logs
+            small_font = getattr(self, "ui_fonts", {}).get("small", pygame.font.Font(None, 18))
+            hint_surface = small_font.render("Please check game logs for details.", True, (200, 200, 200))
+            hint_rect = hint_surface.get_rect(center=(screen_rect.centerx, screen_rect.centery + 30))
+            self.screen.blit(hint_surface, hint_rect)
+
+        except Exception as e:
+            logger.error(f"Failed to render map fallback: {e}")
+
     def _render_ui(self):
         """Render user interface elements using the modular panel system."""
         try:
@@ -4564,6 +4595,7 @@ class GameplayController:
                     self.map_controller.render(self.screen)
                 except Exception as e:
                     logger.warning(f"Error rendering map controller: {e}")
+                    self._render_map_fallback(e)
 
             # Render modular UI panels
             self._render_ui_panels()
