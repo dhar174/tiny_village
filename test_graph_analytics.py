@@ -268,6 +268,18 @@ class TestGraphAnalytics(unittest.TestCase):
         neighbors = self.graph_analytics.get_neighbors_by_type("nonexistent")
         self.assertEqual(neighbors, [])
 
+        nodes_nearby = self.graph_analytics.find_nodes_within_distance("nonexistent", 1)
+        self.assertEqual(nodes_nearby, {})
+
+    @patch('graph_analytics.nx.single_source_shortest_path_length')
+    def test_find_nodes_within_distance_exception(self, mock_nx):
+        """Test exception handling in find_nodes_within_distance."""
+        mock_nx.side_effect = Exception("Test exception")
+
+        # This should be caught by the try-except block
+        result = self.graph_analytics.find_nodes_within_distance(self.char1, 1)
+        self.assertEqual(result, {})
+
 
 class TestGraphAnalyticsWithMockedNetworkX(unittest.TestCase):
     """Test GraphAnalytics behavior when NetworkX is not available."""
@@ -358,6 +370,31 @@ class TestGraphAnalyticsWithMockedNetworkX(unittest.TestCase):
         # Both should have the same centrality (degree 1, normalized by n-1 = 1)
         self.assertEqual(centrality[char1], 1.0)
         self.assertEqual(centrality[char2], 1.0)
+
+    @patch('graph_analytics.NETWORKX_AVAILABLE', False)
+    def test_fallback_find_nodes_within_distance(self):
+        """Test fallback for finding nodes within distance when NetworkX is unavailable."""
+        graph_analytics = GraphAnalytics(self.world_state)
+
+        # Add test nodes and edges
+        char1 = Mock()
+        char1.name = "Alice"
+        char2 = Mock()
+        char2.name = "Bob"
+
+        self.world_state.add_character_node(char1)
+        self.world_state.add_character_node(char2)
+        self.world_state.add_edge(char1, char2, "friendship")
+
+        # Should use fallback (direct neighbors only)
+        # Distance 0: source node
+        # Distance 1: neighbors
+        nearby_nodes = graph_analytics.find_nodes_within_distance(char1, 1)
+
+        self.assertIn(char1, nearby_nodes)
+        self.assertEqual(nearby_nodes[char1], 0)
+        self.assertIn(char2, nearby_nodes)
+        self.assertEqual(nearby_nodes[char2], 1)
 
 
 if __name__ == '__main__':
