@@ -122,11 +122,21 @@ def graph():
 
 
 @pytest.fixture
-def mock_llm(monkeypatch):
+def mock_llm():
     """Fixture for mocking LLM responses."""
-    # TODO: Implement LLM mocking
-    # See mock_llm_responses.py for helpers
-    pass
+    from unittest.mock import MagicMock, AsyncMock
+
+    # Optional: use helpers from mock_llm_responses.py
+    # from mock_llm_responses import MockLLM
+    # return MockLLM(response="Mocked response")
+
+    mock = MagicMock()
+    # Mock both sync and async invoke methods
+    # Returns a dict similar to AIMessage
+    mock.invoke = MagicMock(return_value={{"role": "assistant", "content": "Mocked response"}})
+    mock.ainvoke = AsyncMock(return_value={{"role": "assistant", "content": "Mocked response"}})
+
+    return mock
 
 
 class TestGraphStructure:
@@ -192,11 +202,20 @@ class TestEndToEnd:
         # result = graph.invoke(test_input)
         pass
 
-    def test_execution_with_mock_llm(self, graph, mock_llm):
+    def test_execution_with_mock_llm(self, graph, mock_llm, monkeypatch):
         """Test graph execution with mocked LLM responses."""
         # TODO: Configure mock LLM behavior
+        # mock_llm.invoke.return_value = {"role": "assistant", "content": "Custom response"}
+
+        # TODO: Use monkeypatch to swap real LLM with mock
+        # monkeypatch.setattr("your_module.your_llm_instance", mock_llm)
+
         # TODO: Execute graph
+        # test_input = {"messages": [{"role": "user", "content": "Hello"}]}
+        # result = graph.invoke(test_input)
+
         # TODO: Verify the graph flow is correct
+        # assert result is not None
         pass
 
 
@@ -213,10 +232,17 @@ class TestErrorHandling:
         # TODO: Test invalid input handling
         pass
 
-    def test_llm_error_handling(self, graph):
+    def test_llm_error_handling(self, graph, mock_llm, monkeypatch):
         """Test graph behavior when LLM calls fail."""
-        # TODO: Mock LLM to raise errors
+        # TODO: Configure mock LLM to raise an error
+        # mock_llm.invoke.side_effect = Exception("LLM connection error")
+
+        # TODO: Use monkeypatch to swap real LLM with mock
+        # monkeypatch.setattr("your_module.your_llm_instance", mock_llm)
+
         # TODO: Verify graceful error handling
+        # with pytest.raises(Exception):
+        #     graph.invoke({"messages": []})
         pass
 '''
 
@@ -307,7 +333,39 @@ class TestEndToEnd(unittest.TestCase):
         self.skipTest("Integration test")
 
         # TODO: Create realistic test input
+        test_input = {"messages": []}
+
         # TODO: Execute and verify
+        # result = self.graph.invoke(test_input)
+        pass
+
+    def test_execution_with_mock_llm(self):
+        """Test graph execution with mocked LLM responses."""
+        from unittest.mock import patch, MagicMock
+
+        # TODO: Configure mock LLM behavior
+        mock_llm = MagicMock()
+        mock_llm.invoke.return_value = {"role": "assistant", "content": "Mocked response"}
+
+        # TODO: Patch the real LLM with our mock
+        # with patch("your_module.your_llm_instance", mock_llm):
+        #     test_input = {"messages": []}
+        #     result = self.graph.invoke(test_input)
+        #     self.assertIsNotNone(result)
+        pass
+
+    def test_llm_error_handling(self):
+        """Test graph behavior when LLM calls fail."""
+        from unittest.mock import patch, MagicMock
+
+        # TODO: Configure mock LLM to raise an error
+        mock_llm = MagicMock()
+        mock_llm.invoke.side_effect = Exception("LLM connection error")
+
+        # TODO: Patch the real LLM and verify error handling
+        # with patch("your_module.your_llm_instance", mock_llm):
+        #     with self.assertRaises(Exception):
+        #         self.graph.invoke({"messages": []})
         pass
 
 
