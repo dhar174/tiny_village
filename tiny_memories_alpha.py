@@ -34,6 +34,7 @@ import heapq
 import tiny_brain_io as tbi
 import tiny_time_manager as ttm
 import os
+TINY_SLEEP_DELAY = float(os.getenv("TINY_SLEEP_DELAY", 0))
 import sys
 
 from sklearn.cluster import KMeans
@@ -2480,7 +2481,7 @@ class FlatMemoryAccess:
             # self.faiss_index.add(np.array(embeddings))
         else:
             print("No embeddings found to populate the FAISS index")
-            time.sleep(2)
+            time.sleep(TINY_SLEEP_DELAY)
 
     def retrieve_cache(json_file):
         try:
@@ -5217,13 +5218,13 @@ if __name__ == "__main__":
         f"\n \n \n Keywords for each memory: {[(mem.description, mem.keywords) for mem in manager.hierarchy.general_memories]} \n \n \n"
     )
 
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
 
     print(
         f"\n \n \n List of specific memories for each general memory: {[(mem.description, [specific_memory.description for specific_memory in mem.get_specific_memories()]) for mem in manager.hierarchy.general_memories]} \n \n \n"
     )
 
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
 
     print(
         f"\n \n \n General Memories: {[mem.description for mem in manager.hierarchy.general_memories]} \n \n \n"
@@ -5515,7 +5516,7 @@ if __name__ == "__main__":
         f"\n \n Memories for query '{query}': {[mem.description for mem in memories[query]]}\n \n "
     )
     # Pause until the user presses a key
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
 
     query = "When will the 2022 Winter Olympics be held?"
     memories[query] = manager.search_memories(query)
@@ -5523,7 +5524,7 @@ if __name__ == "__main__":
         f"\n \n Memories for query '{query}': {[mem.description for mem in memories[query]]}\n \n "
     )
     # Pause until the user presses a key
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
 
     query = "I think someone is planning a surprise party"
     memories[query] = manager.search_memories(query)
@@ -5531,120 +5532,120 @@ if __name__ == "__main__":
         f"\n \n Memories for query '{query}': {[mem.description for mem in memories[query]]}\n \n "
     )
     # Pause until the user presses a key
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
 
     query = "I need to think of a popular tourist attraction"
     memories[query] = manager.search_memories(query)
     print(
         f"\n \n Memories for query '{query}': {[mem.description for mem in memories[query]]}\n \n "
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
 
     query = "I am planning a trip to Europe"
     memories[query] = manager.search_memories(query)
     print(
         f"\n \n Memories for query '{query}': {[mem.description for mem in memories[query]]}\n \n "
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
 
     query = "Who is learning to play the guitar?"
     memories[query] = manager.search_memories(query)
     print(
         f"\n \n Memories for query '{query}': {[mem.description for mem in memories[query]]}\n \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
 
     query = "I think someone is studying for a Chemistry test"
     memories[query] = manager.search_memories(query)
     print(
         f"\n \n Memories for query '{query}': {[mem.description for mem in memories[query]]}\n \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
 
     query = "What product should I sell in my electronics store?"
     memories[query] = manager.search_memories(query)
     print(
         f"\n \n Memories for query '{query}': {[mem.description for mem in memories[query]]}\n \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
 
     query = "What should I eat at the French restaurant?"
     memories[query] = manager.search_memories(query)
     print(
         f"\n \n Memories for query '{query}': {[mem.description for mem in memories[query]]}\n \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
 
     query = "What book should I read?"
     memories[query] = manager.search_memories(query)
     print(
         f"\n \n Memories for query '{query}': {[mem.description for mem in memories[query]]}\n \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
 
     query = "Where should I go for a night out to have drinks  and meet someone?"
     memories[query] = manager.search_memories(query)
     print(
         f"\n \n Memories for query '{query}': {[mem.description for mem in memories[query]]}\n \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
 
     query = "What bar should I avoid?"
     memories[query] = manager.search_memories(query)
     print(
         f"\n \n Memories for query '{query}': {[mem.description for mem in memories[query]]}\n \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
 
     query = "What fashion accessory should I wear to the party?"
     memories[query] = manager.search_memories(query)
     print(
         f"\n \n Memories for query '{query}': {[mem.description for mem in memories[query]]}\n \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
 
     query = "What is the future of transportation?"
     memories[query] = manager.search_memories(query)
     print(
         f"\n \n Memories for query '{query}': {[mem.description for mem in memories[query]]}\n \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
 
     query = "What is the current state of the ebola outbreak?"
     memories[query] = manager.search_memories(query)
     print(
         f"\n \n Memories for query '{query}': {[mem.description for mem in memories[query]]}\n \n \n \n"
     )
-    time.sleep(2)
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
+    time.sleep(TINY_SLEEP_DELAY)
 
     query = "I am a farmer, what crop should I grow to make the most profit?"
     memories[query] = manager.search_memories(query)
     print(
         f"\n \n Memories for query '{query}': {[mem.description for mem in memories[query]]}\n \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
 
     query = "Is the new iPhone worth buying?"
     memories[query] = manager.search_memories(query)
     print(
         f"\n \n Memories for query '{query}': {[mem.description for mem in memories[query]]}\n \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
 
     query = "As a farmer, what crop would be make the most money?"
     memories[query] = manager.search_memories(query)
     print(
         f"\n \n Memories for query '{query}': {[mem.description for mem in memories[query]]}\n \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
 
     query = "What farm vegetable is selling the most these days?"
     memories[query] = manager.search_memories(query)
     print(
         f"\n \n Memories for query '{query}': {[mem.description for mem in memories[query]]}\n \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
 
     for query, memory in memories.items():
         print(f"\n \n \n \n Memory upper: {memory} \n for query: {query} \n ")
@@ -5727,7 +5728,7 @@ if __name__ == "__main__":
     print(
         f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
     # Write same to file
     with open("results.txt", "w") as file:
         file.write(f"Query: {query} \n \n")
@@ -5773,7 +5774,7 @@ if __name__ == "__main__":
     print(
         f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
     # Write same to file
     with open("results.txt", "w") as file:
         file.write(f"Query: {query} \n \n")
@@ -5819,7 +5820,7 @@ if __name__ == "__main__":
     print(
         f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
     # Write same to file
     with open("results.txt", "a") as file:
         file.write(f"Query: {query} \n \n")
@@ -5865,7 +5866,7 @@ if __name__ == "__main__":
     print(
         f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
     # Write same to file
     with open("results.txt", "a") as file:
         file.write(f"Query: {query} \n \n")
@@ -5911,7 +5912,7 @@ if __name__ == "__main__":
     print(
         f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
     # Write same to file
     with open("results.txt", "a") as file:
         file.write(f"Query: {query} \n \n")
@@ -5955,7 +5956,7 @@ if __name__ == "__main__":
     print(
         f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
     # Write same to file
     with open("results.txt", "a") as file:
         file.write(f"Query: {query} \n \n")
@@ -6001,7 +6002,7 @@ if __name__ == "__main__":
     print(
         f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
     # Write same to file
     with open("results.txt", "a") as file:
         file.write(f"Query: {query} \n \n")
@@ -6047,7 +6048,7 @@ if __name__ == "__main__":
     print(
         f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
     # Write same to file
     with open("results.txt", "a") as file:
         file.write(f"Query: {query} \n \n")
@@ -6093,7 +6094,7 @@ if __name__ == "__main__":
     print(
         f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
     # Write same to file
     with open("results.txt", "a") as file:
         file.write(f"Query: {query} \n \n")
@@ -6139,7 +6140,7 @@ if __name__ == "__main__":
     print(
         f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
     # Write same to file
     with open("results.txt", "a") as file:
         file.write(f"Query: {query} \n \n")
@@ -6185,7 +6186,7 @@ if __name__ == "__main__":
     print(
         f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
     # Write same to file
     with open("results.txt", "a") as file:
         file.write(f"Query: {query} \n \n")
@@ -6231,7 +6232,7 @@ if __name__ == "__main__":
     print(
         f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
     # Write same to file
     with open("results.txt", "a") as file:
         file.write(f"Query: {query} \n \n")
@@ -6278,7 +6279,7 @@ if __name__ == "__main__":
     print(
         f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
     # Write same to file
     with open("results.txt", "a") as file:
         file.write(f"Query: {query} \n \n")
@@ -6324,7 +6325,7 @@ if __name__ == "__main__":
     print(
         f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
     # Write same to file
     with open("results.txt", "a") as file:
         file.write(f"Query: {query} \n \n")
@@ -6371,7 +6372,7 @@ if __name__ == "__main__":
     print(
         f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
     # Write same to file
     with open("results.txt", "a") as file:
         file.write(f"Query: {query} \n \n")
@@ -6418,7 +6419,7 @@ if __name__ == "__main__":
     print(
         f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
     # Write same to file
     with open("results.txt", "a") as file:
         file.write(f"Query: {query} \n \n")
@@ -6465,7 +6466,7 @@ if __name__ == "__main__":
     print(
         f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
     # Write same to file
     with open("results.txt", "a") as file:
         file.write(f"Query: {query} \n \n")
@@ -6512,7 +6513,7 @@ if __name__ == "__main__":
     print(
         f"\n \n \n Flat access results for query '{query}': {flat_access_results} \n \n \n"
     )
-    time.sleep(2)
+    time.sleep(TINY_SLEEP_DELAY)
     # Write same to file
     with open("results.txt", "a") as file:
         file.write(f"Query: {query} \n \n")
