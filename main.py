@@ -64,11 +64,6 @@ def check_dependencies() -> Tuple[bool, List[str]]:
     except ImportError:
         missing.append("pydantic")
     
-    try:
-        import faiss
-    except ImportError:
-        missing.append("faiss-cpu")
-    
     return len(missing) == 0, missing
 
 def print_banner():
@@ -113,7 +108,7 @@ def run_visual_demo(config: dict, logger):
         
     except ImportError as e:
         logger.error(f"Missing dependency: {e}")
-        logger.error("Install dependencies with: pip install pygame networkx numpy pydantic faiss-cpu")
+        logger.error("Install dependencies with: pip install pygame networkx numpy pydantic")
         return 1
     except Exception as e:
         logger.error(f"Error running visual demo: {e}")
