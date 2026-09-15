@@ -59,6 +59,23 @@ The `CheckpointManager` class handles all checkpoint operations:
 - **Manual operations**: Provides API for manual checkpoint creation/restoration
 - **History management**: Tracks checkpoint metadata and manages file cleanup
 - **Error recovery**: Handles corrupted files and provides fallback options
+- **Concurrency safety**: Uses an internal lock so create/restore operations do
+  not overlap
+- **Failure escalation**: Tracks consecutive failures and can emit a high-priority
+  notification after repeated save problems
+
+### Internal Robustness Helpers
+
+The public API below is the main surface area for gameplay code, but the
+implementation also relies on internal helpers to keep the checkpoint history
+consistent and to recover cleanly from bad states:
+
+- `_check_failure_threshold()` - raises user-visible warnings after repeated
+  checkpoint failures
+- `_validate_checkpoint_history()` - removes history entries whose files no
+  longer exist
+- `_cleanup_old_checkpoints()` - deletes older checkpoint files beyond the
+  configured retention limit
 
 ### Integration with GameplayController
 
@@ -197,6 +214,9 @@ python tests/test_checkpoint_focused.py
 # Run full integration tests (requires full game setup)
 python tests/test_checkpoint_system.py
 ```
+
+These commands verify the checkpoint system itself. They do not guarantee that a
+full Tiny Village demo session is currently runnable in the local environment.
 
 ### Test Coverage
 

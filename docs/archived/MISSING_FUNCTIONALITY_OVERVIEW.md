@@ -1,5 +1,11 @@
 # Missing Functionality Needed for Minimal Tiny Village Demo
 
+> Archived note (2026-04-08): This file is preserved as historical analysis
+> only. It predates the current repository state: `main.py` now exists in the
+> repo root, `assets/default_map.png` exists, and current runtime guidance lives
+> in `README.md`, `docs/guides/QUICKSTART.md`, and
+> `docs/reference/MINIMUM_DEMO_STATUS.md`.
+
 This document summarizes notable gaps that prevent running Tiny Village as a playable demo. Analysis is based on repository inspection and the existing `TODO_report.md`.
 
 ## Missing Assets and Entry Point
@@ -30,4 +36,3 @@ To run a minimal Tiny Village demo, the project requires at least:
 4. Basic UI and rendering assets.
 
 Addressing these gaps will enable a playable demonstration of the Tiny Village simulation.
-

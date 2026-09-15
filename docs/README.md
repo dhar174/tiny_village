@@ -15,7 +15,7 @@ User-facing documentation for getting started and using the system.
 Current technical documentation and API references for the system's components.
 
 - **AGENTS.md** - Supplemental developer-agent architecture background (see root `/AGENTS.md` for the canonical guide)
-- **SYSTEM_INTEGRATION_COMPLETE.md** - Complete system integration documentation
+- **SYSTEM_INTEGRATION_COMPLETE.md** - System integration status and architecture notes
 - **MINIMUM_DEMO_STATUS.md** - Current implementation status and demo capabilities
 - **CHECKPOINT_SYSTEM_DOCUMENTATION.md** - Checkpoint and save system documentation
 - **STORYTELLING_DOCUMENTATION.md** - Storytelling system documentation

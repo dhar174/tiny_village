@@ -57,22 +57,19 @@ Each building includes:
 
 ### 3. Comprehensive Test Suite
 
-#### Unit Tests (`tests/test_building_loading_unit.py`)
-12 tests covering:
-- ✅ Valid building loading with all properties
-- ✅ Minimal building loading (only required fields)
-- ✅ All 15 building types
-- ✅ Invalid JSON handling
-- ✅ Missing required fields
-- ✅ Invalid numeric values
-- ✅ Custom property preservation
-- ✅ Unrecognized building types
-- ✅ File not found
-- ✅ Empty buildings array
-- ✅ Missing 'buildings' key
-- ✅ Complete building specifications
+Two suites currently cover building loading:
 
-All tests use mocked pygame to avoid initialization issues.
+#### Preferred controller-level tests (`tests/test_custom_building_loading.py`)
+- Uses a real `GameplayController`
+- Patches the pygame display boundary instead of replacing the controller with a
+  mock shell
+- Best reflects the repository's current testing guidance
+
+#### Legacy direct-loader tests (`tests/test_building_loading_unit.py`)
+- Exercises `_load_buildings_from_file` by binding the method onto a mocked
+  controller
+- Still useful as supplementary coverage/examples
+- Not the preferred pattern to copy for new tests in this area
 
 ### 4. User Documentation
 
@@ -137,6 +134,10 @@ Comprehensive guide including:
 
 Run tests:
 ```bash
+# Preferred controller-level validation
+python -m unittest tests.test_custom_building_loading -v
+
+# Legacy direct-loader suite (more mock-heavy)
 python -m unittest tests.test_building_loading_unit -v
 ```
 
@@ -147,11 +148,12 @@ python demo_custom_building_loading.py
 
 ## Verification
 
-### All Tests Pass
-```
-Ran 12 tests in 0.123s
-OK
-```
+### Validation Notes
+- `tests/test_custom_building_loading.py` is the best reference when `pygame`
+  is installed in the local environment.
+- `tests/test_building_loading_unit.py` remains in the repo for supplementary
+  direct-loader coverage, but its mock-heavy structure should not be treated as
+  the canonical pattern.
 
 ### Demo Output Shows
 - ✅ 10/10 buildings load successfully
