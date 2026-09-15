@@ -1,0 +1,21 @@
+name: 🤖 AI Algorithm Mentor
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  algorithm-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: choam2426/AI-Algorithm-Mentor@v5
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LLM_PROVIDER: google              # openai, google, anthropic
+          # MODEL_NAME: gemini-1.5-pro      # Optional
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          REVIEW_LANGUAGE: english          # Set to english
