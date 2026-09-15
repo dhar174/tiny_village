@@ -33,6 +33,9 @@ BUILDING_TYPE_INTERACTIONS = {
     "building": ["Enter Building"],  # Default fallback
 }
 
+PRIVATE_OWNER_ONLY_BUILDING_TYPES = {"house", "residential"}
+OWNER_INCOME_RESOURCE_TYPES = {"goods", "food", "services", "tools", "knowledge"}
+
 effect_dict = {
     "Enter Building": [
         {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 5},
@@ -518,6 +521,7 @@ class Building:
         self.stories = stories
         self.door = door
         self.owner = owner
+        self.owner_income_generated = 0
         self.building_type = building_type
         self.num_rooms = num_rooms
         self.building_manager = building_manager
@@ -553,6 +557,9 @@ class Building:
         self.possible_interactions = self._create_building_interactions(action_system)
     def get_possible_interactions(self, requester):
         """Get interactions available to a specific character."""
+        if not self.is_accessible_to(requester):
+            return []
+
         # For now, return all interactions for the building type
         # In a full implementation, this would check character attributes, energy, etc.
         # against the action's preconditions using requester.compare_to_condition()
@@ -624,6 +631,70 @@ class Building:
     def set_owner(self, owner):
         self.owner = owner
 
+    def is_owner(self, requester):
+        """Return True when the requester matches the current owner."""
+        if self.owner is None or requester is None:
+            return False
+
+        owner_uuid = getattr(self.owner, "uuid", None)
+        requester_uuid = getattr(requester, "uuid", None)
+        if owner_uuid is not None or requester_uuid is not None:
+            return owner_uuid is not None and owner_uuid == requester_uuid
+
+        return requester is self.owner
+
+    def is_private_property(self):
+        """Return True when the building restricts access to its owner."""
+        return self.owner is not None and self.building_type in PRIVATE_OWNER_ONLY_BUILDING_TYPES
+
+    def is_accessible_to(self, requester):
+        """Return True when the requester is allowed to use this building."""
+        return not self.is_private_property() or self.is_owner(requester)
+
+    def _apply_owner_income(self, amount):
+        """Apply income or costs to the building owner when ownership is active."""
+        if self.owner is None or amount == 0 or not hasattr(self.owner, "wealth_money"):
+            return 0
+
+        previous_wealth = self.owner.wealth_money
+        new_wealth = max(0, previous_wealth + amount)
+        self.owner.wealth_money = new_wealth
+        actual_delta = new_wealth - previous_wealth
+        self.owner_income_generated += actual_delta
+        return actual_delta
+
+    def _calculate_production_income(self):
+        """Estimate owner income from saleable resources produced by the building."""
+        if not self.building_manager:
+            return 0
+
+        production_config = getattr(self.building_manager, "BUILDING_PRODUCTION", {})
+        config = production_config.get(self.building_type, {})
+        return sum(
+            amount
+            for resource_type, amount in config.get("produces", {}).items()
+            if getattr(resource_type, "value", resource_type) in OWNER_INCOME_RESOURCE_TYPES
+            and isinstance(amount, (int, float))
+            and amount > 0
+        )
+
+    def _get_service_income_delta(self, service_name):
+        """Translate a configured service cost into owner income."""
+        if not self.building_manager:
+            return 0
+
+        services_config = getattr(self.building_manager, "BUILDING_SERVICES", {}).get(
+            self.building_type, {}
+        )
+        normalized_name = service_name.lower().replace(" ", "_")
+        service = services_config.get(normalized_name)
+        if service is None:
+            return 0
+        cost = getattr(service, "cost", 0)
+        if not isinstance(cost, (int, float)):
+            return 0
+        return cost
+
     def volume(self):
         return self.length * self.width * self.height
 
@@ -663,6 +734,7 @@ class Building:
         return {
             "name": self.name,
             "type": self.building_type,
+            "owner": getattr(self.owner, "name", None),
             "address": self.address,
             "dimensions": {"width": self.width, "height": self.height, "length": self.length},
             "stories": self.stories,
@@ -884,9 +956,13 @@ class Building:
             Tuple of (success, message)
         """
         if self.building_manager:
-            return self.building_manager.provide_service(
+            owner_income = self._get_service_income_delta(service_name)
+            success, message = self.building_manager.provide_service(
                 str(self.uuid), self.building_type, service_name, character
             )
+            if success:
+                self._apply_owner_income(owner_income)
+            return success, message
         return False, "Building manager not available"
     
     def get_resource_levels(self):
@@ -911,9 +987,12 @@ class Building:
             True if production occurred, False otherwise
         """
         if self.building_manager:
-            return self.building_manager.process_production(
+            produced = self.building_manager.process_production(
                 str(self.uuid), self.building_type, current_tick
             )
+            if produced:
+                self._apply_owner_income(self._calculate_production_income())
+            return produced
         return False
     
     def get_full_building_info(self):
