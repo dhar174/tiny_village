@@ -15,6 +15,7 @@ User-facing documentation for getting started and using the system.
 Current technical documentation and API references for the system's components.
 
 - **AGENTS.md** - Supplemental developer-agent architecture background (see root `/AGENTS.md` for the canonical guide)
+- **PROJECT_CONTEXT_MAP.md** - Current module, test, dependency, and risk map for the repository
 - **SYSTEM_INTEGRATION_COMPLETE.md** - Complete system integration documentation
 - **MINIMUM_DEMO_STATUS.md** - Current implementation status and demo capabilities
 - **CHECKPOINT_SYSTEM_DOCUMENTATION.md** - Checkpoint and save system documentation
@@ -84,6 +85,7 @@ Deep-dive documentation on system architecture and design decisions.
 - high_level_architecture.md
 - memory_manager_deep_dive.md
 - module_connectivity_map.md
+- project_folder_blueprint.md
 - strategy_management_architecture.md
 
 ### `/critical_analysis/` - Critical Analysis
@@ -123,6 +125,8 @@ GitHub-specific documentation and agent definitions.
 ### For Developers
 - **System architecture**: See [/design_docs/high_level_architecture.md](../design_docs/high_level_architecture.md)
 - **Module connectivity**: See [/design_docs/module_connectivity_map.md](../design_docs/module_connectivity_map.md)
+- **Project context map**: See [/reference/PROJECT_CONTEXT_MAP.md](reference/PROJECT_CONTEXT_MAP.md)
+- **Folder blueprint**: See [/design_docs/project_folder_blueprint.md](../design_docs/project_folder_blueprint.md)
 - **Agent guidelines**: Start with [`../AGENTS.md`](../AGENTS.md), then use [/reference/AGENTS.md](reference/AGENTS.md) for supplemental background
 - **Current status**: See [/reference/MINIMUM_DEMO_STATUS.md](reference/MINIMUM_DEMO_STATUS.md)
 
