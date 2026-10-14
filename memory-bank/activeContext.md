@@ -1,10 +1,11 @@
 ## Current Work Focus
 
-- Current implementation work is #718: restore the utility Goal fallback and
-  validate existing PR #706 against current main (TASK002, 2026-10-13).
-- PR #706 is rebased and its cold imports, actual fallback, and five GOAP tests
-  pass. The reduced minimal demo exits 0; broader startup is still incomplete.
-- Validation evidence lives in `docs/testing/issue-718-goal-fallback-validation.md`.
+- #718 is complete: PR #706 merged and the issue closed on 2026-10-14.
+- TASK003 / #719 repairs graph initialization and ownership on branch
+  `codex/issue-719-graph-initialization`; human code review/merge remain pending.
+- 53 required tests and the combined 23-test rerun pass. Cold graph access now
+  completes; reduced minimal mode still executes zero actions.
+- Evidence and limits: `docs/testing/issue-719-graph-initialization-validation.md`.
 
 ## Recent Changes Reflected in the Repository
 
@@ -17,11 +18,11 @@
 
 ## Immediate Next Steps
 
-- Maintainer reviews PR #706 and the recorded failures before merge/issue closure.
-- Follow #719 for recursive global graph initialization; do not replace the lock
-  without resolving import-time construction and graph ownership.
-- Triage #773 (integration fixtures) and #774 (utility Goal contracts and fixture
-  IDs) alongside existing ordered tasks. Human startup review #721 is pending.
+- Maintainer reviews #719's implementation/evidence before merge and closure.
+- #720 cache repair follows #719. Human startup review #721 and gate #722 remain
+  pending; passing scoped tests does not approve them.
+- Retain #773/#774 integration/utility failures and #775/#776 Door-definition/
+  optional-spaCy limits, scheduled under existing parent tasks and human gates.
 
 ## Active Considerations
 

@@ -1593,7 +1593,9 @@ class SystemRecoveryManager:
         """Recover the strategy manager system."""
         try:
             if not self.gameplay_controller.strategy_manager:
-                self.gameplay_controller.strategy_manager = StrategyManager()
+                self.gameplay_controller.strategy_manager = StrategyManager(
+                    graph_manager=self.gameplay_controller.graph_manager
+                )
                 return True
             return True
         except Exception as e:
@@ -1780,16 +1782,6 @@ class GameplayController:
 
         # Initialize core systems with error handling and recovery
 
-        try:
-            self.strategy_manager = StrategyManager()
-        except Exception as e:
-            logger.error(f"Failed to initialize StrategyManager: {e}")
-            self.strategy_manager = None
-            self.initialization_errors.append("StrategyManager initialization failed")
-            # Attempt immediate recovery
-            self.recovery_manager.attempt_recovery("strategy_manager")
-
-
         # Initialize graph manager if not provided
         if graph_manager is None:
             try:
@@ -1803,6 +1795,16 @@ class GameplayController:
 
         else:
             self.graph_manager = graph_manager
+
+        try:
+            self.strategy_manager = StrategyManager(graph_manager=self.graph_manager)
+        except Exception as e:
+            logger.error(f"Failed to initialize StrategyManager: {e}")
+            self.strategy_manager = None
+            self.initialization_errors.append("StrategyManager initialization failed")
+            # Attempt immediate recovery
+            self.recovery_manager.attempt_recovery("strategy_manager")
+
 
         # Initialize event handler (using narrative-aware handler)
         try:

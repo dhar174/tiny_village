@@ -50,7 +50,7 @@ class Event:
             coordinates_location if coordinates_location else (0, 0)
         )
         self.location = location
-        self.action_system = action_system if action_system else ActionSystem()
+        self.action_system = action_system if action_system is not None else ActionSystem()
 
         # Enhanced event properties
         self.recurrence_pattern = recurrence_pattern  # Dict: {"type": "daily/weekly/monthly/yearly", "interval": 1, "end_date": None}

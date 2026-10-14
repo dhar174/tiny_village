@@ -167,14 +167,16 @@ therefore more complete than the controller's direct LLM turn path.
 
 The main cross-file synchronization mechanism is the global graph manager.
 
-- `tiny_globals.get_global_graph_manager()` (`tiny_globals.py:212`) lazily
-  creates a singleton `GraphManager`.
-- `Character.__init__()` (`tiny_characters.py:2099`) falls back to that global
-  instance when one is not injected; the `GraphManager` fallback logic is
-  currently around `tiny_characters.py:2149`.
-- `StrategyManager.__init__()` (`tiny_strategy_manager.py:122`) does the same.
-- `Action.__init__()` (`actions.py:303`) also falls back to the global graph
-  manager when no instance is passed.
+- `tiny_globals.get_global_graph_manager()` delegates cold access to one
+  initializer, importing the graph before taking the global lifecycle lock.
+- `GraphManager()` synchronizes complete singleton construction; recursion and
+  failure/retry are explicit. Lock order is global lifecycle then class construction.
+- Character, ActionSystem, StrategyManager/GOAP and controller recovery retain
+  supplied owners; strategy-generated actions forward the same graph.
+- Legacy omitted owners still resolve the global provider. World-valued character
+  examples are built only by `build_example_world_criteria(graph)`.
+- Reset clears class/provider references without importing the graph and is
+  supported at quiescent test/setup boundaries only.
 
 Inside `GraphManager.__init__()` (`tiny_graph_manager.py:723`), the manager
 delegates its entity dictionaries to `WorldState`:

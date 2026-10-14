@@ -6,28 +6,40 @@ GraphManager, defined in `tiny_graph_manager.py`, acts as the central hub for Ti
 GraphManager interacts with nearly all other modules: `tiny_characters` for character objects and motives, `actions` for possible interactions, `tiny_goap_system` for planning, and others. It is referenced by `StrategyManager`, `EventHandler`, and `PromptBuilder` according to the architecture documents.
 
 ## Initialization
-The class ensures only one instance exists. During `__init__`, dictionaries for each node type are prepared and a fresh `MultiDiGraph` is created. Helper mappings for comparison operators and symbol shortcuts are also stored. The initialization fragment below illustrates this setup:
+
+`tiny_globals.initialize_global_graph_manager()` imports the graph module before
+acquiring the global lifecycle lock. `get_global_graph_manager()` delegates its
+cold path to that initializer. A private construction gate serializes the whole
+`GraphManager()` allocation/initialization call, including direct constructor
+users; public calls return a fully initialized singleton backed by WorldState.
+
+The lock order is global lifecycle lock then class construction lock. Thread-local
+guards reject recursive initialization before reacquiring those locks. Construction
+failure restores the previous singleton reference and permits retry. A constructing
+thread can query publication status without waiting on its own lock.
 
 ```python
-class GraphManager:
-    _instance = None
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance.__initialized = False
-        return cls._instance
-    def __init__(self):
-        if self.__initialized:
-            return
-        self.std_cache = StdCache(refresh_interval_seconds=60)
-        self.unique_graph_id = uuid.uuid4()
-        self.dp_cache = {}
-        self.characters = {}
-        ...
-        self.G = self.initialize_graph()
-        self.__initialized = True
+from tiny_globals import initialize_global_graph_manager, get_global_graph_manager
+from actions import ActionSystem
+from tiny_strategy_manager import StrategyManager
+
+graph = initialize_global_graph_manager()
+assert get_global_graph_manager() is graph
+actions = ActionSystem(graph_manager=graph)
+strategy = StrategyManager(graph_manager=graph)
 ```
-【F:tiny_graph_manager.py†L634-L703】
+
+Explicit graph/action-system injection takes precedence over legacy lazy globals.
+Controller composition, recovery, and strategy-generated actions forward that
+owner. `tiny_characters.build_example_world_criteria(graph)` replaces the two
+object-valued sample globals; importing runtime definitions constructs no sample
+world.
+
+`reset_global_graph_manager()` clears both singleton references without importing
+the graph module. Reset/replacement is for quiescent test/setup boundaries; discard
+old consumers afterwards. It is not a concurrent live-world hot-swap feature.
+See [issue #719 validation](../testing/issue-719-graph-initialization-validation.md)
+for required coverage and remaining feature/dependency limitations.
 
 ## Node Management
 GraphManager provides dedicated methods to add different node types. For example `add_character_node` imports `Character` dynamically, stores the object, and records numerous attributes into the graph node:
