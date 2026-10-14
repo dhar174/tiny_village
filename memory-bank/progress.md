@@ -24,6 +24,15 @@
 
 ## Current Status
 
+- As of 2026-10-13, TASK002 / #718 has a reviewed, rebased fix in draft PR #706.
+  Cold utility/GOAP imports, production fallback construction, and 5 GOAP tests
+  pass. Maintainer approval and merge remain pending.
+- Bounded validation executed 42 tests: 30 passed, 2 failures, 10 errors, and
+  0 skipped. The minimal demo exits 0 but executes zero actions. See
+  `docs/testing/issue-718-goal-fallback-validation.md` for exact commands and scope.
+- Graph lock re-entry still hangs (#719). Separate issues #773 and #774 retain
+  integration fixture and utility Goal/API failures; they are blocked by #718.
+
 - TinyVillage is documented as a modular Python simulation project with
   root-level runtime modules and optional advanced AI/LLM features.
 - The Memory Bank is in the process of being corrected from stale template

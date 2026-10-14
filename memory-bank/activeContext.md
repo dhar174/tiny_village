@@ -1,10 +1,10 @@
 ## Current Work Focus
 
-- The current documentation focus is correcting stale Memory Bank files that
-  still describe an unrelated `langgraph_system_generator` project.
-- The active goal is to keep Memory Bank content aligned with TinyVillage's
-  actual architecture: root-level runtime modules, graph-based world state,
-  GOAP planning, memory systems, optional LLM routing, and simulation demos.
+- Current implementation work is #718: restore the utility Goal fallback and
+  validate existing PR #706 against current main (TASK002, 2026-10-13).
+- PR #706 is rebased and its cold imports, actual fallback, and five GOAP tests
+  pass. The reduced minimal demo exits 0; broader startup is still incomplete.
+- Validation evidence lives in `docs/testing/issue-718-goal-fallback-validation.md`.
 
 ## Recent Changes Reflected in the Repository
 
@@ -17,11 +17,11 @@
 
 ## Immediate Next Steps
 
-- Replace stale Memory Bank summaries that still reference
-  `langgraph_system_generator` or unrelated notebook-generation workflows.
-- Create and maintain the first real task record under `memory-bank/tasks/`.
-- Keep the Memory Bank synchronized with the current repo entry points,
-  architecture docs, testing guidance, and known demo/runtime gaps.
+- Maintainer reviews PR #706 and the recorded failures before merge/issue closure.
+- Follow #719 for recursive global graph initialization; do not replace the lock
+  without resolving import-time construction and graph ownership.
+- Triage #773 (integration fixtures) and #774 (utility Goal contracts and fixture
+  IDs) alongside existing ordered tasks. Human startup review #721 is pending.
 
 ## Active Considerations
 
