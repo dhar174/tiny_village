@@ -20,7 +20,8 @@
 
 ## Immediate Next Steps
 
-- Finish #720 startup/cache validation and fresh code review; publish its PR.
+- Review draft PR #778 for #720, including its retained timing limitation.
+  Implementation and scoped validation are complete; maintainer merge is pending.
 - Human startup review #721 and gate #722 follow; passing scoped tests does
   not approve either decision.
 - Retain #773/#774 integration/utility failures and #775/#776 Door-definition/

@@ -1,6 +1,6 @@
 # [TASK004] - Use an owned model cache (#720)
 
-**Status:** In Progress
+**Status:** In Progress — Awaiting human review/merge
 
 **Added:** 2026-10-14
 
@@ -23,7 +23,7 @@ See [the scoped implementation plan](../../docs/superpowers/plans/2026-10-14-iss
 
 ## Progress Tracking
 
-**Overall Status:** In Progress — Implementation and scoped validation complete; draft PR publication in progress.
+**Overall Status:** In Progress — Implementation and scoped validation complete; draft PR #778 published for human review/merge.
 
 | ID | Description | Status | Updated | Notes |
 | --- | --- | --- | --- | --- |
@@ -31,7 +31,7 @@ See [the scoped implementation plan](../../docs/superpowers/plans/2026-10-14-iss
 | 4.2 | Owned-cache helper | Complete | 2026-10-14 | 15 isolated filesystem/configuration checks pass |
 | 4.3 | Memory/brain integration | Complete | 2026-10-14 | Full cache suite 17/17; both import orders and real loader methods |
 | 4.4 | Startup validation and fresh review | Complete | 2026-10-14 | 73/73 bounded tests; two review findings fixed; single-module deadline limitation retained |
-| 4.5 | Publish evidence and PR | In Progress | 2026-10-14 | #720 remains open for human review/merge |
+| 4.5 | Publish evidence and PR | Complete | 2026-10-14 | Draft PR #778 published and attached; #720 remains open for human review/merge |
 
 ## Progress Log
 
@@ -67,3 +67,6 @@ See [the scoped implementation plan](../../docs/superpowers/plans/2026-10-14-iss
   Combined initialization exceeded its aggregate deadline; import/lifecycle
   batches pass without changing child or batch limits.
 - See [validation evidence and execution decisions](../../docs/testing/issue-720-owned-cache-validation.md).
+
+- Published and attached [draft PR #778](https://github.com/dhar174/tiny_village/pull/778).
+  #720 remains open; #721 is blocked by #720 and #722 is still a human decision.

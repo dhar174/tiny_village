@@ -1,5 +1,8 @@
 # Issue #720: Owned model cache validation
 
+Published in [draft PR #778](https://github.com/dhar174/tiny_village/pull/778);
+human review and merge remain pending.
+
 ## Scope and revisions
 
 The user authorized post-merge verification of #777, followed immediately by
