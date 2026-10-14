@@ -162,14 +162,14 @@ class ItemObject:
         self.uuid = uuid.uuid4()
         self.item_type = item_type
         self.item_subtype = item_subtype
-        self.location = Location(name, 0, 0, 0, 0, ActionSystem())
+        self.action_system = action_system if action_system is not None else ActionSystem()
+        self.location = Location(name, 0, 0, 0, 0, self.action_system)
         self.coordinates_location = coordinates_location
         self.possible_interactions = possible_interactions
         self.usability = True
         self.ownership_history = ["unowned"]
         self.status = status
         self.type_specific_attributes = False
-        # self.action_system = action_system
 
     def __repr__(self):
         return f"Item({self.name}, {self.description}, {self.value}, {self.weight}, {self.quantity})"
@@ -394,6 +394,7 @@ class FoodItem(ItemObject):
                 action_system.instantiate_conditions(preconditions_dict["Eat"]),
                 effects=effect_dict["Eat"],
                 cost=1,
+                graph_manager=getattr(getattr(action_system, "action_generator", None), "graph_manager", None),
             ),
         ]
         super().__init__(
@@ -406,6 +407,7 @@ class FoodItem(ItemObject):
             item_subtype=name,
             possible_interactions=possible_interactions,
             coordinates_location=coordinates_location,
+            action_system=action_system,
         )
         self.calories = calories
         self.item_type = "food"
@@ -560,6 +562,7 @@ class Door(ItemObject):
                 action_system.instantiate_conditions(preconditions_dict["Open"]),
                 effects=effect_dict["Open"],
                 cost=1,
+                graph_manager=getattr(getattr(action_system, "action_generator", None), "graph_manager", None),
             ),
         ]
         super().__init__(
@@ -570,6 +573,7 @@ class Door(ItemObject):
             quantity,
             item_type="door",
             possible_interactions=possible_interactions,
+            action_system=action_system,
         )
         self.item_type = "door"
         self.possible_interactions = possible_interactions
