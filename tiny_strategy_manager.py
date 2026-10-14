@@ -119,13 +119,15 @@ class StrategyManager:
     CRISIS_THRESHOLD = CRISIS_THRESHOLD
     VARIETY_PROBABILITY = VARIETY_PROBABILITY
 
-    def __init__(self, use_llm=False, model_name=None):
-        # Initialize graph_manager using global instance
-        try:
-            from tiny_globals import get_global_graph_manager
-            self.graph_manager = get_global_graph_manager()
-        except ImportError:
-            self.graph_manager = None
+    def __init__(self, use_llm=False, model_name=None, graph_manager=None):
+        if graph_manager is not None:
+            self.graph_manager = graph_manager
+        else:
+            try:
+                from tiny_globals import get_global_graph_manager
+                self.graph_manager = get_global_graph_manager()
+            except ImportError:
+                self.graph_manager = None
             
         # Initialize GOAP planner with graph manager
         try:

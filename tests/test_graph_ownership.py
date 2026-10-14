@@ -5,6 +5,61 @@ import unittest
 
 
 class TestGraphOwnership(FreshPythonTestCase):
+    def test_strategy_uses_an_explicit_owner_and_preserves_positional_arguments(self):
+        self.run_python("""
+            from unittest.mock import patch
+            from tiny_graph_manager import GraphManager
+            from tiny_strategy_manager import StrategyManager
+            from tiny_goap_system import GOAPPlanner
+            graph = GraphManager()
+            with patch('tiny_globals.get_global_graph_manager', side_effect=AssertionError('Unexpected global access')):
+                for strategy in (StrategyManager(graph_manager=graph), StrategyManager(False, None, graph)):
+                    assert strategy.graph_manager is graph
+                    assert isinstance(strategy.goap_planner, GOAPPlanner)
+                    assert strategy.goap_planner.graph_manager is graph
+                    assert not strategy.use_llm
+        """)
+
+    def test_strategy_preserves_legacy_global_access(self):
+        self.run_python("""
+            from tiny_globals import get_global_graph_manager
+            from tiny_strategy_manager import StrategyManager
+            graph = get_global_graph_manager()
+            strategy = StrategyManager(False, None)
+            assert strategy.graph_manager is graph
+            assert strategy.goap_planner.graph_manager is graph
+        """)
+
+    def test_controller_composes_and_recovers_with_the_explicit_owner(self):
+        self.run_python("""
+            import tempfile
+            from unittest.mock import patch
+            from tiny_graph_manager import GraphManager
+            from tiny_gameplay_controller import GameplayController
+            from tiny_globals import has_global_graph_manager
+            import pygame
+            graph = GraphManager()
+            with tempfile.TemporaryDirectory() as checkpoint_directory:
+                config = {'headless': True, 'characters': {'use_llm': False, 'count': 0},
+                    'checkpoint': {'directory': checkpoint_directory, 'auto_enabled': False}}
+                with patch('tiny_globals.get_global_graph_manager', side_effect=AssertionError('Unexpected global access')):
+                    try:
+                        controller = GameplayController(graph_manager=graph, config=config)
+                        assert controller.graph_manager is graph
+                        assert controller.strategy_manager.graph_manager is graph
+                        assert controller.strategy_manager.goap_planner.graph_manager is graph
+                        assert controller.action_system.action_generator.graph_manager is graph
+                        assert controller.action_resolver.graph_manager is graph
+                        assert controller.event_handler.graph_manager is graph
+                        assert not has_global_graph_manager(), 'Explicit composition initialized global provider'
+                        controller.strategy_manager = None
+                        assert controller.recovery_manager._recover_strategy_manager()
+                        assert controller.strategy_manager.graph_manager is graph
+                        assert controller.strategy_manager.goap_planner.graph_manager is graph
+                    finally:
+                        pygame.quit()
+        """)
+
     def test_location_actions_retain_the_supplied_graph(self):
         self.run_python("""
             from unittest.mock import patch
