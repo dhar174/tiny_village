@@ -122,6 +122,41 @@ class TestGraphOwnership(FreshPythonTestCase):
                     assert all(action.graph_manager is graph for action in item.possible_interactions)
                 """)
 
+    def test_domain_actions_use_direct_graph_owner_without_action_generator(self):
+        self.run_python("""
+            from unittest.mock import patch
+            from tiny_graph_manager import GraphManager
+            from actions import ActionSystem
+            from tiny_items import Door, FoodItem, ItemObject
+            from tiny_locations import Location
+            import tiny_items
+            graph = GraphManager()
+            system = ActionSystem(graph_manager=graph)
+            system.graph_manager = graph
+            system.action_generator = None
+            with patch('tiny_globals.get_global_graph_manager', side_effect=AssertionError('Unexpected global access')):
+                with patch.dict(tiny_items.effect_dict, {'Open': [{
+                    'targets': ['target'], 'attribute': 'status', 'change_value': 'set:open'
+                }]}):
+                    location = Location('Square', 0, 0, 10, 10, system)
+                    items = [
+                        ItemObject('Tool', 'A tool', 1, 1, 1, action_system=system),
+                        FoodItem('Apple', 'A fruit', 1, True, 0.5, 1, system, calories=2),
+                        Door('Door', 'A door', 1, 1, 1, system),
+                    ]
+            objects = [location, *items]
+            assert all(
+                action.graph_manager is graph
+                for obj in objects
+                for action in obj.possible_interactions
+            )
+            assert all(
+                action.graph_manager is graph
+                for item in items
+                for action in item.location.possible_interactions
+            )
+        """)
+
     def test_event_preserves_a_falsy_supplied_action_system(self):
         self.run_python("""
             from unittest.mock import patch

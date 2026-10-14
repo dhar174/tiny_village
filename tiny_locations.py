@@ -87,7 +87,14 @@ class Location:
                 ),
                 effect_dict["Enter Location Boundary"],
                 cost=0,
-                graph_manager=getattr(getattr(action_system, "action_generator", None), "graph_manager", None),
+                graph_manager=(
+                    getattr(action_system, "graph_manager", None)
+                    or getattr(
+                        getattr(action_system, "action_generator", None),
+                        "graph_manager",
+                        None,
+                    )
+                ),
             )
         ]
         self.security = 0

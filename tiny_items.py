@@ -394,7 +394,14 @@ class FoodItem(ItemObject):
                 action_system.instantiate_conditions(preconditions_dict["Eat"]),
                 effects=effect_dict["Eat"],
                 cost=1,
-                graph_manager=getattr(getattr(action_system, "action_generator", None), "graph_manager", None),
+                graph_manager=(
+                    getattr(action_system, "graph_manager", None)
+                    or getattr(
+                        getattr(action_system, "action_generator", None),
+                        "graph_manager",
+                        None,
+                    )
+                ),
             ),
         ]
         super().__init__(
@@ -562,7 +569,14 @@ class Door(ItemObject):
                 action_system.instantiate_conditions(preconditions_dict["Open"]),
                 effects=effect_dict["Open"],
                 cost=1,
-                graph_manager=getattr(getattr(action_system, "action_generator", None), "graph_manager", None),
+                graph_manager=(
+                    getattr(action_system, "graph_manager", None)
+                    or getattr(
+                        getattr(action_system, "action_generator", None),
+                        "graph_manager",
+                        None,
+                    )
+                ),
             ),
         ]
         super().__init__(
