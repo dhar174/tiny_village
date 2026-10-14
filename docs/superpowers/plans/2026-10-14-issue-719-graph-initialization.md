@@ -101,12 +101,12 @@ Excluded: cache permissions/model initialization (#720), utility Goal interface/
 
 **Interfaces:** Consume existing `ActionSystem(graph_manager=None)` and `Event(..., action_system=None)`. Produce the explicit `build_example_world_criteria(graph_manager)` factory; bare imports leave both graph singleton references empty.
 
-- [ ] Record approval, update to the then-current main, and establish the implementation branch in the existing checkout. Recheck this plan's call sites if main changed.
-- [ ] Add stdlib-only subprocess test infrastructure: execute child source with a 20-second fatal traceback timer and `subprocess.run(..., timeout=25, capture_output=True, text=True)`. Preserve stdout, stderr, exit status, and timeout reason; subprocess failures must fail the test.
-- [ ] Add `test_imports_do_not_construct_world` with eight fresh-process orders: globals first; graph first; characters first; utility first; GOAP first; actions then locations; items then events; strategy then controller. Assert `has_global_graph_manager()` is False and the loaded real GraphManager class has no instance after imports.
-- [ ] Run the new tests against the unchanged baseline and preserve the failing/hanging results.
-- [ ] Move only the object-valued examples into the explicit factory. Leave the factory unused during import. Audit actual top-level world construction in the modules on the traced path.
-- [ ] Rerun the import tests. Keep a narrow commit for this deliverable. Factory ownership assertions become required in Task 3 once the existing nested forwarding omissions are fixed.
+- [x] Record approval, update to the then-current main, and establish the implementation branch in the existing checkout. Recheck this plan's call sites if main changed.
+- [x] Add stdlib-only subprocess test infrastructure: execute child source with a 20-second fatal traceback timer and `subprocess.run(..., timeout=25, capture_output=True, text=True)`. Preserve stdout, stderr, exit status, and timeout reason; subprocess failures must fail the test.
+- [x] Add `test_imports_do_not_construct_world` with eight fresh-process orders: globals first; graph first; characters first; utility first; GOAP first; actions then locations; items then events; strategy then controller. Assert `has_global_graph_manager()` is False and the loaded real GraphManager class has no instance after imports.
+- [x] Run the new tests against the unchanged baseline and preserve the failing/hanging results.
+- [x] Move only the object-valued examples into the explicit factory. Leave the factory unused during import. Audit actual top-level world construction in the modules on the traced path.
+- [x] Rerun the import tests. Keep a narrow commit for this deliverable. Factory ownership assertions become required in Task 3 once the existing nested forwarding omissions are fixed.
 
 ### Task 2: Make singleton construction and lifecycle safe
 
@@ -114,13 +114,13 @@ Excluded: cache permissions/model initialization (#720), utility Goal interface/
 
 **Interfaces:** Preserve public initializer/getter/setter/reset signatures. Add private class lifecycle helpers `_is_initializing_on_current_thread() -> bool`, `_reset_singleton() -> None`, and `_adopt_singleton(instance: "GraphManager") -> None`; protect them with the class construction gate. Helpers must not import the graph or acquire the global lock.
 
-- [ ] Add failing tests for cold getter and explicit initialization, constructor/getter identity, and one-time WorldState creation.
-- [ ] Add `test_concurrent_mixed_first_access`: eight barrier-synchronized workers mix getter, initializer, and direct constructor calls; assert one object/UUID, one WorldState initialization, `G is world_state.graph`, and initialized analytics/social model. Repeat ten rounds with quiescent reset. Bound joins and capture worker exceptions.
-- [ ] Add recursion tests for getter-first and direct-constructor-first access using a controlled constructor callback. Assert prompt RuntimeError, no published graph, released locks, and successful retry after removing the callback.
-- [ ] Add failure/retry tests by injecting one constructor failure while retaining the real constructor for successful calls. Assert no partial singleton survives, original error context is retained, and a subsequent call builds one ready graph. Test waiting callers' eventual progress without requiring every caller to receive the same failed attempt.
-- [ ] Add reset/setter/status tests: reset before graph import leaves that module unimported; reset after success creates a different next graph; reinjecting a previously ready real instance keeps getter and constructor identity consistent; recursive reset/replacement is rejected promptly; querying readiness from inside construction returns False without hanging.
-- [ ] Consolidate initialization, move imports outside the provider lock, add pre-lock recursion checks, serialize complete class construction, and implement coordinated rollback/set/reset without widening exception catches.
-- [ ] Run lifecycle/concurrency tests and `python -m unittest -v test_core_global_graph_manager`. Review the lock-order and publication invariants; commit this deliverable.
+- [x] Add failing tests for cold getter and explicit initialization, constructor/getter identity, and one-time WorldState creation.
+- [x] Add `test_concurrent_mixed_first_access`: eight barrier-synchronized workers mix getter, initializer, and direct constructor calls; assert one object/UUID, one WorldState initialization, `G is world_state.graph`, and initialized analytics/social model. Repeat ten rounds with quiescent reset. Bound joins and capture worker exceptions.
+- [x] Add recursion tests for getter-first and direct-constructor-first access using a controlled constructor callback. Assert prompt RuntimeError, no published graph, released locks, and successful retry after removing the callback.
+- [x] Add failure/retry tests by injecting one constructor failure while retaining the real constructor for successful calls. Assert no partial singleton survives, original error context is retained, and a subsequent call builds one ready graph. Test waiting callers' eventual progress without requiring every caller to receive the same failed attempt.
+- [x] Add reset/setter/status tests: reset before graph import leaves that module unimported; reset after success creates a different next graph; reinjecting a previously ready real instance keeps getter and constructor identity consistent; recursive reset/replacement is rejected promptly; querying readiness from inside construction returns False without hanging.
+- [x] Consolidate initialization, move imports outside the provider lock, add pre-lock recursion checks, serialize complete class construction, and implement coordinated rollback/set/reset without widening exception catches.
+- [x] Run lifecycle/concurrency tests and `python -m unittest -v test_core_global_graph_manager`. Review the lock-order and publication invariants; commit this deliverable.
 
 ### Task 3: Preserve graph ownership through nested domain objects
 
@@ -128,12 +128,12 @@ Excluded: cache permissions/model initialization (#720), utility Goal interface/
 
 **Interfaces:** Consume a ready real graph and `ActionSystem(graph_manager=graph)`. The character, event, item, location, ActionGenerator, and their generated Action instances retain that owner. Constructors resolve defaults only when the corresponding argument is None.
 
-- [ ] Add failing tests that pass an explicit action system and make the global getter raise if called unexpectedly. Use real runtime Action/ActionSystem/Location/Event/item classes and an actual ready GraphManager for successful behavior.
-- [ ] Assert FoodItem and Door forward their action system to ItemObject; ItemObject uses it for its location; all generated item/location actions retain its graph. Exercise a valid falsy injected boundary object separately to pin explicit-None semantics.
-- [ ] Assert the criteria factory creates fresh Festival/Apple objects on each explicit call and uses the supplied action system/graph throughout. Importing characters must still construct none of those objects.
-- [ ] Resolve a Character's graph before creating its default action system; fix only the local class/module alias needed for that construction and forward the same graph into its generated actions. Exercise compatible existing real-character fixtures; do not repair unrelated character statistics, motives, or memory behavior.
-- [ ] Fix the identified forwarding omissions and Event's supplied-action-system selection, leaving effect values and target-resolution semantics unchanged.
-- [ ] Run ownership tests, the import suite, and all six existing named-target tests in a fresh bounded subprocess. Add one real graph-backed named-target case using lightweight demo characters and existing Action. Register UUID-keyed nodes on the actual WorldState graph and matching objects in its character registry, using the identifiers already passed by Action.execute. Assert the selected character changes once, a bystander stays unchanged, and its authoritative graph attribute reflects the result. Commit the ownership deliverable. Do not change canonical node-key/UUID semantics, which belong to the later action/world-state alignment tasks.
+- [x] Add failing tests that pass an explicit action system and make the global getter raise if called unexpectedly. Use real runtime Action/ActionSystem/Location/Event/item classes and an actual ready GraphManager for successful behavior.
+- [x] Assert FoodItem and Door forward their action system to ItemObject; ItemObject uses it for its location; all generated item/location actions retain its graph. Exercise a valid falsy injected boundary object separately to pin explicit-None semantics.
+- [x] Assert the criteria factory creates fresh Festival/Apple objects on each explicit call and uses the supplied action system/graph throughout. Importing characters must still construct none of those objects.
+- [x] Resolve a Character's graph before creating its default action system; fix only the local class/module alias needed for that construction and forward the same graph into its generated actions. Exercise compatible existing real-character fixtures; do not repair unrelated character statistics, motives, or memory behavior.
+- [x] Fix the identified forwarding omissions and Event's supplied-action-system selection, leaving effect values and target-resolution semantics unchanged.
+- [x] Run ownership tests, the import suite, and all six existing named-target tests in a fresh bounded subprocess. Add one real graph-backed named-target case using lightweight demo characters and existing Action. Register UUID-keyed nodes on the actual WorldState graph and matching objects in its character registry, using the identifiers already passed by Action.execute. Assert the selected character changes once, a bystander stays unchanged, and its authoritative graph attribute reflects the result. Commit the ownership deliverable. Do not change canonical node-key/UUID semantics, which belong to the later action/world-state alignment tasks.
 
 If graph key/UUID mapping or full Character construction reveals an unrelated defect, record it separately. Such a defect cannot be hidden with permissive mocks; pause for a scope decision if it prevents a required ownership assertion.
 
@@ -143,11 +143,11 @@ If graph key/UUID mapping or full Character construction reveals an unrelated de
 
 **Interfaces:** Consume the optional StrategyManager graph parameter. GameplayController resolves its graph before constructing StrategyManager; controller strategy/GOAP/action/event systems and strategy recovery receive the same owner.
 
-- [ ] Add failing tests for `StrategyManager(graph_manager=graph)` with real GOAPPlanner, and verify existing no-argument construction still uses the global provider.
-- [ ] Test controller composition with an explicit graph, supplied config `{"headless": True, "characters": {"use_llm": False}}`, and the prepared dummy SDL environment. Assert controller/strategy/GOAP/action generator/event handler identities; do not treat optional UI initialization warnings as proof that those identities hold.
-- [ ] Add a recovery ownership assertion: reconstructing a missing strategy manager uses the controller's current graph. Keep unrelated recovery policies unchanged.
-- [ ] Add the optional argument, move controller graph resolution before strategy construction, and forward the owner on normal/recovery paths. Preserve failure reporting; do not broaden the task into controller configuration or LLM logic changes.
-- [ ] Rerun ownership, lifecycle, and existing targeted action/event tests. Commit the composition deliverable.
+- [x] Add failing tests for `StrategyManager(graph_manager=graph)` with real GOAPPlanner, and verify existing no-argument construction still uses the global provider.
+- [x] Test controller composition with an explicit graph, supplied config `{"headless": True, "characters": {"use_llm": False}}`, and the prepared dummy SDL environment. Assert controller/strategy/GOAP/action generator/event handler identities; do not treat optional UI initialization warnings as proof that those identities hold.
+- [x] Add a recovery ownership assertion: reconstructing a missing strategy manager uses the controller's current graph. Keep unrelated recovery policies unchanged.
+- [x] Add the optional argument, move controller graph resolution before strategy construction, and forward the owner on normal/recovery paths. Preserve failure reporting; do not broaden the task into controller configuration or LLM logic changes.
+- [x] Rerun ownership, lifecycle, and existing targeted action/event tests. Commit the composition deliverable.
 
 ### Task 5: Complete bounded regression validation
 
@@ -155,11 +155,11 @@ If graph key/UUID mapping or full Character construction reveals an unrelated de
 
 **Interfaces:** Consume the repaired initialization/ownership contracts. Produce a result matrix at the exact PR head; no reliance on warmed imports from a previous suite.
 
-- [ ] Run required suites below in separate bounded processes. Compare observed behavior with the baseline and retain every timeout/failure trace.
-- [ ] Confirm six named-target cases are discovered and finish, rather than equating collection or zero tests with success. Run a combined graph/ownership suite once to detect singleton state leakage between tests.
-- [ ] Rerun minimal and test entry points with no LLM and dummy SDL. Report actual behavior and counts; the existing minimal demo's zero executed actions is insufficient evidence of graph-backed action execution.
-- [ ] Re-run the #718 cold-import/fallback probe to establish that its production fallback behavior remains intact.
-- [ ] Reconcile every new failure with a specific source/contract and issue. Compare #773/#774 outcomes explicitly; never claim pre-existing failures are repaired without executed evidence. Stop broadening validation after relevant concerns are resolved or precisely scoped.
+- [x] Run required suites below in separate bounded processes. Compare observed behavior with the baseline and retain every timeout/failure trace.
+- [x] Confirm six named-target cases are discovered and finish, rather than equating collection or zero tests with success. Run a combined graph/ownership suite once to detect singleton state leakage between tests.
+- [x] Rerun minimal and test entry points with no LLM and dummy SDL. Report actual behavior and counts; the existing minimal demo's zero executed actions is insufficient evidence of graph-backed action execution.
+- [x] Re-run the #718 cold-import/fallback probe to establish that its production fallback behavior remains intact.
+- [x] Reconcile every new failure with a specific source/contract and issue. Compare #773/#774 outcomes explicitly; never claim pre-existing failures are repaired without executed evidence. Stop broadening validation after relevant concerns are resolved or precisely scoped.
 
 ### Task 6: Publish evidence and obtain human code review
 
@@ -167,8 +167,8 @@ If graph key/UUID mapping or full Character construction reveals an unrelated de
 
 **Interfaces:** Produce a reviewable PR linked to #719, containing code, meaningful regressions, exact validation evidence, and limitations. No phase decision is supplied by automation.
 
-- [ ] Document the initialization contract, lock order, explicit sample factory, legacy compatibility, recursion errors, and quiescent reset policy.
-- [ ] Record base/head SHAs; commands; passed/failed/error/skipped/unexecuted counts; import-order cases; concurrency rounds; before/after traces; and remaining issues.
+- [x] Document the initialization contract, lock order, explicit sample factory, legacy compatibility, recursion errors, and quiescent reset policy.
+- [x] Record base/head SHAs; commands; passed/failed/error/skipped/unexecuted counts; import-order cases; concurrency rounds; before/after traces; and remaining issues.
 - [ ] Review the final diff against this scope. Create one PR for #719 and retain the task's dependency links. No duplicate program issues are needed for these cohesive subtasks.
 - [ ] Have a human review the graph lifecycle, ownership forwarding, failure/retry behavior, and evidence. Developer UX review checks prompt actionable errors and understandable startup diagnostics; visual/aesthetic changes remain in their planned phases.
 - [ ] Close #719 only through maintainer-approved completion/merge. Then #720 is the next ordered implementation issue. #721 startup engineering review and #722 phase decision remain their own human steps; #719 approval does not approve either gate.
@@ -215,7 +215,7 @@ Run additional existing graph/social tests only when relevant to the constructio
 | This plan's architecture and scope | Approved by the user on 2026-10-14 |
 | Permission to begin implementation | Granted by the user on 2026-10-14 |
 | Recommended execution | Sequential implementation in this session with milestone updates |
-| Implementation reviewer/decision | Pending future human review |
+| Implementation reviewer/decision | Fresh code review completed; Important finding fixed by RED→GREEN. Human review pending |
 | #721/#722 human phase decisions | Remain pending |
 
 Approve the factory access-pattern change, preserved singleton API with complete construction synchronization, explicit forwarding scope, required tests, and sequential execution to authorize implementation. Requests to expand the scope will be incorporated into this plan first.

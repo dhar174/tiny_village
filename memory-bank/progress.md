@@ -24,14 +24,15 @@
 
 ## Current Status
 
-- As of 2026-10-13, TASK002 / #718 has a reviewed, rebased fix in draft PR #706.
-  Cold utility/GOAP imports, production fallback construction, and 5 GOAP tests
-  pass. Maintainer approval and merge remain pending.
-- Bounded validation executed 42 tests: 30 passed, 2 failures, 10 errors, and
-  0 skipped. The minimal demo exits 0 but executes zero actions. See
-  `docs/testing/issue-718-goal-fallback-validation.md` for exact commands and scope.
-- Graph lock re-entry still hangs (#719). Separate issues #773 and #774 retain
-  integration fixture and utility Goal/API failures; they are blocked by #718.
+- As of 2026-10-14, #718 is complete: #706 merged and the issue closed.
+- TASK003 / #719 repairs the reproduced graph initialization hang and explicit
+  ownership on its implementation branch, awaiting human code review/merge.
+  53 required tests and a combined 23-test rerun pass, with no skips/required
+  timeouts. Cold graph startup completes in 1.70s; the Goal fallback is retained.
+- Existing integration tests remain 9/11 and utility tests 16/26. #773/#774 retain
+  those failures. #775/#776 retain missing Door effects and optional spaCy
+  initialization limits; full Character/simulation readiness is not established.
+- Evidence: `docs/testing/issue-719-graph-initialization-validation.md`.
 
 - TinyVillage is documented as a modular Python simulation project with
   root-level runtime modules and optional advanced AI/LLM features.

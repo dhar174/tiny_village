@@ -1,6 +1,6 @@
 # [TASK003] - Resolve GraphManager initialization deadlock (#719)
 
-**Status:** In Progress  
+**Status:** In Progress — Awaiting human code review
 **Added:** 2026-10-14  
 **Updated:** 2026-10-14
 
@@ -22,16 +22,16 @@ See [the approved implementation plan](../../docs/superpowers/plans/2026-10-14-i
 
 ## Progress Tracking
 
-**Overall Status:** In Progress — import regressions added; implementation unstarted.
+**Overall Status:** Implementation and scoped validation complete; publication/human review pending.
 
 | ID | Description | Status | Updated | Notes |
 | --- | --- | --- | --- | --- |
-| 3.1 | Remove import-time sample construction | In Progress | 2026-10-14 | Test-first import-order baseline running |
-| 3.2 | Coordinate singleton lifecycle | Pending | 2026-10-14 | Recursion, failure/retry, concurrency and reset/set |
-| 3.3 | Preserve nested domain ownership | Pending | 2026-10-14 | Actual objects; no unexpected global access |
-| 3.4 | Compose controller/strategy ownership | Pending | 2026-10-14 | Normal and recovery paths |
-| 3.5 | Complete bounded validation | Pending | 2026-10-14 | Retain existing #773/#774 failures separately |
-| 3.6 | Publish evidence and review | Pending | 2026-10-14 | Human merge/phase decisions remain separate |
+| 3.1 | Remove import-time sample construction | Complete | 2026-10-14 | Eight import orders pass without a world |
+| 3.2 | Coordinate singleton lifecycle | Complete | 2026-10-14 | Recursion, failure/retry, mixed concurrency and reset/set pass |
+| 3.3 | Preserve nested domain ownership | Complete | 2026-10-14 | Real objects; qualified Door/Character boundaries documented |
+| 3.4 | Compose controller/strategy ownership | Complete | 2026-10-14 | Normal/recovery/generated-action ownership verified |
+| 3.5 | Complete bounded validation | Complete | 2026-10-14 | 53 required tests pass; combined23 pass; #773/#774 unchanged |
+| 3.6 | Publish evidence and review | In Progress | 2026-10-14 | Fresh code review finding fixed; human merge/phase decisions pending |
 
 ## Progress Log
 
@@ -43,3 +43,12 @@ See [the approved implementation plan](../../docs/superpowers/plans/2026-10-14-i
 - Execution ledger/logs are retained locally in the ignored plan workspace.
 - Cache work (#720), integration fixtures (#773), and Goal contracts (#774)
   remain outside this implementation scope.
+- Runtime validated at `6667a0b615d615054d6b2701494e220df45ef2d4`:
+  53/53 required tests, 23/23 combined rerun, no skips/required timeouts. Cold
+  getter completes in 1.70s; Goal fallback and reduced minimal mode pass.
+- Fresh reviewer found one Important generated-action ownership gap; verified
+  RED→GREEN and reran the full agreed matrix. No Critical/Minor findings.
+- Broader integration remains 9/11 (1 failure, 1 error); utility 16/26
+  (1 failure, 9 errors). Door definition #775 and optional spaCy #776 retain
+  newly discovered limits under their existing tasks and native human gates.
+- See [validation evidence and execution decisions](../../docs/testing/issue-719-graph-initialization-validation.md).
