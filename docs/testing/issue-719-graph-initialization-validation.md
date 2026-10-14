@@ -1,6 +1,6 @@
 # Issue #719: Graph initialization and ownership validation
 
-Implementation follows the [approved plan](../superpowers/plans/2026-10-14-issue-719-graph-initialization.md). The user approved sequential execution on 2026-10-14. Human code review, merge, and phase decisions remain separate.
+Implementation follows the [approved plan](../superpowers/plans/2026-10-14-issue-719-graph-initialization.md) and is published in [draft PR #777](https://github.com/dhar174/tiny_village/pull/777). The user approved sequential execution on 2026-10-14. Human code review, merge, and phase decisions remain separate.
 
 ## Revisions and repaired behavior
 
