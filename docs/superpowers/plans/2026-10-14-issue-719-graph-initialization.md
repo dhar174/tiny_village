@@ -169,7 +169,7 @@ If graph key/UUID mapping or full Character construction reveals an unrelated de
 
 - [x] Document the initialization contract, lock order, explicit sample factory, legacy compatibility, recursion errors, and quiescent reset policy.
 - [x] Record base/head SHAs; commands; passed/failed/error/skipped/unexecuted counts; import-order cases; concurrency rounds; before/after traces; and remaining issues.
-- [ ] Review the final diff against this scope. Create one PR for #719 and retain the task's dependency links. No duplicate program issues are needed for these cohesive subtasks.
+- [x] Review the final diff against this scope. Create one PR for #719 and retain the task's dependency links. Published draft PR #777; no duplicate program issues were needed for these cohesive subtasks.
 - [ ] Have a human review the graph lifecycle, ownership forwarding, failure/retry behavior, and evidence. Developer UX review checks prompt actionable errors and understandable startup diagnostics; visual/aesthetic changes remain in their planned phases.
 - [ ] Close #719 only through maintainer-approved completion/merge. Then #720 is the next ordered implementation issue. #721 startup engineering review and #722 phase decision remain their own human steps; #719 approval does not approve either gate.
 
