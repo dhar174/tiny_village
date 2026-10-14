@@ -1060,39 +1060,38 @@ example_criteria_h = [
         "max_distance": 20,
     }
 ]
-example_criteria_i = [
-    {
-        "event_participation": Event(
-            name="Festival",
-            date="2022-07-04",
-            event_type="annual",
-            importance=0.8,
-            impact=0.8,
-            required_items=["food", "decorations"],
-            coordinates_location=(100.0, 100.0),
-        ),
+def build_example_world_criteria(graph_manager: "GraphManager") -> dict[str, list[dict]]:
+    """Build object-valued examples only when an explicit world owner is supplied."""
+    if graph_manager is None:
+        raise ValueError("An explicit graph manager is required for world examples")
+    action_system = importlib.import_module("actions").ActionSystem(graph_manager=graph_manager)
+    return {
+        "example_criteria_i": [{
+            "event_participation": Event(
+                name="Festival",
+                date="2022-07-04",
+                event_type="annual",
+                importance=0.8,
+                impact=0.8,
+                required_items=["food", "decorations"],
+                coordinates_location=(100.0, 100.0),
+                action_system=action_system,
+            ),
+        }],
+        "example_criteria_j": [{
+            "offer_item_trade": ItemInventory(food_items=[FoodItem(
+                name="Apple",
+                description="A juicy red apple.",
+                value=1,
+                perishable=True,
+                weight=0.5,
+                quantity=1,
+                calories=2,
+                action_system=action_system,
+            )]),
+            "max_distance": 20,
+        }],
     }
-]
-
-example_criteria_j = [
-    {
-        "offer_item_trade": ItemInventory(
-            food_items=[
-                FoodItem(
-                    name="Apple",
-                    description="A juicy red apple.",
-                    value=1,
-                    perishable=True,
-                    weight=0.5,
-                    quantity=1,
-                    calories=2,
-                    action_system=importlib.import_module("actions").ActionSystem(),
-                )
-            ]
-        ),
-        "max_distance": 20,
-    }
-]
 
 example_criteria_k = [
     {
