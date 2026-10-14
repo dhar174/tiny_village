@@ -1,7 +1,7 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK004](TASK004-owned-cache-720.md) Use an owned model cache (#720) - PR #778 published; 73/73 bounded tests; awaiting human review/merge (Updated: 2026-10-14)
+- [TASK004](TASK004-owned-cache-720.md) Use an owned model cache (#720) - PR #778 ready; review fixes validated in 81 bounded checks; awaiting human review/merge (Updated: 2026-10-14)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending

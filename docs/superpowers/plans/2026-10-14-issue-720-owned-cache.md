@@ -44,13 +44,14 @@
 | `tiny_cache.py` (new) | `configure_model_cache() -> str`; path selection, owned-directory validation and private POSIX permissions |
 | `tiny_memories.py` | Call helper before optional imports, remove shared-temp block, retain explicit loader cache argument |
 | `tiny_brain_io.py` | Call helper before optional imports, remove drive-specific overrides, use returned cache for model/tokenizer |
+| `tiny_sr_mapping.py` | Remove its transitive HF_HOME override; preserve semantic-role behavior |
 | `tests/test_model_cache.py` (new) | Real isolated filesystem behavior and bounded module/loader integration checks |
 | `docs/guides/QUICKSTART.md`, CHANGELOG, validation report | Document configuration, permissions, repeat startup, supported boundaries and evidence |
 | `memory-bank/tasks/TASK004-owned-cache-720.md` and current summaries | Resume-ready progress; record #719 merged and #720 execution |
 
 `configure_model_cache()` selects HF_HOME from its explicit setting, otherwise XDG_CACHE_HOME/huggingface, otherwise Path.home()/.cache/huggingface. HF_HUB_CACHE independently overrides HF_HOME/hub. TRANSFORMERS_CACHE, when supplied, takes precedence for these existing Transformers loaders; it is not newly introduced or overwritten. Expand `~` and use absolute filesystem paths internally. Preserve explicit variable values and unrelated security settings; publish missing HF_HOME/HF_HUB_CACHE defaults only after directory validation succeeds.
 
-Prepare distinct selected directories idempotently. On POSIX, validate directory type and effective-user ownership before setting mode `0700`; use non-following directory descriptors for permission changes and search-only descriptors for ancestors. Reject symlink directory paths, including symlinked ancestors, and `..` components with an actionable error. Windows retains its inherited user-profile ACL behavior; do not claim POSIX modes prove Windows ACL isolation. Never alter parent permissions or existing file contents. Filesystem errors identify the offending path and advise selecting an owned HF_HOME/HF_HUB_CACHE/TRANSFORMERS_CACHE location.
+Prepare distinct selected directories idempotently. On POSIX, validate directory type and effective-user ownership before setting mode `0700`; ancestors must be owned by the effective user or root, checked both before mutation and during descriptor traversal. Use non-following directory descriptors for permission changes and search-only descriptors for ancestors. Reject symlink/reparse directory paths, including unsafe ancestors, and `..` components with an actionable error. On Windows, preflight existing prefixes before creating directories and validate each level; inherited ACL behavior remains outside the executed Linux evidence. Never alter unselected parent permissions or existing file contents. Filesystem errors identify the offending path and advise selecting an owned HF_HOME/HF_HUB_CACHE/TRANSFORMERS_CACHE location. Resolve the default user home only when explicit HF_HOME/XDG settings do not supply it; transitive semantic-role imports must not replace caller settings.
 
 ## Ordered tasks
 

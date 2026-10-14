@@ -23,7 +23,7 @@ See [the scoped implementation plan](../../docs/superpowers/plans/2026-10-14-iss
 
 ## Progress Tracking
 
-**Overall Status:** In Progress — Implementation and scoped validation complete; draft PR #778 published for human review/merge.
+**Overall Status:** In Progress — PR #778 is ready for review; Codex/Copilot fixes are implemented and validated.
 
 | ID | Description | Status | Updated | Notes |
 | --- | --- | --- | --- | --- |
@@ -70,3 +70,19 @@ See [the scoped implementation plan](../../docs/superpowers/plans/2026-10-14-iss
 
 - Published and attached [draft PR #778](https://github.com/dhar174/tiny_village/pull/778).
   #720 remains open; #721 is blocked by #720 and #722 is still a human decision.
+
+- User requested fixes and replies for Codex review5525477509 and Copilot
+  review5525500435. Five comments cover four issues (one duplicated finding).
+- Added failing regressions for foreign ancestors, unavailable user-home
+  resolution, non-POSIX prefix/reparse handling and the spaCy-present transitive
+  cache override. All 27 cache tests pass; 81 unique checks pass in final bounded batches.
+- Public preflight already rejected ordinary existing symlink prefixes; the
+  non-POSIX helper was strengthened and Windows reparse metadata covered.
+  Native Windows execution/ACL validation remains unavailable.
+
+- Review follow-up runtime `2a1ad8b4cabb33085dc846bd3dd9fee57633a5e7`:
+  81 unique checks pass across final batches, including one targeted cold-import
+  rerun after an initial 20-second native timeout. Original 80/81 run and
+  diagnostic evidence are retained; no timeout/graph assertion changes.
+- Changes are limited to cache ownership/path/home handling, removing the
+  transitive environment override, meaningful regressions and evidence.

@@ -5,7 +5,7 @@
 - Post-merge verification passes 54/54 tests plus cold-getter/fallback/minimal
   probes. Reduced minimal mode still executes zero actions.
 - TASK004 / #720 is implementing owned cache configuration on branch
-  `codex/issue-720-owned-cache`; 73/73 tests pass in bounded batches (19 cache).
+  `codex/issue-720-owned-cache`; 81 unique checks pass in final bounded batches (27 cache).
   The single-module initialization deadline limitation is retained for review.
 - Evidence and limits: `docs/testing/issue-719-graph-initialization-validation.md`.
 
@@ -20,8 +20,10 @@
 
 ## Immediate Next Steps
 
-- Review draft PR #778 for #720, including its retained timing limitation.
-  Implementation and scoped validation are complete; maintainer merge is pending.
+- Codex/Copilot review fixes for PR #778 are implemented; 81 unique checks
+  pass in final batches, including one cold-import rerun after an initial native
+  timeout. Original failures and platform limits are retained. Maintainer merge
+  and #721/#722 human decisions remain pending.
 - Human startup review #721 and gate #722 follow; passing scoped tests does
   not approve either decision.
 - Retain #773/#774 integration/utility failures and #775/#776 Door-definition/

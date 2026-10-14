@@ -242,12 +242,18 @@ new legacy setting. Cache setup runs before optional model libraries are importe
 and does not import or download models itself.
 
 On POSIX systems, selected directories must belong to the effective runtime user
-and are restricted to mode `0700`. Existing files and parent permissions remain
-intact. Symlink directory paths, paths containing `..`, and parents that allow
-other users to replace entries are rejected with a path-specific error; use the
-direct directory path beneath a
-trusted parent. Windows uses inherited directory ACLs; POSIX mode checks do not
-establish Windows ACL isolation.
+and are restricted to mode `0700`. Ancestors must belong to that user or root;
+an unrelated owner can replace children even when the ancestor's mode is `0755`.
+Existing files and unselected parent permissions remain intact. Symlink/reparse
+directory paths, paths containing `..`, and parents that allow other users to
+replace entries are rejected with a path-specific error; use the direct path
+beneath trusted ancestors. Windows prefixes are checked before directory creation
+and use inherited directory ACLs; POSIX mode checks do not establish Windows ACL
+isolation.
+
+An absolute HF_HOME works without resolving a user-profile directory. The default
+home directory is needed only when neither HF_HOME nor XDG_CACHE_HOME supplies
+the location. Semantic-role module imports also preserve these settings.
 
 The previous shared `hf_test_cache` and machine-specific drive cache are not
 deleted or automatically migrated. TLS and downloader verification settings are

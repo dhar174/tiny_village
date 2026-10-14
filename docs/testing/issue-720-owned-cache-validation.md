@@ -1,6 +1,6 @@
 # Issue #720: Owned model cache validation
 
-Published in [draft PR #778](https://github.com/dhar174/tiny_village/pull/778);
+Published in [PR #778](https://github.com/dhar174/tiny_village/pull/778);
 human review and merge remain pending.
 
 ## Scope and revisions
@@ -10,8 +10,9 @@ The user authorized post-merge verification of #777, followed immediately by
 records that authorization and the acceptance criteria.
 
 - Base main: `0ba9061a90db776d49a5959b6eb35f711754530c` (merged #777; #719 closed).
-- Runtime/test revision: `2ec8259f7bee9426c16a986006af95dd63ebcbdc`.
-- Subsequent publication commits update documentation only.
+- Initial runtime/test revision: `2ec8259f7bee9426c16a986006af95dd63ebcbdc`.
+- Initial publication commits update documentation only; the review follow-up
+  below records the later runtime fixes and their exact revision.
 - Post-merge verification **before cache edits**: 54/54 tests, zero skips or
   timeouts, plus cold-getter, actual Goal fallback and minimal mode probes.
   See the [#719 report](issue-719-graph-initialization-validation.md#post-merge-verification--2026-10-14).
@@ -51,7 +52,7 @@ paths containing `..` are rejected before normalization so preserved environment
 values cannot point at an unvalidated different location. Errors identify the
 cache path/condition and the available owned-directory configuration settings.
 
-## Verification commands and results
+## Initial implementation verification commands and results
 
 Prepared Python 3.12.14 CPU environment, Linux POSIX, repository root. HF_HOME,
 HF_HUB_CACHE and TMPDIR were directed to owned isolated fixtures. Dummy SDL,
@@ -191,3 +192,62 @@ narrow patch; neither PR is automatically merged. #721 is the next human startup
 engineering review, followed by #722's separate phase decision. Review diagnostics,
 configuration precedence, filesystem boundaries and the timing limitation above;
 passing tests do not supply either human decision.
+
+## Codex and Copilot review follow-up — 2026-10-14
+
+Reviewed [Codex review 5525477509](https://github.com/dhar174/tiny_village/pull/778#pullrequestreview-5525477509)
+and [Copilot review 5525500435](https://github.com/dhar174/tiny_village/pull/778#pullrequestreview-5525500435)
+against `b0dd99bf57e5823b9d9cfdc311db661409c8f7f5`. Five comments cover four
+issues; both reviewers identified the same eager home lookup. Runtime/test
+revision for the fixes: `2a1ad8b4cabb33085dc846bd3dd9fee57633a5e7`.
+
+| Comments | Investigation and change | Regression evidence |
+| --- | --- | --- |
+| Codex 4276871885 | A foreign non-root ancestor owner can replace children despite mode 0755. Require effective-user/root ancestor ownership in preflight and opened-descriptor checks; retain effective-user ownership for selected caches. | Two regressions first fail, then pass: foreign ancestor before mutation and changed ownership during descriptor traversal. Real directories with controlled ownership metadata; no privileged chown. |
+| Codex 4276871886; Copilot 4276889540 | Resolve Path.home only when neither explicit HF_HOME nor XDG supplies the location. | Explicit HF_HOME with failing home resolution fails before the fix and passes after; XDG positive control also passes. |
+| Codex 4276871891 | Public configuration already rejected existing ordinary symlink prefixes before creation. Harden the non-POSIX preparation function itself, reject Windows reparse-point attributes, and validate each level before/after creation. | Existing public preflight test passes before the change; private create-before-error and reparse acceptance tests fail before repair and pass after. Linux executes the non-POSIX branch with real symlink fixtures/controlled Windows metadata; native Windows/ACL/race guarantees are not claimed. |
+| Copilot 4276889603 | Remove tiny_sr_mapping's unconditional HF_HOME override and its now-unused os import. No semantic-role behavior changes. | Both import orders first lose the caller setting, then pass. The actual tiny_sr_mapping module executes through memory imports, with a controlled present spaCy library boundary and no installed NLP model; SPACY_AVAILABLE/TSM_AVAILABLE and cache identity are asserted. |
+
+All **27 cache tests pass**, with no skips. This includes the original 19 plus
+eight added methods; subcases are not double-counted. No live model download,
+real spaCy inference, privileged ownership change or native Windows execution
+was required or claimed. Broader follow-up validation is recorded below when
+complete. Existing full-repository/visual/heavy-model limits remain unchanged.
+
+### Follow-up validation results
+
+At runtime revision `2a1ad8b4cabb33085dc846bd3dd9fee57633a5e7`, **81 unique
+checks pass across the final bounded batches**, zero skipped:
+
+| Target | Executed/passed | Failures/errors/skips |
+| --- | ---: | --- |
+| Cold import orders (eight subcases, targeted rerun) | 1/1 | 0/0/0 |
+| Graph lifecycle | 12/12 | 0/0/0 |
+| Ownership | 11/11 | 0/0/0 |
+| Core global manager | 9/9 | 0/0/0 |
+| Named-target | 6/6 | 0/0/0 |
+| Actions | 5/5 | 0/0/0 |
+| Event payloads | 5/5 | 0/0/0 |
+| GOAP errors | 5/5 | 0/0/0 |
+| Cache configuration/integration | 27/27 | 0/0/0 |
+
+The same startup commands listed in the initial matrix were run, with imports
+and lifecycle kept in their existing separate batches. Cold getter exited 0 in
+2.80 seconds; actual Goal fallback and minimal mode exited 0. Minimal mode still
+executes zero actions. No graph-test assertions or child/batch deadlines changed.
+
+The first follow-up matrix was **80/81**, with one cold-import child reaching its
+20-second fatal timer and reporting no Python frame. The failed order was
+`tiny_goap_system`, `tiny_characters`, `tiny_graph_manager`. Its isolated diagnostic
+subsequently completed all import/singleton assertions and reached atexit in
+3.03 seconds, exiting 0 in 3.44 seconds. One targeted rerun of the complete import
+batch passed all eight orders in 26.38 seconds. This is a retained intermittent
+native-timeout limitation, not a discarded failure or a claimed timing fix; the
+original native delay remains unexplained. Other 80 unique checks passed on the
+first follow-up run. No passing method is added twice to the count.
+
+Raw RED/GREEN logs, the original failed matrix, diagnostic markers, targeted
+rerun and final combined result JSON are retained under
+`/workspace/scratch/pr-778-review-response/`. Full-repository, heavy model,
+visual and native Windows behavior remain outside executed evidence. The
+existing #721/#722 human decisions remain pending.
