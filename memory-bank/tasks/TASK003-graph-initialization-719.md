@@ -1,6 +1,6 @@
 # [TASK003] - Resolve GraphManager initialization deadlock (#719)
 
-**Status:** In Progress — Awaiting human code review
+**Status:** Completed
 **Added:** 2026-10-14
 
 **Updated:** 2026-10-14
@@ -23,7 +23,7 @@ See [the approved implementation plan](../../docs/superpowers/plans/2026-10-14-i
 
 ## Progress Tracking
 
-**Overall Status:** Implementation and scoped validation complete; PR #777 published and awaiting human review/merge.
+**Overall Status:** Completed — PR #777 merged and #719 closed; post-merge verification passed.
 
 | ID | Description | Status | Updated | Notes |
 | --- | --- | --- | --- | --- |
@@ -32,7 +32,7 @@ See [the approved implementation plan](../../docs/superpowers/plans/2026-10-14-i
 | 3.3 | Preserve nested domain ownership | Complete | 2026-10-14 | Real objects; qualified Door/Character boundaries documented |
 | 3.4 | Compose controller/strategy ownership | Complete | 2026-10-14 | Normal/recovery/generated-action ownership verified |
 | 3.5 | Complete bounded validation | Complete | 2026-10-14 | 53 required tests pass; combined23 pass; #773/#774 unchanged |
-| 3.6 | Publish evidence and review | In Progress | 2026-10-14 | PR #777 published; fresh code review finding fixed; human merge/phase decisions pending |
+| 3.6 | Publish evidence and review | Complete | 2026-10-14 | PR #777 merged; #719 closed; #721/#722 human phase decisions remain separate |
 
 ## Progress Log
 
@@ -55,3 +55,7 @@ See [the approved implementation plan](../../docs/superpowers/plans/2026-10-14-i
 - See [validation evidence and execution decisions](../../docs/testing/issue-719-graph-initialization-validation.md).
 - Published [draft PR #777](https://github.com/dhar174/tiny_village/pull/777).
   Issue #719 remains open for human review/merge; #720 follows its completion.
+
+- Confirmed merge `0ba9061a90db776d49a5959b6eb35f711754530c` and closed #719.
+  Post-merge validation passes 54/54 tests, including the added direct-owner
+  regression, plus cold-getter/fallback/minimal probes. #720 now proceeds.

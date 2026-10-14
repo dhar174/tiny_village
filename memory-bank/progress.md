@@ -25,10 +25,11 @@
 ## Current Status
 
 - As of 2026-10-14, #718 is complete: #706 merged and the issue closed.
-- TASK003 / #719 repairs the reproduced graph initialization hang and explicit
-  ownership on its implementation branch, awaiting human code review/merge.
-  53 required tests and a combined 23-test rerun pass, with no skips/required
-  timeouts. Cold graph startup completes in 1.70s; the Goal fallback is retained.
+- TASK003 / #719 is complete: #777 merged and the issue closed. Post-merge
+  verification passes 54/54 tests, no skips/timeouts, plus cold-getter, actual
+  Goal fallback and minimal probes.
+- TASK004 / #720 repairs shared and machine-specific cache configuration;
+  17 isolated cache tests pass. Broader startup validation and review proceed.
 - Existing integration tests remain 9/11 and utility tests 16/26. #773/#774 retain
   those failures. #775/#776 retain missing Door effects and optional spaCy
   initialization limits; full Character/simulation readiness is not established.

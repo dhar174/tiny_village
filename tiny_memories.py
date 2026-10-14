@@ -1,8 +1,12 @@
+from tiny_cache import configure_model_cache
+
+# Hugging Face snapshots cache settings while its libraries are imported.
+cache_dir = configure_model_cache()
+
 import html
 import json
 import pickle
 import random
-import tempfile
 import os
 import math
 import re
@@ -331,23 +335,6 @@ except ImportError:
         def stem(self, word):
             return word.lower()  # Simple fallback
 
-print(
-    f"HF_HOME is set to {os.environ.get('HF_HOME', '/tmp/hf_test_cache')}"
-)
-# Set up cache directory
-cache_dir = os.path.join(tempfile.gettempdir(), "hf_test_cache")
-
-# Create a temporary cache directory with full permissions
-if not os.path.exists(cache_dir):
-    os.makedirs(cache_dir, exist_ok=True)
-os.chmod(cache_dir, 0o777)
-
-print(f"Temporary cache directory created at: {cache_dir}")
-
-# cache_dir = os.environ.get("HF_HOME", "/tmp/hf_test_cache")
-print(f"Using cache directory: {cache_dir}")
-os.environ["HF_HOME"] = cache_dir
-os.environ["TRANSFORMERS_CACHE"] = cache_dir
 # Write a line of code that will identify how many classes are in this module:
 num_classes = 0
 for name, obj in inspect.getmembers(sys.modules[__name__]):

@@ -1,6 +1,6 @@
 # Issue #719: Graph initialization and ownership validation
 
-Implementation follows the [approved plan](../superpowers/plans/2026-10-14-issue-719-graph-initialization.md) and is published in [draft PR #777](https://github.com/dhar174/tiny_village/pull/777). The user approved sequential execution on 2026-10-14. Human code review, merge, and phase decisions remain separate.
+Implementation follows the [approved plan](../superpowers/plans/2026-10-14-issue-719-graph-initialization.md) and was merged in [PR #777](https://github.com/dhar174/tiny_village/pull/777). The branch-validation record below is retained; see the post-merge verification at the end. Human phase decisions remain separate.
 
 ## Revisions and repaired behavior
 
@@ -108,3 +108,32 @@ The reviewer did not judge full Character readiness, default Door feature behavi
 ## Human review and next work
 
 Review graph lock order/publication, fault recovery, explicit ownership including generated actions, and the fixture/integration boundaries above. #719 is ready for code review on this branch; main remains unchanged until merge. After approval and merge, #720 is next. The planned #721 startup engineering review and #722 phase decision still require their own human evidence and decisions.
+
+## Post-merge verification — 2026-10-14
+
+PR #777 merged as `0ba9061a90db776d49a5959b6eb35f711754530c` and closed #719.
+The merged head also includes the direct graph-ownership fallback regression
+added after the original 53-test branch validation. The exact merged code was
+verified before beginning #720:
+
+| Target | Executed | Passed | Failures/errors/skips |
+| --- | ---: | ---: | --- |
+| Initialization/lifecycle | 13 | 13 | 0/0/0 |
+| Ownership, including direct owner fallback | 11 | 11 | 0/0/0 |
+| Core global manager | 9 | 9 | 0/0/0 |
+| Named-target | 6 | 6 | 0/0/0 |
+| Actions | 5 | 5 | 0/0/0 |
+| Event payloads | 5 | 5 | 0/0/0 |
+| GOAP errors | 5 | 5 | 0/0/0 |
+
+**54/54 tests passed**, with no skips or timeouts. The same commands listed
+above were run in bounded subprocesses. Cold getter exited 0 in 2.40 seconds;
+the actual Goal fallback and minimal mode also exited 0. Minimal mode continues
+to report zero executed actions. No broader integration, full-model or visual
+readiness is inferred.
+
+TMPDIR was isolated under an owned validation directory so the pre-#720 code
+could not chmod an existing shared cache. Model offline flags, dummy SDL and
+the prepared CPU interpreter were used. Raw logs and the command/result JSON
+are retained in `/workspace/scratch/issue-719-post-merge/`. #720 implementation
+started only after this verification passed; #721/#722 remain human steps.

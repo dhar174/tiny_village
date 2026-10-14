@@ -26,8 +26,12 @@
 
 ## Configuration Model
 
-- Some optional runtime behavior depends on environment variables such as
-  `TRANSFORMERS_CACHE`, `PYGAME_DISPLAY_WIDTH`, and `PYGAME_DISPLAY_HEIGHT`.
+- Model caches use HF_HOME and HF_HUB_CACHE, with an existing
+  TRANSFORMERS_CACHE override preserved for Transformers loaders. Default:
+  XDG_CACHE_HOME/huggingface or ~/.cache/huggingface, repositories in hub/.
+  tiny_cache configures validated owned directories before optional imports.
+- Other runtime configuration includes PYGAME_DISPLAY_WIDTH and
+  PYGAME_DISPLAY_HEIGHT.
 - LLM- and NLP-related functionality may require additional dependencies beyond
   the minimal runtime requirements listed in `requirements.txt`.
 - The project uses both core runtime modules and auxiliary scripts:

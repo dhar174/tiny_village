@@ -1,10 +1,11 @@
 ## Current Work Focus
 
 - #718 is complete: PR #706 merged and the issue closed on 2026-10-14.
-- TASK003 / #719 repairs graph initialization and ownership on branch
-  `codex/issue-719-graph-initialization`; human code review/merge remain pending.
-- 53 required tests and the combined 23-test rerun pass. Cold graph access now
-  completes; reduced minimal mode still executes zero actions.
+- TASK003 / #719 is complete: PR #777 merged as `0ba9061`; #719 closed.
+- Post-merge verification passes 54/54 tests plus cold-getter/fallback/minimal
+  probes. Reduced minimal mode still executes zero actions.
+- TASK004 / #720 is implementing owned cache configuration on branch
+  `codex/issue-720-owned-cache`; 17 isolated cache tests pass.
 - Evidence and limits: `docs/testing/issue-719-graph-initialization-validation.md`.
 
 ## Recent Changes Reflected in the Repository
@@ -18,9 +19,9 @@
 
 ## Immediate Next Steps
 
-- Maintainer reviews #719's implementation/evidence before merge and closure.
-- #720 cache repair follows #719. Human startup review #721 and gate #722 remain
-  pending; passing scoped tests does not approve them.
+- Finish #720 startup/cache validation and fresh code review; publish its PR.
+- Human startup review #721 and gate #722 follow; passing scoped tests does
+  not approve either decision.
 - Retain #773/#774 integration/utility failures and #775/#776 Door-definition/
   optional-spaCy limits, scheduled under existing parent tasks and human gates.
 

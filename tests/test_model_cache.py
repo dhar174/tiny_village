@@ -8,6 +8,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import textwrap
 import unittest
 from unittest.mock import patch
 
@@ -172,6 +173,111 @@ assert Path(configure_model_cache()).is_dir()
 """], capture_output=True, text=True, timeout=10,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
+class TestModelCacheIntegration(unittest.TestCase):
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory(prefix="tiny-village-cache-integration-")
+        self.addCleanup(self.directory.cleanup)
+        self.root = Path(self.directory.name)
+        self.environment = os.environ.copy()
+        for name in CACHE_SETTINGS:
+            self.environment.pop(name, None)
+        self.environment.update(
+            HF_HOME=str(self.root / "hf"), HF_HUB_CACHE=str(self.root / "hub"),
+            TRANSFORMERS_CACHE=str(self.root / "transformers"), TMPDIR=str(self.root),
+            HF_HUB_OFFLINE="1", TRANSFORMERS_OFFLINE="1", PYTHONDONTWRITEBYTECODE="1",
+            OMP_NUM_THREADS="2", OPENBLAS_NUM_THREADS="2", MPLCONFIGDIR=str(self.root / "matplotlib"),
+        )
+
+    def run_python(self, source):
+        result = subprocess.run(
+            [sys.executable, "-c", "import faulthandler; faulthandler.dump_traceback_later(25, exit=True)\n" + textwrap.dedent(source)],
+            cwd=Path(__file__).resolve().parents[1], env=self.environment,
+            capture_output=True, text=True, timeout=30,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout[-3000:] + result.stderr[-6000:])
+
+    def test_import_orders_and_repeat_startup_preserve_owned_and_shared_data(self):
+        shared = self.root / "hf_test_cache"
+        shared.mkdir(mode=0o700)
+        (shared / "unrelated").write_bytes(b"never modify shared caches")
+        orders = [("tiny_memories", "tiny_brain_io"), ("tiny_brain_io", "tiny_memories")]
+        for order in orders:
+            with self.subTest(order=order):
+                self.run_python(f"""
+                    import importlib, importlib.abc, os, sys
+                    from pathlib import Path
+                    configured = {{name: os.environ[name] for name in ('HF_HOME', 'HF_HUB_CACHE', 'TRANSFORMERS_CACHE')}}
+                    class OptionalModelsUnavailable(importlib.abc.MetaPathFinder):
+                        def find_spec(self, fullname, path=None, target=None):
+                            if fullname == 'transformers':
+                                assert all(Path(value).is_dir() for value in configured.values()), 'Models imported before owned cache setup'
+                            if fullname.split('.')[0] in {{'transformers', 'nltk', 'spacy'}}:
+                                raise ImportError('Controlled unavailable optional dependency: ' + fullname)
+                    sys.meta_path.insert(0, OptionalModelsUnavailable())
+                    for name in {order!r}:
+                        module = importlib.import_module(name)
+                        assert module.cache_dir == configured['TRANSFORMERS_CACHE']
+                    assert {{name: os.environ[name] for name in configured}} == configured
+                    sentinel = Path(configured['TRANSFORMERS_CACHE']) / 'existing-model.bin'
+                    if sentinel.exists():
+                        assert sentinel.read_bytes() == b'reusable model data'
+                    else:
+                        sentinel.write_bytes(b'reusable model data')
+                """)
+        self.assertEqual((shared / "unrelated").read_bytes(), b"never modify shared caches")
+        if os.name == "posix":
+            self.assertEqual(stat.S_IMODE(shared.stat().st_mode), 0o700)
+            for name in ("HF_HOME", "HF_HUB_CACHE", "TRANSFORMERS_CACHE"):
+                path = Path(self.environment[name])
+                self.assertTrue(path.is_dir(), str(path))
+                self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o700)
+                self.assertEqual(path.stat().st_uid, os.geteuid())
+
+    def test_real_model_loaders_receive_selected_cache_and_preserve_verification(self):
+        self.run_python("""
+            import importlib.abc, os, sys
+            from pathlib import Path
+            expected = os.environ['TRANSFORMERS_CACHE']
+            original_security = {name: os.environ.get(name) for name in
+                ('REQUESTS_CA_BUNDLE', 'CURL_CA_BUNDLE', 'HF_HUB_DISABLE_SSL_VERIFICATION')}
+            class OptionalModelsUnavailable(importlib.abc.MetaPathFinder):
+                def find_spec(self, fullname, path=None, target=None):
+                    if fullname.split('.')[0] in {'transformers', 'nltk', 'spacy'}:
+                        raise ImportError('Controlled unavailable optional dependency: ' + fullname)
+            sys.meta_path.insert(0, OptionalModelsUnavailable())
+            import tiny_memories as memory
+            import tiny_brain_io as brain
+            calls = []
+            class DownloadBoundary:
+                @classmethod
+                def from_pretrained(cls, name, **kwargs):
+                    assert kwargs['cache_dir'] == expected, kwargs
+                    assert kwargs.get('trust_remote_code') is True
+                    assert set(kwargs) <= {'cache_dir', 'trust_remote_code', 'revision'}, kwargs
+                    directory = Path(kwargs['cache_dir'])
+                    assert directory.is_dir()
+                    (directory / 'download-fixture.bin').write_bytes(b'isolated downloader fixture')
+                    calls.append((name, kwargs))
+                    return cls()
+                def to(self, device): return self
+                def eval(self): return self
+                def zero_grad(self): return self
+            memory.AutoModel = memory.AutoTokenizer = DownloadBoundary
+            memory.TORCH_AVAILABLE = False
+            embedding = memory.EmbeddingModel()
+            assert embedding.is_initialized
+            brain.AutoModelForCausalLM = brain.AutoTokenizer = DownloadBoundary
+            brain.TRANSFORMERS_AVAILABLE = True
+            brain.TORCH_AVAILABLE = False
+            model = brain.TinyBrainIO('offline-fixture', {'offline-fixture': {'revision': 'fixed-test-rev'}})
+            assert model.model is not None and model.tokenizer is not None and model.load_error is None
+            assert len(calls) == 4
+            assert calls[2][1]['revision'] == 'fixed-test-rev'
+            assert (Path(expected) / 'download-fixture.bin').read_bytes() == b'isolated downloader fixture'
+            assert {name: os.environ.get(name) for name in original_security} == original_security
+        """)
 
 
 if __name__ == "__main__":
