@@ -23,7 +23,7 @@ See [the scoped implementation plan](../../docs/superpowers/plans/2026-10-14-iss
 
 ## Progress Tracking
 
-**Overall Status:** In Progress — PR #778 is ready for review; Codex/Copilot fixes are implemented and validated.
+**Overall Status:** In Progress — PR #778 is ready for review; Codex/Copilot fixes are validated and all five threads replied to/resolved.
 
 | ID | Description | Status | Updated | Notes |
 | --- | --- | --- | --- | --- |
@@ -86,3 +86,7 @@ See [the scoped implementation plan](../../docs/superpowers/plans/2026-10-14-iss
   diagnostic evidence are retained; no timeout/graph assertion changes.
 - Changes are limited to cache ownership/path/home handling, removing the
   transitive environment override, meaningful regressions and evidence.
+
+- Replied inline to all five Codex/Copilot comments with fix/test evidence and
+  explicit Windows/spaCy validation limits, then resolved their five threads.
+  PR #778 remains ready for maintainer review; no merge/phase approval supplied.

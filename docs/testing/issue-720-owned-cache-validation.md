@@ -251,3 +251,7 @@ rerun and final combined result JSON are retained under
 `/workspace/scratch/pr-778-review-response/`. Full-repository, heavy model,
 visual and native Windows behavior remain outside executed evidence. The
 existing #721/#722 human decisions remain pending.
+
+All five original inline comments have replies describing the fix, regression
+coverage and applicable limits, and their threads are resolved. This records
+feedback disposition only; #720 merge and #721/#722 human decisions remain pending.
