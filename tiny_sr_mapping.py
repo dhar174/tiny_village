@@ -1,11 +1,7 @@
 import re
 import spacy
-import os
 import json
 import datetime
-
-os.environ["HF_HOME"] = "/mnt/d/transformers_cache"
-
 
 def find_root_verb(self, token):
     """Recursively find the root verb related to the current token."""

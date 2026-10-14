@@ -438,6 +438,39 @@ class TestModelCacheIntegration(unittest.TestCase):
             assert {name: os.environ.get(name) for name in original_security} == original_security
         """)
 
+    def test_spacy_available_transitive_import_preserves_configured_caches(self):
+        for order in (("tiny_memories", "tiny_brain_io"), ("tiny_brain_io", "tiny_memories")):
+            with self.subTest(order=order):
+                self.run_python(f"""
+                    import importlib, importlib.abc, os, sys, types
+                    from pathlib import Path
+                    configured = {{name: os.environ[name] for name in ('HF_HOME', 'HF_HUB_CACHE', 'TRANSFORMERS_CACHE')}}
+                    # Supply only the unavailable spaCy library boundary. The
+                    # actual tiny_sr_mapping module must execute during memory import.
+                    spacy = types.ModuleType('spacy')
+                    spacy.__path__ = []
+                    spacy.language = types.SimpleNamespace(Language=object)
+                    def no_installed_model(*args, **kwargs):
+                        raise OSError('No local spaCy model in this isolated fixture')
+                    spacy.load = no_installed_model
+                    sys.modules['spacy'] = spacy
+                    class NoDownloads(importlib.abc.MetaPathFinder):
+                        def find_spec(self, fullname, path=None, target=None):
+                            if fullname.split('.')[0] in {{'transformers', 'nltk'}}:
+                                raise ImportError('Controlled unavailable optional dependency: ' + fullname)
+                    sys.meta_path.insert(0, NoDownloads())
+                    for name in {order!r}:
+                        importlib.import_module(name)
+                        assert {{name: os.environ[name] for name in configured}} == configured, 'Transitive import replaced caller cache settings'
+                    import tiny_memories as memory
+                    import tiny_brain_io as brain
+                    mapping = sys.modules['tiny_sr_mapping']
+                    assert Path(mapping.__file__).resolve() == Path('tiny_sr_mapping.py').resolve()
+                    assert memory.SPACY_AVAILABLE and memory.TSM_AVAILABLE
+                    assert memory.tsm is mapping
+                    assert memory.cache_dir == brain.cache_dir == configured['TRANSFORMERS_CACHE']
+                """)
+
 
 if __name__ == "__main__":
     unittest.main()
