@@ -83,7 +83,10 @@ def configure_model_cache() -> str:
     """
     path = "configured model cache"
     try:
-        default_home = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "huggingface"
+        if "HF_HOME" in os.environ:
+            default_home = Path(os.environ["HF_HOME"])
+        else:
+            default_home = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "huggingface"
         home = _cache_path("HF_HOME", default_home)
         hub = _cache_path("HF_HUB_CACHE", home / "hub")
         model = _cache_path("TRANSFORMERS_CACHE", hub)

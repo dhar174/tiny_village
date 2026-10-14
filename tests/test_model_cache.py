@@ -53,6 +53,23 @@ class TestModelCache(unittest.TestCase):
         self.assertEqual(Path(self.configure()), self.root / "configured" / "hub")
         self.assertFalse((self.root / "unused").exists())
 
+    def test_explicit_hf_home_does_not_resolve_user_home(self):
+        home = self.root / "explicit-without-profile"
+        os.environ["HF_HOME"] = str(home)
+        with patch("pathlib.Path.home", side_effect=RuntimeError("User has no resolvable home")):
+            try:
+                result = self.configure()
+            except RuntimeError as error:
+                self.fail(f"Explicit cache must work without a user home: {error}")
+        self.assertEqual(Path(result), home / "hub")
+        self.assertEqual(os.environ["HF_HOME"], str(home))
+
+    def test_xdg_override_does_not_resolve_user_home(self):
+        os.environ["XDG_CACHE_HOME"] = str(self.root / "xdg-without-profile")
+        with patch("pathlib.Path.home", side_effect=RuntimeError("User has no resolvable home")):
+            result = self.configure()
+        self.assertEqual(Path(result), self.root / "xdg-without-profile" / "huggingface" / "hub")
+
     def test_distinct_hub_and_legacy_overrides_are_preserved(self):
         configured = {"HF_HOME": str(self.root / "hf"), "HF_HUB_CACHE": str(self.root / "hub"),
                       "TRANSFORMERS_CACHE": str(self.root / "legacy")}
