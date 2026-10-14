@@ -183,6 +183,62 @@ class TestModelCache(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "owned"):
                     self.configure()
 
+    @unittest.skipUnless(os.name == "posix", "POSIX ancestor ownership")
+    def test_foreign_0755_ancestor_is_rejected_before_mutation(self):
+        parent = self.root / "foreign-parent"
+        cache = parent / "cache"
+        cache.mkdir(parents=True)
+        parent.chmod(0o755)
+        sentinel = cache / "keep"
+        sentinel.write_bytes(b"original data")
+        os.environ["HF_HOME"] = str(cache)
+        before = dict(os.environ)
+        real_lstat = Path.lstat
+        foreign_uid = os.geteuid() + 1
+
+        def metadata(path, *args, **kwargs):
+            info = real_lstat(path, *args, **kwargs)
+            if path == parent:
+                fields = list(info)
+                fields[4] = foreign_uid
+                return os.stat_result(fields)
+            return info
+
+        with patch.object(Path, "lstat", metadata):
+            with self.assertRaisesRegex(RuntimeError, "ancestor.*owned|trusted.*owner"):
+                self.configure()
+        self.assertEqual(dict(os.environ), before)
+        self.assertFalse((cache / "hub").exists())
+        self.assertEqual(sentinel.read_bytes(), b"original data")
+        self.assertEqual(stat.S_IMODE(parent.stat().st_mode), 0o755)
+
+    @unittest.skipUnless(os.name == "posix", "POSIX descriptor ownership")
+    def test_descriptor_walk_rechecks_ancestor_ownership(self):
+        import tiny_cache
+        parent = self.root / "replaced-parent"
+        cache = parent / "cache"
+        cache.mkdir(parents=True)
+        parent.chmod(0o755)
+        os.environ["HF_HOME"] = str(cache)
+        before = dict(os.environ)
+        identity = (parent.stat().st_dev, parent.stat().st_ino)
+        real_fstat = os.fstat
+        foreign_uid = os.geteuid() + 1
+
+        def metadata(descriptor):
+            info = real_fstat(descriptor)
+            if (info.st_dev, info.st_ino) == identity:
+                fields = list(info)
+                fields[4] = foreign_uid
+                return os.stat_result(fields)
+            return info
+
+        with patch.object(tiny_cache.os, "fstat", side_effect=metadata):
+            with self.assertRaisesRegex(RuntimeError, "ancestor.*owned|trusted.*owner"):
+                self.configure()
+        self.assertEqual(dict(os.environ), before)
+        self.assertFalse((cache / "hub").exists())
+
     def test_filesystem_error_is_actionable_and_does_not_change_environment(self):
         before = dict(os.environ)
         with patch("os.mkdir", side_effect=PermissionError("denied")):

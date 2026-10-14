@@ -28,6 +28,14 @@ def _validate_directory_path(path: Path) -> None:
             raise ValueError(f"not a directory: {component}")
         if component == path and os.name == "posix" and info.st_uid != os.geteuid():
             raise ValueError(f"directory is not owned by the runtime user: {path}")
+        if component != path and os.name == "posix":
+            _validate_ancestor_owner(info, component)
+
+
+def _validate_ancestor_owner(info: os.stat_result, path: Path) -> None:
+    # An ancestor's owner can replace entries even when its mode is 0755.
+    if info.st_uid not in (0, os.geteuid()):
+        raise ValueError(f"cache ancestor is not owned by the runtime user or root: {path}")
 
 
 def _prepare_directory(path: Path) -> None:
@@ -54,6 +62,7 @@ def _prepare_directory(path: Path) -> None:
             descriptor = child
             info = os.fstat(descriptor)
             if index < len(path.parts) - 1:
+                _validate_ancestor_owner(info, Path(path.anchor, *path.parts[1:index + 1]))
                 if info.st_mode & 0o022 and not info.st_mode & stat.S_ISVTX:
                     raise ValueError(f"cache parent allows other users to replace entries: {path}")
                 continue
