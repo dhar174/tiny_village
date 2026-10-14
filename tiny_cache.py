@@ -22,8 +22,9 @@ def _validate_directory_path(path: Path) -> None:
             info = component.lstat()
         except FileNotFoundError:
             continue
-        if stat.S_ISLNK(info.st_mode):
-            raise ValueError(f"symlink directory is not supported: {component}")
+        reparse = getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+        if stat.S_ISLNK(info.st_mode) or reparse:
+            raise ValueError(f"symlink or reparse directory is not supported: {component}")
         if not stat.S_ISDIR(info.st_mode):
             raise ValueError(f"not a directory: {component}")
         if component == path and os.name == "posix" and info.st_uid != os.geteuid():
@@ -41,8 +42,11 @@ def _validate_ancestor_owner(info: os.stat_result, path: Path) -> None:
 def _prepare_directory(path: Path) -> None:
     if os.name != "posix":
         # Windows directory access is controlled by inherited ACLs, not chmod.
-        path.mkdir(mode=0o700, parents=True, exist_ok=True)
         _validate_directory_path(path)
+        for component in (*reversed(path.parents), path):
+            _validate_directory_path(component)
+            component.mkdir(mode=0o700, exist_ok=True)
+            _validate_directory_path(component)
         return
 
     # Walk using descriptors so a substituted symlink cannot redirect chmod.

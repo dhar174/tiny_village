@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import textwrap
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -147,6 +148,52 @@ class TestModelCache(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "symlink"):
             self.configure()
         self.assertFalse((target / "cache").exists())
+
+    @unittest.skipUnless(os.name == "posix", "Host supports isolated symlink fixture")
+    def test_non_posix_public_preflight_rejects_existing_symlink_before_creation(self):
+        import tiny_cache
+        target = self.root / "target"
+        target.mkdir()
+        alias = self.root / "alias"
+        alias.symlink_to(target, target_is_directory=True)
+        os.environ["HF_HOME"] = str(alias / "missing")
+        with patch.object(tiny_cache, "os", SimpleNamespace(name="nt", environ=os.environ)):
+            with self.assertRaisesRegex(RuntimeError, "symlink"):
+                self.configure()
+        self.assertFalse((target / "missing").exists())
+
+    @unittest.skipUnless(os.name == "posix", "Host supports isolated symlink fixture")
+    def test_non_posix_directory_preparation_checks_prefix_before_creation(self):
+        import tiny_cache
+        target = self.root / "target"
+        target.mkdir()
+        alias = self.root / "alias"
+        alias.symlink_to(target, target_is_directory=True)
+        with patch.object(tiny_cache, "os", SimpleNamespace(name="nt", environ=os.environ)):
+            with self.assertRaisesRegex(ValueError, "symlink"):
+                tiny_cache._prepare_directory(alias / "missing")
+        self.assertFalse((target / "missing").exists())
+
+    def test_non_posix_reparse_prefix_is_rejected_before_creation(self):
+        import tiny_cache
+        prefix = self.root / "junction-prefix"
+        prefix.mkdir()
+        os.environ["HF_HOME"] = str(prefix / "missing")
+        before = dict(os.environ)
+        real_lstat = Path.lstat
+
+        def metadata(path, *args, **kwargs):
+            info = real_lstat(path, *args, **kwargs)
+            if path == prefix:
+                return SimpleNamespace(st_mode=info.st_mode, st_file_attributes=0x400)
+            return info
+
+        with patch.object(tiny_cache, "os", SimpleNamespace(name="nt", environ=os.environ)):
+            with patch.object(Path, "lstat", metadata):
+                with self.assertRaisesRegex(RuntimeError, "reparse|junction"):
+                    self.configure()
+        self.assertFalse((prefix / "missing").exists())
+        self.assertEqual(dict(os.environ), before)
 
     @unittest.skipUnless(os.name == "posix", "POSIX search permissions")
     def test_owned_cache_beneath_search_only_parent_is_supported(self):
