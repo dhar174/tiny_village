@@ -337,10 +337,10 @@ print(
 # Set up cache directory
 cache_dir = os.path.join(tempfile.gettempdir(), "hf_test_cache")
 
-# Create a temporary cache directory with full permissions
+# Create a temporary cache directory with owner-only permissions
 if not os.path.exists(cache_dir):
-    os.makedirs(cache_dir, exist_ok=True)
-os.chmod(cache_dir, 0o777)
+    os.makedirs(cache_dir, mode=0o700, exist_ok=True)
+os.chmod(cache_dir, 0o700)
 
 print(f"Temporary cache directory created at: {cache_dir}")
 
