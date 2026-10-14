@@ -1,7 +1,7 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK004](TASK004-owned-cache-720.md) Use an owned model cache (#720) - Implementation and isolated validation in progress (Updated: 2026-10-14)
+- [TASK004](TASK004-owned-cache-720.md) Use an owned model cache (#720) - 73/73 bounded tests; draft PR publication in progress (Updated: 2026-10-14)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending

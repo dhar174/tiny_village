@@ -29,7 +29,9 @@
   verification passes 54/54 tests, no skips/timeouts, plus cold-getter, actual
   Goal fallback and minimal probes.
 - TASK004 / #720 repairs shared and machine-specific cache configuration;
-  17 isolated cache tests pass. Broader startup validation and review proceed.
+  73/73 tests pass in bounded batches (19 cache); two review findings are fixed.
+  Single-module initialization exceeded its aggregate deadline; details retained
+  in docs/testing/issue-720-owned-cache-validation.md. Draft PR publication proceeds.
 - Existing integration tests remain 9/11 and utility tests 16/26. #773/#774 retain
   those failures. #775/#776 retain missing Door effects and optional spaCy
   initialization limits; full Character/simulation readiness is not established.

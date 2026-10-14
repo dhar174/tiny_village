@@ -23,15 +23,15 @@ See [the scoped implementation plan](../../docs/superpowers/plans/2026-10-14-iss
 
 ## Progress Tracking
 
-**Overall Status:** In Progress — Runtime repair and cache regressions complete; startup validation/review/publication pending.
+**Overall Status:** In Progress — Implementation and scoped validation complete; draft PR publication in progress.
 
 | ID | Description | Status | Updated | Notes |
 | --- | --- | --- | --- | --- |
 | 4.1 | Verify merged #719 | Complete | 2026-10-14 | 54/54 tests; cold-getter/fallback/minimal pass |
 | 4.2 | Owned-cache helper | Complete | 2026-10-14 | 15 isolated filesystem/configuration checks pass |
 | 4.3 | Memory/brain integration | Complete | 2026-10-14 | Full cache suite 17/17; both import orders and real loader methods |
-| 4.4 | Startup validation and fresh review | In Progress | 2026-10-14 | Bounded matrix and one fresh whole-branch review |
-| 4.5 | Publish evidence and PR | Pending | 2026-10-14 | #720 remains open for human review/merge |
+| 4.4 | Startup validation and fresh review | Complete | 2026-10-14 | 73/73 bounded tests; two review findings fixed; single-module deadline limitation retained |
+| 4.5 | Publish evidence and PR | In Progress | 2026-10-14 | #720 remains open for human review/merge |
 
 ## Progress Log
 
@@ -52,3 +52,18 @@ See [the scoped implementation plan](../../docs/superpowers/plans/2026-10-14-iss
   full 17-test cache suite passes. Optional model downloads are controlled
   boundaries; no full inference or Windows ACL validation is claimed.
 - #773–#776 and human review/phase gates #721/#722 remain separate.
+
+- Fresh review found two Important filesystem cases: search-only ancestors and
+  normalization of symlink/non-directory paths followed by `..`. Added failing
+  real-filesystem regressions, fixed both in one pass, and passed all 19 cache
+  tests. No Critical/Minor findings.
+- Initial startup runs exceeded aggregate initialization deadlines, and one
+  Character child timed out. The Character case passes alone with unchanged
+  limits. Initialization is verified in bounded import/lifecycle class batches;
+  the single-module timing limitation is retained for #721 review.
+
+- Final runtime `2ec8259f7bee9426c16a986006af95dd63ebcbdc`: 73/73 unique
+  tests pass in bounded batches, zero skips; cold getter/fallback/minimal pass.
+  Combined initialization exceeded its aggregate deadline; import/lifecycle
+  batches pass without changing child or batch limits.
+- See [validation evidence and execution decisions](../../docs/testing/issue-720-owned-cache-validation.md).

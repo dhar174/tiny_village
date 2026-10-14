@@ -5,7 +5,8 @@
 - Post-merge verification passes 54/54 tests plus cold-getter/fallback/minimal
   probes. Reduced minimal mode still executes zero actions.
 - TASK004 / #720 is implementing owned cache configuration on branch
-  `codex/issue-720-owned-cache`; 17 isolated cache tests pass.
+  `codex/issue-720-owned-cache`; 73/73 tests pass in bounded batches (19 cache).
+  The single-module initialization deadline limitation is retained for review.
 - Evidence and limits: `docs/testing/issue-719-graph-initialization-validation.md`.
 
 ## Recent Changes Reflected in the Repository

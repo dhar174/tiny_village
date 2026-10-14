@@ -84,10 +84,10 @@ Prepare distinct selected directories idempotently. On POSIX, validate directory
 
 **Interfaces:** Consume repaired startup/cache contracts. Produce one reviewable PR for #720 and preserve its dependency on completed #719.
 
-- [ ] Run cache tests and the same 54-test post-merge startup matrix, plus cold-getter/fallback/minimal probes, under isolated directories with bounded subprocess deadlines. Record executed/pass/failure/error/skipped counts and exact revision.
-- [ ] Verify repeated process startup preserves populated cache files, owned leaf directories have private POSIX modes, the old shared-cache sentinel remains intact, and no destructive repro script is added.
-- [ ] Record PR #701's reviewed revision, limitations, successful CI versus runtime evidence, and the reason the new branch supersedes its patch without merging it.
-- [ ] Obtain one fresh whole-branch code review, address Important/Critical findings through failing regressions followed by a green agreed matrix, and document remaining limitations accurately.
+- [x] Run cache tests and the same 54-test post-merge startup matrix, plus cold-getter/fallback/minimal probes, under isolated directories with bounded subprocess deadlines. Record executed/pass/failure/error/skipped counts and exact revision.
+- [x] Verify repeated process startup preserves populated cache files, owned leaf directories have private POSIX modes, the old shared-cache sentinel remains intact, and no destructive repro script is added.
+- [x] Record PR #701's reviewed revision, limitations, successful CI versus runtime evidence, and the reason the new branch supersedes its patch without merging it.
+- [x] Obtain one fresh whole-branch code review, address Important/Critical findings through failing regressions followed by a green agreed matrix, and document remaining limitations accurately.
 - [ ] Publish a draft PR linked to #720, attach it to this task, and update issue evidence without merging or approving human gates. Keep #720 open pending review/merge.
 
 ## Completion and handoff
