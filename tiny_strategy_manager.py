@@ -71,43 +71,44 @@ VARIETY_PROBABILITY = 0.2       # 20% chance to use LLM for emergent behavior
 
 
 class EatAction(Action):
-    def __init__(self, name="Eat", cost=0.1, effects=None, item_name="food"):
+    def __init__(self, name="Eat", cost=0.1, effects=None, item_name="food", graph_manager=None):
         super().__init__(
             name=f"{name} {item_name}",
             preconditions={},
             effects=effects if effects else [],
             cost=cost,
+            graph_manager=graph_manager,
         )
         self.item_name = item_name
 
 
 class SleepAction(Action):
     def __init__(
-        self, name="Sleep", cost=0.0, effects=None
+        self, name="Sleep", cost=0.0, effects=None, graph_manager=None
     ):  # Sleeping might have time cost, but 0 for this model
         super().__init__(
-            name=name, preconditions={}, effects=effects if effects else [], cost=cost
+            name=name, preconditions={}, effects=effects if effects else [], cost=cost, graph_manager=graph_manager
         )
 
 
 class WorkAction(Action):
-    def __init__(self, name="Work", cost=0.3, effects=None):
+    def __init__(self, name="Work", cost=0.3, effects=None, graph_manager=None):
         super().__init__(
-            name=name, preconditions={}, effects=effects if effects else [], cost=cost
+            name=name, preconditions={}, effects=effects if effects else [], cost=cost, graph_manager=graph_manager
         )
 
 
 class NoOpAction(Action):
-    def __init__(self, name="NoOp", cost=0.0, effects=None):
+    def __init__(self, name="NoOp", cost=0.0, effects=None, graph_manager=None):
         super().__init__(
-            name=name, preconditions={}, effects=effects if effects else [], cost=cost
+            name=name, preconditions={}, effects=effects if effects else [], cost=cost, graph_manager=graph_manager
         )
 
 
 class WanderAction(Action):  # Example generic action
-    def __init__(self, name="Wander", cost=0.1, effects=None):
+    def __init__(self, name="Wander", cost=0.1, effects=None, graph_manager=None):
         super().__init__(
-            name=name, preconditions={}, effects=effects if effects else [], cost=cost
+            name=name, preconditions={}, effects=effects if effects else [], cost=cost, graph_manager=graph_manager
         )
 
 
@@ -803,9 +804,9 @@ class StrategyManager:
 
         # --- Action Generation ---
         # 1. Generic Actions
-        potential_actions.append(NoOpAction())
+        potential_actions.append(NoOpAction(graph_manager=self.graph_manager))
         potential_actions.append(
-            WanderAction(effects=[{"attribute": "energy", "change_value": -0.05}])
+            WanderAction(effects=[{"attribute": "energy", "change_value": -0.05}], graph_manager=self.graph_manager)
         )  # Wandering costs a little energy
 
         # 2. Contextual Actions
@@ -840,7 +841,8 @@ class StrategyManager:
                 {"targets": ["initiator"], "attribute": "energy", "change_value": 0.15},
                 {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 0.08}
             ],
-            cost=0.1
+            cost=0.1,
+            graph_manager=self.graph_manager,
         )
         potential_actions.append(rest_action)
         
@@ -852,7 +854,8 @@ class StrategyManager:
                 {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 0.12},
                 {"targets": ["initiator"], "attribute": "happiness", "change_value": 0.08}
             ],
-            cost=0.2
+            cost=0.2,
+            graph_manager=self.graph_manager,
         )
         potential_actions.append(leisure_action)
         
@@ -864,7 +867,8 @@ class StrategyManager:
                 {"targets": ["initiator"], "attribute": "energy", "change_value": 0.10},
                 {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 0.06}
             ],
-            cost=0.3
+            cost=0.3,
+            graph_manager=self.graph_manager,
         )
         potential_actions.append(exercise_action)
 
@@ -882,7 +886,8 @@ class StrategyManager:
                     ]
                     potential_actions.append(
                         EatAction(
-                            item_name=food_item.name, effects=eat_effects, cost=0.05
+                            item_name=food_item.name, effects=eat_effects, cost=0.05,
+                            graph_manager=self.graph_manager,
                         )
                     )
 
@@ -892,7 +897,7 @@ class StrategyManager:
                 {"attribute": "energy", "change_value": 0.7}
             ]  # Restore 70% energy
             potential_actions.append(
-                SleepAction(effects=sleep_effects, cost=0)
+                SleepAction(effects=sleep_effects, cost=0, graph_manager=self.graph_manager)
             )  # Sleep itself has no direct cost other than time
 
         # Work Action
@@ -908,7 +913,7 @@ class StrategyManager:
                 {"attribute": "energy", "change_value": -0.3},  # Example energy cost
             ]
             potential_actions.append(
-                WorkAction(name=f"Work as {job_name}", effects=work_effects, cost=0.2)
+                WorkAction(name=f"Work as {job_name}", effects=work_effects, cost=0.2, graph_manager=self.graph_manager)
             )  # Base cost for work action
 
         # --- Utility Calculation & Sorting ---
@@ -1659,7 +1664,8 @@ class StrategyManager:
                     {"targets": ["initiator"], "attribute": "safety", "change_value": 20},
                     {"targets": ["initiator"], "attribute": "energy", "change_value": -10}
                 ],
-                cost=0.2
+                cost=0.2,
+                graph_manager=self.graph_manager,
             ))
             
             # Add help others action
@@ -1670,7 +1676,8 @@ class StrategyManager:
                     {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 15},
                     {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 10}
                 ],
-                cost=0.3
+                cost=0.3,
+                graph_manager=self.graph_manager,
             ))
             
             return self._plan_with_goal_and_actions(character, goal, crisis_actions)
@@ -1714,7 +1721,8 @@ class StrategyManager:
                     effects=[
                         {"targets": ["initiator"], "attribute": "job_performance", "change_value": 10},
                         {"targets": ["initiator"], "attribute": "energy", "change_value": -15}
-                    ]
+                    ],
+                    graph_manager=self.graph_manager,
                 )]
                 
             return self._plan_with_goal_and_actions(character, goal, work_actions)
@@ -1751,7 +1759,7 @@ class StrategyManager:
                     SleepAction(name="Take Shelter", effects=[
                         {"targets": ["initiator"], "attribute": "safety", "change_value": 15},
                         {"targets": ["initiator"], "attribute": "energy", "change_value": 10}
-                    ]),
+                    ], graph_manager=self.graph_manager),
                 ]
             else:  # Positive weather
                 # Better weather increases happiness targets
@@ -1768,7 +1776,7 @@ class StrategyManager:
                     WanderAction(name="Enjoy Outdoors", effects=[
                         {"targets": ["initiator"], "attribute": "happiness", "change_value": 10},
                         {"targets": ["initiator"], "attribute": "energy", "change_value": 5}
-                    ])
+                    ], graph_manager=self.graph_manager)
                 ]
                 
             return self._plan_with_goal_and_actions(character, goal, weather_actions)
@@ -1989,7 +1997,8 @@ class StrategyManager:
                         {"attribute": "career_progress", "change_value": action_dict.get("career_progress", 0)},
                         {"attribute": "satisfaction", "change_value": action_dict.get("cost", 0) * -1}  # Cost reduces satisfaction
                     ],
-                    cost=action_dict.get("cost", 0)
+                    cost=action_dict.get("cost", 0),
+                    graph_manager=self.graph_manager,
                 )
                 actions.append(action_obj)
             else:

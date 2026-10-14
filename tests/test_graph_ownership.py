@@ -5,6 +5,26 @@ import unittest
 
 
 class TestGraphOwnership(FreshPythonTestCase):
+    def test_strategy_generated_actions_keep_the_explicit_world(self):
+        self.run_python("""
+            from unittest.mock import patch
+            from tiny_graph_manager import GraphManager
+            from tiny_globals import set_global_graph_manager
+            from tiny_strategy_manager import StrategyManager, EatAction, SleepAction, WorkAction, NoOpAction, WanderAction
+            owner = GraphManager()
+            other = object()
+            set_global_graph_manager(other)
+            strategy = StrategyManager(graph_manager=owner)
+            actions = strategy.get_daily_actions({'name': 'Ada', 'energy': 5, 'hunger_level': 5})
+            assert actions, 'Strategy generated no actions'
+            assert all(action.graph_manager is owner for action in actions), 'Generated action resolved a different global world'
+            with patch('tiny_globals.get_global_graph_manager', side_effect=AssertionError('Unexpected global access')):
+                actions = strategy.get_daily_actions({'name': 'Ada', 'energy': 5, 'hunger_level': 5})
+                helpers = [kind(graph_manager=owner) for kind in (EatAction, SleepAction, WorkAction, NoOpAction, WanderAction)]
+            assert all(action.graph_manager is owner for action in actions + helpers)
+            assert strategy.goap_planner.graph_manager is owner
+        """)
+
     def test_strategy_uses_an_explicit_owner_and_preserves_positional_arguments(self):
         self.run_python("""
             from unittest.mock import patch
