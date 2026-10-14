@@ -131,6 +131,45 @@ class TestModelCache(unittest.TestCase):
             self.configure()
         self.assertFalse((target / "cache").exists())
 
+    @unittest.skipUnless(os.name == "posix", "POSIX search permissions")
+    def test_owned_cache_beneath_search_only_parent_is_supported(self):
+        parent = self.root / "search-only"
+        cache = parent / "cache"
+        cache.mkdir(parents=True, mode=0o700)
+        sentinel = cache / "keep"
+        sentinel.write_bytes(b"already usable cache")
+        os.environ["HF_HOME"] = str(cache)
+        parent.chmod(0o100)
+        self.addCleanup(parent.chmod, 0o700)
+        self.assertEqual(sentinel.read_bytes(), b"already usable cache")
+        self.assertEqual(Path(self.configure()), cache / "hub")
+        self.assertEqual(sentinel.read_bytes(), b"already usable cache")
+        self.assertEqual(stat.S_IMODE(parent.stat().st_mode), 0o100)
+
+    @unittest.skipUnless(os.name == "posix", "POSIX symlink semantics")
+    def test_parent_traversal_cannot_hide_unsafe_components(self):
+        outside = self.root / "outside"
+        (outside / "nested").mkdir(parents=True)
+        target = outside / "cache"
+        target.mkdir()
+        target.chmod(0o750)
+        (target / "keep").write_bytes(b"original configured target")
+        alias = self.root / "alias"
+        alias.symlink_to(outside / "nested", target_is_directory=True)
+        regular_file = self.root / "regular-file"
+        regular_file.write_text("keep file")
+        for component in (alias, regular_file):
+            with self.subTest(component=component.name):
+                os.environ["HF_HOME"] = str(component / ".." / "cache")
+                before = dict(os.environ)
+                with self.assertRaisesRegex(RuntimeError, "parent traversal|symlink|not a directory"):
+                    self.configure()
+                self.assertEqual(dict(os.environ), before)
+                self.assertFalse((self.root / "cache").exists())
+        self.assertEqual(stat.S_IMODE(target.stat().st_mode), 0o750)
+        self.assertEqual((target / "keep").read_bytes(), b"original configured target")
+        self.assertEqual(regular_file.read_text(), "keep file")
+
     @unittest.skipUnless(os.name == "posix", "POSIX ownership")
     def test_foreign_ownership_is_rejected_before_chmod(self):
         self.assertIsNotNone(importlib.util.find_spec("tiny_cache"), "Owned-cache helper is missing")

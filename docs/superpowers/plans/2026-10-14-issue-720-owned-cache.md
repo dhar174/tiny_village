@@ -50,7 +50,7 @@
 
 `configure_model_cache()` selects HF_HOME from its explicit setting, otherwise XDG_CACHE_HOME/huggingface, otherwise Path.home()/.cache/huggingface. HF_HUB_CACHE independently overrides HF_HOME/hub. TRANSFORMERS_CACHE, when supplied, takes precedence for these existing Transformers loaders; it is not newly introduced or overwritten. Expand `~` and use absolute filesystem paths internally. Preserve explicit variable values and unrelated security settings; publish missing HF_HOME/HF_HUB_CACHE defaults only after directory validation succeeds.
 
-Prepare distinct selected directories idempotently. On POSIX, validate directory type and effective-user ownership before setting mode `0700`; use non-following directory descriptors for permission changes. Reject symlink directory paths, including symlinked ancestors, with an actionable error. Windows retains its inherited user-profile ACL behavior; do not claim POSIX modes prove Windows ACL isolation. Never alter parent permissions or existing file contents. Filesystem errors identify the offending path and advise selecting an owned HF_HOME/HF_HUB_CACHE/TRANSFORMERS_CACHE location.
+Prepare distinct selected directories idempotently. On POSIX, validate directory type and effective-user ownership before setting mode `0700`; use non-following directory descriptors for permission changes and search-only descriptors for ancestors. Reject symlink directory paths, including symlinked ancestors, and `..` components with an actionable error. Windows retains its inherited user-profile ACL behavior; do not claim POSIX modes prove Windows ACL isolation. Never alter parent permissions or existing file contents. Filesystem errors identify the offending path and advise selecting an owned HF_HOME/HF_HUB_CACHE/TRANSFORMERS_CACHE location.
 
 ## Ordered tasks
 
@@ -60,11 +60,11 @@ Prepare distinct selected directories idempotently. On POSIX, validate directory
 
 **Interfaces:** Produce `configure_model_cache() -> str` without importing runtime/model libraries. Consume environment path settings described above.
 
-- [ ] Write selection tests for default home, XDG, explicit HF_HOME, HF_HUB_CACHE, legacy TRANSFORMERS_CACHE and distinct overrides; all paths live in an owned TemporaryDirectory.
-- [ ] Write filesystem tests for `0700` despite permissive umask, repeat calls preserving a sentinel, existing permissive owned directories, file/symlink/ancestor-symlink rejection, foreign ownership, denied operations and unchanged environment on rejected configuration.
-- [ ] Run `python -m unittest tests.test_model_cache -v`; observe feature failures before creating the helper.
-- [ ] Implement the stdlib-only helper with the exact contract above; validate existing directories and use descriptor-based POSIX permission changes. Fail closed on invalid configuration.
-- [ ] Rerun the tests; require all executed assertions to pass. Commit this independently testable deliverable.
+- [x] Write selection tests for default home, XDG, explicit HF_HOME, HF_HUB_CACHE, legacy TRANSFORMERS_CACHE and distinct overrides; all paths live in an owned TemporaryDirectory.
+- [x] Write filesystem tests for `0700` despite permissive umask, repeat calls preserving a sentinel, existing permissive owned directories, file/symlink/ancestor-symlink rejection, foreign ownership, denied operations and unchanged environment on rejected configuration.
+- [x] Run `python -m unittest tests.test_model_cache -v`; observe feature failures before creating the helper.
+- [x] Implement the stdlib-only helper with the exact contract above; validate existing directories and use descriptor-based POSIX permission changes. Fail closed on invalid configuration.
+- [x] Rerun the tests; require all executed assertions to pass. Commit this independently testable deliverable.
 
 ### Task 2: Wire memory and brain loaders without machine-specific side effects
 
@@ -72,11 +72,11 @@ Prepare distinct selected directories idempotently. On POSIX, validate directory
 
 **Interfaces:** Consume Task 1 helper before optional library imports. Preserve existing public constructors/model IDs, fallback behavior and download verification options.
 
-- [ ] Add bounded fresh-process regressions for both module import orders and repeated startup. Use isolated HOME-cache settings and temporary roots; preserve an unrelated shared-cache sentinel.
-- [ ] Guard optional library import boundaries: before Transformers is imported, cache settings must already be configured. Isolate unavailable optional NLP/model packages to avoid real downloads; cache tests do not claim full model inference readiness.
-- [ ] Exercise the real EmbeddingModel and TinyBrainIO loader methods with controlled from_pretrained boundaries, asserting each model/tokenizer receives the selected cache directory, and TLS/checksum-disabling flags/settings are not added. Observe failure on current hardcoded/late setup behavior.
-- [ ] Call the helper at the top of both modules, remove the shared-temp chmod/environment block and Windows-drive overrides, and forward the selected directory. Keep unrelated import-time NLP/model work and inference policy outside this task.
-- [ ] Rerun cache and targeted startup checks. Commit integration and accompanying cache configuration documentation.
+- [x] Add bounded fresh-process regressions for both module import orders and repeated startup. Use isolated HOME-cache settings and temporary roots; preserve an unrelated shared-cache sentinel.
+- [x] Guard optional library import boundaries: before Transformers is imported, cache settings must already be configured. Isolate unavailable optional NLP/model packages to avoid real downloads; cache tests do not claim full model inference readiness.
+- [x] Exercise the real EmbeddingModel and TinyBrainIO loader methods with controlled from_pretrained boundaries, asserting each model/tokenizer receives the selected cache directory, and TLS/checksum-disabling flags/settings are not added. Observe failure on current hardcoded/late setup behavior.
+- [x] Call the helper at the top of both modules, remove the shared-temp chmod/environment block and Windows-drive overrides, and forward the selected directory. Keep unrelated import-time NLP/model work and inference policy outside this task.
+- [x] Rerun cache and targeted startup checks. Commit integration and accompanying cache configuration documentation.
 
 ### Task 3: Validate, review and publish the scoped repair
 

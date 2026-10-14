@@ -9,7 +9,10 @@ def _cache_path(name: str, default: Path) -> Path:
     value = os.environ.get(name)
     if value == "":
         raise ValueError(f"{name} is empty")
-    return Path(os.path.abspath(Path(value if value is not None else default).expanduser()))
+    path = Path(value if value is not None else default).expanduser()
+    if ".." in path.parts:
+        raise ValueError(f"parent traversal ('..') is not supported in {name}; use the direct directory path")
+    return path.absolute()
 
 
 def _validate_directory_path(path: Path) -> None:
@@ -35,14 +38,17 @@ def _prepare_directory(path: Path) -> None:
         return
 
     # Walk using descriptors so a substituted symlink cannot redirect chmod.
-    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
-    descriptor = os.open(path.anchor, flags)
+    directory_flags = os.O_DIRECTORY | os.O_NOFOLLOW
+    search_flags = getattr(os, "O_SEARCH", getattr(os, "O_PATH", os.O_RDONLY)) | directory_flags
+    descriptor = os.open(path.anchor, search_flags)
     try:
         for index, part in enumerate(path.parts[1:], start=1):
             try:
                 os.mkdir(part, mode=0o700, dir_fd=descriptor)
             except FileExistsError:
                 pass
+            # Traversing an ancestor requires search permission, not listing.
+            flags = (os.O_RDONLY | directory_flags) if index == len(path.parts) - 1 else search_flags
             child = os.open(part, flags, dir_fd=descriptor)
             os.close(descriptor)
             descriptor = child

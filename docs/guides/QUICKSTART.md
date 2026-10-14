@@ -243,8 +243,9 @@ and does not import or download models itself.
 
 On POSIX systems, selected directories must belong to the effective runtime user
 and are restricted to mode `0700`. Existing files and parent permissions remain
-intact. Symlink directory paths and parents that allow other users to replace
-entries are rejected with a path-specific error; select a directory beneath a
+intact. Symlink directory paths, paths containing `..`, and parents that allow
+other users to replace entries are rejected with a path-specific error; use the
+direct directory path beneath a
 trusted parent. Windows uses inherited directory ACLs; POSIX mode checks do not
 establish Windows ACL isolation.
 
