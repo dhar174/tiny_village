@@ -90,6 +90,27 @@ should link to this file rather than maintain separate decision records.
 - **Confirmation:** The user answered “Yes” to keeping real downloads and
   inference in later ML/LLM work while #721 uses offline startup checks.
 
+### D006 — Defer real gameplay-turn validation to integration work
+
+- **Date:** 2026-10-15
+- **Decision-maker:** dhar174
+- **Decision:** Keep completion of a real gameplay turn in the later demo and
+  integration work, rather than make it a prerequisite for Phase 1 approval.
+  Phase 1 remains focused on reliable startup within the agreed environment.
+- **Boundary:** The minimal-mode probe exits successfully but executes zero
+  actions. Its result establishes no completed gameplay turn or full simulation
+  readiness. Later integration validation must demonstrate actual behavior.
+- **Reason:** Separate the startup repairs from end-to-end simulation behavior,
+  retaining the latter as explicit follow-up work.
+- **Confirmation:** “Later, yes,” in response to scheduling gameplay-turn
+  validation in later demo/integration work.
+
+## Review status
+
+The current scope questions have been answered (D002, D004–D006). Review #721
+remains **Deferred** under D001. Revisit its disposition after #779 supplies
+the required startup evidence; this walkthrough does not approve Phase 1.
+
 ## Outstanding actions and limits
 
 - Investigate #779 and return the results to #721. These decisions do not
@@ -98,6 +119,8 @@ should link to this file rather than maintain separate decision records.
   the later platform work, before any Windows-support claim (D004).
 - Include live model download and inference checks in the later ML/LLM work
   before making readiness claims for those features (D005).
+- Demonstrate a real gameplay turn during the later demo/integration work;
+  retain the zero-action limitation of the current minimal-mode probe (D006).
 - Project 10's **Decision** field still needs synchronization to **Deferred**.
   The configured credential received HTTP 403, “Resource not accessible by
   integration,” on the last attempt. The native issue dependency and recorded
