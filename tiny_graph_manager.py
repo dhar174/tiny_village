@@ -69,9 +69,11 @@ from tiny_types import Location, Event
 from tiny_jobs import Job
 
 # from actions import Action, State, ActionSystem
+from character_attribute_mapper import AttributeMapper
 from tiny_items import ItemInventory, ItemObject, InvestmentPortfolio, Stock
 # import tiny_memories  # Temporarily commented out for testing
 from tiny_utility_functions import is_goal_achieved
+from tiny_util_funcs import is_numeric
 
 # Graceful fallbacks for optional dependencies
 try:
@@ -2643,8 +2645,45 @@ class GraphManager(metaclass=_GraphManagerSingleton):
         Usage example:
             graph_manager.update_node_attribute('char1', 'mood', 'happy')
         """
+        if isinstance(node, str):
+            node = self._resolve_node_reference(node)
         # Delegate to WorldState
         self.world_state.update_node_attribute(node, attribute, value)
+
+    def _resolve_node_reference(self, node):
+        """Resolve name/uuid strings to the graph node object when available."""
+        if node is None or self.G.has_node(node):
+            return node
+
+        if not isinstance(node, str):
+            return node
+
+        for collection_name in (
+            "characters",
+            "locations",
+            "objects",
+            "events",
+            "activities",
+            "jobs",
+            "stocks",
+        ):
+            collection = getattr(self, collection_name, None)
+            if not isinstance(collection, dict):
+                continue
+
+            if node in collection and self.G.has_node(collection[node]):
+                return collection[node]
+
+            for candidate in collection.values():
+                if getattr(candidate, "uuid", None) == node or getattr(candidate, "name", None) == node:
+                    if self.G.has_node(candidate):
+                        return candidate
+
+        for graph_node, data in self.G.nodes(data=True):
+            if getattr(graph_node, "uuid", None) == node or data.get("name") == node:
+                return graph_node
+
+        return node
 
     def find_all_paths(self, source, target, max_length=None):
         """
@@ -4511,7 +4550,9 @@ class GraphManager(metaclass=_GraphManagerSingleton):
             goal_conditions = set()
             if hasattr(goal, "completion_conditions") and goal.completion_conditions:
                 for condition in goal.completion_conditions:
-                    condition_key = f"{condition.attribute}_{condition.satisfy_value}_{condition.op}"
+                    condition_key = (
+                        f"{condition.attribute}_{condition.satisfy_value}_{condition.operator}"
+                    )
                     goal_conditions.add(condition_key)
 
             fulfilled_conditions = set()
@@ -4532,8 +4573,13 @@ class GraphManager(metaclass=_GraphManagerSingleton):
 
                     # Check if action preconditions are met
                     if hasattr(action, "preconditions") and action.preconditions:
+                        preconditions = (
+                            action.preconditions.values()
+                            if isinstance(action.preconditions, dict)
+                            else action.preconditions
+                        )
                         preconditions_met = True
-                        for precondition in action.preconditions.values():
+                        for precondition in preconditions:
                             if hasattr(precondition, "check_condition"):
                                 state_obj = State(current_state)
                                 if not precondition.check_condition(state_obj):
@@ -4546,17 +4592,47 @@ class GraphManager(metaclass=_GraphManagerSingleton):
                     # Apply action effects to current state
                     for effect in action.effects:
                         if "attribute" in effect and "change_value" in effect:
-                            attr = effect["attribute"]
+                            raw_attr = effect["attribute"]
+                            # AttributeMapper returns:
+                            # (actual_attribute_name, min_value, max_value, default_value)
+                            attr, _, _, _ = AttributeMapper.map_attribute(raw_attr)
                             change_val = effect["change_value"]
 
                             # Update state
                             if attr in current_state:
                                 if isinstance(change_val, (int, float)):
                                     current_state[attr] += change_val
+                                elif (
+                                    isinstance(change_val, str)
+                                    and change_val.startswith("add:")
+                                    and is_numeric(change_val[4:])
+                                ):
+                                    current_state[attr] += float(change_val[4:])
+                                elif isinstance(change_val, str) and change_val.startswith("set:"):
+                                    set_val_str = change_val[4:]
+                                    current_state[attr] = (
+                                        float(set_val_str)
+                                        if is_numeric(set_val_str)
+                                        else set_val_str
+                                    )
                                 else:
                                     current_state[attr] = change_val
                             else:
-                                current_state[attr] = change_val
+                                if isinstance(change_val, str) and change_val.startswith("set:"):
+                                    set_val_str = change_val[4:]
+                                    current_state[attr] = (
+                                        float(set_val_str)
+                                        if is_numeric(set_val_str)
+                                        else set_val_str
+                                    )
+                                elif (
+                                    isinstance(change_val, str)
+                                    and change_val.startswith("add:")
+                                    and is_numeric(change_val[4:])
+                                ):
+                                    current_state[attr] = float(change_val[4:])
+                                else:
+                                    current_state[attr] = change_val
 
                             # Check if this effect fulfills any goal conditions
                             for condition in (
@@ -4567,7 +4643,9 @@ class GraphManager(metaclass=_GraphManagerSingleton):
                                 if condition.attribute == attr:
                                     state_obj = State(current_state)
                                     if condition.check_condition(state_obj):
-                                        condition_key = f"{condition.attribute}_{condition.satisfy_value}_{condition.op}"
+                                        condition_key = (
+                                            f"{condition.attribute}_{condition.satisfy_value}_{condition.operator}"
+                                        )
                                         fulfilled_conditions.add(condition_key)
 
             # Check if all goal conditions are fulfilled
