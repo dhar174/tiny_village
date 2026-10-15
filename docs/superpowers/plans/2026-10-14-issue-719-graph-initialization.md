@@ -10,7 +10,7 @@
 
 **Spec:** [Issue #719](https://github.com/dhar174/tiny_village/issues/719), its acceptance criteria below, and the user's instruction: “Don't start implementation until the plan has been reviewed and approved.”
 
-**Status:** Approved by the user on 2026-10-14; sequential implementation authorized. Completion evidence is tracked in TASK003 and the execution ledger.
+**Status:** Completed — PR #777 merged on 2026-10-14 and #719 closed. Post-merge verification passed 54/54 tests plus cold-getter/fallback/minimal probes. TASK003 and the validation report retain evidence; #721/#722 remain separate human phase decisions.
 
 ## Global Constraints
 
@@ -170,8 +170,8 @@ If graph key/UUID mapping or full Character construction reveals an unrelated de
 - [x] Document the initialization contract, lock order, explicit sample factory, legacy compatibility, recursion errors, and quiescent reset policy.
 - [x] Record base/head SHAs; commands; passed/failed/error/skipped/unexecuted counts; import-order cases; concurrency rounds; before/after traces; and remaining issues.
 - [x] Review the final diff against this scope. Create one PR for #719 and retain the task's dependency links. Published draft PR #777; no duplicate program issues were needed for these cohesive subtasks.
-- [ ] Have a human review the graph lifecycle, ownership forwarding, failure/retry behavior, and evidence. Developer UX review checks prompt actionable errors and understandable startup diagnostics; visual/aesthetic changes remain in their planned phases.
-- [ ] Close #719 only through maintainer-approved completion/merge. Then #720 is the next ordered implementation issue. #721 startup engineering review and #722 phase decision remain their own human steps; #719 approval does not approve either gate.
+- [x] Have a human review the graph lifecycle, ownership forwarding, failure/retry behavior, and evidence. Maintainer review and merge of #777 completed #719; the broader #721 engineering review remains separate. Visual/aesthetic changes remain in their planned phases.
+- [x] Close #719 only through maintainer-approved completion/merge. PR #777 merged and #719 closed; #720 now proceeds in draft PR #778. #721 startup engineering review and #722 phase decision remain their own human steps; #719 completion does not approve either gate.
 
 ## Required validation matrix
 
@@ -215,7 +215,7 @@ Run additional existing graph/social tests only when relevant to the constructio
 | This plan's architecture and scope | Approved by the user on 2026-10-14 |
 | Permission to begin implementation | Granted by the user on 2026-10-14 |
 | Recommended execution | Sequential implementation in this session with milestone updates |
-| Implementation reviewer/decision | Fresh code review completed; Important finding fixed by RED→GREEN. Human review pending |
+| Implementation reviewer/decision | Fresh review finding fixed; maintainer merged #777 and #719 closed. Post-merge verification passes 54/54 tests |
 | #721/#722 human phase decisions | Remain pending |
 
 Approve the factory access-pattern change, preserved singleton API with complete construction synchronization, explicit forwarding scope, required tests, and sequential execution to authorize implementation. Requests to expand the scope will be incorporated into this plan first.
