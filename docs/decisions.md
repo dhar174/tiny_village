@@ -59,10 +59,27 @@ should link to this file rather than maintain separate decision records.
 - **Existing records:** Preserve historical GitHub comments and validation
   evidence as provenance. Use this file for subsequent decision updates.
 
+### D004 — Defer native Windows validation to platform work
+
+- **Date:** 2026-10-15
+- **Decision-maker:** dhar174
+- **Decision:** Keep native Windows execution and cache-permission validation
+  in the later platform work, rather than add it as a prerequisite for #721.
+  The current review remains focused on the Linux startup evidence and #779.
+- **Boundary:** Windows support and Windows cache isolation remain unverified.
+  Require native Windows validation before claiming Windows support; Linux
+  tests and simulated Windows metadata do not establish it.
+- **Reason:** Resolve the current startup verification failures within their
+  existing environment and address platform-specific guarantees separately.
+- **Confirmation:** “Yes, save it for later,” in response to deferring Windows
+  validation to the later platform work.
+
 ## Outstanding actions and limits
 
 - Investigate #779 and return the results to #721. These decisions do not
   establish a cause, approve an unreviewed repair, or change test deadlines.
+- Include native Windows execution and cache-permission checks when planning
+  the later platform work, before any Windows-support claim (D004).
 - Project 10's **Decision** field still needs synchronization to **Deferred**.
   The configured credential received HTTP 403, “Resource not accessible by
   integration,” on the last attempt. The native issue dependency and recorded
