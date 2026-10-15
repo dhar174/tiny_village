@@ -25,8 +25,10 @@
 - Merged-main verification completes with timing failures/incomplete batches;
   cache passes 26/27, and 30 tests in five other complete suites pass. Both
   affected import orders pass instrumented diagnostics, but cause is unproven.
-  #779 tracks investigation; evidence is published on #721, and the human
-  walkthrough starts with whether to defer approval pending that investigation.
+  dhar174 explicitly confirmed Deferred; the decision is recorded on #721 and
+  #779 is a verified native blocker. Continue the scope/limits walkthrough.
+  Project Decision synchronization was denied (403); issue disposition is
+  authoritative, with Project field update still outstanding.
   Source repair, approval and downstream phase advancement are separate decisions.
 - Human startup review #721 and gate #722 follow; passing scoped tests does
   not approve either decision.

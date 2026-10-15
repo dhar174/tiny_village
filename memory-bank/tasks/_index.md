@@ -1,7 +1,7 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK005](TASK005-startup-human-review-721.md) Verify merged startup repairs and guide human review (#721) - verification complete with timing failures/incomplete batches; investigation #779; human walkthrough pending (Updated: 2026-10-15)
+- [TASK005](TASK005-startup-human-review-721.md) Verify merged startup repairs and guide human review (#721) - human Deferred recorded; native blocker #779 verified; remaining walkthrough pending; Project field update denied (403) (Updated: 2026-10-15)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending

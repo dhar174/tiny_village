@@ -1,6 +1,6 @@
 # [TASK005] - Verify merged startup repairs and guide human review (#721)
 
-**Status:** In Progress — verification and human walkthrough
+**Status:** In Progress — human Deferred; investigation #779 blocks review completion
 
 **Added:** 2026-10-15
 
@@ -28,15 +28,15 @@ by this verification and walkthrough alone.
 
 ## Progress Tracking
 
-**Overall Status:** In Progress — no human decision recorded.
+**Overall Status:** In Progress — Deferred recorded; #779 blocks #721; Project Decision synchronization denied.
 
 | ID | Description | Status | Updated | Notes |
 | --- | --- | --- | --- | --- |
 | 5.1 | Confirm merge and prerequisites | Complete | 2026-10-15 | PR #778 merged at 93079fd; #718/#719/#720 closed; source matches f796b33 |
 | 5.2 | Focused merged verification | Complete | 2026-10-15 | 30 tests in complete suites pass; cache 26/27; import timing failures and incomplete lifecycle/ownership retained |
 | 5.3 | Review evidence and diagnostics | Complete | 2026-10-15 | Both affected import orders pass instrumented diagnostics; cause unproven; investigation #779 |
-| 5.4 | Human decision walkthrough | In Progress | 2026-10-15 | First question: defer #721 pending #779; recommendation is not a recorded decision |
-| 5.5 | Record decision and phase ordering | Pending | 2026-10-15 | #721 and #722 remain open; no Project approval supplied |
+| 5.4 | Human decision walkthrough | In Progress | 2026-10-15 | dhar174 confirmed Deferred; remaining scope/limits still to walk through |
+| 5.5 | Record decision and phase ordering | Partially complete | 2026-10-15 | Deferred recorded; native #779 blocker verified; #721/#722 open; Project field denied (403) |
 
 ## Progress Log
 
@@ -67,3 +67,13 @@ by this verification and walkthrough alone.
 - Published the review evidence on #721:
   https://github.com/dhar174/tiny_village/issues/721#issuecomment-6194577005.
   Human disposition, gate/dependency changes and source repairs remain pending.
+- dhar174 answered “Yes” to recording Deferred pending #779. Recorded the
+  explicit decision in the issue body and comment, including reviewer, date,
+  revision, rationale and evidence:
+  https://github.com/dhar174/tiny_village/issues/721#issuecomment-6194738536.
+- Added and read back native dependency #779 → #721; preserved existing #720
+  dependency. Both #721 and #722 remain open. No runtime implementation or
+  downstream phase advancement authorized by this disposition.
+- Project 10 read returned HTTP 403 “Resource not accessible by integration”
+  through the configured GH_PROJECT_TOKEN binding. Decision field remains
+  unsynchronized; issue decision is recorded and verified. No credential requested.

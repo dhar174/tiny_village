@@ -37,7 +37,9 @@
   zero actions. Cache passes 26/27; both affected import orders pass subsequent
   instrumented diagnostics with unchanged limits, without explaining failures.
   Verification is complete with failures; #779 tracks diagnosis. #721/#722
-  remain open without approval.
+  remain open. dhar174 confirmed Deferred on #721, recorded with evidence and
+  verified native blocker #779. Project Decision field update is outstanding
+  because Project API access returns HTTP 403. No phase approval supplied.
 - Existing integration tests remain 9/11 and utility tests 16/26. #773/#774 retain
   those failures. #775/#776 retain missing Door effects and optional spaCy
   initialization limits; full Character/simulation readiness is not established.
