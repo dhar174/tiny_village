@@ -4,9 +4,11 @@
 - TASK003 / #719 is complete: PR #777 merged as `0ba9061`; #719 closed.
 - Post-merge verification passes 54/54 tests plus cold-getter/fallback/minimal
   probes. Reduced minimal mode still executes zero actions.
-- TASK004 / #720 is implementing owned cache configuration on branch
-  `codex/issue-720-owned-cache`; 81 unique checks pass in final bounded batches (27 cache).
-  The single-module initialization deadline limitation is retained for review.
+- TASK004 / #720 is complete: PR #778 merged as `93079fd`; #720 closed.
+- TASK005 / #721 verifies merged main and prepares a human walkthrough on
+  `codex/issue-721-review`. Current cold-import timing failures and incomplete
+  lifecycle/ownership batches prevent a blanket readiness claim. The earlier
+  81 pre-merge checks remain historical evidence.
 - Evidence and limits: `docs/testing/issue-719-graph-initialization-validation.md`.
 
 ## Recent Changes Reflected in the Repository
@@ -20,10 +22,12 @@
 
 ## Immediate Next Steps
 
-- Codex/Copilot review fixes for PR #778 are implemented; 81 unique checks
-  pass in final batches, including one cold-import rerun after an initial native
-  timeout. Original failures and platform limits are retained. Maintainer merge
-  and #721/#722 human decisions remain pending.
+- Merged-main verification completes with timing failures/incomplete batches;
+  cache passes 26/27, and 30 tests in five other complete suites pass. Both
+  affected import orders pass instrumented diagnostics, but cause is unproven.
+  #779 tracks investigation; evidence is published on #721, and the human
+  walkthrough starts with whether to defer approval pending that investigation.
+  Source repair, approval and downstream phase advancement are separate decisions.
 - Human startup review #721 and gate #722 follow; passing scoped tests does
   not approve either decision.
 - Retain #773/#774 integration/utility failures and #775/#776 Door-definition/

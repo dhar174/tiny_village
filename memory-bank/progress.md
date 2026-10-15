@@ -28,12 +28,16 @@
 - TASK003 / #719 is complete: #777 merged and the issue closed. Post-merge
   verification passes 54/54 tests, no skips/timeouts, plus cold-getter, actual
   Goal fallback and minimal probes.
-- TASK004 / #720 repairs shared and machine-specific cache configuration;
-  81 unique checks pass in final bounded batches (27 cache); Codex/Copilot
-  feedback fixes are validated. One initial cold-import timeout passed a targeted
-  rerun and remains explicitly recorded.
-  Single-module initialization exceeded its aggregate deadline; details retained
-  in docs/testing/issue-720-owned-cache-validation.md. PR #778 awaits human review/merge.
+- As of 2026-10-15, TASK004 / #720 is complete: PR #778 merged at `93079fd`
+  and #720 closed. Its 81 pre-merge checks and timing limits remain historical.
+- TASK005 / #721 is verifying merged main and preparing the human walkthrough.
+  Cold imports fail two timing subcases; lifecycle/ownership batches exceed
+  aggregate deadlines after partial passes. Global-manager (9), named-target
+  (6), actions (5), events (5) and GOAP errors (5) pass; minimal exits 0 with
+  zero actions. Cache passes 26/27; both affected import orders pass subsequent
+  instrumented diagnostics with unchanged limits, without explaining failures.
+  Verification is complete with failures; #779 tracks diagnosis. #721/#722
+  remain open without approval.
 - Existing integration tests remain 9/11 and utility tests 16/26. #773/#774 retain
   those failures. #775/#776 retain missing Door effects and optional spaCy
   initialization limits; full Character/simulation readiness is not established.

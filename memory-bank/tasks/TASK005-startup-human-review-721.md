@@ -1,0 +1,69 @@
+# [TASK005] - Verify merged startup repairs and guide human review (#721)
+
+**Status:** In Progress — verification and human walkthrough
+
+**Added:** 2026-10-15
+
+**Updated:** 2026-10-15
+
+## Original Request
+
+"Let's do it, together. After you verify things, you can walk me through the decisions step by step."
+
+## Approach
+
+Verify merged main rather than reuse pre-merge results. Retain failed and
+incomplete runs, identify the limits of each passing check, and prepare a
+human-readable review on #721. A human must explicitly record the disposition;
+#722 remains a separate phase decision. No application changes are authorized
+by this verification and walkthrough alone.
+
+## Implementation Plan
+
+1. Confirm merge/prerequisites and freeze the reviewed revision.
+2. Execute existing focused regression suites and startup probes.
+3. Retain failures and run targeted diagnostics where useful.
+4. Publish evidence and guide the human through scope, limits and disposition.
+5. Record the explicit human decision before any issue closure or phase advance.
+
+## Progress Tracking
+
+**Overall Status:** In Progress — no human decision recorded.
+
+| ID | Description | Status | Updated | Notes |
+| --- | --- | --- | --- | --- |
+| 5.1 | Confirm merge and prerequisites | Complete | 2026-10-15 | PR #778 merged at 93079fd; #718/#719/#720 closed; source matches f796b33 |
+| 5.2 | Focused merged verification | Complete | 2026-10-15 | 30 tests in complete suites pass; cache 26/27; import timing failures and incomplete lifecycle/ownership retained |
+| 5.3 | Review evidence and diagnostics | Complete | 2026-10-15 | Both affected import orders pass instrumented diagnostics; cause unproven; investigation #779 |
+| 5.4 | Human decision walkthrough | In Progress | 2026-10-15 | First question: defer #721 pending #779; recommendation is not a recorded decision |
+| 5.5 | Record decision and phase ordering | Pending | 2026-10-15 | #721 and #722 remain open; no Project approval supplied |
+
+## Progress Log
+
+### 2026-10-15
+
+- Confirmed PR #778 merge 93079fd6ef7ef7607153b95e2b66a48a957a9ee6,
+  exact tree match with reviewed f796b33, and all three closed prerequisites.
+- Both merged-main CodeQL language checks succeed; these are static analysis,
+  not startup verification.
+- Reused prepared Python 3.12 CPU environment and previous bounded commands,
+  unchanged assertions/deadlines; no dependency/model installation.
+- Eight import-order subcases: six pass, graph-manager-first reaches the fatal
+  timer in pandas imports, Character-first reaches the parent deadline.
+- Lifecycle/ownership batches reach aggregate deadlines after partial passes
+  and timing failures. Do not count incomplete batches as passing suites.
+- No cause established for timing variability; no graph-lock regression claim.
+- #773–#776 remain open; earlier outcomes are historical and not rerun here.
+- Verification completes with failures: 30/30 in five complete suites, cache
+  26/27, two import-order timeouts and incomplete lifecycle/ownership batches.
+  Goal fallback, cold getter and minimal probes pass; minimal executes no actions.
+- Instrumented graph-first/Character-first diagnostics pass unchanged limits in
+  10.19s/5.11s. Import timing varies; no root cause established and no failed run
+  erased. Recommendation is Deferred, pending explicit human disposition.
+- Created #779 to retain the scoped timing investigation; no Project dependency
+  change, runtime implementation or human decision supplied by that issue.
+- Review packet: docs/testing/issue-721-startup-review.md. Raw evidence and
+  corrected interpretation of incomplete-suite counts retained in scratch.
+- Published the review evidence on #721:
+  https://github.com/dhar174/tiny_village/issues/721#issuecomment-6194577005.
+  Human disposition, gate/dependency changes and source repairs remain pending.

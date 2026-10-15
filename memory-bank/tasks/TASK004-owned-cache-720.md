@@ -1,10 +1,10 @@
 # [TASK004] - Use an owned model cache (#720)
 
-**Status:** In Progress — Awaiting human review/merge
+**Status:** Completed — PR #778 merged; #720 closed
 
 **Added:** 2026-10-14
 
-**Updated:** 2026-10-14
+**Updated:** 2026-10-15
 
 ## Original Request
 
@@ -23,7 +23,7 @@ See [the scoped implementation plan](../../docs/superpowers/plans/2026-10-14-iss
 
 ## Progress Tracking
 
-**Overall Status:** In Progress — PR #778 is ready for review; Codex/Copilot fixes are validated and all five threads replied to/resolved.
+**Overall Status:** Completed — merged at 93079fd; post-merge verification and human decisions tracked in TASK005.
 
 | ID | Description | Status | Updated | Notes |
 | --- | --- | --- | --- | --- |
@@ -31,9 +31,15 @@ See [the scoped implementation plan](../../docs/superpowers/plans/2026-10-14-iss
 | 4.2 | Owned-cache helper | Complete | 2026-10-14 | 15 isolated filesystem/configuration checks pass |
 | 4.3 | Memory/brain integration | Complete | 2026-10-14 | Full cache suite 17/17; both import orders and real loader methods |
 | 4.4 | Startup validation and fresh review | Complete | 2026-10-14 | 73/73 bounded tests; two review findings fixed; single-module deadline limitation retained |
-| 4.5 | Publish evidence and PR | Complete | 2026-10-14 | Draft PR #778 published and attached; #720 remains open for human review/merge |
+| 4.5 | Publish evidence and PR | Complete | 2026-10-15 | PR #778 merged; #720 closed; #721/#722 remain separate human decisions |
 
 ## Progress Log
+
+### 2026-10-15
+
+- Confirmed merge 93079fd6ef7ef7607153b95e2b66a48a957a9ee6 and closed #720.
+- TASK005 retains fresh post-merge verification, including timing failures;
+  the historical pre-merge 81 checks do not establish current readiness.
 
 ### 2026-10-14
 
