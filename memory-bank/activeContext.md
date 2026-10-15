@@ -6,7 +6,7 @@
   probes. Reduced minimal mode still executes zero actions.
 - TASK004 / #720 is complete: PR #778 merged as `93079fd`; #720 closed.
 - TASK005 / #721 verifies merged main and prepares a human walkthrough on
-  `codex/issue-721-review`. Current cold-import timing failures and incomplete
+  `codex/issue-721-review`. Historical cold-import timing failures and incomplete
   lifecycle/ownership batches prevent a blanket readiness claim. The earlier
   81 pre-merge checks remain historical evidence.
 - Evidence and limits: `docs/testing/issue-719-graph-initialization-validation.md`.
@@ -22,6 +22,10 @@
 
 ## Immediate Next Steps
 
+- TASK007 synchronized 18 actual GitHub issue bodies with the decision record,
+  preserving original checklists and states. #779 is now a native child/blocker
+  of #721; #721 blocks #722. Draft docs PR #780 publishes decisions/evidence.
+  #718–#720 remain closed; #717/#721/#722/#779 remain open. No new approval.
 - TASK006 / #779's approved investigation plan is in
   `docs/superpowers/plans/2026-10-15-issue-779-startup-investigation.md`.
   Approval is D007; the bounded cycle is complete. All 51 affected methods pass

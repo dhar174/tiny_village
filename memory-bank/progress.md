@@ -24,6 +24,10 @@
 
 ## Current Status
 
+- As of 2026-10-15, TASK007 synchronized 18 issue bodies, verified original
+  bodies/states, and linked native #779 under #721 while retaining blocker
+  order. Draft docs PR #780 is published/attached. No issue closure, reopening,
+  new runtime work or new human disposition supplied.
 - As of 2026-10-15, TASK006's approved bounded investigation is complete.
   51/51 affected methods pass; all 16 diagnostic cases exit 0 with unchanged
   limits. Plot-cache cost is measured, but historical timeout cause remains

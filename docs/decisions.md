@@ -165,4 +165,18 @@ the diagnostic budget is exhausted and #779 remains open.
   integration evidence remains separate in #585. Later lightweight-demo,
   real-turn scenario and canonical demo work remain in #654/#751/#658.
 - GitHub hierarchy: #717 is the Phase 1 parent of #718–#722. #722 is a gate,
-  not the parent issue; #779 is required remediation for review #721.
+  not the parent issue. #779 is now a native child and required blocker of #721;
+  #721 remains a required blocker of #722.
+
+### Repository synchronization — 2026-10-15
+
+Updated 18 existing issue bodies with targeted status/scope references to this
+decision record: #717–#722, #779, #773–#776, #724–#726, #654, #751, #658 and
+#585. Preserved their previous bodies, acceptance checklists and issue states;
+no issues were closed or reopened. Read-back verification confirms the native
+relationships and the open review/gate/remediation issues.
+
+The decision file and evidence are published in
+[draft documentation PR #780](https://github.com/dhar174/tiny_village/pull/780).
+That PR closes no issues and supplies no new human review or phase approval.
+Project Decision synchronization remains outstanding as described above.
