@@ -1,10 +1,9 @@
 # Issue #721: merged startup engineering review
 
-Review prepared on 2026-10-15 for dhar174. **Human disposition: Deferred.**
-dhar174 explicitly confirmed this disposition in the chat walkthrough. The
-[decision record](https://github.com/dhar174/tiny_village/issues/721#issuecomment-6194738536)
-retains reviewer, rationale, evidence and required follow-up. #721 and #722
-remain open; neither review nor phase completion is approved.
+Review evidence prepared on 2026-10-15 for dhar174. Human dispositions, scope
+decisions and outstanding decision actions are maintained in the single
+[project decision record](../decisions.md). This report retains verification
+evidence; it does not independently approve #721 or phase gate #722.
 
 ## Revision and prerequisites
 
@@ -107,15 +106,9 @@ The issue records Deferred; the Project field is not confirmed updated.
 
 ## Human walkthrough
 
-1. Completed: dhar174 confirmed **Deferred** until startup timing is explained
-   and required checks complete with retained evidence; #779 now blocks #721.
-2. Review repair scope and decide which wider limits remain scheduled followups
-   versus prerequisites. Any required remediation needs its own linked issue.
-3. Record reviewer identity, date, exact revision/evidence, rationale, followups
-   and exactly one disposition: Approved / Changes requested / Deferred.
-   Only explicit human Approved permits closing #721.
-4. Consider #722 separately afterward; never infer its approval from #721,
-   merged PRs, passing tests, silence or elapsed time.
+See [the project decision record](../decisions.md) for the confirmed disposition,
+agreed treatment of #773–#776, required #779 investigation and remaining gate
+actions. Future walkthrough decisions belong there.
 
 ## Evidence retained
 

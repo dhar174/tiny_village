@@ -35,7 +35,7 @@ by this verification and walkthrough alone.
 | 5.1 | Confirm merge and prerequisites | Complete | 2026-10-15 | PR #778 merged at 93079fd; #718/#719/#720 closed; source matches f796b33 |
 | 5.2 | Focused merged verification | Complete | 2026-10-15 | 30 tests in complete suites pass; cache 26/27; import timing failures and incomplete lifecycle/ownership retained |
 | 5.3 | Review evidence and diagnostics | Complete | 2026-10-15 | Both affected import orders pass instrumented diagnostics; cause unproven; investigation #779 |
-| 5.4 | Human decision walkthrough | In Progress | 2026-10-15 | dhar174 confirmed Deferred; remaining scope/limits still to walk through |
+| 5.4 | Human decision walkthrough | In Progress | 2026-10-15 | Disposition and scope confirmed; canonical record: docs/decisions.md; revisit after #779 |
 | 5.5 | Record decision and phase ordering | Partially complete | 2026-10-15 | Deferred recorded; native #779 blocker verified; #721/#722 open; Project field denied (403) |
 
 ## Progress Log
@@ -77,3 +77,7 @@ by this verification and walkthrough alone.
 - Project 10 read returned HTTP 403 “Resource not accessible by integration”
   through the configured GH_PROJECT_TOKEN binding. Decision field remains
   unsynchronized; issue decision is recorded and verified. No credential requested.
+- User confirmed the proposed scope and requested a single Markdown decision
+  record. Consolidated the decisions and outstanding actions in
+  [docs/decisions.md](../../docs/decisions.md); future decisions belong there.
+  Evidence remains in the validation report; no runtime changes or new checks.
