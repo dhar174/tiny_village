@@ -269,10 +269,19 @@ This will check for JSON syntax errors.
 
 ## Testing
 
-Run the building loading tests to ensure your configuration is valid:
+Two test suites currently exist for building loading:
+
+- `tests/test_custom_building_loading.py` is the preferred controller-level
+  regression example. It exercises a real `GameplayController` while patching
+  only the pygame display boundary.
+- `tests/test_building_loading_unit.py` is an older, more mock-heavy direct
+  loader suite. Keep it as supplementary coverage rather than the primary
+  example to follow.
+
+Preferred validation command:
 
 ```bash
-python -m unittest tests.test_building_loading_unit
+python -m unittest tests.test_custom_building_loading
 ```
 
 ## Troubleshooting
@@ -294,4 +303,5 @@ python -m unittest tests.test_building_loading_unit
 
 - `tiny_buildings.py` - Building class implementation
 - `tiny_gameplay_controller.py` - Loading system implementation
-- `tests/test_building_loading_unit.py` - Comprehensive test examples
+- `tests/test_custom_building_loading.py` - Preferred controller-level examples
+- `tests/test_building_loading_unit.py` - Legacy direct-loader examples
