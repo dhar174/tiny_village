@@ -74,12 +74,30 @@ should link to this file rather than maintain separate decision records.
 - **Confirmation:** “Yes, save it for later,” in response to deferring Windows
   validation to the later platform work.
 
+### D005 — Defer live model validation to ML/LLM work
+
+- **Date:** 2026-10-15
+- **Decision-maker:** dhar174
+- **Decision:** Keep real model downloads and inference validation in the
+  later ML/LLM work. Use offline startup checks for #721, including the
+  existing cache integration checks with controlled model-loading boundaries.
+- **Boundary:** Offline checks do not establish live download, transport,
+  artifact verification or inference behavior. Preserve existing verification
+  settings; this decision does not permit disabling TLS or checksum checks.
+  The cache-loader timeout remains part of required investigation #779.
+- **Reason:** Validate startup and cache configuration within the prepared
+  environment without expanding this review into live model integration.
+- **Confirmation:** The user answered “Yes” to keeping real downloads and
+  inference in later ML/LLM work while #721 uses offline startup checks.
+
 ## Outstanding actions and limits
 
 - Investigate #779 and return the results to #721. These decisions do not
   establish a cause, approve an unreviewed repair, or change test deadlines.
 - Include native Windows execution and cache-permission checks when planning
   the later platform work, before any Windows-support claim (D004).
+- Include live model download and inference checks in the later ML/LLM work
+  before making readiness claims for those features (D005).
 - Project 10's **Decision** field still needs synchronization to **Deferred**.
   The configured credential received HTTP 403, “Resource not accessible by
   integration,” on the last attempt. The native issue dependency and recorded
