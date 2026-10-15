@@ -127,6 +127,12 @@ The [#779 investigation plan](superpowers/plans/2026-10-15-issue-779-startup-inv
 is approved for investigation under D007. Execution may proceed within that
 scope; no production repair approval is recorded.
 
+The [approved observation cycle](testing/issue-779-startup-investigation.md)
+has concluded: 51 affected regression methods pass and all 16 predeclared
+diagnostic cases exit successfully. The historical timeout cause remains
+unconfirmed. No remedy or new review disposition is approved by those results;
+the diagnostic budget is exhausted and #779 remains open.
+
 ## Outstanding actions and limits
 
 - Investigate #779 and return the results to #721. These decisions do not

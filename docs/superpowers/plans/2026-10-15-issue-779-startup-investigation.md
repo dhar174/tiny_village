@@ -1,7 +1,9 @@
 # Issue #779 Startup Timing Investigation Plan
 
-**Status:** Approved for investigation on 2026-10-15; see D007 in
-`docs/decisions.md`. Production remedies require separate review.
+**Status:** Approved bounded investigation cycle complete on 2026-10-15;
+root cause unconfirmed. See D007 in `docs/decisions.md` and the
+[investigation report](../../testing/issue-779-startup-investigation.md).
+No production remedy or complete 81-method final verification is supplied.
 
 **Goal:** Explain the intermittent startup timeouts, distinguish individual
 process failures from batch-budget exhaustion, and produce evidence for a
@@ -90,19 +92,19 @@ No production or existing test-file edits belong to this investigation plan.
 
 ### Phase A — Freeze inputs and make evidence trustworthy
 
-- [ ] Record checkout SHA, base SHA and runtime/test-file hashes. If main or
+- [x] Record checkout SHA, base SHA and runtime/test-file hashes. If main or
   those files have changed, report the difference before mixing baselines.
-- [ ] Record Python/dependency versions using metadata rather than importing
+- [x] Record Python/dependency versions using metadata rather than importing
   heavy libraries merely to discover their versions. Capture CPU quota, memory
   events, filesystem type, process counts and tool availability without secrets.
-- [ ] Recover exact original command/environment setup from saved `validate.py`
+- [x] Recover exact original command/environment setup from saved `validate.py`
   and `final-commands.json`. Retain offline flags, dummy SDL, two BLAS/OpenMP
   threads and bytecode policy. Record child-specific overrides, especially
   the integration test's plotting and cache directories.
-- [ ] Create a new owned evidence directory; preserve old logs and shared
+- [x] Create a new owned evidence directory; preserve old logs and shared
   caches. Distinguish a fresh process, a fresh application cache and an OS-cold
   filesystem; do not describe them interchangeably.
-- [ ] Define structured outcomes: `PASS`, `ASSERTION_FAILURE`,
+- [x] Define structured outcomes: `PASS`, `ASSERTION_FAILURE`,
   `CHILD_FATAL_TIMEOUT`, `PARENT_TIMEOUT`, `BATCH_INCOMPLETE`, `NOT_RUN`, and
   `INFRASTRUCTURE_INTERRUPTION`. Unknown final counts are null, never zero.
 
@@ -110,7 +112,7 @@ No production or existing test-file edits belong to this investigation plan.
 
 ### Phase B — Reproduce once with the original contract
 
-- [ ] Run the four original affected targets once, sequentially, under the
+- [x] Run the four original affected targets once, sequentially, under the
   unchanged original supervisor and limits:
 
   ```bash
@@ -122,10 +124,10 @@ No production or existing test-file edits belong to this investigation plan.
 
   The supervisor must retain the saved 110/120-second batch timers; bare shell
   commands alone do not reproduce that batch contract.
-- [ ] Retain separate full stdout/stderr, parent wall/CPU timing and exit status
+- [x] Retain separate full stdout/stderr, parent wall/CPU timing and exit status
   for every batch. Count test methods and subcases separately. A cutoff must
   list interrupted and unrun cases rather than fabricate a completed summary.
-- [ ] Check for surviving processes started by these runs. Clean up only
+- [x] Check for surviving processes started by these runs. Clean up only
   identified investigation descendants before the next experiment; never use
   broad process-name kills. If descendant cleanup cannot be assured, stop.
 
@@ -134,28 +136,28 @@ until it passes or replace the prior evidence if the failure does not recur.
 
 ### Phase C — Locate the boundary that consumes time
 
-- [ ] Add temporary diagnostic instrumentation outside the repository. Emit
+- [x] Add temporary diagnostic instrumentation outside the repository. Emit
   monotonic and UTC markers for process start, before/after imports, before/
   after the tested operation, assertions complete, entry to atexit, and parent
   observation of process exit. Atexit entry alone does not prove clean shutdown.
-- [ ] Observe PID/parent PID, elapsed and CPU time, thread count and available
+- [x] Observe PID/parent PID, elapsed and CPU time, thread count and available
   wait-state data for investigation-owned processes before existing deadlines.
   Write diagnostics to files rather than relying on truncated unittest output.
   Keep instrumented runs distinct: measurement can alter timing.
-- [ ] Cover these five previously affected scenarios using original source and
+- [x] Cover these five previously affected scenarios using original source and
   assertions: graph-manager-first, Character-first,
   `TestGraphLifecycle.test_recursion_is_prompt_and_retryable`,
   `TestGraphOwnership.test_items_with_configured_effects_preserve_the_supplied_action_system`,
   and `TestModelCacheIntegration.test_real_model_loaders_receive_selected_cache_and_preserve_verification`.
   Preserve both constructor-entry and all item-constructor subcases.
-- [ ] Preserve child fatal/parent limits. Invoke existing single methods when
+- [x] Preserve child fatal/parent limits. Invoke existing single methods when
   useful; import-order diagnostics must retain the no-world-construction
   assertions. Do not convert a smaller diagnostic into a full-suite pass.
-- [ ] If supported, obtain a Python stack dump before the fatal timer through
+- [x] If supported, obtain a Python stack dump before the fatal timer through
   a diagnostic-only signal registration. If a native-only stall remains, use
   already-available permitted process/syscall observations; do not install or
   escalate profiling tools. Missing access is an explicit evidence limit.
-- [ ] Ensure diagnostic supervisor cleanup terminates only its own process
+- [x] Ensure diagnostic supervisor cleanup terminates only its own process
   group after capture, reaps it, and retains partial output. Never extend the
   original time budget merely to obtain a passing exit.
 
@@ -176,15 +178,15 @@ result and what would falsify the hypothesis.
 | Native shutdown, threads or inherited pipes delay exit | Compare assertion/atexit markers with parent-observed exit and thread/process state; use file versus pipe output only as a separately labeled experiment if indicated | Delay localized after the tested work, or a documented descriptor/descendant keeping capture open |
 | Environment or storage scheduling contributes | Compare wall/CPU timing and before/after cgroup/process observations; use a lightweight fresh-interpreter control alongside serial, not competing, runs | Correlated resource/wait evidence; aggregate historical throttling or no OOM events alone is insufficient |
 
-- [ ] Limit targeted diagnostic runs to **16 launched top-level cases**, each
+- [x] Limit targeted diagnostic runs to **16 launched top-level cases**, each
   retaining its native child limits and at most the original 120-second batch
   parent limit. Subprocesses/subcases count separately in recorded statistics.
-- [ ] Predeclare at most **three trials per chosen variant** before running it;
+- [x] Predeclare at most **three trials per chosen variant** before running it;
   retain all trials and stop early only for safety or a confirmed hypothesis.
   Stop at the cap if evidence remains insufficient; do not retry until green.
-- [ ] Treat multiple independent causes separately. One explained batch cutoff
+- [x] Treat multiple independent causes separately. One explained batch cutoff
   does not resolve the cache-loader child timeout or another unexplained stall.
-- [ ] If no failure recurs, report the fixed observation window and remaining
+- [x] If no failure recurs, report the fixed observation window and remaining
   uncertainty. Do not call the cause identified or #779 resolved.
 
 **Deliverable:** Supported causal explanation, or a bounded inconclusive
@@ -192,9 +194,9 @@ report naming the missing evidence and next useful observation.
 
 ### Phase E — Present the finding before any repair
 
-- [ ] Prepare a finding with exact evidence, affected files/environment,
+- [x] Prepare a finding with exact evidence, affected files/environment,
   alternatives ruled out, confidence limits and the smallest proposed remedy.
-- [ ] Distinguish an environment/setup correction, a runtime repair, a test
+- [x] Distinguish an environment/setup correction, a runtime repair, a test
   harness repair and a verification-budget contract change. Propose only what
   the evidence supports; do not combine unrelated repairs.
 - [ ] Stop for human review before applying a remedy. In particular, import
@@ -220,11 +222,11 @@ is justified. Investigation completion is not issue resolution.
 - [ ] Report executed/passed/failed/errored/skipped/unrun results and child/
   batch timeouts separately, with the exact SHA. Confirm mixed-thread graph
   access still executes. Preserve the zero-action minimal-mode limitation.
-- [ ] Write `docs/testing/issue-779-startup-investigation.md` with the manifest,
+- [x] Write `docs/testing/issue-779-startup-investigation.md` with the manifest,
   experiment table, retained failures, cause or uncertainty, proposed remedy
   and verification still needed. Link raw local evidence as local evidence;
   retain substantive findings in a shareable report.
-- [ ] After execution, add the findings to #779 and link them on #721 without
+- [x] After execution, add the findings to #779 and link them on #721 without
   closing either issue or changing the human disposition. Keep #722 blocked.
   A denied Project API update remains an explicit outstanding action.
 

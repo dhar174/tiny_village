@@ -22,10 +22,12 @@
 
 ## Immediate Next Steps
 
-- TASK006 / #779 has a proposed investigation plan in
+- TASK006 / #779's approved investigation plan is in
   `docs/superpowers/plans/2026-10-15-issue-779-startup-investigation.md`.
-  Investigation approval is recorded as D007 in docs/decisions.md. Execute the
-  bounded diagnostics; production remedies still require separate review.
+  Approval is D007; the bounded cycle is complete. All 51 affected methods pass
+  and all 16 diagnostic cases exit 0, but historical timeouts do not recur and
+  their cause remains unconfirmed. See docs/testing/issue-779-startup-investigation.md.
+  No runtime remedy or further observation budget is approved; #779 stays open.
 - Merged-main verification completes with timing failures/incomplete batches;
   cache passes 26/27, and 30 tests in five other complete suites pass. Both
   affected import orders pass instrumented diagnostics, but cause is unproven.

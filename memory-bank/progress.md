@@ -24,8 +24,12 @@
 
 ## Current Status
 
-- As of 2026-10-15, TASK006 / #779 investigation is approved (D007). Manifest
-  and baseline execution are starting; no production remedy is approved.
+- As of 2026-10-15, TASK006's approved bounded investigation is complete.
+  51/51 affected methods pass; all 16 diagnostic cases exit 0 with unchanged
+  limits. Plot-cache cost is measured, but historical timeout cause remains
+  unconfirmed; #779 is not resolved. No production/test/dependency edits.
+  Report: docs/testing/issue-779-startup-investigation.md. Other 30/probes and
+  full 81-method final verification were not rerun in this cycle.
 - As of 2026-10-14, #718 is complete: #706 merged and the issue closed.
 - TASK003 / #719 is complete: #777 merged and the issue closed. Post-merge
   verification passes 54/54 tests, no skips/timeouts, plus cold-getter, actual
