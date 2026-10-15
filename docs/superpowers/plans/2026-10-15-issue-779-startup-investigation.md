@@ -1,7 +1,7 @@
 # Issue #779 Startup Timing Investigation Plan
 
-**Status:** Proposed — awaiting explicit plan approval. No investigation runs,
-diagnostic helpers or runtime changes are authorized by preparing this document.
+**Status:** Approved for investigation on 2026-10-15; see D007 in
+`docs/decisions.md`. Production remedies require separate review.
 
 **Goal:** Explain the intermittent startup timeouts, distinguish individual
 process failures from batch-budget exhaustion, and produce evidence for a
@@ -21,7 +21,7 @@ observations. No new dependencies or model downloads.
 [the agreed decisions](../../decisions.md), and
 [the merged verification report](../../testing/issue-721-startup-review.md).
 Execution should use `superpowers:executing-plans` sequentially, without
-delegation. All execution checkboxes below remain unchecked pending approval.
+delegation. Checkboxes track execution evidence, not implied phase approval.
 
 ## 1. Scope and constraints
 
@@ -244,9 +244,8 @@ matrix under this plan. Stop earlier for missing required capability,
 unreaped processes, changed inputs or exhausted diagnostic budget; report the
 specific blocker rather than widen scope or relax checks.
 
-## Approval requested
+## Approval boundary
 
-Approve this **investigation-only** scope and bounded experiment sequence.
-Approval starts the diagnostic work; it does not authorize production fixes,
-deadline changes, release claims, issue closure or phase advancement. Until
-approval arrives, no execution steps above will begin.
+The user approved this **investigation-only** scope and bounded experiment
+sequence. That starts diagnostic work; it does not authorize production fixes,
+deadline changes, release claims, issue closure or phase advancement.

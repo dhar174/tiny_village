@@ -105,6 +105,18 @@ should link to this file rather than maintain separate decision records.
 - **Confirmation:** “Later, yes,” in response to scheduling gameplay-turn
   validation in later demo/integration work.
 
+### D007 — Approve the bounded #779 investigation
+
+- **Date:** 2026-10-15
+- **Decision-maker:** dhar174
+- **Decision:** Execute the [investigation plan](superpowers/plans/2026-10-15-issue-779-startup-investigation.md)
+  sequentially within its diagnostic budget and unchanged verification limits.
+- **Boundary:** Investigation only. Bring findings back before applying a
+  runtime, dependency, persistent configuration or deadline-contract remedy.
+  #721 remains Deferred; #722 remains open.
+- **Confirmation:** “Approved, proceed,” in response to the investigation-only
+  plan approval question.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
@@ -112,8 +124,8 @@ remains **Deferred** under D001. Revisit its disposition after #779 supplies
 the required startup evidence; this walkthrough does not approve Phase 1.
 
 The [#779 investigation plan](superpowers/plans/2026-10-15-issue-779-startup-investigation.md)
-is proposed and awaits the user's explicit approval. The user requested a plan
-and a pause before execution; no investigation or repair approval is recorded.
+is approved for investigation under D007. Execution may proceed within that
+scope; no production repair approval is recorded.
 
 ## Outstanding actions and limits
 

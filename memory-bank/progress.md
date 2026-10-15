@@ -24,9 +24,8 @@
 
 ## Current Status
 
-- As of 2026-10-15, TASK006 / #779 planning is complete and awaiting explicit
-  approval. No diagnostic execution, runtime/test changes or new validation
-  results are supplied by the plan. See the plan linked from docs/decisions.md.
+- As of 2026-10-15, TASK006 / #779 investigation is approved (D007). Manifest
+  and baseline execution are starting; no production remedy is approved.
 - As of 2026-10-14, #718 is complete: #706 merged and the issue closed.
 - TASK003 / #719 is complete: #777 merged and the issue closed. Post-merge
   verification passes 54/54 tests, no skips/timeouts, plus cold-getter, actual

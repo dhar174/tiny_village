@@ -1,6 +1,6 @@
 # [TASK006] - Plan startup timing investigation (#779)
 
-**Status:** Pending — awaiting plan approval
+**Status:** In Progress — approved investigation
 
 **Added:** 2026-10-15
 
@@ -25,14 +25,14 @@ Human decisions and approval status belong in
 
 ## Progress Tracking
 
-**Overall Status:** Planning complete — execution not started.
+**Overall Status:** Investigation approved; freezing inputs before baseline runs.
 
 | ID | Description | Status | Updated | Notes |
 | --- | --- | --- | --- | --- |
 | 6.1 | Review issue, constraints and historical evidence | Complete | 2026-10-15 | #779 open; main remains 93079fd; no reproduction runs |
 | 6.2 | Draft and self-review investigation plan | Complete | 2026-10-15 | Hypotheses, bounded experiments, outputs and stopping points specified |
-| 6.3 | Obtain explicit plan approval | Pending | 2026-10-15 | Do not execute the plan before approval |
-| 6.4 | Execute investigation and report findings | Not started | 2026-10-15 | Diagnostics only; production remedy requires separate review |
+| 6.3 | Obtain explicit plan approval | Complete | 2026-10-15 | D007 in docs/decisions.md |
+| 6.4 | Execute investigation and report findings | In Progress | 2026-10-15 | Freezing inputs; diagnostics only; remedy requires separate review |
 
 ## Progress Log
 
@@ -47,3 +47,5 @@ Human decisions and approval status belong in
   per-attempt outcome accounting, a diagnostic budget and repair review boundary.
 - Scope and review decisions remain in docs/decisions.md; #721/#722 and Project
   field status are unchanged. Await explicit plan approval.
+- Approval received; see D007. Begin manifest/baseline work with original
+  deadlines and no production/test-source changes.
