@@ -111,6 +111,10 @@ The current scope questions have been answered (D002, D004–D006). Review #721
 remains **Deferred** under D001. Revisit its disposition after #779 supplies
 the required startup evidence; this walkthrough does not approve Phase 1.
 
+The [#779 investigation plan](superpowers/plans/2026-10-15-issue-779-startup-investigation.md)
+is proposed and awaits the user's explicit approval. The user requested a plan
+and a pause before execution; no investigation or repair approval is recorded.
+
 ## Outstanding actions and limits
 
 - Investigate #779 and return the results to #721. These decisions do not

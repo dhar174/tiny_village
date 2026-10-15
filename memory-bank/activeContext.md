@@ -22,6 +22,10 @@
 
 ## Immediate Next Steps
 
+- TASK006 / #779 has a proposed investigation plan in
+  `docs/superpowers/plans/2026-10-15-issue-779-startup-investigation.md`.
+  The user explicitly requires plan approval before investigation. Planning
+  reviewed historical evidence/source only; no new experiments or runtime edits.
 - Merged-main verification completes with timing failures/incomplete batches;
   cache passes 26/27, and 30 tests in five other complete suites pass. Both
   affected import orders pass instrumented diagnostics, but cause is unproven.
