@@ -124,8 +124,8 @@ remains **Deferred** under D001. Revisit its disposition after #779 supplies
 the required startup evidence; this walkthrough does not approve Phase 1.
 
 The [#779 investigation plan](superpowers/plans/2026-10-15-issue-779-startup-investigation.md)
-is approved for investigation under D007. Execution may proceed within that
-scope; no production repair approval is recorded.
+was approved under D007, and its bounded cycle has concluded. No further
+observation budget or production repair approval is recorded.
 
 The [approved observation cycle](testing/issue-779-startup-investigation.md)
 has concluded: 51 affected regression methods pass and all 16 predeclared
@@ -135,8 +135,9 @@ the diagnostic budget is exhausted and #779 remains open.
 
 ## Outstanding actions and limits
 
-- Investigate #779 and return the results to #721. These decisions do not
-  establish a cause, approve an unreviewed repair, or change test deadlines.
+- #779 remains open: capture the historical timeout cause and complete the
+  required verification. Its bounded investigation already concluded; further
+  observation or a remedy requires the review boundary recorded in D007.
 - Include native Windows execution and cache-permission checks when planning
   the later platform work, before any Windows-support claim (D004).
 - Include live model download and inference checks in the later ML/LLM work
@@ -151,3 +152,17 @@ the diagnostic budget is exhausted and #779 remains open.
   **Approved** decision is required before closing it.
 - Consider #722 separately afterward. No Phase 1 completion decision has been
   made, and no platform, gameplay or model-inference readiness is implied.
+
+## Issue closure and roadmap references
+
+- #718, #719 and #720 remain closed: their scoped implementation repairs merged.
+- #717, #721, #722 and #779 remain open. The implementation merges and passing
+  observation cycle do not supply the outstanding review/gate approval or
+  resolve the unexplained timeout issue.
+- #773–#776 remain open in their existing phases; deferral is not completion.
+- Native Windows support/validation is carried into support-matrix and CI work
+  (#724/#726); core/optional dependency profiles remain in #725. Live-model
+  integration evidence remains separate in #585. Later lightweight-demo,
+  real-turn scenario and canonical demo work remain in #654/#751/#658.
+- GitHub hierarchy: #717 is the Phase 1 parent of #718–#722. #722 is a gate,
+  not the parent issue; #779 is required remediation for review #721.
