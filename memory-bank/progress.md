@@ -24,6 +24,10 @@
 
 ## Current Status
 
+- As of 2026-10-16, TASK008 has a reviewed-against-source failure-capture
+  implementation proposal for #779. Human plan approval is pending. No new
+  test/runtime edits, experiments or application-readiness claims. #780 remains
+  open and unmerged, now ready for review; the new plan is on a separate branch.
 - As of 2026-10-15, TASK007 synchronized 18 issue bodies, verified original
   bodies/states, and linked native #779 under #721 while retaining blocker
   order. Draft docs PR #780 is published/attached. No issue closure, reopening,

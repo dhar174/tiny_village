@@ -5,7 +5,7 @@
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending
-- No additional pending task files.
+- [TASK008](TASK008-issue-779-failure-capture.md) Plan durable startup failure capture (#779) - implementation plan prepared; awaiting approval before test edits or new observations (Updated: 2026-10-16)
 
 ## Completed
 - [TASK007](TASK007-issue-decision-sync.md) Synchronize review decisions to GitHub issues - 18 bodies verified, native #779 child/blocker, docs PR #780 published; no issue states changed (Updated: 2026-10-15)
@@ -28,4 +28,5 @@
   - `TASK005-startup-human-review-721.md`
   - `TASK006-startup-investigation-779.md`
   - `TASK007-issue-decision-sync.md`
+  - `TASK008-issue-779-failure-capture.md`
 - Task-level Memory Bank tracking has started for this repository.
