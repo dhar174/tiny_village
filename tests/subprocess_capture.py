@@ -141,18 +141,22 @@ def capture_python(
     timed_out = False
     try:
         with paths["stdout.log"].open("wb") as stdout, paths["stderr.log"].open("wb") as stderr:
-            started = time.monotonic()
-            deadline = started + timeout
             try:
                 process = subprocess.Popen(command, cwd=cwd, env=env, stdout=stdout, stderr=stderr)
             except OSError as error:
                 metadata.update(outcome="SPAWN_ERROR", spawn_error=type(error).__name__)
                 _write_json(metadata_path, metadata)
                 raise
-            metadata.update(pid=process.pid, outcome="STARTED", launched_monotonic=started)
+            launched = time.monotonic()
+            metadata.update(pid=process.pid, outcome="STARTED", launched_monotonic=launched)
             _write_json(metadata_path, metadata)
+            # Match subprocess.run's post-launch wait budget. Capture setup must
+            # not consume it; the child's fatal watchdog remains independent.
+            wait_started = time.monotonic()
+            metadata["wait_started_monotonic"] = wait_started
+            deadline = wait_started + timeout
             try:
-                sample_at = started + max(0, fatal_timeout - 2)
+                sample_at = launched + max(0, fatal_timeout - 2)
                 try:
                     process.wait(timeout=max(0, min(sample_at, deadline) - time.monotonic()))
                 except subprocess.TimeoutExpired:

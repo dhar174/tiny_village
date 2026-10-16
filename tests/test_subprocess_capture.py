@@ -12,6 +12,7 @@ import sys
 import tempfile
 import textwrap
 import time
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -109,6 +110,43 @@ class TestSubprocessCapture(unittest.TestCase):
         self.assertEqual(metadata["outcome"], "PARENT_TIMEOUT")
         with self.assertRaises(ChildProcessError):
             os.waitpid(metadata["pid"], os.WNOHANG)
+
+    def _run_with_setup_delay(self, boundary):
+        # Advance only the launcher's clock: real child execution stays fast,
+        # and the regression does not depend on a slow machine or tight timing.
+        elapsed_setup = [0]
+        clock = SimpleNamespace(monotonic=lambda: time.monotonic() + elapsed_setup[0])
+        real_popen = subprocess.Popen
+        real_write_json = capture._write_json
+
+        def launch(*args, **kwargs):
+            if boundary == "launch":
+                elapsed_setup[0] += 10
+            return real_popen(*args, **kwargs)
+
+        def write_metadata(path, values):
+            real_write_json(path, values)
+            if boundary == "metadata" and values.get("outcome") == "STARTED":
+                elapsed_setup[0] += 10
+
+        with patch.object(capture, "time", clock), \
+                patch.object(capture.subprocess, "Popen", launch), \
+                patch.object(capture, "_write_json", write_metadata):
+            try:
+                result = self.run_child("import time\ntime.sleep(0.25)\nprint('completed')")
+            except capture.CapturedTimeout as error:
+                self.fail(f"{boundary} setup consumed the child's timeout budget: {error}")
+        self.assertEqual(result.completed.returncode, 0, result.completed.stderr)
+        self.assertEqual(result.completed.stdout, "completed\n")
+        metadata = self.metadata(result)
+        self.assertEqual(metadata["outcome"], "EXITED_ZERO")
+        self.assertEqual((metadata["fatal_timeout"], metadata["timeout"]), (3, 5))
+
+    def test_launch_time_does_not_consume_parent_timeout(self):
+        self._run_with_setup_delay("launch")
+
+    def test_started_metadata_time_does_not_consume_parent_timeout(self):
+        self._run_with_setup_delay("metadata")
 
     def test_invalid_deadlines_do_not_launch_or_create_artifacts(self):
         for fatal, parent in [(0, 1), (2, 1), (1, 1), (float("nan"), 2), (1, float("inf"))]:

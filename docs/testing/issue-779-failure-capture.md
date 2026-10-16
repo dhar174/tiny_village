@@ -147,6 +147,29 @@ count do not establish actual executed gameplay actions. These messages remain
 explicit limitations; no full simulation, display, model or gameplay readiness
 claim is made.
 
+## PR #781 deadline review correction — 2026-10-16
+
+The review identified a harness regression: starting the parent deadline before
+`Popen` and the STARTED metadata write deducted setup time from the configured
+child wait budget. The helper now records launch time after process creation
+and starts the parent wait deadline after capture setup. Resource sampling
+remains tied to launch time; the child's fatal watchdog and configured limits
+are unchanged. Completed metadata records `wait_started_monotonic` separately.
+
+Two regression cases advance only the launcher's clock across process creation
+or STARTED metadata persistence while running real children. Both failed before
+the correction. All **13 focused capture checks pass** afterward, with no skips,
+failures or errors (3.352 seconds). The real-process review reproduction with a
+controlled 0.7-second pre-launch delay also now exits 0: the previous launcher
+and corrected helper finish in 1.448 and 1.478 seconds overall, respectively,
+using the same 1.2-second parent and 0.9-second fatal limits.
+
+Correction evidence is local at `/workspace/scratch/pr-781-deadline-fix/`:
+`red.log`, `green.log`, `real-launch.log` and the reproduction script/results.
+The 81-method application matrix and three probes above remain historical
+evidence for `31e8cdb`; they were **not rerun for this correction**. No additional
+application observation window, runtime remedy or issue closure is claimed.
+
 ## Evidence, review and remaining work
 
 Local evidence: `/workspace/scratch/issue-779-capture/2026-10-16/`:

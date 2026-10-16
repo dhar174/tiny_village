@@ -74,3 +74,11 @@ Approval and all human decisions remain in
   all original acceptance text and its open state. #721/#722 remain open.
 - The approved observation budget is consumed. Capture tooling is delivered;
   historical cause remains unknown. Report: docs/testing/issue-779-failure-capture.md.
+- Review follow-up: reproduced P2 deadline regression; start the parent wait
+  budget after process creation/STARTED metadata and keep launch time separate.
+  Two regression cases fail before the change; all 13 focused checks pass
+  afterward (3.352s). Original real-process delayed-launch reproduction now
+  exits 0 for both old and corrected launchers with unchanged timeouts.
+- Prior 81-method/probe results remain historical; no new application window.
+  #780 has merged; #781 now targets main. Push correction and resolve the
+  addressed review finding; keep #779/#721/#722 dispositions unchanged.
