@@ -24,7 +24,8 @@
 
 - TASK008 prepares the scoped #779 failure-capture follow-up on a separate
   planning branch. See docs/superpowers/plans/2026-10-16-issue-779-failure-capture.md.
-  Plan review is pending; no test edits or further observations have begun.
+  D008 approves implementation and one bounded observation window. The shared
+  capture helper passes 11 focused checks; integrate existing helpers next.
   #780 is now ready for review, open and unmerged at 29063c3.
 - TASK007 synchronized 18 actual GitHub issue bodies with the decision record,
   preserving original checklists and states. #779 is now a native child/blocker

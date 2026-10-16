@@ -4,8 +4,8 @@
 > plan sequentially after human approval. Preserve the existing execution
 > method; do not delegate or create a worktree. Track the steps below.
 
-**Status:** Proposed; awaiting review. This document authorizes no test edits
-or additional observation runs. Human approvals belong only in
+**Status:** Approved; implementation in progress. See D008 in the single
+decision record for authorization and scope. Human approvals belong only in
 [docs/decisions.md](../../decisions.md).
 
 **Goal:** Preserve useful evidence from the next startup failure without

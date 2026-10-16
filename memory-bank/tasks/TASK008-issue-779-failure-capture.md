@@ -1,6 +1,6 @@
 # [TASK008] - Plan durable failure capture for #779
 
-**Status:** Pending plan approval
+**Status:** In progress — approval D008 recorded
 
 **Added:** 2026-10-16
 
@@ -35,8 +35,8 @@ Approval and all human decisions remain in
 | --- | --- | --- | --- | --- |
 | 8.1 | Read issue, existing helper code and investigation evidence | Complete | 2026-10-16 | No new observation runs |
 | 8.2 | Draft and self-review scoped implementation plan | Complete | 2026-10-16 | Durable output, process ownership, exact deadlines and bounded validation |
-| 8.3 | Human plan review | Pending | 2026-10-16 | Canonical approval status in docs/decisions.md |
-| 8.4 | Implementation and bounded verification | Not started | 2026-10-16 | No test, runtime, dependency or cloud configuration edits |
+| 8.3 | Human plan review | Complete | 2026-10-16 | Canonical approval status in docs/decisions.md |
+| 8.4 | Implementation and bounded verification | In progress | 2026-10-16 | No test, runtime, dependency or cloud configuration edits |
 
 ## Progress Log
 
@@ -53,3 +53,8 @@ Approval and all human decisions remain in
   approval. It does not reopen the old exhausted 16-case diagnostic budget.
 - No tests or experiments executed during planning. #779 remains unresolved;
   #721 and #722 dispositions are unchanged. Plan review is the next step.
+
+- Approval recorded as D008. Begin sequential implementation and the approved
+  nine-batch/three-probe verification window. No extra diagnostic observations.
+- Task 1: new helper passes 11/11 focused checks (2.658s, no skips/errors),
+  including abrupt-parent evidence and timeout reaping. Integration not yet run.
