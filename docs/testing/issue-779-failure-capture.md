@@ -15,7 +15,7 @@ stacked on documentation PR #780. Findings were posted and read back on
 [#779](https://github.com/dhar174/tiny_village/issues/779#issuecomment-6205767601)
 and [#721](https://github.com/dhar174/tiny_village/issues/721#issuecomment-6205768056).
 The dedicated #779 status block was updated without changing its original
-acceptance text or open state. #780's head and ready-for-review state are unchanged.
+#780 was merged before this PR was retargeted to main; its head and review state are no longer unchanged.
 
 ## Changes and usage
 
