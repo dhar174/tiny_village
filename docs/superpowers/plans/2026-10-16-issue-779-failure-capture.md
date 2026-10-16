@@ -22,7 +22,7 @@ pathlib, JSON and optional read-only Linux `/proc` observations. No installs.
 
 **Spec:** [#779](https://github.com/dhar174/tiny_village/issues/779), the
 [completed investigation](../../testing/issue-779-startup-investigation.md),
-and decisions D001–D007 in the single decision record. This is the proposed
+and decisions D001–D008 in the single decision record. This is the proposed
 observability follow-up, not a claim to satisfy all of #779's acceptance criteria.
 
 ## Global constraints
