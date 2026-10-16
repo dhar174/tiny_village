@@ -2,10 +2,10 @@
 
 import os
 from pathlib import Path
-import subprocess
-import sys
 import textwrap
 import unittest
+
+from tests.subprocess_capture import CapturedTimeout, capture_python
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -23,24 +23,21 @@ class FreshPythonTestCase(unittest.TestCase):
             OPENBLAS_NUM_THREADS="2",
         )
         prelude = (
-            "import faulthandler, logging\n"
-            f"faulthandler.dump_traceback_later({timeout - 5}, exit=True)\n"
+            "import logging\n"
             "logging.basicConfig(level=logging.ERROR)\n"
         )
         try:
-            result = subprocess.run(
-                [sys.executable, "-c", prelude + textwrap.dedent(source)],
-                cwd=REPO_ROOT,
-                env=env,
-                capture_output=True,
-                text=True,
-                timeout=timeout,
+            captured = capture_python(
+                prelude + textwrap.dedent(source), cwd=REPO_ROOT, env=env,
+                test_id=self.id(), fatal_timeout=timeout - 5, timeout=timeout,
             )
-        except subprocess.TimeoutExpired as error:
-            self.fail(f"Fresh process exceeded {timeout}s: {error.stdout!r}\n{error.stderr!r}")
+        except CapturedTimeout as error:
+            self.fail(f"{error}\n{error.stdout[-3000:]}\n{error.stderr[-6000:]}")
+        result = captured.completed
         self.assertEqual(
             result.returncode, 0,
-            f"Child exited {result.returncode}:\n{result.stdout[-3000:]}\n{result.stderr[-6000:]}",
+            f"Child exited {result.returncode}; artifacts: {captured.artifact_dir}\n"
+            f"{result.stdout[-3000:]}\n{result.stderr[-6000:]}",
         )
         return result
 

@@ -117,6 +117,19 @@ should link to this file rather than maintain separate decision records.
 - **Confirmation:** “Approved, proceed,” in response to the investigation-only
   plan approval question.
 
+### D008 — Approve durable failure capture and bounded verification for #779
+
+- **Date:** 2026-10-16
+- **Decision-maker:** dhar174
+- **Decision:** Implement the [failure-capture plan](superpowers/plans/2026-10-16-issue-779-failure-capture.md)
+  sequentially, including its focused real-process checks and single nine-batch,
+  three-probe application observation window.
+- **Boundary:** Test-harness diagnostics only; preserve original assertions,
+  deadlines, runtime, dependency and cache behavior. No automatic retries,
+  issue closure, phase approval or delegation. Bring any unexplained timeout
+  or proposed runtime/environment correction back with evidence.
+- **Confirmation:** “Looks good. Approved.” in response to the saved plan.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
@@ -124,8 +137,21 @@ remains **Deferred** under D001. Revisit its disposition after #779 supplies
 the required startup evidence; this walkthrough does not approve Phase 1.
 
 The [#779 investigation plan](superpowers/plans/2026-10-15-issue-779-startup-investigation.md)
-was approved under D007, and its bounded cycle has concluded. No further
-observation budget or production repair approval is recorded.
+was approved under D007, and its bounded cycle has concluded. Its original
+16-case diagnostic budget remains exhausted; no production repair is approved.
+
+The [failure-capture follow-up](superpowers/plans/2026-10-16-issue-779-failure-capture.md)
+is approved under D008. Its test-harness implementation and single bounded
+verification window may proceed. This does not change #721's disposition or
+approve a runtime correction.
+
+The [D008 implementation and verification report](testing/issue-779-failure-capture.md)
+records 11 new capture checks, 81 existing methods and three original probes
+passing in the single approved window. Its nine-batch/three-probe budget is
+consumed. The historical timeout did not recur, so its cause remains unknown;
+#779 stays open and #721's Deferred disposition is unchanged.
+Draft [PR #781](https://github.com/dhar174/tiny_village/pull/781) publishes this
+follow-up above #780; its publication is not a human approval or issue closure.
 
 The [approved observation cycle](testing/issue-779-startup-investigation.md)
 has concluded: 51 affected regression methods pass and all 16 predeclared
@@ -177,6 +203,6 @@ no issues were closed or reopened. Read-back verification confirms the native
 relationships and the open review/gate/remediation issues.
 
 The decision file and evidence are published in
-[draft documentation PR #780](https://github.com/dhar174/tiny_village/pull/780).
+[documentation PR #780](https://github.com/dhar174/tiny_village/pull/780).
 That PR closes no issues and supplies no new human review or phase approval.
 Project Decision synchronization remains outstanding as described above.

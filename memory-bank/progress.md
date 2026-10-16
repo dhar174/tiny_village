@@ -24,6 +24,14 @@
 
 ## Current Status
 
+- As of 2026-10-16, TASK008 implementation is approved under D008. The new
+  capture helper and integrations pass 11 new checks, 81 existing methods and
+  three probes in the approved window. No failures/errors/skips/timeouts; 42 child
+  artifact sets verified. Runtime/dependency behavior and zero-action limit unchanged.
+  PR #781 now targets main after #780 merged. Its P2 parent-deadline review
+  correction passes 13 focused checks, including two new red-to-green regressions.
+  Earlier 81-method/probe evidence is historical; no new application window.
+  #779 stays open; its historical cause is unknown. D008 budget consumed.
 - As of 2026-10-15, TASK007 synchronized 18 issue bodies, verified original
   bodies/states, and linked native #779 under #721 while retaining blocker
   order. Draft docs PR #780 is published/attached. No issue closure, reopening,
