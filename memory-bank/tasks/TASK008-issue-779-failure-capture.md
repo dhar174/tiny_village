@@ -1,6 +1,6 @@
 # [TASK008] - Plan durable failure capture for #779
 
-**Status:** Implementation verified — publication in progress
+**Status:** Completed — implementation/verification published; #779 unresolved
 
 **Added:** 2026-10-16
 
@@ -36,7 +36,7 @@ Approval and all human decisions remain in
 | 8.1 | Read issue, existing helper code and investigation evidence | Complete | 2026-10-16 | No new observation runs |
 | 8.2 | Draft and self-review scoped implementation plan | Complete | 2026-10-16 | Durable output, process ownership, exact deadlines and bounded validation |
 | 8.3 | Human plan review | Complete | 2026-10-16 | Canonical approval status in docs/decisions.md |
-| 8.4 | Implementation and bounded verification | In progress | 2026-10-16 | 11 new checks + 81 existing methods + three probes pass; publication next |
+| 8.4 | Implementation and bounded verification | Complete | 2026-10-16 | 11 new checks + 81 existing methods + three probes pass; draft PR #781 |
 
 ## Progress Log
 
@@ -67,3 +67,10 @@ Approval and all human decisions remain in
   missing-node limitations. No full-gameplay or live-model claim.
 - Separate author review found no blocking defect; independent agent review was
   excluded by the approved execution method. Publish a stacked PR above #780.
+- Published/attached draft PR #781 above codex/issue-721-review; #780 remains
+  ready, open and unchanged at 29063c3. No automatic closing references.
+- Posted and read back findings on #779 (comment6205767601) and #721
+  (comment6205768056). Updated #779's dedicated status block while preserving
+  all original acceptance text and its open state. #721/#722 remain open.
+- The approved observation budget is consumed. Capture tooling is delivered;
+  historical cause remains unknown. Report: docs/testing/issue-779-failure-capture.md.

@@ -10,6 +10,13 @@ Authorization is D008 in the single [decision record](../decisions.md).
 The [implementation plan](../superpowers/plans/2026-10-16-issue-779-failure-capture.md)
 defines the unchanged deadlines, scope and fixed observation budget.
 
+Published as [draft PR #781](https://github.com/dhar174/tiny_village/pull/781),
+stacked on documentation PR #780. Findings were posted and read back on
+[#779](https://github.com/dhar174/tiny_village/issues/779#issuecomment-6205767601)
+and [#721](https://github.com/dhar174/tiny_village/issues/721#issuecomment-6205768056).
+The dedicated #779 status block was updated without changing its original
+acceptance text or open state. #780's head and ready-for-review state are unchanged.
+
 ## Changes and usage
 
 [The shared helper](../../tests/subprocess_capture.py) replaces only the launch

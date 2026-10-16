@@ -28,7 +28,9 @@
   capture helper and integrations pass 11 new checks, 81 existing methods and
   three probes in the approved window. No failures/errors/skips/timeouts; 42 child
   artifact sets verified. Runtime/dependency behavior and zero-action limit unchanged.
-  #780 remains open, unmerged and ready for review on its separate branch.
+  Draft PR #781 publishes the follow-up above #780; findings/comments and #779
+  status verified. #780 remains open, unmerged and ready for review unchanged.
+  #779 stays open; its historical cause is unknown. D008 budget consumed.
 - As of 2026-10-15, TASK007 synchronized 18 issue bodies, verified original
   bodies/states, and linked native #779 under #721 while retaining blocker
   order. Draft docs PR #780 is published/attached. No issue closure, reopening,

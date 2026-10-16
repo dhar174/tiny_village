@@ -1,7 +1,6 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK008](TASK008-issue-779-failure-capture.md) Implement durable startup failure capture (#779) - D008 approved; 11 new checks + 81 existing methods + three probes pass; publication next (Updated: 2026-10-16)
 - [TASK005](TASK005-startup-human-review-721.md) Verify merged startup repairs and guide human review (#721) - disposition/scope recorded in [docs/decisions.md](../../docs/decisions.md); investigation #779 and Project synchronization outstanding (Updated: 2026-10-15)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
@@ -9,6 +8,7 @@
 - No additional pending task files.
 
 ## Completed
+- [TASK008](TASK008-issue-779-failure-capture.md) Durable startup failure capture (#779) - draft PR #781; 11 new checks + 81 existing methods + three probes pass; cause unknown, issue stays open (Updated: 2026-10-16)
 - [TASK007](TASK007-issue-decision-sync.md) Synchronize review decisions to GitHub issues - 18 bodies verified, native #779 child/blocker, docs PR #780 published; no issue states changed (Updated: 2026-10-15)
 - [TASK006](TASK006-startup-investigation-779.md) Bounded startup investigation (#779) - 51/51 affected methods; 16 diagnostic cases; root cause unconfirmed and issue remains open (Updated: 2026-10-15)
 - [TASK004](TASK004-owned-cache-720.md) Use an owned model cache (#720) - #778 merged at 93079fd; #720 closed; post-merge review tracked in TASK005 (Updated: 2026-10-15)

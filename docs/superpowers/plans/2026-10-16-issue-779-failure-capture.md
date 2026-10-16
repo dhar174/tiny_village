@@ -4,8 +4,9 @@
 > plan sequentially after human approval. Preserve the existing execution
 > method; do not delegate or create a worktree. Track the steps below.
 
-**Status:** Approved; implementation in progress. See D008 in the single
-decision record for authorization and scope. Human approvals belong only in
+**Status:** Implementation and bounded verification complete; draft PR #781
+awaits review. See the [outcome report](../../testing/issue-779-failure-capture.md).
+Human approvals belong only in
 [docs/decisions.md](../../decisions.md).
 
 **Goal:** Preserve useful evidence from the next startup failure without
@@ -257,7 +258,7 @@ Produce an exact input manifest, all attempt records and an evidence report.
   metadata identifies the test/source; output is complete for emitted bytes;
   phase markers and parent exit remain distinct; interrupted counts are honest.
   Report overhead/transport limitations without claiming an unmeasured speedup.
-- [ ] Write the outcome report and prepare a scoped PR referencing #779 with
+- [x] Write the outcome report and prepare a scoped PR referencing #779 with
   no automatic closing keyword. Add a concise findings/evidence link on #779
   and #721 after verifying published links. Do not merge or approve reviews.
 

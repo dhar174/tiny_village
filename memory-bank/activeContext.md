@@ -22,16 +22,17 @@
 
 ## Immediate Next Steps
 
-- TASK008 prepares the scoped #779 failure-capture follow-up on a separate
-  planning branch. See docs/superpowers/plans/2026-10-16-issue-779-failure-capture.md.
+- TASK008 implements the scoped #779 failure-capture follow-up on a separate
+  branch, published as draft PR #781 stacked on #780. See docs/superpowers/plans/2026-10-16-issue-779-failure-capture.md.
   D008 approves implementation and one bounded observation window. The shared
   capture helper and both integrations are verified: 11 new checks, 81 existing
   methods and three probes pass. See docs/testing/issue-779-failure-capture.md.
-  D008 observation budget consumed; publish the stacked implementation PR next.
+  D008 observation budget consumed; review draft PR #781 next. #779 stays open
+  because the historical cause remains unknown. Findings posted on #779/#721.
   #780 is now ready for review, open and unmerged at 29063c3.
 - TASK007 synchronized 18 actual GitHub issue bodies with the decision record,
   preserving original checklists and states. #779 is now a native child/blocker
-  of #721; #721 blocks #722. Draft docs PR #780 publishes decisions/evidence.
+  of #721; #721 blocks #722. Docs PR #780 publishes decisions/evidence.
   #718–#720 remain closed; #717/#721/#722/#779 remain open. No new approval.
 - TASK006 / #779's approved investigation plan is in
   `docs/superpowers/plans/2026-10-15-issue-779-startup-investigation.md`.

@@ -150,6 +150,8 @@ records 11 new capture checks, 81 existing methods and three original probes
 passing in the single approved window. Its nine-batch/three-probe budget is
 consumed. The historical timeout did not recur, so its cause remains unknown;
 #779 stays open and #721's Deferred disposition is unchanged.
+Draft [PR #781](https://github.com/dhar174/tiny_village/pull/781) publishes this
+follow-up above #780; its publication is not a human approval or issue closure.
 
 The [approved observation cycle](testing/issue-779-startup-investigation.md)
 has concluded: 51 affected regression methods pass and all 16 predeclared
