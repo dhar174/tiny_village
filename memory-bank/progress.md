@@ -24,16 +24,32 @@
 
 ## Current Status
 
+- As of 2026-10-15, TASK007 synchronized 18 issue bodies, verified original
+  bodies/states, and linked native #779 under #721 while retaining blocker
+  order. Draft docs PR #780 is published/attached. No issue closure, reopening,
+  new runtime work or new human disposition supplied.
+- As of 2026-10-15, TASK006's approved bounded investigation is complete.
+  51/51 affected methods pass; all 16 diagnostic cases exit 0 with unchanged
+  limits. Plot-cache cost is measured, but historical timeout cause remains
+  unconfirmed; #779 is not resolved. No production/test/dependency edits.
+  Report: docs/testing/issue-779-startup-investigation.md. Other 30/probes and
+  full 81-method final verification were not rerun in this cycle.
 - As of 2026-10-14, #718 is complete: #706 merged and the issue closed.
 - TASK003 / #719 is complete: #777 merged and the issue closed. Post-merge
   verification passes 54/54 tests, no skips/timeouts, plus cold-getter, actual
   Goal fallback and minimal probes.
-- TASK004 / #720 repairs shared and machine-specific cache configuration;
-  81 unique checks pass in final bounded batches (27 cache); Codex/Copilot
-  feedback fixes are validated. One initial cold-import timeout passed a targeted
-  rerun and remains explicitly recorded.
-  Single-module initialization exceeded its aggregate deadline; details retained
-  in docs/testing/issue-720-owned-cache-validation.md. PR #778 awaits human review/merge.
+- As of 2026-10-15, TASK004 / #720 is complete: PR #778 merged at `93079fd`
+  and #720 closed. Its 81 pre-merge checks and timing limits remain historical.
+- TASK005 / #721 is verifying merged main and preparing the human walkthrough.
+  Cold imports fail two timing subcases; lifecycle/ownership batches exceed
+  aggregate deadlines after partial passes. Global-manager (9), named-target
+  (6), actions (5), events (5) and GOAP errors (5) pass; minimal exits 0 with
+  zero actions. Cache passes 26/27; both affected import orders pass subsequent
+  instrumented diagnostics with unchanged limits, without explaining failures.
+  Verification is complete with failures; #779 tracks diagnosis. #721/#722
+  remain open. dhar174 confirmed Deferred on #721, recorded with evidence and
+  verified native blocker #779. Project Decision field update is outstanding
+  because Project API access returns HTTP 403. No phase approval supplied.
 - Existing integration tests remain 9/11 and utility tests 16/26. #773/#774 retain
   those failures. #775/#776 retain missing Door effects and optional spaCy
   initialization limits; full Character/simulation readiness is not established.
