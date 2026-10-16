@@ -30,7 +30,7 @@
   D008 observation budget consumed. Deadline review correction passes 13 focused
   capture checks; the prior application matrix was not rerun. #779 stays open
   because the historical cause remains unknown. Findings posted on #779/#721.
-  #780 merged; #781 now targets main. Addressed timeout finding is ready to resolve.
+  #780 merged; #781 now targets main. Deadline fix a32cdb2 is pushed; review updated and thread resolved.
 - TASK007 synchronized 18 actual GitHub issue bodies with the decision record,
   preserving original checklists and states. #779 is now a native child/blocker
   of #721; #721 blocks #722. Docs PR #780 publishes decisions/evidence.

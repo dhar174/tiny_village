@@ -82,3 +82,5 @@ Approval and all human decisions remain in
 - Prior 81-method/probe results remain historical; no new application window.
   #780 has merged; #781 now targets main. Push correction and resolve the
   addressed review finding; keep #779/#721/#722 dispositions unchanged.
+- Pushed a32cdb2; inline reply4300349223 read back, thread resolved, and
+  author review5542333079 updated to withdraw its addressed P2 hold.

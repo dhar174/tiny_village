@@ -156,6 +156,11 @@ and starts the parent wait deadline after capture setup. Resource sampling
 remains tied to launch time; the child's fatal watchdog and configured limits
 are unchanged. Completed metadata records `wait_started_monotonic` separately.
 
+Published in [commit a32cdb2](https://github.com/dhar174/tiny_village/commit/a32cdb2ac12ce50ddda209fb0ef8bfaa4aeea4ff).
+The [inline finding](https://github.com/dhar174/tiny_village/pull/781#discussion_r4300349223)
+has a verified fix reply and is resolved; the author's review was updated to
+withdraw its hold recommendation for this finding.
+
 Two regression cases advance only the launcher's clock across process creation
 or STARTED metadata persistence while running real children. Both failed before
 the correction. All **13 focused capture checks pass** afterward, with no skips,
