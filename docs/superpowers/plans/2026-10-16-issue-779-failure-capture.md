@@ -121,22 +121,22 @@ and unchanged time limits. Returns captured output and status without asserting
 success; a parent timeout raises `CapturedTimeout`, still catchable as
 `subprocess.TimeoutExpired`. Invalid limits fail before launching a process.
 
-- [ ] Add real-process checks before implementing the helper. Cover successful
+- [x] Add real-process checks before implementing the helper. Cover successful
   output/return code; nonzero exit; output larger than current 3000/6000-character
   console tails; non-ASCII output; two calls with the same test ID; and artifact
   survival after removal of a separate temporary cache directory. Assert raw
   files retain all bytes emitted by each controlled child.
-- [ ] Add controlled fatal-watchdog and parent-timeout cases. Only these new
+- [x] Add controlled fatal-watchdog and parent-timeout cases. Only these new
   synthetic cases use short limits; existing graph/cache limits stay unchanged.
   The fatal case must retain a faulthandler dump and nonzero exit. The parent
   case deliberately cancels its child watchdog, then verifies `CapturedTimeout`,
   retained output, and child termination/reaping. Avoid tight timing assertions.
-- [ ] Add an abrupt-parent-exit check using an owned outer supervisor. Confirm
+- [x] Add an abrupt-parent-exit check using an owned outer supervisor. Confirm
   that flushed child output and started metadata survive `os._exit`, without
   inventing a final exit code. The supervisor must clean up/reap its own process
   group even if an assertion fails. Add unwritable-root and unavailable-resource
   checks; do not turn missing capture into a silent passing fallback.
-- [ ] Run the new checks once and confirm they fail for the missing helper.
+- [x] Run the new checks once and confirm they fail for the missing helper.
   Implement the interface with these artifact rules:
   - Root: `TINY_TEST_ARTIFACT_DIR` if provided, otherwise
     `cwd / '.test-artifacts' / 'subprocess'`; resolve relative overrides against
@@ -173,11 +173,11 @@ success; a parent timeout raises `CapturedTimeout`, still catchable as
   - Store no environment dump, credentials, raw source or model contents in
     metadata. Raw child output can contain user data; review it before uploading.
     Do not automatically publish raw artifacts.
-- [ ] Run `/workspace/.venvs/tiny_village/bin/python -m unittest -v
+- [x] Run `/workspace/.venvs/tiny_village/bin/python -m unittest -v
   tests.test_subprocess_capture` and verify every intended case completed.
   Buffered application output not yet written to a descriptor is unrecoverable;
   `atexit_marker` is not proof of final process exit. Document both limits.
-- [ ] Commit the helper, its focused behavior checks and `.gitignore` entry.
+- [x] Commit the helper, its focused behavior checks and `.gitignore` entry.
 
 ### Task 2: Integrate existing startup helpers
 
@@ -191,23 +191,23 @@ their test bodies, fixtures or the separate stdlib-import guard in
 contract. Supply `self.id()` plus the source digest/unique directory so
 different subcases of one test remain distinguishable.
 
-- [ ] Replace graph pipe-launch plumbing with `capture_python`, passing the
+- [x] Replace graph pipe-launch plumbing with `capture_python`, passing the
   current environment, `timeout - 5`, `timeout` and original logging setup.
   Keep caught parent timeouts as unittest failures. Include the artifact path
   and bounded output tails in failure messages.
-- [ ] Replace only cache integration pipe-launch plumbing, passing its existing
+- [x] Replace only cache integration pipe-launch plumbing, passing its existing
   fixture environment and 25/30-second limits. Keep nonzero exits as assertion
   failures and uncaught parent timeouts as unittest errors. Include the artifact
   path in both diagnostics; preserve the exception's standard timeout fields.
-- [ ] Review the source diff to confirm all embedded assertions, subcases,
+- [x] Review the source diff to confirm all embedded assertions, subcases,
   concurrency rounds and loader-verification settings are unchanged. Verify
   the shared helper imports under both existing module and discovery commands;
   do not introduce a `tests/__init__.py` solely for this change.
-- [ ] Use the first four batches of Task 3 as integration verification rather
+- [x] Use the first four batches of Task 3 as integration verification rather
   than running an additional duplicate affected matrix. If they reveal a
   capture implementation defect, repair it and explicitly report any required
   rerun; never replace the original failed attempt in the evidence.
-- [ ] Commit integration after those batches complete, or report the specific
+- [x] Commit integration after those batches complete, or report the specific
   failed/incomplete boundary. No deadline adjustment is a permitted fix.
 
 ### Task 3: One bounded observation window and evidence handoff
@@ -219,15 +219,15 @@ Temporary run files stay in the owned scratch directory listed above.
 **Interfaces:** Consume Task 2's integrated helpers and Task 1 artifacts.
 Produce an exact input manifest, all attempt records and an evidence report.
 
-- [ ] Record the exact checkout/runtime diff, interpreter, dependency metadata,
+- [x] Record the exact checkout/runtime diff, interpreter, dependency metadata,
   platform, effective non-secret test settings and hashes. Preserve previous
   evidence directories. Do not call a fresh Python process or cache a fresh
   cloud instance; record which condition actually applies.
-- [ ] Reuse the historical verification target definitions and limits in a
+- [x] Reuse the historical verification target definitions and limits in a
   temporary sequential supervisor. Give each batch its own process group,
   retain batch output directly to files, and clean up/reap only that group's
   descendants. Missing unittest completion counts are null/incomplete, not zero.
-- [ ] Run this single ordered matrix, with no unrelated suite expansion:
+- [x] Run this single ordered matrix, with no unrelated suite expansion:
 
   | Order | Target after `python -m unittest` | Existing methods |
   | --- | --- | ---: |
@@ -246,14 +246,14 @@ Produce an exact input manifest, all attempt records and an evidence report.
   extra preliminary matrix. Run the three existing cold-getter, production
   Goal-fallback and minimal-mode probes once with the saved original assertions
   and 110/120-second limits. Minimal mode still proves zero actions only.
-- [ ] Treat this as a new, explicitly approved budget of nine batches plus
+- [x] Treat this as a new, explicitly approved budget of nine batches plus
   three probes, separate from the exhausted 16-case investigation. Stop on a
   startup timeout/aggregate cutoff, changed inputs, unsafe cleanup or unavailable
   required capture. Record later targets as unrun. There are no automatic
   retries, additional cold-host trials or new profiling experiments; a captured
   failure leads to a finding and scoped next proposal. Development checks for
   the new helper are not extra application-observation attempts.
-- [ ] Review artifact usability: a failure message identifies an existing path;
+- [x] Review artifact usability: a failure message identifies an existing path;
   metadata identifies the test/source; output is complete for emitted bytes;
   phase markers and parent exit remain distinct; interrupted counts are honest.
   Report overhead/transport limitations without claiming an unmeasured speedup.

@@ -145,6 +145,12 @@ is approved under D008. Its test-harness implementation and single bounded
 verification window may proceed. This does not change #721's disposition or
 approve a runtime correction.
 
+The [D008 implementation and verification report](testing/issue-779-failure-capture.md)
+records 11 new capture checks, 81 existing methods and three original probes
+passing in the single approved window. Its nine-batch/three-probe budget is
+consumed. The historical timeout did not recur, so its cause remains unknown;
+#779 stays open and #721's Deferred disposition is unchanged.
+
 The [approved observation cycle](testing/issue-779-startup-investigation.md)
 has concluded: 51 affected regression methods pass and all 16 predeclared
 diagnostic cases exit successfully. The historical timeout cause remains

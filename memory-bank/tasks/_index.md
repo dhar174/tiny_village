@@ -1,7 +1,7 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK008](TASK008-issue-779-failure-capture.md) Implement durable startup failure capture (#779) - D008 approved; 11 focused capture checks pass; integration and bounded matrix next (Updated: 2026-10-16)
+- [TASK008](TASK008-issue-779-failure-capture.md) Implement durable startup failure capture (#779) - D008 approved; 11 new checks + 81 existing methods + three probes pass; publication next (Updated: 2026-10-16)
 - [TASK005](TASK005-startup-human-review-721.md) Verify merged startup repairs and guide human review (#721) - disposition/scope recorded in [docs/decisions.md](../../docs/decisions.md); investigation #779 and Project synchronization outstanding (Updated: 2026-10-15)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 

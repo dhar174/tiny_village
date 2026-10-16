@@ -1,6 +1,6 @@
 # [TASK008] - Plan durable failure capture for #779
 
-**Status:** In progress — approval D008 recorded
+**Status:** Implementation verified — publication in progress
 
 **Added:** 2026-10-16
 
@@ -36,7 +36,7 @@ Approval and all human decisions remain in
 | 8.1 | Read issue, existing helper code and investigation evidence | Complete | 2026-10-16 | No new observation runs |
 | 8.2 | Draft and self-review scoped implementation plan | Complete | 2026-10-16 | Durable output, process ownership, exact deadlines and bounded validation |
 | 8.3 | Human plan review | Complete | 2026-10-16 | Canonical approval status in docs/decisions.md |
-| 8.4 | Implementation and bounded verification | In progress | 2026-10-16 | No test, runtime, dependency or cloud configuration edits |
+| 8.4 | Implementation and bounded verification | In progress | 2026-10-16 | 11 new checks + 81 existing methods + three probes pass; publication next |
 
 ## Progress Log
 
@@ -58,3 +58,12 @@ Approval and all human decisions remain in
   nine-batch/three-probe verification window. No extra diagnostic observations.
 - Task 1: new helper passes 11/11 focused checks (2.658s, no skips/errors),
   including abrupt-parent evidence and timeout reaping. Integration not yet run.
+- Task 2: two launch helpers integrated; all existing test bodies/fixtures
+  compare unchanged. Code committed as 31e8cdb, equivalent to tested sources.
+- Task 3: one approved nine-batch/three-probe window passes 81/81 existing
+  methods and all probes, no failures/errors/skips/timeouts. All 42 child
+  artifact sets verified; 390 source hashes stable; all owned groups reaped.
+- Minimal mode still executes zero actions and logs existing map/sentiment/
+  missing-node limitations. No full-gameplay or live-model claim.
+- Separate author review found no blocking defect; independent agent review was
+  excluded by the approved execution method. Publish a stacked PR above #780.
