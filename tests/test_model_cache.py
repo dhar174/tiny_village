@@ -13,6 +13,8 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
+from tests.subprocess_capture import capture_python
+
 
 CACHE_SETTINGS = ("HF_HOME", "HF_HUB_CACHE", "TRANSFORMERS_CACHE", "XDG_CACHE_HOME")
 
@@ -350,12 +352,14 @@ class TestModelCacheIntegration(unittest.TestCase):
         )
 
     def run_python(self, source):
-        result = subprocess.run(
-            [sys.executable, "-c", "import faulthandler; faulthandler.dump_traceback_later(25, exit=True)\n" + textwrap.dedent(source)],
+        captured = capture_python(
+            textwrap.dedent(source),
             cwd=Path(__file__).resolve().parents[1], env=self.environment,
-            capture_output=True, text=True, timeout=30,
+            test_id=self.id(), fatal_timeout=25, timeout=30,
         )
-        self.assertEqual(result.returncode, 0, result.stdout[-3000:] + result.stderr[-6000:])
+        result = captured.completed
+        self.assertEqual(result.returncode, 0,
+                         f"Artifacts: {captured.artifact_dir}\n" + result.stdout[-3000:] + result.stderr[-6000:])
 
     def test_import_orders_and_repeat_startup_preserve_owned_and_shared_data(self):
         shared = self.root / "hf_test_cache"
