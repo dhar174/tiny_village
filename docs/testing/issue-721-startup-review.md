@@ -13,12 +13,15 @@ with one missing lifecycle supervisor completion record. Its complete unittest
 summary and child zero-exit evidence are retained; no target was rerun.
 The results below remain the historical `93079fd` review and are not overwritten.
 D010 in the decision record accepts the unknown timeout cause and supervisor
-gap; #779 is closed as unable to reproduce; diagnostics added. #721 remains
-Deferred and ready for its own human disposition; #722 remains open.
+gap; #779 is closed as unable to reproduce; diagnostics added. D011 records
+the maintainer's subsequent approval of #721 for Linux/offline startup at
+`77e4b94`. #721 is closed as completed; #722 remains open for its separate
+decision. The historical failed verification below is preserved.
 
 - Merged main: `93079fd6ef7ef7607153b95e2b66a48a957a9ee6` (PR #778).
 - Exact source tree matches reviewed PR head `f796b33a8e140f6bebc2b0bad14c6b300eb26ee8`.
-- #718, #719 and #720 are closed; #721 and #722 remain open.
+- At the original review, #718–#720 were closed and #721/#722 were open.
+  Current #721 disposition is recorded above under D011.
 - Both merged-main CodeQL language checks succeed. Static analysis does not
   establish startup, model or gameplay readiness.
 

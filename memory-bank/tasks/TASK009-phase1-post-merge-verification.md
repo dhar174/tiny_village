@@ -1,10 +1,10 @@
 # [TASK009] - Verify merged Phase 1 capture work
 
-**Status:** Completed with supervisor gap — #779 accepted-risk closure; #721/#722 decisions pending
+**Status:** Completed with supervisor gap — #779 accepted-risk closure and #721 approval recorded; #722 pending
 
 **Added:** 2026-10-16
 
-**Updated:** 2026-10-17
+**Updated:** 2026-10-16 (America/New_York)
 
 ## Original Request
 
@@ -36,7 +36,7 @@ including verification authorization D009. No closure or gate approval is inferr
 | 9.1 | Freeze merged-main inputs | Complete | 2026-10-16 | main 77e4b94; no runtime/test edits |
 | 9.2 | Run one authorized window | Complete with gap | 2026-10-16 | 94 successful method summaries; three probes; lifecycle supervisor result unknown |
 | 9.3 | Verify and publish evidence | Complete | 2026-10-16 | Draft PR #782; #779/#721 comments and status blocks verified |
-| 9.4 | Handoff to human decisions | In Progress | 2026-10-17 | D010 accepts #779 closure; next #721, then #722 separately |
+| 9.4 | Handoff to human decisions | In Progress | 2026-10-16 | D010 accepts #779 closure; D011 approves #721; #722 separate and pending |
 
 ## Progress Log
 
@@ -79,3 +79,11 @@ including verification authorization D009. No closure or gate approval is inferr
   and [#721 handoff](https://github.com/dhar174/tiny_village/issues/721#issuecomment-6227665778).
   #779 state is closed / not_planned; #717/#721/#722 are open. Original issue
   acceptance tails match their pre-update snapshots byte for byte.
+
+### 2026-10-16 America/New_York — subsequent review disposition
+
+- [D011](../../docs/decisions.md#d011--approve-startup-engineering-review-721)
+  records the maintainer's explicit #721 approval. #721 is closed as completed;
+  #722 and parent #717 remain open. #779's accepted-risk closure is unchanged.
+- No new observations, runtime changes or broader readiness claims. The
+  next walkthrough item is #722's separate Phase 1 decision.

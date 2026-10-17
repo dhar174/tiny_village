@@ -9,8 +9,9 @@ That gap remains explicit; no target was rerun to replace it.
 This window was authorized under D009 in the single
 [decision record](../decisions.md). Subsequently D010 explicitly accepted the
 unknown historical cause and supervisor gap and authorized #779's closure as
-unable to reproduce; diagnostics added. #721 remains Deferred and #722 remains
-open, awaiting their separate human decisions.
+unable to reproduce; diagnostics added. D011 subsequently records the
+maintainer's approval of #721 for Linux/offline startup. #721 is closed as
+completed; #722 remains open for its separate phase-gate decision.
 
 Published in [draft evidence PR #782](https://github.com/dhar174/tiny_village/pull/782).
 Findings were posted and read back on
@@ -22,7 +23,8 @@ the later D010 accepted-risk decision supplies #779's closure rationale.
 
 Disposition read-back confirms [#779's closure](https://github.com/dhar174/tiny_village/issues/779#issuecomment-6227664671)
 with reason `not_planned` and [#721's unchanged Deferred status](https://github.com/dhar174/tiny_village/issues/721#issuecomment-6227665778).
-#717, #721 and #722 remain open. Their original acceptance text is preserved.
+Those receipts precede D011's separate approval of #721; its earlier Deferred
+disposition remains historical evidence. #717 and #722 remain open.
 
 ## Inputs and boundaries
 
@@ -122,8 +124,8 @@ reproduce; diagnostics added"**. #779 is closed with reason **not planned**;
 its original root-cause criteria are not claimed complete. Reopen on recurrence
 and retain the diagnostic artifacts.
 
-The #779 decision is recorded. Review #721 separately next,
-then obtain #722's separate Phase 1 decision. Do not close #717 or advance to
+The #779 decision and #721 approval are recorded under D010/D011. Next obtain
+#722's separate Phase 1 decision. Do not close #717 or advance to
 Phase 2 until those required human decisions are recorded in `docs/decisions.md`.
 Project Decision synchronization remains outstanding from the previous 403;
 no new access attempt or synchronization is claimed here.
