@@ -24,6 +24,17 @@
 
 ## Current Status
 
+- As of 2026-10-16, TASK009 verifies merged main 77e4b94 under D009. All 94
+  method summaries report success and all three probes exit 0, with one
+  lifecycle supervisor completion gap after an execution-server disconnect.
+  Its 12-test OK summary and child exits remain intact; only NOT_RUN targets
+  were continued once. 390 source hashes unchanged; 42 child artifact sets
+  verified. Report: docs/testing/phase-1-post-merge-verification.md.
+  On 2026-10-17 UTC, D010 accepts both residual uncertainties and #779 closes
+  as unable to reproduce; diagnostics added. The subsequent D011 explicitly
+  approves #721 for Linux/offline startup and #721 closes as completed. D012
+  separately approves #722 and completes #717 on 2026-10-17 America/New_York.
+  Phase 2 is unblocked with #724 next; no new runtime observations.
 - As of 2026-10-16, TASK008 implementation is approved under D008. The new
   capture helper and integrations pass 11 new checks, 81 existing methods and
   three probes in the approved window. No failures/errors/skips/timeouts; 42 child
@@ -48,7 +59,7 @@
   Goal fallback and minimal probes.
 - As of 2026-10-15, TASK004 / #720 is complete: PR #778 merged at `93079fd`
   and #720 closed. Its 81 pre-merge checks and timing limits remain historical.
-- TASK005 / #721 is verifying merged main and preparing the human walkthrough.
+- Historical TASK005 verification at 93079fd (superseded by D011 at 77e4b94):
   Cold imports fail two timing subcases; lifecycle/ownership batches exceed
   aggregate deadlines after partial passes. Global-manager (9), named-target
   (6), actions (5), events (5) and GOAP errors (5) pass; minimal exits 0 with
@@ -57,7 +68,9 @@
   Verification is complete with failures; #779 tracks diagnosis. #721/#722
   remain open. dhar174 confirmed Deferred on #721, recorded with evidence and
   verified native blocker #779. Project Decision field update is outstanding
-  because Project API access returns HTTP 403. No phase approval supplied.
+  because Project API access returns HTTP 403. D011 subsequently supersedes
+  Deferred for the scoped #721 review; Project Decision now needs Approved.
+  No phase-gate approval supplied.
 - Existing integration tests remain 9/11 and utility tests 16/26. #773/#774 retain
   those failures. #775/#776 retain missing Door effects and optional spaCy
   initialization limits; full Character/simulation readiness is not established.

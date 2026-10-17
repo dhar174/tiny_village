@@ -130,61 +130,166 @@ should link to this file rather than maintain separate decision records.
   or proposed runtime/environment correction back with evidence.
 - **Confirmation:** “Looks good. Approved.” in response to the saved plan.
 
+### D009 — Approve one post-merge verification window
+
+- **Date:** 2026-10-16
+- **Decision-maker:** dhar174
+- **Decision:** Verify merged `main` once with the 13 capture checks,
+  81 existing startup-matrix methods and three original probes. Preserve all
+  original assertions, child deadlines and 110/120-second batch limits.
+- **Boundary:** One sequential window, no automatic retries or expanded
+  diagnosis. Bring results back for the #779 closure/risk decision and the
+  separate human reviews of #721 and #722. This execution approval does not
+  accept the unexplained timeout risk, close issues or approve either gate.
+- **Confirmation:** “Proceed,” following the ordered post-merge next steps.
+
+### D010 — Accept residual uncertainty and close investigation #779
+
+- **Date:** 2026-10-17 UTC (2026-10-16 EDT)
+- **Decision-maker:** dhar174
+- **Decision:** Accept the unknown historical timeout cause and the D009
+  lifecycle supervisor completion gap; authorize closing #779 as **unable to
+  reproduce; diagnostics added**. This is an accepted-risk disposition, not
+  a demonstrated root-cause fix or fulfillment of every original criterion.
+- **Evidence:** [Post-merge report](testing/phase-1-post-merge-verification.md)
+  at main `77e4b9437cc00970def933d992140e6da37eae8e`: 94 successful method
+  summaries (82 with confirmed supervisor completion, 12 with the documented
+  supervisor gap), three zero-exit probes and 42 verified child artifact sets.
+  Diagnostics merged in #781; evidence is published in #782.
+- **Boundary:** Preserve the original failures and missing terminal record.
+  Reopen #779 if the timeout recurs and retain the diagnostic artifacts before
+  proposing further investigation. This decision supplies no approval of #721
+  or #722 and authorizes no additional observation window or phase advancement.
+- **Confirmation:** “yes” to: “Do you accept the unknown historical timeout
+  cause and this reporting gap, and authorize closing #779 as ‘unable to
+  reproduce; diagnostics added’?”
+
+### D011 — Approve startup engineering review #721
+
+- **Date:** 2026-10-16 (America/New_York)
+- **Decision-maker:** dhar174
+- **Disposition:** Approved
+- **Reviewed revision:** `77e4b9437cc00970def933d992140e6da37eae8e`
+  (merged startup repairs and capture diagnostics).
+- **Decision:** Approve #721 for the agreed Linux/offline startup scope and
+  close the engineering-review issue. This supersedes D001's Deferred
+  disposition for the current review; the original failed runs remain evidence.
+- **Rationale and evidence:** Startup fallback, graph lifecycle/ownership and
+  cache repairs are merged. The [post-merge report](testing/phase-1-post-merge-verification.md)
+  retains 94 successful method summaries and three zero-exit probes. 82 methods
+  have confirmed supervisor completion; the other 12 retain successful summaries
+  and child exits with the supervisor reporting gap accepted under D010.
+  The historical timeout cause remains unknown; #779's accepted-risk closure
+  does not establish a root-cause fix.
+- **Boundary:** Native Windows, live models and real gameplay remain deferred
+  under D004–D006; #773–#776 retain their existing scope under D002. This does
+  not approve phase gate #722, close parent #717 or advance downstream work.
+- **Confirmation:** “Yes, approved. **#721’s engineering review**,” explicitly
+  for the agreed Linux/offline startup scope and documented limitations.
+
+### D012 — Approve Phase 1 gate #722 and complete phase #717
+
+- **Date:** 2026-10-17 (America/New_York)
+- **Decision-maker:** dhar174
+- **Disposition:** Approved
+- **Reviewed revision:** `77e4b9437cc00970def933d992140e6da37eae8e`,
+  with the [post-merge evidence](testing/phase-1-post-merge-verification.md)
+  published in PR #782.
+- **Decision:** Approve #722 for the agreed Linux/offline startup scope,
+  complete Phase 1 parent #717, and allow Phase 2 to begin. Close #722 and
+  #717 as completed; preserve the native dependency links and later gates.
+- **Rationale:** The #718–#720 repairs are merged and closed. D011 records
+  human approval of engineering review #721. The evidence retains 94 successful
+  method summaries and three zero-exit probes; D010 explicitly accepts the
+  unknown historical timeout cause and the 12-method lifecycle supervisor
+  reporting gap. This decision accepts Phase 1 within those documented limits.
+- **Boundary:** Windows validation, live models and real gameplay stay in
+  later work under D004–D006; #773–#776 remain in their existing phases under
+  D002. This gate approval does not establish broader platform, inference or
+  gameplay readiness or approve any subsequent phase gate. The next ordered
+  task is #724, defining the MVP scenario, support matrix and release budgets.
+- **Confirmation:** “Yes” to: “Do you approve completing Phase 1 within the
+  same Linux/offline scope and accepted limitations, allowing Phase 2 to begin?”
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
-remains **Deferred** under D001. Revisit its disposition after #779 supplies
-the required startup evidence; this walkthrough does not approve Phase 1.
+is **Approved** under D011 and closed for the agreed Linux/offline startup
+scope. D010 accepts #779's residual uncertainty and closure. D001 remains the
+historical disposition of the earlier failed verification. D012 separately
+approves phase gate #722 and completes parent #717 within the same scope.
+Phase 2 is unblocked; #724 is its next ordered task.
 
 The [#779 investigation plan](superpowers/plans/2026-10-15-issue-779-startup-investigation.md)
 was approved under D007, and its bounded cycle has concluded. Its original
 16-case diagnostic budget remains exhausted; no production repair is approved.
 
 The [failure-capture follow-up](superpowers/plans/2026-10-16-issue-779-failure-capture.md)
-is approved under D008. Its test-harness implementation and single bounded
-verification window may proceed. This does not change #721's disposition or
-approve a runtime correction.
+was approved under D008. Its implementation merged and its bounded verification
+window concluded. This did not change #721's disposition or approve a runtime
+correction.
 
 The [D008 implementation and verification report](testing/issue-779-failure-capture.md)
 records 11 new capture checks, 81 existing methods and three original probes
 passing in the single approved window. Its nine-batch/three-probe budget is
 consumed. The historical timeout did not recur, so its cause remains unknown;
-#779 stays open and #721's Deferred disposition is unchanged.
-Draft [PR #781](https://github.com/dhar174/tiny_village/pull/781) publishes this
-follow-up above #780; its publication is not a human approval or issue closure.
+#779 stayed open at that handoff; D010 subsequently accepts closure with the
+cause still unknown. That handoff did not change #721's disposition; its later
+approval is recorded separately under D011.
+Merged [PR #781](https://github.com/dhar174/tiny_village/pull/781) contains this
+follow-up; merging it is not a human approval or issue closure.
+
+The [D009 post-merge report](testing/phase-1-post-merge-verification.md) on merged
+main `77e4b94` contains 94 successful test-method summaries and three zero-exit
+probes. One lifecycle supervisor completion record is missing after a transport
+disconnect; its successful 12-test summary and all child exits are retained.
+Only previously unstarted targets were continued, once each. No target was
+rerun, and the missing supervisor result is not labeled PASS. The authorized
+window is consumed. D010 subsequently accepts the residual risk and #779
+closure. D011 subsequently approves #721 and D012 approves #722 separately.
+Neither merging the PRs nor "Proceed" supplied those dispositions.
+The evidence is published in [draft PR #782](https://github.com/dhar174/tiny_village/pull/782)
+and linked on #779/#721; their original acceptance text is preserved.
 
 The [approved observation cycle](testing/issue-779-startup-investigation.md)
 has concluded: 51 affected regression methods pass and all 16 predeclared
 diagnostic cases exit successfully. The historical timeout cause remains
 unconfirmed. No remedy or new review disposition is approved by those results;
-the diagnostic budget is exhausted and #779 remains open.
+the diagnostic budget is exhausted. The later D010 closure accepts this
+uncertainty without claiming a proven remedy.
 
 ## Outstanding actions and limits
 
-- #779 remains open: capture the historical timeout cause and complete the
-  required verification. Its bounded investigation already concluded; further
-  observation or a remedy requires the review boundary recorded in D007.
+- #779 is closed under D010 as unable to reproduce; diagnostics added. Reopen
+  if the timeout recurs and retain failure artifacts. Further observations
+  require a new scope; no root cause or production fix has been established.
 - Include native Windows execution and cache-permission checks when planning
   the later platform work, before any Windows-support claim (D004).
 - Include live model download and inference checks in the later ML/LLM work
   before making readiness claims for those features (D005).
 - Demonstrate a real gameplay turn during the later demo/integration work;
   retain the zero-action limitation of the current minimal-mode probe (D006).
-- Project 10's **Decision** field still needs synchronization to **Deferred**.
+- Project 10's #721 and #722 **Decision** fields still need synchronization to
+  **Approved** under D011/D012, and Phase 1/Phase 2 readiness needs reflecting
+  in the Project where applicable.
   The configured credential received HTTP 403, “Resource not accessible by
   integration,” on the last attempt. The native issue dependency and recorded
   issue disposition were verified; a Project field update was not.
-- Revisit #721 after the required evidence is complete. An explicit human
-  **Approved** decision is required before closing it.
-- Consider #722 separately afterward. No Phase 1 completion decision has been
-  made, and no platform, gameplay or model-inference readiness is implied.
+- #721 is approved and closed under D011 using the current evidence and D010's
+  accepted limitations. No additional observation window is authorized.
+- #722 is approved and #717 is complete under D012. Begin Phase 2 with #724's
+  MVP scenario, support matrix and measurable budgets; subsequent reviews and
+  gates retain their own approval requirements. No platform, gameplay or
+  model-inference readiness is implied by Phase 1 completion.
 
 ## Issue closure and roadmap references
 
 - #718, #719 and #720 remain closed: their scoped implementation repairs merged.
-- #717, #721, #722 and #779 remain open. The implementation merges and passing
-  observation cycle do not supply the outstanding review/gate approval or
-  resolve the unexplained timeout issue.
+- #779 is closed with reason **not planned** under D010's non-reproducible,
+  accepted-risk disposition. Original root-cause criteria remain unfulfilled.
+- #721 is closed as completed under the explicit D011 human approval.
+- #717 and #722 are closed as completed under the separate D012 phase-gate
+  approval. Phase 2 parent #723 and task #724 remain open and uncompleted.
 - #773–#776 remain open in their existing phases; deferral is not completion.
 - Native Windows support/validation is carried into support-matrix and CI work
   (#724/#726); core/optional dependency profiles remain in #725. Live-model
