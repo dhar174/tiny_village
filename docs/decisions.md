@@ -174,6 +174,8 @@ Only previously unstarted targets were continued, once each. No target was
 rerun, and the missing supervisor result is not labeled PASS. The authorized
 window is consumed; #779 risk acceptance/closure and #721/#722 decisions remain
 pending. Neither merging the PRs nor "Proceed" supplied those dispositions.
+The evidence is published in [draft PR #782](https://github.com/dhar174/tiny_village/pull/782)
+and linked on #779/#721; their original acceptance text and open states are preserved.
 
 The [approved observation cycle](testing/issue-779-startup-investigation.md)
 has concluded: 51 affected regression methods pass and all 16 predeclared

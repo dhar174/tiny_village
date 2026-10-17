@@ -1,6 +1,6 @@
 # [TASK009] - Verify merged Phase 1 capture work
 
-**Status:** Verification complete with supervisor gap — publication/human handoff
+**Status:** Completed with supervisor gap — evidence published; human decisions pending
 
 **Added:** 2026-10-16
 
@@ -35,8 +35,8 @@ including verification authorization D009. No closure or gate approval is inferr
 | --- | --- | --- | --- | --- |
 | 9.1 | Freeze merged-main inputs | Complete | 2026-10-16 | main 77e4b94; no runtime/test edits |
 | 9.2 | Run one authorized window | Complete with gap | 2026-10-16 | 94 successful method summaries; three probes; lifecycle supervisor result unknown |
-| 9.3 | Verify and publish evidence | Pending | 2026-10-16 | Keep failures/incomplete counts explicit |
-| 9.4 | Handoff to human decisions | Pending | 2026-10-16 | #779, then #721, then #722 |
+| 9.3 | Verify and publish evidence | Complete | 2026-10-16 | Draft PR #782; #779/#721 comments and status blocks verified |
+| 9.4 | Handoff to human decisions | Ready | 2026-10-16 | First #779 risk/closure question; #721/#722 separate and unchanged |
 
 ## Progress Log
 
@@ -60,3 +60,8 @@ including verification authorization D009. No closure or gate approval is inferr
   Minimal mode still executes zero actions and retains map/sentiment/node limits.
 - Report: docs/testing/phase-1-post-merge-verification.md. Prepare the #779
   risk/closure question; #721 Deferred and #722 open remain unchanged.
+- Published/attached draft evidence PR #782. Posted and read back comments
+  6227420596 (#779) and 6227421138 (#721). Updated dedicated status blocks
+  while preserving original acceptance text and open states. No issue closed.
+- Human handoff is ready: ask whether the maintainer accepts the unknown
+  historical cause and supervisor limitation for the proposed #779 closure.

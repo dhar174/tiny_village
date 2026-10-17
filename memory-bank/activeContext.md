@@ -27,7 +27,8 @@
   supervisor terminal record after transport loss; its 12-test OK summary and
   all child zero-exits survive. Only unstarted targets were continued once.
   No blanket clean-supervisor claim. See docs/testing/phase-1-post-merge-verification.md.
-  D009 budget consumed; next is the explicit #779 risk/closure decision,
+  Evidence published in draft PR #782 and on #779/#721; D009 budget consumed.
+  Next is the explicit #779 risk/closure decision,
   followed separately by #721 and #722. No issue disposition changed.
 - TASK008 implements the scoped #779 failure-capture follow-up on a separate
   branch, published as PR #781 (now merged with #780). See docs/superpowers/plans/2026-10-16-issue-779-failure-capture.md.

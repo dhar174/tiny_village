@@ -11,6 +11,13 @@ This window was authorized under D009 in the single
 and #722 remains open. Verification authorization does not accept the residual
 timeout risk or approve a review/gate.
 
+Published in [draft evidence PR #782](https://github.com/dhar174/tiny_village/pull/782).
+Findings were posted and read back on
+[#779](https://github.com/dhar174/tiny_village/issues/779#issuecomment-6227420596)
+and [#721](https://github.com/dhar174/tiny_village/issues/721#issuecomment-6227421138).
+Their dedicated status blocks were refreshed while preserving all original
+acceptance text and open states. No human disposition was changed.
+
 ## Inputs and boundaries
 
 - Exact merged main: `77e4b9437cc00970def933d992140e6da37eae8e`, including
