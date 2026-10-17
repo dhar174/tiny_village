@@ -12,7 +12,9 @@ on main `77e4b94` reports 94 successful test methods and three successful probes
 with one missing lifecycle supervisor completion record. Its complete unittest
 summary and child zero-exit evidence are retained; no target was rerun.
 The results below remain the historical `93079fd` review and are not overwritten.
-The #779 risk/closure decision and #721/#722 human decisions are still pending.
+D010 in the decision record accepts the unknown timeout cause and supervisor
+gap; #779 is closed as unable to reproduce; diagnostics added. #721 remains
+Deferred and ready for its own human disposition; #722 remains open.
 
 - Merged main: `93079fd6ef7ef7607153b95e2b66a48a957a9ee6` (PR #778).
 - Exact source tree matches reviewed PR head `f796b33a8e140f6bebc2b0bad14c6b300eb26ee8`.

@@ -1,10 +1,10 @@
 # [TASK005] - Verify merged startup repairs and guide human review (#721)
 
-**Status:** In Progress — human Deferred; investigation #779 blocks review completion
+**Status:** In Progress — human Deferred; #779 closed with accepted risk; ready for review disposition
 
 **Added:** 2026-10-15
 
-**Updated:** 2026-10-15
+**Updated:** 2026-10-17
 
 ## Original Request
 
@@ -28,7 +28,7 @@ by this verification and walkthrough alone.
 
 ## Progress Tracking
 
-**Overall Status:** In Progress — Deferred recorded; #779 blocks #721; Project Decision synchronization denied.
+**Overall Status:** In Progress — Deferred recorded; D010 resolves #779's disposition with accepted risk; #721 decision next; Project synchronization denied.
 
 | ID | Description | Status | Updated | Notes |
 | --- | --- | --- | --- | --- |
@@ -81,3 +81,13 @@ by this verification and walkthrough alone.
   record. Consolidated the decisions and outstanding actions in
   [docs/decisions.md](../../docs/decisions.md); future decisions belong there.
   Evidence remains in the validation report; no runtime changes or new checks.
+
+### 2026-10-17 UTC
+
+- Latest evidence is the 77e4b94 post-merge report in PR #782: 94 successful
+  method summaries, three zero-exit probes, and one lifecycle supervisor gap.
+- See [D010](../../docs/decisions.md#d010--accept-residual-uncertainty-and-close-investigation-779)
+  for the maintainer's accepted-risk disposition of #779. Its closed state
+  preserves the native historical dependency; it does not approve this review.
+- Next: obtain #721's explicit disposition using the updated evidence, then
+  consider #722 separately. Existing later-phase scope decisions still apply.

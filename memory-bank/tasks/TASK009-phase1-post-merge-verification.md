@@ -1,10 +1,10 @@
 # [TASK009] - Verify merged Phase 1 capture work
 
-**Status:** Completed with supervisor gap — evidence published; human decisions pending
+**Status:** Completed with supervisor gap — #779 accepted-risk closure; #721/#722 decisions pending
 
 **Added:** 2026-10-16
 
-**Updated:** 2026-10-16
+**Updated:** 2026-10-17
 
 ## Original Request
 
@@ -36,7 +36,7 @@ including verification authorization D009. No closure or gate approval is inferr
 | 9.1 | Freeze merged-main inputs | Complete | 2026-10-16 | main 77e4b94; no runtime/test edits |
 | 9.2 | Run one authorized window | Complete with gap | 2026-10-16 | 94 successful method summaries; three probes; lifecycle supervisor result unknown |
 | 9.3 | Verify and publish evidence | Complete | 2026-10-16 | Draft PR #782; #779/#721 comments and status blocks verified |
-| 9.4 | Handoff to human decisions | Ready | 2026-10-16 | First #779 risk/closure question; #721/#722 separate and unchanged |
+| 9.4 | Handoff to human decisions | In Progress | 2026-10-17 | D010 accepts #779 closure; next #721, then #722 separately |
 
 ## Progress Log
 
@@ -65,3 +65,13 @@ including verification authorization D009. No closure or gate approval is inferr
   while preserving original acceptance text and open states. No issue closed.
 - Human handoff is ready: ask whether the maintainer accepts the unknown
   historical cause and supervisor limitation for the proposed #779 closure.
+
+### 2026-10-17 UTC
+
+- Continued the walkthrough after the maintainer's explicit approval. The
+  decision is maintained only in [D010](../../docs/decisions.md#d010--accept-residual-uncertainty-and-close-investigation-779).
+- Published the updated evidence on PR #782 and synchronized #779/#721 status
+  blocks without changing their original acceptance text. #779 is closed as
+  non-reproducible with diagnostics added; its cause remains unknown.
+- No application changes, new tests, repeated observations or new phase work.
+  #721 remains Deferred and #722 remains open for separate decisions.

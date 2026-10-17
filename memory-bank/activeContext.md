@@ -28,27 +28,31 @@
   all child zero-exits survive. Only unstarted targets were continued once.
   No blanket clean-supervisor claim. See docs/testing/phase-1-post-merge-verification.md.
   Evidence published in draft PR #782 and on #779/#721; D009 budget consumed.
-  Next is the explicit #779 risk/closure decision,
-  followed separately by #721 and #722. No issue disposition changed.
+  D010 now accepts the unknown cause and supervisor gap; #779 is closed as
+  unable to reproduce, diagnostics added (2026-10-17 UTC). #721 remains Deferred
+  and is next for human disposition, followed separately by #722.
 - TASK008 implements the scoped #779 failure-capture follow-up on a separate
   branch, published as PR #781 (now merged with #780). See docs/superpowers/plans/2026-10-16-issue-779-failure-capture.md.
   D008 approves implementation and one bounded observation window. The shared
   capture helper and both integrations are verified: 11 new checks, 81 existing
   methods and three probes pass. See docs/testing/issue-779-failure-capture.md.
   D008 observation budget consumed. Deadline review correction passes 13 focused
-  capture checks; the prior application matrix was not rerun. #779 stays open
-  because the historical cause remains unknown. Findings posted on #779/#721.
+  capture checks; the prior application matrix was not rerun at that handoff.
+  #779 stayed open then; the subsequent D010 closure accepts its unknown cause.
+  Findings posted on #779/#721.
   #780/#781 merged. Deadline fix a32cdb2 is included; review updated and thread resolved.
 - TASK007 synchronized 18 actual GitHub issue bodies with the decision record,
   preserving original checklists and states. #779 is now a native child/blocker
   of #721; #721 blocks #722. Docs PR #780 publishes decisions/evidence.
-  #718–#720 remain closed; #717/#721/#722/#779 remain open. No new approval.
+  That synchronization kept #718–#720 closed and #717/#721/#722/#779 open.
+  Subsequent #779 closure is recorded under D010; #717/#721/#722 stay open.
 - TASK006 / #779's approved investigation plan is in
   `docs/superpowers/plans/2026-10-15-issue-779-startup-investigation.md`.
   Approval is D007; the bounded cycle is complete. All 51 affected methods pass
   and all 16 diagnostic cases exit 0, but historical timeouts do not recur and
   their cause remains unconfirmed. See docs/testing/issue-779-startup-investigation.md.
-  No runtime remedy or further observation budget is approved; #779 stays open.
+  No runtime remedy or further observation budget was approved by D007;
+  subsequent D010 accepts closure without establishing a cause.
 - Merged-main verification completes with timing failures/incomplete batches;
   cache passes 26/27, and 30 tests in five other complete suites pass. Both
   affected import orders pass instrumented diagnostics, but cause is unproven.

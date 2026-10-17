@@ -7,16 +7,18 @@ final exit/cleanup record was lost during an execution-server disconnect.
 That gap remains explicit; no target was rerun to replace it.
 
 This window was authorized under D009 in the single
-[decision record](../decisions.md). #779 remains open, #721 remains Deferred,
-and #722 remains open. Verification authorization does not accept the residual
-timeout risk or approve a review/gate.
+[decision record](../decisions.md). Subsequently D010 explicitly accepted the
+unknown historical cause and supervisor gap and authorized #779's closure as
+unable to reproduce; diagnostics added. #721 remains Deferred and #722 remains
+open, awaiting their separate human decisions.
 
 Published in [draft evidence PR #782](https://github.com/dhar174/tiny_village/pull/782).
 Findings were posted and read back on
 [#779](https://github.com/dhar174/tiny_village/issues/779#issuecomment-6227420596)
 and [#721](https://github.com/dhar174/tiny_village/issues/721#issuecomment-6227421138).
 Their dedicated status blocks were refreshed while preserving all original
-acceptance text and open states. No human disposition was changed.
+acceptance text. The initial evidence publication changed no human disposition;
+the later D010 accepted-risk decision supplies #779's closure rationale.
 
 ## Inputs and boundaries
 
@@ -110,12 +112,13 @@ previous bounded investigation windows remain preserved.
 
 The historical timeout did not recur; its cause remains unknown. The application
 summaries support revisiting #779, while the supervisor gap prevents claiming an
-entirely clean supervised run. The proposed closure rationale is **"unable to
-reproduce; diagnostics added"**, explicitly accepting the unknown historical
-cause and the documented supervisor limitation. That risk acceptance has **not**
-been recorded or inferred from "Proceed."
+entirely clean supervised run. D010 records the maintainer's subsequent explicit
+acceptance of both limitations and authorization of closure as **"unable to
+reproduce; diagnostics added"**. #779 is closed with reason **not planned**;
+its original root-cause criteria are not claimed complete. Reopen on recurrence
+and retain the diagnostic artifacts.
 
-First obtain the maintainer's #779 decision. Review #721 separately afterward,
+The #779 decision is recorded. Review #721 separately next,
 then obtain #722's separate Phase 1 decision. Do not close #717 or advance to
 Phase 2 until those required human decisions are recorded in `docs/decisions.md`.
 Project Decision synchronization remains outstanding from the previous 403;

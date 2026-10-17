@@ -30,7 +30,9 @@
   Its 12-test OK summary and child exits remain intact; only NOT_RUN targets
   were continued once. 390 source hashes unchanged; 42 child artifact sets
   verified. Report: docs/testing/phase-1-post-merge-verification.md.
-  #779 risk/closure decision and #721/#722 human decisions remain pending.
+  On 2026-10-17 UTC, D010 accepts both residual uncertainties and #779 closes
+  as unable to reproduce; diagnostics added. #721 remains Deferred and ready
+  for its separate disposition; #722 remains open. No new runtime observations.
 - As of 2026-10-16, TASK008 implementation is approved under D008. The new
   capture helper and integrations pass 11 new checks, 81 existing methods and
   three probes in the approved window. No failures/errors/skips/timeouts; 42 child
