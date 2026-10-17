@@ -101,3 +101,9 @@ including verification authorization D009. No closure or gate approval is inferr
 - No runtime changes, installs or new test/application observations. Project
   synchronization remains outstanding from the earlier HTTP 403; no repeat
   request through the unchanged credential or successful update is claimed.
+- Publication receipts: [#722 approval](https://github.com/dhar174/tiny_village/issues/722#issuecomment-6229527606)
+  and [#717 completion](https://github.com/dhar174/tiny_village/issues/717#issuecomment-6229528445).
+  Read-back confirms both closed/completed, all #718–#722 sub-issues closed,
+  #724's native #722 dependency closed, and #723/#724 still open. Original
+  issue text is retained; completed gate/phase checklist items are checked,
+  with the unavailable Project Decision synchronization left unchecked.

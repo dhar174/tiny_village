@@ -31,6 +31,11 @@ The [subsequent #721 approval](https://github.com/dhar174/tiny_village/issues/72
 was posted and read back; #721 is closed with reason `completed`. Native
 #779 → #721 → #722 relationships are retained. D012 separately authorizes
 completion of #722 and #717; Phase 2 retains its later review requirements.
+[Gate #722's approval](https://github.com/dhar174/tiny_village/issues/722#issuecomment-6229527606)
+and [parent #717's completion](https://github.com/dhar174/tiny_village/issues/717#issuecomment-6229528445)
+were posted and read back. Both are closed with reason `completed`; all five
+Phase 1 sub-issues are closed, and #724 retains its now-closed #722 dependency.
+Phase 2 #723 and task #724 remain open. Project field updates remain unconfirmed.
 
 ## Inputs and boundaries
 
