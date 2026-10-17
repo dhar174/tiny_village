@@ -75,3 +75,7 @@ including verification authorization D009. No closure or gate approval is inferr
   non-reproducible with diagnostics added; its cause remains unknown.
 - No application changes, new tests, repeated observations or new phase work.
   #721 remains Deferred and #722 remains open for separate decisions.
+- Read-back receipts: [#779 closure comment](https://github.com/dhar174/tiny_village/issues/779#issuecomment-6227664671)
+  and [#721 handoff](https://github.com/dhar174/tiny_village/issues/721#issuecomment-6227665778).
+  #779 state is closed / not_planned; #717/#721/#722 are open. Original issue
+  acceptance tails match their pre-update snapshots byte for byte.

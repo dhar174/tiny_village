@@ -20,6 +20,10 @@ Their dedicated status blocks were refreshed while preserving all original
 acceptance text. The initial evidence publication changed no human disposition;
 the later D010 accepted-risk decision supplies #779's closure rationale.
 
+Disposition read-back confirms [#779's closure](https://github.com/dhar174/tiny_village/issues/779#issuecomment-6227664671)
+with reason `not_planned` and [#721's unchanged Deferred status](https://github.com/dhar174/tiny_village/issues/721#issuecomment-6227665778).
+#717, #721 and #722 remain open. Their original acceptance text is preserved.
+
 ## Inputs and boundaries
 
 - Exact merged main: `77e4b9437cc00970def933d992140e6da37eae8e`, including
