@@ -103,3 +103,7 @@ by this verification and walkthrough alone.
   application runs; this records the human's disposition of retained evidence.
 - Project synchronization remains outstanding from the earlier HTTP 403;
   no credential change or successful Project field update is claimed.
+- Publication receipt: [#721 approval comment](https://github.com/dhar174/tiny_village/issues/721#issuecomment-6229486733).
+  Read-back verifies #721 closed / completed, #779 closed, #717/#722 open,
+  native dependency relationships retained, and the original Deferred history
+  preserved. Review checklist items are checked except Project synchronization.

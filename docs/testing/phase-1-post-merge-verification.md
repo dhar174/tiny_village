@@ -25,6 +25,9 @@ Disposition read-back confirms [#779's closure](https://github.com/dhar174/tiny_
 with reason `not_planned` and [#721's unchanged Deferred status](https://github.com/dhar174/tiny_village/issues/721#issuecomment-6227665778).
 Those receipts precede D011's separate approval of #721; its earlier Deferred
 disposition remains historical evidence. #717 and #722 remain open.
+The [subsequent #721 approval](https://github.com/dhar174/tiny_village/issues/721#issuecomment-6229486733)
+was posted and read back; #721 is closed with reason `completed`. Native
+#779 → #721 → #722 relationships are retained; #722 remains open.
 
 ## Inputs and boundaries
 
