@@ -15,8 +15,9 @@ The results below remain the historical `93079fd` review and are not overwritten
 D010 in the decision record accepts the unknown timeout cause and supervisor
 gap; #779 is closed as unable to reproduce; diagnostics added. D011 records
 the maintainer's subsequent approval of #721 for Linux/offline startup at
-`77e4b94`. #721 is closed as completed; #722 remains open for its separate
-decision. The historical failed verification below is preserved.
+`77e4b94`. #721 is closed as completed. D012 subsequently approves #722 and
+completes parent #717 for the same scope; Phase 2 is unblocked. The historical
+failed verification below is preserved.
 
 - Merged main: `93079fd6ef7ef7607153b95e2b66a48a957a9ee6` (PR #778).
 - Exact source tree matches reviewed PR head `f796b33a8e140f6bebc2b0bad14c6b300eb26ee8`.

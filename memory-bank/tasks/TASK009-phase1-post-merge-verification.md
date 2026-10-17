@@ -1,10 +1,10 @@
 # [TASK009] - Verify merged Phase 1 capture work
 
-**Status:** Completed with supervisor gap — #779 accepted-risk closure and #721 approval recorded; #722 pending
+**Status:** Completed with supervisor gap — human dispositions D010–D012 recorded; Phase 1 complete
 
 **Added:** 2026-10-16
 
-**Updated:** 2026-10-16 (America/New_York)
+**Updated:** 2026-10-17 (America/New_York)
 
 ## Original Request
 
@@ -36,7 +36,7 @@ including verification authorization D009. No closure or gate approval is inferr
 | 9.1 | Freeze merged-main inputs | Complete | 2026-10-16 | main 77e4b94; no runtime/test edits |
 | 9.2 | Run one authorized window | Complete with gap | 2026-10-16 | 94 successful method summaries; three probes; lifecycle supervisor result unknown |
 | 9.3 | Verify and publish evidence | Complete | 2026-10-16 | Draft PR #782; #779/#721 comments and status blocks verified |
-| 9.4 | Handoff to human decisions | In Progress | 2026-10-16 | D010 accepts #779 closure; D011 approves #721; #722 separate and pending |
+| 9.4 | Handoff to human decisions | Complete | 2026-10-17 | D010 accepts #779 closure; D011 approves #721; D012 separately approves #722 and completes #717 |
 
 ## Progress Log
 
@@ -87,3 +87,17 @@ including verification authorization D009. No closure or gate approval is inferr
   #722 and parent #717 remain open. #779's accepted-risk closure is unchanged.
 - No new observations, runtime changes or broader readiness claims. The
   next walkthrough item is #722's separate Phase 1 decision.
+
+### 2026-10-17 America/New_York — Phase 1 gate disposition
+
+- The maintainer explicitly approved the Phase 1 gate. The canonical
+  [D012](../../docs/decisions.md#d012--approve-phase-1-gate-722-and-complete-phase-717)
+  records scope, rationale, evidence and the exact confirmation.
+- Published the decision in PR #782, recorded approval on #722 and closed
+  #722/#717 as completed. Retained the native hierarchy/dependencies and all
+  earlier failures and accepted limitations. Refreshed linked issue status.
+- Phase 2 is unblocked, starting with #724's MVP scenario/support matrix/budgets.
+  #723/#724 remain open; subsequent review and phase-gate decisions are required.
+- No runtime changes, installs or new test/application observations. Project
+  synchronization remains outstanding from the earlier HTTP 403; no repeat
+  request through the unchanged credential or successful update is claimed.

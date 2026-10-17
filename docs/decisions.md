@@ -187,13 +187,38 @@ should link to this file rather than maintain separate decision records.
 - **Confirmation:** “Yes, approved. **#721’s engineering review**,” explicitly
   for the agreed Linux/offline startup scope and documented limitations.
 
+### D012 — Approve Phase 1 gate #722 and complete phase #717
+
+- **Date:** 2026-10-17 (America/New_York)
+- **Decision-maker:** dhar174
+- **Disposition:** Approved
+- **Reviewed revision:** `77e4b9437cc00970def933d992140e6da37eae8e`,
+  with the [post-merge evidence](testing/phase-1-post-merge-verification.md)
+  published in PR #782.
+- **Decision:** Approve #722 for the agreed Linux/offline startup scope,
+  complete Phase 1 parent #717, and allow Phase 2 to begin. Close #722 and
+  #717 as completed; preserve the native dependency links and later gates.
+- **Rationale:** The #718–#720 repairs are merged and closed. D011 records
+  human approval of engineering review #721. The evidence retains 94 successful
+  method summaries and three zero-exit probes; D010 explicitly accepts the
+  unknown historical timeout cause and the 12-method lifecycle supervisor
+  reporting gap. This decision accepts Phase 1 within those documented limits.
+- **Boundary:** Windows validation, live models and real gameplay stay in
+  later work under D004–D006; #773–#776 remain in their existing phases under
+  D002. This gate approval does not establish broader platform, inference or
+  gameplay readiness or approve any subsequent phase gate. The next ordered
+  task is #724, defining the MVP scenario, support matrix and release budgets.
+- **Confirmation:** “Yes” to: “Do you approve completing Phase 1 within the
+  same Linux/offline scope and accepted limitations, allowing Phase 2 to begin?”
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
 is **Approved** under D011 and closed for the agreed Linux/offline startup
 scope. D010 accepts #779's residual uncertainty and closure. D001 remains the
-historical disposition of the earlier failed verification. Phase gate #722
-still needs its separate human decision; parent #717 remains open.
+historical disposition of the earlier failed verification. D012 separately
+approves phase gate #722 and completes parent #717 within the same scope.
+Phase 2 is unblocked; #724 is its next ordered task.
 
 The [#779 investigation plan](superpowers/plans/2026-10-15-issue-779-startup-investigation.md)
 was approved under D007, and its bounded cycle has concluded. Its original
@@ -221,7 +246,7 @@ disconnect; its successful 12-test summary and all child exits are retained.
 Only previously unstarted targets were continued, once each. No target was
 rerun, and the missing supervisor result is not labeled PASS. The authorized
 window is consumed. D010 subsequently accepts the residual risk and #779
-closure. D011 subsequently approves #721; #722's decision remains pending.
+closure. D011 subsequently approves #721 and D012 approves #722 separately.
 Neither merging the PRs nor "Proceed" supplied those dispositions.
 The evidence is published in [draft PR #782](https://github.com/dhar174/tiny_village/pull/782)
 and linked on #779/#721; their original acceptance text is preserved.
@@ -244,15 +269,18 @@ uncertainty without claiming a proven remedy.
   before making readiness claims for those features (D005).
 - Demonstrate a real gameplay turn during the later demo/integration work;
   retain the zero-action limitation of the current minimal-mode probe (D006).
-- Project 10's #721 **Decision** field still needs synchronization to **Approved**
-  under D011; #722 has no approval to synchronize.
+- Project 10's #721 and #722 **Decision** fields still need synchronization to
+  **Approved** under D011/D012, and Phase 1/Phase 2 readiness needs reflecting
+  in the Project where applicable.
   The configured credential received HTTP 403, “Resource not accessible by
   integration,” on the last attempt. The native issue dependency and recorded
   issue disposition were verified; a Project field update was not.
 - #721 is approved and closed under D011 using the current evidence and D010's
   accepted limitations. No additional observation window is authorized.
-- Consider #722 separately afterward. No Phase 1 completion decision has been
-  made, and no platform, gameplay or model-inference readiness is implied.
+- #722 is approved and #717 is complete under D012. Begin Phase 2 with #724's
+  MVP scenario, support matrix and measurable budgets; subsequent reviews and
+  gates retain their own approval requirements. No platform, gameplay or
+  model-inference readiness is implied by Phase 1 completion.
 
 ## Issue closure and roadmap references
 
@@ -260,8 +288,8 @@ uncertainty without claiming a proven remedy.
 - #779 is closed with reason **not planned** under D010's non-reproducible,
   accepted-risk disposition. Original root-cause criteria remain unfulfilled.
 - #721 is closed as completed under the explicit D011 human approval.
-- #717 and #722 remain open. Engineering-review approval does not supply the
-  outstanding phase-gate approval.
+- #717 and #722 are closed as completed under the separate D012 phase-gate
+  approval. Phase 2 parent #723 and task #724 remain open and uncompleted.
 - #773–#776 remain open in their existing phases; deferral is not completion.
 - Native Windows support/validation is carried into support-matrix and CI work
   (#724/#726); core/optional dependency profiles remain in #725. Live-model

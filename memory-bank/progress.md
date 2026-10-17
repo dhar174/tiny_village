@@ -32,8 +32,9 @@
   verified. Report: docs/testing/phase-1-post-merge-verification.md.
   On 2026-10-17 UTC, D010 accepts both residual uncertainties and #779 closes
   as unable to reproduce; diagnostics added. The subsequent D011 explicitly
-  approves #721 for Linux/offline startup and #721 closes as completed. #722
-  remains open for its own decision; no new runtime observations.
+  approves #721 for Linux/offline startup and #721 closes as completed. D012
+  separately approves #722 and completes #717 on 2026-10-17 America/New_York.
+  Phase 2 is unblocked with #724 next; no new runtime observations.
 - As of 2026-10-16, TASK008 implementation is approved under D008. The new
   capture helper and integrations pass 11 new checks, 81 existing methods and
   three probes in the approved window. No failures/errors/skips/timeouts; 42 child

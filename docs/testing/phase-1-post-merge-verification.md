@@ -11,7 +11,8 @@ This window was authorized under D009 in the single
 unknown historical cause and supervisor gap and authorized #779's closure as
 unable to reproduce; diagnostics added. D011 subsequently records the
 maintainer's approval of #721 for Linux/offline startup. #721 is closed as
-completed; #722 remains open for its separate phase-gate decision.
+completed. D012 separately approves #722 and completes Phase 1 parent #717
+within the same scope, allowing Phase 2 to begin with #724.
 
 Published in [draft evidence PR #782](https://github.com/dhar174/tiny_village/pull/782).
 Findings were posted and read back on
@@ -24,10 +25,12 @@ the later D010 accepted-risk decision supplies #779's closure rationale.
 Disposition read-back confirms [#779's closure](https://github.com/dhar174/tiny_village/issues/779#issuecomment-6227664671)
 with reason `not_planned` and [#721's unchanged Deferred status](https://github.com/dhar174/tiny_village/issues/721#issuecomment-6227665778).
 Those receipts precede D011's separate approval of #721; its earlier Deferred
-disposition remains historical evidence. #717 and #722 remain open.
+disposition remains historical evidence. Those receipts precede the subsequent
+D012 approval and closure of #717/#722.
 The [subsequent #721 approval](https://github.com/dhar174/tiny_village/issues/721#issuecomment-6229486733)
 was posted and read back; #721 is closed with reason `completed`. Native
-#779 → #721 → #722 relationships are retained; #722 remains open.
+#779 → #721 → #722 relationships are retained. D012 separately authorizes
+completion of #722 and #717; Phase 2 retains its later review requirements.
 
 ## Inputs and boundaries
 
@@ -127,8 +130,9 @@ reproduce; diagnostics added"**. #779 is closed with reason **not planned**;
 its original root-cause criteria are not claimed complete. Reopen on recurrence
 and retain the diagnostic artifacts.
 
-The #779 decision and #721 approval are recorded under D010/D011. Next obtain
-#722's separate Phase 1 decision. Do not close #717 or advance to
-Phase 2 until those required human decisions are recorded in `docs/decisions.md`.
+The #779 decision, #721 approval and separate Phase 1 gate approval are recorded
+under D010–D012 in `docs/decisions.md`. #717 and #722 are complete within the
+agreed scope. Phase 2 is unblocked, starting with #724; its human reviews and
+gate remain required. These dispositions authorize no additional test window.
 Project Decision synchronization remains outstanding from the previous 403;
 no new access attempt or synchronization is claimed here.

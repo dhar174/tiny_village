@@ -30,8 +30,9 @@
   Evidence published in draft PR #782 and on #779/#721; D009 budget consumed.
   D010 now accepts the unknown cause and supervisor gap; #779 is closed as
   unable to reproduce, diagnostics added (2026-10-17 UTC). D011 subsequently
-  approves #721; its completed closure leaves #722 next for a separate human
-  decision. Parent #717 remains open; no Phase 2 advancement is authorized.
+  approves #721. D012 now separately approves #722 and completes parent #717
+  (2026-10-17 America/New_York). Phase 2 is unblocked; the next ordered task
+  is #724: define the MVP scenario, support matrix and release budgets.
 - TASK008 implements the scoped #779 failure-capture follow-up on a separate
   branch, published as PR #781 (now merged with #780). See docs/superpowers/plans/2026-10-16-issue-779-failure-capture.md.
   D008 approves implementation and one bounded observation window. The shared
@@ -47,7 +48,7 @@
   of #721; #721 blocks #722. Docs PR #780 publishes decisions/evidence.
   That synchronization kept #718–#720 closed and #717/#721/#722/#779 open.
   Subsequent #779 closure is recorded under D010 and #721 approval under D011;
-  #717/#722 stay open.
+  Subsequent D012 separately approves #722 and completes #717.
 - TASK006 / #779's approved investigation plan is in
   `docs/superpowers/plans/2026-10-15-issue-779-startup-investigation.md`.
   Approval is D007; the bounded cycle is complete. All 51 affected methods pass
@@ -64,8 +65,10 @@
   Project Decision synchronization was denied (403); issue disposition is
   authoritative, with Project field update still outstanding.
   Source repair, approval and downstream phase advancement are separate decisions.
-- #721 human approval is now recorded under D011. Gate #722 needs its own
-  explicit human disposition; its approval is not supplied by D011.
+- D011 records #721 engineering approval; D012 separately records #722 gate
+  approval and Phase 1 completion. Later phase reviews/gates remain required.
+  Project 10 needs #721/#722 Decision Approved and corresponding readiness
+  synchronization; unchanged credentials previously returned HTTP 403.
 - Retain #773/#774 integration/utility failures and #775/#776 Door-definition/
   optional-spaCy limits, scheduled under existing parent tasks and human gates.
 
