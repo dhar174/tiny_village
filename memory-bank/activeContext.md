@@ -22,15 +22,22 @@
 
 ## Immediate Next Steps
 
+- TASK009 verifies merged main 77e4b94 after #780/#781. All 94 test methods
+  report success and three probes exit 0. Lifecycle has a preserved missing
+  supervisor terminal record after transport loss; its 12-test OK summary and
+  all child zero-exits survive. Only unstarted targets were continued once.
+  No blanket clean-supervisor claim. See docs/testing/phase-1-post-merge-verification.md.
+  D009 budget consumed; next is the explicit #779 risk/closure decision,
+  followed separately by #721 and #722. No issue disposition changed.
 - TASK008 implements the scoped #779 failure-capture follow-up on a separate
-  branch, published as PR #781 (now targeting main after #780 merged). See docs/superpowers/plans/2026-10-16-issue-779-failure-capture.md.
+  branch, published as PR #781 (now merged with #780). See docs/superpowers/plans/2026-10-16-issue-779-failure-capture.md.
   D008 approves implementation and one bounded observation window. The shared
   capture helper and both integrations are verified: 11 new checks, 81 existing
   methods and three probes pass. See docs/testing/issue-779-failure-capture.md.
   D008 observation budget consumed. Deadline review correction passes 13 focused
   capture checks; the prior application matrix was not rerun. #779 stays open
   because the historical cause remains unknown. Findings posted on #779/#721.
-  #780 merged; #781 now targets main. Deadline fix a32cdb2 is pushed; review updated and thread resolved.
+  #780/#781 merged. Deadline fix a32cdb2 is included; review updated and thread resolved.
 - TASK007 synchronized 18 actual GitHub issue bodies with the decision record,
   preserving original checklists and states. #779 is now a native child/blocker
   of #721; #721 blocks #722. Docs PR #780 publishes decisions/evidence.

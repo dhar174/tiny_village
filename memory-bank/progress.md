@@ -24,6 +24,13 @@
 
 ## Current Status
 
+- As of 2026-10-16, TASK009 verifies merged main 77e4b94 under D009. All 94
+  method summaries report success and all three probes exit 0, with one
+  lifecycle supervisor completion gap after an execution-server disconnect.
+  Its 12-test OK summary and child exits remain intact; only NOT_RUN targets
+  were continued once. 390 source hashes unchanged; 42 child artifact sets
+  verified. Report: docs/testing/phase-1-post-merge-verification.md.
+  #779 risk/closure decision and #721/#722 human decisions remain pending.
 - As of 2026-10-16, TASK008 implementation is approved under D008. The new
   capture helper and integrations pass 11 new checks, 81 existing methods and
   three probes in the approved window. No failures/errors/skips/timeouts; 42 child

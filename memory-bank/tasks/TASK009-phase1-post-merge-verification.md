@@ -1,0 +1,62 @@
+# [TASK009] - Verify merged Phase 1 capture work
+
+**Status:** Verification complete with supervisor gap — publication/human handoff
+
+**Added:** 2026-10-16
+
+**Updated:** 2026-10-16
+
+## Original Request
+
+"Proceed," following the proposed single post-merge verification and subsequent
+human closure/review walkthrough.
+
+## Approach
+
+Freeze main at `77e4b9437cc00970def933d992140e6da37eae8e`, including merged
+#780 and #781. Reuse the prepared offline Linux environment and existing
+supervisor, adding the 13 capture checks before the nine existing test batches
+and three probes. Stop on a failing/incomplete batch; do not retry or expand.
+
+## Implementation Plan
+
+1. Record the exact SHA, commands, dependencies and source hashes.
+2. Run 13 capture checks, 81 existing methods and three probes once, retaining
+   20/25-second graph, 25/30-second cache and 110/120-second batch limits.
+3. Retain complete evidence and publish a concise report on #779/#721.
+4. Present the #779 closure/risk decision, then #721 and #722 separately.
+
+All human decisions belong in [docs/decisions.md](../../docs/decisions.md),
+including verification authorization D009. No closure or gate approval is inferred.
+
+## Progress Tracking
+
+| ID | Description | Status | Updated | Notes |
+| --- | --- | --- | --- | --- |
+| 9.1 | Freeze merged-main inputs | Complete | 2026-10-16 | main 77e4b94; no runtime/test edits |
+| 9.2 | Run one authorized window | Complete with gap | 2026-10-16 | 94 successful method summaries; three probes; lifecycle supervisor result unknown |
+| 9.3 | Verify and publish evidence | Pending | 2026-10-16 | Keep failures/incomplete counts explicit |
+| 9.4 | Handoff to human decisions | Pending | 2026-10-16 | #779, then #721, then #722 |
+
+## Progress Log
+
+### 2026-10-16
+
+- Created a documentation branch from current merged main; application source
+  remains identical to 77e4b94 during the window.
+- Recorded authorization D009; it does not accept risk or close an issue.
+- Evidence root: /workspace/scratch/phase1-post-merge/2026-10-16-main-77e4b94/.
+  Exact commands, source hashes and all attempt outcomes are retained there.
+- Execution-server transport disconnected after the lifecycle suite. Preserved
+  its 12-test OK summary and 15 child zero-exits; final supervisor exit/cleanup
+  remain unknown. The original results snapshot remains untouched.
+- Recovery ruling: the tests had completed, so continue only NOT_RUN targets
+  once, in a detached supervisor. No completed/interrupted target was repeated,
+  no deadline changed and no application diagnosis was added.
+- Completed all remaining targets. All 94 methods report success and all three
+  probes exit 0; lifecycle keeps SUPERVISOR_INTERRUPTED, not PASS. 82 methods
+  have confirmed supervisor completion; 12 have the recorded supervisor gap.
+- Verified all 42 child artifact sets and unchanged 390 source/manifest hashes.
+  Minimal mode still executes zero actions and retains map/sentiment/node limits.
+- Report: docs/testing/phase-1-post-merge-verification.md. Prepare the #779
+  risk/closure question; #721 Deferred and #722 open remain unchanged.

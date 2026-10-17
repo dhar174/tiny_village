@@ -1,6 +1,7 @@
 ## Tasks Index
 
 ## In Progress
+- [TASK009](TASK009-phase1-post-merge-verification.md) Verify merged Phase 1 capture work - D009 approves one 13+81-method window and three probes; human decisions afterward (Updated: 2026-10-16)
 - [TASK005](TASK005-startup-human-review-721.md) Verify merged startup repairs and guide human review (#721) - disposition/scope recorded in [docs/decisions.md](../../docs/decisions.md); investigation #779 and Project synchronization outstanding (Updated: 2026-10-15)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
@@ -30,4 +31,5 @@
   - `TASK006-startup-investigation-779.md`
   - `TASK007-issue-decision-sync.md`
   - `TASK008-issue-779-failure-capture.md`
+  - `TASK009-phase1-post-merge-verification.md`
 - Task-level Memory Bank tracking has started for this repository.

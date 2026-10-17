@@ -130,6 +130,19 @@ should link to this file rather than maintain separate decision records.
   or proposed runtime/environment correction back with evidence.
 - **Confirmation:** “Looks good. Approved.” in response to the saved plan.
 
+### D009 — Approve one post-merge verification window
+
+- **Date:** 2026-10-16
+- **Decision-maker:** dhar174
+- **Decision:** Verify merged `main` once with the 13 capture checks,
+  81 existing startup-matrix methods and three original probes. Preserve all
+  original assertions, child deadlines and 110/120-second batch limits.
+- **Boundary:** One sequential window, no automatic retries or expanded
+  diagnosis. Bring results back for the #779 closure/risk decision and the
+  separate human reviews of #721 and #722. This execution approval does not
+  accept the unexplained timeout risk, close issues or approve either gate.
+- **Confirmation:** “Proceed,” following the ordered post-merge next steps.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
@@ -150,8 +163,17 @@ records 11 new capture checks, 81 existing methods and three original probes
 passing in the single approved window. Its nine-batch/three-probe budget is
 consumed. The historical timeout did not recur, so its cause remains unknown;
 #779 stays open and #721's Deferred disposition is unchanged.
-Draft [PR #781](https://github.com/dhar174/tiny_village/pull/781) publishes this
-follow-up above #780; its publication is not a human approval or issue closure.
+Merged [PR #781](https://github.com/dhar174/tiny_village/pull/781) contains this
+follow-up; merging it is not a human approval or issue closure.
+
+The [D009 post-merge report](testing/phase-1-post-merge-verification.md) on merged
+main `77e4b94` contains 94 successful test-method summaries and three zero-exit
+probes. One lifecycle supervisor completion record is missing after a transport
+disconnect; its successful 12-test summary and all child exits are retained.
+Only previously unstarted targets were continued, once each. No target was
+rerun, and the missing supervisor result is not labeled PASS. The authorized
+window is consumed; #779 risk acceptance/closure and #721/#722 decisions remain
+pending. Neither merging the PRs nor "Proceed" supplied those dispositions.
 
 The [approved observation cycle](testing/issue-779-startup-investigation.md)
 has concluded: 51 affected regression methods pass and all 16 predeclared
@@ -161,9 +183,10 @@ the diagnostic budget is exhausted and #779 remains open.
 
 ## Outstanding actions and limits
 
-- #779 remains open: capture the historical timeout cause and complete the
-  required verification. Its bounded investigation already concluded; further
-  observation or a remedy requires the review boundary recorded in D007.
+- #779 remains open: decide whether to accept the unknown historical cause and
+  D009's supervisor limitation, or require further evidence. Closure on the
+  proposed non-reproducible rationale requires an explicit human decision;
+  no such acceptance has been inferred. Further observations require a new scope.
 - Include native Windows execution and cache-permission checks when planning
   the later platform work, before any Windows-support claim (D004).
 - Include live model download and inference checks in the later ML/LLM work
