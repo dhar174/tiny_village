@@ -96,11 +96,36 @@ The four optional ML cases are separate local evidence, not part of that PR run.
 revisions, Python/platform, counts, job links and verified archive digests.
 The check publisher is GitHub Actions app ID **15368**.
 
-Hosted main-run results, manual dispatch evidence and actual ruleset activation
-remain pending merge. A passing PR run does not establish enforcement. The PR references #726 without
-an automatic closing keyword. Keep it open until the post-merge rollout passes.
+## Post-merge rollout — enforcement blocked
 
-[Operator instructions](supported-profile-ci.md#required-check-activation-and-human-handoff)
-name the stable check, GitHub Actions publisher, up-to-date policy and owner UI
-handoff if API permissions deny configuration. Existing bypass/review rules stay
-unchanged; later phase gates receive no approval here.
+PR #789 merged at `ac0e25d3674efb03440d2ccce26d7b009d5e82f3`.
+[Main run 39504506879](https://github.com/dhar174/tiny_village/actions/runs/39504506879)
+passes all three profiles and `Python CI required`: **128 cases + three probes**.
+[Manual run 39506792633](https://github.com/dhar174/tiny_village/actions/runs/39506792633),
+dispatched on main with `profile=both`, passes NLP **2** and CPU-LLM **2** cases.
+All five fresh installs, pip checks, profile checks and uploads succeed. Every
+batch exits 0. Total: **132 cases + three probes**, zero skips, failures, errors,
+expected failures, unexpected successes or timeouts. All five downloaded ZIP
+SHA-256 values match GitHub's artifact digests; each summary records the merged
+revision. Hosted CPython is 3.12.15 on Linux x86-64, Ubuntu 24.04 runners.
+
+[Rollout receipt](evidence/issue-726-hosted-rollout-results.json) retains commands,
+counts, package versions, lock hashes, job links and verified archive digests.
+Full downloaded artifacts and API snapshots remain under
+`/workspace/scratch/issue-726/rollout/`; Actions retains artifacts for 30 days.
+The current main SHA was checked against the verified merged revision.
+
+The authorized PUT to existing active ruleset `tiny_ruleset` (5735164) failed:
+**HTTP 403: Resource not accessible by integration**. Readback confirms its
+rules, conditions, review parameters and bypass actors are unchanged. Effective
+main rules contain **no required-status rule**. Passing workflows therefore do
+not yet enforce this CI requirement. **#726 remains open.**
+
+Owner action: [edit tiny_ruleset](https://github.com/dhar174/tiny_village/settings/rules/5735164),
+enable **Require status checks to pass**, add **Python CI required** with
+**GitHub Actions** as source (app 15368), enable **Require branches to be up to
+date before merging**, and save. Preserve every other rule and bypass actor.
+After saving, read back ruleset 5735164 and effective main rules; verify context,
+source and strict/up-to-date policy before closing #726. The full
+[operator instructions](supported-profile-ci.md#required-check-activation-and-human-handoff)
+remain authoritative. No credentials were changed and no phase gate is approved.

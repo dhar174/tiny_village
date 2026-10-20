@@ -82,6 +82,12 @@ claim. Review raw logs before sharing them outside the project.
 
 ## Required-check activation and human handoff
 
+**Current rollout:** #789 is merged. Main and both manual profiles pass:
+132 cases + three CLI probes, with verified artifact digests. Ruleset activation
+was denied with HTTP 403; readback confirms no required-status rule. #726 stays
+open pending the owner settings change below. See the
+[rollout report](issue-726-ci-validation.md#post-merge-rollout--enforcement-blocked).
+
 After human review and merge of the CI PR:
 
 1. Confirm a main-branch **Python CI** run succeeds with all three profiles.

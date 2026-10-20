@@ -1,11 +1,12 @@
 ## Current Work Focus
 
-- TASK013 / #726 implements approved D017: required core/dev/visual CI and
-  manual-only NLP/CPU-LLM checks. #788 merged at eb5f4c9; #654/#776 are closed.
-  Post-merge 47-method verification and CLI 0/0/2 pass. Local CI profiles pass
-  132 cases plus three CLI probes after review corrections. PR #789 is ready;
-  first hosted required profiles pass 128 cases + 3 probes. Main/manual runs
-  and enforcement remain pending merge. See tasks/TASK013-supported-profile-ci-726.md.
+- TASK013 / #726: #789 merged at ac0e25d. Main and both manual ML profiles
+  pass 132 cases + three CLI probes; all five artifact digests verified.
+  Required-check activation was denied with HTTP 403. Readback confirms no
+  required-status rule; #726 stays open for owner activation and verification.
+  Preserve reviews/bypasses. See tasks/TASK013-supported-profile-ci-726.md and
+  docs/testing/issue-726-ci-validation.md for exact owner steps. #727/#728
+  UX/aesthetic planning follows; no phase gate is approved.
 
 - Product requirement clarification (2026-10-20): apply [D015](../docs/decisions.md#d015--require-ai-capabilities-in-the-final-product)
   when scoping #654/#776 and later AI work. Lightweight testing profiles do

@@ -1,0 +1,913 @@
+{
+  "implementation_pr": 789,
+  "merged_revision": "ac0e25d3674efb03440d2ccce26d7b009d5e82f3",
+  "runs": [
+    {
+      "kind": "main",
+      "run_id": 39504506879,
+      "url": "https://github.com/dhar174/tiny_village/actions/runs/39504506879",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Python (visual)",
+          "id": 118909950866,
+          "conclusion": "success",
+          "html_url": "https://github.com/dhar174/tiny_village/actions/runs/39504506879/job/118909950866"
+        },
+        {
+          "name": "Python (dev)",
+          "id": 118909951136,
+          "conclusion": "success",
+          "html_url": "https://github.com/dhar174/tiny_village/actions/runs/39504506879/job/118909951136"
+        },
+        {
+          "name": "Python (core)",
+          "id": 118909951174,
+          "conclusion": "success",
+          "html_url": "https://github.com/dhar174/tiny_village/actions/runs/39504506879/job/118909951174"
+        },
+        {
+          "name": "Python CI required",
+          "id": 118910330618,
+          "conclusion": "success",
+          "html_url": "https://github.com/dhar174/tiny_village/actions/runs/39504506879/job/118910330618"
+        }
+      ]
+    },
+    {
+      "kind": "ml",
+      "run_id": 39506792633,
+      "url": "https://github.com/dhar174/tiny_village/actions/runs/39506792633",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "name": "Offline ML (nlp)",
+          "id": 118917615593,
+          "conclusion": "success",
+          "html_url": "https://github.com/dhar174/tiny_village/actions/runs/39506792633/job/118917615593"
+        },
+        {
+          "name": "Offline ML (llm-cpu)",
+          "id": 118917616047,
+          "conclusion": "success",
+          "html_url": "https://github.com/dhar174/tiny_village/actions/runs/39506792633/job/118917616047"
+        }
+      ]
+    }
+  ],
+  "executed_cases": 132,
+  "cli_probes": 3,
+  "profiles": {
+    "core": {
+      "status": "PASS",
+      "revision": "ac0e25d3674efb03440d2ccce26d7b009d5e82f3",
+      "python": "3.12.15 (main, Oct  1 2026, 02:35:59) [GCC 13.3.0]",
+      "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+      "machine": "x86_64",
+      "locks": {
+        "requirements/locks/core-py312-linux-x86_64.txt": "2a037e6923b1f4e0f19d14109adc4217a5e4b7e0583a780639dd476a1451c908"
+      },
+      "packages": {
+        "pydantic": "2.14.1",
+        "pip": "25.0.1",
+        "numpy": "1.26.4",
+        "attrs": "23.2.0",
+        "pyparsing": "3.1.2",
+        "networkx": "3.1",
+        "typing-extensions": "4.16.0",
+        "typing-inspection": "0.4.4",
+        "pydantic-core": "2.50.1",
+        "annotated-types": "0.8.0"
+      },
+      "counts": {
+        "tests_run": 40,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 3,
+      "artifact_id": 12303217394,
+      "verified_archive_digest": "sha256:01b1dda6a743b78283d94cda127163b4b86a0a807618a4dcb2be60cc939fa5ea",
+      "batches": {
+        "components": {
+          "status": "PASS",
+          "command": [
+            "/home/runner/work/tiny_village/tiny_village/.venv/bin/python",
+            "-B",
+            "/home/runner/work/tiny_village/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "unittest",
+            "--report",
+            "/home/runner/work/tiny_village/tiny_village/.test-artifacts/ci/core/batches/components/result.json",
+            "tests.test_actions",
+            "tests.test_action_named_target_resolution",
+            "tests.test_goap_error_handling",
+            "tests.test_event_handler_payloads"
+          ],
+          "exit_code": 0,
+          "started_utc": "2026-10-20T21:58:02.974623+00:00",
+          "finished_utc": "2026-10-20T21:58:04.093391+00:00",
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 21,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          }
+        },
+        "runtime": {
+          "status": "PASS",
+          "command": [
+            "/home/runner/work/tiny_village/tiny_village/.venv/bin/python",
+            "-B",
+            "/home/runner/work/tiny_village/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "unittest",
+            "--report",
+            "/home/runner/work/tiny_village/tiny_village/.test-artifacts/ci/core/batches/runtime/result.json",
+            "tests.test_memory_runtime",
+            "tests.test_lightweight_runtime.TestHeadlessRuntime",
+            "tests.test_lightweight_runtime.TestMinimalRunner"
+          ],
+          "exit_code": 0,
+          "started_utc": "2026-10-20T21:58:04.094398+00:00",
+          "finished_utc": "2026-10-20T21:58:14.379696+00:00",
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 19,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          }
+        },
+        "canonical-cli": {
+          "status": "PASS",
+          "command": [
+            "/home/runner/work/tiny_village/tiny_village/.venv/bin/python",
+            "-B",
+            "/home/runner/work/tiny_village/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "probe",
+            "--report",
+            "/home/runner/work/tiny_village/tiny_village/.test-artifacts/ci/core/batches/canonical-cli/result.json",
+            "canonical"
+          ],
+          "exit_code": 0,
+          "started_utc": "2026-10-20T21:58:14.381026+00:00",
+          "finished_utc": "2026-10-20T21:58:15.398874+00:00",
+          "report": {
+            "kind": "probe",
+            "status": "PASS",
+            "probes_run": 1,
+            "expected_exit_code": 0,
+            "observed_exit_code": 0,
+            "capture_artifacts": "/home/runner/work/tiny_village/tiny_village/.test-artifacts/ci/core/children/child-gzsm53gs"
+          }
+        },
+        "default-cli": {
+          "status": "PASS",
+          "command": [
+            "/home/runner/work/tiny_village/tiny_village/.venv/bin/python",
+            "-B",
+            "/home/runner/work/tiny_village/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "probe",
+            "--report",
+            "/home/runner/work/tiny_village/tiny_village/.test-artifacts/ci/core/batches/default-cli/result.json",
+            "default"
+          ],
+          "exit_code": 0,
+          "started_utc": "2026-10-20T21:58:15.400168+00:00",
+          "finished_utc": "2026-10-20T21:58:16.517589+00:00",
+          "report": {
+            "kind": "probe",
+            "status": "PASS",
+            "probes_run": 1,
+            "expected_exit_code": 0,
+            "observed_exit_code": 0,
+            "capture_artifacts": "/home/runner/work/tiny_village/tiny_village/.test-artifacts/ci/core/children/child-i0u589ol"
+          }
+        },
+        "invalid-cli": {
+          "status": "PASS",
+          "command": [
+            "/home/runner/work/tiny_village/tiny_village/.venv/bin/python",
+            "-B",
+            "/home/runner/work/tiny_village/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "probe",
+            "--report",
+            "/home/runner/work/tiny_village/tiny_village/.test-artifacts/ci/core/batches/invalid-cli/result.json",
+            "invalid"
+          ],
+          "exit_code": 0,
+          "started_utc": "2026-10-20T21:58:16.518767+00:00",
+          "finished_utc": "2026-10-20T21:58:16.884429+00:00",
+          "report": {
+            "kind": "probe",
+            "status": "PASS",
+            "probes_run": 1,
+            "expected_exit_code": 2,
+            "observed_exit_code": 2,
+            "capture_artifacts": "/home/runner/work/tiny_village/tiny_village/.test-artifacts/ci/core/children/child-m2tyrg9j"
+          }
+        }
+      }
+    },
+    "visual": {
+      "status": "PASS",
+      "revision": "ac0e25d3674efb03440d2ccce26d7b009d5e82f3",
+      "python": "3.12.15 (main, Oct  1 2026, 02:35:59) [GCC 13.3.0]",
+      "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+      "machine": "x86_64",
+      "locks": {
+        "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5",
+        "requirements/locks/visual-py312-linux-x86_64.txt": "a6db9f00d612e0b715961e9f1565c90066eb0872f165ad3984d3fcb414eaed73"
+      },
+      "packages": {
+        "pydantic": "2.14.1",
+        "pytest": "9.1.1",
+        "pip": "25.0.1",
+        "numpy": "1.26.4",
+        "attrs": "23.2.0",
+        "iniconfig": "2.3.1",
+        "pyparsing": "3.1.2",
+        "networkx": "3.1",
+        "typing-extensions": "4.16.0",
+        "pygments": "2.21.0",
+        "pygame": "2.6.1",
+        "typing-inspection": "0.4.4",
+        "uv": "0.12.23",
+        "pluggy": "1.7.0",
+        "pydantic-core": "2.50.1",
+        "annotated-types": "0.8.0",
+        "packaging": "26.3"
+      },
+      "counts": {
+        "tests_run": 68,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 0,
+      "artifact_id": 12302272842,
+      "verified_archive_digest": "sha256:a197d0f47bd707eabd0121440b439bfd6f4b667ae8d85d126ab93f36f215a8c6",
+      "batches": {
+        "lifecycle": {
+          "status": "PASS",
+          "command": [
+            "/home/runner/work/tiny_village/tiny_village/.venv/bin/python",
+            "-B",
+            "/home/runner/work/tiny_village/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "unittest",
+            "--report",
+            "/home/runner/work/tiny_village/tiny_village/.test-artifacts/ci/visual/batches/lifecycle/result.json",
+            "tests.test_lightweight_runtime.TestVisualLifecycle"
+          ],
+          "exit_code": 0,
+          "started_utc": "2026-10-20T21:58:04.754645+00:00",
+          "finished_utc": "2026-10-20T21:58:07.827603+00:00",
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 4,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          }
+        },
+        "graph": {
+          "status": "PASS",
+          "command": [
+            "/home/runner/work/tiny_village/tiny_village/.venv/bin/python",
+            "-B",
+            "/home/runner/work/tiny_village/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "unittest",
+            "--report",
+            "/home/runner/work/tiny_village/tiny_village/.test-artifacts/ci/visual/batches/graph/result.json",
+            "tests.test_graph_initialization",
+            "tests.test_graph_ownership"
+          ],
+          "exit_code": 0,
+          "started_utc": "2026-10-20T21:58:07.828640+00:00",
+          "finished_utc": "2026-10-20T21:58:28.537273+00:00",
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 24,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          }
+        },
+        "cache": {
+          "status": "PASS",
+          "command": [
+            "/home/runner/work/tiny_village/tiny_village/.venv/bin/python",
+            "-B",
+            "/home/runner/work/tiny_village/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "unittest",
+            "--report",
+            "/home/runner/work/tiny_village/tiny_village/.test-artifacts/ci/visual/batches/cache/result.json",
+            "tests.test_model_cache"
+          ],
+          "exit_code": 0,
+          "started_utc": "2026-10-20T21:58:28.538413+00:00",
+          "finished_utc": "2026-10-20T21:58:30.607498+00:00",
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 27,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          }
+        },
+        "capture": {
+          "status": "PASS",
+          "command": [
+            "/home/runner/work/tiny_village/tiny_village/.venv/bin/python",
+            "-B",
+            "/home/runner/work/tiny_village/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "unittest",
+            "--report",
+            "/home/runner/work/tiny_village/tiny_village/.test-artifacts/ci/visual/batches/capture/result.json",
+            "tests.test_subprocess_capture"
+          ],
+          "exit_code": 0,
+          "started_utc": "2026-10-20T21:58:30.608541+00:00",
+          "finished_utc": "2026-10-20T21:58:34.032808+00:00",
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 13,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          }
+        }
+      }
+    },
+    "dev": {
+      "status": "PASS",
+      "revision": "ac0e25d3674efb03440d2ccce26d7b009d5e82f3",
+      "python": "3.12.15 (main, Oct  1 2026, 02:35:59) [GCC 13.3.0]",
+      "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+      "machine": "x86_64",
+      "locks": {
+        "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5"
+      },
+      "packages": {
+        "uv": "0.12.23",
+        "numpy": "1.26.4",
+        "pip": "25.0.1",
+        "packaging": "26.3",
+        "pydantic-core": "2.50.1",
+        "pygments": "2.21.0",
+        "annotated-types": "0.8.0",
+        "attrs": "23.2.0",
+        "networkx": "3.1",
+        "pyparsing": "3.1.2",
+        "typing-inspection": "0.4.4",
+        "typing-extensions": "4.16.0",
+        "iniconfig": "2.3.1",
+        "pydantic": "2.14.1",
+        "pytest": "9.1.1",
+        "pluggy": "1.7.0"
+      },
+      "counts": {
+        "tests_run": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 0,
+      "artifact_id": 12301704280,
+      "verified_archive_digest": "sha256:25e5b77f40d3171a18fa4b78c56f30994dfbd702b0da8daa3377cc79ac2061bd",
+      "batches": {
+        "runner": {
+          "status": "PASS",
+          "command": [
+            "/home/runner/work/tiny_village/tiny_village/.venv/bin/python",
+            "-B",
+            "/home/runner/work/tiny_village/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "unittest",
+            "--report",
+            "/home/runner/work/tiny_village/tiny_village/.test-artifacts/ci/dev/batches/runner/result.json",
+            "tests.test_ci_checks"
+          ],
+          "exit_code": 0,
+          "started_utc": "2026-10-20T21:58:04.090412+00:00",
+          "finished_utc": "2026-10-20T21:58:17.940924+00:00",
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 18,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          }
+        },
+        "cli-smoke": {
+          "status": "PASS",
+          "command": [
+            "/home/runner/work/tiny_village/tiny_village/.venv/bin/python",
+            "-B",
+            "/home/runner/work/tiny_village/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "pytest",
+            "--report",
+            "/home/runner/work/tiny_village/tiny_village/.test-artifacts/ci/dev/batches/cli-smoke/result.json",
+            "tests/test_minimal_demo_smoke.py"
+          ],
+          "exit_code": 0,
+          "started_utc": "2026-10-20T21:58:17.941947+00:00",
+          "finished_utc": "2026-10-20T21:58:20.462709+00:00",
+          "report": {
+            "status": "PASS",
+            "kind": "pytest",
+            "counts": {
+              "tests_run": 2,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            },
+            "pytest_exit_code": 0
+          }
+        }
+      }
+    },
+    "llm-cpu": {
+      "status": "PASS",
+      "revision": "ac0e25d3674efb03440d2ccce26d7b009d5e82f3",
+      "python": "3.12.15 (main, Oct  1 2026, 02:35:59) [GCC 13.3.0]",
+      "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+      "machine": "x86_64",
+      "locks": {
+        "requirements/locks/llm-cpu-py312-linux-x86_64.txt": "a7aa20681fd3af915dc9f0b75adb8c4fd9ef3d852b430b76aa346e2a861b2b5a"
+      },
+      "packages": {
+        "transformers": "4.57.6",
+        "scikit-learn": "1.3.2",
+        "jinja2": "3.1.6",
+        "torch": "2.14.1+cpu",
+        "tiktoken": "0.14.0",
+        "safetensors": "0.8.0",
+        "six": "1.17.0",
+        "pandas": "3.0.6",
+        "mpmath": "1.3.0",
+        "certifi": "2026.10.19",
+        "numpy": "1.26.4",
+        "hf-xet": "1.7.0",
+        "setuptools": "84.2.0",
+        "regex": "2026.9.29",
+        "pip": "25.0.1",
+        "packaging": "26.3",
+        "requests": "2.34.2",
+        "psutil": "7.2.2",
+        "tokenizers": "0.22.2",
+        "pydantic-core": "2.50.1",
+        "scipy": "1.12.0",
+        "annotated-types": "0.8.0",
+        "fsspec": "2026.9.0",
+        "attrs": "23.2.0",
+        "sentencepiece": "0.2.2",
+        "filelock": "4.2.4",
+        "networkx": "3.1",
+        "urllib3": "2.8.0",
+        "cycler": "0.12.1",
+        "accelerate": "1.15.0",
+        "sympy": "1.14.0",
+        "kiwisolver": "1.5.1",
+        "pyparsing": "3.1.2",
+        "faiss-cpu": "1.15.1",
+        "matplotlib": "3.11.2",
+        "typing-inspection": "0.4.4",
+        "idna": "3.20",
+        "pillow": "13.0.0",
+        "joblib": "1.6.0",
+        "seaborn": "0.13.2",
+        "typing-extensions": "4.16.0",
+        "sentence-transformers": "5.7.0",
+        "huggingface-hub": "0.36.2",
+        "tqdm": "4.70.1",
+        "cloudpickle": "3.1.2",
+        "markupsafe": "3.0.4",
+        "pyyaml": "6.0.3",
+        "contourpy": "1.3.3",
+        "pydantic": "2.14.1",
+        "python-dateutil": "2.9.0.post0",
+        "charset-normalizer": "3.5.2",
+        "fonttools": "4.67.0",
+        "threadpoolctl": "3.7.0"
+      },
+      "counts": {
+        "tests_run": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 0,
+      "artifact_id": 12304321171,
+      "verified_archive_digest": "sha256:0c9ce33a5fda340eb141d1c8304ec2b7a55c9fbad537c7bb5c80ed6225b76334",
+      "batches": {
+        "retrieval": {
+          "status": "PASS",
+          "command": [
+            "/home/runner/work/tiny_village/tiny_village/.venv/bin/python",
+            "-B",
+            "/home/runner/work/tiny_village/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "unittest",
+            "--report",
+            "/home/runner/work/tiny_village/tiny_village/.test-artifacts/ci/llm-cpu/batches/retrieval/result.json",
+            "tests.test_memory_optional_profiles.TestInstalledRetrieval"
+          ],
+          "exit_code": 0,
+          "started_utc": "2026-10-20T22:16:54.694814+00:00",
+          "finished_utc": "2026-10-20T22:16:55.260959+00:00",
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 1,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          }
+        },
+        "installed-basic": {
+          "status": "PASS",
+          "command": [
+            "/home/runner/work/tiny_village/tiny_village/.venv/bin/python",
+            "-B",
+            "/home/runner/work/tiny_village/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "unittest",
+            "--report",
+            "/home/runner/work/tiny_village/tiny_village/.test-artifacts/ci/llm-cpu/batches/installed-basic/result.json",
+            "tests.test_lightweight_runtime.TestMinimalRunner.test_demo_returns_real_registered_state_and_memories"
+          ],
+          "exit_code": 0,
+          "started_utc": "2026-10-20T22:16:55.261888+00:00",
+          "finished_utc": "2026-10-20T22:16:56.228556+00:00",
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 1,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          }
+        }
+      }
+    },
+    "nlp": {
+      "status": "PASS",
+      "revision": "ac0e25d3674efb03440d2ccce26d7b009d5e82f3",
+      "python": "3.12.15 (main, Oct  1 2026, 02:35:59) [GCC 13.3.0]",
+      "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+      "machine": "x86_64",
+      "locks": {
+        "requirements/locks/nlp-py312-linux-x86_64.txt": "d3cba0d3cb6ecb1796da85b0882bd84db0a8ac2a290c5f9ebdc19f3e3128ef15"
+      },
+      "packages": {
+        "certifi": "2026.10.19",
+        "contourpy": "1.3.3",
+        "threadpoolctl": "3.7.0",
+        "tqdm": "4.70.1",
+        "httpx": "0.28.1",
+        "shellingham": "1.5.4",
+        "scikit-learn": "1.3.2",
+        "pydantic": "2.14.1",
+        "pillow": "13.0.0",
+        "scipy": "1.12.0",
+        "annotated-doc": "0.0.5",
+        "python-dateutil": "2.9.0.post0",
+        "six": "1.17.0",
+        "defusedxml": "0.7.1",
+        "jinja2": "3.1.6",
+        "pip": "25.0.1",
+        "confection": "1.3.3",
+        "numpy": "1.26.4",
+        "blis": "1.3.3",
+        "attrs": "23.2.0",
+        "markdown-it-py": "4.2.0",
+        "idna": "3.20",
+        "preshed": "3.0.13",
+        "spacy": "3.8.16",
+        "thinc": "8.3.13",
+        "wasabi": "1.1.3",
+        "h11": "0.16.0",
+        "murmurhash": "1.0.15",
+        "requests": "2.34.2",
+        "spacy-loggers": "1.0.5",
+        "markupsafe": "3.0.4",
+        "pyparsing": "3.1.2",
+        "charset-normalizer": "3.5.2",
+        "networkx": "3.1",
+        "fonttools": "4.67.0",
+        "typing-extensions": "4.16.0",
+        "weasel": "1.0.0",
+        "mdurl": "0.1.2",
+        "cloudpickle": "3.1.2",
+        "pygments": "2.21.0",
+        "typer": "0.27.3",
+        "rich": "15.0.0",
+        "setuptools": "84.2.0",
+        "typing-inspection": "0.4.4",
+        "wrapt": "2.5.1",
+        "matplotlib": "3.11.2",
+        "click": "8.5.0",
+        "pandas": "3.0.6",
+        "srsly": "2.5.4",
+        "cloudpathlib": "0.26.0",
+        "textblob": "0.20.1",
+        "regex": "2026.9.29",
+        "nltk": "3.10.3",
+        "spacy-legacy": "3.0.12",
+        "seaborn": "0.13.2",
+        "smart-open": "8.0.4",
+        "pydantic-core": "2.50.1",
+        "httpcore": "1.0.9",
+        "catalogue": "2.0.10",
+        "urllib3": "2.8.0",
+        "rake-nltk": "1.0.6",
+        "joblib": "1.6.0",
+        "annotated-types": "0.8.0",
+        "cycler": "0.12.1",
+        "kiwisolver": "1.5.1",
+        "packaging": "26.3",
+        "cymem": "2.0.13",
+        "anyio": "4.15.1"
+      },
+      "counts": {
+        "tests_run": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 0,
+      "artifact_id": 12303816723,
+      "verified_archive_digest": "sha256:fa7edfdd6c90e599eb8745e6b426e76d8c2963f7e37f67a12dd7424f9f157b5b",
+      "batches": {
+        "nlp": {
+          "status": "PASS",
+          "command": [
+            "/home/runner/work/tiny_village/tiny_village/.venv/bin/python",
+            "-B",
+            "/home/runner/work/tiny_village/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "unittest",
+            "--report",
+            "/home/runner/work/tiny_village/tiny_village/.test-artifacts/ci/nlp/batches/nlp/result.json",
+            "tests.test_memory_optional_profiles.TestInstalledNLP"
+          ],
+          "exit_code": 0,
+          "started_utc": "2026-10-20T22:16:25.406820+00:00",
+          "finished_utc": "2026-10-20T22:16:29.381078+00:00",
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 2,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          }
+        }
+      }
+    }
+  },
+  "enforcement": {
+    "status": "blocked_owner_action_required",
+    "ruleset_id": 5735164,
+    "name": "tiny_ruleset",
+    "required_context": "Python CI required",
+    "integration_id": 15368,
+    "strict_required_status_checks_policy": true,
+    "attempted_operation": "PUT repos/dhar174/tiny_village/rulesets/5735164",
+    "exit_code": 1,
+    "error": "Resource not accessible by integration (HTTP 403)",
+    "unchanged_after_denial": true,
+    "before": {
+      "name": "tiny_ruleset",
+      "target": "branch",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": [
+            "~DEFAULT_BRANCH"
+          ]
+        }
+      },
+      "bypass_actors": [
+        {
+          "actor_id": null,
+          "actor_type": "DeployKey",
+          "bypass_mode": "always"
+        },
+        {
+          "actor_id": 2,
+          "actor_type": "RepositoryRole",
+          "bypass_mode": "always"
+        },
+        {
+          "actor_id": 5,
+          "actor_type": "RepositoryRole",
+          "bypass_mode": "always"
+        }
+      ],
+      "rules": [
+        {
+          "type": "deletion"
+        },
+        {
+          "type": "non_fast_forward"
+        },
+        {
+          "type": "required_linear_history"
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 0,
+            "dismiss_stale_reviews_on_push": false,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          }
+        }
+      ]
+    },
+    "readback": {
+      "name": "tiny_ruleset",
+      "target": "branch",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": [
+            "~DEFAULT_BRANCH"
+          ]
+        }
+      },
+      "bypass_actors": [
+        {
+          "actor_id": null,
+          "actor_type": "DeployKey",
+          "bypass_mode": "always"
+        },
+        {
+          "actor_id": 2,
+          "actor_type": "RepositoryRole",
+          "bypass_mode": "always"
+        },
+        {
+          "actor_id": 5,
+          "actor_type": "RepositoryRole",
+          "bypass_mode": "always"
+        }
+      ],
+      "rules": [
+        {
+          "type": "deletion"
+        },
+        {
+          "type": "non_fast_forward"
+        },
+        {
+          "type": "required_linear_history"
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 0,
+            "dismiss_stale_reviews_on_push": false,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          }
+        }
+      ]
+    },
+    "effective_main_rules": [
+      {
+        "type": "deletion",
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "dhar174/tiny_village",
+        "ruleset_id": 5735164
+      },
+      {
+        "type": "non_fast_forward",
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "dhar174/tiny_village",
+        "ruleset_id": 5735164
+      },
+      {
+        "type": "required_linear_history",
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "dhar174/tiny_village",
+        "ruleset_id": 5735164
+      },
+      {
+        "type": "pull_request",
+        "parameters": {
+          "required_approving_review_count": 0,
+          "dismiss_stale_reviews_on_push": false,
+          "required_reviewers": [],
+          "require_code_owner_review": false,
+          "require_last_push_approval": false,
+          "required_review_thread_resolution": false,
+          "require_extra_approval_for_unattributed_changes": true,
+          "allowed_merge_methods": [
+            "merge",
+            "squash",
+            "rebase"
+          ]
+        },
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "dhar174/tiny_village",
+        "ruleset_id": 5735164
+      }
+    ]
+  },
+  "issue_status": "open_until_required_check_enforcement_is_verified",
+  "limitations": [
+    "Offline supported-profile checks only; no live inference, gameplay, GPU or native Windows/macOS acceptance.",
+    "Existing bypass actors and review policy remain unchanged.",
+    "No phase-gate approval."
+  ]
+}

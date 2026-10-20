@@ -1,6 +1,6 @@
 # SDD ledger — plan: docs/superpowers/plans/2026-10-20-issue-726-supported-profile-ci.md
 
-**Status:** PR #789 ready for human review; #726 open pending post-merge rollout
+**Status:** Blocked on owner ruleset activation; #789 merged, all hosted checks verified; #726 open
 **Added/Updated:** 2026-10-20
 
 ## Request / approved scope
@@ -15,7 +15,7 @@ required in the final product (D015).
 2. Bounded runner: complete. Produces --profile / --artifacts and exit/report contract.
 3. Required workflow: implemented. Consumes runner profiles and success-only gate.
 4. Manual ML workflow: implemented. Consumes nlp/llm-cpu profiles; never scheduled.
-5. Validation/review/PR: complete for publication. Human review and hosted main/manual/enforcement rollout follow merge.
+5. Validation/review/PR: complete; #789 merged. Main/manual rollout verified; enforcement blocked by HTTP 403.
 
 Pre-flight: tasks 3/4 consume task 2's exact profile names and artifact directory.
 Both require existing hash locks; no application runtime API changes.
@@ -82,3 +82,16 @@ Both require existing hash locks; no application runtime API changes.
   128 cases + 3 probes, no skips/failures/errors. All artifact ZIP digests match
   GitHub metadata. Publisher GitHub Actions app ID 15368. No enforcement change
   or manual workflow dispatch before merge. Hosted receipt published.
+
+- 2026-10-20 rollout: #789 merged at ac0e25d. Main 39504506879 passes
+  core/dev/visual and aggregate; manual 39506792633 passes both ML profiles.
+  All five archive digests verified: 132 cases + three CLI probes, no unexpected
+  skips/failures/errors/timeouts; fresh hosted installs and pip checks pass.
+- Authorized ruleset PUT denied: HTTP 403 Resource not accessible by integration.
+  Readback verifies unchanged rules/conditions/reviews/bypasses; effective main
+  rules have no required_status_checks. #726 stays open. Owner must enable
+  Python CI required (GitHub Actions app 15368), strict/up-to-date, in active
+  tiny_ruleset 5735164, then effective enforcement must be read back.
+- Published structured rollout receipt and owner instructions; no runtime,
+  lock, workflow or decision changes. #727/#728 planning is next after this
+  enforcement handoff; no phase gate approved.
