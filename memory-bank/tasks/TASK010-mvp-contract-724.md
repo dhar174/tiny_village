@@ -30,7 +30,7 @@ against codex/phase1-post-merge-review, with #782 as a merge prerequisite.
 | 10.3 | Draft scenario/support/budgets | Complete | 2026-10-20 | docs/superpowers/specs/2026-10-20-issue-724-mvp-contract.md; all choices proposed |
 | 10.4 | Review and publish draft | Complete | 2026-10-20 | Draft PR #783 stacked on #782; #724 comment and additive status block verified |
 | 10.5 | Obtain human agreement | Complete | 2026-10-20 | D014 accepts the contract with explicit original-vision preservation guardrails |
-| 10.6 | Integrate approved contract to main | In Progress | 2026-10-20 | #783 merged to #782's old branch after #782 merged; focused integration PR needed |
+| 10.6 | Integrate approved contract to main | In Progress | 2026-10-20 | Ready PR #784 targets main and closes #724 on merge; source/issue read-back verified |
 
 ## Progress log
 
@@ -80,3 +80,10 @@ against codex/phase1-post-merge-review, with #782 as a merge prerequisite.
 - Next ordered task: #725, core/development dependency locks and optional
   visual/NLP/LLM/GPU profiles, including review of #704 and verified installation.
   #727 UX planning can follow #724 separately; #654 then #726 follow #725.
+- Published and attached [integration PR #784](https://github.com/dhar174/tiny_village/pull/784),
+  targeting main with a closing reference for #724. Its diff is six Markdown
+  files and contains no runtime edits. Local specification links resolve.
+- Read back the [D014/integration handoff on #724](https://github.com/dhar174/tiny_village/issues/724#issuecomment-6297463774).
+  The issue remains open pending integration; agreement criteria are checked
+  and the status block identifies the merge target repair. No dependency edges
+  or Project custom fields were changed.
