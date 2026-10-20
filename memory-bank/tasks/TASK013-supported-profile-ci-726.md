@@ -42,3 +42,12 @@ Both require existing hash locks; no application runtime API changes.
   separate session per batch, real unittest/pytest counts and explicit failing
   evidence for empty/skipped/incomplete/nonzero/timeout/cancellation cases.
   The existing subprocess_capture interface and diagnostic limits are unchanged.
+
+- Task 2: complete — 13 runner methods pass. All five profiles pass locally:
+  core 40 + 3 CLI probes, dev 15, visual 68, NLP 2, CPU-LLM 2 (127 methods/cases).
+  Core/dev/visual used new hash-verified issue726 venvs and pip checks; optional
+  local profiles reuse existing locked environments, not fresh-install claims.
+- Workflow structural check: verified actionlint 1.7.12 archive SHA-256
+  8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8.
+  Initial check rejected runner.temp in job-level env; retained original output,
+  moved cache assignment to a runner step, and both workflows validate.
