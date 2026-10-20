@@ -13,8 +13,8 @@ startup/event/memory checks are selected; gameplay proof stays #751/#658.
 
 | Task | Status | Evidence |
 | --- | --- | --- |
-| 1 Baseline | In progress | Branch from merged main 8a89965; D015 edits preserved |
-| 2 Lazy services | Pending | |
+| 1 Baseline | Complete | Branch from merged main 8a89965; D015 edits preserved |
+| 2 Lazy services | In progress | Cold-import tests RED→GREEN; baseline.json and lazy-*.log |
 | 3 Basic memory / real Characters | Pending | |
 | 4 Headless controller | Pending | |
 | 5 Minimal runner | Pending | |
@@ -41,3 +41,8 @@ startup/event/memory checks are selected; gameplay proof stays #751/#658.
   from origin/main 8a899650; all four D015 edits carried without loss.
 - Implement inline using executing-plans; a fresh whole-branch review is required
   at the end. No per-task delegation or independent implementation agents.
+
+- Task 1 complete: baseline.json retains both original core-only failures.
+- Task 2: removed eager imports/model/corpus initialization. Cold imports and
+  non-LLM strategy tests pass 2/2 after retained RED and intermediate failure
+  exposed a further eager NMF import. Cache-boundary check recorded separately.

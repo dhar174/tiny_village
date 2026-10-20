@@ -1,339 +1,144 @@
+from __future__ import annotations
+
 from tiny_cache import configure_model_cache
 
-# Hugging Face snapshots cache settings while its libraries are imported.
+# Configure owned caches before a caller explicitly loads Hugging Face services.
 cache_dir = configure_model_cache()
 
+import functools
+import heapq
 import html
+import importlib
+import inspect
 import json
+import logging
+import math
+import os
 import pickle
 import random
-import os
-import math
 import re
+import sys
+import threading
 import time
-import logging
-
 from collections import deque
-
-# Graceful fallback for networkx
-try:
-    from networkx import node_link_data
-    import networkx as nx
-
-    NETWORKX_AVAILABLE = True
-except ImportError:
-    NETWORKX_AVAILABLE = False
-    node_link_data = None
-    nx = None
-# Graceful fallbacks for optional dependencies
-try:
-    import numpy as np
-    NUMPY_AVAILABLE = True
-except ImportError:
-    NUMPY_AVAILABLE = False
-    # Create minimal numpy-like functionality
-    class MockNumpy:
-        def array(self, data):
-            return data
-        def mean(self, data, axis=None):
-            return sum(data) / len(data) if data else 0
-        def random(self):
-            return random
-    np = MockNumpy()
-
 from datetime import datetime, timedelta
 
-try:
-    import pandas as pd
-    PANDAS_AVAILABLE = True
-except ImportError:
-    PANDAS_AVAILABLE = False
-    pd = None
-
-try:
-    import scipy as sp
-    SCIPY_AVAILABLE = True
-except ImportError:
-    SCIPY_AVAILABLE = False
-    sp = None
-
-try:
-    from sklearn import tree
-    from sklearn.metrics.pairwise import cosine_similarity
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    SKLEARN_AVAILABLE = True
-except ImportError:
-    SKLEARN_AVAILABLE = False
-    tree = None
-    def cosine_similarity(a, b):
-        """Simple fallback cosine similarity"""
-        return [[0.5]]  # Return neutral similarity
-    
-    class TfidfVectorizer:
-        """Fallback TfidfVectorizer implementation"""
-        def __init__(self, **kwargs):
-            pass
-        def fit_transform(self, docs):
-            return [[0.5] * len(docs)]  # Return dummy vectors
-        def transform(self, docs):
-            return [[0.5] * len(docs)]
-# Graceful fallback for networkx
-try:
-    import networkx as nx
-    NETWORKX_AVAILABLE = NETWORKX_AVAILABLE and True
-except ImportError:
-    NETWORKX_AVAILABLE = False
-    # Create a minimal networkx-like module for fallback
-    class MockNetworkX:
-        @staticmethod
-        def Graph():
-            return {'nodes': [], 'edges': []}
-        @staticmethod
-        def DiGraph():
-            return {'nodes': [], 'edges': []}
-        @staticmethod
-        def add_node(graph, node, **kwargs):
-            if 'nodes' in graph:
-                graph['nodes'].append(node)
-        @staticmethod
-        def add_edge(graph, a, b, **kwargs):
-            if 'edges' in graph:
-                graph['edges'].append((a, b))
-    nx = MockNetworkX()
-# Conditional torch import - skip functionality if not available
-try:
-    import torch
-    TORCH_AVAILABLE = True
-except ImportError:
-    TORCH_AVAILABLE = False
-    torch = None
-
-# Conditional faiss import - skip functionality if not available  
-try:
-    import faiss
-    FAISS_AVAILABLE = True
-except ImportError:
-    FAISS_AVAILABLE = False
-    # Create minimal faiss-like functionality
-    class MockFaiss:
-        class IndexFlatIP:
-            def __init__(self, dim):
-                self.dim = dim
-                self.vectors = []
-            def add(self, vectors):
-                if NUMPY_AVAILABLE:
-                    self.vectors.extend(vectors)
-                else:
-                    self.vectors.extend(vectors if isinstance(vectors, list) else [vectors])
-            def search(self, query, k=5):
-                # Return dummy search results
-                scores = [0.5] * min(k, len(self.vectors))
-                indices = list(range(min(k, len(self.vectors))))
-                return scores, indices
-    faiss = MockFaiss()
-# Optional transformers support
-try:
-    from transformers import AutoModel, AutoTokenizer, pipeline
-    TRANSFORMERS_AVAILABLE = True
-except ImportError:
-    TRANSFORMERS_AVAILABLE = False
-    AutoModel = AutoTokenizer = pipeline = None
-
-# Optional NLP libraries 
-try:
-    from rake_nltk import Rake
-    RAKE_AVAILABLE = True
-except ImportError:
-    RAKE_AVAILABLE = False
-    Rake = None
-
-try:
-    import spacy
-    SPACY_AVAILABLE = True
-except ImportError:
-    SPACY_AVAILABLE = False
-    spacy = None
-
-try:
-    import nltk
-    from nltk.tokenize import RegexpTokenizer
-    NLTK_AVAILABLE = True
-except ImportError:
-    NLTK_AVAILABLE = False
-    nltk = None
-    class RegexpTokenizer:
-        def __init__(self, pattern):
-            pass
-        def tokenize(self, text):
-            return text.split()
-
-try:
-    from textblob import TextBlob
-    TEXTBLOB_AVAILABLE = True
-except ImportError:
-    TEXTBLOB_AVAILABLE = False
-    class TextBlob:
-        def __init__(self, text):
-            self.text = text
-        @property
-        def words(self):
-            return self.text.split()
-
-# Remove duplicate sklearn imports - already handled above
-
-# Additional optional imports
-try:
-    from nltk.corpus import stopwords
-    NLTK_STOPWORDS_AVAILABLE = True
-except ImportError:
-    NLTK_STOPWORDS_AVAILABLE = False
-    stopwords = None
-
-import heapq
-
-# Optional tiny_brain_io - graceful fallback if not available
-try:
-    import tiny_brain_io as tbi
-    TBI_AVAILABLE = True
-except ImportError:
-    TBI_AVAILABLE = False
-    tbi = None
-
-# Optional tiny_time_manager
-try:
-    import tiny_time_manager as ttm
-    TTM_AVAILABLE = True
-except ImportError:
-    TTM_AVAILABLE = False
-    ttm = None
-
-import sys
-
-# Optional tiny_sr_mapping
-try:
-    import tiny_sr_mapping as tsm
-    TSM_AVAILABLE = True
-except ImportError:
-    TSM_AVAILABLE = False
-    tsm = None
-
-# Additional sklearn components
-try:
-    from sklearn.cluster import KMeans
-    from sklearn.feature_extraction.text import CountVectorizer
-    from sklearn.decomposition import LatentDirichletAllocation
-    SKLEARN_EXTENDED_AVAILABLE = True
-except ImportError:
-    SKLEARN_EXTENDED_AVAILABLE = False
-    KMeans = CountVectorizer = LatentDirichletAllocation = None
-
+import networkx as nx
+from networkx import node_link_data
+import numpy as np
+import tiny_time_manager as ttm
 from tiny_globals import (
-    tiny_globals_obj,
-    get_globals,
-    get_global,
-    set_global,
-    remove_global,
-    has_global,
-    global_keys,
-    global_values,
+    tiny_globals_obj, get_globals, get_global, set_global, remove_global,
+    has_global, global_keys, global_values,
 )
 
-remove_list = [r"\)", r"\(", r"–", r'"', r"”", r'"', r"\[.*\]", r".*\|.*", r"—"]
-# Initialize global objects only if dependencies are available
-if SKLEARN_EXTENDED_AVAILABLE and LatentDirichletAllocation:
-    lda = LatentDirichletAllocation(n_components=3)
-else:
-    lda = None
-# Try to load the transformer model, fallback to smaller model if not available
-if SPACY_AVAILABLE and spacy:
-    try:
-        nlp = spacy.load("en_core_web_trf")
-    except OSError:
+NETWORKX_AVAILABLE = NUMPY_AVAILABLE = TTM_AVAILABLE = True
+
+
+class MemoryFeatureUnavailableError(RuntimeError):
+    """An explicitly requested memory capability cannot be provided."""
+
+
+# These names remain available for existing callers, but importing this module
+# never imports optional AI/analytics libraries or initializes model services.
+_BINDINGS = {
+    "pd": ("pandas", None, "PANDAS_AVAILABLE"),
+    "sp": ("scipy", None, "SCIPY_AVAILABLE"),
+    "tree": ("sklearn", "tree", "SKLEARN_AVAILABLE"),
+    "cosine_similarity": ("sklearn.metrics.pairwise", "cosine_similarity", "SKLEARN_AVAILABLE"),
+    "TfidfVectorizer": ("sklearn.feature_extraction.text", "TfidfVectorizer", "SKLEARN_AVAILABLE"),
+    "CountVectorizer": ("sklearn.feature_extraction.text", "CountVectorizer", "SKLEARN_EXTENDED_AVAILABLE"),
+    "LatentDirichletAllocation": ("sklearn.decomposition", "LatentDirichletAllocation", "SKLEARN_EXTENDED_AVAILABLE"),
+    "KMeans": ("sklearn.cluster", "KMeans", "SKLEARN_EXTENDED_AVAILABLE"),
+    "NMF": ("sklearn.decomposition", "NMF", "SKLEARN_NMF_AVAILABLE"),
+    "ENGLISH_STOP_WORDS": ("sklearn.feature_extraction.text", "ENGLISH_STOP_WORDS", "SKLEARN_AVAILABLE"),
+    "torch": ("torch", None, "TORCH_AVAILABLE"),
+    "faiss": ("faiss", None, "FAISS_AVAILABLE"),
+    "AutoModel": ("transformers", "AutoModel", "TRANSFORMERS_AVAILABLE"),
+    "AutoTokenizer": ("transformers", "AutoTokenizer", "TRANSFORMERS_AVAILABLE"),
+    "pipeline": ("transformers", "pipeline", "TRANSFORMERS_AVAILABLE"),
+    "Rake": ("rake_nltk", "Rake", "RAKE_AVAILABLE"),
+    "spacy": ("spacy", None, "SPACY_AVAILABLE"),
+    "Matcher": ("spacy.matcher", "Matcher", "SPACY_EXTENDED_AVAILABLE"),
+    "Span": ("spacy.tokens", "Span", "SPACY_EXTENDED_AVAILABLE"),
+    "nltk": ("nltk", None, "NLTK_AVAILABLE"),
+    "RegexpTokenizer": ("nltk.tokenize", "RegexpTokenizer", "NLTK_AVAILABLE"),
+    "stopwords": ("nltk.corpus", "stopwords", "NLTK_STOPWORDS_AVAILABLE"),
+    "wordnet": ("nltk.corpus", "wordnet", "NLTK_EXTENDED_AVAILABLE"),
+    "word_tokenize": ("nltk.tokenize", "word_tokenize", "NLTK_EXTENDED_AVAILABLE"),
+    "pos_tag": ("nltk", "pos_tag", "NLTK_EXTENDED_AVAILABLE"),
+    "PorterStemmer": ("nltk.stem", "PorterStemmer", "NLTK_STEMMER_AVAILABLE"),
+    "TextBlob": ("textblob", "TextBlob", "TEXTBLOB_AVAILABLE"),
+    "matplotlib": ("matplotlib", None, "MATPLOTLIB_AVAILABLE"),
+    "plt": ("matplotlib.pyplot", None, "MATPLOTLIB_AVAILABLE"),
+    "sns": ("seaborn", None, "SEABORN_AVAILABLE"),
+    "tbi": ("tiny_brain_io", None, "TBI_AVAILABLE"),
+    "tsm": ("tiny_sr_mapping", None, "TSM_AVAILABLE"),
+}
+for _symbol, (_, _, _flag) in _BINDINGS.items():
+    globals()[_symbol] = None
+    globals()[_flag] = False
+
+_service_lock = threading.RLock()
+model = nlp = sentiment_analysis = lda = None
+manager = None
+
+
+def _dependency(symbol):
+    """Load a real dependency on demand; never substitute invented results."""
+    with _service_lock:
+        value = globals()[symbol]
+        if value is not None:
+            return value
+        module_name, attribute, flag = _BINDINGS[symbol]
         try:
-            nlp = spacy.load("en_core_web_sm")
-        except OSError:
-            print("Warning: No spaCy model found. Using basic NLP functions.")
-            nlp = None
-else:
-    nlp = None
-# Already imported and handled above - remove duplicate imports
-
-# Optional spacy imports
-try:
-    from spacy.matcher import Matcher
-    from spacy.tokens import Span
-    SPACY_EXTENDED_AVAILABLE = True
-except ImportError:
-    SPACY_EXTENDED_AVAILABLE = False
-    Matcher = Span = None
-
-# Download stopwords if nltk is available
-if NLTK_AVAILABLE and nltk:
-    try:
-        nltk.download("stopwords", quiet=True)
-        if hasattr(nltk, 'data') and hasattr(nltk.data, 'find'):
-            if not os.path.exists(nltk.data.find("corpora/stopwords")):
-                nltk.download("stopwords", quiet=True)
-        nltk.download("punkt", quiet=True)
-    except Exception:
-        pass  # Silently ignore download failures
-
-# Optional matplotlib
-try:
-    import matplotlib
-    matplotlib.use("Agg")  # Use non-interactive backend
-    import matplotlib.pyplot as plt
-    MATPLOTLIB_AVAILABLE = True
-except ImportError:
-    MATPLOTLIB_AVAILABLE = False
-    matplotlib = plt = None
-
-# Optional seaborn
-try:
-    import seaborn as sns
-    SEABORN_AVAILABLE = True
-except ImportError:
-    SEABORN_AVAILABLE = False
-    sns = None
-
-# Additional transformers imports - already handled above with TRANSFORMERS_AVAILABLE flag
-# from transformers import AutoModelForSequenceClassification, AutoTokenizer - remove duplicate
-import functools
-
-import inspect
-
-# Additional nltk imports
-try:
-    from nltk.corpus import wordnet
-    from nltk.tokenize import word_tokenize
-    from nltk import pos_tag
-    NLTK_EXTENDED_AVAILABLE = True
-except ImportError:
-    NLTK_EXTENDED_AVAILABLE = False
-    wordnet = None
-    def word_tokenize(text):
-        return text.split()
-    def pos_tag(tokens):
-        return [(token, 'NN') for token in tokens]  # Default to noun
-
-# Initialize networkx graphs only if available
-if NETWORKX_AVAILABLE:
-    class_interaction_graph = nx.DiGraph()
-    call_flow_diagram = nx.DiGraph()
-else:
-    class_interaction_graph = None
-    call_flow_diagram = None
+            module = importlib.import_module(module_name)
+            value = getattr(module, attribute) if attribute else module
+        except (ImportError, OSError) as error:
+            raise MemoryFeatureUnavailableError(
+                f"Memory requires {module_name} for {symbol}; install the documented "
+                "feature profile before requesting this capability."
+            ) from error
+        globals()[symbol] = value
+        globals()[flag] = True
+        return value
 
 
-# Additional nltk imports
-try:
-    from nltk.stem import PorterStemmer
-    NLTK_STEMMER_AVAILABLE = True
-except ImportError:
-    NLTK_STEMMER_AVAILABLE = False
-    class PorterStemmer:
-        def stem(self, word):
-            return word.lower()  # Simple fallback
+def _get_nlp():
+    global nlp
+    with _service_lock:
+        if nlp is None:
+            provider = _dependency("spacy")
+            try:
+                nlp = provider.load("en_core_web_trf")
+            except OSError:
+                try:
+                    nlp = provider.load("en_core_web_sm")
+                except OSError as error:
+                    raise MemoryFeatureUnavailableError(
+                        "NLP requires an installed en_core_web_trf or en_core_web_sm "
+                        "model; no model is downloaded automatically."
+                    ) from error
+        return nlp
+
+
+def _get_sentiment():
+    global sentiment_analysis
+    with _service_lock:
+        if sentiment_analysis is None:
+            try:
+                sentiment_analysis = SentimentAnalysis()
+            except (ImportError, LookupError, OSError) as error:
+                raise MemoryFeatureUnavailableError(
+                    "Sentiment analysis requires its model and NLTK data; "
+                    "no corpus is downloaded automatically."
+                ) from error
+        return sentiment_analysis
+
+
+remove_list = [r"\)", r"\(", r"–", r'"', r"”", r'"', r"\[.*\]", r".*\|.*", r"—"]
+class_interaction_graph = nx.DiGraph()
+call_flow_diagram = nx.DiGraph()
 
 # Write a line of code that will identify how many classes are in this module:
 num_classes = 0
@@ -508,19 +313,15 @@ def sigmoid(x):
 
 
 # Additional sklearn imports
-try:
-    from sklearn.decomposition import NMF
-    SKLEARN_NMF_AVAILABLE = True
-except ImportError:
-    SKLEARN_NMF_AVAILABLE = False
-    NMF = None
-
-
 # Example usage:
 # @track_calls
 class EmbeddingModel:
     def __init__(self):
 
+        if AutoModel is None or AutoTokenizer is None:
+            _dependency("torch")
+            _dependency("AutoModel")
+            _dependency("AutoTokenizer")
         try:
             self.tokenizer = AutoTokenizer.from_pretrained(
                 "sentence-transformers/all-MiniLM-L6-v2",
@@ -573,8 +374,11 @@ def get_wordnet_pos(spacy_token):
 class SentimentAnalysis:
     def __init__(self):
         # self.classifier = pipeline('sentiment-analysis')
-        self.emo_classifier = pipeline(model="lordtt13/emo-mobilebert")
-        self.stop_words = list(ENGLISH_STOP_WORDS.union(stopwords.words("english")))
+        self.stop_words = list(_dependency("ENGLISH_STOP_WORDS").union(
+            _dependency("stopwords").words("english")
+        ))
+        _dependency("TextBlob")
+        self.emo_classifier = _dependency("pipeline")(model="lordtt13/emo-mobilebert")
 
     def get_sentiment_score(self, text):
         # result = self.classifier(text)
@@ -603,8 +407,7 @@ class SentimentAnalysis:
 
 def mean_pooling(model_output, attention_mask):
     """Mean pooling - ensure torch is available before using torch operations."""
-    if not TORCH_AVAILABLE:
-        raise RuntimeError("torch is required for mean_pooling but is not available")
+    _dependency("torch")
     
     # #print(type(model_output))
     # #print(type(attention_mask))
@@ -2535,20 +2338,6 @@ def get_global_model():
         print("Global model not found, attempting to initialize...")
         model = init_global_model()
     return model
-
-
-# Initialize the global model when the module is imported
-model = get_global_model()
-
-# Initialize sentiment analysis only if transformers is available
-if TRANSFORMERS_AVAILABLE and pipeline:
-    try:
-        sentiment_analysis = SentimentAnalysis()
-    except Exception as e:
-        print(f"Warning: Could not initialize sentiment analysis: {e}")
-        sentiment_analysis = None
-else:
-    sentiment_analysis = None
 
 
 # @track_calls
