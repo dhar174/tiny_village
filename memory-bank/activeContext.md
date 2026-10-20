@@ -1,5 +1,9 @@
 ## Current Work Focus
 
+- Product requirement clarification (2026-10-20): apply [D015](../docs/decisions.md#d015--require-ai-capabilities-in-the-final-product)
+  when scoping #654/#776 and later AI work. Lightweight testing profiles do
+  not establish readiness of the final AI-enabled product.
+
 - TASK011 / #725 implements reproducible dependencies from main 8d6b254
   (2026-10-20). Eight hash locks separate core, Pygame/dev and optional feature
   profiles; the full historical manifest is retained. Mode checks no longer

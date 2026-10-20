@@ -7,6 +7,11 @@ vision and its existing feature paths; a small default install is not a feature
 removal. The accepted [MVP contract](../superpowers/specs/2026-10-20-issue-724-mvp-contract.md)
 defines future release behavior, not what these package installations prove.
 
+AI capabilities are required in the final product. Here, optional AI packages
+allow lightweight testing without installing or loading those components;
+passing that profile does not establish final-product readiness. See
+[D015](../decisions.md#d015--require-ai-capabilities-in-the-final-product).
+
 ## Install a locked profile
 
 The lock target is **CPython 3.12, Linux x86-64, glibc 2.28 or newer**. The MVP

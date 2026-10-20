@@ -1,6 +1,7 @@
 ## Tasks Index
 
 ## In Progress
+- [TASK012](TASK012-lightweight-runtime-654.md) Lightweight runtime (#654/#776) - approved plan D016; implementation in progress (Updated: 2026-10-20)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending
