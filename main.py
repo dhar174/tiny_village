@@ -44,8 +44,7 @@ def setup_logging(verbose: bool = False):
 def check_dependencies(mode: str = "visual") -> Tuple[bool, List[str]]:
     """Import direct mode dependencies without requiring optional ML packages.
 
-    Legacy renderer-free initialization is tracked by #654; package
-    availability alone does not establish that the demo works.
+    Package availability alone does not establish full gameplay or AI readiness.
     """
     missing = []
     dependencies = [
@@ -83,10 +82,8 @@ def run_visual_demo(config: dict, logger):
     logger.info("Starting visual demo...")
     logger.info(f"Configuration: {config}")
     
+    controller = None
     try:
-        import pygame
-        pygame.init()
-        
         from tiny_gameplay_controller import GameplayController
         
         controller = GameplayController(config=config)
@@ -114,6 +111,9 @@ def run_visual_demo(config: dict, logger):
         traceback.print_exc()
         return 1
     
+    finally:
+        if controller is not None:
+            controller.close()
     return 0
 
 def run_minimal_demo(config: dict, logger):
@@ -124,10 +124,10 @@ def run_minimal_demo(config: dict, logger):
         from demo_minimal_integration import demonstrate_minimal_integration
         
         logger.info("Running integration demonstration...")
-        controller = demonstrate_minimal_integration()
+        controller = demonstrate_minimal_integration(config)
         
         if controller:
-            logger.info("\n✅ Minimal demo completed successfully")
+            logger.info("\nMinimal startup/event/memory verification completed")
             return 0
         else:
             logger.error("\n❌ Minimal demo failed")
@@ -204,7 +204,11 @@ def main():
     )
     
     args = parser.parse_args()
-    
+    if args.headless and args.mode == "visual":
+        parser.error("--headless requires --mode minimal (or test); visual mode needs a renderer")
+    if args.characters < 0 or (args.mode == "minimal" and args.characters == 0):
+        parser.error("Character count must be nonnegative; minimal checks require at least one Character")
+
     # Set up logging
     logger = setup_logging(args.verbose)
     

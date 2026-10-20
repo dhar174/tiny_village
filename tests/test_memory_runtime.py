@@ -38,6 +38,18 @@ assert strategy.llm_status == 'not_initialized'
 assert not (blocked & sys.modules.keys())
 ''')
 
+    def test_strategy_without_llm_does_not_import_ai(self):
+        self.run_python(NO_AI_IMPORTS + '''
+from tiny_graph_manager import GraphManager
+from tiny_strategy_manager import StrategyManager
+graph = GraphManager()
+strategy = StrategyManager(False, None, graph)
+assert strategy.graph_manager is graph
+assert strategy.brain_io is None
+assert not strategy.use_llm
+assert not (blocked & sys.modules.keys())
+''')
+
 
 class TestBasicMemory(FreshPythonTestCase):
     def test_real_records_retain_fields_and_evict_oldest(self):
@@ -161,14 +173,3 @@ assert all(graph.G.has_node(c) for c in characters)
 assert not (blocked & sys.modules.keys())
 ''')
 
-    def test_strategy_without_llm_does_not_import_ai(self):
-        self.run_python(NO_AI_IMPORTS + '''
-from tiny_graph_manager import GraphManager
-from tiny_strategy_manager import StrategyManager
-graph = GraphManager()
-strategy = StrategyManager(False, None, graph)
-assert strategy.graph_manager is graph
-assert strategy.brain_io is None
-assert not strategy.use_llm
-assert not (blocked & sys.modules.keys())
-''')
