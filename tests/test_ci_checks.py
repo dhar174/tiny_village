@@ -126,6 +126,63 @@ class TestCIChecks(unittest.TestCase):
         self.assertEqual(batch['status'], 'PASS')
         self.assertEqual(report['counts']['tests_run'], 2)
 
+    def test_pytest_unexpected_pass_cannot_pass(self):
+        batch, report = self.worker('import pytest\n@pytest.mark.xfail(reason="controlled")\ndef test_xpass(): pass\n', kind='pytest')
+        self.assertEqual(batch['status'], 'FAIL')
+        self.assertEqual(report['counts']['tests_run'], 1)
+        self.assertEqual(report['counts']['unexpected_successes'], 1)
+
+    def test_pytest_expected_failure_is_reported(self):
+        batch, report = self.worker('import pytest\n@pytest.mark.xfail(reason="controlled")\ndef test_xfail(): assert False\n', kind='pytest')
+        self.assertEqual(batch['status'], 'FAIL')
+        self.assertEqual(report['counts']['expected_failures'], 1)
+
+    def test_child_written_probe_reports_require_complete_integer_exit_codes(self):
+        cases = [
+            {'status':'RUNNING'},
+            {'status':'PASS','kind':'probe','probes_run':1},
+            {'status':'PASS','kind':'probe','probes_run':1,'expected_exit_code':None,'observed_exit_code':None},
+            {'status':'PASS','kind':'probe','probes_run':1,'expected_exit_code':0},
+            {'status':'PASS','kind':'probe','probes_run':1,'expected_exit_code':False,'observed_exit_code':False},
+        ]
+        for index, payload in enumerate(cases):
+            with self.subTest(payload=payload):
+                report = self.root/f'probe-{index}.json'
+                source = f'from pathlib import Path; Path({str(report)!r}).write_text({json.dumps(payload)!r})'
+                batch = self.ci.supervise([sys.executable,'-c',source], report,
+                                           self.root/f'probe-batch-{index}', timeout=5)
+                self.assertEqual(batch['status'], 'FAIL')
+                self.assertEqual(batch['report'], payload)
+
+    def nested_supervisor(self, *, watchdog):
+        pid_file = self.root/'nested.pid'
+        descendant = ('import os,signal,time; from pathlib import Path; '
+                      'signal.signal(signal.SIGTERM,signal.SIG_IGN); '
+                      f'Path({str(pid_file)!r}).write_text(str(os.getpid())); time.sleep(60)')
+        source = ('import faulthandler; from pathlib import Path; from scripts.run_ci_checks import supervise; '
+                  + ('faulthandler.dump_traceback_later(.8,exit=True); ' if watchdog else '')
+                  + f'supervise({[sys.executable,"-c",descendant]!r},Path({str(self.root/"nested-result.json")!r}),'
+                  + f'Path({str(self.root/"nested-batch")!r}),timeout=30)')
+        unrelated = subprocess.Popen([sys.executable,'-c','import time;time.sleep(60)'])
+        self.addCleanup(lambda: (unrelated.kill(),unrelated.wait()) if unrelated.poll() is None else None)
+        result = self.ci.supervise([sys.executable,'-c',source], self.root/'outer-report.json',
+                                   self.root/'outer-batch', timeout=2)
+        self.assertIsNone(unrelated.poll())
+        self.assertTrue(pid_file.exists(), 'Fixture did not start')
+        pid = int(pid_file.read_text())
+        stat = Path(f'/proc/{pid}/stat')
+        dead = not stat.exists() or stat.read_text().split()[2] == 'Z'
+        if not dead:
+            os.kill(pid, signal.SIGKILL)  # Clean up a regression failure, never leave its sleeper.
+        self.assertTrue(dead, 'Nested supervisor left a TERM-resistant descendant alive')
+        return result
+
+    def test_nested_process_groups_are_cleaned_after_outer_timeout(self):
+        self.assertEqual(self.nested_supervisor(watchdog=False)['status'], 'TIMEOUT')
+
+    def test_nested_process_groups_are_cleaned_after_worker_watchdog_exit(self):
+        self.assertEqual(self.nested_supervisor(watchdog=True)['status'], 'FAIL')
+
     def test_profile_audit_rejects_visual_package_in_core(self):
         with self.assertRaises(ValueError):
             self.ci.audit_packages('core', {'pygame':'2.6.1'})

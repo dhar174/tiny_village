@@ -51,3 +51,20 @@ Both require existing hash locks; no application runtime API changes.
   8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8.
   Initial check rejected runner.temp in job-level env; retained original output,
   moved cache assignment to a runner step, and both workflows validate.
+
+- Independent whole-branch review at ab22ce2: three Important findings, no
+  Critical findings or declines. All accepted: nested session cleanup, pytest
+  non-strict XPASS accounting and missing/null probe exit codes.
+- One fix pass: original review-red retains six failing observations across
+  17 methods (including subcases); xpass-red separately proves false PASS.
+  Intermediate group cleanup tests exposed asynchronous SIGKILL delivery;
+  retained review-green1 failure, added bounded quiescence after signalling.
+  All 18 runner methods now pass in review-green2.log.
+- Ruling: track supervisor-created nested sessions in an inherited scoped
+  registry, with bootstrap registration/closed-owner guards and Linux process
+  identities — signal handlers cannot clean up after a watchdog hard exit;
+  cost is Linux-specific lifecycle bookkeeping, within the approved target.
+- Final: minor (deferred): original prewritten RUNNING test branch is deleted
+  by the supervisor, duplicating missing-file coverage. New child-written
+  partial-report regression covers the real contract; original duplicate
+  assertion remains a test-cleanup opportunity, not an untested success path.

@@ -60,7 +60,10 @@ def successful_report(report):
     if not isinstance(report, dict) or report.get('status') != 'PASS':
         return False
     if report.get('kind') == 'probe':
-        return report.get('probes_run') == 1 and report.get('observed_exit_code') == report.get('expected_exit_code')
+        expected, observed = report.get('expected_exit_code'), report.get('observed_exit_code')
+        return (type(report.get('probes_run')) is int and report['probes_run'] == 1 and
+                type(expected) is int and type(observed) is int and
+                0 <= expected <= 255 and observed == expected)
     values = report.get('counts', {})
     return (report.get('kind') in ('unittest', 'pytest') and
             all(isinstance(values.get(key), int) and values[key] >= 0 for key in COUNT_KEYS) and
@@ -96,12 +99,24 @@ def worker_pytest(selectors, report):
     import pytest
     junit = Path(report).with_suffix('.xml')
     write_json(report, {'status':'RUNNING', 'kind':'pytest'})
-    exit_code = int(pytest.main(['-q', *selectors, '--junitxml='+str(junit)]))
+    outcomes = {'expected_failures':0, 'unexpected_successes':0}
+
+    class Outcomes:
+        def pytest_runtest_logreport(self, report):
+            if hasattr(report, 'wasxfail'):
+                if report.skipped:
+                    outcomes['expected_failures'] += 1
+                elif report.passed:
+                    outcomes['unexpected_successes'] += 1
+
+    exit_code = int(pytest.main(['-q', *selectors, '--junitxml='+str(junit)], plugins=[Outcomes()]))
     cases = list(ET.parse(junit).getroot().iter('testcase')) if junit.exists() else []
     values = dict.fromkeys(COUNT_KEYS, 0)
     values.update(tests_run=len(cases), failures=sum(c.find('failure') is not None for c in cases),
                   errors=sum(c.find('error') is not None for c in cases),
                   skipped=sum(c.find('skipped') is not None for c in cases))
+    values.update(outcomes)
+    values['skipped'] -= outcomes['expected_failures']  # JUnit represents XFAIL as skipped.
     state = {'status':'PASS', 'kind':'pytest', 'counts':values, 'pytest_exit_code':exit_code}
     if exit_code != 0 or not successful_report(state):
         state['status'] = 'FAIL'
@@ -129,29 +144,100 @@ def worker_probe(selector, report):
     return 0 if state['status'] == 'PASS' else 1
 
 
-def cleanup_group(process):
-    """Only signal the session created for this batch, including descendants."""
+def process_identity(pid):
+    """Linux process start time distinguishes a reused leader PID."""
     try:
-        os.killpg(process.pid, signal.SIGTERM)
-    except ProcessLookupError:
-        return
-    deadline = time.monotonic()+2
-    while time.monotonic() < deadline:
-        process.poll()  # Reap the direct child while descendants wind down.
+        stat = Path(f'/proc/{pid}/stat').read_text()
+        return stat[stat.rfind(')')+2:].split()[19]
+    except (OSError, IndexError):
+        return None
+
+
+def register_group(registry, parent_group):
+    """Bootstrap before exec: no workload can spawn before ownership is durable."""
+    registry = Path(registry)
+    pid = os.getpid()
+    write_json(registry/f'{pid}.json', {'pgid':pid, 'parent':parent_group, 'identity':process_identity(pid)})
+    visited = set()
+    ancestor = parent_group
+    while ancestor not in visited:
+        visited.add(ancestor)
+        if (registry/f'{ancestor}.closed').exists():
+            raise SystemExit('Owning batch already stopped; refusing late descendant startup')
         try:
-            os.killpg(process.pid, 0)
+            ancestor = json.loads((registry/f'{ancestor}.json').read_text())['parent']
+        except FileNotFoundError:
+            break
+
+
+def cleanup_group(process, registry):
+    """Stop registered descendant sessions too, including after hard worker exit."""
+    registry = Path(registry)
+    (registry/f'{process.pid}.closed').touch()
+    signalled = set()
+    deadline = time.monotonic()+2
+
+    def owned_groups():
+        records = {int(p.stem):json.loads(p.read_text()) for p in registry.glob('*.json')}
+        owned = {process.pid}
+        while True:
+            extra = {pid for pid, row in records.items() if row['parent'] in owned}
+            if extra <= owned:
+                break
+            owned |= extra
+        # A live different leader means the old PID/group has been reused.
+        return {pid for pid in owned if pid not in records or
+                process_identity(pid) in (None, records[pid]['identity'])}
+
+    while True:
+        alive = False
+        for pgid in owned_groups():
+            (registry/f'{pgid}.closed').touch()
+            try:
+                os.killpg(pgid, 0)
+                alive = True
+                if pgid not in signalled:
+                    os.killpg(pgid, signal.SIGTERM)
+                    signalled.add(pgid)
+            except ProcessLookupError:
+                pass
+        process.poll()
+        if not alive:
+            return sorted(signalled)
+        if time.monotonic() >= deadline:
+            break
+        time.sleep(.02)  # Re-scan for bootstraps racing with owner termination.
+    groups = owned_groups()
+    for pgid in groups:
+        try:
+            os.killpg(pgid, signal.SIGKILL)
         except ProcessLookupError:
-            return
-        time.sleep(.02)
-    try:
-        os.killpg(process.pid, signal.SIGKILL)
-    except ProcessLookupError:
-        pass
+            pass
+    # SIGKILL delivery is asynchronous. Wait for live members to stop; zombies
+    # can remain until the host reaps them and do not represent running work.
+    deadline = time.monotonic()+1
+    while True:
+        live = False
+        for path in Path('/proc').glob('[0-9]*/stat'):
+            try:
+                stat = path.read_text()
+                fields = stat[stat.rfind(')')+2:].split()
+                if int(fields[2]) in groups and fields[0] not in ('Z','X'):
+                    live = True
+                    break
+            except (OSError, IndexError, ValueError):
+                continue
+        if not live:
+            break
+        if time.monotonic() >= deadline:
+            raise RuntimeError('Owned process group did not stop after SIGKILL')
+        time.sleep(.01)
+    return sorted(signalled)
 
 
 def supervise(command, report, directory, *, timeout=120):
     """Run one owned batch; process status and structured evidence must agree."""
-    directory = Path(directory)
+    directory = Path(directory).resolve()
     directory.mkdir(parents=True, exist_ok=True)
     record_path = directory/'run.json'
     if record_path.exists():
@@ -162,9 +248,17 @@ def supervise(command, report, directory, *, timeout=120):
               'started_utc':datetime.now(timezone.utc).isoformat(), 'exit_code':None}
     write_json(record_path, record)
     process = None
+    registry = Path(os.environ.get('TINY_CI_GROUP_REGISTRY', directory/'groups'))
+    registry.mkdir(mode=0o700, parents=True, exist_ok=True)
+    environment = os.environ.copy()
+    environment['TINY_CI_GROUP_REGISTRY'] = str(registry)
+    bootstrap = ('import os; from scripts.run_ci_checks import register_group; '
+                 f'register_group({str(registry)!r},{os.getpgrp()!r}); '
+                 f'os.execvp({command[0]!r},{command!r})')
+    record['launcher'] = [sys.executable, '-B', '-c', bootstrap]
     try:
         with (directory/'stdout.log').open('wb') as out, (directory/'stderr.log').open('wb') as err:
-            process = subprocess.Popen(command, cwd=ROOT, stdout=out, stderr=err, start_new_session=True)
+            process = subprocess.Popen(record['launcher'], cwd=ROOT, env=environment, stdout=out, stderr=err, start_new_session=True)
             record.update(status='RUNNING', pid=process.pid)
             write_json(record_path, record)
             try:
@@ -175,7 +269,7 @@ def supervise(command, report, directory, *, timeout=120):
             except KeyboardInterrupt:
                 record['status'] = 'CANCELLED'
             finally:
-                cleanup_group(process)
+                record['terminated_groups'] = cleanup_group(process, registry)
                 process.wait(timeout=3)
         record['exit_code'] = process.returncode
         try:
@@ -188,7 +282,7 @@ def supervise(command, report, directory, *, timeout=120):
         record.update(status='FAIL', supervisor_error=f'{type(error).__name__}: {error}')
     finally:
         if process is not None and process.poll() is None:
-            cleanup_group(process)
+            record['terminated_groups'] = cleanup_group(process, registry)
             process.wait(timeout=3)
         record['finished_utc'] = datetime.now(timezone.utc).isoformat()
         write_json(record_path, record)
