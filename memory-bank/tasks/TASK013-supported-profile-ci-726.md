@@ -37,3 +37,8 @@ Both require existing hash locks; no application runtime API changes.
 
 - Task 1: complete — baseline.json retains 47 passing methods and CLI exits
   0/0/2. Task 2 RED: 12 tests fail because the bounded runner does not exist.
+
+- Task 2: initial 12-method RED→GREEN pass. New runner uses stdlib parent and
+  separate session per batch, real unittest/pytest counts and explicit failing
+  evidence for empty/skipped/incomplete/nonzero/timeout/cancellation cases.
+  The existing subprocess_capture interface and diagnostic limits are unchanged.
