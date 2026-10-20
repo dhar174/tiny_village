@@ -29,7 +29,8 @@
   core/dev+visual/NLP/CPU-LLM installs and unchanged repeats pass, as do pip
   checks, 85 existing methods and real dependency probes. GPU resolution is
   unexecuted; lightweight runtime/model/platform readiness remains separate.
-  Setup and validation are documented; review PR publication is next.
+  Setup and validation are documented in ready PR #785, targeting main. #725
+  issue comment/status read-back is verified; issue closure follows merge.
 
 - As of 2026-10-20, D014 accepts TASK010 / #724's MVP contract with the
   original expansive vision preserved. Scenario limits are fixture data;

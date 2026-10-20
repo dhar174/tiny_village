@@ -115,6 +115,8 @@ Additional probes:
   not a full UI/gameplay or human display review.
 - **NLP:** spaCy blank-English tokenization produces `Tiny`, `Village`; NLTK,
   RAKE and TextBlob import. No trained model/corpus feature claim is supplied.
+- **Analytics inside NLP:** a real pandas mean, SciPy distance, scikit-learn
+  cosine similarity and a Seaborn/Matplotlib Agg plot written to PNG pass.
 - **CPU-LLM/retrieval:** CPU Torch tensor arithmetic passes, Transformers and
   sentence-transformers import, and a real FAISS index returns its inserted
   vector with distance zero. No pretrained-model download or inference-quality
@@ -149,3 +151,10 @@ feature vision and the separate #730/#731/#732 and release decisions. GPU
 execution, native Windows/macOS, live model artifacts/inference, GGUF source
 builds and arbitrary optional-profile combinations remain unverified. No phase
 gate or Project Decision field is automatically approved or updated.
+
+Implementation and the above evidence are published in
+[PR #785](https://github.com/dhar174/tiny_village/pull/785), targeting main;
+the [#725 handoff](https://github.com/dhar174/tiny_village/issues/725#issuecomment-6297885936)
+was read back. The issue remains open until the implementation PR merges.
+Validated implementation source is commit
+`bec88aac2a2b4b367ebb75a6340bb5f6240f4a11`; subsequent handoff edits are documentation only.

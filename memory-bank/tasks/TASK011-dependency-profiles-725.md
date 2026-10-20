@@ -1,6 +1,6 @@
 # [TASK011] — Reproducible dependency profiles (#725)
 
-**Status:** In Progress — implementation and local validation complete; PR publication pending
+**Status:** Completed for review — PR #785 published; merge/issue closure pending
 
 **Added:** 2026-10-20
 
@@ -27,7 +27,7 @@ claim #654's lightweight runtime or live inference is complete.
 | 11.1 | Audit baseline and #704 | Complete | 2026-10-20 | main 8d6b254; #704 head 5636167 only removes mandatory FAISS/hint |
 | 11.2 | Inputs, locks and mode checks | Complete | 2026-10-20 | Eight hash-locked profiles, pinned generator, preserved legacy manifest, main checks by mode |
 | 11.3 | Clean/repeat installation and focused checks | Complete | 2026-10-20 | Four fresh env combinations; pip checks/idempotent repeats; 85 existing methods; real library probes; corrupt hash rejected |
-| 11.4 | Documentation, issue update and PR | In Progress | 2026-10-20 | Setup guide and exact validation report ready; publish against main |
+| 11.4 | Documentation, issue update and PR | Complete | 2026-10-20 | Ready PR #785 targets main and closes #725 on merge; issue handoff read back |
 
 ## Log
 
@@ -68,3 +68,12 @@ claim #654's lightweight runtime or live inference is complete.
   runtime work; do not treat this as the integrated MVP behavior proof.
 - Updated README, Quickstart and dependency guide to use locked profiles and
   state current limits. Validation report: docs/testing/issue-725-dependency-profile-validation.md.
+- Published and attached [PR #785](https://github.com/dhar174/tiny_village/pull/785)
+  against main, with a closing reference for #725. Validated code/locks are in
+  bec88aac2a2b4b367ebb75a6340bb5f6240f4a11; subsequent edits are handoff docs.
+- Posted and read back the [#725 implementation handoff](https://github.com/dhar174/tiny_village/issues/725#issuecomment-6297885936).
+  Refreshed the dedicated status block and checked the three completed work
+  criteria while preserving their text and native dependencies. #725 remains
+  open until PR merge; no phase approval or Project field update supplied.
+- Additional real pandas/SciPy/scikit-learn calculations and an Agg plot pass
+  inside the NLP superset, supporting the optional analytics package boundary.

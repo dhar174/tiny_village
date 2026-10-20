@@ -6,7 +6,8 @@
   require FAISS and only visual requires Pygame. Four fresh env combinations,
   unchanged repeat installs, integrity rejection and 85 existing methods pass.
   Read docs/guides/DEPENDENCY_PROFILES.md and the #725 validation report.
-  Local implementation is ready for PR review; #654/#776 runtime boundaries,
+  Ready PR #785 targets main; #725 handoff/status is verified and stays open
+  until merge. #654/#776 runtime boundaries,
   GPU execution and model artifacts remain separate. No phase approval.
 
 - TASK010 / #724 is complete: #784 integrated the accepted contract to main
