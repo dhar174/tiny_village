@@ -107,7 +107,9 @@ class TestCIChecks(unittest.TestCase):
         command = [sys.executable, '-B', str(ROOT/'scripts/run_ci_checks.py'), '--profile','core',
                    '--artifacts', str(artifacts)]
         # Signal only the runner, not this test's process group.
-        process = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        environment = os.environ.copy()
+        environment.pop('GITHUB_STEP_SUMMARY', None)  # Controlled cancellation is not a real CI job.
+        process = subprocess.Popen(command, cwd=ROOT, env=environment, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         deadline = time.monotonic()+10
         while time.monotonic()<deadline and not list(artifacts.glob('batches/*/run.json')):
             if process.poll() is not None:
