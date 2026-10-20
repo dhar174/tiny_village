@@ -48,17 +48,33 @@ TinyVillage is a 2D simulation game where AI characters autonomously go about th
     ```bash
     cd tinyvillage
     ```
-3. Install the required packages with Python 3.12:
+3. Create an environment and install the locked core profile with Python 3.12:
     ```bash
-    python3.12 -m pip install -r requirements.txt
+    python3.12 -m venv .venv
+    . .venv/bin/activate
+    python -m pip install --require-hashes --only-binary=:all: -r requirements.txt
+    python -m pip check
     ```
+
+The default profile contains graph/planning/state dependencies. For Pygame,
+development tools or optional NLP/LLM/GPU capabilities, use the separate
+[dependency profiles](docs/guides/DEPENDENCY_PROFILES.md). Hash locks currently
+target Python 3.12 on Linux x86-64; native Windows/macOS support is unverified.
+The original broad manifest remains available as `requirements/legacy-full.txt`
+for historical/experimental feature paths.
 
 ### Running the Game
 
 To start the game, run the following command:
 ```bash
+python -m pip install --require-hashes --only-binary=:all: -r requirements/locks/visual-py312-linux-x86_64.txt
 python main.py
 ```
+
+The commands below are the current demo entry points. The legacy minimal demo
+uses mocked components and may finish with zero real actions; it does not yet
+prove the accepted MVP economic scenario. Renderer-free runtime construction
+and real optional-feature boundaries remain tracked in #654/#776.
 
 The game supports multiple modes:
 
@@ -93,7 +109,7 @@ For more detailed instructions, see the [Quickstart Guide](docs/guides/QUICKSTAR
 Comprehensive documentation is available in the `docs/` directory:
 
 - **[User Guides](docs/guides/)** - Getting started and usage guides
-  - [Quickstart Guide](docs/guides/QUICKSTART.md) - Get running in under 5 minutes
+  - [Quickstart Guide](docs/guides/QUICKSTART.md) - Installation and current demo entry points
   - [Checkpoint System Guide](docs/guides/QUICKSTART_CHECKPOINTS.md) - Save system usage
   - [LLM Integration Guide](docs/guides/LLM_INTEGRATION_USAGE_GUIDE.md) - Using LLM features
 

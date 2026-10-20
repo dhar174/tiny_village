@@ -285,3 +285,5 @@ compare_lda_tfidf.py
 
 # Durable startup-test diagnostics (review before sharing raw output).
 /.test-artifacts/
+/.venv/
+/.venv-*/

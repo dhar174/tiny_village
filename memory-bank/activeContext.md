@@ -1,13 +1,19 @@
 ## Current Work Focus
 
-- TASK010 / #724 has D014 acceptance with original-vision preservation
-  (2026-10-20). The fixed scenario is a release fixture, not a limit on the
-  shared simulation or broader character/social/economic/memory/LLM plans.
-  #782 merged to main, but #783 then merged into its old branch, leaving the
-  contract outside main. A focused integration PR carries the exact #783
-  commits and D014 guardrails to main; #724 stays open until that merge.
-  Next delivery task: #725 dependency profiles; UX planning #727 also follows
-  #724. No runtime changes, feature removals or new tests/benchmarks.
+- TASK011 / #725 implements reproducible dependencies from main 8d6b254
+  (2026-10-20). Eight hash locks separate core, Pygame/dev and optional feature
+  profiles; the full historical manifest is retained. Mode checks no longer
+  require FAISS and only visual requires Pygame. Four fresh env combinations,
+  unchanged repeat installs, integrity rejection and 85 existing methods pass.
+  Read docs/guides/DEPENDENCY_PROFILES.md and the #725 validation report.
+  Ready PR #785 targets main; #725 handoff/status is verified and stays open
+  until merge. #654/#776 runtime boundaries,
+  GPU execution and model artifacts remain separate. No phase approval.
+
+- TASK010 / #724 is complete: #784 integrated the accepted contract to main
+  at 8d6b254 and #724 closed. D014 preserves the original expansive vision;
+  scenario limits are fixture data. TASK011 now implements #725; UX planning
+  #727 also follows #724 with its own later design approval requirements.
 
 - #718 is complete: PR #706 merged and the issue closed on 2026-10-14.
 - TASK003 / #719 is complete: PR #777 merged as `0ba9061`; #719 closed.

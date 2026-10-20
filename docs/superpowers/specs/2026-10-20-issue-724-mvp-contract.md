@@ -5,8 +5,8 @@
 [#724](https://github.com/dhar174/tiny_village/issues/724). It defines agreed
 implementation and release-validation targets, not implemented behavior or
 measured performance. D013 selects both presentations; D014 accepts the
-contract while preserving the original TinyVillage vision. #724 awaits the
-integration PR because #783 merged into #782's old branch after #782 had merged.
+contract while preserving the original TinyVillage vision. Integration PR #784
+subsequently merged to main and closed #724; implementation remains downstream.
 Human decisions belong only in [docs/decisions.md](../../decisions.md).
 
 ## 1. Purpose, scope and recommendation

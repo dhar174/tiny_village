@@ -1,6 +1,6 @@
 # Tiny Village Quickstart Guide
 
-This guide will get you running a Tiny Village demo in under 5 minutes.
+This guide describes installation and the current Tiny Village demo entry points.
 
 ## Prerequisites
 
@@ -17,13 +17,22 @@ cd tiny_village
 
 ### 2. Install Minimum Dependencies
 ```bash
-python3.12 -m pip install -r requirements.txt
+python3.12 -m venv .venv
+. .venv/bin/activate
+python -m pip install --require-hashes --only-binary=:all: -r requirements.txt
+python -m pip check
 ```
 
-**Note**: Tiny Village now targets Python 3.12. The full `requirements.txt` is the
-supported dependency set for this quickstart; packages such as `transformers`
-and `spacy` are included for advanced features, but the minimal demo paths do
-not depend on those features being exercised.
+The default install is the locked core profile for Python 3.12/Linux x86-64.
+Add [visual, development or optional feature profiles](DEPENDENCY_PROFILES.md)
+as needed. NLP/LLM/GPU capabilities remain available through separate profiles;
+their model artifacts and hardware need independent validation.
+
+**Current runtime boundary:** the legacy minimal demo uses mocked components
+and may exit 0 with zero actions. It is not the accepted MVP economic loop.
+The visual application and broader integration tests have separate unresolved
+runtime/fixture work. See [the dependency validation report](../testing/issue-725-dependency-profile-validation.md)
+before interpreting a startup or test result as full gameplay readiness.
 
 ## Running Your First Demo
 
@@ -40,10 +49,9 @@ python main.py --mode minimal
 - Action execution examples
 - Performance analytics
 
-**Time**: ~5 seconds
 
 ### Option 2: Integration Tests
-Validate all systems are working:
+Run the existing integration tests (known fixture/runtime failures are separate):
 ```bash
 python main.py --mode test
 ```
@@ -53,11 +61,11 @@ python main.py --mode test
 - 9+ tests passing
 - System validation report
 
-**Time**: ~5 seconds
 
 ### Option 3: Full Visual Demo
 Pygame window with characters moving on a map:
 ```bash
+python -m pip install --require-hashes --only-binary=:all: -r requirements/locks/visual-py312-linux-x86_64.txt
 python main.py --mode visual
 ```
 
@@ -74,14 +82,13 @@ python main.py --mode visual
 - `L` - Load game
 - Click characters to select
 
-**Time**: Runs continuously until quit
 
 ## Common Issues & Solutions
 
 ### "No module named 'pygame'"
-**Solution**: Install dependencies
+**Solution**: Install the visual profile in your activated virtual environment
 ```bash
-python3.12 -m pip install -r requirements.txt
+python -m pip install --require-hashes --only-binary=:all: -r requirements/locks/visual-py312-linux-x86_64.txt
 ```
 
 ### "Failed to initialize MapController"

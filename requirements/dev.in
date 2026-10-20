@@ -1,0 +1,4 @@
+-r core.in
+pytest>=8.1.1,<10
+# Lock the resolver used to regenerate these requirements.
+uv==0.12.23

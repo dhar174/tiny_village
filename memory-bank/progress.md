@@ -24,13 +24,21 @@
 
 ## Current Status
 
+- As of 2026-10-20, TASK011 / #725 has eight SHA-256 requirement locks and
+  mode-aware checks, with full legacy dependencies preserved separately. Fresh
+  core/dev+visual/NLP/CPU-LLM installs and unchanged repeats pass, as do pip
+  checks, 85 existing methods and real dependency probes. GPU resolution is
+  unexecuted; lightweight runtime/model/platform readiness remains separate.
+  Setup and validation are documented in ready PR #785, targeting main. #725
+  issue comment/status read-back is verified; issue closure follows merge.
+
 - As of 2026-10-20, D014 accepts TASK010 / #724's MVP contract with the
   original expansive vision preserved. Scenario limits are fixture data;
   optional capabilities and later roadmap work remain intact. D013 confirms
   both presentations. Targets are not implemented or benchmarked guarantees.
   #782 merged to main before #783 merged into its old branch, so a focused
-  integration PR is required. #724 remains open until that integration.
-  Next is #725: reproducible core/development and optional feature profiles.
+  integration PR was required. #784 subsequently merged as 8d6b254 and closed
+  #724; TASK011 now implements the next task, #725, without feature removal.
 
 - As of 2026-10-16, TASK009 verifies merged main 77e4b94 under D009. All 94
   method summaries report success and all three probes exit 0, with one
