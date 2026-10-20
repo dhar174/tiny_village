@@ -86,9 +86,9 @@ python main.py --mode visual
 ## Common Issues & Solutions
 
 ### "No module named 'pygame'"
-**Solution**: Install dependencies
+**Solution**: Install the visual profile in your activated virtual environment
 ```bash
-python3.12 -m pip install -r requirements.txt
+python -m pip install --require-hashes --only-binary=:all: -r requirements/locks/visual-py312-linux-x86_64.txt
 ```
 
 ### "Failed to initialize MapController"

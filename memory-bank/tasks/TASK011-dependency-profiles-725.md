@@ -28,6 +28,7 @@ claim #654's lightweight runtime or live inference is complete.
 | 11.2 | Inputs, locks and mode checks | Complete | 2026-10-20 | Eight hash-locked profiles, pinned generator, preserved legacy manifest, main checks by mode |
 | 11.3 | Clean/repeat installation and focused checks | Complete | 2026-10-20 | Four fresh env combinations; pip checks/idempotent repeats; 85 existing methods; real library probes; corrupt hash rejected |
 | 11.4 | Documentation, issue update and PR | Complete | 2026-10-20 | Ready PR #785 targets main and closes #725 on merge; issue handoff read back |
+| 11.5 | PR #785 Pygame recovery review fix | Complete | 2026-10-20 | Quickstart selects the visual lock; fresh core-to-visual install and SDL-dummy probe pass |
 
 ## Log
 
@@ -77,3 +78,12 @@ claim #654's lightweight runtime or live inference is complete.
   open until PR merge; no phase approval or Project field update supplied.
 - Additional real pandas/SciPy/scikit-learn calculations and an Agg plot pass
   inside the NLP superset, supporting the optional analytics package boundary.
+- Reviewed PR #785's sole unresolved finding, discussion_r4328579247. The
+  Pygame troubleshooting command still selected the core-only requirements.
+  Changed it to the same hash-verified visual lock used by the visual demo,
+  explicitly using the activated virtual environment's Python.
+- In a new isolated Python 3.12 environment, installed core and confirmed
+  Pygame absent, then ran the exact corrected recovery command successfully.
+  pip check and real Pygame 2.6.1 import/display/draw/shutdown with SDL dummy
+  drivers pass. Install logs: /workspace/scratch/issue-725/review/.
+  Runtime code and requirement locks are unchanged by this review fix.
