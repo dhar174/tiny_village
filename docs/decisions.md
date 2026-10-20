@@ -283,6 +283,18 @@ should link to this file rather than maintain separate decision records.
 - **Limits:** This is implementation authorization, not phase-gate approval,
   gameplay acceptance, live-model validation, or permission to merge the PR.
 
+### D017 — Implement supported-profile CI; ML checks manual only
+
+- **Date:** 2026-10-20 (America/New_York).
+- **Decision-maker:** dhar174.
+- **Decision:** Implement the [reviewed #726 plan](superpowers/plans/2026-10-20-issue-726-supported-profile-ci.md)
+  with required core/dev/visual checks and manually triggered NLP/CPU-LLM checks.
+  No ML schedule. Preserve D015's required final-product AI scope.
+- **Confirmation:** Selected “Manual only,” then “Yes, implement this plan.”
+- **Boundary:** Human PR review precedes merge. Verify hosted main/manual runs
+  and effective required-check enforcement before closing #726. No automatic
+  merge or phase-gate approval; gameplay and inference remain separate.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
