@@ -1,7 +1,7 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK010](TASK010-mvp-contract-724.md) Define MVP scenario, support matrix and release budgets (#724) - researched draft; D013 selects both presentations; remaining contract pending review (Updated: 2026-10-20)
+- [TASK010](TASK010-mvp-contract-724.md) Define MVP scenario, support matrix and release budgets (#724) - draft PR #783 published, stacked on #782; D013 selects both presentations; remaining contract pending review (Updated: 2026-10-20)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending
