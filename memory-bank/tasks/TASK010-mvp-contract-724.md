@@ -1,6 +1,6 @@
 # [TASK010] — Define the MVP scenario, support matrix and release budgets (#724)
 
-**Status:** In Progress — researched draft prepared; human agreement pending
+**Status:** In Progress — draft PR #783 published; human agreement pending
 
 **Added:** 2026-10-20
 
@@ -28,7 +28,7 @@ against codex/phase1-post-merge-review, with #782 as a merge prerequisite.
 | 10.1 | Verify repository and prerequisites | Complete | 2026-10-20 | main 77e4b94; #722 Approved/closed under D012; #724 open |
 | 10.2 | Research runtime and related issues | Complete | 2026-10-20 | Static reads of CLI/demo, strategy/actions, time, UI/performance, dependencies and roadmap tasks |
 | 10.3 | Draft scenario/support/budgets | Complete | 2026-10-20 | docs/superpowers/specs/2026-10-20-issue-724-mvp-contract.md; all choices proposed |
-| 10.4 | Review and publish draft | In Progress | 2026-10-20 | Check consistency, issue ownership, source links and stacked PR diff; link on #724 |
+| 10.4 | Review and publish draft | Complete | 2026-10-20 | Draft PR #783 stacked on #782; #724 comment and additive status block verified |
 | 10.5 | Obtain human agreement | Pending | 2026-10-20 | Approve exact spec revision or revise; #724 acceptance criteria remain unchecked |
 
 ## Progress log
@@ -55,3 +55,12 @@ against codex/phase1-post-merge-review, with #782 as a merge prerequisite.
 - Mapped implementation and design/engineering/release reviews to existing
   roadmap issues. Drafting does not close #724, approve Phase 2's gate, modify
   native dependency edges or claim Project custom fields are synchronized.
+- Published and attached [draft PR #783](https://github.com/dhar174/tiny_village/pull/783),
+  base codex/phase1-post-merge-review. Its focused diff contains six Markdown
+  files; #782 must merge first, followed by retargeting/rechecking this PR.
+- Posted and read back the [#724 draft handoff](https://github.com/dhar174/tiny_village/issues/724#issuecomment-6296391132)
+  and added a dedicated draft-status block while preserving the entire original
+  issue body. #724 remains open with original acceptance checkboxes unchecked.
+- Checked document link targets, explicit future-command labels, fixture
+  arithmetic and scope/measurement consistency. No tests/lint or runtime runs.
+  Publication receipts are in /workspace/scratch/issue-724/publication-receipt.json.

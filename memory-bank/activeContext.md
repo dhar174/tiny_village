@@ -5,7 +5,8 @@
   D013 confirms both headless and Pygame presentations; other details remain
   proposed. No new runtime/tests/benchmarks or downstream implementation.
   Branch codex/issue-724-mvp-contract is based on open PR #782 for a focused
-  stacked documentation review; #724 stays open pending contract agreement.
+  stacked documentation review, published as draft PR #783; #724 stays open
+  pending contract agreement. #724 comment/status read-back is verified.
 
 - #718 is complete: PR #706 merged and the issue closed on 2026-10-14.
 - TASK003 / #719 is complete: PR #777 merged as `0ba9061`; #719 closed.

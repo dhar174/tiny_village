@@ -29,7 +29,8 @@
   targets, UX/UI constraints and measurable release budgets. D013 confirms
   headless plus Pygame presentations; remaining choices are unapproved.
   No application runs or benchmark claims. #724 remains open; its draft is
-  stacked on open evidence PR #782 rather than silently merging those docs.
+  published in draft PR #783 stacked on open evidence PR #782. Issue #724
+  comment/status is verified, with its original acceptance text preserved.
 
 - As of 2026-10-16, TASK009 verifies merged main 77e4b94 under D009. All 94
   method summaries report success and all three probes exit 0, with one
