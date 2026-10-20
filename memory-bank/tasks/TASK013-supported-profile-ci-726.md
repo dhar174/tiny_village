@@ -1,6 +1,6 @@
 # SDD ledger — plan: docs/superpowers/plans/2026-10-20-issue-726-supported-profile-ci.md
 
-**Status:** In progress
+**Status:** PR #789 ready for human review; #726 open pending post-merge rollout
 **Added/Updated:** 2026-10-20
 
 ## Request / approved scope
@@ -15,7 +15,7 @@ required in the final product (D015).
 2. Bounded runner: complete. Produces --profile / --artifacts and exit/report contract.
 3. Required workflow: implemented. Consumes runner profiles and success-only gate.
 4. Manual ML workflow: implemented. Consumes nlp/llm-cpu profiles; never scheduled.
-5. Validation/review/PR: pending. Hosted main/manual/enforcement rollout follows merge.
+5. Validation/review/PR: complete for publication. Human review and hosted main/manual/enforcement rollout follow merge.
 
 Pre-flight: tasks 3/4 consume task 2's exact profile names and artifact directory.
 Both require existing hash locks; no application runtime API changes.
@@ -75,3 +75,10 @@ Both require existing hash locks; no application runtime API changes.
   3/3 CLI probes pass, zero unexpected skips/profile failures/timeouts.
   Fresh required environments/pip checks and final actionlint pass retained.
   Runtime/test/workflow/lock hashes published in issue-726-local-results.json.
+
+- Published PR #789: https://github.com/dhar174/tiny_village/pull/789 . Issue #726
+  body and evidence comment updated; issue remains open, no closing PR keyword.
+- First hosted PR run 39501297078 passes core/dev/visual and Python CI required:
+  128 cases + 3 probes, no skips/failures/errors. All artifact ZIP digests match
+  GitHub metadata. Publisher GitHub Actions app ID 15368. No enforcement change
+  or manual workflow dispatch before merge. Hosted receipt published.

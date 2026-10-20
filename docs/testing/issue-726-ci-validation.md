@@ -86,9 +86,18 @@ incomplete-result contract, so this is test cleanup rather than missing behavior
 
 ## Hosted rollout and completion boundary
 
-Hosted PR results, main-run results, manual dispatch evidence and actual ruleset
-activation must be recorded as they become available. They are currently pending;
-local pass results do not establish enforcement. The PR references #726 without
+[First hosted PR run](https://github.com/dhar174/tiny_village/actions/runs/39501297078)
+at branch head `ad89f83` passed core, dev, visual and `Python CI required`.
+Downloaded all three artifacts and verified each ZIP SHA-256 against GitHub's
+published digest. Structured hosted results report **128 cases and three CLI
+probes**, no skips/failures/errors; all install, pip-check and upload steps pass.
+The four optional ML cases are separate local evidence, not part of that PR run.
+[Hosted receipt](evidence/issue-726-hosted-pr-results.json) retains actual executed
+revisions, Python/platform, counts, job links and verified archive digests.
+The check publisher is GitHub Actions app ID **15368**.
+
+Hosted main-run results, manual dispatch evidence and actual ruleset activation
+remain pending merge. A passing PR run does not establish enforcement. The PR references #726 without
 an automatic closing keyword. Keep it open until the post-merge rollout passes.
 
 [Operator instructions](supported-profile-ci.md#required-check-activation-and-human-handoff)

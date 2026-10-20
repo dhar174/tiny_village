@@ -3,8 +3,9 @@
 - TASK013 / #726 implements approved D017: required core/dev/visual CI and
   manual-only NLP/CPU-LLM checks. #788 merged at eb5f4c9; #654/#776 are closed.
   Post-merge 47-method verification and CLI 0/0/2 pass. Local CI profiles pass
-  132 cases plus three CLI probes after review corrections; hosted runs and activation
-  remain pending. See tasks/TASK013-supported-profile-ci-726.md.
+  132 cases plus three CLI probes after review corrections. PR #789 is ready;
+  first hosted required profiles pass 128 cases + 3 probes. Main/manual runs
+  and enforcement remain pending merge. See tasks/TASK013-supported-profile-ci-726.md.
 
 - The repository has established architecture and documentation for the core
   simulation loop: events, strategy updates, GOAP planning, action execution,

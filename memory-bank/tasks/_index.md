@@ -1,7 +1,7 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK013](TASK013-supported-profile-ci-726.md) Supported-profile CI (#726) - D017 implementation in progress; hosted enforcement pending (Updated: 2026-10-20)
+- [TASK013](TASK013-supported-profile-ci-726.md) Supported-profile CI (#726) - PR #789 ready; hosted PR checks pass, post-merge enforcement pending (Updated: 2026-10-20)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending
