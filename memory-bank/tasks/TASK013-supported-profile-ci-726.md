@@ -12,9 +12,9 @@ required in the final product (D015).
 ## Tasks / shared interfaces
 
 1. Post-merge baseline and plan: complete, base eb5f4c9 (#788 merged).
-2. Bounded runner: pending. Produces --profile / --artifacts and exit/report contract.
-3. Required workflow: pending. Consumes runner profiles and success-only gate.
-4. Manual ML workflow: pending. Consumes nlp/llm-cpu profiles; never scheduled.
+2. Bounded runner: complete. Produces --profile / --artifacts and exit/report contract.
+3. Required workflow: implemented. Consumes runner profiles and success-only gate.
+4. Manual ML workflow: implemented. Consumes nlp/llm-cpu profiles; never scheduled.
 5. Validation/review/PR: pending. Hosted main/manual/enforcement rollout follows merge.
 
 Pre-flight: tasks 3/4 consume task 2's exact profile names and artifact directory.
@@ -68,3 +68,10 @@ Both require existing hash locks; no application runtime API changes.
   by the supervisor, duplicating missing-file coverage. New child-written
   partial-report regression covers the real contract; original duplicate
   assertion remains a test-cleanup opportunity, not an untested success path.
+
+- Final: fixed all three Important findings — new nested timeout/watchdog,
+  XFAIL/XPASS and child-written incomplete-code regressions RED→GREEN; 18/18
+  runner methods pass. Full corrected five-profile matrix 132/132 cases and
+  3/3 CLI probes pass, zero unexpected skips/profile failures/timeouts.
+  Fresh required environments/pip checks and final actionlint pass retained.
+  Runtime/test/workflow/lock hashes published in issue-726-local-results.json.

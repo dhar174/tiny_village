@@ -45,12 +45,15 @@ which environment actually ran.
 ## Results and deadlines
 
 The standard-library parent runs explicit batches in separate owned POSIX
-sessions. It captures stdout/stderr to durable files, uses a 120-second parent
+sessions. A scoped registry records supervisor-created nested sessions before
+their workloads execute, so a worker watchdog exit cannot orphan them. Closed
+owners reject late startup; Linux process identities guard against PID reuse. It captures stdout/stderr to durable files, uses a 120-second parent
 batch deadline, and terminates owned descendants on completion, timeout or
 cancellation. Aggregate unittest workers emit diagnostics at 110 seconds;
 pytest smoke keeps 115/120. Existing inner graph/runtime checks keep 20/25 and
 cache checks 25/30. Standalone CLI probes use the existing durable capture helper
-with 20/25. Cleanup has a separate bounded grace period. Unrelated processes
+with 20/25. Cleanup has a separate two-second TERM grace and up to one second to confirm
+SIGKILL quiescence; zombies awaiting host reaping are not running work. Unrelated processes
 are not signalled. Workflow ceilings are 20 minutes for required profiles and
 40 minutes for manual ML; superseded PR runs are cancelled, main runs are not.
 
@@ -60,7 +63,8 @@ actual test counts and CLI probe counts. Each batch has `run.json`, result JSON,
 stdout/stderr and, where applicable, JUnit XML. Existing cold-child metadata and
 watchdog output remain under `children/`. Unittest methods and pytest cases are
 counted as executed; failing subtests are reported as failures without inflating
-method counts. Controlled failures inside runner regressions are test fixtures,
+method counts. Pytest reporting hooks also retain XFAIL/XPASS outcomes that
+JUnit alone does not distinguish; neither can silently pass the gate. Controlled failures inside runner regressions are test fixtures,
 not failed application checks.
 
 A profile passes only when all selected batches exit successfully with complete,

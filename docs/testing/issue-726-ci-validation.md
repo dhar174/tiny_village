@@ -52,6 +52,38 @@ assignment into a runner step. Both files now validate, exit 0. Original output
 is preserved. This validates workflow structure, not hosted execution. No style
 linting, dependency regeneration or full legacy-suite run was added.
 
+## Independent review and final verification
+
+One independent whole-branch review at `ab22ce2` found three Important issues,
+no Critical findings, one Minor observation, and no declined findings. All three
+Important issues were fixed in one pass in `586fbd1`:
+
+1. Track nested supervisor-owned sessions durably so timeout/watchdog exit does
+   not leave a TERM-resistant descendant running; preserve unrelated processes.
+2. Count pytest XFAIL/XPASS via reporting hooks and reject unexpected successes.
+3. Require complete integer probe exit codes; missing/null/boolean values fail.
+
+Review regressions were observed RED: six failed observations across 17 methods
+(including subcases), plus a separate pure-XPASS false-green regression. The
+first fix run retained an asynchronous SIGKILL-delivery failure; bounded
+quiescence now waits for live group members to stop. All 18 runner methods pass.
+
+The complete five-profile selection was rerun on `586fbd1`: **132 cases and
+three actual CLI probes pass**, no unexpected skips, profile failures or
+timeouts. Counts: core 40 + three probes, dev 20, visual 68, NLP 2, CPU-LLM 2.
+All five top-level commands exit 0. Workflow structural validation still exits 0.
+No second independent review was requested. Original failures and the earlier
+127-case matrix remain separate; neither is relabeled as a clean final run.
+
+Published receipts: [merged baseline](evidence/issue-726-merged-baseline.json)
+and [final profile commands/results/install receipts/source hashes](evidence/issue-726-local-results.json).
+Full local batch/child artifacts remain in `/workspace/scratch/issue-726/`.
+
+**Deferred minor:** one original test prewrites RUNNING before the supervisor
+removes stale reports, duplicating missing-file coverage. It remains a redundant
+assertion. A new child-written partial-report regression covers the actual
+incomplete-result contract, so this is test cleanup rather than missing behavior.
+
 ## Hosted rollout and completion boundary
 
 Hosted PR results, main-run results, manual dispatch evidence and actual ruleset

@@ -3,7 +3,7 @@
 - TASK013 / #726 implements approved D017: required core/dev/visual CI and
   manual-only NLP/CPU-LLM checks. #788 merged at eb5f4c9; #654/#776 are closed.
   Post-merge 47-method verification and CLI 0/0/2 pass. Local CI profiles pass
-  127 cases plus three CLI probes; hosted runs and required-check activation
+  132 cases plus three CLI probes after review corrections; hosted runs and activation
   remain pending. See tasks/TASK013-supported-profile-ci-726.md.
 
 - Product requirement clarification (2026-10-20): apply [D015](../docs/decisions.md#d015--require-ai-capabilities-in-the-final-product)
