@@ -2604,16 +2604,13 @@ class MemoryManager:
             with open(filename, "rb") as f:
                 loaded_memories = pickle.load(f)
             
-            # Validate loaded object
-            if not hasattr(loaded_memories, '__class__'):
-                logging.error("Loaded object is not a valid class instance")
+            if not isinstance(loaded_memories, FlatMemoryAccess):
+                logging.error("Loaded object is not a FlatMemoryAccess instance")
                 return False
-            
-            # Check if it's the expected type (more flexible than isinstance)
-            if not hasattr(loaded_memories, 'faiss_index'):
-                logging.warning("Loaded object might not be a FlatMemoryAccess instance")
-                # Continue anyway as it might still be usable
-            
+
+            # Feature guards must consult the receiving manager, not the full
+            # manager reachable through a serialized store's old ownership link.
+            loaded_memories.manager = self
             self.flat_access = loaded_memories
             
             # Reset the index load filename to prevent conflicts
@@ -5667,6 +5664,7 @@ class MemoryManager:
         #         keywords = keywords.union(synonyms)
         return keywords
 
+    @_requires_memory_feature('analysis')
     def extract_themes(self, srl_features):
         # Apply NMF for theme extraction
         tfidf = self.tfidf_vectorizer.fit_transform(srl_features)

@@ -5,6 +5,58 @@ from tests.test_memory_runtime import NO_AI_IMPORTS
 
 
 class TestHeadlessRuntime(FreshPythonTestCase):
+    def test_configured_ai_load_failure_is_recorded_and_not_retried_per_turn(self):
+        self.run_python('''
+from unittest.mock import patch
+from tiny_brain_io import TinyBrainIO
+from tiny_gameplay_controller import GameplayController
+from tiny_graph_manager import GraphManager
+controller = GameplayController(GraphManager(), {'headless':True,
+    'memory':{'mode':'basic'}, 'characters':{'count':1,'use_llm':True},
+    'checkpoint':{'auto_enabled':False}})
+try:
+    strategy = controller.strategy_manager
+    strategy.model_name = 'configured-model'
+    character = next(iter(controller.characters.values()))
+    cause = OSError('Controlled missing model assets')
+    with patch.object(TinyBrainIO, 'load_model', side_effect=cause) as loader:
+        controller._execute_character_actions(character)
+        controller._execute_character_actions(character)
+    assert loader.call_count == 1, loader.call_count
+    assert strategy.use_llm
+    assert strategy.llm_status == 'unavailable'
+    assert strategy.llm_load_error is cause
+    assert loader.call_args.args == ('configured-model',)
+finally:
+    controller.close()
+''')
+
+    def test_configured_ai_reuses_ready_real_provider(self):
+        self.run_python('''
+from unittest.mock import patch
+from tiny_brain_io import TinyBrainIO
+from tiny_gameplay_controller import GameplayController
+from tiny_graph_manager import GraphManager
+controller = GameplayController(GraphManager(), {'headless':True,
+    'memory':{'mode':'basic'}, 'characters':{'count':1,'use_llm':True},
+    'checkpoint':{'auto_enabled':False}})
+def loaded(provider, model_name):
+    provider.model = object()  # External model load boundary only; no inference claimed.
+try:
+    strategy = controller.strategy_manager
+    character = next(iter(controller.characters.values()))
+    with patch.object(TinyBrainIO, 'load_model', autospec=True, side_effect=loaded) as loader:
+        controller._execute_character_actions(character)
+        provider = strategy.brain_io
+        controller._execute_character_actions(character)
+    assert loader.call_count == 1, loader.call_count
+    assert isinstance(provider, TinyBrainIO)
+    assert strategy.brain_io is provider
+    assert strategy.llm_status == 'ready'
+finally:
+    controller.close()
+''')
+
     def test_invalid_character_input_raises_instead_of_exiting_process(self):
         self.run_python(NO_AI_IMPORTS + '''
 from tiny_gameplay_controller import GameplayController
@@ -136,6 +188,39 @@ with patch('sys.argv',['main.py','--mode','minimal','--headless']), \
 
 
 class TestVisualLifecycle(FreshPythonTestCase):
+    def test_borrowed_independent_subsystems_survive_cleanup(self):
+        self.run_python(NO_AI_IMPORTS.replace("'pygame', ", '') + '''
+import os, tempfile
+from pathlib import Path
+import pygame
+from tiny_gameplay_controller import GameplayController
+from tiny_graph_manager import GraphManager
+root = Path.cwd()
+sys.path.insert(0, str(root))
+config = {'memory':{'mode':'basic'}, 'characters':{'count':0,'use_llm':False},
+    'checkpoint':{'auto_enabled':False},
+    'map':{'image_path':str(root/'assets/default_map.png')}}
+with tempfile.TemporaryDirectory() as directory:
+    os.chdir(directory)
+    pygame.quit()
+    pygame.display.init()
+    foreign_display = pygame.display.set_mode((100,100))
+    borrower = GameplayController(GraphManager(), config)
+    assert borrower.screen is foreign_display
+    borrower.close()
+    assert pygame.display.get_init()
+    assert pygame.display.get_surface() is foreign_display
+    assert not pygame.font.get_init()
+    pygame.quit()
+    pygame.font.init()
+    font_borrower = GameplayController(GraphManager(), config)
+    font_borrower.close()
+    assert pygame.font.get_init()
+    assert not pygame.display.get_init()
+    pygame.quit()
+assert not (blocked & sys.modules.keys())
+''')
+
     def test_real_renderer_and_owned_cleanup(self):
         self.run_python(NO_AI_IMPORTS.replace("'pygame', ", '') + '''
 import os, tempfile
@@ -152,7 +237,7 @@ with tempfile.TemporaryDirectory() as directory:
     os.chdir(directory)
     pygame.quit()
     controller = GameplayController(GraphManager(), config)
-    assert pygame.get_init()
+    assert pygame.display.get_init() and pygame.font.get_init()
     assert controller.screen is not None and controller.map_controller is not None
     assert controller.ui_fonts and controller.ui_panels
     controller.render()

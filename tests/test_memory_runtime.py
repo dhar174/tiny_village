@@ -18,6 +18,17 @@ sys.meta_path.insert(0, NoAIImports())
 
 
 class TestLazyMemory(FreshPythonTestCase):
+    def test_public_integration_helper_preserves_requested_lazy_ai(self):
+        self.run_python(NO_AI_IMPORTS + '''
+from llm_integration_utils import setup_full_llm_integration
+enabled, strategy = setup_full_llm_integration([], [], 'configured-model')
+assert strategy.use_llm
+assert strategy.model_name == 'configured-model'
+assert strategy.llm_status == 'not_initialized'
+assert strategy.brain_io is None
+assert not (blocked & sys.modules.keys())
+''')
+
     def test_import_does_not_initialize_ai(self):
         self.run_python(NO_AI_IMPORTS + '''
 import tiny_memories as memory
@@ -91,6 +102,7 @@ manager = MemoryManager(clock, mode='basic')
 operations = [
     lambda: manager.extract_entities('Ada walked home'),
     lambda: manager.extract_keywords('Ada walked home'),
+    lambda: manager.extract_themes(['apple fruit', 'dog animal']),
     lambda: manager.retrieve_memories('home'),
     lambda: manager.get_query_embedding('home'),
     lambda: manager.flat_access.initialize_faiss_index(384),
@@ -125,6 +137,39 @@ except MemoryFeatureUnavailableError as error:
 else:
     raise AssertionError('Missing NLP feature silently succeeded')
 assert manager.get_capabilities()['nlp'] == 'unavailable'
+try:
+    manager.extract_themes(['apple fruit', 'dog animal'])
+except MemoryFeatureUnavailableError as error:
+    assert isinstance(error.__cause__, ImportError)
+else:
+    raise AssertionError('Theme extraction bypassed lazy analysis')
+assert manager.get_capabilities()['analysis'] == 'unavailable'
+''')
+
+    def test_loaded_flat_store_obeys_receiving_basic_mode(self):
+        self.run_python(NO_AI_IMPORTS + '''
+import pickle, tempfile
+from pathlib import Path
+from tiny_memories import Memory, MemoryManager, MemoryFeatureUnavailableError
+from tiny_time_manager import GameCalendar, GameTimeManager
+clock = GameTimeManager(GameCalendar())
+source = MemoryManager(clock)
+source.add_memory(Memory('Saved full-mode record'))
+receiver = MemoryManager(clock, mode='basic')
+with tempfile.TemporaryDirectory() as directory:
+    filename = Path(directory) / 'flat.pkl'
+    filename.write_bytes(pickle.dumps(source.flat_access))
+    assert receiver.load_all_flat_access_memories_from_file(filename)
+assert receiver.flat_access.manager is receiver
+assert receiver.flat_access.get_recent_memories()[0].description == 'Saved full-mode record'
+try:
+    receiver.flat_access.initialize_faiss_index(3, 'ip')
+except MemoryFeatureUnavailableError as error:
+    assert 'basic' in str(error)
+else:
+    raise AssertionError('Restored store bypassed receiving basic mode')
+assert receiver.get_capabilities()['vector_index'] == 'disabled'
+assert not (blocked & sys.modules.keys())
 ''')
 
     def test_basic_state_restores_without_importing_ai(self):

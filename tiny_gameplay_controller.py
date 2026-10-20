@@ -1747,7 +1747,7 @@ class GameplayController:
         """Initialize the gameplay controller with improved error handling and configuration."""
         self.config = deepcopy(config or {})
         self.headless = bool(self.config.get("headless", False))
-        self._owns_pygame = self._owns_display = self._owns_font = False
+        self._owns_display = self._owns_font = False
         self._temporary_checkpoint_directory = None
         self.screen = self.clock = self.map_controller = None
         self.ui_panels = {}
@@ -1939,9 +1939,11 @@ class GameplayController:
         import pygame
         from tiny_map_controller import MapController
         try:
-            self._owns_pygame = not pygame.get_init()
-            if self._owns_pygame:
-                pygame.init()
+            # Initialize only the subsystems this renderer needs. Top-level
+            # get_init() does not identify independently initialized resources.
+            self._owns_display = not pygame.display.get_init()
+            if self._owns_display:
+                pygame.display.init()
             self._owns_font = not pygame.font.get_init()
             if self._owns_font:
                 pygame.font.init()
@@ -1950,7 +1952,6 @@ class GameplayController:
                 self.screen = pygame.display.set_mode((
                     self.config.get("screen_width", 800), self.config.get("screen_height", 600)
                 ))
-                self._owns_display = True
                 pygame.display.set_caption("Tiny Village")
             self.clock = pygame.time.Clock()
             map_config = self.config.get("map", {})
@@ -1968,14 +1969,11 @@ class GameplayController:
         """Release owned resources; safe for headless, failed and repeated cleanup."""
         self.running = False
         if pygame is not None:
-            if self._owns_pygame:
-                pygame.quit()
-            else:
-                if self._owns_display:
-                    pygame.display.quit()
-                if self._owns_font:
-                    pygame.font.quit()
-        self._owns_pygame = self._owns_display = self._owns_font = False
+            if self._owns_display:
+                pygame.display.quit()
+            if self._owns_font:
+                pygame.font.quit()
+        self._owns_display = self._owns_font = False
         self.screen = self.clock = self.map_controller = None
         self.ui_panels = {}
         self.ui_fonts = {}
@@ -3954,41 +3952,14 @@ class GameplayController:
             bool: True if turn processed successfully, False otherwise
         """
         try:
-            from tiny_prompt_builder import PromptBuilder
-            from tiny_brain_io import TinyBrainIO
-            from tiny_output_interpreter import OutputInterpreter
-            from tiny_goap_system import GOAPPlanner
-            
             logger.info(f"Processing LLM-driven turn for {character.name}")
-            
-            # Step 1: Initialize LLM components with error handling
-            prompt_builder = None
-            brain_io = None
-            output_interpreter = None
-            goap_planner = None
-            
-            try:
-                # Initialize PromptBuilder with memory manager if available
-                memory_manager = getattr(self, 'memory_manager', None)
-                prompt_builder = PromptBuilder(character, memory_manager)
-                
-                # Initialize output interpreter
-                output_interpreter = OutputInterpreter(self.graph_manager)
-                
-                # Initialize GOAP planner
-                goap_planner = GOAPPlanner(self.graph_manager)
-                
-                # Initialize LLM brain - use fallback if not available
-                try:
-                    brain_io = TinyBrainIO("alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2")
-                except Exception as e:
-                    logger.warning(f"Could not initialize LLM brain: {e}. Using fallback decision making.")
-                    brain_io = None
-                    
-            except ImportError as e:
-                logger.warning(f"LLM components not available: {e}. Falling back to basic actions.")
+            # Share the configured provider and its availability state across
+            # characters/turns; failed loads must not be retried every turn.
+            if self.strategy_manager is None or not self.strategy_manager._ensure_llm():
+                logger.warning("Configured LLM provider unavailable; using basic actions")
                 return self._execute_fallback_character_action(character)
-                
+            goap_planner = self.strategy_manager.goap_planner
+
             # Step 2: Get available actions from strategy manager and GOAP
             potential_actions = []
             try:
