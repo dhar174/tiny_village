@@ -97,3 +97,11 @@ startup/event/memory checks are selected; gameplay proof stays #751/#658.
   and guidance. Both issue bodies/checklists and evidence comments synchronized;
   issues remain open until merge. No human phase decision was recorded.
 - PR: https://github.com/dhar174/tiny_village/pull/788
+
+- PR inline review 4329410028: reproduced a leaked controller-created window on
+  an initialized borrowed display with no prior surface. Fixed in 6543c67 by
+  tracking surface ownership and restoring the initialized/windowless host state.
+  Borrowed/replaced host windows survive; failed startup and double cleanup pass.
+  Focused RED→GREEN verification: 47 methods pass, zero skips/timeouts. Original
+  four-method run retained one failure. Earlier 112-execution matrix is separate;
+  docs/testing/evidence/issue-654-pr-review-results.json records this correction.

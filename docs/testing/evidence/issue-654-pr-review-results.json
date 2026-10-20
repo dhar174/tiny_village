@@ -1,0 +1,72 @@
+{
+  "runtime_revision": "6543c67a12f3a9e2ad4f9ee1940bd758abb502f3",
+  "review_comment": "https://github.com/dhar174/tiny_village/pull/788#discussion_r4329410028",
+  "red": {
+    "exit_code": 1,
+    "executed": 4,
+    "failures": 1,
+    "retained_output": "test_borrowed_independent_subsystems_survive_cleanup (tests.test_lightweight_runtime.TestVisualLifecycle.test_borrowed_independent_subsystems_survive_cleanup) ... ok\ntest_created_surface_on_borrowed_display_is_released (tests.test_lightweight_runtime.TestVisualLifecycle.test_created_surface_on_borrowed_display_is_released) ... FAIL\ntest_host_replacement_surface_survives_controller_cleanup (tests.test_lightweight_runtime.TestVisualLifecycle.test_host_replacement_surface_survives_controller_cleanup) ... ok\ntest_real_renderer_and_owned_cleanup (tests.test_lightweight_runtime.TestVisualLifecycle.test_real_renderer_and_owned_cleanup) ... ok\n\n======================================================================\nFAIL: test_created_surface_on_borrowed_display_is_released (tests.test_lightweight_runtime.TestVisualLifecycle.test_created_surface_on_borrowed_display_is_released)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/tiny_village/tests/test_lightweight_runtime.py\", line 192, in test_created_surface_on_borrowed_display_is_released\n    self.run_python(NO_AI_IMPORTS.replace(\"'pygame', \", '') + '''\n  File \"/workspace/tiny_village/tests/test_graph_initialization.py\", line 37, in run_python\n    self.assertEqual(\nAssertionError: 1 != 0 : Child exited 1; artifacts: /workspace/scratch/issue-654/review-4329410028/artifacts/child-9vx70hwd\n\nTraceback (most recent call last):\n  File \"<string>\", line 15, in <module>\n  File \"<string>\", line 13, in _tiny_capture_run\n  File \"<string>\", line 37, in <module>\nAssertionError: Controller window leaked\n\n\n----------------------------------------------------------------------\nRan 4 tests in 1.212s\n\nFAILED (failures=1)\n"
+  },
+  "green": [
+    {
+      "command": [
+        "/workspace/.venvs/issue654-visual/bin/python",
+        "-B",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.test_lightweight_runtime.TestVisualLifecycle"
+      ],
+      "exit_code": 0,
+      "executed": 4,
+      "skips": 0,
+      "timeouts": 0,
+      "log": "/workspace/scratch/issue-654/review-4329410028/green.log"
+    },
+    {
+      "command": [
+        "/workspace/.venvs/issue654-core/bin/python",
+        "-B",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.test_memory_runtime",
+        "tests.test_lightweight_runtime.TestHeadlessRuntime",
+        "tests.test_lightweight_runtime.TestMinimalRunner"
+      ],
+      "exit_code": 0,
+      "executed": 19,
+      "skips": 0,
+      "timeouts": 0,
+      "log": "/workspace/scratch/issue-654/review-4329410028/core.log"
+    },
+    {
+      "command": [
+        "/workspace/.venvs/issue654-visual/bin/python",
+        "-B",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.test_graph_initialization",
+        "tests.test_graph_ownership"
+      ],
+      "exit_code": 0,
+      "executed": 24,
+      "skips": 0,
+      "timeouts": 0,
+      "log": "/workspace/scratch/issue-654/review-4329410028/graph.log"
+    }
+  ],
+  "executed_total": 47,
+  "skips": 0,
+  "timeouts": 0,
+  "artifact_outcomes_including_red": {
+    "EXITED_ZERO": 63,
+    "EXITED_NONZERO": 1
+  },
+  "source_hashes": {
+    "tiny_gameplay_controller.py": "e20b047efdb728fe1f644802195403e654d7933d02255807a919756cabec79bf",
+    "tests/test_lightweight_runtime.py": "6e50dd6e5fc4663963d56a87cf9f68fcb9fa0820785b564847d029b9e5bbc55a"
+  },
+  "scope": "Focused regression after PR review; earlier 112-execution full profile matrix remains recorded separately at ccc2469."
+}

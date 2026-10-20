@@ -8,9 +8,11 @@ required final-product capability. These checks establish real startup, event
 registration and basic memory, not gameplay turns or AI model readiness.
 
 - Base: merged main `8a899650e47484add62b3269e7188de59d221870` (#785).
-- Final runtime checked: `ccc2469880a04bdf03531da049a8421d0de65368`, including the
+- Full-matrix runtime checked: `ccc2469880a04bdf03531da049a8421d0de65368`, including the
   independent review corrections. Earlier matrix at `56a1698` and its cache-test
   correction remain retained separately. Dependency locks are unchanged.
+- Subsequent PR review correction: `6543c67a12f3a9e2ad4f9ee1940bd758abb502f3`,
+  checked with the focused selection described below.
 - Execution: CPython 3.12/Linux x86-64, 2026-10-20.
 - Evidence retained locally: `/workspace/scratch/issue-654/`, with commands,
   stdout/stderr, baseline failures, source hashes, install receipts and durable
@@ -60,6 +62,28 @@ The complete approved matrix was then rerun once on the corrected runtime;
 every selection passes, as recorded below. No second independent review was
 requested. Provider tests inject only the external model-load boundary and do
 not establish inference or gameplay correctness. No review finding is deferred.
+
+## PR review follow-up — borrowed display without a window
+
+[Review comment](https://github.com/dhar174/tiny_village/pull/788#discussion_r4329410028)
+identified an additional lifecycle case: the host initialized `pygame.display`
+but had no surface. The controller created a window but did not release it.
+The new real SDL-dummy regression failed with `Controller window leaked` before
+correction; its original four-method selection retained one failure.
+
+Commit `6543c67` tracks controller-created surfaces separately from subsystem
+ownership. On cleanup it releases its window and restores the host's initialized,
+windowless display state. Borrowed windows and host replacement surfaces remain
+untouched. Successful startup, controlled renderer failure and repeated cleanup
+are covered without replacing real display operations.
+
+The post-fix selection passes **47 methods: 4 visual lifecycle, 19 core-only
+memory/headless/minimal and 24 graph lifecycle/ownership**, zero skips/timeouts.
+New cold processes retain 20-second diagnostics / 25-second parent deadlines.
+[Focused receipt](evidence/issue-654-pr-review-results.json) records exact commands,
+source hashes and the failed regression. This is scoped verification of the PR
+review fix; the earlier 112-execution matrix below remains evidence for `ccc2469`
+and is not presented as rerun on the later commit.
 
 ## Installation and checks
 
