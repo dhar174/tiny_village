@@ -29,7 +29,7 @@
   111 distinct cases / 112 profile executions pass after five Important review
   corrections; original RED and cache-expectation failures are retained.
   Gameplay turns, live AI models and phase approval remain unproven. Independent review
-  complete; publication pending. #785 merged at 8a899650 and #725 is closed.
+  complete; PR #788 ready for human review. #785 merged at 8a899650 and #725 is closed.
 
 - As of 2026-10-20, TASK011 / #725 has eight SHA-256 requirement locks and
   mode-aware checks, with full legacy dependencies preserved separately. Fresh

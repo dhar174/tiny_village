@@ -12,7 +12,7 @@
   Current evidence: 111 distinct cases / 112 profile executions after the five
   Important independent-review findings were fixed. Original failures retained.
   See docs/testing/issue-654-lightweight-runtime-validation.md. Independent review is complete;
-  publication is pending; issues remain open until merge. Next ordered: #726.
+  PR #788 is ready for human review; issues remain open until merge. Next ordered: #726.
 
 - TASK011 / #725 merged via #785 at 8a899650 and #725 closed. Its eight hash
   locks and legacy manifest are unchanged. Original dependency validation is

@@ -1,6 +1,6 @@
 # TASK012 — Lightweight runtime and basic memory (#654/#776)
 
-**Status:** In progress
+**Status:** Implemented — PR #788 ready for human review; issues open pending merge
 **Added/Updated:** 2026-10-20
 
 ## Request and approved plan
@@ -18,7 +18,7 @@ startup/event/memory checks are selected; gameplay proof stays #751/#658.
 | 3 Basic memory / real Characters | Complete | 8 fresh-process checks pass, including complete Characters and basic restore |
 | 4 Headless controller | Complete | Four core-only checks plus real Pygame owned/borrowed cleanup |
 | 5 Minimal runner | Complete | Real seven-Character graph/event/memory probe and CLI validation |
-| Verification / docs / PR | In progress | 111 distinct cases / 112 profile executions; five Important review findings fixed; publication pending |
+| Verification / docs / PR | Complete | 111 distinct cases / 112 profile executions; all five review findings fixed; PR #788 open |
 
 ## Pre-flight
 
@@ -91,3 +91,9 @@ startup/event/memory checks are selected; gameplay proof stays #751/#658.
 - Separate observed legacy defects now have issues: #786 for dictionary Event
   impacts/hashing and #787 for job-catalog count/missing-role diagnostics. These
   are scope limits, not deferred review findings. Next ordered task remains #726.
+
+- Published ready PR #788 targeting main, with closing references for #654/#776
+  and explicit human review requests for boundaries, retained AI paths, failures
+  and guidance. Both issue bodies/checklists and evidence comments synchronized;
+  issues remain open until merge. No human phase decision was recorded.
+- PR: https://github.com/dhar174/tiny_village/pull/788
