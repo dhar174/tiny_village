@@ -1,18 +1,21 @@
 ## Current Work Focus
 
+- TASK013 / #726 implements approved D017: required core/dev/visual CI and
+  manual-only NLP/CPU-LLM checks. #788 merged at eb5f4c9; #654/#776 are closed.
+  Post-merge 47-method verification and CLI 0/0/2 pass. Local CI profiles pass
+  132 cases plus three CLI probes after review corrections. PR #789 is ready;
+  first hosted required profiles pass 128 cases + 3 probes. Main/manual runs
+  and enforcement remain pending merge. See tasks/TASK013-supported-profile-ci-726.md.
+
 - Product requirement clarification (2026-10-20): apply [D015](../docs/decisions.md#d015--require-ai-capabilities-in-the-final-product)
   when scoping #654/#776 and later AI work. Lightweight testing profiles do
   not establish readiness of the final AI-enabled product.
 
-- TASK012 / #654 and child #776 implement the approved lightweight runtime
-  plan under D016. Real Characters, graph/action/event/time composition and
-  basic recording/recent recall work without rendering/AI dependencies. The
-  bounded demo explicitly does not execute gameplay turns. Full memory and
-  strategy services are lazy; AI remains a final-product requirement (D015).
-  Current evidence: 111 distinct cases / 112 profile executions after the five
-  Important independent-review findings were fixed. Original failures retained.
-  See docs/testing/issue-654-lightweight-runtime-validation.md. Independent review is complete;
-  PR #788 is ready for human review; issues remain open until merge. Next ordered: #726.
+- TASK012 / #654 and #776 are complete through merged #788 at eb5f4c9.
+  Real basic memory and headless startup are verified; gameplay and live inference
+  remain separate. Historical full-profile and PR-fix evidence is retained in
+  docs/testing/issue-654-lightweight-runtime-validation.md; TASK013 supplies the
+  newer merged-source baseline. Next ordered implementation is #726.
 
 - TASK011 / #725 merged via #785 at 8a899650 and #725 closed. Its eight hash
   locks and legacy manifest are unchanged. Original dependency validation is

@@ -1,0 +1,107 @@
+name: Python CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: python-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  checks:
+    name: Python (${{ matrix.profile }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - profile: core
+            lockfiles: |
+              requirements.txt
+              requirements/locks/core-py312-linux-x86_64.txt
+          - profile: dev
+            lockfiles: |
+              requirements/locks/core-py312-linux-x86_64.txt
+              requirements/locks/dev-py312-linux-x86_64.txt
+          - profile: visual
+            lockfiles: |
+              requirements/locks/core-py312-linux-x86_64.txt
+              requirements/locks/dev-py312-linux-x86_64.txt
+              requirements/locks/visual-py312-linux-x86_64.txt
+    env:
+      PROFILE: ${{ matrix.profile }}
+      HF_HUB_OFFLINE: '1'
+      TRANSFORMERS_OFFLINE: '1'
+      PYTHONNOUSERSITE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Initialize evidence and isolated model cache
+        shell: bash
+        run: |
+          mkdir -p ".test-artifacts/ci/$PROFILE"
+          git rev-parse HEAD > ".test-artifacts/ci/$PROFILE/revision.txt"
+          echo "HF_HOME=$RUNNER_TEMP/tiny-village-hf-$PROFILE" >> "$GITHUB_ENV"
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+          architecture: x64
+          cache: pip
+          cache-dependency-path: ${{ matrix.lockfiles }}
+      - name: Install verified profile in a fresh environment
+        timeout-minutes: 10
+        shell: bash
+        run: |
+          evidence=".test-artifacts/ci/$PROFILE"
+          mkdir -p "$evidence"
+          python --version 2>&1 | tee "$evidence/python.log"
+          python -m venv .venv
+          requirements=(-r "requirements/locks/$PROFILE-py312-linux-x86_64.txt")
+          if [[ "$PROFILE" == core ]]; then
+            requirements=(-r requirements.txt)
+          elif [[ "$PROFILE" == visual ]]; then
+            requirements+=(-r requirements/locks/dev-py312-linux-x86_64.txt)
+          fi
+          .venv/bin/python -m pip install --require-hashes --only-binary=:all: "${requirements[@]}" 2>&1 | tee "$evidence/install.log"
+          .venv/bin/python -m pip check 2>&1 | tee "$evidence/pip-check.log"
+          .venv/bin/python -m pip freeze > "$evidence/packages.txt"
+      - name: Run bounded checks and retain actual results
+        timeout-minutes: 9
+        shell: bash
+        run: |
+          .venv/bin/python -B scripts/run_ci_checks.py --profile "$PROFILE" --artifacts ".test-artifacts/ci/$PROFILE"
+      - name: Retain profile evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: python-${{ matrix.profile }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .test-artifacts/ci/${{ matrix.profile }}/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
+
+  required:
+    name: Python CI required
+    if: ${{ always() }}
+    needs: [checks]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Require every profile to succeed
+        env:
+          CHECKS_RESULT: ${{ needs.checks.result }}
+        shell: bash
+        run: |
+          if [[ "$CHECKS_RESULT" != success ]]; then
+            echo "Required profile matrix did not succeed: $CHECKS_RESULT"
+            exit 1
+          fi

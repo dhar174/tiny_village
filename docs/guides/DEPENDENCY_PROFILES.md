@@ -158,4 +158,5 @@ generated versions or hashes to work around an install failure. Optional model
 artifacts retain their own verification requirements. Re-run clean install,
 repeat install, `pip check` and relevant existing behavioral checks for the
 profiles changed; keep failed/incomplete outcomes visible. #726 will automate
-the supported checks in CI.
+the supported checks in CI; see [supported-profile CI](../testing/supported-profile-ci.md)
+for selections, local reproduction, manual ML checks and enforcement rollout.

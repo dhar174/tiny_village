@@ -1,0 +1,89 @@
+{
+  "run_id": 39501297078,
+  "run_url": "https://github.com/dhar174/tiny_village/actions/runs/39501297078",
+  "head_sha": "ad89f839cc2710361419ba24d533e48fa4b13d61",
+  "github_actions_app_id": 15368,
+  "required_context": "Python CI required",
+  "enforcement": "not yet configured; post-merge rollout pending",
+  "profiles": {
+    "visual": {
+      "status": "PASS",
+      "revision": "c2f0573761f82553f0fb067019f6bab74aacd5c9",
+      "python": "3.12.15 (main, Oct  1 2026, 02:35:59) [GCC 13.3.0]",
+      "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+      "counts": {
+        "tests_run": 68,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 0,
+      "artifact_id": 12300516084,
+      "verified_archive_digest": "sha256:73997cfd82fd65e22ad1b93e43036459f1f7e719d7ad60232745654447cdcb5d"
+    },
+    "core": {
+      "status": "PASS",
+      "revision": "c2f0573761f82553f0fb067019f6bab74aacd5c9",
+      "python": "3.12.15 (main, Oct  1 2026, 02:35:59) [GCC 13.3.0]",
+      "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+      "counts": {
+        "tests_run": 40,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 3,
+      "artifact_id": 12300516043,
+      "verified_archive_digest": "sha256:6c4d01bfee276cad645f21db0abf4745b9731ddfbb19027a8ae0addbcad38dc4"
+    },
+    "dev": {
+      "status": "PASS",
+      "revision": "c2f0573761f82553f0fb067019f6bab74aacd5c9",
+      "python": "3.12.15 (main, Oct  1 2026, 02:35:59) [GCC 13.3.0]",
+      "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+      "counts": {
+        "tests_run": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 0,
+      "artifact_id": 12299527823,
+      "verified_archive_digest": "sha256:ae372c4d235b8e489a8e1c8a53b76b041b1a4fc75b5eae1258f2a5933da37fbb"
+    }
+  },
+  "executed_cases": 128,
+  "cli_probes": 3,
+  "jobs": [
+    {
+      "name": "Python (visual)",
+      "id": 118899170289,
+      "conclusion": "success",
+      "html_url": "https://github.com/dhar174/tiny_village/actions/runs/39501297078/job/118899170289"
+    },
+    {
+      "name": "Python (core)",
+      "id": 118899170548,
+      "conclusion": "success",
+      "html_url": "https://github.com/dhar174/tiny_village/actions/runs/39501297078/job/118899170548"
+    },
+    {
+      "name": "Python (dev)",
+      "id": 118899170636,
+      "conclusion": "success",
+      "html_url": "https://github.com/dhar174/tiny_village/actions/runs/39501297078/job/118899170636"
+    },
+    {
+      "name": "Python CI required",
+      "id": 118899624005,
+      "conclusion": "success",
+      "html_url": "https://github.com/dhar174/tiny_village/actions/runs/39501297078/job/118899624005"
+    }
+  ]
+}

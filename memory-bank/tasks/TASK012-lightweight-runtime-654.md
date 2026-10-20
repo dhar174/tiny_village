@@ -1,6 +1,6 @@
 # TASK012 — Lightweight runtime and basic memory (#654/#776)
 
-**Status:** Implemented — PR #788 ready for human review; issues open pending merge
+**Status:** Complete — PR #788 merged at eb5f4c9; #654/#776 closed
 **Added/Updated:** 2026-10-20
 
 ## Request and approved plan
@@ -105,3 +105,6 @@ startup/event/memory checks are selected; gameplay proof stays #751/#658.
   Focused RED→GREEN verification: 47 methods pass, zero skips/timeouts. Original
   four-method run retained one failure. Earlier 112-execution matrix is separate;
   docs/testing/evidence/issue-654-pr-review-results.json records this correction.
+
+- Post-merge: #788 merged as eb5f4c9; #654/#776 closed. TASK013 verifies 47
+  focused methods and CLI exit codes 0/0/2 on that merged source.

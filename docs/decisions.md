@@ -283,6 +283,18 @@ should link to this file rather than maintain separate decision records.
 - **Limits:** This is implementation authorization, not phase-gate approval,
   gameplay acceptance, live-model validation, or permission to merge the PR.
 
+### D017 — Implement supported-profile CI; ML checks manual only
+
+- **Date:** 2026-10-20 (America/New_York).
+- **Decision-maker:** dhar174.
+- **Decision:** Implement the [reviewed #726 plan](superpowers/plans/2026-10-20-issue-726-supported-profile-ci.md)
+  with required core/dev/visual checks and manually triggered NLP/CPU-LLM checks.
+  No ML schedule. Preserve D015's required final-product AI scope.
+- **Confirmation:** Selected “Manual only,” then “Yes, implement this plan.”
+- **Boundary:** Human PR review precedes merge. Verify hosted main/manual runs
+  and effective required-check enforcement before closing #726. No automatic
+  merge or phase-gate approval; gameplay and inference remain separate.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
@@ -294,7 +306,9 @@ Phase 2 is unblocked and #724's planning contract is integrated.
 The [#724 contract](superpowers/specs/2026-10-20-issue-724-mvp-contract.md)
 has D013's two presentations and D014's qualified acceptance. The broader
 TinyVillage vision remains intact. #784 integrated the accepted contract to
-main and closed #724; #725's reproducible dependency profiles are in progress.
+main and closed #724. #725 merged through #785; #654/#776 merged through #788.
+D017 now authorizes #726 implementation; CI enforcement and later human gates
+remain pending.
 
 The [#779 investigation plan](superpowers/plans/2026-10-15-issue-779-startup-investigation.md)
 was approved under D007, and its bounded cycle has concluded. Its original
@@ -366,7 +380,9 @@ uncertainty without claiming a proven remedy.
 - #721 is closed as completed under the explicit D011 human approval.
 - #717 and #722 are closed as completed under the separate D012 phase-gate
   approval. Phase 2 parent #723 remains open; #724 is closed after #784's merge.
-- #773–#776 remain open in their existing phases; deferral is not completion.
+- #773–#775 remain open in their existing phases; deferral is not completion.
+- #776 and parent #654 closed after #788 merged; lightweight memory/startup
+  readiness does not establish gameplay or final AI readiness.
 - Native Windows support/validation is carried into support-matrix and CI work
   (#724/#726); core/optional dependency profiles remain in #725. Live-model
   integration evidence remains separate in #585. Later lightweight-demo,

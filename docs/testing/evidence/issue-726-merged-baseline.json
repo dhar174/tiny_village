@@ -1,0 +1,86 @@
+{
+  "revision": "eb5f4c935e87abe53570d0d949ffd8a6f9dd5cfa",
+  "jobs": [
+    {
+      "name": "core",
+      "command": [
+        "/workspace/.venvs/issue654-core/bin/python",
+        "-B",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.test_memory_runtime",
+        "tests.test_lightweight_runtime.TestHeadlessRuntime",
+        "tests.test_lightweight_runtime.TestMinimalRunner"
+      ],
+      "expected": 0,
+      "exit_code": 0,
+      "status": "PASS"
+    },
+    {
+      "name": "visual",
+      "command": [
+        "/workspace/.venvs/issue654-visual/bin/python",
+        "-B",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.test_lightweight_runtime.TestVisualLifecycle"
+      ],
+      "expected": 0,
+      "exit_code": 0,
+      "status": "PASS"
+    },
+    {
+      "name": "graph",
+      "command": [
+        "/workspace/.venvs/issue654-visual/bin/python",
+        "-B",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.test_graph_initialization",
+        "tests.test_graph_ownership"
+      ],
+      "expected": 0,
+      "exit_code": 0,
+      "status": "PASS"
+    },
+    {
+      "name": "canonical",
+      "command": [
+        "/workspace/.venvs/issue654-core/bin/python",
+        "-B",
+        "-c",
+        "import faulthandler,runpy,sys; faulthandler.dump_traceback_later(20,exit=True); sys.argv=['main.py', '--mode', 'minimal', '--headless', '--no-llm', '--characters', '2']; runpy.run_path('main.py',run_name='__main__')"
+      ],
+      "expected": 0,
+      "exit_code": 0,
+      "status": "PASS"
+    },
+    {
+      "name": "default",
+      "command": [
+        "/workspace/.venvs/issue654-core/bin/python",
+        "-B",
+        "-c",
+        "import faulthandler,runpy,sys; faulthandler.dump_traceback_later(20,exit=True); sys.argv=['main.py', '--mode', 'minimal']; runpy.run_path('main.py',run_name='__main__')"
+      ],
+      "expected": 0,
+      "exit_code": 0,
+      "status": "PASS"
+    },
+    {
+      "name": "invalid",
+      "command": [
+        "/workspace/.venvs/issue654-core/bin/python",
+        "-B",
+        "-c",
+        "import faulthandler,runpy,sys; faulthandler.dump_traceback_later(20,exit=True); sys.argv=['main.py', '--headless']; runpy.run_path('main.py',run_name='__main__')"
+      ],
+      "expected": 2,
+      "exit_code": 2,
+      "status": "PASS"
+    }
+  ]
+}
