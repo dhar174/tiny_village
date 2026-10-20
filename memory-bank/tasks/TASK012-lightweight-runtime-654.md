@@ -18,7 +18,7 @@ startup/event/memory checks are selected; gameplay proof stays #751/#658.
 | 3 Basic memory / real Characters | Complete | 8 fresh-process checks pass, including complete Characters and basic restore |
 | 4 Headless controller | Complete | Four core-only checks plus real Pygame owned/borrowed cleanup |
 | 5 Minimal runner | Complete | Real seven-Character graph/event/memory probe and CLI validation |
-| Verification / docs / PR | In progress | 106 distinct cases / 107 profile executions; final review/publication pending |
+| Verification / docs / PR | In progress | 111 distinct cases / 112 profile executions; five Important review findings fixed; publication pending |
 
 ## Pre-flight
 
@@ -78,3 +78,16 @@ startup/event/memory checks are selected; gameplay proof stays #751/#658.
   proving lazy import. Corrected cache selection passes 27/27; runtime unchanged.
 - Drafted validation report and user-facing guidance; all dependency locks remain
   unchanged. No live model, gameplay-turn or whole-suite readiness claim.
+
+- Independent whole-branch review found five Important issues, no Critical or
+  actionable Minor findings. Accepted all five: lazy helper enablement, cached
+  controller provider use/status, restored-store ownership, theme analysis guard,
+  and independently owned Pygame display/font cleanup. One RED→GREEN fix pass
+  in ccc2469; no findings deferred and no second review dispatch.
+- Final complete scoped matrix on ccc2469 passes 111 distinct cases / 112 profile
+  executions, no skips/timeouts, plus expected standalone CLI exit codes 0/0/2.
+  Earlier failures/matrices preserved separately; final sources stayed unchanged.
+  Published baseline and machine-readable final receipt in docs/testing/evidence/.
+- Separate observed legacy defects now have issues: #786 for dictionary Event
+  impacts/hashing and #787 for job-catalog count/missing-role diagnostics. These
+  are scope limits, not deferred review findings. Next ordered task remains #726.

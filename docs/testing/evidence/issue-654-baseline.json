@@ -1,0 +1,19 @@
+{
+  "revision": "8a899650e47484add62b3269e7188de59d221870",
+  "python": "Python 3.12.14",
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "probes": {
+    "controller_import": {
+      "code": "from tiny_gameplay_controller import GameplayController",
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/workspace/tiny_village/tiny_gameplay_controller.py\", line 13, in <module>\n    import pygame\nModuleNotFoundError: No module named 'pygame'\n"
+    },
+    "memory_construction": {
+      "code": "from tiny_time_manager import GameCalendar, GameTimeManager\nfrom tiny_memories import MemoryManager\nMemoryManager(GameTimeManager(GameCalendar()))",
+      "exit_code": 1,
+      "stdout": "Global model not found, attempting to initialize...\nError initializing embedding model: 'NoneType' object has no attribute 'from_pretrained'\nCache directory: /home/agent/.cache/huggingface/hub\nFailed to initialize global embedding model: EmbeddingModel could not be initialized. Please check the model path or network connection.\n",
+      "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 3, in <module>\n  File \"/workspace/tiny_village/tiny_memories.py\", line 2557, in __init__\n    self.flat_access = FlatMemoryAccess(\n                       ^^^^^^^^^^^^^^^^^\n  File \"/workspace/tiny_village/tiny_memories.py\", line 1571, in __init__\n    isinstance(value, spacy.tokens.token.Token)\n                      ^^^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'tokens'\n"
+    }
+  }
+}

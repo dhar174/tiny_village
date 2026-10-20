@@ -9,10 +9,10 @@
   basic recording/recent recall work without rendering/AI dependencies. The
   bounded demo explicitly does not execute gameplay turns. Full memory and
   strategy services are lazy; AI remains a final-product requirement (D015).
-  Current evidence: 106 distinct cases / 107 profile executions; original cache
-  expectation failures retained and corrected to request the deferred mapper.
-  See docs/testing/issue-654-lightweight-runtime-validation.md. Final review and
-  publication are pending; issues remain open until merge. Next ordered: #726.
+  Current evidence: 111 distinct cases / 112 profile executions after the five
+  Important independent-review findings were fixed. Original failures retained.
+  See docs/testing/issue-654-lightweight-runtime-validation.md. Independent review is complete;
+  publication is pending; issues remain open until merge. Next ordered: #726.
 
 - TASK011 / #725 merged via #785 at 8a899650 and #725 closed. Its eight hash
   locks and legacy manifest are unchanged. Original dependency validation is
