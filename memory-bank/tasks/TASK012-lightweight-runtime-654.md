@@ -14,8 +14,8 @@ startup/event/memory checks are selected; gameplay proof stays #751/#658.
 | Task | Status | Evidence |
 | --- | --- | --- |
 | 1 Baseline | Complete | Branch from merged main 8a89965; D015 edits preserved |
-| 2 Lazy services | In progress | Cold-import tests RED→GREEN; baseline.json and lazy-*.log |
-| 3 Basic memory / real Characters | Pending | |
+| 2 Lazy services | Complete | Cold imports RED→GREEN; owned-cache boundary test passes |
+| 3 Basic memory / real Characters | Complete | 8 fresh-process checks pass, including complete Characters and basic restore |
 | 4 Headless controller | Pending | |
 | 5 Minimal runner | Pending | |
 | Verification / docs / PR | Pending | |
@@ -46,3 +46,10 @@ startup/event/memory checks are selected; gameplay proof stays #751/#658.
 - Task 2: removed eager imports/model/corpus initialization. Cold imports and
   non-LLM strategy tests pass 2/2 after retained RED and intermediate failure
   exposed a further eager NMF import. Cache-boundary check recorded separately.
+
+- Tasks 2/3 complete: 8/8 fresh-process checks pass in basic-green3.log. Real
+  Characters finish construction with no AI imports; memory fields, 50-record
+  eviction, equal importance, independent stores and explicit errors verified.
+- Retained intermediate decorator-order failure and restore-data loss failure;
+  corrected helper placement and preserved recent records during restoration.
+  New feature tests were observed RED before implementation.
