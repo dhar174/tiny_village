@@ -24,6 +24,14 @@
 
 ## Current Status
 
+- As of 2026-10-20, D014 accepts TASK010 / #724's MVP contract with the
+  original expansive vision preserved. Scenario limits are fixture data;
+  optional capabilities and later roadmap work remain intact. D013 confirms
+  both presentations. Targets are not implemented or benchmarked guarantees.
+  #782 merged to main before #783 merged into its old branch, so a focused
+  integration PR is required. #724 remains open until that integration.
+  Next is #725: reproducible core/development and optional feature profiles.
+
 - As of 2026-10-16, TASK009 verifies merged main 77e4b94 under D009. All 94
   method summaries report success and all three probes exit 0, with one
   lifecycle supervisor completion gap after an execution-server disconnect.
