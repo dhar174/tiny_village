@@ -16,8 +16,8 @@ startup/event/memory checks are selected; gameplay proof stays #751/#658.
 | 1 Baseline | Complete | Branch from merged main 8a89965; D015 edits preserved |
 | 2 Lazy services | Complete | Cold imports RED→GREEN; owned-cache boundary test passes |
 | 3 Basic memory / real Characters | Complete | 8 fresh-process checks pass, including complete Characters and basic restore |
-| 4 Headless controller | Pending | |
-| 5 Minimal runner | Pending | |
+| 4 Headless controller | Complete | Four core-only checks plus real Pygame owned/borrowed cleanup |
+| 5 Minimal runner | Complete | Real seven-Character graph/event/memory probe and CLI validation |
 | Verification / docs / PR | Pending | |
 
 ## Pre-flight
@@ -53,3 +53,20 @@ startup/event/memory checks are selected; gameplay proof stays #751/#658.
 - Retained intermediate decorator-order failure and restore-data loss failure;
   corrected helper placement and preserved recent records during restoration.
   New feature tests were observed RED before implementation.
+
+- Tasks 4/5: 15 core-only tests and one real visual lifecycle test pass.
+  Source/config copies prevent generated visual preferences mutating caller data.
+- Ruling: minimal CLI requires at least one Character, while controller component
+  tests can still request zero — memory acceptance cannot pass vacuously; cost
+  is rejecting a previously meaningless zero-Character minimal invocation.
+- Ruling: replace unsupported sample jobs Blacksmith/Guard/Healer with catalog
+  roles Craftsman/Security Guard/Doctor — real construction exposed process exit
+  12; cost is fixture wording only, no job-system feature removal. Invalid jobs
+  now raise ValueError instead of terminating the process; retained RED probe.
+- Ruling: the startup Event uses the supported neutral numeric impact 0 — dict
+  impacts cannot currently be hashed as graph nodes. Keep this distinct legacy
+  event defect as a follow-up rather than changing event equality/identity in
+  dependency work; cost is leaving dict-impact graph registration unsupported.
+- Retained visual fixture CWD/import failure, config-mutation failure, and the
+  legacy smoke test's obsolete turn/banner assertions. Updated the latter to
+  actual startup/event/memory claims, retaining its 120-second parent limit.

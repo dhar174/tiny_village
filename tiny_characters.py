@@ -3195,8 +3195,7 @@ class Character:
 
             else:
                 logging.info(f"Job role not found for job {job}")
-                exit(12)
-                self.job = random.choice(job_rules.ValidJobRoles)
+                raise ValueError(f"Unsupported character job: {job}")
         else:
             self.job = random.choice(job_rules.ValidJobRoles)
         return self.job

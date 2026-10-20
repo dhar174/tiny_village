@@ -3386,13 +3386,9 @@ class GraphManager(metaclass=_GraphManagerSingleton):
             logging.error(traceback.format_exc())
 
     def _get_current_time(self):
-        """Helper method to get current time for social network metadata."""
-        try:
-            import pygame
-            return pygame.time.get_ticks()
-        except (ImportError, AttributeError):
-            import time
-            return int(time.time() * 1000)
+        """Renderer-independent monotonic time for runtime social metadata."""
+        import time
+        return int(time.monotonic() * 1000)
 
     # Including the provided decay functions here for completeness
     def time_based_decay(self, time_since):
