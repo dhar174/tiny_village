@@ -1748,6 +1748,7 @@ class GameplayController:
         self.config = deepcopy(config or {})
         self.headless = bool(self.config.get("headless", False))
         self._owns_display = self._owns_font = False
+        self._owns_display_surface = False
         self._temporary_checkpoint_directory = None
         self.screen = self.clock = self.map_controller = None
         self.ui_panels = {}
@@ -1952,6 +1953,7 @@ class GameplayController:
                 self.screen = pygame.display.set_mode((
                     self.config.get("screen_width", 800), self.config.get("screen_height", 600)
                 ))
+                self._owns_display_surface = True
                 pygame.display.set_caption("Tiny Village")
             self.clock = pygame.time.Clock()
             map_config = self.config.get("map", {})
@@ -1971,9 +1973,15 @@ class GameplayController:
         if pygame is not None:
             if self._owns_display:
                 pygame.display.quit()
+            elif self._owns_display_surface and pygame.display.get_surface() is self.screen:
+                # Pygame releases its window through display.quit(). Restore
+                # the host's previously initialized, windowless subsystem.
+                pygame.display.quit()
+                pygame.display.init()
             if self._owns_font:
                 pygame.font.quit()
         self._owns_display = self._owns_font = False
+        self._owns_display_surface = False
         self.screen = self.clock = self.map_controller = None
         self.ui_panels = {}
         self.ui_fonts = {}

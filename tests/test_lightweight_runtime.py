@@ -188,6 +188,77 @@ with patch('sys.argv',['main.py','--mode','minimal','--headless']), \
 
 
 class TestVisualLifecycle(FreshPythonTestCase):
+    def test_created_surface_on_borrowed_display_is_released(self):
+        self.run_python(NO_AI_IMPORTS.replace("'pygame', ", '') + '''
+import os, tempfile
+from pathlib import Path
+from unittest.mock import patch
+import pygame
+from tiny_gameplay_controller import GameplayController
+from tiny_graph_manager import GraphManager
+root = Path.cwd()
+sys.path.insert(0, str(root))
+config = {'memory':{'mode':'basic'}, 'characters':{'count':0,'use_llm':False},
+    'checkpoint':{'auto_enabled':False},
+    'map':{'image_path':str(root/'assets/default_map.png')}}
+with tempfile.TemporaryDirectory() as directory:
+    os.chdir(directory)
+    pygame.quit()
+    pygame.display.init()
+    assert pygame.display.get_surface() is None
+    controller = GameplayController(GraphManager(), config)
+    assert controller.screen is pygame.display.get_surface()
+    assert controller.screen is not None
+    controller.close()
+    controller.close()
+    assert pygame.display.get_init(), 'Borrowed subsystem was shut down'
+    assert pygame.display.get_surface() is None, 'Controller window leaked'
+    assert not pygame.font.get_init()
+
+    # A failed renderer startup must restore the same borrowed state.
+    with patch('tiny_map_controller.MapController', side_effect=RuntimeError('Controlled renderer failure')):
+        try:
+            GameplayController(GraphManager(), config)
+        except RuntimeError:
+            pass
+        else:
+            raise AssertionError('Required renderer failure was hidden')
+    assert pygame.display.get_init()
+    assert pygame.display.get_surface() is None
+    assert not pygame.font.get_init()
+    pygame.quit()
+assert not (blocked & sys.modules.keys())
+''')
+
+    def test_host_replacement_surface_survives_controller_cleanup(self):
+        self.run_python(NO_AI_IMPORTS.replace("'pygame', ", '') + '''
+import os, tempfile
+from pathlib import Path
+import pygame
+from tiny_gameplay_controller import GameplayController
+from tiny_graph_manager import GraphManager
+root = Path.cwd()
+sys.path.insert(0, str(root))
+config = {'memory':{'mode':'basic'}, 'characters':{'count':0,'use_llm':False},
+    'checkpoint':{'auto_enabled':False},
+    'map':{'image_path':str(root/'assets/default_map.png')}}
+with tempfile.TemporaryDirectory() as directory:
+    os.chdir(directory)
+    pygame.quit()
+    pygame.display.init()
+    controller = GameplayController(GraphManager(), config)
+    original = controller.screen
+    pygame.display.quit()
+    pygame.display.init()
+    replacement = pygame.display.set_mode((100,100))
+    assert replacement is not original
+    controller.close()
+    assert pygame.display.get_init()
+    assert pygame.display.get_surface() is replacement
+    pygame.quit()
+assert not (blocked & sys.modules.keys())
+''')
+
     def test_borrowed_independent_subsystems_survive_cleanup(self):
         self.run_python(NO_AI_IMPORTS.replace("'pygame', ", '') + '''
 import os, tempfile
