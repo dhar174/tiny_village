@@ -226,6 +226,32 @@ should link to this file rather than maintain separate decision records.
   visual design or implementation plan, nor complete #724 or later reviews.
 - **Artifact:** [Draft #724 MVP contract](superpowers/specs/2026-10-20-issue-724-mvp-contract.md).
 
+### D014 — Accept the MVP contract while preserving the original vision
+
+- **Date:** 2026-10-20 (America/New_York)
+- **Decision-maker:** dhar174
+- **Reviewed artifact:** PR #783 source `a42c447d05f3248ce27863fda36b604cb93ac17e`,
+  including the [MVP contract](superpowers/specs/2026-10-20-issue-724-mvp-contract.md).
+- **Decision:** Accept #724's planning contract with the condition that the
+  MVP preserves the expansiveness of the original TinyVillage plans. Treat the
+  small deterministic scenario as the first release's proof of behavior, not
+  a replacement for the broader product vision or a cap on the shared engine.
+- **Condition made concrete:** Preserve autonomous characters, personalities,
+  relationships, jobs/economy, memory/storytelling, optional LLM integration,
+  persistence and village expansion in their existing planned scope. Keep the
+  fixture data-driven and optional features available through explicit profiles.
+  Do not remove features or narrow the long-term scope without a separate
+  explicit decision. Section 1 of the contract carries these guardrails.
+- **Confirmation:** “Merged, sounds good as long as the MVP doesn't dilute
+  the expansiveness of the original TinyVillage plans.” This explicit qualified
+  acceptance supplies the disposition; a PR merge alone would not.
+- **Boundary:** Targets remain future requirements, not verified functionality
+  or benchmark results. #730/#731/#732 and later release gates remain required.
+- **Integration finding:** #782 merged into main as `79e5683`; #783 subsequently
+  merged into #782's old branch as `a9ed214`. The MVP contract therefore needs
+  a focused integration PR to main. #724 remains open until that PR lands;
+  the next ordered delivery task is #725.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
@@ -234,10 +260,10 @@ scope. D010 accepts #779's residual uncertainty and closure. D001 remains the
 historical disposition of the earlier failed verification. D012 separately
 approves phase gate #722 and completes parent #717 within the same scope.
 Phase 2 is unblocked; #724 is its next ordered task.
-The [#724 draft contract](superpowers/specs/2026-10-20-issue-724-mvp-contract.md)
-is being prepared for human review. D013 selects both headless and Pygame
-presentations; the fixture, support targets and numeric budgets remain proposed.
-#724 remains open until the maintainer agrees the complete contract.
+The [#724 contract](superpowers/specs/2026-10-20-issue-724-mvp-contract.md)
+has D013's two presentations and D014's qualified acceptance. The broader
+TinyVillage vision remains intact. #724 awaits integration to main because
+of #783's merge target; next comes #725's reproducible dependency profiles.
 
 The [#779 investigation plan](superpowers/plans/2026-10-15-issue-779-startup-investigation.md)
 was approved under D007, and its bounded cycle has concluded. Its original

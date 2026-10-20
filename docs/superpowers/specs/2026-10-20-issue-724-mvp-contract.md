@@ -1,10 +1,12 @@
 # Tiny Village MVP scenario, support matrix and release budgets
 
-**Status: Draft for maintainer review — 2026-10-20.** This is the planning
-deliverable for [#724](https://github.com/dhar174/tiny_village/issues/724), not
-an implemented demo or an approved release contract. The two presentation
-surfaces are selected under D013; proposed numbers, commands and support
-targets below still need explicit agreement. #724 stays open.
+**Status: Planning contract approved with vision-preservation constraint —
+2026-10-20 (D014).** This is the planning deliverable for
+[#724](https://github.com/dhar174/tiny_village/issues/724). It defines agreed
+implementation and release-validation targets, not implemented behavior or
+measured performance. D013 selects both presentations; D014 accepts the
+contract while preserving the original TinyVillage vision. #724 awaits the
+integration PR because #783 merged into #782's old branch after #782 had merged.
 Human decisions belong only in [docs/decisions.md](../../decisions.md).
 
 ## 1. Purpose, scope and recommendation
@@ -19,8 +21,8 @@ Use **one simulation with two presentations**: a headless acceptance run
 and a small Pygame observer interface. Both use the same scenario, action
 execution, logical clock and state; rendering cannot choose or apply actions.
 The maintainer explicitly selected both surfaces on 2026-10-20; D013 in the
-single decision record captures that choice. Detailed flows and the remaining
-scenario/support/budget contract still need review.
+single decision record captures that choice. D014 subsequently accepts the
+scenario/support/budget contract with the long-term scope guardrails below.
 
 | Approach | Benefit | Cost / scope consequence |
 | --- | --- | --- |
@@ -35,6 +37,29 @@ multiplayer/network play, mod/editor tooling, broad social simulation and
 advanced analytics from this MVP. Optional live ML/LLM features cannot become
 core requirements through imports or silent downloads. Existing later-phase
 issues remain open; exclusion from this scenario is not their completion.
+
+### Preserve the expansive TinyVillage vision
+
+The MVP is the first verifiable slice of the existing project. Autonomous
+characters, personalities and histories, relationships and social behavior,
+careers and a richer economy, memory and storytelling, optional LLM-assisted
+decisions, persistence and a growing village remain part of the broader vision
+in the project brief, product context and design documents. Their existing
+roadmap issues and review requirements remain intact.
+
+The three villagers, fixed map, fixed seed and episode rules are a versioned
+acceptance fixture. They are not limits on simulation population, map size,
+available actions or eventual emergent behavior. Put fixture-specific values
+in scenario data; the shared engine must continue to accept other actors,
+worlds and supported action definitions without name-based branches.
+
+Separating core/visual/ML dependencies changes installation requirements, not
+the availability or ambition of optional capabilities. Preserve their explicit
+integration boundaries and existing feature paths. Do not delete subsystems,
+replace the shared world with a demo-only implementation, or narrow public
+contracts solely to fit this episode. Any proposed feature removal or broader
+scope reduction needs its own explicit decision and issue. Keep extensions
+grounded in current interfaces; this does not require a speculative rewrite.
 
 ## 2. Research baseline and current gaps
 
@@ -157,7 +182,7 @@ cancelled outcomes. An unmet goal with no progress for 30 logical ticks is
 reported as blocked; it must not spin indefinitely or be marked complete.
 Expected waits after a satisfied goal are not stuck plans.
 
-## 4. Proposed commands and observable results
+## 4. Planned commands and observable results
 
 **The commands in this section are future interface requirements.** Only
 `visual/minimal/test`, `--headless`, `--no-llm`, character count and FPS exist
@@ -198,12 +223,12 @@ current needs/units, inventory, credits, goal, action and reason, tick/pause
 state, transfer outcomes and the final summary. A save/load error must show
 what happened and what the user can do, not an exception dump.
 
-## 5. Proposed support and presentation matrix
+## 5. Agreed support targets and presentation matrix
 
 | Profile / surface | MVP target | Current evidence and release prerequisite |
 | --- | --- | --- |
 | Linux x86-64, Ubuntu 24.04, CPython 3.12, CPU-only core, headless | Required automated behavior/installation profile | Phase 1 used prepared Python 3.12.14 CPU/Linux; clean installation and full scenario are unverified. #725/#654/#776/#726 supply the core profile and CI. No Pygame, FAISS, spaCy, Transformers, GPU or network/model service required for core. |
-| Same OS/Python plus Pygame visual profile, local display | Required presentation (D013); platform target proposed | No current visual release proof. #727–#730 define/review UX/UI/aesthetics; later implementation and Phase 8 validation must pass. SDL dummy rendering supports automation but cannot substitute for a human display/controls review. |
+| Same OS/Python plus Pygame visual profile, local display | Required presentation (D013); platform target agreed under D014 | No current visual release proof. #727–#730 define/review UX/UI/aesthetics; later implementation and Phase 8 validation must pass. SDL dummy rendering supports automation but cannot substitute for a human display/controls review. |
 | Native Windows | Planned/unverified; no MVP support promise | Preserve D004: require native startup, paths/cache permissions and supported flow evidence before claiming support. Installing a wheel or simulating metadata is insufficient. |
 | macOS, ARM, other Python versions | Unverified; outside the initial support claim | Require a separately recorded support expansion and native evidence. |
 | Live ML/LLM, GPU, remote services | Optional later profile; not a core release condition | D005 and existing ML/LLM work, including #585, retain separate download/inference validation. |
@@ -229,15 +254,15 @@ Motion effects must be reducible and fit the frame budget. These are proposed
 Pygame review criteria, not claims of browser/ARIA or general accessibility
 conformance. #730 and Phase 8's #765/#766 review the actual experience.
 
-## 6. Proposed release budgets and measurement contract
+## 6. Agreed release budgets and measurement contract
 
-**Targets for approval, not benchmark results.** These bound the three-villager
+**Agreed targets under D014, not benchmark results.** These bound the three-villager
 MVP on the declared reference profile. They neither change Phase 1's graph
 20/25-second, cache 25/30-second or batch 110/120-second diagnostic limits nor
 authorize repeated tests now. A target miss becomes an issue or explicit
 maintainer revision, never a silent timeout increase or retry until green.
 
-| Metric | Proposed acceptance budget | Definition / sample requirement |
+| Metric | Agreed acceptance budget | Definition / sample requirement |
 | --- | --- | --- |
 | Fresh-process ready time | At most 20 s, each of 5 launches per profile | Process launch to constructed real world and available console/UI. Packages/assets already installed, no process/model cache reuse or network downloads; OS file caches are not flushed. Report every launch, not a best run. |
 | Headless episode | At most 30 s after readiness | All 120 ticks and final result written; excludes setup, includes actual planning/actions. Record all 5 complete episodes. |
@@ -293,14 +318,13 @@ issues rather than duplicate them. Project custom-field synchronization remains
 unconfirmed after the earlier access denial; this specification cannot assert
 that Project readiness/Decision fields have changed.
 
-For #724 review, the maintainer must agree: (1) the fixture/actions, state units,
-invariants and outcome; (2) both presentations, supported platforms/resolutions
-and explicit exclusions; (3) the numeric budgets and measurement workload.
-Record the exact approved commit and human rationale in `docs/decisions.md`.
-If approved, #724 may complete as a planning issue; its closure does not claim
-the scenario already runs or complete downstream implementation/review issues.
-Changes requested or unresolved choices keep #724 open and its dependent work
-unreleased. D012 authorizes Phase 2, not approval of this new contract.
+The maintainer accepted the fixture/actions, state units, invariants/outcome,
+presentations, support targets and budget workload under D014, conditional on
+preserving the original project's expansiveness. The guardrails in section 1
+make that condition explicit. Record the approved source revision and human
+rationale in `docs/decisions.md`. #724 completes as a planning issue when this
+contract and its decision reach main; implementation, actual support claims
+and downstream design/engineering/release reviews remain separate work.
 
 Future release evidence must contain source/spec/lock/asset hashes, commands,
 machine/profile metadata, seeds and fixture version, initial/final authoritative

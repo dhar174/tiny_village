@@ -1,12 +1,13 @@
 ## Current Work Focus
 
-- TASK010 / #724 is in progress (2026-10-20): researched draft scenario, support
-  matrix and release budgets in docs/superpowers/specs/2026-10-20-issue-724-mvp-contract.md.
-  D013 confirms both headless and Pygame presentations; other details remain
-  proposed. No new runtime/tests/benchmarks or downstream implementation.
-  Branch codex/issue-724-mvp-contract is based on open PR #782 for a focused
-  stacked documentation review, published as draft PR #783; #724 stays open
-  pending contract agreement. #724 comment/status read-back is verified.
+- TASK010 / #724 has D014 acceptance with original-vision preservation
+  (2026-10-20). The fixed scenario is a release fixture, not a limit on the
+  shared simulation or broader character/social/economic/memory/LLM plans.
+  #782 merged to main, but #783 then merged into its old branch, leaving the
+  contract outside main. A focused integration PR carries the exact #783
+  commits and D014 guardrails to main; #724 stays open until that merge.
+  Next delivery task: #725 dependency profiles; UX planning #727 also follows
+  #724. No runtime changes, feature removals or new tests/benchmarks.
 
 - #718 is complete: PR #706 merged and the issue closed on 2026-10-14.
 - TASK003 / #719 is complete: PR #777 merged as `0ba9061`; #719 closed.
@@ -41,7 +42,7 @@
   approves #721. D012 now separately approves #722 and completes parent #717
   (2026-10-17 America/New_York). Phase 2 is unblocked; the next ordered task
   is #724: define the MVP scenario, support matrix and release budgets.
-  TASK010 now prepares that contract; review and agreement are next.
+  TASK010 records the accepted contract; integrate it to main, then begin #725.
 - TASK008 implements the scoped #779 failure-capture follow-up on a separate
   branch, published as PR #781 (now merged with #780). See docs/superpowers/plans/2026-10-16-issue-779-failure-capture.md.
   D008 approves implementation and one bounded observation window. The shared

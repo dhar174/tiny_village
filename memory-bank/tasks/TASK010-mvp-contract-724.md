@@ -1,6 +1,6 @@
 # [TASK010] — Define the MVP scenario, support matrix and release budgets (#724)
 
-**Status:** In Progress — draft PR #783 published; human agreement pending
+**Status:** In Progress — D014 acceptance recorded; integration to main pending
 
 **Added:** 2026-10-20
 
@@ -29,7 +29,8 @@ against codex/phase1-post-merge-review, with #782 as a merge prerequisite.
 | 10.2 | Research runtime and related issues | Complete | 2026-10-20 | Static reads of CLI/demo, strategy/actions, time, UI/performance, dependencies and roadmap tasks |
 | 10.3 | Draft scenario/support/budgets | Complete | 2026-10-20 | docs/superpowers/specs/2026-10-20-issue-724-mvp-contract.md; all choices proposed |
 | 10.4 | Review and publish draft | Complete | 2026-10-20 | Draft PR #783 stacked on #782; #724 comment and additive status block verified |
-| 10.5 | Obtain human agreement | Pending | 2026-10-20 | Approve exact spec revision or revise; #724 acceptance criteria remain unchecked |
+| 10.5 | Obtain human agreement | Complete | 2026-10-20 | D014 accepts the contract with explicit original-vision preservation guardrails |
+| 10.6 | Integrate approved contract to main | In Progress | 2026-10-20 | #783 merged to #782's old branch after #782 merged; focused integration PR needed |
 
 ## Progress log
 
@@ -64,3 +65,18 @@ against codex/phase1-post-merge-review, with #782 as a merge prerequisite.
 - Checked document link targets, explicit future-command labels, fixture
   arithmetic and scope/measurement consistency. No tests/lint or runtime runs.
   Publication receipts are in /workspace/scratch/issue-724/publication-receipt.json.
+
+### 2026-10-20 — accepted contract and merge-target repair
+
+- The maintainer accepted the contract on the condition that the original
+  TinyVillage vision remains expansive. D014 records the exact confirmation;
+  section 1 now makes fixture boundaries and feature-preservation explicit.
+- Verified #782 merged as 79e5683, then #783 merged as a9ed214 into #782's old
+  branch. Main did not contain the MVP specification. Created a branch from
+  current main and cherry-picked the two exact #783 commits before recording
+  the new decision; no runtime changes or feature removals.
+- Publish a focused PR to main with a closing reference for #724. Keep the
+  issue open until integration; its human agreement is supplied by D014.
+- Next ordered task: #725, core/development dependency locks and optional
+  visual/NLP/LLM/GPU profiles, including review of #704 and verified installation.
+  #727 UX planning can follow #724 separately; #654 then #726 follow #725.
