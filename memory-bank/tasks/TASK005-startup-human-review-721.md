@@ -1,10 +1,10 @@
 # [TASK005] - Verify merged startup repairs and guide human review (#721)
 
-**Status:** In Progress — human Deferred; investigation #779 blocks review completion
+**Status:** Completed — human Approved under D011; Project synchronization outstanding
 
 **Added:** 2026-10-15
 
-**Updated:** 2026-10-15
+**Updated:** 2026-10-16 (America/New_York)
 
 ## Original Request
 
@@ -28,15 +28,15 @@ by this verification and walkthrough alone.
 
 ## Progress Tracking
 
-**Overall Status:** In Progress — Deferred recorded; #779 blocks #721; Project Decision synchronization denied.
+**Overall Status:** Completed — D011 approval recorded and #721 closed; #722 remains a separate pending decision; Project synchronization outstanding.
 
 | ID | Description | Status | Updated | Notes |
 | --- | --- | --- | --- | --- |
 | 5.1 | Confirm merge and prerequisites | Complete | 2026-10-15 | PR #778 merged at 93079fd; #718/#719/#720 closed; source matches f796b33 |
 | 5.2 | Focused merged verification | Complete | 2026-10-15 | 30 tests in complete suites pass; cache 26/27; import timing failures and incomplete lifecycle/ownership retained |
 | 5.3 | Review evidence and diagnostics | Complete | 2026-10-15 | Both affected import orders pass instrumented diagnostics; cause unproven; investigation #779 |
-| 5.4 | Human decision walkthrough | In Progress | 2026-10-15 | Disposition and scope confirmed; canonical record: docs/decisions.md; revisit after #779 |
-| 5.5 | Record decision and phase ordering | Partially complete | 2026-10-15 | Deferred recorded; native #779 blocker verified; #721/#722 open; Project field denied (403) |
+| 5.4 | Human decision walkthrough | Complete | 2026-10-16 | D011 explicitly approves Linux/offline startup at 77e4b94; prior Deferred retained |
+| 5.5 | Record decision and phase ordering | Complete with external sync limit | 2026-10-16 | #721 closed; #722/#717 open; Project Decision update remains unconfirmed after 403 |
 
 ## Progress Log
 
@@ -81,3 +81,29 @@ by this verification and walkthrough alone.
   record. Consolidated the decisions and outstanding actions in
   [docs/decisions.md](../../docs/decisions.md); future decisions belong there.
   Evidence remains in the validation report; no runtime changes or new checks.
+
+### 2026-10-17 UTC
+
+- Latest evidence is the 77e4b94 post-merge report in PR #782: 94 successful
+  method summaries, three zero-exit probes, and one lifecycle supervisor gap.
+- See [D010](../../docs/decisions.md#d010--accept-residual-uncertainty-and-close-investigation-779)
+  for the maintainer's accepted-risk disposition of #779. Its closed state
+  preserves the native historical dependency; it does not approve this review.
+- Next: obtain #721's explicit disposition using the updated evidence, then
+  consider #722 separately. Existing later-phase scope decisions still apply.
+
+### 2026-10-16 America/New_York — subsequent approval
+
+- The maintainer explicitly approved #721's engineering review. See the
+  canonical [D011](../../docs/decisions.md#d011--approve-startup-engineering-review-721)
+  for the reviewed SHA, rationale, accepted limits and scope.
+- Recorded approval and closed #721 as completed. Refreshed linked issue
+  status without granting #722 or #717 approval. Native dependencies remain.
+- Updated PR #782 with the decision and evidence pointers. No new tests or
+  application runs; this records the human's disposition of retained evidence.
+- Project synchronization remains outstanding from the earlier HTTP 403;
+  no credential change or successful Project field update is claimed.
+- Publication receipt: [#721 approval comment](https://github.com/dhar174/tiny_village/issues/721#issuecomment-6229486733).
+  Read-back verifies #721 closed / completed, #779 closed, #717/#722 open,
+  native dependency relationships retained, and the original Deferred history
+  preserved. Review checklist items are checked except Project synchronization.
