@@ -8,6 +8,7 @@ This directory contains organized documentation for the Tiny Village project.
 User-facing documentation for getting started and using the system.
 
 - **QUICKSTART.md** - Quick start guide for running demos
+- **[DEPENDENCY_PROFILES.md](guides/DEPENDENCY_PROFILES.md)** - Hash-locked Python 3.12 core, visual, development and optional feature installs
 - **QUICKSTART_CHECKPOINTS.md** - Guide to the checkpoint system
 - **LLM_INTEGRATION_USAGE_GUIDE.md** - How to use LLM integration features
 

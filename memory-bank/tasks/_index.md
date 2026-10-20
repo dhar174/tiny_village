@@ -1,13 +1,14 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK010](TASK010-mvp-contract-724.md) Define MVP scenario, support matrix and release budgets (#724) - D014 accepts contract with original-vision guardrails; #783 merged off main, integration pending; #725 next (Updated: 2026-10-20)
+- [TASK011](TASK011-dependency-profiles-725.md) Reproducible dependencies (#725) - eight hash locks, mode checks, four clean/repeat profile installs and 85 existing tests pass; PR pending (Updated: 2026-10-20)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending
 - No additional pending task files.
 
 ## Completed
+- [TASK010](TASK010-mvp-contract-724.md) MVP contract accepted under D014 and integrated by #784 at 8d6b254; #724 closed, #725 started (Updated: 2026-10-20)
 - [TASK005](TASK005-startup-human-review-721.md) Startup engineering review approved under [D011](../../docs/decisions.md#d011--approve-startup-engineering-review-721); #721 closed; subsequent D012 completes Phase 1; Project sync outstanding (Updated: 2026-10-17 America/New_York)
 - [TASK009](TASK009-phase1-post-merge-verification.md) Merged-main verification - 94 successful method summaries and three probes, one supervisor record gap; evidence PR #782; D010–D012 recorded; #779/#721/#722/#717 closed, Phase 2 unblocked with #724 next (Updated: 2026-10-17 America/New_York)
 - [TASK008](TASK008-issue-779-failure-capture.md) Durable startup failure capture (#779) - PR #781; deadline review fix passes 13 focused checks; prior 81 methods/probes historical; cause unknown, later D010 accepts closure (Updated: 2026-10-17)
@@ -34,4 +35,5 @@
   - `TASK008-issue-779-failure-capture.md`
   - `TASK009-phase1-post-merge-verification.md`
   - `TASK010-mvp-contract-724.md`
+  - `TASK011-dependency-profiles-725.md`
 - Task-level Memory Bank tracking has started for this repository.

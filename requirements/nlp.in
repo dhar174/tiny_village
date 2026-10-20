@@ -1,0 +1,6 @@
+-r analytics.in
+# Libraries only; spaCy models and NLTK data are separate verified downloads.
+spacy>=3.7.4,<4
+nltk>=3.9,<4
+rake-nltk>=1.0.6,<2
+textblob>=0.18,<1

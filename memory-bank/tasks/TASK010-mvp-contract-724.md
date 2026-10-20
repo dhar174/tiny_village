@@ -1,6 +1,6 @@
 # [TASK010] — Define the MVP scenario, support matrix and release budgets (#724)
 
-**Status:** In Progress — D014 acceptance recorded; integration to main pending
+**Status:** Completed — D014 acceptance recorded; #784 merged to main and #724 closed
 
 **Added:** 2026-10-20
 
@@ -30,7 +30,7 @@ against codex/phase1-post-merge-review, with #782 as a merge prerequisite.
 | 10.3 | Draft scenario/support/budgets | Complete | 2026-10-20 | docs/superpowers/specs/2026-10-20-issue-724-mvp-contract.md; all choices proposed |
 | 10.4 | Review and publish draft | Complete | 2026-10-20 | Draft PR #783 stacked on #782; #724 comment and additive status block verified |
 | 10.5 | Obtain human agreement | Complete | 2026-10-20 | D014 accepts the contract with explicit original-vision preservation guardrails |
-| 10.6 | Integrate approved contract to main | In Progress | 2026-10-20 | Ready PR #784 targets main and closes #724 on merge; source/issue read-back verified |
+| 10.6 | Integrate approved contract to main | Complete | 2026-10-20 | #784 merged as 8d6b254 and #724 closed; #725 is unblocked |
 
 ## Progress log
 
@@ -87,3 +87,6 @@ against codex/phase1-post-merge-review, with #782 as a merge prerequisite.
   The issue remains open pending integration; agreement criteria are checked
   and the status block identifies the merge target repair. No dependency edges
   or Project custom fields were changed.
+- Verified #784 merged to main at 8d6b254357fadff390e3dae228acd7f1e55f5b4a
+  and #724 is closed. The accepted contract and D014 are now in main; TASK011
+  starts the next ordered delivery task, #725.

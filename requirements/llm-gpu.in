@@ -1,0 +1,5 @@
+-r llm-common.in
+# CUDA 12.6 wheel profile; GPU/driver validation is separate from resolution.
+torch>=2.6,<3
+bitsandbytes>=0.42,<1
+torch-geometric>=2.5,<3

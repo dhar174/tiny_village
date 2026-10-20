@@ -249,8 +249,9 @@ should link to this file rather than maintain separate decision records.
   or benchmark results. #730/#731/#732 and later release gates remain required.
 - **Integration finding:** #782 merged into main as `79e5683`; #783 subsequently
   merged into #782's old branch as `a9ed214`. The MVP contract therefore needs
-  a focused integration PR to main. #724 remains open until that PR lands;
-  the next ordered delivery task is #725.
+  a focused integration PR to main. Subsequently #784 merged as
+  `8d6b254357fadff390e3dae228acd7f1e55f5b4a`, bringing the contract to main and
+  closing #724. The next ordered delivery task is #725.
 
 ## Review status
 
@@ -259,11 +260,11 @@ is **Approved** under D011 and closed for the agreed Linux/offline startup
 scope. D010 accepts #779's residual uncertainty and closure. D001 remains the
 historical disposition of the earlier failed verification. D012 separately
 approves phase gate #722 and completes parent #717 within the same scope.
-Phase 2 is unblocked; #724 is its next ordered task.
+Phase 2 is unblocked and #724's planning contract is integrated.
 The [#724 contract](superpowers/specs/2026-10-20-issue-724-mvp-contract.md)
 has D013's two presentations and D014's qualified acceptance. The broader
-TinyVillage vision remains intact. #724 awaits integration to main because
-of #783's merge target; next comes #725's reproducible dependency profiles.
+TinyVillage vision remains intact. #784 integrated the accepted contract to
+main and closed #724; #725's reproducible dependency profiles are in progress.
 
 The [#779 investigation plan](superpowers/plans/2026-10-15-issue-779-startup-investigation.md)
 was approved under D007, and its bounded cycle has concluded. Its original
@@ -334,7 +335,7 @@ uncertainty without claiming a proven remedy.
   accepted-risk disposition. Original root-cause criteria remain unfulfilled.
 - #721 is closed as completed under the explicit D011 human approval.
 - #717 and #722 are closed as completed under the separate D012 phase-gate
-  approval. Phase 2 parent #723 and task #724 remain open and uncompleted.
+  approval. Phase 2 parent #723 remains open; #724 is closed after #784's merge.
 - #773–#776 remain open in their existing phases; deferral is not completion.
 - Native Windows support/validation is carried into support-matrix and CI work
   (#724/#726); core/optional dependency profiles remain in #725. Live-model
