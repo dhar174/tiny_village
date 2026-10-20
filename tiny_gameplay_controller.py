@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import datetime  # Added for time-based achievement
+from copy import deepcopy
 import inspect
 import logging
 import json
@@ -6,11 +9,20 @@ import os
 import random
 import threading
 import time
+import tempfile
 import traceback
 from collections import deque
 from datetime import timedelta
 
-import pygame
+# Rendering providers are bound only by an explicit visual initialization.
+pygame = None
+MapController = None
+
+
+def _ticks_ms():
+    """A renderer-independent monotonic clock, shared by runtime bookkeeping."""
+    return int(time.monotonic() * 1000)
+
 
 # Constants for speed control
 MAX_SPEED = 5.0
@@ -61,7 +73,6 @@ from typing import Dict, List, Any, Union, Optional
 from tiny_strategy_manager import StrategyManager
 from tiny_event_handler import EventHandler, Event
 from tiny_types import GraphManager
-from tiny_map_controller import MapController
 
 class UIPanel:
     """Base class for UI panels in the modular UI system."""
@@ -607,11 +618,10 @@ class EventNotificationPanel(UIPanel):
     DEFAULT_NOTIFICATION_TIMEOUT = 5000  # 5 seconds in milliseconds
     def add_notification(self, message: str, priority: str = "normal"):
         """Add a notification to the queue."""
-        import pygame
         notification = {
             'message': message,
             'priority': priority,
-            'timestamp': pygame.time.get_ticks(),
+            'timestamp': _ticks_ms(),
             'color': self._get_priority_color(priority)
         }
         
@@ -638,7 +648,7 @@ class EventNotificationPanel(UIPanel):
         current_y = y
         
         # Remove expired notifications
-        current_time = pygame.time.get_ticks()
+        current_time = _ticks_ms()
         self.notification_queue = [
             notif for notif in self.notification_queue
             if current_time - notif['timestamp'] < self.notification_timeout
@@ -941,11 +951,11 @@ class BuildingInteractionPanel(UIPanel):
         self.selected_building = building
         self.position = (mouse_pos[0] + 10, mouse_pos[1] - 50)  # Position near cursor
         self.visible = True
-        self.interaction_timeout = pygame.time.get_ticks() + 5000  # 5 second timeout
+        self.interaction_timeout = _ticks_ms() + 5000  # 5 second timeout
     
     def _render_content(self, screen: pygame.Surface, controller: "GameplayController", fonts: Dict[str, pygame.font.Font]) -> int:
         import pygame
-        if not self.selected_building or pygame.time.get_ticks() > self.interaction_timeout:
+        if not self.selected_building or _ticks_ms() > self.interaction_timeout:
             self.visible = False
             return 0
         
@@ -1138,7 +1148,7 @@ class ActionResolver:
         """Track action execution for analytics and improvement."""
         try:
             execution_record = {
-                "timestamp": pygame.time.get_ticks(),
+                "timestamp": _ticks_ms(),
                 "action_name": getattr(action, "name", str(action)),
                 "character_id": (
                     getattr(character, "uuid", "unknown") if character else None
@@ -1279,7 +1289,7 @@ class CheckpointManager:
         self.gameplay_controller = gameplay_controller
         self.checkpoint_dir = checkpoint_dir
         self.checkpoint_interval = 300000  # 5 minutes in milliseconds by default
-        self.last_checkpoint_time = 0
+        self.last_checkpoint_time = _ticks_ms()
         self.max_checkpoints = 10  # Keep last 10 checkpoints
         self.checkpoint_history = []
         self.auto_checkpoint_enabled = True
@@ -1318,7 +1328,7 @@ class CheckpointManager:
             return False
         
         try:
-            current_time = pygame.time.get_ticks()
+            current_time = _ticks_ms()
             
             # Generate checkpoint filename with timestamp to ensure uniqueness
             if checkpoint_name is None:
@@ -1594,7 +1604,8 @@ class SystemRecoveryManager:
         try:
             if not self.gameplay_controller.strategy_manager:
                 self.gameplay_controller.strategy_manager = StrategyManager(
-                    graph_manager=self.gameplay_controller.graph_manager
+                    graph_manager=self.gameplay_controller.graph_manager,
+                    use_llm=self.gameplay_controller.config.get("characters", {}).get("use_llm", False),
                 )
                 return True
             return True
@@ -1656,7 +1667,9 @@ class SystemRecoveryManager:
             return False
 
     def _recover_map_controller(self) -> bool:
-        """Recover the map controller system."""
+        """Recover an enabled renderer; headless absence is intentional."""
+        if self.gameplay_controller.headless:
+            return False
         try:
             if not self.gameplay_controller.map_controller:
                 map_config = self.gameplay_controller.config.get("map", {})
@@ -1717,7 +1730,9 @@ class SystemRecoveryManager:
         status["action_system"] = (
             "healthy" if getattr(gc, "action_system", None) else "failed"
         )
-        status["map_controller"] = "healthy" if gc.map_controller else "failed"
+        status["map_controller"] = (
+            "disabled" if gc.headless else "healthy" if gc.map_controller else "failed"
+        )
         status["characters"] = "healthy" if gc.characters else "failed"
         status["storytelling_system"] = "healthy" if getattr(gc, "storytelling_system", None) else "failed"
 
@@ -1730,7 +1745,14 @@ class GameplayController:
         self, graph_manager: GraphManager = None, config: Dict[str, Any] = None
     ):
         """Initialize the gameplay controller with improved error handling and configuration."""
-        self.config = config or {}
+        self.config = deepcopy(config or {})
+        self.headless = bool(self.config.get("headless", False))
+        self._owns_display = self._owns_font = False
+        self._owns_display_surface = False
+        self._temporary_checkpoint_directory = None
+        self.screen = self.clock = self.map_controller = None
+        self.ui_panels = {}
+        self.ui_fonts = {}
         self.initialization_errors = []
         self.running = True
         self.paused = False
@@ -1768,7 +1790,11 @@ class GameplayController:
         
         # Initialize checkpoint manager for game state persistence
         checkpoint_config = self.config.get("checkpoint", {})
-        checkpoint_dir = checkpoint_config.get("directory", "saves/checkpoints")
+        if self.headless and "directory" not in checkpoint_config:
+            self._temporary_checkpoint_directory = tempfile.TemporaryDirectory(prefix="tiny-village-")
+            checkpoint_dir = self._temporary_checkpoint_directory.name
+        else:
+            checkpoint_dir = checkpoint_config.get("directory", "saves/checkpoints")
         self.checkpoint_manager = CheckpointManager(self, checkpoint_dir)
         
         # Configure checkpointing
@@ -1797,7 +1823,10 @@ class GameplayController:
             self.graph_manager = graph_manager
 
         try:
-            self.strategy_manager = StrategyManager(graph_manager=self.graph_manager)
+            self.strategy_manager = StrategyManager(
+                graph_manager=self.graph_manager,
+                use_llm=self.config.get("characters", {}).get("use_llm", False),
+            )
         except Exception as e:
             logger.error(f"Failed to initialize StrategyManager: {e}")
             self.strategy_manager = None
@@ -1833,35 +1862,8 @@ class GameplayController:
             self.storytelling_system = None
             self.initialization_errors.append("StorytellingSystem initialization failed")
 
-        # Initialize pygame with error handling
-        try:
-            pygame.init()
-            screen_width = self.config.get("screen_width", 800)
-            screen_height = self.config.get("screen_height", 600)
-            self.screen = pygame.display.set_mode((screen_width, screen_height))
-            pygame.display.set_caption("Tiny Village")
-            self.clock = pygame.time.Clock()
-        except Exception as e:
-            logger.error(f"Failed to initialize pygame: {e}")
-            self.screen = None
-            self.clock = None
-            self.initialization_errors.append("Pygame initialization failed")
-
-        # Initialize the Map Controller with dynamic configuration
-        try:
-            map_config = self.config.get("map", {})
-            self.map_controller = MapController(
-                map_config.get("image_path", "assets/default_map.png"),
-                map_data={
-                    "width": map_config.get("width", 100),
-                    "height": map_config.get("height", 100),
-                    "buildings": self._get_default_buildings(map_config),
-                },
-            )
-        except Exception as e:
-            logger.error(f"Failed to initialize MapController: {e}")
-            self.map_controller = None
-            self.initialization_errors.append("MapController initialization failed")
+        if not self.headless:
+            self._initialize_rendering()
 
         # Initialize ActionResolver
         self.action_resolver = None
@@ -1897,11 +1899,21 @@ class GameplayController:
             },
         }
 
-        # Initialize all game systems
-        self.initialize_game_systems()
+        # Required simulation failures propagate; no substitute Characters.
+        try:
+            self.initialize_game_systems()
+            required = (self.graph_manager, self.strategy_manager, self.event_handler,
+                        self.action_system, self.gametime_manager)
+            if any(service is None for service in required):
+                raise RuntimeError("Required simulation service initialization failed")
+        except Exception:
+            self.close()
+            raise
 
-        # Setup user-driven configuration
-        self.setup_user_driven_configuration()
+        # A bounded headless check must not generate config files or read implicit
+        # user preferences that could re-enable rendering or model services.
+        if not self.headless:
+            self.setup_user_driven_configuration()
 
         # Initialize feature systems (delegate social networks to GraphManager)
         self.implement_achievement_system()
@@ -1922,8 +1934,65 @@ class GameplayController:
         else:
             logger.info("GameplayController initialized successfully")
 
+    def _initialize_rendering(self):
+        """Initialize actual Pygame resources only for visual use."""
+        global pygame, MapController
+        import pygame
+        from tiny_map_controller import MapController
+        try:
+            # Initialize only the subsystems this renderer needs. Top-level
+            # get_init() does not identify independently initialized resources.
+            self._owns_display = not pygame.display.get_init()
+            if self._owns_display:
+                pygame.display.init()
+            self._owns_font = not pygame.font.get_init()
+            if self._owns_font:
+                pygame.font.init()
+            self.screen = pygame.display.get_surface()
+            if self.screen is None:
+                self.screen = pygame.display.set_mode((
+                    self.config.get("screen_width", 800), self.config.get("screen_height", 600)
+                ))
+                self._owns_display_surface = True
+                pygame.display.set_caption("Tiny Village")
+            self.clock = pygame.time.Clock()
+            map_config = self.config.get("map", {})
+            self.map_controller = MapController(
+                map_config.get("image_path", "assets/default_map.png"),
+                map_data={"width": map_config.get("width", 100),
+                          "height": map_config.get("height", 100),
+                          "buildings": self._get_default_buildings(map_config)},
+            )
+        except Exception:
+            self.close()
+            raise
+
+    def close(self):
+        """Release owned resources; safe for headless, failed and repeated cleanup."""
+        self.running = False
+        if pygame is not None:
+            if self._owns_display:
+                pygame.display.quit()
+            elif self._owns_display_surface and pygame.display.get_surface() is self.screen:
+                # Pygame releases its window through display.quit(). Restore
+                # the host's previously initialized, windowless subsystem.
+                pygame.display.quit()
+                pygame.display.init()
+            if self._owns_font:
+                pygame.font.quit()
+        self._owns_display = self._owns_font = False
+        self._owns_display_surface = False
+        self.screen = self.clock = self.map_controller = None
+        self.ui_panels = {}
+        self.ui_fonts = {}
+        if self._temporary_checkpoint_directory is not None:
+            self._temporary_checkpoint_directory.cleanup()
+            self._temporary_checkpoint_directory = None
+
     def _init_ui_system(self):
-        """Initialize the modular UI panel system."""
+        """Initialize UI only for an enabled real renderer."""
+        if self.headless:
+            return
         try:
             # Create UI panels with positions
             self.ui_panels = {
@@ -2312,10 +2381,7 @@ class GameplayController:
 
             # Log system initialization results
             if system_init_errors:
-                logger.warning(
-                    f"Game systems initialized with {len(system_init_errors)} errors: {system_init_errors}"
-                )
-                self.game_statistics["errors_recovered"] = len(system_init_errors)
+                raise RuntimeError("Required system initialization failed: " + "; ".join(system_init_errors))
             else:
                 logger.info("All game systems initialized successfully")
 
@@ -2327,6 +2393,7 @@ class GameplayController:
             self.events = []
             if not hasattr(self, "action_resolver"):
                 self.action_resolver = ActionResolver()
+            raise RuntimeError("Required character/system initialization failed") from e
 
     def _can_create_characters(self, imported_modules: Dict) -> bool:
         """Check if we have the minimum required modules to create characters."""
@@ -2334,33 +2401,7 @@ class GameplayController:
         return all(module in imported_modules for module in required_for_characters)
 
     def _create_fallback_characters(self):
-        """Create minimal fallback characters when full character creation fails."""
-        try:
-            logger.info("Creating fallback characters")
-            # Create simple character data without complex dependencies
-            fallback_character_data = {
-                "name": "Fallback Villager",
-                "position": pygame.math.Vector2(400, 300),
-                "color": (100, 150, 200),
-                "uuid": "fallback_001",
-                "energy": 80,
-                "health_status": 90,
-                "path": [],
-            }
-
-            # Create a simple character dict (not a full Character object)
-            fallback_char = type("FallbackCharacter", (), fallback_character_data)()
-
-            # Add to systems if they exist
-            if self.map_controller:
-                self.map_controller.characters[fallback_char.uuid] = fallback_char
-            self.characters[fallback_char.uuid] = fallback_char
-
-            logger.info("Fallback character created successfully")
-        except Exception as e:
-            logger.error(f"Even fallback character creation failed: {e}")
-            # Ensure characters dict exists even if empty
-            self.characters = {}
+        raise RuntimeError("Required real character initialization failed; no substitute is installed")
 
     def _create_sample_characters(self, imported_modules: Dict, config: Dict):
         """Create sample characters with dynamic configuration and external file support."""
@@ -2373,6 +2414,9 @@ class GameplayController:
 
         # Get character configuration
         character_count = config.get("count", 4)
+        if not isinstance(character_count, int) or character_count < 0:
+            raise ValueError("Character count must be a nonnegative integer")
+        default_templates = False
         use_custom_data = config.get("use_custom", False)
         characters_file = config.get("characters_file")
 
@@ -2394,6 +2438,7 @@ class GameplayController:
                 character_data_list = config["character_data"]
             else:
                 # Enhanced default character data with more variety
+                default_templates = True
                 character_data_list = [
                     {
                         "name": "Alice Cooper",
@@ -2409,7 +2454,7 @@ class GameplayController:
                         "name": "Bob Wilson",
                         "age": 35,
                         "pronouns": "he/him",
-                        "job": "Blacksmith",
+                        "job": "Craftsman",
                         "recent_event": "Crafted special sword for mayor",
                         "long_term_goal": "Master legendary crafting techniques",
                         "personality": {"conscientiousness": 90, "openness": 60},
@@ -2439,7 +2484,7 @@ class GameplayController:
                         "name": "Erik Thornfield",
                         "age": 27,
                         "pronouns": "he/him",
-                        "job": "Guard",
+                        "job": "Security Guard",
                         "recent_event": "Prevented bandit attack",
                         "long_term_goal": "Establish village militia",
                         "personality": {"conscientiousness": 85, "neuroticism": 30},
@@ -2449,7 +2494,7 @@ class GameplayController:
                         "name": "Fiona Rivers",
                         "age": 39,
                         "pronouns": "she/her",
-                        "job": "Healer",
+                        "job": "Doctor",
                         "recent_event": "Cured mysterious illness",
                         "long_term_goal": "Open medical school",
                         "personality": {"agreeableness": 90, "conscientiousness": 80},
@@ -2457,7 +2502,15 @@ class GameplayController:
                     },
                 ]
 
-        # Limit character creation to requested count
+        if default_templates:
+            templates = character_data_list[:]
+            while len(character_data_list) < character_count:
+                i = len(character_data_list)
+                template = dict(templates[i % len(templates)])
+                template["name"] += f" {i + 1}"
+                character_data_list.append(template)
+        if len(character_data_list) < character_count:
+            raise ValueError("Character data contains fewer entries than the requested count")
         character_data_list = character_data_list[:character_count]
 
         for char_data in character_data_list:
@@ -2472,6 +2525,8 @@ class GameplayController:
                 )
                 continue
 
+        if len(characters) != character_count:
+            raise RuntimeError(f"Required character creation incomplete: {len(characters)}/{character_count}")
         return characters
 
     def _load_characters_from_file(self, filepath: str) -> List[Dict]:
@@ -2717,7 +2772,7 @@ class GameplayController:
                 "name": char_data["name"],
                 "age": char_data.get("age", random.randint(18, 65)),
                 "pronouns": char_data.get("pronouns", "they/them"),
-                "job": char_data.get("job", "Villager"),
+                "job": char_data.get("job", "Unemployed"),
                 "health_status": char_data.get(
                     "health_status", random.randint(80, 100)
                 ),
@@ -2743,18 +2798,19 @@ class GameplayController:
                 "gametime_manager": self.gametime_manager,
                 "location": location,
                 "graph_manager": self.graph_manager,
+                "memory_mode": self.config.get("memory", {}).get("mode", "full"),
                 "energy": char_data.get("energy", random.randint(60, 100)),
             }
 
             character = Character(**character_kwargs)
+            character.use_llm_decisions = self.config.get("characters", {}).get("use_llm", False)
             return character
 
         except Exception as e:
             logger.error(
                 f"Failed to create character {char_data.get('name', 'Unknown')}: {e}"
             )
-            logger.error(traceback.format_exc())
-            return None
+            raise RuntimeError(f"Required character {char_data.get('name', 'Unknown')} construction failed") from e
 
     def _register_characters(self, characters: List):
         """Register characters with game systems."""
@@ -2770,7 +2826,10 @@ class GameplayController:
 
                 start_x = random.randint(50, screen_width - 50)
                 start_y = random.randint(50, screen_height - 50)
-                character.position = pygame.math.Vector2(start_x, start_y)
+                character.position = (
+                    character.location.get_coordinates() if self.headless
+                    else pygame.math.Vector2(start_x, start_y)
+                )
                 character.color = (
                     random.randint(100, 255),
                     random.randint(100, 255),
@@ -2784,8 +2843,7 @@ class GameplayController:
                 self.characters[character.uuid] = character
 
             except Exception as e:
-                logger.error(f"Error registering character {character.name}: {e}")
-                continue
+                raise RuntimeError(f"Required character {character.name} registration failed") from e
         
         # Initialize relationships through GraphManager (single source of truth)
         if self.graph_manager and len(self.characters) > 1:
@@ -2794,6 +2852,8 @@ class GameplayController:
 
     def game_loop(self):
         """Main game loop with configurable frame rate and performance monitoring."""
+        if self.headless:
+            raise RuntimeError("Headless startup checks use the minimal runner, not the visual game loop")
         # TODO: Add frame rate adjustment based on performance
         # TODO: Add network synchronization for multiplayer
         # TODO: Add mod system integration
@@ -2816,7 +2876,7 @@ class GameplayController:
             
             # Automatic checkpointing
             try:
-                current_time = pygame.time.get_ticks()
+                current_time = _ticks_ms()
                 if self.checkpoint_manager.should_checkpoint(current_time):
                     if self.checkpoint_manager.create_checkpoint():
                         # Only notify on success with low priority
@@ -2966,6 +3026,8 @@ class GameplayController:
 
     def handle_events(self):
         """Handle pygame events and user input with improved interaction support."""
+        if self.headless:
+            return
         # TODO: Implement more sophisticated input handling
         # TODO: Add keyboard shortcuts configuration
         # TODO: Add mouse gesture recognition
@@ -3440,7 +3502,7 @@ class GameplayController:
                 logger.error(f"Error updating map controller: {e}")
                 update_errors.append("Map controller update failed")
                 systems_to_recover.append("map_controller")
-        elif not self.map_controller:
+        elif not self.headless:
             systems_to_recover.append("map_controller")
 
         # Update character AI and decision making
@@ -3485,7 +3547,7 @@ class GameplayController:
         # Update building production and resource management
         if hasattr(self, "building_manager") and self.building_manager:
             try:
-                current_tick = pygame.time.get_ticks()
+                current_tick = _ticks_ms()
                 
                 # Process production for all buildings
                 if self.map_controller and hasattr(self.map_controller, 'buildings'):
@@ -3575,7 +3637,7 @@ class GameplayController:
             if not hasattr(self, "quest_system"):
                 return
 
-            current_time = pygame.time.get_ticks()
+            current_time = _ticks_ms()
 
             # Generate new quests for characters with no active quests
             for char_id in self.characters.keys():
@@ -3898,41 +3960,14 @@ class GameplayController:
             bool: True if turn processed successfully, False otherwise
         """
         try:
-            from tiny_prompt_builder import PromptBuilder
-            from tiny_brain_io import TinyBrainIO
-            from tiny_output_interpreter import OutputInterpreter
-            from tiny_goap_system import GOAPPlanner
-            
             logger.info(f"Processing LLM-driven turn for {character.name}")
-            
-            # Step 1: Initialize LLM components with error handling
-            prompt_builder = None
-            brain_io = None
-            output_interpreter = None
-            goap_planner = None
-            
-            try:
-                # Initialize PromptBuilder with memory manager if available
-                memory_manager = getattr(self, 'memory_manager', None)
-                prompt_builder = PromptBuilder(character, memory_manager)
-                
-                # Initialize output interpreter
-                output_interpreter = OutputInterpreter(self.graph_manager)
-                
-                # Initialize GOAP planner
-                goap_planner = GOAPPlanner(self.graph_manager)
-                
-                # Initialize LLM brain - use fallback if not available
-                try:
-                    brain_io = TinyBrainIO("alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2")
-                except Exception as e:
-                    logger.warning(f"Could not initialize LLM brain: {e}. Using fallback decision making.")
-                    brain_io = None
-                    
-            except ImportError as e:
-                logger.warning(f"LLM components not available: {e}. Falling back to basic actions.")
+            # Share the configured provider and its availability state across
+            # characters/turns; failed loads must not be retried every turn.
+            if self.strategy_manager is None or not self.strategy_manager._ensure_llm():
+                logger.warning("Configured LLM provider unavailable; using basic actions")
                 return self._execute_fallback_character_action(character)
-                
+            goap_planner = self.strategy_manager.goap_planner
+
             # Step 2: Get available actions from strategy manager and GOAP
             potential_actions = []
             try:
@@ -4539,7 +4574,7 @@ class GameplayController:
                     avg_relationships = sum(relationship_values) / len(relationship_values)
             
             try:
-                time_value = pygame.time.get_ticks()
+                time_value = _ticks_ms()
             except (AttributeError, ImportError):
                 time_value = 0
             
@@ -4705,6 +4740,8 @@ class GameplayController:
 
     def render(self):
         """Render the game with modular UI system and error handling."""
+        if self.headless:
+            return
         if not self.screen:
             return
 
@@ -4988,7 +5025,7 @@ class GameplayController:
             
             # Collect saveable game state
             game_state = {
-                "timestamp": pygame.time.get_ticks(),
+                "timestamp": _ticks_ms(),
                 "characters": {},
                 "achievements": self.global_achievements,
                 "statistics": self.game_statistics,
@@ -5075,7 +5112,7 @@ class GameplayController:
         """Implement basic achievement tracking system."""
         try:
             # Achievement checking logic
-            current_time = pygame.time.get_ticks()
+            current_time = _ticks_ms()
             
             # First character created achievement
             if len(self.characters) > 0:
@@ -5099,10 +5136,10 @@ class GameplayController:
                 self.weather_system = {
                     "current_weather": "clear",
                     "temperature": 20,
-                    "last_change": pygame.time.get_ticks()
+                    "last_change": _ticks_ms()
                 }
             
-            current_time = pygame.time.get_ticks()
+            current_time = _ticks_ms()
             
             # Change weather every 2 minutes (120,000 ms)
             if current_time - self.weather_system["last_change"] > 120000:
@@ -5125,7 +5162,7 @@ class GameplayController:
             return self.graph_manager.get_social_networks()
         else:
             # Fallback if GraphManager not available
-            return {"relationships": {}, "last_update": pygame.time.get_ticks()}
+            return {"relationships": {}, "last_update": _ticks_ms()}
     
     # Note: social_networks property now delegates to GraphManager
     @property 
@@ -5181,7 +5218,7 @@ class GameplayController:
             if not hasattr(self, "world_events"):
                 self.world_events = {
                     "event_queue": [],
-                    "last_event_time": pygame.time.get_ticks(),
+                    "last_event_time": _ticks_ms(),
                     "event_templates": [
                         {"type": "weather_change", "description": "Weather patterns shift"},
                         {"type": "visitor_arrival", "description": "A stranger visits the village"},
@@ -5196,6 +5233,9 @@ class GameplayController:
     def add_event_notification(self, message: str, priority: str = "normal"):
         """Add an event notification to the UI."""
         try:
+            if self.headless:
+                logger.info("Event notification: %s (priority: %s)", message, priority)
+                return
             if hasattr(self, 'ui_panels') and 'event_notifications' in self.ui_panels:
                 self.ui_panels['event_notifications'].add_notification(message, priority)
                 logger.info(f"Added event notification: {message} (priority: {priority})")

@@ -1,339 +1,162 @@
+from __future__ import annotations
+
 from tiny_cache import configure_model_cache
 
-# Hugging Face snapshots cache settings while its libraries are imported.
+# Configure owned caches before a caller explicitly loads Hugging Face services.
 cache_dir = configure_model_cache()
 
+import functools
+import heapq
 import html
+import importlib
+import inspect
 import json
+import logging
+import math
+import os
 import pickle
 import random
-import os
-import math
 import re
+import sys
+import threading
 import time
-import logging
-
 from collections import deque
-
-# Graceful fallback for networkx
-try:
-    from networkx import node_link_data
-    import networkx as nx
-
-    NETWORKX_AVAILABLE = True
-except ImportError:
-    NETWORKX_AVAILABLE = False
-    node_link_data = None
-    nx = None
-# Graceful fallbacks for optional dependencies
-try:
-    import numpy as np
-    NUMPY_AVAILABLE = True
-except ImportError:
-    NUMPY_AVAILABLE = False
-    # Create minimal numpy-like functionality
-    class MockNumpy:
-        def array(self, data):
-            return data
-        def mean(self, data, axis=None):
-            return sum(data) / len(data) if data else 0
-        def random(self):
-            return random
-    np = MockNumpy()
-
 from datetime import datetime, timedelta
 
-try:
-    import pandas as pd
-    PANDAS_AVAILABLE = True
-except ImportError:
-    PANDAS_AVAILABLE = False
-    pd = None
-
-try:
-    import scipy as sp
-    SCIPY_AVAILABLE = True
-except ImportError:
-    SCIPY_AVAILABLE = False
-    sp = None
-
-try:
-    from sklearn import tree
-    from sklearn.metrics.pairwise import cosine_similarity
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    SKLEARN_AVAILABLE = True
-except ImportError:
-    SKLEARN_AVAILABLE = False
-    tree = None
-    def cosine_similarity(a, b):
-        """Simple fallback cosine similarity"""
-        return [[0.5]]  # Return neutral similarity
-    
-    class TfidfVectorizer:
-        """Fallback TfidfVectorizer implementation"""
-        def __init__(self, **kwargs):
-            pass
-        def fit_transform(self, docs):
-            return [[0.5] * len(docs)]  # Return dummy vectors
-        def transform(self, docs):
-            return [[0.5] * len(docs)]
-# Graceful fallback for networkx
-try:
-    import networkx as nx
-    NETWORKX_AVAILABLE = NETWORKX_AVAILABLE and True
-except ImportError:
-    NETWORKX_AVAILABLE = False
-    # Create a minimal networkx-like module for fallback
-    class MockNetworkX:
-        @staticmethod
-        def Graph():
-            return {'nodes': [], 'edges': []}
-        @staticmethod
-        def DiGraph():
-            return {'nodes': [], 'edges': []}
-        @staticmethod
-        def add_node(graph, node, **kwargs):
-            if 'nodes' in graph:
-                graph['nodes'].append(node)
-        @staticmethod
-        def add_edge(graph, a, b, **kwargs):
-            if 'edges' in graph:
-                graph['edges'].append((a, b))
-    nx = MockNetworkX()
-# Conditional torch import - skip functionality if not available
-try:
-    import torch
-    TORCH_AVAILABLE = True
-except ImportError:
-    TORCH_AVAILABLE = False
-    torch = None
-
-# Conditional faiss import - skip functionality if not available  
-try:
-    import faiss
-    FAISS_AVAILABLE = True
-except ImportError:
-    FAISS_AVAILABLE = False
-    # Create minimal faiss-like functionality
-    class MockFaiss:
-        class IndexFlatIP:
-            def __init__(self, dim):
-                self.dim = dim
-                self.vectors = []
-            def add(self, vectors):
-                if NUMPY_AVAILABLE:
-                    self.vectors.extend(vectors)
-                else:
-                    self.vectors.extend(vectors if isinstance(vectors, list) else [vectors])
-            def search(self, query, k=5):
-                # Return dummy search results
-                scores = [0.5] * min(k, len(self.vectors))
-                indices = list(range(min(k, len(self.vectors))))
-                return scores, indices
-    faiss = MockFaiss()
-# Optional transformers support
-try:
-    from transformers import AutoModel, AutoTokenizer, pipeline
-    TRANSFORMERS_AVAILABLE = True
-except ImportError:
-    TRANSFORMERS_AVAILABLE = False
-    AutoModel = AutoTokenizer = pipeline = None
-
-# Optional NLP libraries 
-try:
-    from rake_nltk import Rake
-    RAKE_AVAILABLE = True
-except ImportError:
-    RAKE_AVAILABLE = False
-    Rake = None
-
-try:
-    import spacy
-    SPACY_AVAILABLE = True
-except ImportError:
-    SPACY_AVAILABLE = False
-    spacy = None
-
-try:
-    import nltk
-    from nltk.tokenize import RegexpTokenizer
-    NLTK_AVAILABLE = True
-except ImportError:
-    NLTK_AVAILABLE = False
-    nltk = None
-    class RegexpTokenizer:
-        def __init__(self, pattern):
-            pass
-        def tokenize(self, text):
-            return text.split()
-
-try:
-    from textblob import TextBlob
-    TEXTBLOB_AVAILABLE = True
-except ImportError:
-    TEXTBLOB_AVAILABLE = False
-    class TextBlob:
-        def __init__(self, text):
-            self.text = text
-        @property
-        def words(self):
-            return self.text.split()
-
-# Remove duplicate sklearn imports - already handled above
-
-# Additional optional imports
-try:
-    from nltk.corpus import stopwords
-    NLTK_STOPWORDS_AVAILABLE = True
-except ImportError:
-    NLTK_STOPWORDS_AVAILABLE = False
-    stopwords = None
-
-import heapq
-
-# Optional tiny_brain_io - graceful fallback if not available
-try:
-    import tiny_brain_io as tbi
-    TBI_AVAILABLE = True
-except ImportError:
-    TBI_AVAILABLE = False
-    tbi = None
-
-# Optional tiny_time_manager
-try:
-    import tiny_time_manager as ttm
-    TTM_AVAILABLE = True
-except ImportError:
-    TTM_AVAILABLE = False
-    ttm = None
-
-import sys
-
-# Optional tiny_sr_mapping
-try:
-    import tiny_sr_mapping as tsm
-    TSM_AVAILABLE = True
-except ImportError:
-    TSM_AVAILABLE = False
-    tsm = None
-
-# Additional sklearn components
-try:
-    from sklearn.cluster import KMeans
-    from sklearn.feature_extraction.text import CountVectorizer
-    from sklearn.decomposition import LatentDirichletAllocation
-    SKLEARN_EXTENDED_AVAILABLE = True
-except ImportError:
-    SKLEARN_EXTENDED_AVAILABLE = False
-    KMeans = CountVectorizer = LatentDirichletAllocation = None
-
+import networkx as nx
+from networkx import node_link_data
+import numpy as np
+import tiny_time_manager as ttm
 from tiny_globals import (
-    tiny_globals_obj,
-    get_globals,
-    get_global,
-    set_global,
-    remove_global,
-    has_global,
-    global_keys,
-    global_values,
+    tiny_globals_obj, get_globals, get_global, set_global, remove_global,
+    has_global, global_keys, global_values,
 )
 
-remove_list = [r"\)", r"\(", r"–", r'"', r"”", r'"', r"\[.*\]", r".*\|.*", r"—"]
-# Initialize global objects only if dependencies are available
-if SKLEARN_EXTENDED_AVAILABLE and LatentDirichletAllocation:
-    lda = LatentDirichletAllocation(n_components=3)
-else:
-    lda = None
-# Try to load the transformer model, fallback to smaller model if not available
-if SPACY_AVAILABLE and spacy:
-    try:
-        nlp = spacy.load("en_core_web_trf")
-    except OSError:
+NETWORKX_AVAILABLE = NUMPY_AVAILABLE = TTM_AVAILABLE = True
+
+
+class MemoryFeatureUnavailableError(RuntimeError):
+    """An explicitly requested memory capability cannot be provided."""
+
+
+# These names remain available for existing callers, but importing this module
+# never imports optional AI/analytics libraries or initializes model services.
+_BINDINGS = {
+    "pd": ("pandas", None, "PANDAS_AVAILABLE"),
+    "sp": ("scipy", None, "SCIPY_AVAILABLE"),
+    "tree": ("sklearn", "tree", "SKLEARN_AVAILABLE"),
+    "cosine_similarity": ("sklearn.metrics.pairwise", "cosine_similarity", "SKLEARN_AVAILABLE"),
+    "TfidfVectorizer": ("sklearn.feature_extraction.text", "TfidfVectorizer", "SKLEARN_AVAILABLE"),
+    "CountVectorizer": ("sklearn.feature_extraction.text", "CountVectorizer", "SKLEARN_EXTENDED_AVAILABLE"),
+    "LatentDirichletAllocation": ("sklearn.decomposition", "LatentDirichletAllocation", "SKLEARN_EXTENDED_AVAILABLE"),
+    "KMeans": ("sklearn.cluster", "KMeans", "SKLEARN_EXTENDED_AVAILABLE"),
+    "NMF": ("sklearn.decomposition", "NMF", "SKLEARN_NMF_AVAILABLE"),
+    "ENGLISH_STOP_WORDS": ("sklearn.feature_extraction.text", "ENGLISH_STOP_WORDS", "SKLEARN_AVAILABLE"),
+    "torch": ("torch", None, "TORCH_AVAILABLE"),
+    "faiss": ("faiss", None, "FAISS_AVAILABLE"),
+    "AutoModel": ("transformers", "AutoModel", "TRANSFORMERS_AVAILABLE"),
+    "AutoTokenizer": ("transformers", "AutoTokenizer", "TRANSFORMERS_AVAILABLE"),
+    "pipeline": ("transformers", "pipeline", "TRANSFORMERS_AVAILABLE"),
+    "Rake": ("rake_nltk", "Rake", "RAKE_AVAILABLE"),
+    "spacy": ("spacy", None, "SPACY_AVAILABLE"),
+    "Matcher": ("spacy.matcher", "Matcher", "SPACY_EXTENDED_AVAILABLE"),
+    "Span": ("spacy.tokens", "Span", "SPACY_EXTENDED_AVAILABLE"),
+    "nltk": ("nltk", None, "NLTK_AVAILABLE"),
+    "RegexpTokenizer": ("nltk.tokenize", "RegexpTokenizer", "NLTK_AVAILABLE"),
+    "stopwords": ("nltk.corpus", "stopwords", "NLTK_STOPWORDS_AVAILABLE"),
+    "wordnet": ("nltk.corpus", "wordnet", "NLTK_EXTENDED_AVAILABLE"),
+    "word_tokenize": ("nltk.tokenize", "word_tokenize", "NLTK_EXTENDED_AVAILABLE"),
+    "pos_tag": ("nltk", "pos_tag", "NLTK_EXTENDED_AVAILABLE"),
+    "PorterStemmer": ("nltk.stem", "PorterStemmer", "NLTK_STEMMER_AVAILABLE"),
+    "TextBlob": ("textblob", "TextBlob", "TEXTBLOB_AVAILABLE"),
+    "matplotlib": ("matplotlib", None, "MATPLOTLIB_AVAILABLE"),
+    "plt": ("matplotlib.pyplot", None, "MATPLOTLIB_AVAILABLE"),
+    "sns": ("seaborn", None, "SEABORN_AVAILABLE"),
+    "tbi": ("tiny_brain_io", None, "TBI_AVAILABLE"),
+    "tsm": ("tiny_sr_mapping", None, "TSM_AVAILABLE"),
+}
+for _symbol, (_, _, _flag) in _BINDINGS.items():
+    globals()[_symbol] = None
+    globals()[_flag] = False
+
+_service_lock = threading.RLock()
+model = nlp = sentiment_analysis = lda = None
+manager = None
+
+
+def _dependency(symbol):
+    """Load a real dependency on demand; never substitute invented results."""
+    with _service_lock:
+        value = globals()[symbol]
+        if value is not None:
+            return value
+        module_name, attribute, flag = _BINDINGS[symbol]
         try:
-            nlp = spacy.load("en_core_web_sm")
-        except OSError:
-            print("Warning: No spaCy model found. Using basic NLP functions.")
-            nlp = None
-else:
-    nlp = None
-# Already imported and handled above - remove duplicate imports
-
-# Optional spacy imports
-try:
-    from spacy.matcher import Matcher
-    from spacy.tokens import Span
-    SPACY_EXTENDED_AVAILABLE = True
-except ImportError:
-    SPACY_EXTENDED_AVAILABLE = False
-    Matcher = Span = None
-
-# Download stopwords if nltk is available
-if NLTK_AVAILABLE and nltk:
-    try:
-        nltk.download("stopwords", quiet=True)
-        if hasattr(nltk, 'data') and hasattr(nltk.data, 'find'):
-            if not os.path.exists(nltk.data.find("corpora/stopwords")):
-                nltk.download("stopwords", quiet=True)
-        nltk.download("punkt", quiet=True)
-    except Exception:
-        pass  # Silently ignore download failures
-
-# Optional matplotlib
-try:
-    import matplotlib
-    matplotlib.use("Agg")  # Use non-interactive backend
-    import matplotlib.pyplot as plt
-    MATPLOTLIB_AVAILABLE = True
-except ImportError:
-    MATPLOTLIB_AVAILABLE = False
-    matplotlib = plt = None
-
-# Optional seaborn
-try:
-    import seaborn as sns
-    SEABORN_AVAILABLE = True
-except ImportError:
-    SEABORN_AVAILABLE = False
-    sns = None
-
-# Additional transformers imports - already handled above with TRANSFORMERS_AVAILABLE flag
-# from transformers import AutoModelForSequenceClassification, AutoTokenizer - remove duplicate
-import functools
-
-import inspect
-
-# Additional nltk imports
-try:
-    from nltk.corpus import wordnet
-    from nltk.tokenize import word_tokenize
-    from nltk import pos_tag
-    NLTK_EXTENDED_AVAILABLE = True
-except ImportError:
-    NLTK_EXTENDED_AVAILABLE = False
-    wordnet = None
-    def word_tokenize(text):
-        return text.split()
-    def pos_tag(tokens):
-        return [(token, 'NN') for token in tokens]  # Default to noun
-
-# Initialize networkx graphs only if available
-if NETWORKX_AVAILABLE:
-    class_interaction_graph = nx.DiGraph()
-    call_flow_diagram = nx.DiGraph()
-else:
-    class_interaction_graph = None
-    call_flow_diagram = None
+            module = importlib.import_module(module_name)
+            value = getattr(module, attribute) if attribute else module
+        except (ImportError, OSError) as error:
+            raise MemoryFeatureUnavailableError(
+                f"Memory requires {module_name} for {symbol}; install the documented "
+                "feature profile before requesting this capability."
+            ) from error
+        globals()[symbol] = value
+        globals()[flag] = True
+        return value
 
 
-# Additional nltk imports
-try:
-    from nltk.stem import PorterStemmer
-    NLTK_STEMMER_AVAILABLE = True
-except ImportError:
-    NLTK_STEMMER_AVAILABLE = False
-    class PorterStemmer:
-        def stem(self, word):
-            return word.lower()  # Simple fallback
+def _get_nlp():
+    global nlp
+    with _service_lock:
+        if nlp is None:
+            provider = _dependency("spacy")
+            try:
+                nlp = provider.load("en_core_web_trf")
+            except OSError:
+                try:
+                    nlp = provider.load("en_core_web_sm")
+                except OSError as error:
+                    raise MemoryFeatureUnavailableError(
+                        "NLP requires an installed en_core_web_trf or en_core_web_sm "
+                        "model; no model is downloaded automatically."
+                    ) from error
+        return nlp
+
+
+def _get_sentiment():
+    global sentiment_analysis
+    with _service_lock:
+        if sentiment_analysis is None:
+            try:
+                sentiment_analysis = SentimentAnalysis()
+            except (ImportError, LookupError, OSError) as error:
+                raise MemoryFeatureUnavailableError(
+                    "Sentiment analysis requires its model and NLTK data; "
+                    "no corpus is downloaded automatically."
+                ) from error
+        return sentiment_analysis
+
+
+def _requires_memory_feature(feature):
+    """Guard real semantic entry points before touching any optional provider."""
+    def decorate(method):
+        @functools.wraps(method)
+        def guarded(self, *args, **kwargs):
+            owner = self if isinstance(self, MemoryManager) else self.manager
+            owner._require_feature(feature)
+            try:
+                return method(self, *args, **kwargs)
+            except (ImportError, LookupError, OSError) as error:
+                owner._capabilities[feature] = "unavailable"
+                raise MemoryFeatureUnavailableError(
+                    f"Memory {feature} cannot run: {error}"
+                ) from error
+        return guarded
+    return decorate
+
+
+remove_list = [r"\)", r"\(", r"–", r'"', r"”", r'"', r"\[.*\]", r".*\|.*", r"—"]
+class_interaction_graph = nx.DiGraph()
+call_flow_diagram = nx.DiGraph()
 
 # Write a line of code that will identify how many classes are in this module:
 num_classes = 0
@@ -508,19 +331,15 @@ def sigmoid(x):
 
 
 # Additional sklearn imports
-try:
-    from sklearn.decomposition import NMF
-    SKLEARN_NMF_AVAILABLE = True
-except ImportError:
-    SKLEARN_NMF_AVAILABLE = False
-    NMF = None
-
-
 # Example usage:
 # @track_calls
 class EmbeddingModel:
     def __init__(self):
 
+        if AutoModel is None or AutoTokenizer is None:
+            _dependency("torch")
+            _dependency("AutoModel")
+            _dependency("AutoTokenizer")
         try:
             self.tokenizer = AutoTokenizer.from_pretrained(
                 "sentence-transformers/all-MiniLM-L6-v2",
@@ -573,8 +392,11 @@ def get_wordnet_pos(spacy_token):
 class SentimentAnalysis:
     def __init__(self):
         # self.classifier = pipeline('sentiment-analysis')
-        self.emo_classifier = pipeline(model="lordtt13/emo-mobilebert")
-        self.stop_words = list(ENGLISH_STOP_WORDS.union(stopwords.words("english")))
+        self.stop_words = list(_dependency("ENGLISH_STOP_WORDS").union(
+            _dependency("stopwords").words("english")
+        ))
+        _dependency("TextBlob")
+        self.emo_classifier = _dependency("pipeline")(model="lordtt13/emo-mobilebert")
 
     def get_sentiment_score(self, text):
         # result = self.classifier(text)
@@ -603,8 +425,7 @@ class SentimentAnalysis:
 
 def mean_pooling(model_output, attention_mask):
     """Mean pooling - ensure torch is available before using torch operations."""
-    if not TORCH_AVAILABLE:
-        raise RuntimeError("torch is required for mean_pooling but is not available")
+    _dependency("torch")
     
     # #print(type(model_output))
     # #print(type(attention_mask))
@@ -791,10 +612,11 @@ class MemoryQuery:
 
 # @track_calls
 class Memory:
-    def __init__(self, description, creation_time=datetime.now()):
+    def __init__(self, description, creation_time=None, importance_score=0):
         self.description = description
-        self.creation_time = creation_time
-        self.last_access_time = creation_time
+        self.creation_time = datetime.now() if creation_time is None else creation_time
+        self.last_access_time = self.creation_time
+        self.importance_score = importance_score
 
     def update_access_time(self, access_time):
         self.last_access_time = access_time
@@ -1081,11 +903,13 @@ class GeneralMemory(Memory):
     def get_keywords(self):
         return self.keywords
 
+    @_requires_memory_feature('embeddings')
     def get_embedding(self):
         if self.description_embedding is None:
             self.description_embedding = self.generate_embedding()
         return self.description_embedding
 
+    @_requires_memory_feature('embeddings')
     def generate_embedding(self):
         model = get_global_model()
         if model is None or not model.is_initialized:
@@ -1251,6 +1075,7 @@ class GeneralMemory(Memory):
                     )
                     # Continue with other fact embeddings
 
+    @_requires_memory_feature('semantic_search')
     def index_memories(self):
         specific_memories = self.get_specific_memories()
         if not specific_memories:
@@ -1372,6 +1197,7 @@ class SpecificMemory(Memory):
         self.att_mask = None
         self.facts_embeddings = None
 
+    @_requires_memory_feature('analysis')
     def analyze_description(self):
         if self.manager is None:
             # check tiny_globals_obj for global_memory_manager
@@ -1463,6 +1289,7 @@ class SpecificMemory(Memory):
             self.related_memories.append(related_memory)
             related_memory.add_related_memory(self)  # Ensuring bidirectional link
 
+    @_requires_memory_feature('embeddings')
     def get_embedding(self, normalize=None):
         if normalize is not None and self.normalized_embeddings != normalize:
             self.normalized_embeddings = normalize
@@ -1476,6 +1303,7 @@ class SpecificMemory(Memory):
             )
         return self.embedding, self.att_mask
 
+    @_requires_memory_feature('embeddings')
     def generate_embedding(self, string=None, normalize=None):
         model = get_global_model()
         if model is None or not model.is_initialized:
@@ -1529,7 +1357,7 @@ class FlatMemoryAccess:
     def __init__(
         self,
         manager,
-        memory_embeddings={},
+        memory_embeddings=None,
         json_file=None,
         index_load_filename=None,
     ):
@@ -1558,59 +1386,14 @@ class FlatMemoryAccess:
         self.faiss_index = None
         self.euclidean_threshold = 0.35
         self.index_build_count = 0
-        self.memory_embeddings = memory_embeddings
+        self.memory_embeddings = {} if memory_embeddings is None else memory_embeddings
         self.specific_memories = {}
-        # self.initialize_faiss_index(768, "ip", index_load_filename=index_load_filename) # 768 was for sentence-transformers/all-mpnet-base-v2
-        self.initialize_faiss_index(
-            384, "ip", index_load_filename=index_load_filename
-        )  # 384 is for sentence-transformers/all-MiniLM-L6-v2
-
-        for key, value in vars(self).items():
-
-            if (
-                isinstance(value, spacy.tokens.token.Token)
-                or isinstance(value, spacy.tokens.Doc)
-                or isinstance(value, spacy.tokens.Span),
-            ):
-                if isinstance(value, spacy.tokens.token.Token):
-                    print(
-                        f"Token object found in flat_access at key: {key} with value: {value} and type: {type(value)} and text: {value.text}"
-                    )
-                elif isinstance(value, spacy.tokens.Doc):
-                    print(
-                        f"Doc object found in flat_access at key: {key} with value: {value} and type: {type(value)} and text: {value.text}"
-                    )
-                elif isinstance(value, spacy.tokens.Span):
-                    print(
-                        f"Span object found in flat_access at key: {key} with value: {value} and type: {type(value)} and text: {value.root.text}"
-                    )
-            elif isinstance(value, dict):
-                for k, v in value.items():
-                    if isinstance(v, spacy.tokens.token.Token):
-                        print(
-                            f"Token object found in dictionary at key: {k} in flat_access at key: {key}"
-                        )
-                    elif isinstance(v, spacy.tokens.Doc):
-                        print(
-                            f"Doc object found in dictionary at key: {k} in flat_access at key: {key}"
-                        )
-                    elif isinstance(v, spacy.tokens.Span):
-                        print(
-                            f"Span object found in dictionary at key: {k} in flat_access at key: {key}"
-                        )
-            elif isinstance(value, object) and not isinstance(
-                value, (str, int, float, list, tuple)
-            ):
-                print(f"{name}.{key}, {type(value)}, {value}")
-
-        # self.json_file = json_file
-        # self.cache = retrieve_cache(self.json_file)
+        # Indexes are created only when an enabled semantic operation needs one.
 
     def __getstate__(self):
         state = self.__dict__.copy()
         del state["faiss_index"]
         del state["memory_embeddings"]
-        del state["recent_memories"]
 
         return state
 
@@ -1620,7 +1403,7 @@ class FlatMemoryAccess:
         # Add the embedding attribute back so it doesn't cause issues
         self.faiss_index = None
         self.memory_embeddings = {}
-        self.recent_memories = deque(maxlen=50)
+        self.recent_memories = state.get("recent_memories", deque(maxlen=50))
         # Convert string representations of Token objects back to Token objects
         # for key, value in vars(self).items():
         #     if isinstance(value, str):
@@ -1630,6 +1413,7 @@ class FlatMemoryAccess:
         #             if isinstance(v, str):
         #                 self.__dict__[key][k] = nlp(v)[0]
 
+    @_requires_memory_feature('embeddings')
     def save_all_specific_memories_embeddings_to_file(self, filename):
         """
         Save all specific memories embeddings to file with comprehensive error handling.
@@ -1731,6 +1515,7 @@ class FlatMemoryAccess:
             logging.error(f"Critical error saving memory embeddings: {e}")
             return False
 
+    @_requires_memory_feature('embeddings')
     def load_all_specific_memories_embeddings_from_file(self, filename):
         """
         Load all specific memories embeddings from file with comprehensive error handling.
@@ -1840,6 +1625,7 @@ class FlatMemoryAccess:
         for memory in self.get_specific_memories():
             memory.normalized_embeddings = normalized
 
+    @_requires_memory_feature('vector_index')
     def initialize_faiss_index(
         self, dimension, metric="l2", normalize=False, index_load_filename=None
     ):
@@ -2097,6 +1883,7 @@ class FlatMemoryAccess:
         self.faiss_index = None
         self.index_is_normalized = False
 
+    @_requires_memory_feature('vector_index')
     def save_index_to_file(self, filename):
         """
         Save FAISS index to file with comprehensive error handling.
@@ -2135,6 +1922,7 @@ class FlatMemoryAccess:
             logging.error(f"Error saving FAISS index to {filename}: {e}")
             return False
 
+    @_requires_memory_feature('vector_index')
     def load_index_from_file(self, filename, normalize=False):
         """
         Load FAISS index from file with comprehensive error handling.
@@ -2209,6 +1997,7 @@ class FlatMemoryAccess:
         with open(json_file, "w") as file:
             json.dump(cache, file)
 
+    @_requires_memory_feature('semantic_search')
     def find_memories_by_query(
         self,
         query,
@@ -2301,6 +2090,7 @@ class FlatMemoryAccess:
         # print(f"Time taken to find similar memories: {end_time - start_time:.4f} seconds")
         return similar_memories
 
+    @_requires_memory_feature('semantic_search')
     def find_similar_memories(
         self,
         specific_memory_id,
@@ -2367,6 +2157,7 @@ class FlatMemoryAccess:
         # Return basic euclidean distance of two vectors
         return np.linalg.norm(x - y)
 
+    @_requires_memory_feature('semantic_search')
     def find_similar_memories_pagerank(
         self, specific_memory_id, top_k=10, threshold=0.1, similarity_metric="cosine"
     ):
@@ -2409,6 +2200,7 @@ class FlatMemoryAccess:
         # print(f"Time taken to find similar memories: {end_time - start_time:.4f} seconds")
         return similarities
 
+    @_requires_memory_feature('semantic_search')
     def find_similar_memories_faiss(
         self,
         specific_memory_id,
@@ -2452,20 +2244,15 @@ class FlatMemoryAccess:
         # print(f"Time taken to find similar memories: {end_time - start_time:.4f} seconds")
         return similar_memories
 
-    def add_memory(self, memory: SpecificMemory):
+    def add_memory(self, memory: Memory):
+        if not isinstance(memory, Memory):
+            raise TypeError("Memory records must be real Memory instances")
         self.recent_memories.append(memory)
-        # Adding to priority queue with importance score as the priority
-        if len(self.most_importance_memories) < 10:
-            heapq.heappush(
-                self.most_importance_memories, (memory.importance_score, memory)
-            )
-        else:
-            # If the new memory is more important than the least important in the heap
-            if memory.importance_score > self.most_importance_memories[0][0]:
-                heapq.heappop(self.most_importance_memories)
-                heapq.heappush(
-                    self.most_importance_memories, (memory.importance_score, memory)
-                )
+        # A stable bounded ordering handles equal importance without comparing
+        # unrelated Memory objects. Keep the legacy (importance, record) shape.
+        self.most_importance_memories.append((memory.importance_score, memory))
+        self.most_importance_memories.sort(key=lambda pair: pair[0])
+        self.most_importance_memories[:] = self.most_importance_memories[-10:]
 
     def add_common_memory(self, key, memory):
         self.common_memories[key] = memory
@@ -2514,49 +2301,47 @@ class FlatMemoryAccess:
 
 # Global model initialization function
 def init_global_model():
-    """Initialize the global embedding model and store it in tiny_globals"""
-    try:
-        global_model = EmbeddingModel()
-        tiny_globals_obj.set("global_embedding_model", global_model)
-        print(
-            f"Global embedding model initialized successfully: {global_model.is_initialized}"
-        )
-        return global_model
-    except Exception as e:
-        print(f"Failed to initialize global embedding model: {e}")
-        tiny_globals_obj.set("global_embedding_model", None)
-        return None
+    """Initialize the shared real embedding service on explicit request."""
+    global model
+    with _service_lock:
+        try:
+            provider = EmbeddingModel()
+        except MemoryFeatureUnavailableError:
+            raise
+        except Exception as error:
+            raise MemoryFeatureUnavailableError("Embedding model initialization failed") from error
+        tiny_globals_obj.set("global_embedding_model", provider)
+        model = provider
+        return provider
 
 
 def get_global_model():
-    """Get the global embedding model from tiny_globals"""
-    model = tiny_globals_obj.get("global_embedding_model", None)
-    if model is None:
-        print("Global model not found, attempting to initialize...")
-        model = init_global_model()
-    return model
-
-
-# Initialize the global model when the module is imported
-model = get_global_model()
-
-# Initialize sentiment analysis only if transformers is available
-if TRANSFORMERS_AVAILABLE and pipeline:
-    try:
-        sentiment_analysis = SentimentAnalysis()
-    except Exception as e:
-        print(f"Warning: Could not initialize sentiment analysis: {e}")
-        sentiment_analysis = None
-else:
-    sentiment_analysis = None
+    """Return an existing embedding service, initializing it only on demand."""
+    global model
+    with _service_lock:
+        if model is None:
+            model = tiny_globals_obj.get("global_embedding_model", None)
+        if model is None:
+            model = init_global_model()
+        return model
 
 
 # @track_calls
 class MemoryManager:
-    def __init__(self, gametime_manager, index_load_filename=None):
-        self.flat_access = FlatMemoryAccess(
-            self, index_load_filename=index_load_filename
+    def __init__(self, gametime_manager, index_load_filename=None, *, mode="full"):
+        if mode not in ("basic", "full"):
+            raise ValueError("Memory mode must be 'basic' or 'full'")
+        if mode == "basic" and index_load_filename is not None:
+            raise ValueError("Basic memory cannot load a semantic index")
+        if gametime_manager is None:
+            raise ValueError("Game time manager is required")
+        self.mode = mode
+        state = "disabled" if mode == "basic" else "not_initialized"
+        self._capabilities = dict.fromkeys(
+            ("nlp", "embeddings", "analysis", "vector_index", "semantic_search"), state
         )
+        self.gametime_manager = gametime_manager
+        self.flat_access = FlatMemoryAccess(self, index_load_filename=index_load_filename)
         self.index_load_filename = index_load_filename
         self.memory_embeddings = {}
         self.complex_keywords = set()
@@ -2566,21 +2351,61 @@ class MemoryManager:
         self.faiss_index_recent_queries_flatl2 = None
         self.map_tags = {}
         self.general_memories = {}
-        self.gametime_manager = gametime_manager
-        self.lda_tokenizer = RegexpTokenizer(r"\w+")
-        self.lda_vectorizer = CountVectorizer(stop_words="english", min_df=1)
-        self.lda = LatentDirichletAllocation(
-            n_components=3,
-            max_iter=5,
-            learning_method="online",
-            learning_offset=50.0,
-            random_state=0,
-        )
-        self.tfidf_vectorizer = TfidfVectorizer(
-            stop_words=sentiment_analysis.stop_words
-        )
-        self.rake = Rake()
-        assert self.gametime_manager is not None, "Game time manager is required"
+        self.lda_tokenizer = self.lda_vectorizer = self.lda = None
+        self.tfidf_vectorizer = self.rake = None
+
+    def get_capabilities(self):
+        """Describe actual service state without importing or loading providers."""
+        return {"recording": "ready", "recent_recall": "ready", **self._capabilities}
+
+    def _require_feature(self, feature):
+        if self.mode == "basic":
+            raise MemoryFeatureUnavailableError(
+                f"Memory {feature} is disabled in basic testing mode; use full "
+                "memory with the documented AI profile and model assets."
+            )
+        with _service_lock:
+            if self._capabilities[feature] == "ready":
+                return
+            try:
+                if feature == "nlp":
+                    _get_nlp()
+                    _dependency("Matcher")
+                    _dependency("Span")
+                elif feature == "embeddings":
+                    _dependency("torch")
+                    get_global_model()
+                elif feature == "vector_index":
+                    _dependency("faiss")
+                elif feature == "analysis":
+                    self._require_feature("nlp")
+                    for symbol in ("RegexpTokenizer", "CountVectorizer", "LatentDirichletAllocation",
+                                   "TfidfVectorizer", "Rake", "wordnet", "word_tokenize", "pos_tag",
+                                   "PorterStemmer", "NMF", "cosine_similarity", "tsm"):
+                        _dependency(symbol)
+                    sentiment = _get_sentiment()
+                    self.lda_tokenizer = RegexpTokenizer(r"\w+")
+                    self.lda_vectorizer = CountVectorizer(stop_words="english", min_df=1)
+                    self.lda = LatentDirichletAllocation(n_components=3, max_iter=5,
+                        learning_method="online", learning_offset=50.0, random_state=0)
+                    self.tfidf_vectorizer = TfidfVectorizer(stop_words=sentiment.stop_words)
+                    self.rake = Rake(stopwords=sentiment.stop_words)
+                elif feature == "semantic_search":
+                    self._require_feature("embeddings")
+                    self._require_feature("vector_index")
+                    _dependency("cosine_similarity")
+                    if self.flat_access.faiss_index is None:
+                        self.flat_access.initialize_faiss_index(384, "ip",
+                            index_load_filename=self.index_load_filename)
+                else:
+                    raise ValueError(f"Unknown memory feature: {feature}")
+            except MemoryFeatureUnavailableError:
+                self._capabilities[feature] = "unavailable"
+                raise
+            except (ImportError, LookupError, OSError) as error:
+                self._capabilities[feature] = "unavailable"
+                raise MemoryFeatureUnavailableError(f"Memory {feature} unavailable: {error}") from error
+            self._capabilities[feature] = "ready"
 
     def __getstate__(self):
         """Custom pickling method to exclude non-serializable objects"""
@@ -2591,21 +2416,23 @@ class MemoryManager:
         return state
 
     def __setstate__(self, state):
-        """Custom unpickling method to restore non-serializable objects"""
+        """Restore records without initializing optional services."""
         self.__dict__.update(state)
-        # Restore the Rake object
-        from rake_nltk import Rake
+        self.mode = state.get("mode", "full")
+        status = "disabled" if self.mode == "basic" else "not_initialized"
+        self._capabilities = dict.fromkeys(
+            ("nlp", "embeddings", "analysis", "vector_index", "semantic_search"), status
+        )
+        self.rake = None
 
-        self.rake = Rake()
-
-    # ...existing code...
-
+    @_requires_memory_feature('semantic_search')
     def init_memories(self, general_memories):
         # self.general_memories = general_memories
         for general_memory in general_memories:
             general_memory.index_memories()
             self.flat_access.add_memory(general_memory)
 
+    @_requires_memory_feature('semantic_search')
     def index_recent_queries_flatl2(self):
         # print(f"\n Indexing recent queries \n")
         if len(self.recent_queries) < 1:
@@ -2624,6 +2451,7 @@ class MemoryManager:
             return self.faiss_index_recent_queries_flatl2
         return None
 
+    @_requires_memory_feature('semantic_search')
     def index_recent_queries_hnsw(self):
         # print(f"\n Indexing recent queries \n")
         if len(self.recent_queries) < 1:
@@ -2645,11 +2473,13 @@ class MemoryManager:
         self.faiss_index_recent_queries.add(embeddings.cpu().detach().numpy())
         return self.faiss_index_recent_queries
 
+    @_requires_memory_feature('semantic_search')
     def add_general_memory(self, general_memory: GeneralMemory):
         self.general_memories[general_memory.description] = general_memory
         self.update_embeddings(general_memory)
         return general_memory
 
+    @_requires_memory_feature('embeddings')
     def update_embeddings(self, memory=None):
         if isinstance(memory, SpecificMemory):
             self.memory_embeddings.update({memory.description: memory.get_embedding()})
@@ -2774,16 +2604,13 @@ class MemoryManager:
             with open(filename, "rb") as f:
                 loaded_memories = pickle.load(f)
             
-            # Validate loaded object
-            if not hasattr(loaded_memories, '__class__'):
-                logging.error("Loaded object is not a valid class instance")
+            if not isinstance(loaded_memories, FlatMemoryAccess):
+                logging.error("Loaded object is not a FlatMemoryAccess instance")
                 return False
-            
-            # Check if it's the expected type (more flexible than isinstance)
-            if not hasattr(loaded_memories, 'faiss_index'):
-                logging.warning("Loaded object might not be a FlatMemoryAccess instance")
-                # Continue anyway as it might still be usable
-            
+
+            # Feature guards must consult the receiving manager, not the full
+            # manager reachable through a serialized store's old ownership link.
+            loaded_memories.manager = self
             self.flat_access = loaded_memories
             
             # Reset the index load filename to prevent conflicts
@@ -2803,6 +2630,7 @@ class MemoryManager:
     def add_memory(self, memory):
         self.flat_access.add_memory(memory)
 
+    @_requires_memory_feature('nlp')
     def extract_entities(self, text):
         if isinstance(text, list):
             text = " ".join(text)
@@ -2811,6 +2639,7 @@ class MemoryManager:
 
     # Function to perform LDA topic modeling
 
+    @_requires_memory_feature('analysis')
     def extract_lda_keywords(self, docs, num_topics=3, num_words=3):
         tokenizer = self.lda_tokenizer
         docs = [
@@ -2836,6 +2665,7 @@ class MemoryManager:
         return lda_keywords
 
     # Function to extract keywords using TF-IDF
+    @_requires_memory_feature('analysis')
     def extract_tfidf_keywords(self, docs, top_n=3):
         if not isinstance(docs, list):
             docs = [docs]
@@ -2849,6 +2679,7 @@ class MemoryManager:
         return tfidf_keywords
 
     # Function to extract keywords using RAKE
+    @_requires_memory_feature('analysis')
     def extract_rake_keywords(self, docs, top_n=2):
         # print(type(docs))
 
@@ -2858,6 +2689,7 @@ class MemoryManager:
         rake_keywords = set(self.rake.get_ranked_phrases()[:top_n])
         return rake_keywords
 
+    @_requires_memory_feature('embeddings')
     def get_query_embedding(self, query):
         if model is None or not model.is_initialized:
             raise RuntimeError(
@@ -2880,6 +2712,7 @@ class MemoryManager:
                 "Failed to get query embedding. Ensure the model is properly initialized."
             )
 
+    @_requires_memory_feature('semantic_search')
     def retrieve_memories_bst(self, general_memory, query):
         # print(f"\n Retrieving memories from BST for general memory: {general_memory.description} and query: {query.query}")
         exit(0)
@@ -2902,6 +2735,7 @@ class MemoryManager:
         # print(f"\n Matching memories BST: {matching_memories}")
         return matching_memories
 
+    @_requires_memory_feature('semantic_search')
     def retrieve_from_flat_access(self, query_features):
         # print(f"\n Retrieving from flat access: {query_features.query}")
         # rel_mems = [memory for memory in self.flat_access.get_specific_memories() if self.is_relevant_flat_memory(memory, query_features)]
@@ -2913,12 +2747,15 @@ class MemoryManager:
         # print(f"\n Relevant memories and scores, flat access: {rel_mems}")
         return rel_mems
 
+    @_requires_memory_feature('analysis')
     def get_sentiment_score(self, text):
         return sentiment_analysis.get_sentiment_score(text)
 
+    @_requires_memory_feature('analysis')
     def get_emotion_classification(self, text):
         return sentiment_analysis.get_emotion_classification(text)
 
+    @_requires_memory_feature('analysis')
     def extract_relationships(self, semantic_roles, text):
         # print(f"\n Extracting relationships from semantic roles: {semantic_roles}")
         # Extract relationships from the semantic roles and text
@@ -2989,6 +2826,7 @@ class MemoryManager:
 
         return facts
 
+    @_requires_memory_feature('analysis')
     def analyze_query_context(self, query: str):
         """
         Analyzes the context of a query using NLP techniques and returns various features.
@@ -5683,6 +5521,7 @@ class MemoryManager:
         # Process or return the sorted specific memories as needed
         return sorted_specific_memories
 
+    @_requires_memory_feature('semantic_search')
     def retrieve_memories(self, query, urgent=False, common=False, key=None):
         if isinstance(query, str):
             query = MemoryQuery(query)
@@ -5781,12 +5620,14 @@ class MemoryManager:
     # def cosine_similarity(vec1, vec2):
     #     return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
 
+    @_requires_memory_feature('analysis')
     def keyword_specificity(self, keyword):
         if keyword in self.complex_keywords:
             return 1
         else:
             return 0.5
 
+    @_requires_memory_feature('analysis')
     def extract_keywords(self, text):
         # Extract keywords using different methods
         stemmer = PorterStemmer
@@ -5823,6 +5664,7 @@ class MemoryManager:
         #         keywords = keywords.union(synonyms)
         return keywords
 
+    @_requires_memory_feature('analysis')
     def extract_themes(self, srl_features):
         # Apply NMF for theme extraction
         tfidf = self.tfidf_vectorizer.fit_transform(srl_features)
@@ -5837,6 +5679,7 @@ class MemoryManager:
             print(" ".join([feature_names[i] for i in topic.argsort()[: -10 - 1 : -1]]))
         return [feature_names[i] for i in topic.argsort()[: -10 - 1 : -1]]
 
+    @_requires_memory_feature('semantic_search')
     def search_memories(self, query, urgent=False, common=False, tag=None):
 
         if isinstance(query, MemoryQuery):
@@ -5883,6 +5726,7 @@ class MemoryManager:
     #         if tag in mem.tags:
     #             res.append(mem)
     #     return res
+    @_requires_memory_feature('semantic_search')
     def search_by_index(self, general_memory, k=10):
         return general_memory.faiss_index.search(
             general_memory.description_embedding.cpu().detach().numpy(), k

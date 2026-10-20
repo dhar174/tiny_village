@@ -3,6 +3,10 @@
 ## 1. Overview
 Tiny Village is a single-repo Python simulation where contributor work usually touches an autonomous character decision loop backed by GOAP, graph state, memory, and optional LLM routing. This guide is for coding agents and maintainers: use it to place changes in the right layer, extend agent-specific tooling safely, and keep repository documentation aligned with the current root-level layout.
 
+AI capabilities are required in the final product under [D015](docs/decisions.md#d015--require-ai-capabilities-in-the-final-product).
+Dependency optionality and basic memory support lightweight testing; they do not
+reduce product scope or establish AI/gameplay readiness.
+
 ## 2. Folder Structure
 - `.github`: repository automation and GitHub-specific metadata.
     - `agents`: specialized contributor-agent definitions in `.agent.md` format; use these for narrowly scoped task agents.

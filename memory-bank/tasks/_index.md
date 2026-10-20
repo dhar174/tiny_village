@@ -1,13 +1,14 @@
 ## Tasks Index
 
 ## In Progress
+- [TASK012](TASK012-lightweight-runtime-654.md) Lightweight runtime (#654/#776) - D016 implementation verified; review corrected; PR #788 ready (Updated: 2026-10-20)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending
 - No additional pending task files.
 
 ## Completed
-- [TASK011](TASK011-dependency-profiles-725.md) Reproducible dependencies (#725) - ready PR #785; eight hash locks, verified installs/repeats, 85 tests; Pygame recovery review fix verified; issue closure on merge (Updated: 2026-10-20)
+- [TASK011](TASK011-dependency-profiles-725.md) Reproducible dependencies (#725) - PR #785 merged at 8a899650; #725 closed; eight hash locks preserved (Updated: 2026-10-20)
 - [TASK010](TASK010-mvp-contract-724.md) MVP contract accepted under D014 and integrated by #784 at 8d6b254; #724 closed, #725 started (Updated: 2026-10-20)
 - [TASK005](TASK005-startup-human-review-721.md) Startup engineering review approved under [D011](../../docs/decisions.md#d011--approve-startup-engineering-review-721); #721 closed; subsequent D012 completes Phase 1; Project sync outstanding (Updated: 2026-10-17 America/New_York)
 - [TASK009](TASK009-phase1-post-merge-verification.md) Merged-main verification - 94 successful method summaries and three probes, one supervisor record gap; evidence PR #782; D010–D012 recorded; #779/#721/#722/#717 closed, Phase 2 unblocked with #724 next (Updated: 2026-10-17 America/New_York)

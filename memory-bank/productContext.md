@@ -12,7 +12,7 @@
 - Provides a shared simulation framework for characters, locations, jobs,
   items, and relationships instead of isolated scripts or toy demos.
 - Connects high-level character goals to concrete actions through GOAP,
-  utility-based reasoning, and optional LLM-assisted decision support.
+  utility-based reasoning, and LLM-assisted decision support.
 - Centralizes world knowledge in a graph-based model (`GraphManager`) so
   multiple systems operate on a common, authoritative source of truth.
 - Preserves room for both lightweight demos and richer feature paths, including
@@ -24,8 +24,9 @@
   characters behaving autonomously inside a living village simulation.
 - The system should produce understandable event → decision → action flows
   rather than opaque black-box character updates.
-- Optional advanced features such as LLM-backed decision logic should enrich
-  behavior without being mandatory for basic operation.
+- Follow [D015](../docs/decisions.md#d015--require-ai-capabilities-in-the-final-product):
+  AI capabilities belong to the final product; lightweight testing may omit
+  their dependencies without establishing final-product readiness.
 
 ## UX Goals Reflected in the Repository
 

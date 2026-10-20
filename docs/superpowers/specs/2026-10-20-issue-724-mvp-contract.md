@@ -34,15 +34,17 @@ Release scope includes the economic loop, a small fixed map, explanations,
 pause/inspection, basic save/load and honest failure recovery. Save/load remains
 Phase 7 work, not an extra task to implement in #724. Defer quests, VR,
 multiplayer/network play, mod/editor tooling, broad social simulation and
-advanced analytics from this MVP. Optional live ML/LLM features cannot become
-core requirements through imports or silent downloads. Existing later-phase
+advanced analytics from this MVP. The deterministic testing profile cannot acquire
+live ML/LLM requirements through imports or silent downloads. AI remains a core
+requirement of the final product under [D015](../../decisions.md#d015--require-ai-capabilities-in-the-final-product).
+Existing later-phase
 issues remain open; exclusion from this scenario is not their completion.
 
 ### Preserve the expansive TinyVillage vision
 
 The MVP is the first verifiable slice of the existing project. Autonomous
 characters, personalities and histories, relationships and social behavior,
-careers and a richer economy, memory and storytelling, optional LLM-assisted
+careers and a richer economy, memory and storytelling, LLM-assisted
 decisions, persistence and a growing village remain part of the broader vision
 in the project brief, product context and design documents. Their existing
 roadmap issues and review requirements remain intact.

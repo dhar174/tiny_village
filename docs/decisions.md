@@ -253,6 +253,36 @@ should link to this file rather than maintain separate decision records.
   `8d6b254357fadff390e3dae228acd7f1e55f5b4a`, bringing the contract to main and
   closing #724. The next ordered delivery task is #725.
 
+### D015 — Require AI capabilities in the final product
+
+- **Date:** 2026-10-20
+- **Decision-maker:** dhar174
+- **Disposition:** Product requirement clarified
+- **Decision:** AI capabilities are a core component of the final TinyVillage
+  product. Their optionality applies to lightweight testing; it does not make
+  AI an optional final-product feature.
+- **Effect on #654/#776:** Support testing without the heavy AI dependencies
+  while preserving real AI integration and explicit capability reporting.
+  Successful execution with AI disabled does not establish final-product
+  readiness. Keep dependency profiles and separate AI integration validation.
+- **Confirmation:** “The AI capabilities are only optional for testing
+  purposes; they will be a core component of the final product.”
+
+### D016 — Approve #654/#776 lightweight testing implementation
+
+- **Date:** 2026-10-20
+- **Decision-maker:** dhar174
+- **Disposition:** Implementation approved
+- **Decision:** Implement the [reviewed plan](superpowers/plans/2026-10-20-issue-654-lightweight-runtime.md)
+  with real basic memory recording/recent recall, real startup and event
+  registration, and explicit disabled semantic operations. Gameplay-turn proof
+  remains #751/#658. Require explicit minimal mode; reject visual/headless CLI
+  combinations before initialization. D015's final-product AI requirement stands.
+- **Confirmation:** The user selected these three choices during planning and
+  explicitly requested implementation of the complete plan.
+- **Limits:** This is implementation authorization, not phase-gate approval,
+  gameplay acceptance, live-model validation, or permission to merge the PR.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721

@@ -28,11 +28,12 @@ Add [visual, development or optional feature profiles](DEPENDENCY_PROFILES.md)
 as needed. NLP/LLM/GPU capabilities remain available through separate profiles;
 their model artifacts and hardware need independent validation.
 
-**Current runtime boundary:** the legacy minimal demo uses mocked components
-and may exit 0 with zero actions. It is not the accepted MVP economic loop.
-The visual application and broader integration tests have separate unresolved
-runtime/fixture work. See [the dependency validation report](../testing/issue-725-dependency-profile-validation.md)
-before interpreting a startup or test result as full gameplay readiness.
+**Current runtime boundary:** minimal mode runs real startup, event registration,
+and basic-memory checks. It intentionally executes no gameplay turns. AI is a
+core requirement of the final product; its dependencies are omitted here for
+lightweight testing. The economic loop, live models, full visual gameplay and
+broader integration readiness require their own evidence. See the
+[runtime validation report](../testing/issue-654-lightweight-runtime-validation.md).
 
 ## Running Your First Demo
 
@@ -40,14 +41,19 @@ before interpreting a startup or test result as full gameplay readiness.
 No display required, perfect for testing:
 ```bash
 python main.py --mode minimal
+# Or select a smaller explicit testing run:
+python main.py --mode minimal --headless --no-llm --characters 2
 ```
 
 **Expected output:**
-- System initialization
-- Character creation
-- Event handling demonstration
-- Action execution examples
-- Performance analytics
+- Real system and Character initialization
+- An event registered in both the handler and authoritative graph
+- Basic memory records stored and recalled for each Character
+- Explicit renderer/AI capability status
+- Confirmation that gameplay turns were not exercised
+
+Use at least one Character for this memory check. `--headless` requires explicit
+minimal (or test) mode; it cannot be combined with visual mode.
 
 
 ### Option 2: Integration Tests
@@ -98,12 +104,17 @@ python main.py --mode minimal
 ```
 
 ### "Character class not available"
-**Solution**: This is a warning, not an error. The demo uses simplified characters.
+**Solution**: Minimal mode requires real Characters and fails if required
+construction fails. Keep the full error and use the supported locked core
+environment; no simplified Character is substituted.
 
 ### "LLM components not available"
-**Solution**: This is expected. LLM is optional. Use `--no-llm` flag to suppress warnings:
+**Solution**: Minimal testing deliberately disables LLM decisions and semantic
+memory. For AI-enabled workflows, install the matching feature profile and
+validate its model assets separately. AI remains required in the final product.
+For a lightweight check:
 ```bash
-python main.py --no-llm
+python main.py --mode minimal --headless --no-llm
 ```
 
 ## Customizing Your Demo

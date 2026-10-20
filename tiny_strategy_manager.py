@@ -24,28 +24,8 @@ import logging
 import time
 import random
 
-# Optional imports to avoid dependency issues
-try:
-    from tiny_characters import Character
-except ImportError:
-    Character = None
-    logging.warning("Character class not available - using simplified character handling")
-
-try:
-    from tiny_graph_manager import GraphManager
-except ImportError:
-    GraphManager = None
-    logging.warning("GraphManager not available - graph functionality will be limited")
-
-try:
-    from tiny_prompt_builder import PromptBuilder
-    from tiny_brain_io import TinyBrainIO
-    from tiny_output_interpreter import OutputInterpreter
-except ImportError:
-    PromptBuilder = None
-    TinyBrainIO = None
-    OutputInterpreter = None
-    logging.warning("LLM components not available - LLM functionality will be disabled")
+# AI providers are imported only when an enabled decision requests them.
+PromptBuilder = TinyBrainIO = OutputInterpreter = None
 
 logger = logging.getLogger(__name__)
 
@@ -139,21 +119,45 @@ class StrategyManager:
  
         self.use_llm = use_llm
 
-        # Initialize LLM components if needed and available
-        if self.use_llm and TinyBrainIO and PromptBuilder and OutputInterpreter:
-            self.brain_io = TinyBrainIO(
-                model_name or "alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2"
-            )
-            self.output_interpreter = OutputInterpreter()
-        else:
-            self.brain_io = None
-            self.output_interpreter = None
-            if self.use_llm:
-                logging.warning("LLM components not available - disabling LLM functionality")
-                self.use_llm = False
-                
+        self.model_name = model_name or "alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2"
+        self.brain_io = None
+        self.output_interpreter = None
+        self.llm_status = "not_initialized" if self.use_llm else "disabled"
+        self.llm_load_error = None
+
         # Track characters using LLM for strategy decisions
         self._characters_using_llm = set()
+
+    def _ensure_llm(self):
+        """Initialize an explicitly enabled AI decision provider once on demand."""
+        global TinyBrainIO, PromptBuilder, OutputInterpreter
+        if not self.use_llm:
+            return False
+        if self.llm_status == "unavailable":
+            return False
+        if self.brain_io is not None and self.output_interpreter is not None:
+            self.llm_status = "ready"
+            return True
+        try:
+            if TinyBrainIO is None:
+                from tiny_brain_io import TinyBrainIO
+            if PromptBuilder is None:
+                from tiny_prompt_builder import PromptBuilder
+            if OutputInterpreter is None:
+                from tiny_output_interpreter import OutputInterpreter
+            provider = TinyBrainIO(self.model_name)
+            if provider.model is None:
+                cause = provider.load_error
+                raise RuntimeError(f"LLM model unavailable: {cause or self.model_name}") from cause
+            self.brain_io = provider
+            self.output_interpreter = OutputInterpreter(graph_manager=self.graph_manager)
+            self.llm_status = "ready"
+            return True
+        except (ImportError, OSError, RuntimeError) as error:
+            self.llm_load_error = error
+            self.llm_status = "unavailable"
+            logger.warning("Requested LLM capability unavailable: %s", error)
+            return False
 
     def enable_llm_for_character(self, character):
         """Enable LLM decision-making for a specific character."""
@@ -276,7 +280,7 @@ class StrategyManager:
         }
         
         # Check 0: LLM availability
-        if not self.use_llm or not self.brain_io or not self.output_interpreter:
+        if not self.use_llm or not self._ensure_llm():
             logger.debug(f"LLM components unavailable for {char_name}, using utility-based planning")
             decision_metadata['reason'] = 'llm_unavailable'
             self._log_decision(decision_metadata, False)
@@ -949,7 +953,7 @@ class StrategyManager:
         This integrates the full decision-making pipeline:
         Character Context → PromptBuilder → BrainIO → OutputInterpreter → Actions
         """
-        if not self.use_llm or not self.brain_io or not self.output_interpreter:
+        if not self.use_llm or not self._ensure_llm():
             logger.warning(
                 "LLM decision-making not available, falling back to utility-based actions"
             )
@@ -1788,7 +1792,7 @@ class StrategyManager:
     def _handle_new_day_strategy(self, character, use_llm=False):
         """Handle new day events with optional LLM decision-making."""
         try:
-            if use_llm and self.use_llm and self.brain_io and self.output_interpreter:
+            if use_llm and self.use_llm and self._ensure_llm():
                 # Use LLM for strategic new day planning
                 logger.info(f"Using LLM strategy for new day planning for {getattr(character, 'name', character)}")
                 

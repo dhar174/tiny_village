@@ -2126,6 +2126,8 @@ class Character:
         romanceable: bool = True,
         physical_appearance: str = "",
         physical_beauty: int = random.randint(0, 100),
+        *,
+        memory_mode: str = "full",
     ):
         GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
         self._updating = False  # Flag to prevent recursion
@@ -2316,7 +2318,7 @@ class Character:
         else:
             raise ValueError("GameTimeManager instance required.")
         self.memory_manager = MemoryManager(
-            gametime_manager
+            gametime_manager, mode=memory_mode
         )  # Initialize MemoryManager with GameTimeManager instance
         if location is None:
             self.location = Location(name, 0, 0, 0, 0, action_system)
@@ -3193,8 +3195,7 @@ class Character:
 
             else:
                 logging.info(f"Job role not found for job {job}")
-                exit(12)
-                self.job = random.choice(job_rules.ValidJobRoles)
+                raise ValueError(f"Unsupported character job: {job}")
         else:
             self.job = random.choice(job_rules.ValidJobRoles)
         return self.job

@@ -57,7 +57,7 @@ TinyVillage is a 2D simulation game where AI characters autonomously go about th
     ```
 
 The default profile contains graph/planning/state dependencies. For Pygame,
-development tools or optional NLP/LLM/GPU capabilities, use the separate
+development tools or NLP/LLM/GPU dependencies, use the separate
 [dependency profiles](docs/guides/DEPENDENCY_PROFILES.md). Hash locks currently
 target Python 3.12 on Linux x86-64; native Windows/macOS support is unverified.
 The original broad manifest remains available as `requirements/legacy-full.txt`
@@ -71,10 +71,11 @@ python -m pip install --require-hashes --only-binary=:all: -r requirements/locks
 python main.py
 ```
 
-The commands below are the current demo entry points. The legacy minimal demo
-uses mocked components and may finish with zero real actions; it does not yet
-prove the accepted MVP economic scenario. Renderer-free runtime construction
-and real optional-feature boundaries remain tracked in #654/#776.
+AI is a core requirement of the final product. The minimal testing profile
+constructs real Characters and shared runtime systems, registers an event, and
+records/recalls basic memory without rendering or AI dependencies. It does not
+execute gameplay turns or prove the accepted MVP economic scenario. See the
+[runtime validation report](docs/testing/issue-654-lightweight-runtime-validation.md).
 
 The game supports multiple modes:
 
@@ -83,10 +84,16 @@ The game supports multiple modes:
 python main.py --mode visual
 ```
 
-**Minimal Demo** (Console output, no display):
+**Minimal Demo** (Bounded startup/event/memory checks, no display or AI services):
 ```bash
 python main.py --mode minimal
+# Explicit two-Character testing run:
+python main.py --mode minimal --headless --no-llm --characters 2
 ```
+
+Select minimal mode explicitly: `--mode visual --headless` is rejected. The
+minimal profile disables model services regardless of installed AI packages;
+the final AI-enabled product requires separate integration validation.
 
 **Integration Tests** (Verify system integration):
 ```bash
