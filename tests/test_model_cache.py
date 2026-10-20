@@ -449,8 +449,9 @@ class TestModelCacheIntegration(unittest.TestCase):
                     import importlib, importlib.abc, os, sys, types
                     from pathlib import Path
                     configured = {{name: os.environ[name] for name in ('HF_HOME', 'HF_HUB_CACHE', 'TRANSFORMERS_CACHE')}}
-                    # Supply only the unavailable spaCy library boundary. The
-                    # actual tiny_sr_mapping module must execute during memory import.
+                    # Supply the external spaCy boundary. Importing memory must
+                    # defer mapping; its explicit request still executes the real
+                    # tiny_sr_mapping module without replacing caller caches.
                     spacy = types.ModuleType('spacy')
                     spacy.__path__ = []
                     spacy.language = types.SimpleNamespace(Language=object)
@@ -468,7 +469,11 @@ class TestModelCacheIntegration(unittest.TestCase):
                         assert {{name: os.environ[name] for name in configured}} == configured, 'Transitive import replaced caller cache settings'
                     import tiny_memories as memory
                     import tiny_brain_io as brain
-                    mapping = sys.modules['tiny_sr_mapping']
+                    assert 'tiny_sr_mapping' not in sys.modules
+                    assert memory.nlp is None and memory.model is None
+                    memory._dependency('spacy')
+                    mapping = memory._dependency('tsm')
+                    assert {{name: os.environ[name] for name in configured}} == configured
                     assert Path(mapping.__file__).resolve() == Path('tiny_sr_mapping.py').resolve()
                     assert memory.SPACY_AVAILABLE and memory.TSM_AVAILABLE
                     assert memory.tsm is mapping

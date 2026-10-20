@@ -90,14 +90,13 @@ failure in a core optional-dependency boundary.
 - `python main.py --help` does not load optional models or require a display.
 - Dependency checking is mode-aware: minimal/test check core, visual also
   checks Pygame, and no mode requires FAISS as a prerequisite.
-- The legacy minimal demonstration still patches `sys.modules` and can return
-  successfully with zero real actions. Its current exit status is a startup
-  observation, not the accepted economic-loop proof. #654 replaces those
-  production mock boundaries; #776 handles unavailable-spaCy Character memory.
-- Existing optional imports may attempt model/data initialization. Use the
-  documented offline settings when checking package availability without
-  intending live model activity. Removing import side effects belongs to the
-  relevant runtime tasks, not to lock generation.
+- Minimal mode uses real Characters, shared runtime services, event registration
+  and basic memory. It performs no gameplay turns. It does not patch dependency
+  modules or substitute mock Characters, even when AI packages are installed.
+- Headless construction skips Pygame, map rendering, fonts and display setup.
+  Choose `--mode minimal` explicitly; visual/headless CLI combinations are errors.
+- Memory and strategy services defer heavy dependencies/model initialization
+  until requested. Memory imports perform no model loading or NLTK downloads.
 - Installing an NLP/LLM library or resolving a CUDA wheel does not establish
   native Windows behavior, model downloads/inference, GPU execution or game
   readiness. Those remain separate roadmap evidence and human reviews.
@@ -112,6 +111,31 @@ python main.py --mode minimal --no-llm --headless
 
 See the [#725 validation report](../testing/issue-725-dependency-profile-validation.md)
 for exact checked profiles, commands, counts and remaining limitations.
+
+## Memory and renderer boundaries
+
+`MemoryManager(clock, mode="basic")` and `Character(..., memory_mode="basic")`
+support real recording and recent recall without NLP, embeddings or FAISS. Each
+store retains the latest 50 records, preserving description, timestamp and
+importance. Disabled semantic operations raise `MemoryFeatureUnavailableError`;
+they never manufacture embeddings, sentiment or retrieval results. A semantic
+index filename cannot be supplied to basic mode.
+
+The default memory mode is `full`. Its services initialize on demand and report
+missing packages/model assets explicitly. `get_capabilities()` returns actual
+states (`disabled`, `not_initialized`, `ready`, `unavailable`) without loading
+anything. Library installation alone does not make a service ready. NLTK data
+must be provisioned separately; imports do not download corpora.
+
+`GameplayController` accepts `headless=True`, `memory.mode`, and
+`characters.use_llm` independently. The minimal runner explicitly selects basic
+memory/no LLM and returns inspectable state after releasing its owned resources.
+The controller's `close()` is idempotent and preserves externally initialized
+Pygame resources. This boundary does not implement an AI-enabled headless game
+loop or establish full product readiness.
+
+See the [#654/#776 validation report](../testing/issue-654-lightweight-runtime-validation.md)
+for runtime checks, remaining job-catalog/event limitations and review evidence.
 
 ## Regenerate locks
 

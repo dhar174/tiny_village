@@ -24,6 +24,13 @@
 
 ## Current Status
 
+- As of 2026-10-20, TASK012 implements #654/#776 under D016 with real basic
+  memory and headless construction; no production mocks in the minimal runner.
+  106 distinct cases / 107 profile executions pass after updating the owned-cache
+  test's obsolete eager-import expectation; original failures are retained.
+  Gameplay turns, live AI models and phase approval remain unproven. Final review
+  and publication pending. #785 merged at 8a899650 and #725 is closed.
+
 - As of 2026-10-20, TASK011 / #725 has eight SHA-256 requirement locks and
   mode-aware checks, with full legacy dependencies preserved separately. Fresh
   core/dev+visual/NLP/CPU-LLM installs and unchanged repeats pass, as do pip

@@ -4,15 +4,20 @@
   when scoping #654/#776 and later AI work. Lightweight testing profiles do
   not establish readiness of the final AI-enabled product.
 
-- TASK011 / #725 implements reproducible dependencies from main 8d6b254
-  (2026-10-20). Eight hash locks separate core, Pygame/dev and optional feature
-  profiles; the full historical manifest is retained. Mode checks no longer
-  require FAISS and only visual requires Pygame. Four fresh env combinations,
-  unchanged repeat installs, integrity rejection and 85 existing methods pass.
-  Read docs/guides/DEPENDENCY_PROFILES.md and the #725 validation report.
-  Ready PR #785 targets main; #725 handoff/status is verified and stays open
-  until merge. #654/#776 runtime boundaries,
-  GPU execution and model artifacts remain separate. No phase approval.
+- TASK012 / #654 and child #776 implement the approved lightweight runtime
+  plan under D016. Real Characters, graph/action/event/time composition and
+  basic recording/recent recall work without rendering/AI dependencies. The
+  bounded demo explicitly does not execute gameplay turns. Full memory and
+  strategy services are lazy; AI remains a final-product requirement (D015).
+  Current evidence: 106 distinct cases / 107 profile executions; original cache
+  expectation failures retained and corrected to request the deferred mapper.
+  See docs/testing/issue-654-lightweight-runtime-validation.md. Final review and
+  publication are pending; issues remain open until merge. Next ordered: #726.
+
+- TASK011 / #725 merged via #785 at 8a899650 and #725 closed. Its eight hash
+  locks and legacy manifest are unchanged. Original dependency validation is
+  historical; TASK012 supplies the newer runtime evidence. GPU/model inference
+  and gameplay acceptance remain separate. No phase-gate approval supplied.
 
 - TASK010 / #724 is complete: #784 integrated the accepted contract to main
   at 8d6b254 and #724 closed. D014 preserves the original expansive vision;
@@ -39,7 +44,7 @@
 - Current docs distinguish between current documentation and archived historical
   material under `docs/archived/`.
 
-## Immediate Next Steps
+## Earlier handoff history (superseded by Current Work Focus)
 
 - TASK009 verifies merged main 77e4b94 after #780/#781. All 94 test methods
   report success and three probes exit 0. Lifecycle has a preserved missing

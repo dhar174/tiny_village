@@ -18,7 +18,7 @@ startup/event/memory checks are selected; gameplay proof stays #751/#658.
 | 3 Basic memory / real Characters | Complete | 8 fresh-process checks pass, including complete Characters and basic restore |
 | 4 Headless controller | Complete | Four core-only checks plus real Pygame owned/borrowed cleanup |
 | 5 Minimal runner | Complete | Real seven-Character graph/event/memory probe and CLI validation |
-| Verification / docs / PR | Pending | |
+| Verification / docs / PR | In progress | 106 distinct cases / 107 profile executions; final review/publication pending |
 
 ## Pre-flight
 
@@ -70,3 +70,11 @@ startup/event/memory checks are selected; gameplay proof stays #751/#658.
 - Retained visual fixture CWD/import failure, config-mutation failure, and the
   legacy smoke test's obsolete turn/banner assertions. Updated the latter to
   actual startup/event/memory claims, retaining its 120-second parent limit.
+
+- Verification matrix completed: three fresh verified installs/pip checks; 106
+  distinct cases / 107 executions across core, dev, visual, NLP and CPU-LLM.
+  Initial cache import-order subcases expected eager mapper loading; retained
+  failures and updated only that test to explicitly load the real mapper after
+  proving lazy import. Corrected cache selection passes 27/27; runtime unchanged.
+- Drafted validation report and user-facing guidance; all dependency locks remain
+  unchanged. No live model, gameplay-turn or whole-suite readiness claim.

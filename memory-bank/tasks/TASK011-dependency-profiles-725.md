@@ -1,6 +1,6 @@
 # [TASK011] — Reproducible dependency profiles (#725)
 
-**Status:** Completed for review — PR #785 published; merge/issue closure pending
+**Status:** Completed — PR #785 merged as 8a899650; #725 closed
 
 **Added:** 2026-10-20
 
@@ -87,3 +87,5 @@ claim #654's lightweight runtime or live inference is complete.
   pip check and real Pygame 2.6.1 import/display/draw/shutdown with SDL dummy
   drivers pass. Install logs: /workspace/scratch/issue-725/review/.
   Runtime code and requirement locks are unchanged by this review fix.
+
+- PR #785 merged as 8a899650 and closed #725. Subsequent runtime work is TASK012.
