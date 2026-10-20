@@ -211,6 +211,21 @@ should link to this file rather than maintain separate decision records.
 - **Confirmation:** “Yes” to: “Do you approve completing Phase 1 within the
   same Linux/offline scope and accepted limitations, allowing Phase 2 to begin?”
 
+### D013 — Require headless and Pygame presentations for the MVP
+
+- **Date:** 2026-10-20 (America/New_York)
+- **Decision-maker:** dhar174
+- **Decision:** Require a reproducible headless scenario plus a small Pygame
+  view of that same simulation for the MVP release.
+- **Reason:** Preserve automated behavioral proof and a player-facing village
+  view, sharing the authoritative simulation rather than separate demo logic.
+- **Confirmation:** Selected “Headless scenario + Pygame view (recommended)”
+  in response to the #724 presentation-scope question.
+- **Boundary:** This selects the two required presentations. It does not
+  approve the draft's detailed fixture, new CLI, support claims, numeric budgets,
+  visual design or implementation plan, nor complete #724 or later reviews.
+- **Artifact:** [Draft #724 MVP contract](superpowers/specs/2026-10-20-issue-724-mvp-contract.md).
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
@@ -219,6 +234,10 @@ scope. D010 accepts #779's residual uncertainty and closure. D001 remains the
 historical disposition of the earlier failed verification. D012 separately
 approves phase gate #722 and completes parent #717 within the same scope.
 Phase 2 is unblocked; #724 is its next ordered task.
+The [#724 draft contract](superpowers/specs/2026-10-20-issue-724-mvp-contract.md)
+is being prepared for human review. D013 selects both headless and Pygame
+presentations; the fixture, support targets and numeric budgets remain proposed.
+#724 remains open until the maintainer agrees the complete contract.
 
 The [#779 investigation plan](superpowers/plans/2026-10-15-issue-779-startup-investigation.md)
 was approved under D007, and its bounded cycle has concluded. Its original

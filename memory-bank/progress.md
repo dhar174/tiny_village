@@ -24,6 +24,14 @@
 
 ## Current Status
 
+- As of 2026-10-20, TASK010 / #724 has a researched draft MVP contract, covering
+  a fixed three-villager economic loop, proposed CLI/state evidence, support
+  targets, UX/UI constraints and measurable release budgets. D013 confirms
+  headless plus Pygame presentations; remaining choices are unapproved.
+  No application runs or benchmark claims. #724 remains open; its draft is
+  published in draft PR #783 stacked on open evidence PR #782. Issue #724
+  comment/status is verified, with its original acceptance text preserved.
+
 - As of 2026-10-16, TASK009 verifies merged main 77e4b94 under D009. All 94
   method summaries report success and all three probes exit 0, with one
   lifecycle supervisor completion gap after an execution-server disconnect.
