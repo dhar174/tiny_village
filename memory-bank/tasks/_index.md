@@ -1,6 +1,7 @@
 ## Tasks Index
 
 ## In Progress
+- [TASK018](TASK018-consolidated-design-walkthrough.md) Consolidated design walkthrough - D022 J01 accepted; remaining journeys and final dispositions pending (Updated: 2026-10-21 America/New_York)
 - [TASK017](TASK017-design-review-727-729.md) Remaining design review (#727-#729) - D021 R01-R13 recorded; specifications consolidated, final written dispositions pending (Updated: 2026-10-21 America/New_York)
 - [TASK016](TASK016-ui-wireframes-729.md) UI wireframes/states (#729) - Consolidated under TASK017/D021; complete written disposition pending (Updated: 2026-10-21 America/New_York)
 - [TASK015](TASK015-visual-direction-728.md) Visual direction (#728) - Consolidated under TASK017/D021; complete written disposition pending (Updated: 2026-10-21 America/New_York)

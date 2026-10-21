@@ -471,6 +471,27 @@ Record a distinct Approved / Changes requested / Deferred disposition for each
 of #727, #728 and #729 after that review. #730 remains a separate combined
 UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
 
+### D022 — Walk through the consolidated design journeys
+
+- **Date:** 2026-10-21 (America/New_York).
+- **Reviewer:** dhar174.
+- **Reviewed revision:** merged main `752bc2e`, following PR #794.
+- **Disposition:** In progress; record only the journey explicitly reviewed
+  in each response. Complete #727/#728/#729 dispositions and #730's combined
+  review decision remain pending.
+- **Artifacts:** [UX journeys](superpowers/specs/2026-10-20-issue-727-ux-design.md),
+  [visual direction](superpowers/specs/2026-10-20-issue-728-visual-design.md)
+  and [UI specification](superpowers/specs/2026-10-20-issue-729-ui-design.md).
+
+| Journey | Human disposition | Reviewed scope and rationale | Confirmation |
+| --- | --- | --- | --- |
+| J01 — Launch and first inspection | Accepted as written | Validated setup, paused tick-0 start, discoverable Play/Help/hint, top controls/right inspector/bottom event strip, mouse/keyboard entity selection, ring/outline identity, truthful expandable information and inspection without unintended advancement. Warm pixel art and readable text retain later native checks. | User: “Its good.” after the launch-and-inspection walkthrough and recommendation to accept. |
+
+- **Boundary:** J01 accepts this planned journey, not an executed usability
+  result, the complete specifications or a phase decision. Other journeys,
+  complete planning acceptance, #730/#731/#732 and runtime implementation are
+  not approved by this response. All human decisions remain in this file.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
