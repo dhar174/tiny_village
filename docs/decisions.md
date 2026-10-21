@@ -440,6 +440,7 @@ should link to this file rather than maintain separate decision records.
 | R03 — Exact palette approach (#728) | Trial the existing section 3 Meadow & Terracotta color values, refining them against real scenes and contrast checks. | Revise the palette within the selected mood and compare visually before implementation; develop an original constrained palette from scratch (more design work and another visual review). | Provide a reproducible starting point while allowing refinements supported by rendered-scene evidence. The user accepted the recommendation; no rendered palette validation has been executed. |
 | R04 — Font pairing trial (#728) | Trial Atkinson Hyperlegible for information and Pixelify Sans for short headings; use conventional headings if pixel lettering fails readability testing. Verify real Pygame rendering and character coverage at both supported sizes. | Noto Sans information text with Pixelify Sans headings (more neutral appearance); conventional text throughout, starting with Atkinson Hyperlegible (simpler typography, pixel identity carried by artwork/frames). | Distinguishable letters/numbers for information with restrained pixel-art character in headings. The user explicitly selected this pairing; no font has been imported or renderer/font-coverage pass established. |
 | R05 — Type-size and spacing baseline (#728) | Trial 18px body/control text, 16px secondary text and 24px headings; 4px spacing increments, 8px control padding, 12px panel padding and 16px group gaps. Check actual fonts at both supported sizes; wrap or scroll essential text rather than shrink it to fit. | Same text sizes with a roomier 8px spacing grid (less information visible/more scrolling); larger text such as 20px body, 18px secondary and 28px headings (requires revised panel fit/wrapping/scrolling). | Use a concrete readable starting point that balances information density and map area, subject to actual font-fit checks. The user explicitly selected this baseline. |
+| R06 — Animation/layer production scope (#728) | Complete a small, coherent set: reuse compatible templates, draw missing directional/activity frames, and separate foreground pieces needed for selected-villager fading. Retain the agreed short walks, clear activity poses and limited ambient motion; exact frame counts/fade values belong in the production plan. | Larger bespoke animation set (more individualized detail, substantially more artwork/performance validation); revisit the earlier choice to reduce initial coverage (requires revised design/rework, preserving complete visibility/status cues). | Complete the selected behavior with controlled art scope instead of expanding animation detail. The user explicitly selected this approach. |
 
 - **Boundary:** R01 selects the later working-interface test method; R02 selects
   an environment-art trial. No human walkthrough or asset trial has been
@@ -448,8 +449,9 @@ should link to this file rather than maintain separate decision records.
   or approve #730/#731/#732. R03 selects a palette-trial approach, not a rendered
   contrast pass. R04 selects the font pairing to trial, not final validated
   font files. R05 selects initial sizes/spacing, not a measured font-fit result.
-  Exact imported assets, villager artwork and other unselected defaults remain
-  pending. Record subsequent selections in this table.
+  R06 selects production scope, not completed artwork or renderer validation.
+  Exact imported assets, villager-family selection and other unselected defaults
+  remain pending. Record subsequent selections in this table.
 
 ## Review status
 
