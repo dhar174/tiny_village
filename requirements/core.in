@@ -1,0 +1,7 @@
+# Python 3.12 core: real graph/planning/state objects, no display or ML stack.
+# Keep the graph/numeric/parser versions exercised by the startup repairs.
+attrs==23.2.0
+networkx==3.1
+numpy==1.26.4
+pydantic>=2.6.4,<3
+pyparsing==3.1.2

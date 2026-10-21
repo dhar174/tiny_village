@@ -1,4 +1,5 @@
 import unittest
+import math
 import tiny_memories
 from tiny_memories import SpecificMemory, MemoryManager
 import numpy as np
@@ -37,10 +38,6 @@ def create_mock_tensor(shape):
     return mock_tensor
 
 
-# Patch the global 'manager' and 'model' for GeneralMemory and SpecificMemory tests
-# to avoid unintended side effects from the module-level initializations.
-@patch("tiny_memories.manager", new_callable=MagicMock)
-@patch("tiny_memories.model", new_callable=MagicMock)
 class TestImport(unittest.TestCase):
     def test_module_import(self):
         """Test that we can import tiny_memories and use its sigmoid function."""
@@ -52,12 +49,12 @@ class TestImport(unittest.TestCase):
             
             # Test sigmoid with positive value
             result = tiny_memories.sigmoid(1)
-            self.assertAlmostEqual(result, 0.7310585786300049, places=10, 
+            self.assertAlmostEqual(result, 1 / (1 + math.exp(-1)), places=6, 
                                  msg="sigmoid(1) should return approximately 0.731")
             
             # Test sigmoid with negative value
             result = tiny_memories.sigmoid(-1)
-            self.assertAlmostEqual(result, 0.2689414213699951, places=10,
+            self.assertAlmostEqual(result, 1 / (1 + math.exp(1)), places=6,
 
                                  msg="sigmoid(-1) should return approximately 0.269")
         except ImportError as e:

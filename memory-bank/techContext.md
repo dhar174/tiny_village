@@ -1,6 +1,6 @@
 ## Technology Stack
 
-- Python-only repository (Python 3.8+) with code primarily in root-level
+- Python-only repository targeting Python 3.12 with code primarily in root-level
   modules and a `tests/` subdirectory for organized test coverage.
 - Core simulation and planning technologies include:
   - `networkx.MultiDiGraph` for graph-based world state in `tiny_graph_manager.py`
@@ -11,7 +11,8 @@
 
 ## Development Setup
 
-- The README describes standard Python setup via `pip install -r requirements.txt`.
+- The README describes standard Python setup via
+  `python3.12 -m pip install -r requirements.txt`.
 - The main documented runtime entry point is:
   ```
   python main.py
@@ -25,8 +26,12 @@
 
 ## Configuration Model
 
-- Some optional runtime behavior depends on environment variables such as
-  `TRANSFORMERS_CACHE`, `PYGAME_DISPLAY_WIDTH`, and `PYGAME_DISPLAY_HEIGHT`.
+- Model caches use HF_HOME and HF_HUB_CACHE, with an existing
+  TRANSFORMERS_CACHE override preserved for Transformers loaders. Default:
+  XDG_CACHE_HOME/huggingface or ~/.cache/huggingface, repositories in hub/.
+  tiny_cache configures validated owned directories before optional imports.
+- Other runtime configuration includes PYGAME_DISPLAY_WIDTH and
+  PYGAME_DISPLAY_HEIGHT.
 - LLM- and NLP-related functionality may require additional dependencies beyond
   the minimal runtime requirements listed in `requirements.txt`.
 - The project uses both core runtime modules and auxiliary scripts:

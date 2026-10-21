@@ -1,0 +1,860 @@
+{
+  "runtime_revision": "586fbd1bbd2d73a886aef884c1c1b58916b4e25e",
+  "base": "eb5f4c935e87abe53570d0d949ffd8a6f9dd5cfa",
+  "executed_cases": 132,
+  "cli_probes": 3,
+  "unexpected_skips": 0,
+  "profile_failures": 0,
+  "profile_timeouts": 0,
+  "profiles": {
+    "llm-cpu": {
+      "status": "PASS",
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "machine": "x86_64",
+      "revision": "586fbd1bbd2d73a886aef884c1c1b58916b4e25e",
+      "locks": {
+        "requirements/locks/llm-cpu-py312-linux-x86_64.txt": "a7aa20681fd3af915dc9f0b75adb8c4fd9ef3d852b430b76aa346e2a861b2b5a"
+      },
+      "packages": {
+        "fonttools": "4.67.0",
+        "matplotlib": "3.11.2",
+        "cloudpickle": "3.1.2",
+        "huggingface-hub": "0.36.2",
+        "typing-inspection": "0.4.4",
+        "joblib": "1.6.0",
+        "sympy": "1.14.0",
+        "markupsafe": "3.0.4",
+        "mpmath": "1.3.0",
+        "fsspec": "2026.9.0",
+        "packaging": "26.3",
+        "regex": "2026.9.29",
+        "filelock": "4.2.4",
+        "pillow": "13.0.0",
+        "urllib3": "2.8.0",
+        "contourpy": "1.3.3",
+        "sentencepiece": "0.2.2",
+        "scipy": "1.12.0",
+        "setuptools": "84.2.0",
+        "kiwisolver": "1.5.1",
+        "tqdm": "4.70.1",
+        "charset-normalizer": "3.5.2",
+        "sentence-transformers": "5.7.0",
+        "scikit-learn": "1.3.2",
+        "pydantic-core": "2.50.1",
+        "attrs": "23.2.0",
+        "jinja2": "3.1.6",
+        "annotated-types": "0.8.0",
+        "threadpoolctl": "3.7.0",
+        "numpy": "1.26.4",
+        "pyparsing": "3.1.2",
+        "six": "1.17.0",
+        "cycler": "0.12.1",
+        "torch": "2.14.1+cpu",
+        "pydantic": "2.14.1",
+        "safetensors": "0.8.0",
+        "pip": "25.0.1",
+        "pandas": "3.0.6",
+        "transformers": "4.57.6",
+        "python-dateutil": "2.9.0.post0",
+        "tiktoken": "0.14.0",
+        "hf-xet": "1.7.0",
+        "certifi": "2026.10.19",
+        "typing-extensions": "4.16.0",
+        "accelerate": "1.15.0",
+        "idna": "3.20",
+        "pyyaml": "6.0.3",
+        "psutil": "7.2.2",
+        "faiss-cpu": "1.15.1",
+        "requests": "2.34.2",
+        "seaborn": "0.13.2",
+        "networkx": "3.1",
+        "tokenizers": "0.22.2"
+      },
+      "counts": {
+        "tests_run": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 0,
+      "command": [
+        "/workspace/.venvs/issue725-llm-cpu/bin/python",
+        "-B",
+        "scripts/run_ci_checks.py",
+        "--profile",
+        "llm-cpu",
+        "--artifacts",
+        "/workspace/scratch/issue-726/post-review/llm-cpu"
+      ],
+      "batches": {
+        "retrieval": {
+          "status": "PASS",
+          "command": [
+            "/workspace/.venvs/issue725-llm-cpu/bin/python",
+            "-B",
+            "/workspace/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "unittest",
+            "--report",
+            "/workspace/scratch/issue-726/post-review/llm-cpu/batches/retrieval/result.json",
+            "tests.test_memory_optional_profiles.TestInstalledRetrieval"
+          ],
+          "parent_timeout": 120,
+          "started_utc": "2026-10-20T21:30:33.393504+00:00",
+          "exit_code": 0,
+          "pid": 2968,
+          "terminated_groups": [],
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 1,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          },
+          "finished_utc": "2026-10-20T21:30:34.112827+00:00"
+        },
+        "installed-basic": {
+          "status": "PASS",
+          "command": [
+            "/workspace/.venvs/issue725-llm-cpu/bin/python",
+            "-B",
+            "/workspace/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "unittest",
+            "--report",
+            "/workspace/scratch/issue-726/post-review/llm-cpu/batches/installed-basic/result.json",
+            "tests.test_lightweight_runtime.TestMinimalRunner.test_demo_returns_real_registered_state_and_memories"
+          ],
+          "parent_timeout": 120,
+          "started_utc": "2026-10-20T21:30:34.113566+00:00",
+          "exit_code": 0,
+          "pid": 2993,
+          "terminated_groups": [],
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 1,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          },
+          "finished_utc": "2026-10-20T21:30:34.682204+00:00"
+        }
+      }
+    },
+    "dev": {
+      "status": "PASS",
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "machine": "x86_64",
+      "revision": "586fbd1bbd2d73a886aef884c1c1b58916b4e25e",
+      "locks": {
+        "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5"
+      },
+      "packages": {
+        "typing-inspection": "0.4.4",
+        "packaging": "26.3",
+        "iniconfig": "2.3.1",
+        "pydantic-core": "2.50.1",
+        "attrs": "23.2.0",
+        "pytest": "9.1.1",
+        "pygments": "2.21.0",
+        "annotated-types": "0.8.0",
+        "numpy": "1.26.4",
+        "pyparsing": "3.1.2",
+        "uv": "0.12.23",
+        "pydantic": "2.14.1",
+        "pip": "25.0.1",
+        "pluggy": "1.7.0",
+        "typing-extensions": "4.16.0",
+        "networkx": "3.1"
+      },
+      "counts": {
+        "tests_run": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 0,
+      "command": [
+        "/workspace/.venvs/issue726-dev/bin/python",
+        "-B",
+        "scripts/run_ci_checks.py",
+        "--profile",
+        "dev",
+        "--artifacts",
+        "/workspace/scratch/issue-726/post-review/dev"
+      ],
+      "batches": {
+        "runner": {
+          "status": "PASS",
+          "command": [
+            "/workspace/.venvs/issue726-dev/bin/python",
+            "-B",
+            "/workspace/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "unittest",
+            "--report",
+            "/workspace/scratch/issue-726/post-review/dev/batches/runner/result.json",
+            "tests.test_ci_checks"
+          ],
+          "parent_timeout": 120,
+          "started_utc": "2026-10-20T21:30:33.231455+00:00",
+          "exit_code": 0,
+          "pid": 2955,
+          "terminated_groups": [
+            3055,
+            3237,
+            3312
+          ],
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 18,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          },
+          "finished_utc": "2026-10-20T21:30:48.320024+00:00"
+        },
+        "cli-smoke": {
+          "status": "PASS",
+          "command": [
+            "/workspace/.venvs/issue726-dev/bin/python",
+            "-B",
+            "/workspace/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "pytest",
+            "--report",
+            "/workspace/scratch/issue-726/post-review/dev/batches/cli-smoke/result.json",
+            "tests/test_minimal_demo_smoke.py"
+          ],
+          "parent_timeout": 120,
+          "started_utc": "2026-10-20T21:30:48.320561+00:00",
+          "exit_code": 0,
+          "pid": 3364,
+          "terminated_groups": [],
+          "report": {
+            "status": "PASS",
+            "kind": "pytest",
+            "counts": {
+              "tests_run": 2,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            },
+            "pytest_exit_code": 0
+          },
+          "finished_utc": "2026-10-20T21:30:49.294105+00:00"
+        }
+      }
+    },
+    "visual": {
+      "status": "PASS",
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "machine": "x86_64",
+      "revision": "586fbd1bbd2d73a886aef884c1c1b58916b4e25e",
+      "locks": {
+        "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5",
+        "requirements/locks/visual-py312-linux-x86_64.txt": "a6db9f00d612e0b715961e9f1565c90066eb0872f165ad3984d3fcb414eaed73"
+      },
+      "packages": {
+        "typing-inspection": "0.4.4",
+        "packaging": "26.3",
+        "pygame": "2.6.1",
+        "iniconfig": "2.3.1",
+        "pydantic-core": "2.50.1",
+        "attrs": "23.2.0",
+        "pytest": "9.1.1",
+        "pygments": "2.21.0",
+        "annotated-types": "0.8.0",
+        "numpy": "1.26.4",
+        "pyparsing": "3.1.2",
+        "uv": "0.12.23",
+        "pydantic": "2.14.1",
+        "pip": "25.0.1",
+        "pluggy": "1.7.0",
+        "typing-extensions": "4.16.0",
+        "networkx": "3.1"
+      },
+      "counts": {
+        "tests_run": 68,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 0,
+      "command": [
+        "/workspace/.venvs/issue726-visual/bin/python",
+        "-B",
+        "scripts/run_ci_checks.py",
+        "--profile",
+        "visual",
+        "--artifacts",
+        "/workspace/scratch/issue-726/post-review/visual"
+      ],
+      "batches": {
+        "lifecycle": {
+          "status": "PASS",
+          "command": [
+            "/workspace/.venvs/issue726-visual/bin/python",
+            "-B",
+            "/workspace/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "unittest",
+            "--report",
+            "/workspace/scratch/issue-726/post-review/visual/batches/lifecycle/result.json",
+            "tests.test_lightweight_runtime.TestVisualLifecycle"
+          ],
+          "parent_timeout": 120,
+          "started_utc": "2026-10-20T21:30:33.294109+00:00",
+          "exit_code": 0,
+          "pid": 2965,
+          "terminated_groups": [],
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 4,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          },
+          "finished_utc": "2026-10-20T21:30:35.171286+00:00"
+        },
+        "graph": {
+          "status": "PASS",
+          "command": [
+            "/workspace/.venvs/issue726-visual/bin/python",
+            "-B",
+            "/workspace/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "unittest",
+            "--report",
+            "/workspace/scratch/issue-726/post-review/visual/batches/graph/result.json",
+            "tests.test_graph_initialization",
+            "tests.test_graph_ownership"
+          ],
+          "parent_timeout": 120,
+          "started_utc": "2026-10-20T21:30:35.171789+00:00",
+          "exit_code": 0,
+          "pid": 3053,
+          "terminated_groups": [],
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 24,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          },
+          "finished_utc": "2026-10-20T21:30:44.756754+00:00"
+        },
+        "cache": {
+          "status": "PASS",
+          "command": [
+            "/workspace/.venvs/issue726-visual/bin/python",
+            "-B",
+            "/workspace/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "unittest",
+            "--report",
+            "/workspace/scratch/issue-726/post-review/visual/batches/cache/result.json",
+            "tests.test_model_cache"
+          ],
+          "parent_timeout": 120,
+          "started_utc": "2026-10-20T21:30:44.757459+00:00",
+          "exit_code": 0,
+          "pid": 3330,
+          "terminated_groups": [],
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 27,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          },
+          "finished_utc": "2026-10-20T21:30:46.124527+00:00"
+        },
+        "capture": {
+          "status": "PASS",
+          "command": [
+            "/workspace/.venvs/issue726-visual/bin/python",
+            "-B",
+            "/workspace/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "unittest",
+            "--report",
+            "/workspace/scratch/issue-726/post-review/visual/batches/capture/result.json",
+            "tests.test_subprocess_capture"
+          ],
+          "parent_timeout": 120,
+          "started_utc": "2026-10-20T21:30:46.125134+00:00",
+          "exit_code": 0,
+          "pid": 3348,
+          "terminated_groups": [],
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 13,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          },
+          "finished_utc": "2026-10-20T21:30:49.298298+00:00"
+        }
+      }
+    },
+    "nlp": {
+      "status": "PASS",
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "machine": "x86_64",
+      "revision": "586fbd1bbd2d73a886aef884c1c1b58916b4e25e",
+      "locks": {
+        "requirements/locks/nlp-py312-linux-x86_64.txt": "d3cba0d3cb6ecb1796da85b0882bd84db0a8ac2a290c5f9ebdc19f3e3128ef15"
+      },
+      "packages": {
+        "fonttools": "4.67.0",
+        "matplotlib": "3.11.2",
+        "cloudpickle": "3.1.2",
+        "spacy": "3.8.16",
+        "markdown-it-py": "4.2.0",
+        "typing-inspection": "0.4.4",
+        "weasel": "1.0.0",
+        "joblib": "1.6.0",
+        "markupsafe": "3.0.4",
+        "cloudpathlib": "0.26.0",
+        "murmurhash": "1.0.15",
+        "packaging": "26.3",
+        "regex": "2026.9.29",
+        "cymem": "2.0.13",
+        "wasabi": "1.1.3",
+        "pillow": "13.0.0",
+        "httpcore": "1.0.9",
+        "click": "8.5.0",
+        "urllib3": "2.8.0",
+        "contourpy": "1.3.3",
+        "preshed": "3.0.13",
+        "scipy": "1.12.0",
+        "setuptools": "84.2.0",
+        "kiwisolver": "1.5.1",
+        "typer": "0.27.3",
+        "tqdm": "4.70.1",
+        "smart-open": "8.0.4",
+        "confection": "1.3.3",
+        "charset-normalizer": "3.5.2",
+        "scikit-learn": "1.3.2",
+        "pydantic-core": "2.50.1",
+        "attrs": "23.2.0",
+        "srsly": "2.5.4",
+        "defusedxml": "0.7.1",
+        "rich": "15.0.0",
+        "jinja2": "3.1.6",
+        "pygments": "2.21.0",
+        "annotated-types": "0.8.0",
+        "threadpoolctl": "3.7.0",
+        "numpy": "1.26.4",
+        "pyparsing": "3.1.2",
+        "spacy-legacy": "3.0.12",
+        "six": "1.17.0",
+        "cycler": "0.12.1",
+        "pydantic": "2.14.1",
+        "wrapt": "2.5.1",
+        "pip": "25.0.1",
+        "pandas": "3.0.6",
+        "httpx": "0.28.1",
+        "nltk": "3.10.3",
+        "rake-nltk": "1.0.6",
+        "python-dateutil": "2.9.0.post0",
+        "blis": "1.3.3",
+        "anyio": "4.15.1",
+        "h11": "0.16.0",
+        "thinc": "8.3.13",
+        "annotated-doc": "0.0.5",
+        "spacy-loggers": "1.0.5",
+        "shellingham": "1.5.4",
+        "certifi": "2026.10.19",
+        "typing-extensions": "4.16.0",
+        "catalogue": "2.0.10",
+        "idna": "3.20",
+        "requests": "2.34.2",
+        "seaborn": "0.13.2",
+        "mdurl": "0.1.2",
+        "textblob": "0.20.1",
+        "networkx": "3.1"
+      },
+      "counts": {
+        "tests_run": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 0,
+      "command": [
+        "/workspace/.venvs/issue725-nlp/bin/python",
+        "-B",
+        "scripts/run_ci_checks.py",
+        "--profile",
+        "nlp",
+        "--artifacts",
+        "/workspace/scratch/issue-726/post-review/nlp"
+      ],
+      "batches": {
+        "nlp": {
+          "status": "PASS",
+          "command": [
+            "/workspace/.venvs/issue725-nlp/bin/python",
+            "-B",
+            "/workspace/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "unittest",
+            "--report",
+            "/workspace/scratch/issue-726/post-review/nlp/batches/nlp/result.json",
+            "tests.test_memory_optional_profiles.TestInstalledNLP"
+          ],
+          "parent_timeout": 120,
+          "started_utc": "2026-10-20T21:30:33.474246+00:00",
+          "exit_code": 0,
+          "pid": 2976,
+          "terminated_groups": [],
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 2,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          },
+          "finished_utc": "2026-10-20T21:30:37.835000+00:00"
+        }
+      }
+    },
+    "core": {
+      "status": "PASS",
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+      "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+      "machine": "x86_64",
+      "revision": "586fbd1bbd2d73a886aef884c1c1b58916b4e25e",
+      "locks": {
+        "requirements/locks/core-py312-linux-x86_64.txt": "2a037e6923b1f4e0f19d14109adc4217a5e4b7e0583a780639dd476a1451c908"
+      },
+      "packages": {
+        "typing-inspection": "0.4.4",
+        "pydantic-core": "2.50.1",
+        "attrs": "23.2.0",
+        "annotated-types": "0.8.0",
+        "numpy": "1.26.4",
+        "pyparsing": "3.1.2",
+        "pydantic": "2.14.1",
+        "pip": "25.0.1",
+        "typing-extensions": "4.16.0",
+        "networkx": "3.1"
+      },
+      "counts": {
+        "tests_run": 40,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 3,
+      "command": [
+        "/workspace/.venvs/issue726-core/bin/python",
+        "-B",
+        "scripts/run_ci_checks.py",
+        "--profile",
+        "core",
+        "--artifacts",
+        "/workspace/scratch/issue-726/post-review/core"
+      ],
+      "batches": {
+        "components": {
+          "status": "PASS",
+          "command": [
+            "/workspace/.venvs/issue726-core/bin/python",
+            "-B",
+            "/workspace/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "unittest",
+            "--report",
+            "/workspace/scratch/issue-726/post-review/core/batches/components/result.json",
+            "tests.test_actions",
+            "tests.test_action_named_target_resolution",
+            "tests.test_goap_error_handling",
+            "tests.test_event_handler_payloads"
+          ],
+          "parent_timeout": 120,
+          "started_utc": "2026-10-20T21:30:33.277675+00:00",
+          "exit_code": 0,
+          "pid": 2964,
+          "terminated_groups": [],
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 21,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          },
+          "finished_utc": "2026-10-20T21:30:34.054036+00:00"
+        },
+        "runtime": {
+          "status": "PASS",
+          "command": [
+            "/workspace/.venvs/issue726-core/bin/python",
+            "-B",
+            "/workspace/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "unittest",
+            "--report",
+            "/workspace/scratch/issue-726/post-review/core/batches/runtime/result.json",
+            "tests.test_memory_runtime",
+            "tests.test_lightweight_runtime.TestHeadlessRuntime",
+            "tests.test_lightweight_runtime.TestMinimalRunner"
+          ],
+          "parent_timeout": 120,
+          "started_utc": "2026-10-20T21:30:34.054663+00:00",
+          "exit_code": 0,
+          "pid": 2992,
+          "terminated_groups": [],
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 19,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          },
+          "finished_utc": "2026-10-20T21:30:38.997595+00:00"
+        },
+        "canonical-cli": {
+          "status": "PASS",
+          "command": [
+            "/workspace/.venvs/issue726-core/bin/python",
+            "-B",
+            "/workspace/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "probe",
+            "--report",
+            "/workspace/scratch/issue-726/post-review/core/batches/canonical-cli/result.json",
+            "canonical"
+          ],
+          "parent_timeout": 120,
+          "started_utc": "2026-10-20T21:30:38.998336+00:00",
+          "exit_code": 0,
+          "pid": 3226,
+          "terminated_groups": [],
+          "report": {
+            "kind": "probe",
+            "status": "PASS",
+            "probes_run": 1,
+            "expected_exit_code": 0,
+            "observed_exit_code": 0,
+            "capture_artifacts": "/workspace/scratch/issue-726/post-review/core/children/child-nvyl8ov9"
+          },
+          "finished_utc": "2026-10-20T21:30:39.414010+00:00"
+        },
+        "default-cli": {
+          "status": "PASS",
+          "command": [
+            "/workspace/.venvs/issue726-core/bin/python",
+            "-B",
+            "/workspace/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "probe",
+            "--report",
+            "/workspace/scratch/issue-726/post-review/core/batches/default-cli/result.json",
+            "default"
+          ],
+          "parent_timeout": 120,
+          "started_utc": "2026-10-20T21:30:39.414481+00:00",
+          "exit_code": 0,
+          "pid": 3239,
+          "terminated_groups": [],
+          "report": {
+            "kind": "probe",
+            "status": "PASS",
+            "probes_run": 1,
+            "expected_exit_code": 0,
+            "observed_exit_code": 0,
+            "capture_artifacts": "/workspace/scratch/issue-726/post-review/core/children/child-v_imb38l"
+          },
+          "finished_utc": "2026-10-20T21:30:39.882246+00:00"
+        },
+        "invalid-cli": {
+          "status": "PASS",
+          "command": [
+            "/workspace/.venvs/issue726-core/bin/python",
+            "-B",
+            "/workspace/tiny_village/scripts/run_ci_checks.py",
+            "--worker",
+            "probe",
+            "--report",
+            "/workspace/scratch/issue-726/post-review/core/batches/invalid-cli/result.json",
+            "invalid"
+          ],
+          "parent_timeout": 120,
+          "started_utc": "2026-10-20T21:30:39.882738+00:00",
+          "exit_code": 0,
+          "pid": 3250,
+          "terminated_groups": [],
+          "report": {
+            "kind": "probe",
+            "status": "PASS",
+            "probes_run": 1,
+            "expected_exit_code": 2,
+            "observed_exit_code": 2,
+            "capture_artifacts": "/workspace/scratch/issue-726/post-review/core/children/child-9jay499y"
+          },
+          "finished_utc": "2026-10-20T21:30:40.047480+00:00"
+        }
+      }
+    }
+  },
+  "fresh_installs": {
+    "core": {
+      "command": [
+        "/workspace/.venvs/issue726-core/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "--require-hashes",
+        "--only-binary=:all:",
+        "-r",
+        "requirements/locks/core-py312-linux-x86_64.txt"
+      ],
+      "install_exit": 0,
+      "pip_check_exit": 0,
+      "pip_check": "No broken requirements found.\n"
+    },
+    "dev": {
+      "command": [
+        "/workspace/.venvs/issue726-dev/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "--require-hashes",
+        "--only-binary=:all:",
+        "-r",
+        "requirements/locks/dev-py312-linux-x86_64.txt"
+      ],
+      "install_exit": 0,
+      "pip_check_exit": 0,
+      "pip_check": "No broken requirements found.\n"
+    },
+    "visual": {
+      "command": [
+        "/workspace/.venvs/issue726-visual/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "--require-hashes",
+        "--only-binary=:all:",
+        "-r",
+        "requirements/locks/dev-py312-linux-x86_64.txt",
+        "-r",
+        "requirements/locks/visual-py312-linux-x86_64.txt"
+      ],
+      "install_exit": 0,
+      "pip_check_exit": 0,
+      "pip_check": "No broken requirements found.\n"
+    }
+  },
+  "source_hashes": {
+    "scripts/run_ci_checks.py": "23be3b5869b495444d03dd569801b37d4df1cd3ff868125c87d4e7d211e50bad",
+    "tests/test_ci_checks.py": "25890c81d8d2dc51dc6ba541531130805b8f201aeae24b16e91aebe9c43eea5e",
+    ".github/workflows/python-ci.yml": "632e75472a44dc7a44340308de48b098055843b703169b0ade40a873e5737c4d",
+    ".github/workflows/python-ml-profiles.yml": "463aeffcaeebda3d9153b7ecaf257a0ca6216e7503da4a0fe12e524bbdd6a921",
+    "tests/subprocess_capture.py": "a10f3ff792aa9ea9165f5d0bb91e865c09fa181944069e6c5017a5e44abdd278",
+    "requirements.txt": "31a86733cd29040e8807fa70b9794f513763eee76209d8f82a38c2bce5fd1073",
+    "requirements/locks/analytics-py312-linux-x86_64.txt": "1d9c0ace096aaf7dd86788596d3fb2b98eee7a8ea4e5f6e57b9319e92d0b9756",
+    "requirements/locks/core-py312-linux-x86_64.txt": "2a037e6923b1f4e0f19d14109adc4217a5e4b7e0583a780639dd476a1451c908",
+    "requirements/locks/retrieval-py312-linux-x86_64.txt": "be0117f80355481168b137c48051c322781abe63da33e48f8797b96290c8897d",
+    "requirements/locks/nlp-py312-linux-x86_64.txt": "d3cba0d3cb6ecb1796da85b0882bd84db0a8ac2a290c5f9ebdc19f3e3128ef15",
+    "requirements/locks/llm-gpu-py312-linux-x86_64.txt": "9ecd95a340b9d96b69db933f9b6e70c7c3d3a0fd6ae2f6f6239d20153ce3487d",
+    "requirements/locks/llm-cpu-py312-linux-x86_64.txt": "a7aa20681fd3af915dc9f0b75adb8c4fd9ef3d852b430b76aa346e2a861b2b5a",
+    "requirements/locks/visual-py312-linux-x86_64.txt": "a6db9f00d612e0b715961e9f1565c90066eb0872f165ad3984d3fcb414eaed73",
+    "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5"
+  },
+  "workflow_validation": {
+    "tool": "actionlint 1.7.12",
+    "verified_archive_sha256": "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8",
+    "command": [
+      "actionlint",
+      "-shellcheck=",
+      ".github/workflows/python-ci.yml",
+      ".github/workflows/python-ml-profiles.yml"
+    ],
+    "exit_code": 0
+  },
+  "hosted_status": "pending PR publication; main/manual/enforcement pending merge",
+  "original_failures_retained": "/workspace/scratch/issue-726",
+  "review": {
+    "critical": 0,
+    "important_fixed": 3,
+    "minor_deferred": 1,
+    "no_findings_declined": true,
+    "red_logs": [
+      "runner-red.log",
+      "review-red.log",
+      "xpass-red.log",
+      "review-green1.log"
+    ],
+    "final_runner_methods": 18
+  }
+}

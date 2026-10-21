@@ -2,6 +2,7 @@
 /tiny_llms
 /tiny_llmsx
 /wandb
+/logs/copilot/
 /__pycache__
 __pycache__
 /tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf:Zone.Identifier
@@ -281,3 +282,8 @@ feh_013374_000005_tmpoml57nbi.PNG
 feh_013374_000006_tmpoml57nbi.PNG
 metab_adder.py
 compare_lda_tfidf.py
+
+# Durable startup-test diagnostics (review before sharing raw output).
+/.test-artifacts/
+/.venv/
+/.venv-*/

@@ -318,6 +318,16 @@ class TestUpdateGameStateEventHandlerUsage(unittest.TestCase):
     """Ensure update_game_state feeds queued events through EventHandler and strategy."""
 
     def test_update_game_state_forwards_events_and_updates_strategy(self):
+        class RecordingStrategyManager:
+            def __init__(self):
+                self.received_events = []
+
+            def update_strategy(self, events):
+                self.received_events.append(list(events))
+                # Return no decisions to avoid triggering apply_decision() when
+                # controller.action_resolver is None in this test setup.
+                return None
+
         controller = GameplayController.__new__(GameplayController)
         controller.paused = False
         queued_event = Mock(name="queued_event")
@@ -333,8 +343,7 @@ class TestUpdateGameStateEventHandlerUsage(unittest.TestCase):
         controller.event_handler.process_cascading_queue = Mock()
         controller.event_handler.generate_dynamic_events = Mock()
 
-        controller.strategy_manager = Mock()
-        controller.strategy_manager.update_strategy = Mock(return_value=None)
+        controller.strategy_manager = RecordingStrategyManager()
 
         controller._update_feature_systems = Mock()
         controller.map_controller = Mock()
@@ -352,9 +361,7 @@ class TestUpdateGameStateEventHandlerUsage(unittest.TestCase):
 
         controller.event_handler.add_event.assert_called_once_with(queued_event)
         controller.event_handler.check_events.assert_called_once()
-        controller.strategy_manager.update_strategy.assert_called_once_with(
-            [handler_event]
-        )
+        self.assertEqual(controller.strategy_manager.received_events, [[handler_event]])
         self.assertEqual(controller.events, [])
 
 

@@ -1,0 +1,2 @@
+-r core.in
+pygame==2.6.1

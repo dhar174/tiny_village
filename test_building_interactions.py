@@ -7,8 +7,36 @@ that go beyond the basic 'Enter Building' action.
 """
 
 import unittest
-from unittest.mock import Mock, MagicMock
+from dataclasses import dataclass
+
 from tiny_buildings import Building, BUILDING_TYPE_INTERACTIONS
+from tests.skill_test_utils import build_character_skills
+
+
+@dataclass(slots=True)
+from tests.mock_character import MockPersonalityTraits, MockCharacterSkills
+
+# ... inside MockCharacter __init__ ...
+        self.personality_traits = MockPersonalityTraits(
+            extraversion=extraversion,
+            openness=attributes.get('openness', 50.0),
+            conscientiousness=attributes.get('conscientiousness', 50.0),
+            agreeableness=attributes.get('agreeableness', 50.0),
+            neuroticism=attributes.get('neuroticism', 50.0),
+        )
+        
+        self.skills = MockCharacterSkills(
+            crafting=attributes.get('crafting_skill', 20),
+            farming=attributes.get('farming_skill', 15),
+            animal_care=attributes.get('animal_care_skill', 10),
+        )
+
+
+@dataclass(slots=True)
+class CharacterSkills:
+    crafting: int
+    farming: int
+    animal_care: int
 
 
 class MockCharacter:
@@ -20,18 +48,20 @@ class MockCharacter:
         self.hunger = attributes.get('hunger', 20)
         self.thirst = attributes.get('thirst', 30)
         
-        # Mock personality traits
-        self.personality_traits = Mock()
-        self.personality_traits.extraversion = extraversion
-        self.personality_traits.openness = attributes.get('openness', 50)
-        self.personality_traits.conscientiousness = attributes.get('conscientiousness', 50)
-        self.personality_traits.agreeableness = attributes.get('agreeableness', 50)
+        # Use strict value objects so missing attribute access fails.
+        self.personality_traits = PersonalityTraits(
+            extraversion=float(extraversion),
+            openness=float(attributes.get('openness', 50)),
+            conscientiousness=float(attributes.get('conscientiousness', 50)),
+            agreeableness=float(attributes.get('agreeableness', 50)),
+            neuroticism=float(attributes.get('neuroticism', 50))
+        )
         
-        # Mock skills
-        self.skills = Mock()
-        self.skills.crafting = attributes.get('crafting_skill', 20)
-        self.skills.farming = attributes.get('farming_skill', 15)
-        self.skills.animal_care = attributes.get('animal_care_skill', 10)
+        self.skills = CharacterSkills(
+            crafting=attributes.get('crafting_skill', 20),
+            farming=attributes.get('farming_skill', 15),
+            animal_care=attributes.get('animal_care_skill', 10),
+        )
 
 
 class TestBuildingInteractions(unittest.TestCase):
@@ -199,6 +229,17 @@ class TestBuildingInteractions(unittest.TestCase):
         
         # Low energy character should have fewer available interactions
         self.assertLessEqual(len(interactions_low), len(interactions_high))
+
+    def test_character_test_double_uses_explicit_interfaces(self):
+        """Test doubles should not silently allow arbitrary attribute access."""
+        self.assertEqual(self.mock_character.personality_traits.extraversion, 60)
+        self.assertEqual(self.mock_character.skills.crafting, 20)
+
+        with self.assertRaises(AttributeError):
+            _ = self.mock_character.personality_traits.kindness
+
+        with self.assertRaises(AttributeError):
+            _ = self.mock_character.skills.blacksmithing
     
     def test_backward_compatibility(self):
         """Test that the system maintains backward compatibility."""

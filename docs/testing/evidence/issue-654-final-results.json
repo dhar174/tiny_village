@@ -1,0 +1,290 @@
+{
+  "matrix": {
+    "revision": "ccc2469880a04bdf03531da049a8421d0de65368",
+    "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+    "jobs": {
+      "core-existing": {
+        "status": "PASS",
+        "command": [
+          "/workspace/.venvs/issue654-core/bin/python",
+          "-B",
+          "-m",
+          "unittest",
+          "-v",
+          "tests.test_actions",
+          "tests.test_action_named_target_resolution",
+          "tests.test_goap_error_handling",
+          "tests.test_event_handler_payloads"
+        ],
+        "expected_exit_code": 0,
+        "exit_code": 0,
+        "elapsed_seconds": 0.214
+      },
+      "core-new": {
+        "status": "PASS",
+        "command": [
+          "/workspace/.venvs/issue654-core/bin/python",
+          "-B",
+          "-m",
+          "unittest",
+          "-v",
+          "tests.test_memory_runtime",
+          "tests.test_lightweight_runtime.TestHeadlessRuntime",
+          "tests.test_lightweight_runtime.TestMinimalRunner"
+        ],
+        "expected_exit_code": 0,
+        "exit_code": 0,
+        "elapsed_seconds": 4.274
+      },
+      "core-cli": {
+        "status": "PASS",
+        "command": [
+          "/workspace/.venvs/issue654-core/bin/python",
+          "-B",
+          "main.py",
+          "--mode",
+          "minimal",
+          "--headless",
+          "--no-llm",
+          "--characters",
+          "2"
+        ],
+        "expected_exit_code": 0,
+        "exit_code": 0,
+        "elapsed_seconds": 0.264
+      },
+      "core-default-cli": {
+        "status": "PASS",
+        "command": [
+          "/workspace/.venvs/issue654-core/bin/python",
+          "-B",
+          "main.py",
+          "--mode",
+          "minimal"
+        ],
+        "expected_exit_code": 0,
+        "exit_code": 0,
+        "elapsed_seconds": 0.314
+      },
+      "core-invalid-cli": {
+        "status": "PASS",
+        "command": [
+          "/workspace/.venvs/issue654-core/bin/python",
+          "-B",
+          "main.py",
+          "--headless"
+        ],
+        "expected_exit_code": 2,
+        "exit_code": 2,
+        "elapsed_seconds": 0.032
+      },
+      "dev-cli-smoke": {
+        "status": "PASS",
+        "command": [
+          "/workspace/.venvs/issue654-dev/bin/python",
+          "-B",
+          "-m",
+          "pytest",
+          "-q",
+          "tests/test_minimal_demo_smoke.py"
+        ],
+        "expected_exit_code": 0,
+        "exit_code": 0,
+        "elapsed_seconds": 0.765
+      },
+      "visual-new": {
+        "status": "PASS",
+        "command": [
+          "/workspace/.venvs/issue654-visual/bin/python",
+          "-B",
+          "-m",
+          "unittest",
+          "-v",
+          "tests.test_lightweight_runtime.TestVisualLifecycle"
+        ],
+        "expected_exit_code": 0,
+        "exit_code": 0,
+        "elapsed_seconds": 0.665
+      },
+      "visual-graph": {
+        "status": "PASS",
+        "command": [
+          "/workspace/.venvs/issue654-visual/bin/python",
+          "-B",
+          "-m",
+          "unittest",
+          "-v",
+          "tests.test_graph_initialization",
+          "tests.test_graph_ownership"
+        ],
+        "expected_exit_code": 0,
+        "exit_code": 0,
+        "elapsed_seconds": 9.041
+      },
+      "visual-cache": {
+        "status": "PASS",
+        "command": [
+          "/workspace/.venvs/issue654-visual/bin/python",
+          "-B",
+          "-m",
+          "unittest",
+          "-v",
+          "tests.test_model_cache"
+        ],
+        "expected_exit_code": 0,
+        "exit_code": 0,
+        "elapsed_seconds": 1.216
+      },
+      "visual-capture": {
+        "status": "PASS",
+        "command": [
+          "/workspace/.venvs/issue654-visual/bin/python",
+          "-B",
+          "-m",
+          "unittest",
+          "-v",
+          "tests.test_subprocess_capture"
+        ],
+        "expected_exit_code": 0,
+        "exit_code": 0,
+        "elapsed_seconds": 3.024
+      },
+      "nlp-new": {
+        "status": "PASS",
+        "command": [
+          "/workspace/.venvs/issue725-nlp/bin/python",
+          "-B",
+          "-m",
+          "unittest",
+          "-v",
+          "tests.test_memory_optional_profiles.TestInstalledNLP"
+        ],
+        "expected_exit_code": 0,
+        "exit_code": 0,
+        "elapsed_seconds": 1.868
+      },
+      "llm-installed-basic": {
+        "status": "PASS",
+        "command": [
+          "/workspace/.venvs/issue725-llm-cpu/bin/python",
+          "-B",
+          "-m",
+          "unittest",
+          "-v",
+          "tests.test_lightweight_runtime.TestMinimalRunner.test_demo_returns_real_registered_state_and_memories"
+        ],
+        "expected_exit_code": 0,
+        "exit_code": 0,
+        "elapsed_seconds": 0.415
+      },
+      "retrieval-new": {
+        "status": "PASS",
+        "command": [
+          "/workspace/.venvs/issue725-llm-cpu/bin/python",
+          "-B",
+          "-m",
+          "unittest",
+          "-v",
+          "tests.test_memory_optional_profiles.TestInstalledRetrieval"
+        ],
+        "expected_exit_code": 0,
+        "exit_code": 0,
+        "elapsed_seconds": 0.315
+      }
+    },
+    "source_unchanged": true
+  },
+  "test_counts": {
+    "core-existing": 21,
+    "core-new": 19,
+    "dev-cli-smoke": 2,
+    "visual-new": 2,
+    "visual-graph": 24,
+    "visual-cache": 27,
+    "visual-capture": 13,
+    "nlp-new": 2,
+    "llm-installed-basic": 1,
+    "retrieval-new": 1
+  },
+  "unique_test_cases": 111,
+  "test_executions_across_profiles": 112,
+  "skips": 0,
+  "timeouts": 0,
+  "installations": {
+    "core": {
+      "command": [
+        "/workspace/.venvs/issue654-core/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "--require-hashes",
+        "--only-binary=:all:",
+        "-r",
+        "requirements.txt"
+      ],
+      "exit_code": 0,
+      "pip_check": "No broken requirements found.\n"
+    },
+    "dev": {
+      "command": [
+        "/workspace/.venvs/issue654-dev/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "--require-hashes",
+        "--only-binary=:all:",
+        "-r",
+        "requirements/locks/dev-py312-linux-x86_64.txt"
+      ],
+      "exit_code": 0,
+      "pip_check": "No broken requirements found.\n"
+    },
+    "visual": {
+      "command": [
+        "/workspace/.venvs/issue654-visual/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "--require-hashes",
+        "--only-binary=:all:",
+        "-r",
+        "requirements/locks/dev-py312-linux-x86_64.txt",
+        "-r",
+        "requirements/locks/visual-py312-linux-x86_64.txt"
+      ],
+      "exit_code": 0,
+      "pip_check": "No broken requirements found.\n"
+    }
+  },
+  "source_hashes": {
+    "demo_minimal_integration.py": "92466957763297499fbc92903cee1a42ccd18b832f09d77c325791ea2c4ab641",
+    "llm_integration_utils.py": "b4163ded9f25848bd733eac8f217729ba5e60680b40a3385c94e29de9d790244",
+    "main.py": "7aec70b6986facc4b1660551ad9c4e93dc8b2d05adba740f0c967183e9b26084",
+    "requirements.txt": "31a86733cd29040e8807fa70b9794f513763eee76209d8f82a38c2bce5fd1073",
+    "requirements/locks/analytics-py312-linux-x86_64.txt": "1d9c0ace096aaf7dd86788596d3fb2b98eee7a8ea4e5f6e57b9319e92d0b9756",
+    "requirements/locks/core-py312-linux-x86_64.txt": "2a037e6923b1f4e0f19d14109adc4217a5e4b7e0583a780639dd476a1451c908",
+    "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5",
+    "requirements/locks/llm-cpu-py312-linux-x86_64.txt": "a7aa20681fd3af915dc9f0b75adb8c4fd9ef3d852b430b76aa346e2a861b2b5a",
+    "requirements/locks/llm-gpu-py312-linux-x86_64.txt": "9ecd95a340b9d96b69db933f9b6e70c7c3d3a0fd6ae2f6f6239d20153ce3487d",
+    "requirements/locks/nlp-py312-linux-x86_64.txt": "d3cba0d3cb6ecb1796da85b0882bd84db0a8ac2a290c5f9ebdc19f3e3128ef15",
+    "requirements/locks/retrieval-py312-linux-x86_64.txt": "be0117f80355481168b137c48051c322781abe63da33e48f8797b96290c8897d",
+    "requirements/locks/visual-py312-linux-x86_64.txt": "a6db9f00d612e0b715961e9f1565c90066eb0872f165ad3984d3fcb414eaed73",
+    "tests/test_lightweight_runtime.py": "9aadb4e34e11e20f9d23f0706cb69f97d92c9a565977eb6d9830da26146670bf",
+    "tests/test_memory_optional_profiles.py": "c81d51364595058b87969e02c2a125cc6aa0485d9a4daec0ea5ac961fd723ae1",
+    "tests/test_memory_runtime.py": "7a1499dcc2874df3f1b39b03ae9cad32079fcad3d3ee56e833202eeee99c3f27",
+    "tests/test_minimal_demo_smoke.py": "c53b1d20e7cf13f2191ccc9a9acb2fd481c879386bf269314a37446fb03bb13a",
+    "tests/test_model_cache.py": "2f7170de0a6340fb88229a1385e4524b175203ed22fbab02093d73b7b0515fa7",
+    "tiny_characters.py": "67b301e35be0c49cd768e0ccac8afeb776c6d5fa0f29a3db9bfd364f7ae9c209",
+    "tiny_gameplay_controller.py": "e1ffaec1a9595c223263c4945ac9a0167404b8b6421623b5934fb575ea2b2699",
+    "tiny_graph_manager.py": "edb8c04229dda66a089a7fabbb49f2f7f9658fd2a45744a22d4c13108c688440",
+    "tiny_memories.py": "f2fb60544a9eeefbc76e95e390449c279f94ec06ee5099d689832753a966adef",
+    "tiny_strategy_manager.py": "710c36cd93422d56f955e86bdfdfb53838235c9692c01fe8825e1149d3f0ee78"
+  },
+  "durable_child_artifacts": {
+    "root": "/workspace/scratch/issue-654/post-review/subprocess-artifacts",
+    "terminal_outcomes": {
+      "EXITED_ZERO": 69
+    },
+    "incomplete": 0
+  }
+}

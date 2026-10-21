@@ -1,0 +1,22 @@
+flowchart LR
+    Main["main.py\nEntry point"] --> Controller["tiny_gameplay_controller.py\nMain loop and orchestration"]
+    Controller --> Event["tiny_event_handler.py\nEvent detection and routing"]
+    Event --> Strategy["tiny_strategy_manager.py\nGoal selection and routine updates"]
+    Strategy --> GOAP["tiny_goap_system.py\nGOAP planning"]
+    Strategy --> Actions["actions.py\nAction catalog and execution rules"]
+    GOAP --> Actions
+    GOAP --> Graph["tiny_graph_manager.py\nShared world model"]
+    Controller --> Graph
+    Graph --> Strategy
+    Graph --> Memories["tiny_memories.py\nMemory storage and retrieval"]
+    Graph --> Map["tiny_map_controller.py\nMap and presentation"]
+    Strategy --> Prompt["tiny_prompt_builder.py\nPrompt construction"]
+    Prompt --> Brain["tiny_brain_io.py\nModel I/O"]
+    Brain --> Interpret["tiny_output_interpreter.py\nDecision parsing"]
+    Interpret --> Actions
+    Actions --> Graph
+    Actions --> Memories
+    Controller --> Story["tiny_storytelling_system.py\nNarrative hooks"]
+    Controller --> Animation["tiny_animation_system.py\nVisual feedback"]
+    Globals["tiny_globals.py\nGlobal accessors"] -.-> Graph
+    

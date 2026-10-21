@@ -1,0 +1,42 @@
+flowchart TD
+    subgraph Runtime["Runtime code"]
+        Main["main.py"]
+        Tiny["tiny_*.py core systems"]
+        Actions["actions.py"]
+        Support["world_state.py, graph_analytics.py, llm_* helpers"]
+    end
+
+    subgraph Docs["Documentation"]
+        Readme["README.md"]
+        Agents["AGENTS.md"]
+        Design["design_docs/"]
+        DocsReadme["docs/README.md"]
+    end
+
+    subgraph Quality["Validation surfaces"]
+        Demos["demo_*.py"]
+        Tests["test_*.py and tests/"]
+        Checks["validate_*.py and verify_*.py"]
+    end
+
+    subgraph Bundle["Generated visualization bundle"]
+        Markmap["markmap/*.html"]
+        Mermaid["mermaid/*.mmd + *.svg"]
+        Graphs["graphs/*.graphml *.json *.png *.csv"]
+        Index["index/README.md + index.html"]
+    end
+
+    Readme --> Bundle
+    Agents --> Bundle
+    Design --> Bundle
+    DocsReadme --> Bundle
+    Runtime --> Bundle
+    Quality --> Bundle
+    Main --> Tiny
+    Tiny --> Actions
+    Tiny --> Support
+    Demos --> Runtime
+    Tests --> Runtime
+    Checks --> Runtime
+    Bundle --> Index
+    

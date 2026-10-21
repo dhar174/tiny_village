@@ -1,10 +1,60 @@
 ## Current Work Focus
 
-- The current documentation focus is correcting stale Memory Bank files that
-  still describe an unrelated `langgraph_system_generator` project.
-- The active goal is to keep Memory Bank content aligned with TinyVillage's
-  actual architecture: root-level runtime modules, graph-based world state,
-  GOAP planning, memory systems, optional LLM routing, and simulation demos.
+- TASK016 / #729: 12 interface choices recorded in D020. Draft UI specification
+  covers both supported sizes, panels, input/focus, session operations and
+  success/error states. Exact geometry and connective defaults await written
+  review. #729 stays open; #730 is the next combined human design review after
+  planning dispositions. See tasks/TASK016-ui-wireframes-729.md.
+
+- TASK015 / #728: #792 merged at 4c9bbfd; pixel art and 13 choices are in D019.
+  Final written disposition and asset/font/token defaults remain pending; #728
+  stays open. No production art/runtime or phase approval. TASK016 tracks the
+  explicitly requested preliminary #729 design. See TASK015/visual specification.
+
+- TASK014 / #727: #791 merged at 7391861; 15 choices are recorded in D018.
+  Final written-specification disposition remains pending; #727 stays open.
+  See tasks/TASK014-ux-journeys-727.md and the #727 UX specification. Proposed
+  connective defaults and walkthrough await review; no product implementation,
+  UX pass or later phase/design approval supplied. TASK015 tracks #728.
+
+- TASK013 / #726 is complete and closed. #789 merged at ac0e25d; main and
+  both manual ML profiles pass 132 cases + three CLI probes, all five artifact
+  digests verified. Owner activated tiny_ruleset; API readback confirms the
+  effective required check, GitHub Actions source and strict/up-to-date policy.
+  Existing rules/reviews/bypasses are preserved. Evidence PR #790 merged at
+  969f6b9. Next: review #727 UX journeys and plan #728 aesthetic direction, with
+  separate human review. No phase gate is approved. See TASK013/validation report.
+
+- Product requirement clarification (2026-10-20): apply [D015](../docs/decisions.md#d015--require-ai-capabilities-in-the-final-product)
+  when scoping #654/#776 and later AI work. Lightweight testing profiles do
+  not establish readiness of the final AI-enabled product.
+
+- TASK012 / #654 and #776 are complete through merged #788 at eb5f4c9.
+  Real basic memory and headless startup are verified; gameplay and live inference
+  remain separate. Historical full-profile and PR-fix evidence is retained in
+  docs/testing/issue-654-lightweight-runtime-validation.md; TASK013 supplies the
+  newer merged-source baseline. Next ordered implementation is #726.
+
+- TASK011 / #725 merged via #785 at 8a899650 and #725 closed. Its eight hash
+  locks and legacy manifest are unchanged. Original dependency validation is
+  historical; TASK012 supplies the newer runtime evidence. GPU/model inference
+  and gameplay acceptance remain separate. No phase-gate approval supplied.
+
+- TASK010 / #724 is complete: #784 integrated the accepted contract to main
+  at 8d6b254 and #724 closed. D014 preserves the original expansive vision;
+  scenario limits are fixture data. TASK011 now implements #725; UX planning
+  #727 also follows #724 with its own later design approval requirements.
+
+- #718 is complete: PR #706 merged and the issue closed on 2026-10-14.
+- TASK003 / #719 is complete: PR #777 merged as `0ba9061`; #719 closed.
+- Post-merge verification passes 54/54 tests plus cold-getter/fallback/minimal
+  probes. Reduced minimal mode still executes zero actions.
+- TASK004 / #720 is complete: PR #778 merged as `93079fd`; #720 closed.
+- TASK005 / #721 is approved and closed under D011 for Linux/offline startup
+  at main 77e4b94. D010 accepts the unknown historical timeout cause and one
+  lifecycle supervisor reporting gap. Historical failed runs remain evidence;
+  Windows, live models and real gameplay retain their later agreed scope.
+- Evidence and limits: `docs/testing/issue-719-graph-initialization-validation.md`.
 
 ## Recent Changes Reflected in the Repository
 
@@ -15,13 +65,58 @@
 - Current docs distinguish between current documentation and archived historical
   material under `docs/archived/`.
 
-## Immediate Next Steps
+## Earlier handoff history (superseded by Current Work Focus)
 
-- Replace stale Memory Bank summaries that still reference
-  `langgraph_system_generator` or unrelated notebook-generation workflows.
-- Create and maintain the first real task record under `memory-bank/tasks/`.
-- Keep the Memory Bank synchronized with the current repo entry points,
-  architecture docs, testing guidance, and known demo/runtime gaps.
+- TASK009 verifies merged main 77e4b94 after #780/#781. All 94 test methods
+  report success and three probes exit 0. Lifecycle has a preserved missing
+  supervisor terminal record after transport loss; its 12-test OK summary and
+  all child zero-exits survive. Only unstarted targets were continued once.
+  No blanket clean-supervisor claim. See docs/testing/phase-1-post-merge-verification.md.
+  Evidence published in draft PR #782 and on #779/#721; D009 budget consumed.
+  D010 now accepts the unknown cause and supervisor gap; #779 is closed as
+  unable to reproduce, diagnostics added (2026-10-17 UTC). D011 subsequently
+  approves #721. D012 now separately approves #722 and completes parent #717
+  (2026-10-17 America/New_York). Phase 2 is unblocked; the next ordered task
+  is #724: define the MVP scenario, support matrix and release budgets.
+  TASK010 records the accepted contract; integrate it to main, then begin #725.
+- TASK008 implements the scoped #779 failure-capture follow-up on a separate
+  branch, published as PR #781 (now merged with #780). See docs/superpowers/plans/2026-10-16-issue-779-failure-capture.md.
+  D008 approves implementation and one bounded observation window. The shared
+  capture helper and both integrations are verified: 11 new checks, 81 existing
+  methods and three probes pass. See docs/testing/issue-779-failure-capture.md.
+  D008 observation budget consumed. Deadline review correction passes 13 focused
+  capture checks; the prior application matrix was not rerun at that handoff.
+  #779 stayed open then; the subsequent D010 closure accepts its unknown cause.
+  Findings posted on #779/#721.
+  #780/#781 merged. Deadline fix a32cdb2 is included; review updated and thread resolved.
+- TASK007 synchronized 18 actual GitHub issue bodies with the decision record,
+  preserving original checklists and states. #779 is now a native child/blocker
+  of #721; #721 blocks #722. Docs PR #780 publishes decisions/evidence.
+  That synchronization kept #718–#720 closed and #717/#721/#722/#779 open.
+  Subsequent #779 closure is recorded under D010 and #721 approval under D011;
+  Subsequent D012 separately approves #722 and completes #717.
+- TASK006 / #779's approved investigation plan is in
+  `docs/superpowers/plans/2026-10-15-issue-779-startup-investigation.md`.
+  Approval is D007; the bounded cycle is complete. All 51 affected methods pass
+  and all 16 diagnostic cases exit 0, but historical timeouts do not recur and
+  their cause remains unconfirmed. See docs/testing/issue-779-startup-investigation.md.
+  No runtime remedy or further observation budget was approved by D007;
+  subsequent D010 accepts closure without establishing a cause.
+- Merged-main verification completes with timing failures/incomplete batches;
+  cache passes 26/27, and 30 tests in five other complete suites pass. Both
+  affected import orders pass instrumented diagnostics, but cause is unproven.
+  dhar174 explicitly confirmed Deferred; the decision is recorded on #721 and
+  #779 is a verified native blocker. The user also confirmed scope; maintain
+  all current and future review decisions in `docs/decisions.md`.
+  Project Decision synchronization was denied (403); issue disposition is
+  authoritative, with Project field update still outstanding.
+  Source repair, approval and downstream phase advancement are separate decisions.
+- D011 records #721 engineering approval; D012 separately records #722 gate
+  approval and Phase 1 completion. Later phase reviews/gates remain required.
+  Project 10 needs #721/#722 Decision Approved and corresponding readiness
+  synchronization; unchanged credentials previously returned HTTP 403.
+- Retain #773/#774 integration/utility failures and #775/#776 Door-definition/
+  optional-spaCy limits, scheduled under existing parent tasks and human gates.
 
 ## Active Considerations
 
