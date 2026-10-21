@@ -1,6 +1,6 @@
 # TASK021 — Evidence-based backlog triage (#734)
 
-**Status:** In Progress  
+**Status:** In Progress — awaiting consolidated publication review  
 **Added:** 2026-10-21  
 **Updated:** 2026-10-21
 
@@ -23,7 +23,7 @@ and these choices. No runtime fixes or Phase 3 gate approval.
 | Baseline and snapshots | Complete | Branch codex/issue-734-backlog-triage from main 13b8e374d07e7e7ea6f8f562ea6a290fcab967f7 |
 | Original and current ledger | Complete | 475 issues/158 comments, 37 PRs, 50 review origins; original 261 plus 46 later open |
 | Six mandatory audits | Complete with failures retained | Four scoped passes; #602/#609 fail with real objects; 12 existing tests pass; isolated map/animation failure |
-| Integrity checks and PR | Review package prepared | Independent review complete, #530 acceptance restored, catalog checks pass; opening documentation PR |
+| Integrity checks and PR | Complete for review | PR #797; independent review complete, #530 acceptance restored, catalog checks pass |
 | Approved issue publication | Awaiting later review | No issue mutations authorized before package review |
 
 ## Execution record
@@ -69,3 +69,8 @@ and these choices. No runtime fixes or Phase 3 gate approval.
   all current hashes and canonical/readable parity independently verified.
 - Final: minor (deferred): reusable Markdown renderer; current rendered package
   verified, but one-shot generator remains scratch-only.
+
+- Published review PR #797: https://github.com/dhar174/tiny_village/pull/797.
+  It references #734 without an automatic closing keyword. Full completion
+  still requires human review, approved issue publication/readback and merge.
+  No issue/Project metadata or issue state was changed.
