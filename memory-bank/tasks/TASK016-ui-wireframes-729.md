@@ -49,3 +49,10 @@ the user explicitly authorized this preliminary design walkthrough.
 - No product code, runtime prototype, production assets, locks, dependencies
   or workflows changed. #730 is the next combined review after written
   dispositions and planning completion; no automatic approval or merge.
+- PR #793 review follow-through: defined the visible, focusable Quicksave (S)
+  session-menu action separately from named Save. Both quicksave routes share
+  the command, dedicated slot and state checks; menu invocation retains focus
+  and paused playback. Added mouse/keyboard acceptance coverage. The proposed
+  return-to-prior-playback policy applies only to S outside the menu and still
+  needs written review. Static documentation checks passed; no runtime behavior
+  was implemented or tested.

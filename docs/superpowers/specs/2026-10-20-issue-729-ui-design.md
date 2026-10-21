@@ -87,6 +87,15 @@ the session menu/Help; do not silently truncate values into misleading names.
 Font fit is unmeasured: wrap/adjust grouping in a reviewed revision if actual
 metrics fail, rather than hiding controls or claiming the bounds check proves it.
 
+The paused session menu presents **Resume, Quicksave (S), Save… (named saves),
+Load…, Restart…, Quit**, in that order. Each action has a visible label and is
+focusable, with mouse and Enter/Space activation. Quicksave is distinct from
+the named-save dialog: its menu control and S invoke the same command, dedicated
+slot and enabled/busy/world-validity checks. While saving or when the world is
+untrusted, both routes are disabled. Invoking Quicksave from the menu keeps the
+menu open and playback paused, retains focus on the action, and reports the
+actual result without opening a naming or overwrite dialog.
+
 Maintain crisp integer world scaling and independent HUD text sizing. Map
 clipping/hit testing use the same camera transform. Resizing preserves selected
 entity identity and logical state; it changes visible area, not world coordinates
@@ -181,10 +190,11 @@ primary action and Cancel. Proposed inner regions use 16-pixel margins, a
 56. The footer/title stay visible while the body scrolls. No external file
 browser or new save format is required by this UI decision.
 
-Named-save replacement requires confirmation. S writes the dedicated quicksave
-slot without an overwrite prompt and gives the actual result. Every operation
-uses complete authoritative state through the later persistence implementation;
-the existing partial save/load methods do not meet this contract.
+Named-save replacement requires confirmation. Menu → Quicksave (S) and the S
+shortcut write the dedicated quicksave slot without an overwrite prompt and
+give the actual result. Every operation uses complete authoritative state
+through the later persistence implementation; the existing partial save/load
+methods do not meet this contract.
 
 The selected policy holds simulation advancement at a complete tick during
 saving while input/rendering stay responsive. This is a consistency policy, not
@@ -192,14 +202,14 @@ permission to block the event loop with file I/O. Load validates before world
 replacement. Never permit duplicate commits from repeated keys or button clicks.
 The UI must preserve old valid data when writing fails.
 
-**Proposed quicksave return policy:** since S opens no dialog, capture whether
-the valid world was running or paused and restore that state after its temporary
-save hold. A save I/O error alone does not imply world corruption; show a
-persistent error and preserve that same prior state when safe. A concurrent
-runtime/invariant failure overrides this and stays stopped. This recommendation
+**Proposed quicksave return policy:** for S invoked outside the session menu,
+capture whether the valid world was running or paused and restore that state
+after its temporary save hold. A save I/O error alone does not imply world
+corruption; show a persistent error and preserve that same prior state when safe.
+A concurrent runtime/invariant failure overrides this and stays stopped. This recommendation
 was discussed alongside the save choice, but not independently selected; it
-requires written review. Menu saves/loads remain paused, and failed Save and
-Continue never completes the pending destructive transition.
+requires written review. Menu Quicksave and named saves/loads remain paused;
+failed Save and Continue never completes the pending destructive transition.
 
 Ordinary dialogs can cancel before commit. During a non-cancellable save/load
 commit, keep visible busy status and explain unavailable dismissal; keep pumping
@@ -231,7 +241,7 @@ activity/status cues. No flash or animation is required to understand state.
 | Space | Toggle playback when map/global playback context owns input; a focused control uses Space for its own activation. |
 | `.` | One tick only when unfinished, paused and no modal/operation owns input. |
 | Page Up / Page Down | Next faster/slower preset, clamped to 0.5×/1×/2×/4×. Proposed focus rule lets a focused scrolling view page locally first. |
-| S | Quicksave; no naming/overwrite modal for its dedicated slot. |
+| S | Quicksave; matches visible Menu → Quicksave (S), with no naming/overwrite modal for its dedicated slot. |
 | L | Open Load selection/validation flow, never directly load a hard-coded file. |
 | R | Request identical-scenario Restart through the unsaved guard, never regenerate random characters. |
 | H / F1 | Visible in-window Help with actual controls, mode/capability context and guidance. |
@@ -299,6 +309,10 @@ actual screenshots, state/event traces, focus observations and timing evidence:
   against real capabilities without model initialization or fabricated records.
 - Run all shortcuts with map focus, list/history focus, text input, each modal,
   a pending guard and an in-flight operation. Verify one consumed action per key.
+- Invoke Menu → Quicksave (S) using mouse and Tab/Enter without using the
+  shortcut. Compare with S: same dedicated slot, command and state checks;
+  saving/untrusted state disables both. Menu invocation retains menu focus and
+  paused playback on success or save I/O failure, with the actual result visible.
 - Create/overwrite/cancel named saves and quicksave; show busy/success/failure;
   exercise all guard branches and a failed requested Save and Continue.
 - Reject corrupt/incompatible saves without world mutation; load valid state
