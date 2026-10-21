@@ -1,15 +1,17 @@
 # Phase 2 engineering review for #731
 
-Date: 2026-10-21 (America/New_York). Preparation by Codex; **human engineering
-disposition pending**. D023 authorizes beginning this review and approves the
-preceding design planning/review only. #732 remains a separate phase gate.
+Date: 2026-10-21 (America/New_York). Preparation by Codex; **Approved by
+dhar174 under D024** after the PR #795 command-replay correction at `17bed6d`.
+D023 approves the preceding design planning/review. #732 remains a separate
+phase gate; its approval is not supplied here.
 
 ## Recommendation and reviewed revisions
 
 Recommend accepting the Phase 2 engineering foundation within the documented
 Python 3.12/Linux x86-64 scope. No required new engineering remediation was
 identified by this bounded source/evidence review; no framework rewrite is
-needed. This recommendation does not close #731 or approve #732.
+needed. The maintainer accepted this scoped recommendation under D024,
+authorizing #731 closure; #732 is not approved by that decision.
 
 Reviewed main: `752bc2efaacfadfae2c32d6f3df4ce9241087fe2` (#794).
 The #795 preparation head was `6bc999dac7fe289c557805dd79f26eaff9737dd3`.
@@ -72,8 +74,8 @@ verified their states and immutable decision links. Project 10 still returned
 403, so its fields remain unsynchronized. No credentials were printed, replaced
 globally or added to repository files.
 
-Review the findings and retained limits, then record one human disposition for
-#731 in docs/decisions.md. Only close it after Approved; retain any newly
-requested remediation as an individual blocker. #732/#723 stay open pending
-the separate Phase 2 decision. No product implementation begins from this
-engineering-review recommendation alone.
+The maintainer explicitly approved the findings within their retained limits
+under D024 in docs/decisions.md. Close #731 under that approval; no new required
+remediation was requested. #732/#723 stay open pending the separate Phase 2
+decision. No product implementation or downstream phase unlock follows from
+this engineering review alone.

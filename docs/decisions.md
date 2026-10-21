@@ -532,6 +532,32 @@ UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
   the decision record are authoritative; Project Decision/Status fields cannot
   be claimed synchronized. Preserve that administrative limitation explicitly.
 
+### D024 — Approve Phase 2 engineering review #731
+
+- **Date:** 2026-10-21 (America/New_York).
+- **Reviewer / decision-maker:** dhar174.
+- **Disposition:** Approved.
+- **Reviewed artifacts:** [engineering review](testing/issue-731-engineering-review.md)
+  and [receipt](testing/evidence/issue-731-engineering-review.json), including
+  PR #795's replayable-command correction at `17bed6d`. Runtime foundation is
+  unchanged from verified #726 revision `ac0e25d`; the report preserves the
+  separate source revisions, hosted results and evidence limitations.
+- **Explicit confirmation:** the user answered “Approved” after the request
+  to approve #731 for the reviewed Python 3.12/Linux foundation, retaining
+  the documented UI, gameplay and live-AI validation limits.
+- **Rationale:** accept import/renderer/service boundaries, hashed dependency
+  profiles, configuration/error contracts, behavioral/package checks and CI
+  result/enforcement evidence within that supported foundation. No required
+  new engineering remediation or wholesale framework rewrite was identified.
+- **Action:** publish this record and close #731 as completed. Prepare the
+  separate #732 Phase 2 decision using the completed planning/foundation work.
+- **Boundary:** this does not approve #732, close parent #723, unlock Phase 3
+  or establish native UI/font-fit/performance, complete persistence, economic
+  gameplay, GPU/native Windows/macOS or live-model readiness. The original
+  expansive product and final-product AI requirements remain intact.
+  Project 10 fields remain unsynchronized after HTTP 403; issue dispositions
+  and this file are authoritative. No Project update is claimed.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
@@ -560,6 +586,8 @@ the PR merges and individual choices do not supply #730/#731/#732 approval.
 D023 subsequently records the user's explicit approval of the complete
 #727/#728/#729 planning artifacts and #730 combined review. Close those four
 issues and prepare #731; #731/#732 remain separate pending human decisions.
+D024 subsequently approves #731 within its reviewed scope. Close that review;
+#732 and Phase 2 parent #723 remain open for the separate phase decision.
 
 The [#779 investigation plan](superpowers/plans/2026-10-15-issue-779-startup-investigation.md)
 was approved under D007, and its bounded cycle has concluded. Its original

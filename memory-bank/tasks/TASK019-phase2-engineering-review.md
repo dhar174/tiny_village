@@ -1,6 +1,6 @@
 # TASK019 — Phase 2 engineering review (#731)
 
-**Status:** Review prepared; human #731 disposition and Project synchronization pending
+**Status:** Approved under D024; issue closure/publication in progress
 **Added/Updated:** 2026-10-21 (America/New_York)
 
 ## Request and scope
@@ -28,7 +28,7 @@ and [receipt](../../docs/testing/evidence/issue-731-engineering-review.json).
 | Check #731 prerequisites and source boundaries | Complete | Prerequisite issues read closed; no non-doc changes since verified #726 rollout; fourteen source hashes match |
 | Audit retained/current hosted evidence | Complete | Three ZIP digests verified; 128 cases + three probes PASS; manual ML evidence remains historical |
 | Prepare scoped engineering recommendation | Complete | No new blocking remediation identified; review preserves all limits |
-| Human #731 disposition | Pending | Permission to begin is not approval |
+| Human #731 disposition | Approved | D024 records the user's explicit “Approved” for the reviewed scope |
 | Publish updated #795 | Complete | Existing PR carries approval record, engineering report and receipt; no auto-merge |
 
 ## Log
@@ -48,3 +48,6 @@ and [receipt](../../docs/testing/evidence/issue-731-engineering-review.json).
   the git pathspecs for shell replay. Replayed the three download commands in
   a fresh scratch directory and verified the retained SHA-256 digests. No
   runtime tests or new engineering/design approval.
+- 2026-10-21: the user explicitly approved #731's scoped engineering review.
+  Recorded D024 and prepared issue closure plus the distinct #732 phase-gate
+  handoff. No #732 approval or Phase 3 unlock is inferred.

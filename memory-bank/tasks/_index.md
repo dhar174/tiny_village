@@ -1,7 +1,8 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK019](TASK019-phase2-engineering-review.md) Phase 2 engineering review (#731) - Review prepared; artifact commands corrected/verified; human #731 decision pending, Project fields blocked by 403 (Updated: 2026-10-21 America/New_York)
+- [TASK020](TASK020-phase2-gate-readiness.md) Phase 2 gate readiness (#732) - Prepared; separate human phase decision pending (Updated: 2026-10-21 America/New_York)
+- [TASK019](TASK019-phase2-engineering-review.md) Phase 2 engineering review (#731) - Approved under D024; publication/closure synchronization in progress (Updated: 2026-10-21 America/New_York)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending

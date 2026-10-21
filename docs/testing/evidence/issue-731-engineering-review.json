@@ -1,5 +1,5 @@
 {
-  "status": "engineering_review_prepared_human_disposition_pending",
+  "status": "engineering_review_approved_under_D024",
   "recorded_at_utc": "2026-10-21T20:26:10.341206+00:00",
   "reviewed_main_revision": "752bc2efaacfadfae2c32d6f3df4ce9241087fe2",
   "reviewed_pr": 795,
@@ -210,5 +210,13 @@
       }
     ],
     "project_fields_synchronized": false
+  },
+  "subsequent_human_disposition": {
+    "reviewer": "dhar174",
+    "date": "2026-10-21 America/New_York",
+    "decision": "Approved",
+    "record": "docs/decisions.md#d024--approve-phase-2-engineering-review-731",
+    "reviewed_pr_head": "17bed6dcdf345c28dd9477969578a4e94525129d",
+    "scope": "Reviewed Python 3.12/Linux x86-64 foundation; retained evidence limitations; no #732 approval"
   }
 }
