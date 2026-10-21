@@ -79,9 +79,13 @@ and no Project field update is claimed.
 python docs/planning/issue-734/validate_bundle.py
 ```
 
-This validates the frozen bundle, not a passing runtime. All source anchors are
-checked against the recorded baseline commit. Raw issue/PR/review-origin
-snapshots, source hashes and capture receipts are retained alongside the ledger.
+This validates the frozen bundle, not a passing runtime. Every published input,
+including Markdown review documents and capture logs, must have a matching
+SHA-256 entry in `artifact-hashes.json`; missing, unlisted or changed artifacts
+fail validation. The manifest itself, the derived `validation.json` output and
+interpreter `__pycache__` files are excluded from this input set. All source
+anchors are also checked against the recorded baseline commit. Raw issue/PR/
+review-origin snapshots, source hashes and capture receipts are retained alongside the ledger.
 `build_ledger.py` contains the explicit per-issue curation and can regenerate the
 machine ledger/proposed annotations from those frozen inputs; it never writes
 to GitHub. The Markdown review copy was rendered from that ledger.

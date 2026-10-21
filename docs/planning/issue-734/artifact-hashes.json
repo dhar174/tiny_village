@@ -1,5 +1,5 @@
 {
-  "README.md": "81e7e8e6ef155c9806c172825ee17480982c692607249dd81857d760c6741d49",
+  "README.md": "4da72dd8fe8ea9e6237692e3fb4da7d48deac2ef7a755b0837a54edb6a01b559",
   "audit-report.md": "5fa303cfa6bdb8e8ed56924dd3879294aca46c8bed271f7df621254b9852da40",
   "build_ledger.py": "b830fe484c99bbb8eb3e6e208a13a9286d9e69e624e7793720dc9d1b2f6a0ce2",
   "evidence/audit-results.initial.json": "8ec54b9a584338ab305bdd4867c23807922c31bba072d68b6e7eb516aed30eb4",
@@ -61,6 +61,7 @@
   "evidence/existing_regressions.source.txt": "332de240c1b7503a8a1e9406ecd0224f4d08cc9ffdded1c8f26cb1c2bbde92e6",
   "evidence/frame_analysis.source.txt": "b15fc474324fe88aa99bfdda17f1698ee975b70640ecd6d665a25ff87b8e6875",
   "evidence/live_timing.source.txt": "600b53ed8229c174ac99c488f171e894b338eb3ddb4263d3d15da9a277a66ae9",
+  "evidence/manifest-validation-review.json": "2fbea4b2ef05ce4b032ff1b084a0948b762498296b7ca6a44ada7e5fc0e9df32",
   "evidence/named_target.source.txt": "30ddcd12b858d09e576d5bc4e2569c7d409663bf7b11010e99d9267dc01cfd8c",
   "evidence/queue.source.txt": "4241a60ad6bd36ddfe04385a6b4ef33c17f253cfe5569569800304d08bc156c0",
   "evidence/run_audits.initial.py": "9a6022c4dae74f941c378695e690c2552a79a7d7f9d64b7355541a1eb1dc269b",
@@ -80,9 +81,9 @@
   "prs-snapshot.json": "be9301b8a3b68f769a4e37bf15e239f46b6b2df476b027999f75fba5b75050bc",
   "publication-review.md": "4dc7bfcd5023052dd61b64b3c4557a270ff84790ed473328588d768d69a137df",
   "review-origin-snapshot.json": "93f6c889dff71044f28f7b6d7102031c4af180f0ee4b0a0b3dd761d88fe92a56",
-  "review.md": "94fecbc08fe48c904d35af5cdb94961b13e94f99be1866643db084e71db4eebf",
+  "review.md": "4da050ce45e49ed348bca1a0c94eabb485c52dae75d98bb549b8bff7724b0695",
   "snapshot-manifest.json": "6831ed55cd9de05947d6b6a7a4d7496b1f4467acf7bfff762819237a122b65a0",
   "source-anchors.json": "33c1dd2f30d7a6826c8d5551f8959cc4565be0043ddde9959feb8b1be88a82e6",
   "source-review.json": "a2910c3d13803b0b5bb4a01276e5764ff5bc60bc4425482038732c5f45aae32a",
-  "validate_bundle.py": "360b44d9295594a21eef14c4b0923337ed0f7588ce6be68c81233d4bd23c31c3"
+  "validate_bundle.py": "5552cd055fed988d780c94f086eb5a70e8d69d917b23129b1e0aafe861c458f4"
 }

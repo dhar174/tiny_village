@@ -11,6 +11,27 @@ REPO = HERE.parents[2]
 def load(name):
     return json.loads((HERE / name).read_text())
 
+# The manifest cannot hash itself; validation.json is a derived output receipt.
+# Interpreter bytecode caches are not published review inputs.
+artifact_hashes = load('artifact-hashes.json')
+if not isinstance(artifact_hashes, dict) or not artifact_hashes:
+    raise AssertionError('Artifact hash manifest must be a nonempty object')
+artifact_paths = {
+    path.relative_to(HERE).as_posix()
+    for path in HERE.rglob('*')
+    if path.is_file() and '__pycache__' not in path.relative_to(HERE).parts
+    and path.relative_to(HERE).as_posix() not in {'artifact-hashes.json', 'validation.json'}
+}
+if set(artifact_hashes) != artifact_paths:
+    raise AssertionError(
+        f'Artifact manifest coverage mismatch: unlisted artifacts '
+        f'{sorted(artifact_paths - set(artifact_hashes))}; missing artifacts '
+        f'{sorted(set(artifact_hashes) - artifact_paths)}'
+    )
+for name, expected in artifact_hashes.items():
+    if hashlib.sha256((HERE / name).read_bytes()).hexdigest() != expected:
+        raise AssertionError(f'Artifact hash mismatch: {name}')
+
 def assert_acyclic(graph):
     active, done = set(), set()
     def visit(node):
@@ -140,7 +161,8 @@ output = (HERE / 'evidence/captures' / Path(final_test['capture']['artifact_dir'
 assert '12 passed, 2 warnings' in output
 # Catalog integrity passing is deliberately independent of the retained runtime
 # failures. This validator is not a simulation acceptance test.
-summary = {'status': 'catalog_integrity_passed', 'original_issues': len(cohort), 'current_only_open_issues': 46,
+summary = {'status': 'catalog_integrity_passed', 'artifact_hashes_verified': len(artifact_hashes),
+           'original_issues': len(cohort), 'current_only_open_issues': 46,
            'ledger_rows': len(rows), 'open_pr_handoffs': len(handoffs), 'parent_dependency_cycles': 0,
            'proposed_parent_additions': sum(r['proposed_parent'] is not None for r in rows),
            'proposed_duplicate_closures': [351, 382], 'proposed_completed_closures': [355, 482, 594, 596, 597],

@@ -74,3 +74,19 @@ and these choices. No runtime fixes or Phase 3 gate approval.
   It references #734 without an automatic closing keyword. Full completion
   still requires human review, approved issue publication/readback and merge.
   No issue/Project metadata or issue state was changed.
+
+### 2026-10-21 — PR #797 review correction
+
+- Investigated [Codex comment](https://github.com/dhar174/tiny_village/pull/797#discussion_r4342402200)
+  from review 5606749353. It correctly identified that only the two snapshot
+  hashes were checked; other publication artifacts could change undetected.
+- The validator now checks every full-manifest hash and exact input-file
+  coverage, reporting changed/missing/unlisted paths before catalog success.
+  Manifest self-hashing, derived validation.json output and bytecode caches are
+  explicit exclusions. Other field-parity/renderer enhancements remain deferred.
+- Disposable-copy verification: old validator falsely accepted ten mutations;
+  corrected validator accepts the pristine bundle and rejects all ten altered
+  or incomplete copies. Exact before/after output and scratch driver are retained
+  in evidence/manifest-validation-review.json. No original captures modified.
+- Rehashed the bundle and refreshed its validation receipt. No gameplay/runtime
+  changes, triage publication, issue closures or phase approval were performed.

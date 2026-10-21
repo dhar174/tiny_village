@@ -1,5 +1,6 @@
 {
   "status": "catalog_integrity_passed",
+  "artifact_hashes_verified": 87,
   "original_issues": 261,
   "current_only_open_issues": 46,
   "ledger_rows": 307,
