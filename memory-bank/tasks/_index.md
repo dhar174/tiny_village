@@ -1,13 +1,13 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK013](TASK013-supported-profile-ci-726.md) Supported-profile CI (#726) - PR #789 ready; hosted PR checks pass, post-merge enforcement pending (Updated: 2026-10-20)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending
 - No additional pending task files.
 
 ## Completed
+- [TASK013](TASK013-supported-profile-ci-726.md) Supported-profile CI (#726) - Completed/closed; main/manual 132 cases + 3 probes pass; effective required check verified, evidence PR #790 (Updated: 2026-10-20)
 - [TASK012](TASK012-lightweight-runtime-654.md) Lightweight runtime (#654/#776) - PR #788 merged at eb5f4c9; issues closed, 47-method post-merge verification passes (Updated: 2026-10-20)
 - [TASK011](TASK011-dependency-profiles-725.md) Reproducible dependencies (#725) - PR #785 merged at 8a899650; #725 closed; eight hash locks preserved (Updated: 2026-10-20)
 - [TASK010](TASK010-mvp-contract-724.md) MVP contract accepted under D014 and integrated by #784 at 8d6b254; #724 closed, #725 started (Updated: 2026-10-20)

@@ -1,11 +1,12 @@
 ## What Works
 
-- TASK013 / #726 implements approved D017: required core/dev/visual CI and
-  manual-only NLP/CPU-LLM checks. #788 merged at eb5f4c9; #654/#776 are closed.
-  Post-merge 47-method verification and CLI 0/0/2 pass. Local CI profiles pass
-  132 cases plus three CLI probes after review corrections. PR #789 is ready;
-  first hosted required profiles pass 128 cases + 3 probes. Main/manual runs
-  and enforcement remain pending merge. See tasks/TASK013-supported-profile-ci-726.md.
+- TASK013 / #726 is complete and closed. #789 merged at ac0e25d; main and
+  both manual ML profiles pass 132 cases + three CLI probes, all five artifact
+  digests verified. Owner activated tiny_ruleset; API readback confirms the
+  effective required check, GitHub Actions source and strict/up-to-date policy.
+  Existing rules/reviews/bypasses are preserved. Evidence PR #790 remains for
+  human merge. Next: plan #727 UX journeys and #728 aesthetic direction, with
+  separate human review. No phase gate is approved. See TASK013/validation report.
 
 - The repository has established architecture and documentation for the core
   simulation loop: events, strategy updates, GOAP planning, action execution,

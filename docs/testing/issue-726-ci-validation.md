@@ -4,7 +4,7 @@
 
 Approved plan: [supported-profile CI](../superpowers/plans/2026-10-20-issue-726-supported-profile-ci.md).
 D017 selects manual-only ML checks. D015 preserves required final-product AI.
-No gameplay, live inference, GPU or native Windows/macOS claim is supplied.
+No gameplay, live inference, GPU or native Windows/macOS claim is supplied. 
 
 Base main is `eb5f4c935e87abe53570d0d949ffd8a6f9dd5cfa` (#788 merged).
 Post-merge verification passes 47 methods: 19 core runtime, four real Pygame
@@ -96,11 +96,41 @@ The four optional ML cases are separate local evidence, not part of that PR run.
 revisions, Python/platform, counts, job links and verified archive digests.
 The check publisher is GitHub Actions app ID **15368**.
 
-Hosted main-run results, manual dispatch evidence and actual ruleset activation
-remain pending merge. A passing PR run does not establish enforcement. The PR references #726 without
-an automatic closing keyword. Keep it open until the post-merge rollout passes.
+## Post-merge rollout — complete
+
+PR #789 merged at `ac0e25d3674efb03440d2ccce26d7b009d5e82f3`.
+[Main run 39504506879](https://github.com/dhar174/tiny_village/actions/runs/39504506879)
+passes all three profiles and `Python CI required`: **128 cases + three probes**.
+[Manual run 39506792633](https://github.com/dhar174/tiny_village/actions/runs/39506792633),
+dispatched on main with `profile=both`, passes NLP **2** and CPU-LLM **2** cases.
+All five fresh installs, pip checks, profile checks and uploads succeed. Every
+batch exits 0. Total: **132 cases + three probes**, zero skips, failures, errors,
+expected failures, unexpected successes or timeouts. All five downloaded ZIP
+SHA-256 values match GitHub's artifact digests; each summary records the merged
+revision. Hosted CPython is 3.12.15 on Linux x86-64, Ubuntu 24.04 runners.
+
+[Rollout receipt](evidence/issue-726-hosted-rollout-results.json) retains commands,
+counts, package versions, lock hashes, job links and verified archive digests.
+Full downloaded artifacts and API snapshots remain under
+`/workspace/scratch/issue-726/rollout/`; Actions retains artifacts for 30 days.
+The current main SHA was checked against the verified merged revision.
+
+The first authorized PUT to `tiny_ruleset` (5735164) was denied with HTTP 403;
+that historical attempt and readback are retained in the receipt. The owner then
+saved the settings. Subsequent API readback verifies the active ruleset **and
+effective main rules** require `Python CI required`, bound to GitHub Actions
+(app **15368**), with `strict_required_status_checks_policy=true`. Existing
+conditions, review rules and bypass actors match the pre-activation snapshot.
+The existing bypass policy still applies; this does not remove bypass access.
+
+Main remains at the verified merged revision, and both main/manual runs remain
+successful. All #726 acceptance and rollout conditions are met: **#726 is closed
+as completed**. Evidence PR #790 remains for human review/merge. Its first CI run
+[39507410646](https://github.com/dhar174/tiny_village/actions/runs/39507410646)
+passed at `da32843`; this is separate from the main/manual acceptance evidence.
+No automatic merge, credentials change or human phase-gate approval occurred.
+The next planning tasks are #727 UX journeys and #728 aesthetic direction.
 
 [Operator instructions](supported-profile-ci.md#required-check-activation-and-human-handoff)
-name the stable check, GitHub Actions publisher, up-to-date policy and owner UI
-handoff if API permissions deny configuration. Existing bypass/review rules stay
-unchanged; later phase gates receive no approval here.
+remain available for future maintenance. Readback snapshots are preserved under
+`/workspace/scratch/issue-726/completion/` and in the structured rollout receipt.

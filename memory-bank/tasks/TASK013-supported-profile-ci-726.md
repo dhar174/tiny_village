@@ -1,6 +1,6 @@
 # SDD ledger — plan: docs/superpowers/plans/2026-10-20-issue-726-supported-profile-ci.md
 
-**Status:** PR #789 ready for human review; #726 open pending post-merge rollout
+**Status:** Completed; #726 closed after owner activation and effective-enforcement verification
 **Added/Updated:** 2026-10-20
 
 ## Request / approved scope
@@ -15,7 +15,7 @@ required in the final product (D015).
 2. Bounded runner: complete. Produces --profile / --artifacts and exit/report contract.
 3. Required workflow: implemented. Consumes runner profiles and success-only gate.
 4. Manual ML workflow: implemented. Consumes nlp/llm-cpu profiles; never scheduled.
-5. Validation/review/PR: complete for publication. Human review and hosted main/manual/enforcement rollout follow merge.
+5. Validation/review/PR: complete; #789 merged. Main/manual rollout and effective enforcement verified; #726 closed. Evidence PR #790 remains for human merge.
 
 Pre-flight: tasks 3/4 consume task 2's exact profile names and artifact directory.
 Both require existing hash locks; no application runtime API changes.
@@ -82,3 +82,25 @@ Both require existing hash locks; no application runtime API changes.
   128 cases + 3 probes, no skips/failures/errors. All artifact ZIP digests match
   GitHub metadata. Publisher GitHub Actions app ID 15368. No enforcement change
   or manual workflow dispatch before merge. Hosted receipt published.
+
+- 2026-10-20 rollout: #789 merged at ac0e25d. Main 39504506879 passes
+  core/dev/visual and aggregate; manual 39506792633 passes both ML profiles.
+  All five archive digests verified: 132 cases + three CLI probes, no unexpected
+  skips/failures/errors/timeouts; fresh hosted installs and pip checks pass.
+- Authorized ruleset PUT denied: HTTP 403 Resource not accessible by integration.
+  Readback verifies unchanged rules/conditions/reviews/bypasses; effective main
+  rules have no required_status_checks. #726 stays open. Owner must enable
+  Python CI required (GitHub Actions app 15368), strict/up-to-date, in active
+  tiny_ruleset 5735164, then effective enforcement must be read back.
+- Published structured rollout receipt and owner instructions; no runtime,
+  lock, workflow or decision changes. #727/#728 planning is next after this
+  enforcement handoff; no phase gate approved.
+
+- 2026-10-20 completion: owner saved tiny_ruleset settings. API readback verifies
+  active ruleset 5735164 and effective main rules require Python CI required,
+  GitHub Actions app 15368, strict/up-to-date policy true. Existing conditions,
+  reviews/rules and bypass actors match the original snapshot exactly.
+- Main remains ac0e25d; main/manual runs still pass. #790's first CI run
+  39507410646 also passed at da32843. Closed #726 as completed and verified
+  its actual body/state/reason. Updated #790 evidence and documentation;
+  no PR merged and no phase gate approved. Next: plan #727/#728 with human review.

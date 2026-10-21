@@ -64,7 +64,7 @@ required profiles. Spec: #726 and the approved #724 support contract.
 - [x] Create .github/workflows/python-ml-profiles.yml, workflow_dispatch only;
   choices nlp/llm-cpu/both, default both. Separate fresh environment per profile.
 - [x] NLP: existing two installed-spaCy/basic and controlled missing-model cases.
-- [x] CPU-LLM: real FAISS index and guarded minimal with AI libraries installed.
+- [x] CPU-LLM: real FAISS index and guarded minimal with AI libraries installed. 
 - [x] Same evidence/install conventions; no weights/corpora or required ML gate.
 
 ## Review focus and validation
@@ -85,13 +85,19 @@ before adding runner regressions and standalone CLI probes; report actual counts
 
 - [x] Verify locally, review whole branch, publish one focused PR referencing
   #726 without auto-closing it. PR #789 published; hosted PR checks pass.
-- [ ] Obtain human review before merge; do not auto-merge.
-- [ ] After merge, verify main workflow and trigger both manual profiles once.
-- [ ] Add Python CI required, bound to GitHub Actions, to the existing active
+- [x] Human merged PR #789; no automatic merge.
+- [x] After merge, verify main workflow and trigger both manual profiles once.
+  Runs 39504506879 / 39506792633 pass: 132 cases + three CLI probes.
+- [x] Add Python CI required, bound to GitHub Actions, to the existing active
   ruleset with branches current before merge; preserve review/bypass policy.
-- [ ] Verify effective enforcement. If access is denied, provide exact owner
+- [x] Verify effective enforcement. If access is denied, provide exact owner
   steps and leave enforcement incomplete; never claim running means required.
-- [ ] Close #726 only after hosted results and enforcement are verified.
+- [x] Close #726 only after hosted results and enforcement are verified.
+
+Owner completed activation after the earlier API denial. Active ruleset and
+effective-main readback confirm the expected context, app 15368 and strict policy;
+other rules/bypasses are preserved. #726 is closed as completed. Evidence/status
+PR #790 remains for human merge. See docs/testing/issue-726-ci-validation.md.
 
 Next planning block: #727 UX journeys and #728 aesthetic direction, with separate
 human review. All human decisions stay in docs/decisions.md.

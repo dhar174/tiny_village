@@ -82,6 +82,14 @@ claim. Review raw logs before sharing them outside the project.
 
 ## Required-check activation and human handoff
 
+**Current rollout:** Complete; #726 is closed. #789 is merged, and main/both
+manual profiles pass 132 cases + three CLI probes with verified artifact digests.
+After owner activation, API readback confirms `Python CI required` is effective
+on main, bound to GitHub Actions (15368), with branches required up to date.
+Existing rules/reviews/bypasses are preserved. See the
+[rollout report](issue-726-ci-validation.md#post-merge-rollout--complete).
+The steps below document the activation procedure for future maintenance.
+
 After human review and merge of the CI PR:
 
 1. Confirm a main-branch **Python CI** run succeeds with all three profiles.
