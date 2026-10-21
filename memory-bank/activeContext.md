@@ -1,18 +1,18 @@
 ## Current Work Focus
 
-- TASK021 / #734: approved triage plan executing under D026. The review package
-  catalogs all 261 original issues plus 46 later open issues and inventories 37
-  open PR heads. Four mandatory probes pass their narrow scope; real #602/#609
-  failures and isolated map/animation defects remain retained. 12 existing tests
-  pass; no runtime fixes or issue mutations. Exact annotations, 80 missing-parent
-  links, seven specific closures and three remediation drafts await consolidated
-  review. #734/#733/#738 stay open; Project read remains HTTP 403. Next after
-  reviewed publication: #735/#736, then #737. Existing design choices stand.
-
-- Phase 3 #733 is unblocked under D025. Next ordered task is #734: triage
-  the original backlog into canonical subsystem epics with evidence-backed
-  dispositions. #733/#734 remain open; no triage or duplicate closures have
-  been performed by the Phase 2 handoff. Keep #602's blocked-regression limit.
+- TASK021 / #734 complete under D027: #797 merged at 2c3bc57, approved
+  publication independently verified and #734 closed. All 307 annotations
+  preserve original bodies/assignees; 80 missing-parent links, seven narrow
+  closures, #799/#800/#801 and seven blocker edges verified, zero cycles.
+  #602/#609 and #733/#738 remain open. PR #798 retains current publication
+  receipts separately from the frozen historical review package. No Project
+  writes; configuration remains #737's pending handoff after retained HTTP 403.
+- TASK022 / #735 ready for review in maintainer-selected #703 under D028,
+  rebased head c65496d: one utility test module, documented retained behavior,
+  core CI inclusion. #714 closed as superseded with explanation. Local 69 tests
+  + three CLI probes pass; all eight hosted checks green. #735 closes after
+  #703 merges. Then #736 reconciles functional-test PRs, #737 assigns ownership/
+  merge ordering and Project configuration, and #738 gets separate human review.
 
 - TASK020 / #732 is complete: dhar174 explicitly approved Phase 2 under D025.
   #732 and parent #723 are closed/completed with immutable decision links

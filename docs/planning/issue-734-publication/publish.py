@@ -99,6 +99,8 @@ def no_cycles(edges):
 
 
 def run(apply):
+    if apply and (OUT / 'completion.json').exists():
+        raise SystemExit('Publication is finalized; use read-only preflight or inspect the retained completion/readback receipts. No further writes attempted.')
     subprocess.run(['python', str(BUNDLE / 'validate_bundle.py')], cwd=ROOT, check=True,
                    stdout=subprocess.DEVNULL)
     proposals = json.loads((BUNDLE / 'proposed-issue-updates.json').read_text())['updates']

@@ -4,5 +4,5 @@
   "parent_additions": 80,
   "drift": [],
   "approval": "https://github.com/dhar174/tiny_village/blob/eb3f1e2/docs/decisions.md#d027--approve-and-publish-the-734-backlog-triage-package",
-  "apply_requested": false
+  "apply_requested": true
 }

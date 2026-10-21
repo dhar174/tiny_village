@@ -1,0 +1,77 @@
+{
+  "decision": "D028",
+  "selected_pr": 703,
+  "head": "c65496d828ae3d45d17226ce013d2b4355682d20",
+  "state": "open",
+  "draft": false,
+  "mergeable": true,
+  "checks": [
+    {
+      "name": "Python CI required",
+      "head_sha": "c65496d828ae3d45d17226ce013d2b4355682d20",
+      "conclusion": "success",
+      "completed_at": "2026-10-21T23:23:36Z",
+      "html_url": "https://github.com/dhar174/tiny_village/actions/runs/39693024783/job/119543844292"
+    },
+    {
+      "name": "CodeQL",
+      "head_sha": "c65496d828ae3d45d17226ce013d2b4355682d20",
+      "conclusion": "success",
+      "completed_at": "2026-10-21T23:23:21Z",
+      "html_url": "https://github.com/dhar174/tiny_village/runs/119543771763"
+    },
+    {
+      "name": "Python (dev)",
+      "head_sha": "c65496d828ae3d45d17226ce013d2b4355682d20",
+      "conclusion": "success",
+      "completed_at": "2026-10-21T23:23:27Z",
+      "html_url": "https://github.com/dhar174/tiny_village/actions/runs/39693024783/job/119543583342"
+    },
+    {
+      "name": "Python (core)",
+      "head_sha": "c65496d828ae3d45d17226ce013d2b4355682d20",
+      "conclusion": "success",
+      "completed_at": "2026-10-21T23:23:20Z",
+      "html_url": "https://github.com/dhar174/tiny_village/actions/runs/39693024783/job/119543583086"
+    },
+    {
+      "name": "Python (visual)",
+      "head_sha": "c65496d828ae3d45d17226ce013d2b4355682d20",
+      "conclusion": "success",
+      "completed_at": "2026-10-21T23:23:30Z",
+      "html_url": "https://github.com/dhar174/tiny_village/actions/runs/39693024783/job/119543582984"
+    },
+    {
+      "name": "Analyze (actions)",
+      "head_sha": "c65496d828ae3d45d17226ce013d2b4355682d20",
+      "conclusion": "success",
+      "completed_at": "2026-10-21T23:23:29Z",
+      "html_url": "https://github.com/dhar174/tiny_village/actions/runs/39693020221/job/119543571784"
+    },
+    {
+      "name": "Analyze (javascript-typescript)",
+      "head_sha": "c65496d828ae3d45d17226ce013d2b4355682d20",
+      "conclusion": "success",
+      "completed_at": "2026-10-21T23:23:33Z",
+      "html_url": "https://github.com/dhar174/tiny_village/actions/runs/39693020221/job/119543571780"
+    },
+    {
+      "name": "Analyze (python)",
+      "head_sha": "c65496d828ae3d45d17226ce013d2b4355682d20",
+      "conclusion": "success",
+      "completed_at": "2026-10-21T23:23:49Z",
+      "html_url": "https://github.com/dhar174/tiny_village/actions/runs/39693020221/job/119543571430"
+    }
+  ],
+  "superseded_pr": 714,
+  "superseded_state": "closed",
+  "superseded_merged": false,
+  "duplicate_comment": "https://github.com/dhar174/tiny_village/pull/714#issuecomment-6328794833",
+  "local_validation": {
+    "tests": 69,
+    "cli_probes": 3,
+    "unexpected_failures": 0,
+    "evidence": "https://github.com/dhar174/tiny_village/blob/c65496d828ae3d45d17226ce013d2b4355682d20/docs/testing/issue-735-utility-consolidation.md"
+  },
+  "issue_735_comment": "https://github.com/dhar174/tiny_village/issues/735#issuecomment-6328884987"
+}
