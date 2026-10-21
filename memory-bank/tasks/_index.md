@@ -1,7 +1,8 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK015](TASK015-visual-direction-728.md) Visual direction (#728) - D019 records pixel art and 13 choices; consolidated written specification awaits review (Updated: 2026-10-20)
+- [TASK016](TASK016-ui-wireframes-729.md) UI wireframes/states (#729) - D020 records 12 choices; consolidated written specification awaits review (Updated: 2026-10-20)
+- [TASK015](TASK015-visual-direction-728.md) Visual direction (#728) - #792 merged at 4c9bbfd; final written disposition pending (Updated: 2026-10-20)
 - [TASK014](TASK014-ux-journeys-727.md) UX journeys (#727) - #791 merged at 7391861; final written disposition pending (Updated: 2026-10-20)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 

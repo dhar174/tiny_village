@@ -376,6 +376,49 @@ should link to this file rather than maintain separate decision records.
   disposition, #729, #730, #731/#732 and later gates remain separate. No changes
   to D014's broader vision or D015's final-product AI requirement.
 
+### D020 — Select interface behavior for #729
+
+- **Date:** 2026-10-20 (America/New_York).
+- **Decision-maker:** dhar174.
+- **Disposition:** Twelve interface choices explicitly selected; consolidated
+  written specification and additional defaults await review.
+- **Artifact:** [Draft #729 UI specification](superpowers/specs/2026-10-20-issue-729-ui-design.md).
+- **Purpose:** Turn D018's journeys and D019's visual direction into a stable,
+  readable Pygame observer interface at both supported sizes, retaining the
+  wider product vision and final-product AI requirement.
+- **Confirmation:** Each row is the user's submitted choice after review of
+  options/tradeoffs. The generated layout comparison was shown before selecting
+  A. No final written acceptance, prerequisite closure or phase approval is
+  inferred from these selections or the earlier PR merges.
+
+| ID / topic | Confirmed selection | Other options presented | Recommendation rationale |
+| --- | --- | --- | --- |
+| U01 — Main layout | A: docked right entity list/inspector with expandable event strip. | Bottom information dock; collapsible map overlays. | Stable inspection location without covering villagers; exact dimensions remain proposed. |
+| U02 — Inspector organization | Compact overview with expandable Inventory, Plan and Recent Memory sections. | Separate subject tabs; one scrolling inspector with all main sections open. | Keep essential state/reason/outcome together while preserving technical expansion. |
+| U03 — Event history | Docked bottom drawer reduces map height and keeps inspector visible. | Non-modal map overlay; dedicated full-window history view. | Retain village/inspection context and explicit playback. Preserve reading position as new events arrive, with count/Jump to Latest. |
+| U04 — Smaller window | Keep right sidebar at 1024×768, adapt width and use wrapping/local scrolling. | Move to bottom dock; collapse secondary details into drawers. | Preserve positions and keyboard navigation without shrinking essential text. |
+| U05 — Session shortcuts | S Quicksave, L Load selection, R Restart request. | Ctrl+S/Ctrl+O/Ctrl+R; focused menu controls without direct shortcuts. | Retain existing pattern while routing through text focus and unsaved-progress protection; named saves stay in the menu. |
+| U06 — Save/Load placement | Centered modal over the village with focused save list/naming controls. | Full-window save/load screen; temporary sidebar view. | Provide metadata/confirmation space and retained village context; contain focus and restore it afterward. |
+| U07 — Closing menus/dialogs | Remain paused until explicit Play/Resume. Successful loads already remain non-advancing. | Restore prior playback; ask whether to resume each time. | Avoid surprise advancement. Live inspector/history behavior remains unchanged. |
+| U08 — Actual save consistency | Hold the world at a complete tick boundary until saving finishes, keeping UI responsive. Load remains paused and validates replacement. | Save an immutable snapshot while simulation keeps advancing. | Clear saved state and bounded correctness scope; this does not permit blocking the UI thread. |
+| U09 — Routine confirmation | Record in history and show a brief non-modal confirmation. | Dedicated persistent notification area; history/badge without temporary confirmation. | Immediate acknowledgment plus retained evidence, without stealing focus. Required persistent errors/blocked/recovery behavior is unchanged. |
+| U10 — Unavailable capabilities | Keep related section visible with plain-language reason and access to details/requirements. | Hide sections and explain in Feature Status; group unavailable functions into one entry. | Explain profile limits in context; distinguish empty, disabled, uninitialized and unavailable/failed without inventing results. |
+| U11 — Step/speed keys | Period advances one paused tick; Page Up/Down moves between speed presets. | Period plus 1–4 direct preset mapping; focusable controls without additional direct keys. | Retain familiar speed keys and quick step inspection; text fields consume their input and visible controls remain available. |
+| U12 — Final results | Bottom drawer with Summary and Events views, compact outcome when collapsed. | Sidebar Results section; persistent map banner with details on demand. | Keep result/evidence adjacent while preserving inspection. Finished is distinct from Paused; Play/Step cannot extend the episode. |
+
+- **Earlier proposals clarified:** U07 explicitly selects D018's proposed
+  menu-close behavior; U08 selects its proposed held-tick save policy; U05/U11
+  specify the previously deferred shortcut choices. Other written defaults,
+  including the walkthrough method, are not accepted by implication.
+- **Boundary:** These choices permit consolidation into a written UI proposal,
+  not product implementation. Exact geometry, input precedence, quicksave's
+  post-operation playback policy, confirmation duration, history buffer and
+  terminal-save/close details are explicitly proposed for written review.
+  The comparison's example inventory/artwork/text is not scenario evidence.
+  #727/#728 final dispositions and #729 remain open; #730, #731/#732 and later
+  reviews remain separate. No runtime, font-fit, accessibility or performance
+  pass is supplied. Continue recording all human decisions only in this file.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
@@ -393,8 +436,11 @@ effective required-check enforcement verified; #726 closed. D018 records the
 15 confirmed #727 interaction choices. #791 merged the written artifact at
 7391861; its final written-review disposition and #727 remain open. The user
 explicitly requested the subsequent preliminary #728 design walkthrough. D019
-records those visual choices; the consolidated specification and proposed
-defaults await written review. #728 and later human gates remain open.
+records those visual choices; #792 merged the artifact at 4c9bbfd, while #728's
+final disposition remains open. The user requested #729 next and selected the
+12 choices in D020; its consolidated written specification/defaults await review.
+#729 and later human gates remain open. The explicitly selected overlapping
+#727 defaults are clarified in D020 without approving the remaining artifacts.
 
 The [#779 investigation plan](superpowers/plans/2026-10-15-issue-779-startup-investigation.md)
 was approved under D007, and its bounded cycle has concluded. Its original

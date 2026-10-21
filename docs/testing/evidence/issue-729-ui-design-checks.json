@@ -1,0 +1,294 @@
+{
+  "status": "draft_geometry_and_source_checks_only",
+  "base_revision": "4c9bbfd106d721a0b714990653edce8b01b4c041",
+  "recorded_at_utc": "2026-10-21T03:10:37.533146+00:00",
+  "reference": {
+    "path": "docs/superpowers/specs/references/issue-729-layout-comparison.png",
+    "origin": "image_gen concept comparison created in this conversation using the earlier palette reference",
+    "original_filename": "exec-c676b644-e944-4112-8433-44724a05932d.png",
+    "sha256": "a749ae1f2e458b9bab38541d2053e686a0d621ba34441f0e4d750d949869d3c5",
+    "image_dimensions": [
+      1942,
+      809
+    ],
+    "selected_layout": "A Right sidebar",
+    "scope": "Panel-placement reference only; generated text, sample inventory, exact dimensions, bars and artwork are not authoritative scenario data or runtime evidence."
+  },
+  "geometry_units": "logical screen pixels; rectangles are x,y,width,height",
+  "views": [
+    {
+      "window": [
+        1280,
+        720
+      ],
+      "rectangles": {
+        "top_bar": [
+          8,
+          8,
+          1264,
+          64
+        ],
+        "sidebar": [
+          968,
+          80,
+          304,
+          632
+        ],
+        "map_collapsed": [
+          8,
+          80,
+          952,
+          584
+        ],
+        "events_collapsed": [
+          8,
+          672,
+          952,
+          40
+        ],
+        "map_expanded": [
+          8,
+          80,
+          952,
+          384
+        ],
+        "events_expanded": [
+          8,
+          472,
+          952,
+          240
+        ],
+        "entity_browser": [
+          980,
+          92,
+          280,
+          160
+        ],
+        "inspector": [
+          980,
+          264,
+          280,
+          436
+        ],
+        "save_load_modal": [
+          280,
+          100,
+          720,
+          520
+        ]
+      },
+      "header_control_slots": {
+        "title": [
+          16,
+          16,
+          128,
+          48
+        ],
+        "state": [
+          152,
+          16,
+          128,
+          48
+        ],
+        "tick": [
+          288,
+          16,
+          104,
+          48
+        ],
+        "play_pause": [
+          400,
+          16,
+          88,
+          48
+        ],
+        "step": [
+          496,
+          16,
+          72,
+          48
+        ],
+        "speed": [
+          576,
+          16,
+          112,
+          48
+        ],
+        "population": [
+          696,
+          16,
+          96,
+          48
+        ],
+        "menu": [
+          800,
+          16,
+          80,
+          48
+        ],
+        "help": [
+          888,
+          16,
+          72,
+          48
+        ]
+      },
+      "checks": [
+        {
+          "mode": "collapsed",
+          "checks": "all four main regions contained and pairwise non-overlapping"
+        },
+        {
+          "mode": "expanded",
+          "checks": "all four main regions contained and pairwise non-overlapping"
+        }
+      ],
+      "header_space_used_including_padding": 960,
+      "minimum_row_height": 40
+    },
+    {
+      "window": [
+        1024,
+        768
+      ],
+      "rectangles": {
+        "top_bar": [
+          8,
+          8,
+          1008,
+          64
+        ],
+        "sidebar": [
+          736,
+          80,
+          280,
+          680
+        ],
+        "map_collapsed": [
+          8,
+          80,
+          720,
+          632
+        ],
+        "events_collapsed": [
+          8,
+          720,
+          720,
+          40
+        ],
+        "map_expanded": [
+          8,
+          80,
+          720,
+          432
+        ],
+        "events_expanded": [
+          8,
+          520,
+          720,
+          240
+        ],
+        "entity_browser": [
+          748,
+          92,
+          256,
+          160
+        ],
+        "inspector": [
+          748,
+          264,
+          256,
+          484
+        ],
+        "save_load_modal": [
+          152,
+          124,
+          720,
+          520
+        ]
+      },
+      "header_control_slots": {
+        "title": [
+          16,
+          16,
+          128,
+          48
+        ],
+        "state": [
+          152,
+          16,
+          128,
+          48
+        ],
+        "tick": [
+          288,
+          16,
+          104,
+          48
+        ],
+        "play_pause": [
+          400,
+          16,
+          88,
+          48
+        ],
+        "step": [
+          496,
+          16,
+          72,
+          48
+        ],
+        "speed": [
+          576,
+          16,
+          112,
+          48
+        ],
+        "population": [
+          696,
+          16,
+          96,
+          48
+        ],
+        "menu": [
+          800,
+          16,
+          80,
+          48
+        ],
+        "help": [
+          888,
+          16,
+          72,
+          48
+        ]
+      },
+      "checks": [
+        {
+          "mode": "collapsed",
+          "checks": "all four main regions contained and pairwise non-overlapping"
+        },
+        {
+          "mode": "expanded",
+          "checks": "all four main regions contained and pairwise non-overlapping"
+        }
+      ],
+      "header_space_used_including_padding": 960,
+      "minimum_row_height": 40
+    }
+  ],
+  "source_sha256": {
+    "tiny_gameplay_controller.py": "e20b047efdb728fe1f644802195403e654d7933d02255807a919756cabec79bf",
+    "tiny_map_controller.py": "215865d1f70625475bfd6597b062ca39490fd11112c63c8f95b0d3fee3983421",
+    "main.py": "7aec70b6986facc4b1660551ad9c4e93dc8b2d05adba740f0c967183e9b26084",
+    "tiny_memories.py": "f2fb60544a9eeefbc76e95e390449c279f94ec06ee5099d689832753a966adef",
+    "docs/superpowers/specs/2026-10-20-issue-727-ux-design.md": "5fead52ee6480a33cb15529dbd3fe8273c89f5ccd3d164ece64f43e4fd50fc40",
+    "docs/superpowers/specs/2026-10-20-issue-728-visual-design.md": "a3f8f506bd137fa23b016dfe94c3b9356d032d811d8762d351b3debdba3b11cc"
+  },
+  "limitations": [
+    "No runtime code, UI prototype, production assets, fonts, dependencies, locks or workflows changed.",
+    "Bounds/non-overlap arithmetic does not prove font fit, input behavior, readability, rendered pixel-grid fidelity or timing budgets.",
+    "Proposed geometry, focus details, quicksave-return semantics and timing/buffering defaults await written review.",
+    "No #727/#728/#729 final disposition or #730/#732 approval inferred from merged artifacts or conversational selections."
+  ]
+}
