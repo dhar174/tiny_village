@@ -295,6 +295,48 @@ should link to this file rather than maintain separate decision records.
   and effective required-check enforcement before closing #726. No automatic
   merge or phase-gate approval; gameplay and inference remain separate.
 
+### D018 — Select MVP UX behavior for #727
+
+- **Date:** 2026-10-20 (America/New_York).
+- **Decision-maker:** dhar174.
+- **Disposition:** Fifteen interaction choices confirmed individually;
+  consolidated written specification awaits review.
+- **Artifact:** [Draft #727 UX specification](superpowers/specs/2026-10-20-issue-727-ux-design.md).
+- **Purpose:** Make autonomous activity understandable and inspectable through
+  the two accepted presentations, preserving D014's wider vision and D015's
+  required final-product AI. This remains observer UX for the bounded scenario.
+- **Confirmation:** Each selected entry below is the user's submitted answer
+  to its corresponding multiple-choice question. The recommended choice was
+  explicitly selected each time; no selection is inferred from silence.
+
+| ID / topic | Confirmed selection | Other options presented | Recommendation rationale |
+| --- | --- | --- | --- |
+| UX01 — Visual launch | Start paused with the village visible and a clear Play control. Headless remains automatic/non-interactive. | Start running immediately; show a Start/Load/Help launch screen. | Orient and inspect before events advance, without adding another screen. |
+| UX02 — Inspection | Keep inspection live; pause/resume explicitly. | Pause automatically when the inspector opens; offer separate live/paused inspection modes. | Observe changing autonomous activity without selection repeatedly interrupting it. |
+| UX03 — Explanations | Brief plain-language reasons and outcomes, with technical details expandable. | Full decision/state details by default; compact status with explanations only on demand. | Explain causality without overwhelming observation; use recorded evidence and label missing reasons. |
+| UX04 — Playback | Play/Pause, advance one tick while paused, fixed 0.5×/1×/2×/4× speeds. | Play/Pause only at two ticks/s; Play/Pause/Step with a continuous slider. | Combine precise inspection and reproducible pacing. 1× stays two ticks/s; pacing cannot change logical outcomes. |
+| UX05 — Save organization | Named saves in an in-game list, plus quicksave. | Fixed numbered slots; one quicksave slot only. | Preserve identifiable milestones with quick repeated saving. Show scenario, tick and save time. |
+| UX06 — Escape | Dismiss the topmost open panel/dialog; otherwise open a paused session menu. | Always open the session menu; dismiss UI then otherwise request quit confirmation. | Familiar backing out with explicit access to Resume/Save/Load/Restart/Quit. |
+| UX07 — Unsaved progress | Offer Save and Continue / Discard and Continue / Cancel only when Load/Restart/Quit would lose unsaved progress. | Always confirm; automatically create a recovery save and continue without a prompt. | Protect actual progress without habitual unnecessary prompts. A failed requested save blocks the transition. |
+| UX08 — Blocked goals | Keep other villagers running; highlight the blocked goal/reason in inspector and history. | Pause on every newly blocked goal; make pause-on-blockage configurable. | Retain autonomous observation while clearly explaining unmet conditions and honest final outcomes. |
+| UX09 — Runtime failure | Stop advancement, preserve diagnostics, offer only recovery actions known safe for that failure. | Automatically restore a validated checkpoint; end the session with a report and Load/Restart options. | Avoid unannounced rollback or unsafe continuation. Retry only when safe; no ordinary Save of untrusted state. |
+| UX10 — Headless output | Readable decision/outcome lines and final summary, structured results in a file. | JSON Lines events plus readable summary; readable console plus a separate structured event stream and result file. | Serve observers and automated verification without another live output destination. Accepted result/exit contracts remain unchanged. |
+| UX11 — Keyboard selection | Stable entity list with arrow navigation and Enter selection. Map clicking remains available. | Spatial keyboard cursor; entity-name search overlay. | Keep moving villagers discoverable and selectable, with logical Tab order and visible focus for ordinary controls. |
+| UX12 — Final tick | Keep the village inspectable with a persistent non-modal summary; stop advancing. | Modal result dialog before inspection; close window after writing results. | Connect final outcome/invariants to real village state; distinguish Finished from Paused. |
+| UX13 — After load | Always load paused and require explicit Play. | Restore saved running/paused state; offer Resume after loading in the dialog. | Let users confirm the restored world; do not change saved causal state or continuation. |
+| UX14 — Replacement | Confirm named-save replacement; quicksave replaces its dedicated slot without a prompt and reports success/failure. | Version every named save/quicksave; confirm every replacement including quicksave. | Protect milestones while keeping quicksave useful. Failed writes preserve the previous valid save. |
+| UX15 — Guidance | Short dismissible launch hint, always-available Help and visible shortcut labels. | Guided first-use walkthrough plus Help; Help/labels without launch guidance. | Make essentials discoverable without a mandatory tutorial; Help is available by button and H/F1. |
+
+- **Boundary:** These answers approve the interaction choices and their stated
+  rationale, not a written artifact that did not yet exist. They allow the
+  choices to be consolidated for review. The specification's explicit proposed
+  defaults and walkthrough protocol are not separately approved by these
+  answers. #727 remains open; #728/#729, human design review #730, engineering
+  review #731 and gate #732 remain separate. No runtime implementation,
+  persistence correctness, live AI, usability pass or automatic merge is
+  authorized or established by this record. All subsequent human dispositions
+  remain in this file under D003.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
@@ -307,8 +349,10 @@ The [#724 contract](superpowers/specs/2026-10-20-issue-724-mvp-contract.md)
 has D013's two presentations and D014's qualified acceptance. The broader
 TinyVillage vision remains intact. #784 integrated the accepted contract to
 main and closed #724. #725 merged through #785; #654/#776 merged through #788.
-D017 now authorizes #726 implementation; CI enforcement and later human gates
-remain pending.
+D017's #726 work is complete: #789/#790 merged, hosted main/manual results and
+effective required-check enforcement verified; #726 closed. D018 records the
+15 confirmed #727 interaction choices. Its consolidated specification awaits
+written review; #727 and later human gates remain open.
 
 The [#779 investigation plan](superpowers/plans/2026-10-15-issue-779-startup-investigation.md)
 was approved under D007, and its bounded cycle has concluded. Its original

@@ -1,11 +1,17 @@
 ## What Works
 
+- TASK014 / #727: 15 interaction choices confirmed in D018; consolidated UX
+  specification awaits written review. See tasks/TASK014-ux-journeys-727.md and
+  docs/superpowers/specs/2026-10-20-issue-727-ux-design.md. Proposed connective
+  defaults and walkthrough are labeled for review. #727 stays open; no product
+  implementation, UX pass or later phase/design approval supplied. #728 follows.
+
 - TASK013 / #726 is complete and closed. #789 merged at ac0e25d; main and
   both manual ML profiles pass 132 cases + three CLI probes, all five artifact
   digests verified. Owner activated tiny_ruleset; API readback confirms the
   effective required check, GitHub Actions source and strict/up-to-date policy.
-  Existing rules/reviews/bypasses are preserved. Evidence PR #790 remains for
-  human merge. Next: plan #727 UX journeys and #728 aesthetic direction, with
+  Existing rules/reviews/bypasses are preserved. Evidence PR #790 merged at
+  969f6b9. Next: review #727 UX journeys and plan #728 aesthetic direction, with
   separate human review. No phase gate is approved. See TASK013/validation report.
 
 - The repository has established architecture and documentation for the core

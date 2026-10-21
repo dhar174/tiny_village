@@ -1,6 +1,7 @@
 ## Tasks Index
 
 ## In Progress
+- [TASK014](TASK014-ux-journeys-727.md) UX journeys (#727) - D018 confirms 15 choices; consolidated written specification awaits review (Updated: 2026-10-20)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending
