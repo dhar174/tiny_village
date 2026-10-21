@@ -20,8 +20,8 @@ remain only in docs/decisions.md. No runtime/ML cycle or product implementation.
 | Step | Status | Evidence |
 | --- | --- | --- |
 | Record explicit #731 approval | Complete | D024 |
-| Publish/verify #731 closure | In progress | Existing PR #795 and immutable D024 link |
-| Reconcile Phase 2 work/evidence/limits | Prepared | Readiness report; exact historical evidence retained |
+| Publish/verify #731 closure | Complete | Existing PR #795 and immutable D024 link; closed/completed response verified |
+| Reconcile Phase 2 work/evidence/limits | Complete | All nine required tasks/reviews closed; native #732 blockers #730/#731 closed; historical evidence retained |
 | Human #732 decision | Pending | Separate phase approval required |
 | Close #732/#723 and unlock #733 | Not authorized | Only after explicit phase approval |
 
@@ -30,3 +30,7 @@ remain only in docs/decisions.md. No runtime/ML cycle or product implementation.
 - 2026-10-21: user explicitly approved the scoped engineering review. Recorded
   D024, prepared its closure and the Phase 2 readiness handoff. Project access
   still returns 403. No Phase 2 gate approval, automatic merge or Phase 3 work.
+- 2026-10-21: verified #731 closed/completed with D024; all nine required Phase
+  2 work/review issues are closed. The native #732 dependency read lists #730
+  and #731, both closed. Updated #732/#723 readiness without approving or
+  closing them. Existing PR #795 retains the open publication for human merge.

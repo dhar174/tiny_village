@@ -1,15 +1,16 @@
 ## What Works
 
 - TASK020 / #732: Phase 2 readiness prepared after explicit #731 approval
-  under D024. Record/verify its closure and present one separate phase decision.
+  under D024. #731 closure and all Phase 2 task states are verified; present
+  one separate phase decision.
   Approval would unlock Phase 3 backlog/PR consolidation (#733, starting #734),
   not establish UI/gameplay/live-AI readiness. #732/#723 remain open until then.
   Project fields remain blocked by 403; PR #795 remains open for human merge.
 
 - TASK019 / #731: Approved under D024 within the reviewed Python 3.12/Linux
   foundation, with all documented evidence limits. No new blocking remediation
-  identified; current hosted/retained source evidence stands. Publication and
-  issue closure are being synchronized. See TASK019 and the engineering report.
+  identified; current hosted/retained source evidence stands. Published in #795,
+  #731 is closed/completed with its immutable approval link verified. See TASK019.
 
 - D023 records dhar174's explicit approval of #727/#728/#729 planning and #730
   combined design review on 2026-10-21. TASK014–TASK018 are complete for their

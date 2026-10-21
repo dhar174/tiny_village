@@ -1,6 +1,6 @@
 # TASK019 — Phase 2 engineering review (#731)
 
-**Status:** Approved under D024; issue closure/publication in progress
+**Status:** Complete under D024; issue closure verified, Project fields pending 403
 **Added/Updated:** 2026-10-21 (America/New_York)
 
 ## Request and scope
@@ -29,6 +29,7 @@ and [receipt](../../docs/testing/evidence/issue-731-engineering-review.json).
 | Audit retained/current hosted evidence | Complete | Three ZIP digests verified; 128 cases + three probes PASS; manual ML evidence remains historical |
 | Prepare scoped engineering recommendation | Complete | No new blocking remediation identified; review preserves all limits |
 | Human #731 disposition | Approved | D024 records the user's explicit “Approved” for the reviewed scope |
+| Synchronize #731 closure | Complete | Closed/completed state and immutable D024 link verified |
 | Publish updated #795 | Complete | Existing PR carries approval record, engineering report and receipt; no auto-merge |
 
 ## Log
@@ -51,3 +52,6 @@ and [receipt](../../docs/testing/evidence/issue-731-engineering-review.json).
 - 2026-10-21: the user explicitly approved #731's scoped engineering review.
   Recorded D024 and prepared issue closure plus the distinct #732 phase-gate
   handoff. No #732 approval or Phase 3 unlock is inferred.
+- 2026-10-21: published D024 in #795 and closed #731 as completed with the
+  decision link verified. All Phase 2 work/review issues are now closed; #732
+  and #723 remain open. TASK020 retains the distinct phase decision handoff.
