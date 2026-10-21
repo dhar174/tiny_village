@@ -22,7 +22,7 @@ in the specifications, then obtain final written dispositions before #730.
 | Step | Status | Evidence |
 | --- | --- | --- |
 | Reconcile existing choices and remaining proposals | Complete | #727 section 5, #728 section 5 and #729 section 5; D020 resolves three earlier UX proposals. |
-| Review remaining proposals | In progress | D021 R01–R06 recorded; remaining UI defaults pending. |
+| Review remaining proposals | In progress | D021 R01–R07 recorded; remaining UI defaults pending. |
 | Final written-specification dispositions | Pending | #727/#728/#729 remain open. |
 | Combined human design review #730 | Pending | Separate decision after planning acceptance. |
 
@@ -50,3 +50,6 @@ in the specifications, then obtain final written dispositions before #730.
   in D021 R06. Remaining #728 proposals now have selections; complete written
   acceptance is still pending. Next: #729 dimensions. No artwork or rendering
   implementation performed.
+- 2026-10-21 (America/New_York): recorded the submitted initial panel dimensions
+  in D021 R07. Next: quicksave return policy outside the session menu. No layout
+  implementation or native font-fit test performed.
