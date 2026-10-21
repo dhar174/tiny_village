@@ -1,6 +1,6 @@
 # TASK018 — Consolidated design journey walkthrough
 
-**Status:** Approved under D023; GitHub synchronization pending authentication
+**Status:** Complete under D023; issue closure verified
 **Added/Updated:** 2026-10-21 (America/New_York)
 
 ## Request and scope
@@ -31,7 +31,7 @@ maps all review areas to the artifacts and downstream evidence.
 | Blocked goals and failure recovery | Approved under D023 | Valid blocked outcomes versus untrusted state |
 | Completion and headless behavior | Approved under D023 | Terminal inspection, result evidence and exits |
 | Visual/inclusive interaction and evidence limits | Approved under D023 | #728 trials, both resolutions, later native checks |
-| Complete written dispositions and #730 decision | Approved | [D023](../../docs/decisions.md#d023--approve-design-planning-727729-and-combined-review-730); closure/publishing pending authentication |
+| Complete written dispositions and #730 decision | Approved | [D023](../../docs/decisions.md#d023--approve-design-planning-727729-and-combined-review-730); issue closures verified; Project fields pending |
 
 ## Log
 
@@ -47,3 +47,8 @@ maps all review areas to the artifacts and downstream evidence.
   planning and #730 combined review, authorizing #731 preparation. Recorded
   D023. GitHub issue/Project updates and publishing are blocked by credentials;
   no external completion claim. TASK019 contains the prepared engineering review.
+
+- 2026-10-21 (America/New_York): repository access recovered; the D023
+  approval commit was published in #795 and #727–#730 closures were applied
+  and verified. Project fields alone remain blocked by HTTP 403. TASK019
+  retains engineering-review preparation and the outstanding human decision.

@@ -1,6 +1,6 @@
 # TASK017 — Remaining design review for #727–#729
 
-**Status:** Approved under D023; GitHub synchronization pending authentication
+**Status:** Complete under D023; issue closure verified
 **Added/Updated:** 2026-10-21 (America/New_York)
 
 ## Request and scope
@@ -24,7 +24,7 @@ in the specifications, then obtain final written dispositions before #730.
 | Reconcile existing choices and remaining proposals | Complete | #727 section 5, #728 section 5 and #729 section 5; D020 resolves three earlier UX proposals. |
 | Review remaining proposals | Complete | All thirteen submitted selections recorded in D021 R01–R13. |
 | Consolidate and statically review specifications | Complete | Selected requirements reflected in all three artifacts; historical receipts preserved against their recorded base; current written-review receipt retained. |
-| Final written-specification dispositions | Approved | [D023](../../docs/decisions.md#d023--approve-design-planning-727729-and-combined-review-730); issue closures pending authentication |
+| Final written-specification dispositions | Approved | [D023](../../docs/decisions.md#d023--approve-design-planning-727729-and-combined-review-730); issue closures verified; Project fields pending |
 | Combined human design review #730 | Approved | [D023](../../docs/decisions.md#d023--approve-design-planning-727729-and-combined-review-730); #731/#732 remain separate |
 
 ## Log
@@ -80,3 +80,8 @@ in the specifications, then obtain final written dispositions before #730.
 - 2026-10-21 (America/New_York): D023 records all four explicit approvals.
   External synchronization is blocked by 401 after the earlier Project 403.
   Retain local evidence and use TASK019 to resume; do not repeat design choices.
+
+- 2026-10-21 (America/New_York): repository access recovered; the D023
+  approval commit was published in #795 and #727–#730 closures were applied
+  and verified. Project fields alone remain blocked by HTTP 403. TASK019
+  retains engineering-review preparation and the outstanding human decision.

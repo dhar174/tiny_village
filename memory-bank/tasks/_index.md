@@ -1,18 +1,18 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK019](TASK019-phase2-engineering-review.md) Phase 2 engineering review (#731) - Prepared; human disposition and GitHub publication/synchronization pending (Updated: 2026-10-21 America/New_York)
-- [TASK018](TASK018-consolidated-design-walkthrough.md) Consolidated design walkthrough - Approved under D023; issue/publication sync blocked by GitHub credentials (Updated: 2026-10-21 America/New_York)
-- [TASK017](TASK017-design-review-727-729.md) Remaining design review (#727-#729) - Approved under D023; issue/publication sync blocked by GitHub credentials (Updated: 2026-10-21 America/New_York)
-- [TASK016](TASK016-ui-wireframes-729.md) UI wireframes/states (#729) - Approved under D023; issue/publication sync blocked by GitHub credentials (Updated: 2026-10-21 America/New_York)
-- [TASK015](TASK015-visual-direction-728.md) Visual direction (#728) - Approved under D023; issue/publication sync blocked by GitHub credentials (Updated: 2026-10-21 America/New_York)
-- [TASK014](TASK014-ux-journeys-727.md) UX journeys (#727) - Approved under D023; issue/publication sync blocked by GitHub credentials (Updated: 2026-10-21 America/New_York)
+- [TASK019](TASK019-phase2-engineering-review.md) Phase 2 engineering review (#731) - Review prepared; human #731 decision pending, Project fields blocked by 403 (Updated: 2026-10-21 America/New_York)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending
 - No additional pending task files.
 
 ## Completed
+- [TASK018](TASK018-consolidated-design-walkthrough.md) Consolidated design walkthrough - Complete under D023; #727-#730 closed, Project fields pending HTTP 403 (Updated: 2026-10-21 America/New_York)
+- [TASK017](TASK017-design-review-727-729.md) Remaining design review (#727-#729) - Complete under D023; #727-#730 closed, Project fields pending HTTP 403 (Updated: 2026-10-21 America/New_York)
+- [TASK016](TASK016-ui-wireframes-729.md) UI wireframes/states (#729) - Complete under D023; #727-#730 closed, Project fields pending HTTP 403 (Updated: 2026-10-21 America/New_York)
+- [TASK015](TASK015-visual-direction-728.md) Visual direction (#728) - Complete under D023; #727-#730 closed, Project fields pending HTTP 403 (Updated: 2026-10-21 America/New_York)
+- [TASK014](TASK014-ux-journeys-727.md) UX journeys (#727) - Complete under D023; #727-#730 closed, Project fields pending HTTP 403 (Updated: 2026-10-21 America/New_York)
 - [TASK013](TASK013-supported-profile-ci-726.md) Supported-profile CI (#726) - Completed/closed; main/manual 132 cases + 3 probes pass; effective required check verified, evidence PR #790 (Updated: 2026-10-20)
 - [TASK012](TASK012-lightweight-runtime-654.md) Lightweight runtime (#654/#776) - PR #788 merged at eb5f4c9; issues closed, 47-method post-merge verification passes (Updated: 2026-10-20)
 - [TASK011](TASK011-dependency-profiles-725.md) Reproducible dependencies (#725) - PR #785 merged at 8a899650; #725 closed; eight hash locks preserved (Updated: 2026-10-20)

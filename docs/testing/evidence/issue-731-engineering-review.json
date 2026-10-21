@@ -155,10 +155,9 @@
     "726": "closed"
   },
   "administrative_limitations": [
-    "Project 10 read returned HTTP 403: Resource not accessible by integration.",
-    "Subsequent repository and configured project-credential requests returned HTTP 401: Bad credentials.",
-    "Git fetch of the CI merge object failed with authentication error; merge parents were verified via the earlier API snapshot, not direct local merge-tree comparison.",
-    "No issue closure, Project mutation or updated-PR push has succeeded during this handoff."
+    "Project 10 read still returns HTTP 403: Resource not accessible by integration; fields are not synchronized.",
+    "Repository/configured-project requests temporarily returned HTTP 401 and the first CI merge fetch failed. Repository access later recovered; issue updates and the approval push succeeded.",
+    "After recovery the CI merge fetch succeeded; direct comparison with ac0e25d shows no non-document changes. Earlier failures remain preserved in scratch artifacts."
   ],
   "runtime_tests_executed_for_this_review": 0,
   "new_ml_workflow_dispatches": 0,
@@ -174,5 +173,40 @@
     "No native Windows/macOS/GPU support or live inference claim.",
     "No economic-turn, canonical episode, complete persistence or native UX/rendering/performance acceptance.",
     "No #731/#732 human approval inferred."
-  ]
+  ],
+  "executed_merge_non_document_changes_since_verified_runtime": [],
+  "repository_synchronization": {
+    "approval_commit_pushed": "f5fb0ab6bb61cf9c17121332d5ca2ea7608a35b9",
+    "issue_updates": [
+      {
+        "issue": 727,
+        "state": "closed",
+        "state_reason": "completed",
+        "url": "https://github.com/dhar174/tiny_village/issues/727",
+        "decision_link_verified": true
+      },
+      {
+        "issue": 728,
+        "state": "closed",
+        "state_reason": "completed",
+        "url": "https://github.com/dhar174/tiny_village/issues/728",
+        "decision_link_verified": true
+      },
+      {
+        "issue": 729,
+        "state": "closed",
+        "state_reason": "completed",
+        "url": "https://github.com/dhar174/tiny_village/issues/729",
+        "decision_link_verified": true
+      },
+      {
+        "issue": 730,
+        "state": "closed",
+        "state_reason": "completed",
+        "url": "https://github.com/dhar174/tiny_village/issues/730",
+        "decision_link_verified": true
+      }
+    ],
+    "project_fields_synchronized": false
+  }
 }

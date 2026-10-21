@@ -45,8 +45,10 @@ These are existing hosted executions, not tests newly executed by this review.
 The run's PR head is `6bc999d`; its structured reports correctly identify the
 executed merge revision `b54bfc6cee5d34192be6fc71c4f274a2444a1a3b`. The API
 confirmed parents `752bc2e` and `6bc999d`. Do not substitute the PR head for the
-executed revision. A subsequent attempt to fetch that merge object failed when
-credentials stopped working; no direct local merge-tree verification is claimed.
+executed revision. The first fetch of that merge object failed when credentials
+stopped working. After repository access recovered, the fetch succeeded and
+direct comparison with `ac0e25d` confirmed no non-document changes. The failed
+attempt remains recorded separately from that successful source verification.
 
 The [#726 rollout receipt](evidence/issue-726-hosted-rollout-results.json)
 separately retains **132 cases + three probes** across all five profiles at
@@ -64,10 +66,11 @@ closed and #731/#732 as open. The configured Project API returned HTTP 403,
 the configured project credential returned HTTP 401, “Bad credentials.” The
 environment's ready binding observation did not establish API authorization.
 
-D023's four design approvals are recorded locally and authorized for issue
-closure, but issue/Project changes and pushing the updated PR are pending
-credential recovery. Do not claim those external mutations succeeded. No
-credentials were printed, replaced globally or added to repository files.
+Repository access subsequently recovered. D023's approval commit was pushed to
+#795, and #727/#728/#729/#730 were updated and closed as completed; read-back
+verified their states and immutable decision links. Project 10 still returned
+403, so its fields remain unsynchronized. No credentials were printed, replaced
+globally or added to repository files.
 
 Review the findings and retained limits, then record one human disposition for
 #731 in docs/decisions.md. Only close it after Approved; retain any newly

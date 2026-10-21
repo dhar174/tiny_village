@@ -7,12 +7,12 @@
   Human #731 disposition and #732 remain pending. See tasks/TASK019-phase2-engineering-review.md.
 
 - D023 records dhar174's explicit approval of #727/#728/#729 planning and #730
-  combined design review on 2026-10-21. TASK014–TASK018 are accepted for their
-  planning scope; issue closures/publication are authorized but still pending.
-  Project read returned 403, then repository/project authentication returned
-  401. Do not claim external updates or repeat settled design questions.
-  Local approval/report commits must be pushed to existing PR #795 after
-  credential recovery; then synchronize #727–#730 and resume #731 handoff.
+  combined design review on 2026-10-21. TASK014–TASK018 are complete for their
+  planning scope. All four issues are closed/completed; immutable decision
+  links and states were verified after repository authentication recovered.
+  Existing PR #795 carries the record and engineering handoff. Project 10
+  fields remain unsynchronized after HTTP 403. #731/#732 and #723 stay open;
+  do not repeat settled design choices or infer further human approval.
 
 - TASK013 / #726 is complete and closed. #789 merged at ac0e25d; main and
   both manual ML profiles pass 132 cases + three CLI probes, all five artifact
