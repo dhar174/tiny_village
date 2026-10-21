@@ -1,21 +1,23 @@
 ## Current Work Focus
 
-- TASK016 / #729: 12 interface choices recorded in D020. Draft UI specification
-  covers both supported sizes, panels, input/focus, session operations and
-  success/error states. Exact geometry and connective defaults await written
-  review. #729 stays open; #730 is the next combined human design review after
-  planning dispositions. See tasks/TASK016-ui-wireframes-729.md.
+- TASK017 / #727–#729: D021 records all 13 remaining selections. The three
+  specifications are consolidated for complete written review; #727/#728/#729
+  remain open pending distinct dispositions. Trials are selected; production
+  assets, native validation and runtime implementation remain downstream.
+  #730 is the next combined design review after planning acceptance, followed
+  by #731/#732. See tasks/TASK017-design-review-727-729.md.
 
-- TASK015 / #728: #792 merged at 4c9bbfd; pixel art and 13 choices are in D019.
-  Final written disposition and asset/font/token defaults remain pending; #728
-  stays open. No production art/runtime or phase approval. TASK016 tracks the
-  explicitly requested preliminary #729 design. See TASK015/visual specification.
+- TASK016 / #729: #793 merged at 3e1c7ef after the visible-Quicksave review fix.
+  D020 retains the original 12 choices; D021 settles dimension/session/history
+  proposals. No font-fit, runtime or later human approval is inferred.
 
-- TASK014 / #727: #791 merged at 7391861; 15 choices are recorded in D018.
-  Final written-specification disposition remains pending; #727 stays open.
-  See tasks/TASK014-ux-journeys-727.md and the #727 UX specification. Proposed
-  connective defaults and walkthrough await review; no product implementation,
-  UX pass or later phase/design approval supplied. TASK015 tracks #728.
+- TASK015 / #728: #792 merged at 4c9bbfd. D019 retains pixel art and 13 choices;
+  D021 selects the art/font/palette/spacing trials and animation scope. Exact
+  production files still need the later audit; final written disposition pending.
+
+- TASK014 / #727: #791 merged at 7391861. D018 retains 15 choices; D020 resolves
+  overlapping menu/save/shortcut proposals and D021 selects the walkthrough
+  method. Complete written disposition pending; no executed usability pass.
 
 - TASK013 / #726 is complete and closed. #789 merged at ac0e25d; main and
   both manual ML profiles pass 132 cases + three CLI probes, all five artifact

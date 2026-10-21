@@ -419,6 +419,58 @@ should link to this file rather than maintain separate decision records.
   reviews remain separate. No runtime, font-fit, accessibility or performance
   pass is supplied. Continue recording all human decisions only in this file.
 
+### D021 — Review remaining design proposals for #727–#729
+
+- **Date:** 2026-10-21 (UTC; later selections on the same date in America/New_York).
+- **Decision-maker:** dhar174.
+- **Disposition:** All thirteen remaining selections confirmed; consolidated
+  complete written-specification dispositions remain pending.
+- **Artifacts:** [UX specification](superpowers/specs/2026-10-20-issue-727-ux-design.md),
+  [visual specification](superpowers/specs/2026-10-20-issue-728-visual-design.md),
+  and [UI specification](superpowers/specs/2026-10-20-issue-729-ui-design.md),
+  reviewed from merged main `3e1c7ef` after PR #793.
+- **Purpose:** Settle remaining proposals without repeating choices already
+  confirmed in D018–D020, then obtain the separate written dispositions and
+  proceed to #730's combined design review.
+
+| ID / topic | Confirmed selection | Other options presented | Recommendation rationale |
+| --- | --- | --- | --- |
+| R01 — Later UX walkthrough method (#727) | A maintainer exercises every scenario using only in-product guidance; include first-time observers when available and report their results separately. | Maintainer only (less coordination, weaker newcomer evidence); require an external participant group (stronger newcomer evidence, recruitment effort/delays). | Keep the required walkthrough practical while distinguishing maintainer familiarity from newcomer usability. |
+| R02 — Environment artwork foundation (#728) | Trial Slates with matching original artwork for missing pieces; retain CC BY 4.0 attribution and modification notices. Audit coverage/style and a compatible villager family before production adoption. | CC0-only source assets plus more original buildings/props (fewer attribution obligations, more art work); entirely original environment artwork (maximum control, largest workload). | Best researched 32×32 village foundation for the selected direction without mandatory asset purchases. The user explicitly accepted the recommendation. |
+| R03 — Exact palette approach (#728) | Trial the existing section 3 Meadow & Terracotta color values, refining them against real scenes and contrast checks. | Revise the palette within the selected mood and compare visually before implementation; develop an original constrained palette from scratch (more design work and another visual review). | Provide a reproducible starting point while allowing refinements supported by rendered-scene evidence. The user accepted the recommendation; no rendered palette validation has been executed. |
+| R04 — Font pairing trial (#728) | Trial Atkinson Hyperlegible for information and Pixelify Sans for short headings; use conventional headings if pixel lettering fails readability testing. Verify real Pygame rendering and character coverage at both supported sizes. | Noto Sans information text with Pixelify Sans headings (more neutral appearance); conventional text throughout, starting with Atkinson Hyperlegible (simpler typography, pixel identity carried by artwork/frames). | Distinguishable letters/numbers for information with restrained pixel-art character in headings. The user explicitly selected this pairing; no font has been imported or renderer/font-coverage pass established. |
+| R05 — Type-size and spacing baseline (#728) | Trial 18px body/control text, 16px secondary text and 24px headings; 4px spacing increments, 8px control padding, 12px panel padding and 16px group gaps. Check actual fonts at both supported sizes; wrap or scroll essential text rather than shrink it to fit. | Same text sizes with a roomier 8px spacing grid (less information visible/more scrolling); larger text such as 20px body, 18px secondary and 28px headings (requires revised panel fit/wrapping/scrolling). | Use a concrete readable starting point that balances information density and map area, subject to actual font-fit checks. The user explicitly selected this baseline. |
+| R06 — Animation/layer production scope (#728) | Complete a small, coherent set: reuse compatible templates, draw missing directional/activity frames, and separate foreground pieces needed for selected-villager fading. Retain the agreed short walks, clear activity poses and limited ambient motion; exact frame counts/fade values belong in the production plan. | Larger bespoke animation set (more individualized detail, substantially more artwork/performance validation); revisit the earlier choice to reduce initial coverage (requires revised design/rework, preserving complete visibility/status cues). | Complete the selected behavior with controlled art scope instead of expanding animation detail. The user explicitly selected this approach. |
+| R07 — Initial panel dimensions (#729) | Trial the dimensioned specification: 304px sidebar at 1280 width, 280px at 1024; 40px collapsed event strip and 240px expanded drawer. Retain configurable dimensions and revise if actual font-fit checks require it. | Wider sidebar (more details/less wrapping, less map width); taller expanded event/results drawer (more history/summary, less map height). Either alternative requires revised tables and bounds checks. | Keep a concrete, statically checked starting layout at both supported sizes while reserving real font-fit validation. The user explicitly selected this starting point. |
+| R08 — Quicksave return outside menu (#729) | After S quicksave outside the session menu, restore prior playback when safe: running returns to running, paused stays paused. An ordinary save I/O error shows a persistent error and preserves prior playback only while the world remains valid. Menu quicksave remains paused; runtime/state-integrity failure always stops advancement. | Always leave paused and require explicit Play; ask whether to resume whenever quicksave interrupted running playback (more interruption). | Preserve the convenience of quicksave without surprise changes to paused sessions or unsafe advancement. The user explicitly selected this policy. |
+| R09 — Page Up/Down focus precedence (#729) | Page the focused scrollable view first; change speed only when the focused control/dialog has not consumed the key, such as with map focus. Text editing/dialog input remains local; one keypress cannot scroll and change speed. Visible speed controls remain available. | Prioritize speed outside text fields/dialogs (focused lists need other paging navigation); revise the earlier speed mapping to reserve Page Up/Down for scrolling (requires a follow-up shortcut choice). | Preserve predictable local keyboard navigation while retaining the agreed speed shortcut in unconsumed contexts. The user explicitly selected this precedence. |
+| R10 — Routine-confirmation duration/placement (#729) | Show routine confirmations for five seconds in the existing HUD status lane; retain each message in event history and do not steal focus. Actionable errors remain persistent. | Longer configurable duration in the same lane (more reading time, longer occupancy); separate reserved notification lane (requires revised layout and consumes space without covering villagers/controls). | Provide consistent acknowledgment without another interface region or map obstruction. The user explicitly selected this policy. |
+| R11 — Displayed event-history buffer (#729) | Keep 200 recent UI entries with a labelled count and access to the complete canonical result trace; preserve reading position and indicate new events. Trimming the UI never deletes the separately retained simulation evidence. | 1,000 recent entries (more immediate scrollback, greater memory/display-management cost); paginated history (older entries accessible through additional navigation/implementation complexity). | Bound immediate UI work while keeping the complete trace available and the visible subset honest. The user explicitly selected this policy. |
+| R12 — Completed-scenario saves (#729) | Allow completed saves and load them as Finished, keeping the village, final summary and history inspectable with Play/Step disabled. Never advance beyond the scenario endpoint. | Load as Paused with an explicit completion notice (less clear state label); restrict saves to unfinished sessions (requires a design revision and removes completed-world save/reload inspection). | Preserve the authoritative terminal state and useful inspection without implying that playback can resume. The user explicitly selected this behavior. |
+| R13 — Window-close during commit (#729) | Remember the close request during a non-cancellable save/load commit, show closing as pending, finish or report the operation, then apply unsaved-progress protection and failure-appropriate recovery rules at the safe boundary before exiting. Keep UI event handling responsive. | Decline the request while committing, explain why, and require another Quit request after completion (simpler pending state, extra user action). | Honor the user's request without interrupting an in-flight commit or bypassing state/unsaved-progress safeguards. The user explicitly selected this policy. |
+
+- **Boundary:** R01 selects the later working-interface test method; R02 selects
+  an environment-art trial. No human walkthrough or asset trial has been
+  executed. These selections do not approve the complete
+  #727/#728/#729 written artifacts, close issues, authorize UI implementation,
+  or approve #730/#731/#732. R03 selects a palette-trial approach, not a rendered
+  contrast pass. R04 selects the font pairing to trial, not final validated
+  font files. R05 selects initial sizes/spacing, not a measured font-fit result.
+  R06 selects production scope, not completed artwork or renderer validation.
+  R07 selects initial layout dimensions, not a native readability/fit pass.
+  Exact imported assets and the compatible villager-family choice remain work
+  for the later production plan and audit, not unresolved changes to the
+  selected sourcing strategy. No save/load, history or input behavior was run.
+
+**Complete written review now requested:** read the three linked specifications
+together, including their journey/state tables, documented focus traversal,
+input ownership/Escape ordering, recovery restrictions and later evidence
+requirements. The thirteen selections settle the individually presented
+proposals; they do not yet supply acceptance of the complete documents.
+Record a distinct Approved / Changes requested / Deferred disposition for each
+of #727, #728 and #729 after that review. #730 remains a separate combined
+UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
@@ -441,6 +493,9 @@ final disposition remains open. The user requested #729 next and selected the
 12 choices in D020; its consolidated written specification/defaults await review.
 #729 and later human gates remain open. The explicitly selected overlapping
 #727 defaults are clarified in D020 without approving the remaining artifacts.
+D021 now records thirteen further selections and the consolidated written
+review request. #727/#728/#729 remain open pending complete written acceptance;
+the PR merges and individual choices do not supply #730/#731/#732 approval.
 
 The [#779 investigation plan](superpowers/plans/2026-10-15-issue-779-startup-investigation.md)
 was approved under D007, and its bounded cycle has concluded. Its original

@@ -1,7 +1,7 @@
 # TASK015 — Pixel-art direction and aesthetic constraints (#728)
 
 **Status:** Awaiting written-specification review; #728 open
-**Added/Updated:** 2026-10-20 (America/New_York)
+**Added/Updated:** 2026-10-21 (America/New_York)
 
 ## Request and scope
 
@@ -56,3 +56,7 @@ tokens/type/spacing values are labeled proposed defaults for written review.
   open without a final written disposition; specific production assets/fonts/
   tokens are not adopted. The user explicitly requested the preliminary #729
   walkthrough, tracked in TASK016; no prerequisite closure or phase approval.
+
+- 2026-10-21 (America/New_York): TASK017 consolidates the remaining selections
+  from D021 into this specification. Complete written disposition remains
+  pending; no runtime validation or later design/phase approval is inferred.

@@ -1,7 +1,7 @@
 # TASK014 — MVP journeys, controls and simulation feedback (#727)
 
 **Status:** Awaiting written-specification review; #727 open
-**Added/Updated:** 2026-10-20 (America/New_York)
+**Added/Updated:** 2026-10-21 (America/New_York)
 
 ## Request and scope
 
@@ -52,3 +52,7 @@ and release acceptance stay with their mapped downstream issues.
   disposition is recorded; #727 remains open. The user explicitly requested
   the preliminary #728 design walkthrough, now tracked in TASK015. Do not
   infer acceptance of the four proposed #727 defaults or phase approval.
+
+- 2026-10-21 (America/New_York): TASK017 consolidates the remaining selections
+  from D021 into this specification. Complete written disposition remains
+  pending; no runtime validation or later design/phase approval is inferred.

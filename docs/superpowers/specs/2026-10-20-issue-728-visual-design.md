@@ -3,8 +3,10 @@
 **Status:** Draft for written review. The user's pixel-art preference and 13
 explicit selections are recorded with their alternatives in the single decision
 file, [D019](../../decisions.md#d019--select-pixel-art-direction-for-728).
-These choices permit a consolidated proposal; the complete written artifact,
-specific assets/fonts and proposed implementation defaults await review.
+The remaining trial and production-scope selections are recorded in
+[D021 R02–R06](../../decisions.md#d021--review-remaining-design-proposals-for-727729).
+This consolidated written artifact still awaits a complete disposition;
+exact production files require the later audit and native testing.
 
 ## 1. Intent, references and scope
 
@@ -114,7 +116,7 @@ font rendering. This sets a rendering constraint, not a camera-zoom feature.
 Validate 1280×720 and 1024×768 with no clipped essential controls; #729 owns
 layout, scrolling, focus and resize behavior.
 
-## 3. HUD, typography and proposed design tokens
+## 3. HUD, typography and selected trial values
 
 Use restrained pixel-art frames with quiet opaque/high-contrast panel backgrounds,
 thin borders and limited decoration. Place text on a stable panel surface rather
@@ -130,11 +132,12 @@ pairs (`0/O`, `1/I/l`, minus signs, decimals and `×`). Declared character subse
 are not glyph-rendering evidence. Provide a tested coverage/fallback strategy
 before claiming support for scripts or names outside the selected files.
 
-The following exact values are **proposals for written review**, not values
-already selected from the conceptual image. They give #729 a reproducible
-starting point; do not sample arbitrary image pixels and call them approved.
+The following values are selected **trial baselines** under D021 R03/R05.
+They give #729 a reproducible starting point, subject to real-scene contrast
+and font-fit checks; they are not values sampled from the conceptual image
+or claims of validated production rendering.
 
-| Role | Proposed value / behavior |
+| Role | Trial value / behavior |
 | --- | --- |
 | World family | Meadow `#6B8E45`, deep foliage `#3F6038`, clay `#B9633F`, plaster `#D9C89E`, timber `#79543B`, path `#BFA174`; material ramps may extend coherently. |
 | Quiet UI | Panel `#202927`, inset `#29342F`, main text `#F3EAD5`, secondary text `#C9C9B5`. |
@@ -158,7 +161,11 @@ accessibility compliance from the board or these numbers.
 The selected sourcing strategy is a coherent **free, permissively licensed
 foundation with original gap-filling**, preferring CC0 where suitable. Choose
 one compatible terrain/building family rather than mixing every pack below.
-No third-party art or font binary is imported by this draft. Candidate metadata,
+D021 R02 selects **Slates plus matching original gap-filling for trial**;
+R04 selects **Atkinson Hyperlegible information text plus Pixelify Sans short
+headings**, with conventional headings if pixel lettering fails testing.
+These are trial choices, not completed production adoption. No third-party
+art or font binary is imported by this draft. Candidate metadata,
 source-page/file hashes and inspected image dimensions are retained in the
 research receipt; downloaded research copies stay outside runtime assets.
 
@@ -193,6 +200,11 @@ distributed game assets; test offline packaged access. A webpage observation
 does not replace checking the exact files and terms at import. Keep generated
 concept provenance separate from third-party and production-asset provenance.
 
+Under D021 R06, complete a small, coherent set using compatible templates,
+draw missing directional/activity frames and separate foreground pieces needed
+for selected-villager fading. Exact frame counts/fade values and the compatible
+villager family belong in the later production plan and asset audit.
+
 The first coverage audit must account for ground/path tiles, the three building
 roles, foreground layers, distinguishable villagers and directional walks,
 meaningful activity poses, selected/status icons, panel frames and text styles.
@@ -220,26 +232,27 @@ readability/controls review. No new benchmark or runtime API is introduced here.
 
 | Owner | Required next artifact or evidence |
 | --- | --- |
-| #728 | Written review of this direction, references, shortlist and proposed defaults; keep open until an explicit disposition. |
+| #728 | Written review of this direction, references, shortlist and selected trial baselines; keep open until an explicit disposition. |
 | #729 / #381 | Wireframes and implementation-ready panel/focus/busy/error/resize specifications using the agreed direction and #727 journeys. |
 | #730 | Distinct human UX/UI/visual approval before authorizing UI implementation. |
 | #731 / #732 | Engineering-practices review and separate Phase 2 gate. |
 | Later implementation and Phase 8 | Production asset/notice audit, real rendering/occlusion/animation, measured budgets and human interaction/accessibility evidence. |
 
-For the complete written review, the following are **proposed defaults**, not
-additional choices already confirmed in D019:
+The remaining proposals now have explicit selections in D021. Alternatives
+and rationale remain in that single decision file; the selected requirements
+for the complete written review are:
 
-| Detail | Recommendation | Alternatives and consequence |
+| Detail | Selected requirement | Record |
 | --- | --- | --- |
-| Specific production foundation | Trial Slates with matching original gap-filling, and audit one compatible actor family. | CC0-only terrain plus more original buildings; entirely original assets. Avoid automatic multi-pack mixing. |
-| Exact colors | Trial the tokens in section 3 and adjust from measured real scenes. | Derive a fresh palette with the same A mood; commission an original constrained palette. These require another visual comparison. |
-| Specific fonts | Trial Atkinson Hyperlegible for information, Pixelify Sans for short headings. | Noto Sans information text; conventional text for every heading if pixel lettering fails legibility. No font is imported/approved yet. |
-| Density/spacing | Trial the listed type sizes and 4-pixel spacing grid. | An 8-pixel grid uses more space; larger proportional text needs different wrapping/scrolling. #729 validates both resolutions. |
-| Animation/layer details | Keep a small coherent set; author foreground pieces needed for selected-actor fading and draw missing directional/activity poses. | A larger bespoke animation set raises asset/performance scope; reducing required visibility/activity evidence needs explicit rework rather than omission. Exact frame counts/opacities belong in the production plan. |
+| Foundation | Trial Slates with matching original gap-filling; retain attribution/modification notices and audit a compatible villager family. | R02 |
+| Colors | Trial section 3 values and refine against real scenes and contrast checks. | R03 |
+| Fonts | Trial Atkinson Hyperlegible information text and Pixelify Sans short headings; conventional headings are the fallback. Test real files/coverage at both sizes. | R04 |
+| Density/spacing | Trial 18px body/control, 16px secondary and 24px heading text; 4px increments, 8px control/12px panel padding and 16px group gaps. | R05 |
+| Animation/layers | Complete the small coherent set and missing directional/activity/foreground art; retain existing scope. Exact frame/fade details belong in the production plan. | R06 |
 
-#791 is merged, while #727's issue and final written-review disposition remain
-open at this research snapshot. The user explicitly requested this #728 design
-walkthrough; preliminary consolidation does not auto-close that prerequisite.
-Review and record the outstanding #727 disposition as part of the design
-handoff. Approval of this document is separate from #730/#732 and from product
-implementation. Keep subsequent human decisions in docs/decisions.md under D003.
+#791/#792/#793 are merged. #727/#728/#729 still require distinct complete
+written dispositions; individual selections and merged documents do not close
+those issues. Review the source/notice requirements, references, trial values
+and complete visibility/motion coverage before accepting this specification.
+Acceptance is separate from #730/#732 and from product implementation.
+Keep subsequent human decisions in docs/decisions.md under D003.
