@@ -64,7 +64,7 @@ required profiles. Spec: #726 and the approved #724 support contract.
 - [x] Create .github/workflows/python-ml-profiles.yml, workflow_dispatch only;
   choices nlp/llm-cpu/both, default both. Separate fresh environment per profile.
 - [x] NLP: existing two installed-spaCy/basic and controlled missing-model cases.
-- [x] CPU-LLM: real FAISS index and guarded minimal with AI libraries installed.
+- [x] CPU-LLM: real FAISS index and guarded minimal with AI libraries installed. 
 - [x] Same evidence/install conventions; no weights/corpora or required ML gate.
 
 ## Review focus and validation
