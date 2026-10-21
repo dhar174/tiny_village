@@ -1,0 +1,79 @@
+[
+  {
+    "name": "weather",
+    "profile": "visual",
+    "interpreter": "/workspace/.venvs/issue726-visual/bin/python",
+    "parent_returncode": 0,
+    "capture": {
+      "returncode": 0,
+      "artifact_dir": "/workspace/tiny_village/docs/planning/issue-734/evidence/captures/child-4kz9nh_s"
+    },
+    "parent_stderr": ""
+  },
+  {
+    "name": "queue",
+    "profile": "core",
+    "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+    "parent_returncode": 0,
+    "capture": {
+      "returncode": 0,
+      "artifact_dir": "/workspace/tiny_village/docs/planning/issue-734/evidence/captures/child-bjzpci18"
+    },
+    "parent_stderr": ""
+  },
+  {
+    "name": "named_target",
+    "profile": "core",
+    "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+    "parent_returncode": 0,
+    "capture": {
+      "returncode": 1,
+      "artifact_dir": "/workspace/tiny_village/docs/planning/issue-734/evidence/captures/child-nc72u51w"
+    },
+    "parent_stderr": ""
+  },
+  {
+    "name": "live_timing",
+    "profile": "visual",
+    "interpreter": "/workspace/.venvs/issue726-visual/bin/python",
+    "parent_returncode": 0,
+    "capture": {
+      "returncode": 0,
+      "artifact_dir": "/workspace/tiny_village/docs/planning/issue-734/evidence/captures/child-e8e0zfsd"
+    },
+    "parent_stderr": ""
+  },
+  {
+    "name": "frame_analysis",
+    "profile": "core",
+    "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+    "parent_returncode": 0,
+    "capture": {
+      "returncode": 1,
+      "artifact_dir": "/workspace/tiny_village/docs/planning/issue-734/evidence/captures/child-nuu6l2ek"
+    },
+    "parent_stderr": ""
+  },
+  {
+    "name": "social",
+    "profile": "core",
+    "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+    "parent_returncode": 0,
+    "capture": {
+      "returncode": 1,
+      "artifact_dir": "/workspace/tiny_village/docs/planning/issue-734/evidence/captures/child-z95ec5wi"
+    },
+    "parent_stderr": ""
+  },
+  {
+    "name": "existing_regressions",
+    "profile": "core",
+    "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+    "parent_returncode": 0,
+    "capture": {
+      "returncode": 1,
+      "artifact_dir": "/workspace/tiny_village/docs/planning/issue-734/evidence/captures/child-u2aoj3vx"
+    },
+    "parent_stderr": ""
+  }
+]

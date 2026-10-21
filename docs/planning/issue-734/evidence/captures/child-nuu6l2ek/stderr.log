@@ -1,0 +1,30 @@
+WARNING:tiny_utility_functions:Using fallback Goal implementation in tiny_utility_functions
+DEBUG:root:WorldState initialized with empty graph
+DEBUG:root:GraphAnalytics initialized with WorldState dependency
+INFO:tiny_gameplay_controller:Checkpoint directory ready: /tmp/tiny-village-i95jdst9
+INFO:tiny_gameplay_controller:Checkpoint interval set to 300000ms (300.0s)
+INFO:tiny_gameplay_controller:Automatic checkpointing disabled
+INFO:tiny_gameplay_controller:Checkpoint manager initialized (interval: 300000ms, auto: False)
+INFO:root:StorytellingEventHandler initialized with narrative capabilities
+INFO:tiny_storytelling_system:Storytelling system initialized
+INFO:tiny_gameplay_controller:Storytelling system initialized and wired to event handler
+INFO:tiny_gameplay_controller:Action system initialized successfully
+INFO:tiny_gameplay_controller:Time management system initialized
+INFO:tiny_gameplay_controller:Animation system initialized
+INFO:tiny_gameplay_controller:Building management system initialized
+INFO:tiny_gameplay_controller:Successfully created 0 characters
+INFO:tiny_gameplay_controller:All game systems initialized successfully
+INFO:tiny_gameplay_controller:GameplayController initialized successfully
+Traceback (most recent call last):
+  File "<string>", line 15, in <module>
+  File "<string>", line 13, in _tiny_capture_run
+  File "<string>", line 1, in <module>
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/workspace/tiny_village/docs/planning/issue-734/evidence/audit_probes.py", line 136, in <module>
+    globals()[sys.argv[1]]()
+  File "/workspace/tiny_village/docs/planning/issue-734/evidence/audit_probes.py", line 100, in frame_analysis
+    assert c._analyze_frame_performance(5, {'update': 1, 'render': 1}, 16.67) == []
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

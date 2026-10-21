@@ -1,0 +1,17 @@
+WARNING:tiny_utility_functions:Using fallback Goal implementation in tiny_utility_functions
+DEBUG:root:WorldState initialized with empty graph
+DEBUG:root:GraphAnalytics initialized with WorldState dependency
+INFO:tiny_gameplay_controller:Checkpoint directory ready: /tmp/tiny-village-7c25pwx2
+INFO:tiny_gameplay_controller:Checkpoint interval set to 300000ms (300.0s)
+INFO:tiny_gameplay_controller:Automatic checkpointing disabled
+INFO:tiny_gameplay_controller:Checkpoint manager initialized (interval: 300000ms, auto: False)
+INFO:root:StorytellingEventHandler initialized with narrative capabilities
+INFO:tiny_storytelling_system:Storytelling system initialized
+INFO:tiny_gameplay_controller:Storytelling system initialized and wired to event handler
+INFO:tiny_gameplay_controller:Action system initialized successfully
+INFO:tiny_gameplay_controller:Time management system initialized
+INFO:tiny_gameplay_controller:Animation system initialized
+INFO:tiny_gameplay_controller:Building management system initialized
+INFO:tiny_gameplay_controller:Successfully created 0 characters
+INFO:tiny_gameplay_controller:All game systems initialized successfully
+INFO:tiny_gameplay_controller:GameplayController initialized successfully

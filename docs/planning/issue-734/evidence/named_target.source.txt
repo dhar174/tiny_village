@@ -1,0 +1,1 @@
+import runpy,sys; sys.argv=['audit_probes.py','named_target']; runpy.run_path('/workspace/tiny_village/docs/planning/issue-734/evidence/audit_probes.py',run_name='__main__')

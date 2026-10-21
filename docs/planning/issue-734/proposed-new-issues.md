@@ -1,0 +1,56 @@
+# Proposed new issues — not yet created
+
+These three separate remediation issues require the consolidated package review. R734 keys are local proposal identifiers, not GitHub issue numbers. Existing #609 already owns the relationship reader/decay defect; do not create a duplicate for it.
+
+## R734-01 — Stabilize Character/Location graph identity and action target resolution
+
+Proposed parent #222; accountable owner dhar174; Phase 4; prerequisite #738; blocks #220, #602.
+
+## Evidence
+
+At main `13b8e374d07e7e7ea6f8f562ea6a290fcab967f7`, #734's corrected `named_target` probe constructs two real basic-memory Characters and applies a real named-target Action. The action passes the target UUID to `GraphManager.update_node_attribute`, while graph nodes are Character objects: the log reports that the UUID node does not exist. Adding the actual co-located visitors then makes the node lookup raise `AttributeError: Location has no attribute dict_or_obj` inside Location hashing. Character hashing also includes mutable state/location.
+
+## Acceptance
+
+- Agree on and document stable supported Character/Location identity, equality and graph lookup contracts before implementation.
+- Preserve graph lookup/removal across visitor, location and Character-state changes, including repeated visitors, without recursive/mutable-hash corruption.
+- Resolve supported action identifiers to the actual graph entity consistently; update Character state and authoritative graph together.
+- Verify co-located, requested, missing and duplicate-visitor named targets with real production objects; retain existing failed evidence and legacy regression coverage.
+- Coordinate with #220/#602 and preserve their remaining action/plan requirements. Do not claim #602 complete from fixture-only passes.
+
+Proposed ordering: after human gate #738, before #220/#602 acceptance. This is a proposal for review, not an issue already created or an approved identity design.
+
+## R734-02 — Preserve a valid MapController location manager through initialization and recovery
+
+Proposed parent #56; accountable owner dhar174; Phase 4; prerequisite #738; blocks #658.
+
+## Evidence
+
+#734's real SDL-dummy visual frame at main `13b8e374d07e7e7ea6f8f562ea6a290fcab967f7` logs `Error updating map controller: NoneType has no attribute locations` and the same failure during rendering. `MapController.__init__` constructs `LocationManager()` and subsequently sets `self.location_manager = None`; `_update_location_visitors` unconditionally reads its locations. The isolated `visual_interfaces` probe confirms this invalid field after full controller construction with two real Characters. This is not evidence of a new global GraphManager initialization deadlock.
+
+## Acceptance
+
+- Define and retain the supported location-manager ownership/lifecycle in normal visual initialization and renderer recovery.
+- Update/render the actual controller without a None location-manager failure; retain actual shared-world location/visitor ownership rather than adding a competing world model.
+- Cover an empty valid location set, registered locations/visitors, recovery and repeated cleanup using real Pygame/domain objects.
+- Keep headless construction renderer-free and retain the original failed capture.
+
+Proposed ordering: after #738 and before the canonical visual scenario in #658. No renderer or gameplay readiness is inferred from fixing this one interface.
+
+## R734-03 — Reconcile GameplayController animation updates with AnimationSystem lifecycle
+
+Proposed parent #56; accountable owner dhar174; Phase 4; prerequisite #738; blocks #761.
+
+## Evidence
+
+#734's real visual frame on main `13b8e374d07e7e7ea6f8f562ea6a290fcab967f7` logs `AnimationSystem object has no attribute update`. The controller calls `self.animation_system.update(dt)`, while the composed production provider exposes `update_all(delta_time)`. The isolated two-real-Character visual probe confirms the mismatch.
+
+## Acceptance
+
+- Reconcile the controller/provider update contract without hiding the exception or substituting a fake animation provider.
+- Verify actual registered animation controllers advance as intended, paused behavior remains explicit, and repeated cleanup/recovery does not duplicate or leak controllers.
+- Keep the headless path independent of Pygame and asset initialization.
+- Retain captured failure and distinguish working lifecycle calls from delivery of the approved pixel-art animation set, which remains later #761 work.
+
+Proposed ordering: after #738, before #761 acceptance. This proposal supplies no new animation scope or phase approval.
+

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "test_id": "weather",
+  "source_sha256": "056de5eeb27e34ff8179ca5ed1dd75b4dc843e0d3a48b2c519ca7b555e2a51b6",
+  "interpreter": "/workspace/.venvs/issue726-visual/bin/python",
+  "cwd": "/workspace/tiny_village",
+  "pid": 154731,
+  "fatal_timeout": 20,
+  "timeout": 25,
+  "started_utc": "2026-10-21T21:28:00.953790+00:00",
+  "started_monotonic": 86873.810707159,
+  "returncode": 0,
+  "outcome": "EXITED_ZERO",
+  "watchdog_dump_observed": false,
+  "launched_monotonic": 86873.811357319,
+  "wait_started_monotonic": 86873.811518409,
+  "finished_utc": "2026-10-21T21:28:01.318775+00:00",
+  "finished_monotonic": 86874.175703485
+}

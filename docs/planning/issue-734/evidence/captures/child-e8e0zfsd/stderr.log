@@ -1,0 +1,51 @@
+WARNING:tiny_utility_functions:Using fallback Goal implementation in tiny_utility_functions
+DEBUG:root:WorldState initialized with empty graph
+DEBUG:root:GraphAnalytics initialized with WorldState dependency
+INFO:tiny_gameplay_controller:Checkpoint directory ready: saves/checkpoints
+INFO:tiny_gameplay_controller:Checkpoint interval set to 300000ms (300.0s)
+INFO:tiny_gameplay_controller:Automatic checkpointing disabled
+INFO:tiny_gameplay_controller:Checkpoint manager initialized (interval: 300000ms, auto: False)
+INFO:root:StorytellingEventHandler initialized with narrative capabilities
+INFO:tiny_storytelling_system:Storytelling system initialized
+INFO:tiny_gameplay_controller:Storytelling system initialized and wired to event handler
+INFO:root:Successfully loaded map image: /workspace/tiny_village/assets/default_map.png
+INFO:tiny_gameplay_controller:Action system initialized successfully
+INFO:tiny_gameplay_controller:Time management system initialized
+INFO:tiny_gameplay_controller:Animation system initialized
+INFO:tiny_gameplay_controller:Building management system initialized
+INFO:tiny_building_manager:Registered building e0e5be08-de8c-409b-8445-4348889181e2 of type building
+INFO:tiny_building_manager:Registered building 33648eb4-544c-493f-ab45-97036c470ed7 of type building
+INFO:tiny_building_manager:Registered building 7ec470f9-d3d5-4c63-aa35-dddb1b4f75e2 of type building
+INFO:tiny_building_manager:Registered building 8afb12c6-9752-437b-a5ff-e686c97ca688 of type building
+INFO:tiny_building_manager:Registered building 1ca6d525-c61c-4bc1-a808-e61d419a3e56 of type building
+INFO:tiny_building_manager:Registered building 8d748e02-e947-4f84-ae93-46c5d091822e of type building
+INFO:tiny_gameplay_controller:Registered 6 buildings with manager
+INFO:tiny_gameplay_controller:Successfully created 0 characters
+INFO:tiny_gameplay_controller:All game systems initialized successfully
+INFO:tiny_gameplay_controller:Created character template file: custom_characters.json
+INFO:tiny_gameplay_controller:Created buildings template file: custom_buildings.json
+INFO:tiny_gameplay_controller:Created user preferences template: user_preferences.json
+INFO:tiny_gameplay_controller:Applied user preferences from user_preferences.json
+INFO:tiny_gameplay_controller:Enhanced modular UI system initialized
+INFO:tiny_gameplay_controller:GameplayController initialized successfully
+DEBUG:tiny_gameplay_controller:EventHandler found 0 events to process
+WARNING:tiny_strategy_manager:Failed to fetch actions for emma from graph: No character named emma in the graph.
+INFO:root:Goal achieved with plan of 3 actions
+DEBUG:tiny_gameplay_controller:StrategyManager generated strategy result: <class 'actions.Action'>
+DEBUG:tiny_gameplay_controller:Successfully executed strategy action: Rest
+ERROR:tiny_gameplay_controller:Error updating map controller: 'NoneType' object has no attribute 'locations'
+WARNING:tiny_gameplay_controller:Error updating animation system: 'AnimationSystem' object has no attribute 'update'
+DEBUG:tiny_building_manager:Building 33648eb4-544c-493f-ab45-97036c470ed7 cannot produce - insufficient materials
+DEBUG:tiny_building_manager:Building 7ec470f9-d3d5-4c63-aa35-dddb1b4f75e2 produced resources at tick 86874981
+DEBUG:tiny_building_manager:Building 8afb12c6-9752-437b-a5ff-e686c97ca688 cannot produce - insufficient materials
+DEBUG:tiny_building_manager:Building 1ca6d525-c61c-4bc1-a808-e61d419a3e56 produced resources at tick 86874981
+DEBUG:tiny_building_manager:Building 8d748e02-e947-4f84-ae93-46c5d091822e produced resources at tick 86874981
+INFO:tiny_gameplay_controller:Attempting automatic recovery for systems: ['map_controller', 'character_system']
+INFO:tiny_gameplay_controller:Attempting recovery for map_controller (attempt 1)
+INFO:tiny_gameplay_controller:Successfully recovered map_controller
+INFO:tiny_gameplay_controller:Successfully recovered map_controller
+INFO:tiny_gameplay_controller:Attempting recovery for character_system (attempt 1)
+ERROR:tiny_gameplay_controller:Character system recovery failed: Required real character initialization failed; no substitute is installed
+WARNING:tiny_gameplay_controller:Recovery attempt failed for character_system
+WARNING:tiny_gameplay_controller:Game state update completed with 1 errors
+WARNING:tiny_gameplay_controller:Error rendering map controller: 'NoneType' object has no attribute 'locations'

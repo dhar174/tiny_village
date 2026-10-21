@@ -1,0 +1,30 @@
+WARNING:tiny_utility_functions:Using fallback Goal implementation in tiny_utility_functions
+DEBUG:root:WorldState initialized with empty graph
+DEBUG:root:GraphAnalytics initialized with WorldState dependency
+INFO:tiny_gameplay_controller:Checkpoint directory ready: saves/checkpoints
+INFO:tiny_gameplay_controller:Checkpoint interval set to 300000ms (300.0s)
+INFO:tiny_gameplay_controller:Automatic checkpointing disabled
+INFO:tiny_gameplay_controller:Checkpoint manager initialized (interval: 300000ms, auto: False)
+INFO:root:StorytellingEventHandler initialized with narrative capabilities
+INFO:tiny_storytelling_system:Storytelling system initialized
+INFO:tiny_gameplay_controller:Storytelling system initialized and wired to event handler
+INFO:root:Successfully loaded map image: /workspace/tiny_village/assets/default_map.png
+INFO:tiny_gameplay_controller:Action system initialized successfully
+INFO:tiny_gameplay_controller:Time management system initialized
+INFO:tiny_gameplay_controller:Animation system initialized
+INFO:tiny_gameplay_controller:Building management system initialized
+INFO:tiny_building_manager:Registered building 95ab9e4d-1565-4f9c-b507-4b687717e265 of type building
+INFO:tiny_building_manager:Registered building f015f357-2995-41a0-b32f-4ef702f0633f of type building
+INFO:tiny_building_manager:Registered building 724c521d-3eeb-480a-b902-82a08ba46b6a of type building
+INFO:tiny_building_manager:Registered building 7c73eac2-3b69-452d-a5b9-0faa32319599 of type building
+INFO:tiny_building_manager:Registered building f999f6a7-045c-4f05-b08d-7984740977db of type building
+INFO:tiny_building_manager:Registered building ef9ac1d9-3ffe-4b26-9139-bc0340e5d457 of type building
+INFO:tiny_gameplay_controller:Registered 6 buildings with manager
+INFO:tiny_gameplay_controller:Successfully created 0 characters
+INFO:tiny_gameplay_controller:All game systems initialized successfully
+INFO:tiny_gameplay_controller:Created character template file: custom_characters.json
+INFO:tiny_gameplay_controller:Created buildings template file: custom_buildings.json
+INFO:tiny_gameplay_controller:Created user preferences template: user_preferences.json
+INFO:tiny_gameplay_controller:Applied user preferences from user_preferences.json
+INFO:tiny_gameplay_controller:Enhanced modular UI system initialized
+INFO:tiny_gameplay_controller:GameplayController initialized successfully

@@ -1,0 +1,1 @@
+{"issue": 609, "graph_type": "MultiDiGraph", "before": {"type": "character_character", "strength": 0.7, "emotional": 0.4, "trust": 0.8, "interaction_frequency": 2.0}, "reported": null, "after": {"type": "character_character", "strength": 0.7, "emotional": 0.4, "trust": 0.8, "interaction_frequency": 2.0}}

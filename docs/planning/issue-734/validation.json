@@ -1,0 +1,30 @@
+{
+  "status": "catalog_integrity_passed",
+  "original_issues": 261,
+  "current_only_open_issues": 46,
+  "ledger_rows": 307,
+  "open_pr_handoffs": 37,
+  "parent_dependency_cycles": 0,
+  "proposed_parent_additions": 80,
+  "proposed_duplicate_closures": [
+    351,
+    382
+  ],
+  "proposed_completed_closures": [
+    355,
+    482,
+    594,
+    596,
+    597
+  ],
+  "retained_capture_attempts": 12,
+  "capture_nonzero_exits": 7,
+  "existing_focused_tests_passed": 12,
+  "runtime_failures_preserved": [
+    "named_target",
+    "social",
+    "visual_interfaces"
+  ],
+  "github_issue_mutations_performed": 0,
+  "phase_gate_approvals_supplied": 0
+}

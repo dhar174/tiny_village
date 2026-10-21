@@ -1,0 +1,161 @@
+[
+  {
+    "name": "weather",
+    "profile": "visual",
+    "interpreter": "/workspace/.venvs/issue726-visual/bin/python",
+    "parent_returncode": 0,
+    "capture": {
+      "returncode": 0,
+      "artifact_dir": "/workspace/tiny_village/docs/planning/issue-734/evidence/captures/child-4kz9nh_s"
+    },
+    "parent_stderr": "",
+    "probe_source": "audit_probes.initial.py",
+    "probe_source_sha256": "61188482b8fa66c636cb5962cd4b3bea65f74e4a66734e1711d097df4e5f28f0"
+  },
+  {
+    "name": "queue",
+    "profile": "core",
+    "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+    "parent_returncode": 0,
+    "capture": {
+      "returncode": 0,
+      "artifact_dir": "/workspace/tiny_village/docs/planning/issue-734/evidence/captures/child-bjzpci18"
+    },
+    "parent_stderr": "",
+    "probe_source": "audit_probes.initial.py",
+    "probe_source_sha256": "61188482b8fa66c636cb5962cd4b3bea65f74e4a66734e1711d097df4e5f28f0"
+  },
+  {
+    "name": "named_target",
+    "profile": "core",
+    "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+    "parent_returncode": 0,
+    "capture": {
+      "returncode": 1,
+      "artifact_dir": "/workspace/tiny_village/docs/planning/issue-734/evidence/captures/child-nc72u51w"
+    },
+    "parent_stderr": "",
+    "probe_source": "audit_probes.initial.py",
+    "probe_source_sha256": "61188482b8fa66c636cb5962cd4b3bea65f74e4a66734e1711d097df4e5f28f0"
+  },
+  {
+    "name": "live_timing",
+    "profile": "visual",
+    "interpreter": "/workspace/.venvs/issue726-visual/bin/python",
+    "parent_returncode": 0,
+    "capture": {
+      "returncode": 0,
+      "artifact_dir": "/workspace/tiny_village/docs/planning/issue-734/evidence/captures/child-e8e0zfsd"
+    },
+    "parent_stderr": "",
+    "probe_source": "audit_probes.initial.py",
+    "probe_source_sha256": "61188482b8fa66c636cb5962cd4b3bea65f74e4a66734e1711d097df4e5f28f0"
+  },
+  {
+    "name": "frame_analysis",
+    "profile": "core",
+    "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+    "parent_returncode": 0,
+    "capture": {
+      "returncode": 1,
+      "artifact_dir": "/workspace/tiny_village/docs/planning/issue-734/evidence/captures/child-nuu6l2ek"
+    },
+    "parent_stderr": "",
+    "probe_source": "audit_probes.initial.py",
+    "probe_source_sha256": "61188482b8fa66c636cb5962cd4b3bea65f74e4a66734e1711d097df4e5f28f0"
+  },
+  {
+    "name": "social",
+    "profile": "core",
+    "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+    "parent_returncode": 0,
+    "capture": {
+      "returncode": 1,
+      "artifact_dir": "/workspace/tiny_village/docs/planning/issue-734/evidence/captures/child-z95ec5wi"
+    },
+    "parent_stderr": "",
+    "probe_source": "audit_probes.initial.py",
+    "probe_source_sha256": "61188482b8fa66c636cb5962cd4b3bea65f74e4a66734e1711d097df4e5f28f0"
+  },
+  {
+    "name": "existing_regressions",
+    "profile": "core",
+    "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+    "parent_returncode": 0,
+    "capture": {
+      "returncode": 1,
+      "artifact_dir": "/workspace/tiny_village/docs/planning/issue-734/evidence/captures/child-u2aoj3vx"
+    },
+    "parent_stderr": "",
+    "probe_source": "inline pytest source in existing_regressions.source.txt"
+  },
+  {
+    "attempt": "corrected_fixture_or_profile",
+    "name": "named_target",
+    "profile": "core",
+    "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+    "parent_returncode": 0,
+    "capture": {
+      "returncode": 1,
+      "artifact_dir": "/workspace/tiny_village/docs/planning/issue-734/evidence/captures/child-603t1cqw"
+    },
+    "parent_stderr": "",
+    "probe_source": "audit_probes.v2.py",
+    "probe_source_sha256": "33034f840c519fe688d32fdbba214244a0c21824d1e5b6731a1b392eab71ef95"
+  },
+  {
+    "attempt": "corrected_fixture_or_profile",
+    "name": "frame_analysis",
+    "profile": "core",
+    "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+    "parent_returncode": 0,
+    "capture": {
+      "returncode": 0,
+      "artifact_dir": "/workspace/tiny_village/docs/planning/issue-734/evidence/captures/child-rox72iu3"
+    },
+    "parent_stderr": "",
+    "probe_source": "audit_probes.v2.py",
+    "probe_source_sha256": "33034f840c519fe688d32fdbba214244a0c21824d1e5b6731a1b392eab71ef95"
+  },
+  {
+    "attempt": "corrected_fixture_or_profile",
+    "name": "social",
+    "profile": "core",
+    "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+    "parent_returncode": 0,
+    "capture": {
+      "returncode": 1,
+      "artifact_dir": "/workspace/tiny_village/docs/planning/issue-734/evidence/captures/child-t7nxb0aw"
+    },
+    "parent_stderr": "",
+    "probe_source": "audit_probes.v2.py",
+    "probe_source_sha256": "33034f840c519fe688d32fdbba214244a0c21824d1e5b6731a1b392eab71ef95"
+  },
+  {
+    "attempt": "corrected_fixture_or_profile",
+    "name": "existing_regressions",
+    "profile": "dev",
+    "interpreter": "/workspace/.venvs/issue726-dev/bin/python",
+    "parent_returncode": 0,
+    "capture": {
+      "returncode": 0,
+      "artifact_dir": "/workspace/tiny_village/docs/planning/issue-734/evidence/captures/child-2bpb04ke"
+    },
+    "parent_stderr": "",
+    "probe_source": "inline pytest source in existing_regressions.source.txt"
+  },
+  {
+    "attempt": "new_followup_isolation",
+    "name": "visual_interfaces",
+    "profile": "visual",
+    "interpreter": "/workspace/.venvs/issue726-visual/bin/python",
+    "parent_returncode": 0,
+    "capture": {
+      "returncode": 1,
+      "artifact_dir": "/workspace/tiny_village/docs/planning/issue-734/evidence/captures/child-n49v3rnw"
+    },
+    "parent_stderr": "",
+    "probe_source": "audit_probes.py",
+    "probe_source_sha256": "ebb3423ce5e384280e07e04e29abf5f3ace72cf31361dbab7269dd361aa1b8f3"
+  }
+]

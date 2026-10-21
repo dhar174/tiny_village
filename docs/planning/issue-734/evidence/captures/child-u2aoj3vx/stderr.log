@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "<string>", line 15, in <module>
+  File "<string>", line 13, in _tiny_capture_run
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'pytest'

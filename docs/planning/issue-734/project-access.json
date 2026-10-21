@@ -1,0 +1,11 @@
+{
+  "command": "gh api users/dhar174/projectsV2/10",
+  "returncode": 1,
+  "stderr": "gh: Resource not accessible by integration (HTTP 403)\n",
+  "response": {
+    "message": "Resource not accessible by integration",
+    "documentation_url": "https://docs.github.com/rest/projects/projects#get-project-for-user",
+    "status": "403"
+  },
+  "mutations_performed": 0
+}

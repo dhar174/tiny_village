@@ -2,6 +2,12 @@
 
 This directory contains organized documentation for the Tiny Village project.
 
+## Current backlog review
+
+- [#734 backlog triage](planning/issue-734/README.md): original 261 issues,
+  current additions, pinned PR handoffs, retained audit failures and proposed
+  metadata updates. Human publication review remains pending.
+
 ## Directory Structure
 
 ### 📚 `/guides/` - User Guides

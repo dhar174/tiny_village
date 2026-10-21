@@ -1,0 +1,2 @@
+Replanning based on new game state... (attempt 1)
+{"issue": 355, "add_tuple_width": 4, "initial_ties": "insertion order", "replanned_tuple_width": 4, "dependencies_retained": true, "limit": "Replan ties use id(action); this is not cross-process determinism proof."}
