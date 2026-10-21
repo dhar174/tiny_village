@@ -1,6 +1,7 @@
 ## Tasks Index
 
 ## In Progress
+- [TASK021](TASK021-backlog-triage-734.md) Evidence-based backlog triage (#734) - Approved plan executing; publication awaits consolidated review (Updated: 2026-10-21)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending
