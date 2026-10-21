@@ -1,10 +1,15 @@
 ## What Works
 
-- TASK015 / #728: pixel art plus 13 visual choices recorded in D019. Draft
-  visual specification includes palette reference A, candidate source/license
-  research and proposed tokens/fonts/spacing for written review. #728 stays open;
-  no production art/runtime implementation or later design/phase approval.
-  See tasks/TASK015-visual-direction-728.md. #729 is the next design handoff.
+- TASK016 / #729: 12 interface choices recorded in D020. Draft UI specification
+  covers both supported sizes, panels, input/focus, session operations and
+  success/error states. Exact geometry and connective defaults await written
+  review. #729 stays open; #730 is the next combined human design review after
+  planning dispositions. See tasks/TASK016-ui-wireframes-729.md.
+
+- TASK015 / #728: #792 merged at 4c9bbfd; pixel art and 13 choices are in D019.
+  Final written disposition and asset/font/token defaults remain pending; #728
+  stays open. No production art/runtime or phase approval. TASK016 tracks the
+  explicitly requested preliminary #729 design. See TASK015/visual specification.
 
 - TASK014 / #727: #791 merged at 7391861; 15 choices are recorded in D018.
   Final written-specification disposition remains pending; #727 stays open.

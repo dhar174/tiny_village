@@ -51,3 +51,8 @@ tokens/type/spacing values are labeled proposed defaults for written review.
   SHA-256/provenance. Research copies remain in /workspace/scratch/issue-728.
 - Draft publication is for written review. #729/#730 and later gates remain
   separate; no product code, runtime assets, locks or workflows changed.
+
+- 2026-10-20 follow-through: #792 merge verified at 4c9bbfd. #728 remains
+  open without a final written disposition; specific production assets/fonts/
+  tokens are not adopted. The user explicitly requested the preliminary #729
+  walkthrough, tracked in TASK016; no prerequisite closure or phase approval.
