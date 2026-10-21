@@ -21,6 +21,15 @@ class ClampedIntScore:
         )
 
     def clamp_score(self, score):
+        """Return an integer using the legacy score-scaling policy.
+
+        Values inside the configured range are retained. Values outside it
+        are scaled by magnitude with a minimum magnitude of four. This does
+        not guarantee a result inside min/max (for example, 500 becomes 5
+        with the default range). ``self.score`` retains the untruncated value;
+        the return value truncates toward zero. Preserve this policy for
+        existing personality-trait callers rather than silently hard-clamping.
+        """
         if score < self.min:
             self.score = -(max(abs(score), 400) / 100)
         elif score > self.max:
@@ -39,6 +48,12 @@ class ClampedIntScore:
 
 
 def is_numeric(value):
+    """Whether float(value) succeeds without ValueError or TypeError.
+
+    This tests conversion, not finiteness or suitability for arithmetic with
+    the original value. Numeric strings, booleans and non-finite floats retain
+    Python's float-conversion behavior; unrelated exceptions still propagate.
+    """
     try:
         float(value)
         return True
@@ -47,6 +62,12 @@ def is_numeric(value):
 
 
 def tweener(input_value, max_input, start, end, steps):
+    """Interpolate linearly, saturating at end when input >= max_input.
+
+    Supported callers use a positive max_input. Negative inputs extrapolate
+    below start, and descending output ranges work normally. ``steps`` is
+    retained for call compatibility and does not quantize the result.
+    """
     if input_value >= max_input:
         return end
     else:

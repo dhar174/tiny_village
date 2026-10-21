@@ -39,8 +39,10 @@ class TestTinyUtilFuncs(unittest.TestCase):
         self.assertEqual(score.clamp_score(-2), -2)
         self.assertEqual(score.score, -2)
         self.assertEqual(score.clamp_score(0), 0)
+        self.assertEqual(score.clamp_score(3.75), 3)
+        self.assertEqual(score.score, 3.75)
 
-    def test_clamped_int_score_outside_bounds(self):
+    def test_clamped_int_score_legacy_scaling_outside_bounds(self):
         score = ClampedIntScore(min=-4, max=4)
 
         # Slightly outside: abs(score) < 400
@@ -56,6 +58,13 @@ class TestTinyUtilFuncs(unittest.TestCase):
 
         # -600 < -4, -(max(600, 400)/100) = -6.0
         self.assertEqual(score.clamp_score(-600), -6)
+
+        # A custom range changes the threshold, not the legacy scaled result.
+        custom = ClampedIntScore(min=-5, max=5)
+        self.assertEqual(custom.clamp_score(10), 4)
+        self.assertEqual(custom.score, 4.0)
+        self.assertEqual(custom.clamp_score(-10), -4)
+        self.assertEqual(custom.score, -4.0)
 
     def test_clamped_int_score_setters(self):
         score = ClampedIntScore()
@@ -77,6 +86,8 @@ class TestTinyUtilFuncs(unittest.TestCase):
         self.assertAlmostEqual(tweener(5, 10, 0, 100, 10), 50.0)
         # start=10, end=20, max_input=100, input=25 -> 12.5
         self.assertAlmostEqual(tweener(25, 100, 10, 20, 10), 12.5)
+        # The compatibility-only steps argument does not quantize interpolation.
+        self.assertAlmostEqual(tweener(25, 100, 10, 20, 2), 12.5)
 
     def test_tweener_boundaries(self):
         # input >= max_input
@@ -84,6 +95,11 @@ class TestTinyUtilFuncs(unittest.TestCase):
         self.assertEqual(tweener(15, 10, 0, 100, 10), 100)
         # input = 0
         self.assertEqual(tweener(0, 10, 0, 100, 10), 0)
+        self.assertEqual(tweener(-5, 10, 0, 100, 10), -50)
+
+    def test_tweener_reversed(self):
+        # Retained from PR #714: descending output ranges interpolate too.
+        self.assertEqual(tweener(50, 100, 10, 0, 2), 5.0)
 
 if __name__ == "__main__":
     unittest.main()
