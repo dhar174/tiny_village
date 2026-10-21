@@ -436,12 +436,15 @@ should link to this file rather than maintain separate decision records.
 | ID / topic | Confirmed selection | Other options presented | Recommendation rationale |
 | --- | --- | --- | --- |
 | R01 — Later UX walkthrough method (#727) | A maintainer exercises every scenario using only in-product guidance; include first-time observers when available and report their results separately. | Maintainer only (less coordination, weaker newcomer evidence); require an external participant group (stronger newcomer evidence, recruitment effort/delays). | Keep the required walkthrough practical while distinguishing maintainer familiarity from newcomer usability. |
+| R02 — Environment artwork foundation (#728) | Trial Slates with matching original artwork for missing pieces; retain CC BY 4.0 attribution and modification notices. Audit coverage/style and a compatible villager family before production adoption. | CC0-only source assets plus more original buildings/props (fewer attribution obligations, more art work); entirely original environment artwork (maximum control, largest workload). | Best researched 32×32 village foundation for the selected direction without mandatory asset purchases. The user explicitly accepted the recommendation. |
 
-- **Boundary:** R01 selects the later working-interface test method; no human
-  walkthrough has been executed. This selection does not approve the complete
+- **Boundary:** R01 selects the later working-interface test method; R02 selects
+  an environment-art trial. No human walkthrough or asset trial has been
+  executed. These selections do not approve the complete
   #727/#728/#729 written artifacts, close issues, authorize UI implementation,
-  or approve #730/#731/#732. Production asset/font trials and other unselected
-  defaults remain pending. Record subsequent selections in this table.
+  or approve #730/#731/#732. Exact imported assets, villager artwork, font/palette
+  trials and other unselected defaults remain pending. Record subsequent
+  selections in this table.
 
 ## Review status
 

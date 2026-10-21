@@ -22,7 +22,7 @@ in the specifications, then obtain final written dispositions before #730.
 | Step | Status | Evidence |
 | --- | --- | --- |
 | Reconcile existing choices and remaining proposals | Complete | #727 section 5, #728 section 5 and #729 section 5; D020 resolves three earlier UX proposals. |
-| Review remaining proposals | In progress | D021 R01 recorded; remaining visual/UI defaults pending. |
+| Review remaining proposals | In progress | D021 R01–R02 recorded; remaining visual/UI defaults pending. |
 | Final written-specification dispositions | Pending | #727/#728/#729 remain open. |
 | Combined human design review #730 | Pending | Separate decision after planning acceptance. |
 
@@ -34,3 +34,6 @@ in the specifications, then obtain final written dispositions before #730.
   static check caught an attempted edit to #727's hashed research source;
   reverted that edit to retain the original evidence. No runtime walkthrough
   or tests executed.
+- 2026-10-21 UTC: recorded the submitted environment-foundation selection in
+  D021 R02. Palette/font and remaining UI proposals are still awaiting choices;
+  no production asset import or implementation started.
