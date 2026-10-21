@@ -1,5 +1,11 @@
 ## Current Work Focus
 
+- TASK018 / #730 preparation: user confirmed two journeys, then identified
+  repeated questioning of settled choices. Stop the repeated questionnaire.
+  D022 retains scoped responses; a consolidated static consistency review found
+  no blocking design inconsistency. One complete planning/design disposition
+  remains before #731; no runtime/phase approval. See tasks/TASK018-consolidated-design-walkthrough.md.
+
 - TASK017 / #727–#729: D021 records all 13 remaining selections. The three
   specifications are consolidated for complete written review; #727/#728/#729
   remain open pending distinct dispositions. Trials are selected; production

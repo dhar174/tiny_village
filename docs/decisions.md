@@ -486,8 +486,16 @@ UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
 | Journey | Human disposition | Reviewed scope and rationale | Confirmation |
 | --- | --- | --- | --- |
 | J01 — Launch and first inspection | Accepted as written | Validated setup, paused tick-0 start, discoverable Play/Help/hint, top controls/right inspector/bottom event strip, mouse/keyboard entity selection, ring/outline identity, truthful expandable information and inspection without unintended advancement. Warm pixel art and readable text retain later native checks. | User: “Its good.” after the launch-and-inspection walkthrough and recommendation to accept. |
+| J02 — Playback and live inspection | Accepted as written | Play starts at 1×/two logical ticks per second; 0.5×/1×/2×/4× affects pacing only. Pause keeps inspection responsive; Step advances one complete paused tick and is disabled while running/finished/recovering. Inspection/history preserve focus and reading position; focused paging precedes speed. | User: “yes. We didnt already do all these? Im sure they're good...” |
 
-- **Boundary:** J01 accepts this planned journey, not an executed usability
+- **Review method correction:** the user identified that this walkthrough
+  repeated already selected behavior. Stop repeating the choice questionnaire;
+  retain D018–D021 and prepare one consistency review of the complete artifacts.
+  Present only actual gaps and the consolidated final disposition. The informal
+  reassurance above is retained verbatim, not expanded into an unasked phase
+  approval or executed-usability claim.
+
+- **Boundary:** J01/J02 accept these planned journeys, not an executed usability
   result, the complete specifications or a phase decision. Other journeys,
   complete planning acceptance, #730/#731/#732 and runtime implementation are
   not approved by this response. All human decisions remain in this file.
