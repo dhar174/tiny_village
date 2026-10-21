@@ -1,0 +1,309 @@
+{
+  "status": "design_research_only",
+  "base_revision": "739186124b965980662b8a7ee7b26306d2554b5f",
+  "recorded_at_utc": "2026-10-21T02:07:42.936725+00:00",
+  "reference": {
+    "path": "docs/superpowers/specs/references/issue-728-palette-comparison.png",
+    "sha256": "031b523d88467643c2fbff5053fbe677dfea282a14f33990b68b370f28860997",
+    "dimensions": [
+      1881,
+      836
+    ],
+    "origin": "Generated in this conversation with image_gen; not a runtime screenshot or production spritesheet",
+    "original_filename": "exec-b48fa747-2de1-4c88-8bd7-a38ba34ff44c.png",
+    "composition": "Three palette concepts of the same sample village and HUD; A Meadow & Terracotta, B Forest & Ochre, C Sage & Slate",
+    "scope": "D019 records the palette selection. Layout, exact geometry, asset dimensions and measured accessibility are not approved by this concept image."
+  },
+  "resources": [
+    {
+      "name": "kenney-tiny-town",
+      "url": "https://kenney.nl/assets/tiny-town",
+      "retrieved_at_utc": "2026-10-21T02:02:45.896287+00:00",
+      "http_status": 200,
+      "final_url": "https://kenney.nl/assets/tiny-town",
+      "sha256": "b62aad316df1cc06b87d44dea9f85b4889f4793569b908243fd1265cddb48bab",
+      "text_file": "kenney-tiny-town.txt"
+    },
+    {
+      "name": "kenney-roguelike-rpg",
+      "url": "https://kenney.nl/assets/roguelike-rpg-pack",
+      "retrieved_at_utc": "2026-10-21T02:02:45.897075+00:00",
+      "http_status": 200,
+      "final_url": "https://kenney.nl/assets/roguelike-rpg-pack",
+      "sha256": "748b92615e23f12817617a1ab041b033365659112c8085c4832a8a24cea6694c",
+      "text_file": "kenney-roguelike-rpg.txt"
+    },
+    {
+      "name": "lpc-base",
+      "url": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles",
+      "retrieved_at_utc": "2026-10-21T02:02:45.897477+00:00",
+      "http_status": 200,
+      "final_url": "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles",
+      "sha256": "104a16f833b27c4f1f05acbe858c489fe0ea2b1478b55e036158e7a6b567e102",
+      "text_file": "lpc-base.txt"
+    },
+    {
+      "name": "cainos-basic",
+      "url": "https://cainos.itch.io/pixel-art-top-down-basic",
+      "retrieved_at_utc": "2026-10-21T02:02:45.897848+00:00",
+      "http_status": 200,
+      "final_url": "https://cainos.itch.io/pixel-art-top-down-basic",
+      "sha256": "0ada14a9369f74ef819c43670d4655ce4b0444b2516d7b30ac3de0ccebd6ab97",
+      "text_file": "cainos-basic.txt"
+    },
+    {
+      "name": "atkinson-license",
+      "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/atkinsonhyperlegible/OFL.txt",
+      "retrieved_at_utc": "2026-10-21T02:02:45.898182+00:00",
+      "http_status": 200,
+      "final_url": "https://raw.githubusercontent.com/google/fonts/main/ofl/atkinsonhyperlegible/OFL.txt",
+      "sha256": "f32d22b3908fcad2c86a74000614ec22e6a7f66ea7e867e616026a27aebdc143",
+      "text_file": "atkinson-license.txt"
+    },
+    {
+      "name": "atkinson-metadata",
+      "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/atkinsonhyperlegible/METADATA.pb",
+      "retrieved_at_utc": "2026-10-21T02:02:46.265985+00:00",
+      "http_status": 200,
+      "final_url": "https://raw.githubusercontent.com/google/fonts/main/ofl/atkinsonhyperlegible/METADATA.pb",
+      "sha256": "13d7f7361ca762420bc0b8a483fbcae6c94598b5a372aee4b8b6f4e382d3282f",
+      "text_file": "atkinson-metadata.txt"
+    },
+    {
+      "name": "pixelify-license",
+      "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/pixelifysans/OFL.txt",
+      "retrieved_at_utc": "2026-10-21T02:02:46.977739+00:00",
+      "http_status": 200,
+      "final_url": "https://raw.githubusercontent.com/google/fonts/main/ofl/pixelifysans/OFL.txt",
+      "sha256": "b66ba46f511a851ab09998b5a5a9fdbb102545a3864cb993095e1745996873a7",
+      "text_file": "pixelify-license.txt"
+    },
+    {
+      "name": "pixelify-metadata",
+      "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/pixelifysans/METADATA.pb",
+      "retrieved_at_utc": "2026-10-21T02:02:47.125941+00:00",
+      "http_status": 200,
+      "final_url": "https://raw.githubusercontent.com/google/fonts/main/ofl/pixelifysans/METADATA.pb",
+      "sha256": "adac079f2f599996ffa5952f8fdc66e643db2cdcd9a0bc84ad8ad4b8387567d4",
+      "text_file": "pixelify-metadata.txt"
+    },
+    {
+      "name": "noto-license",
+      "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/notosans/OFL.txt",
+      "http_status": 200,
+      "sha256": "cee9892f9f0cc8fe882c9e9537ee6a89621d86ee7ceaf70b02e2b2b1c25c061a"
+    },
+    {
+      "name": "noto-metadata",
+      "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/notosans/METADATA.pb",
+      "http_status": 200,
+      "sha256": "9fd9566184e9833ae3a33b8950e2782a8abb1f0a9d6fb2c51b3fb615f2d78cfe"
+    },
+    {
+      "name": "outdoor32",
+      "url": "https://opengameart.org/content/outdoor-32x32-tileset",
+      "retrieved_at_utc": "2026-10-21T02:04:10.481366+00:00",
+      "http_status": 200,
+      "sha256": "1a5b8402a808cfeef93fc5a14467a95df02d794717dea88398f0c9f8184af2cf"
+    },
+    {
+      "name": "characters32",
+      "url": "https://opengameart.org/content/32x32-rpg-character-sprites",
+      "retrieved_at_utc": "2026-10-21T02:04:10.481752+00:00",
+      "http_status": 200,
+      "sha256": "e8c7af174b2fd233d1ed7bea07e34fc8fc8e4ba5efa41bd248c385b8d1f26300"
+    },
+    {
+      "name": "basic-map32",
+      "url": "https://opengameart.org/content/basic-map-32x32-by-ivan-voirol",
+      "retrieved_at_utc": "2026-10-21T02:04:10.482040+00:00",
+      "http_status": 200,
+      "sha256": "017025edcf72f3f32bde3093b9c1b4c513209780b61e86883a7abedd6940b43d"
+    },
+    {
+      "name": "house32",
+      "url": "https://opengameart.org/content/32x32-house",
+      "retrieved_at_utc": "2026-10-21T02:04:10.482418+00:00",
+      "http_status": 200,
+      "sha256": "b5631bd53259b818ff4551f1b97683459fad775fa2d483dd81426106f41ef0d4"
+    },
+    {
+      "name": "slates",
+      "url": "https://opengameart.org/content/slates-32x32px-orthogonal-tileset-by-ivan-voirol",
+      "http_status": 200,
+      "sha256": "5fca88c2d66680219665b6a346a862385068b923b0ff861201901a7d4d04a64f"
+    },
+    {
+      "name": "buch-sheet",
+      "url": "https://opengameart.org/sites/default/files/sheet_12.png",
+      "sha256": "831785af95da3da0093c0c06a6c1df69c1f4e20be6681234b631e8ede70ba728",
+      "image_dimensions": [
+        640,
+        288
+      ],
+      "bytes": 76024
+    },
+    {
+      "name": "eldiran-sprites",
+      "url": "https://opengameart.org/sites/default/files/RPGCharacterSprites32x32.png",
+      "sha256": "40345d2eee59f06006b2fe420f83eed288a084f7e19e9c4ba1dbd16a861c75b7",
+      "image_dimensions": [
+        384,
+        672
+      ],
+      "bytes": 52335
+    },
+    {
+      "name": "ivan-map-v3.1",
+      "url": "https://opengameart.org/sites/default/files/32x32_map_tile%20v3.1.png",
+      "sha256": "975d7a37f609bbe4b208b4b3af9546e85de85ed6c9e8c7e9c0a2dd67bb352409",
+      "image_dimensions": [
+        760,
+        958
+      ],
+      "bytes": 189339
+    },
+    {
+      "name": "slates-v2",
+      "url": "https://opengameart.org/sites/default/files/Slates%20v.2%20%5B32x32px%20orthogonal%20tileset%20by%20Ivan%20Voirol%5D_1.png",
+      "sha256": "a1fe2258cdd5adcd49b13bf8c2abc9cd1da6b8cbf1e56a656d9db409c256a24b",
+      "image_dimensions": [
+        1792,
+        736
+      ],
+      "bytes": 448910
+    }
+  ],
+  "proposed_token_checks": [
+    {
+      "role": "body text",
+      "foreground": "#F3EAD5",
+      "background": "#202927",
+      "ratio": 12.459,
+      "required_minimum": 4.5,
+      "passes": true
+    },
+    {
+      "role": "secondary text",
+      "foreground": "#C9C9B5",
+      "background": "#29342F",
+      "ratio": 7.688,
+      "required_minimum": 4.5,
+      "passes": true
+    },
+    {
+      "role": "accent icon on HUD",
+      "foreground": "#64D6C4",
+      "background": "#202927",
+      "ratio": 8.493,
+      "required_minimum": 3,
+      "passes": true
+    },
+    {
+      "role": "active control text",
+      "foreground": "#17211C",
+      "background": "#64D6C4",
+      "ratio": 9.41,
+      "required_minimum": 4.5,
+      "passes": true
+    },
+    {
+      "role": "blocked icon",
+      "foreground": "#E5BC68",
+      "background": "#202927",
+      "ratio": 8.328,
+      "required_minimum": 3,
+      "passes": true
+    },
+    {
+      "role": "failure icon",
+      "foreground": "#F09B87",
+      "background": "#202927",
+      "ratio": 6.921,
+      "required_minimum": 3,
+      "passes": true
+    },
+    {
+      "role": "light selection edge on grass",
+      "foreground": "#F3EAD5",
+      "background": "#6B8E45",
+      "ratio": 3.143,
+      "required_minimum": 3,
+      "passes": true
+    },
+    {
+      "role": "dark selection edge on path",
+      "foreground": "#17211C",
+      "background": "#BFA174",
+      "ratio": 6.74,
+      "required_minimum": 3,
+      "passes": true
+    }
+  ],
+  "limitations": [
+    "License checks refer to observed primary source pages; final exact production files and notices still need verification before import.",
+    "No third-party art, font binary, runtime asset, dependency or implementation is added.",
+    "Contrast calculations cover explicit solid token pairs only, not the generated image or rendered game.",
+    "No renderer/performance/animation/font-rendering/accessibility conformance evidence is claimed."
+  ],
+  "source_observations": [
+    {
+      "source_name": "slates",
+      "license_observed": "CC-BY 4.0",
+      "author": "Ivan Voirol",
+      "advertised_tile_size": "32x32",
+      "fit": "Preferred environment-family trial; no characters; palette/layer/coverage audit needed; not adopted."
+    },
+    {
+      "source_name": "outdoor32",
+      "license_observed": "CC0",
+      "author": "Buch",
+      "advertised_tile_size": "32x32",
+      "fit": "Limited terrain/cliff alternative; not a complete village family."
+    },
+    {
+      "source_name": "characters32",
+      "license_observed": "CC0",
+      "author": "Eldiran",
+      "advertised_sprite_cell": "32x32",
+      "fit": "Author explicitly notes missing East/West walk frames for half the characters; template trial only."
+    },
+    {
+      "source_name": "kenney-tiny-town",
+      "license_observed": "Creative Commons CC0",
+      "advertised_tile_size": "16x16",
+      "fit": "Source-density mismatch; not silently substituted for selected 32x32 art."
+    },
+    {
+      "source_name": "kenney-roguelike-rpg",
+      "license_observed": "Creative Commons CC0",
+      "advertised_tile_size": "16x16",
+      "fit": "Source-density mismatch."
+    },
+    {
+      "source_name": "lpc-base",
+      "license_observed": "CC-BY-SA 3.0 / GPL 3.0 with author-specific credits and additional notices",
+      "fit": "Not a blanket CC0/permissive adoption."
+    },
+    {
+      "source_name": "cainos-basic",
+      "license_observed": "Custom terms: free/commercial use and modification; no redistribution or resale",
+      "fit": "Not approved for public source-repository vendoring."
+    },
+    {
+      "source_name": "atkinson-license",
+      "license_observed": "SIL Open Font License 1.1",
+      "fit": "Information-font trial; Pygame metrics/rendering/coverage untested."
+    },
+    {
+      "source_name": "noto-license",
+      "license_observed": "SIL Open Font License 1.1",
+      "fit": "Alternative information-font trial; selected file and rendering/coverage untested."
+    },
+    {
+      "source_name": "pixelify-license",
+      "license_observed": "SIL Open Font License 1.1",
+      "fit": "Short-heading trial; actual file support/rendering/coverage untested."
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+-r analytics.in
+-r retrieval.in
+requests>=2.31,<3
+transformers>=4.44,<5
+sentence-transformers>=3,<6
+accelerate>=0.33,<2
+sentencepiece>=0.1.99,<1
+tiktoken>=0.5,<1

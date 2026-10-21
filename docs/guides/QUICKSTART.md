@@ -1,6 +1,6 @@
 # Tiny Village Quickstart Guide
 
-This guide will get you running a Tiny Village demo in under 5 minutes.
+This guide describes installation and the current Tiny Village demo entry points.
 
 ## Prerequisites
 
@@ -17,13 +17,23 @@ cd tiny_village
 
 ### 2. Install Minimum Dependencies
 ```bash
-python3.12 -m pip install -r requirements.txt
+python3.12 -m venv .venv
+. .venv/bin/activate
+python -m pip install --require-hashes --only-binary=:all: -r requirements.txt
+python -m pip check
 ```
 
-**Note**: Tiny Village now targets Python 3.12. The full `requirements.txt` is the
-supported dependency set for this quickstart; packages such as `transformers`
-and `spacy` are included for advanced features, but the minimal demo paths do
-not depend on those features being exercised.
+The default install is the locked core profile for Python 3.12/Linux x86-64.
+Add [visual, development or optional feature profiles](DEPENDENCY_PROFILES.md)
+as needed. NLP/LLM/GPU capabilities remain available through separate profiles;
+their model artifacts and hardware need independent validation.
+
+**Current runtime boundary:** minimal mode runs real startup, event registration,
+and basic-memory checks. It intentionally executes no gameplay turns. AI is a
+core requirement of the final product; its dependencies are omitted here for
+lightweight testing. The economic loop, live models, full visual gameplay and
+broader integration readiness require their own evidence. See the
+[runtime validation report](../testing/issue-654-lightweight-runtime-validation.md).
 
 ## Running Your First Demo
 
@@ -31,19 +41,23 @@ not depend on those features being exercised.
 No display required, perfect for testing:
 ```bash
 python main.py --mode minimal
+# Or select a smaller explicit testing run:
+python main.py --mode minimal --headless --no-llm --characters 2
 ```
 
 **Expected output:**
-- System initialization
-- Character creation
-- Event handling demonstration
-- Action execution examples
-- Performance analytics
+- Real system and Character initialization
+- An event registered in both the handler and authoritative graph
+- Basic memory records stored and recalled for each Character
+- Explicit renderer/AI capability status
+- Confirmation that gameplay turns were not exercised
 
-**Time**: ~5 seconds
+Use at least one Character for this memory check. `--headless` requires explicit
+minimal (or test) mode; it cannot be combined with visual mode.
+
 
 ### Option 2: Integration Tests
-Validate all systems are working:
+Run the existing integration tests (known fixture/runtime failures are separate):
 ```bash
 python main.py --mode test
 ```
@@ -53,11 +67,11 @@ python main.py --mode test
 - 9+ tests passing
 - System validation report
 
-**Time**: ~5 seconds
 
 ### Option 3: Full Visual Demo
 Pygame window with characters moving on a map:
 ```bash
+python -m pip install --require-hashes --only-binary=:all: -r requirements/locks/visual-py312-linux-x86_64.txt
 python main.py --mode visual
 ```
 
@@ -74,14 +88,13 @@ python main.py --mode visual
 - `L` - Load game
 - Click characters to select
 
-**Time**: Runs continuously until quit
 
 ## Common Issues & Solutions
 
 ### "No module named 'pygame'"
-**Solution**: Install dependencies
+**Solution**: Install the visual profile in your activated virtual environment
 ```bash
-python3.12 -m pip install -r requirements.txt
+python -m pip install --require-hashes --only-binary=:all: -r requirements/locks/visual-py312-linux-x86_64.txt
 ```
 
 ### "Failed to initialize MapController"
@@ -91,12 +104,17 @@ python main.py --mode minimal
 ```
 
 ### "Character class not available"
-**Solution**: This is a warning, not an error. The demo uses simplified characters.
+**Solution**: Minimal mode requires real Characters and fails if required
+construction fails. Keep the full error and use the supported locked core
+environment; no simplified Character is substituted.
 
 ### "LLM components not available"
-**Solution**: This is expected. LLM is optional. Use `--no-llm` flag to suppress warnings:
+**Solution**: Minimal testing deliberately disables LLM decisions and semantic
+memory. For AI-enabled workflows, install the matching feature profile and
+validate its model assets separately. AI remains required in the final product.
+For a lightweight check:
 ```bash
-python main.py --no-llm
+python main.py --mode minimal --headless --no-llm
 ```
 
 ## Customizing Your Demo
@@ -220,9 +238,44 @@ python main.py --mode visual --characters 3 --no-llm --fps 30
 The demo creates these directories/files:
 - `saves/` - Game save files
 - `saves/checkpoints/` - Auto-save checkpoints
-- `/tmp/hf_test_cache/` - Model cache (if using LLM)
+- A user-owned Hugging Face model cache (see below)
 
-These are safe to delete if you want to start fresh.
+Save/checkpoint directories contain game state. Model cache files persist across startups.
+
+### Model cache configuration
+
+The default Hugging Face home is `$XDG_CACHE_HOME/huggingface`, or
+`~/.cache/huggingface` when XDG_CACHE_HOME is unset. Model repositories use its
+`hub/` subdirectory. To select a different owned location before startup:
+
+```bash
+export HF_HOME=/absolute/path/to/your/huggingface
+python main.py --mode minimal --no-llm --headless
+```
+
+`HF_HUB_CACHE` can select a separate repository cache. An existing
+`TRANSFORMERS_CACHE` setting takes precedence for TinyVillage's Transformers
+loaders; the application preserves it instead of replacing it or introducing a
+new legacy setting. Cache setup runs before optional model libraries are imported
+and does not import or download models itself.
+
+On POSIX systems, selected directories must belong to the effective runtime user
+and are restricted to mode `0700`. Ancestors must belong to that user or root;
+an unrelated owner can replace children even when the ancestor's mode is `0755`.
+Existing files and unselected parent permissions remain intact. Symlink/reparse
+directory paths, paths containing `..`, and parents that allow other users to
+replace entries are rejected with a path-specific error; use the direct path
+beneath trusted ancestors. Windows prefixes are checked before directory creation
+and use inherited directory ACLs; POSIX mode checks do not establish Windows ACL
+isolation.
+
+An absolute HF_HOME works without resolving a user-profile directory. The default
+home directory is needed only when neither HF_HOME nor XDG_CACHE_HOME supplies
+the location. Semantic-role module imports also preserve these settings.
+
+The previous shared `hf_test_cache` and machine-specific drive cache are not
+deleted or automatically migrated. TLS and downloader verification settings are
+preserved. This cache configuration does not change optional model availability.
 
 ## Quick Reference
 

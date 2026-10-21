@@ -1,3 +1,8 @@
+from tiny_cache import configure_model_cache
+
+# Configure before importing libraries that snapshot the environment.
+cache_dir = configure_model_cache()
+
 import json
 import re
 from unittest import result
@@ -50,10 +55,6 @@ except ImportError:
 
 import re
 from collections import defaultdict
-import os
-
-os.environ["TRANSFORMERS_CACHE"] = "/mnt/d/transformers_cache"
-
 # Optional llama_cpp import
 try:
     from llama_cpp import Llama
@@ -118,11 +119,11 @@ class TinyBrainIO:
                     self.model_name,
                     trust_remote_code=True,
                     **self.special_args,
-                    cache_dir="/mnt/d/transformers_cache",
+                    cache_dir=cache_dir,
                 ).to(self.device)
                 self.tokenizer = AutoTokenizer.from_pretrained(
                     self.model_name,
-                    cache_dir="/mnt/d/transformers_cache",
+                    cache_dir=cache_dir,
                     trust_remote_code=True,
                 )
         except Exception as exc:

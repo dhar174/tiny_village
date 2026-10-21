@@ -45,12 +45,10 @@ def create_llm_enabled_strategy_manager(model_name: str = None):
             model_name=model_name or "alexredna/TinyLlama-1.1B-Chat-v1.0-reasoning-v2"
         )
         
-        if manager.brain_io and manager.output_interpreter:
-            logger.info(f"Created LLM-enabled StrategyManager with model: {model_name}")
-            return manager
-        else:
-            logger.warning("LLM components not available, falling back to utility-only manager")
-            return StrategyManager(use_llm=False)
+        # Provider availability is determined on first use. Uninitialized fields
+        # must not erase the caller's requested AI configuration.
+        logger.info("Configured lazy LLM StrategyManager with model: %s", manager.model_name)
+        return manager
             
     except ImportError as e:
         logger.error(f"Could not import StrategyManager: {e}")

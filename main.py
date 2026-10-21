@@ -27,6 +27,7 @@ Examples:
 
 import sys
 import argparse
+import importlib
 import logging
 from typing import Tuple, List
 
@@ -40,35 +41,26 @@ def setup_logging(verbose: bool = False):
     )
     return logging.getLogger(__name__)
 
-def check_dependencies() -> Tuple[bool, List[str]]:
-    """Check if required dependencies are installed."""
+def check_dependencies(mode: str = "visual") -> Tuple[bool, List[str]]:
+    """Import direct mode dependencies without requiring optional ML packages.
+
+    Package availability alone does not establish full gameplay or AI readiness.
+    """
     missing = []
-    
-    try:
-        import pygame
-    except ImportError:
-        missing.append("pygame")
-    
-    try:
-        import networkx
-    except ImportError:
-        missing.append("networkx")
-    
-    try:
-        import numpy
-    except ImportError:
-        missing.append("numpy")
-    
-    try:
-        import pydantic
-    except ImportError:
-        missing.append("pydantic")
-    
-    try:
-        import faiss
-    except ImportError:
-        missing.append("faiss-cpu")
-    
+    dependencies = [
+        ("attr", "attrs"),
+        ("networkx", "networkx"),
+        ("numpy", "numpy"),
+        ("pydantic", "pydantic"),
+        ("pyparsing", "pyparsing"),
+    ]
+    if mode == "visual":
+        dependencies.append(("pygame", "pygame"))
+    for module, package in dependencies:
+        try:
+            importlib.import_module(module)
+        except ImportError:
+            missing.append(package)
     return len(missing) == 0, missing
 
 def print_banner():
@@ -90,10 +82,8 @@ def run_visual_demo(config: dict, logger):
     logger.info("Starting visual demo...")
     logger.info(f"Configuration: {config}")
     
+    controller = None
     try:
-        import pygame
-        pygame.init()
-        
         from tiny_gameplay_controller import GameplayController
         
         controller = GameplayController(config=config)
@@ -113,7 +103,7 @@ def run_visual_demo(config: dict, logger):
         
     except ImportError as e:
         logger.error(f"Missing dependency: {e}")
-        logger.error("Install dependencies with: pip install pygame networkx numpy pydantic faiss-cpu")
+        logger.error("Install the visual profile: python -m pip install --require-hashes --only-binary=:all: -r requirements/locks/visual-py312-linux-x86_64.txt")
         return 1
     except Exception as e:
         logger.error(f"Error running visual demo: {e}")
@@ -121,6 +111,9 @@ def run_visual_demo(config: dict, logger):
         traceback.print_exc()
         return 1
     
+    finally:
+        if controller is not None:
+            controller.close()
     return 0
 
 def run_minimal_demo(config: dict, logger):
@@ -131,10 +124,10 @@ def run_minimal_demo(config: dict, logger):
         from demo_minimal_integration import demonstrate_minimal_integration
         
         logger.info("Running integration demonstration...")
-        controller = demonstrate_minimal_integration()
+        controller = demonstrate_minimal_integration(config)
         
         if controller:
-            logger.info("\n✅ Minimal demo completed successfully")
+            logger.info("\nMinimal startup/event/memory verification completed")
             return 0
         else:
             logger.error("\n❌ Minimal demo failed")
@@ -211,7 +204,11 @@ def main():
     )
     
     args = parser.parse_args()
-    
+    if args.headless and args.mode == "visual":
+        parser.error("--headless requires --mode minimal (or test); visual mode needs a renderer")
+    if args.characters < 0 or (args.mode == "minimal" and args.characters == 0):
+        parser.error("Character count must be nonnegative; minimal checks require at least one Character")
+
     # Set up logging
     logger = setup_logging(args.verbose)
     
@@ -221,13 +218,18 @@ def main():
     
     # Check dependencies
     logger.info("Checking dependencies...")
-    deps_ok, missing = check_dependencies()
+    deps_ok, missing = check_dependencies(args.mode)
     
     if not deps_ok:
         logger.error("❌ Missing required dependencies:")
         for dep in missing:
             logger.error(f"   - {dep}")
-        logger.error("\nInstall with: pip install " + " ".join(missing))
+        profile = "visual" if args.mode == "visual" else "core"
+        logger.error(
+            "\nInstall the %s profile: python -m pip install --require-hashes "
+            "--only-binary=:all: -r requirements/locks/%s-py312-linux-x86_64.txt",
+            profile, profile,
+        )
         return 1
     
     logger.info("✅ All required dependencies installed")

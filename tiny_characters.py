@@ -1060,39 +1060,38 @@ example_criteria_h = [
         "max_distance": 20,
     }
 ]
-example_criteria_i = [
-    {
-        "event_participation": Event(
-            name="Festival",
-            date="2022-07-04",
-            event_type="annual",
-            importance=0.8,
-            impact=0.8,
-            required_items=["food", "decorations"],
-            coordinates_location=(100.0, 100.0),
-        ),
+def build_example_world_criteria(graph_manager: "GraphManager") -> dict[str, list[dict]]:
+    """Build object-valued examples only when an explicit world owner is supplied."""
+    if graph_manager is None:
+        raise ValueError("An explicit graph manager is required for world examples")
+    action_system = importlib.import_module("actions").ActionSystem(graph_manager=graph_manager)
+    return {
+        "example_criteria_i": [{
+            "event_participation": Event(
+                name="Festival",
+                date="2022-07-04",
+                event_type="annual",
+                importance=0.8,
+                impact=0.8,
+                required_items=["food", "decorations"],
+                coordinates_location=(100.0, 100.0),
+                action_system=action_system,
+            ),
+        }],
+        "example_criteria_j": [{
+            "offer_item_trade": ItemInventory(food_items=[FoodItem(
+                name="Apple",
+                description="A juicy red apple.",
+                value=1,
+                perishable=True,
+                weight=0.5,
+                quantity=1,
+                calories=2,
+                action_system=action_system,
+            )]),
+            "max_distance": 20,
+        }],
     }
-]
-
-example_criteria_j = [
-    {
-        "offer_item_trade": ItemInventory(
-            food_items=[
-                FoodItem(
-                    name="Apple",
-                    description="A juicy red apple.",
-                    value=1,
-                    perishable=True,
-                    weight=0.5,
-                    quantity=1,
-                    calories=2,
-                    action_system=importlib.import_module("actions").ActionSystem(),
-                )
-            ]
-        ),
-        "max_distance": 20,
-    }
-]
 
 example_criteria_k = [
     {
@@ -2127,6 +2126,8 @@ class Character:
         romanceable: bool = True,
         physical_appearance: str = "",
         physical_beauty: int = random.randint(0, 100),
+        *,
+        memory_mode: str = "full",
     ):
         GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
         self._updating = False  # Flag to prevent recursion
@@ -2134,27 +2135,25 @@ class Character:
         self.work_action_count = 0 # Added to track work actions
 
 
-        ActionSystem = importlib.import_module("actions")
+        ActionSystem = importlib.import_module("actions").ActionSystem
         Action = importlib.import_module("actions").Action
         GraphManager = importlib.import_module("tiny_graph_manager").GraphManager
         self.move_speed = move_speed
-        if not action_system:
-            action_system = ActionSystem()
+        if graph_manager is None:
+            try:
+                from tiny_globals import get_global_graph_manager
+                graph_manager = get_global_graph_manager()
+            except ImportError as e:
+                raise ValueError("GraphManager instance required and could not import global instance.") from e
+        self.graph_manager = graph_manager
+        if action_system is None:
+            action_system = ActionSystem(graph_manager=self.graph_manager)
         self.action_system = action_system
         self.name = self.set_name(name)
         self.age = self.set_age(age)
         self.destination = None
         self.path = []
         self.speed = 1.0  # Units per tick
-        if graph_manager is None:
-            # Use the global GraphManager instance from tiny_globals
-            try:
-                from tiny_globals import get_global_graph_manager
-                self.graph_manager = get_global_graph_manager()
-            except ImportError as e:
-                raise ValueError("GraphManager instance required and could not import global instance.") from e
-        else:
-            self.graph_manager = graph_manager
         self.energy = energy
         self.character_actions = [
             Action(
@@ -2162,24 +2161,28 @@ class Character:
                 self.action_system.instantiate_conditions(preconditions_dict["Talk"]),
                 effects=effect_dict["Talk"],
                 cost=1,
+                graph_manager=self.graph_manager,
             ),
             Action(
                 "Trade",
                 self.action_system.instantiate_conditions(preconditions_dict["Trade"]),
                 effects=effect_dict["Trade"],
                 cost=2,
+                graph_manager=self.graph_manager,
             ),
             Action(
                 "Help",
                 self.action_system.instantiate_conditions(preconditions_dict["Help"]),
                 effects=effect_dict["Help"],
                 cost=1,
+                graph_manager=self.graph_manager,
             ),
             Action(
                 "Attack",
                 self.action_system.instantiate_conditions(preconditions_dict["Attack"]),
                 effects=effect_dict["Attack"],
                 cost=3,
+                graph_manager=self.graph_manager,
             ),
             Action(
                 "Befriend",
@@ -2188,36 +2191,42 @@ class Character:
                 ),
                 effects=effect_dict["Befriend"],
                 cost=1,
+                graph_manager=self.graph_manager,
             ),
             Action(
                 "Teach",
                 self.action_system.instantiate_conditions(preconditions_dict["Teach"]),
                 effects=effect_dict["Teach"],
                 cost=2,
+                graph_manager=self.graph_manager,
             ),
             Action(
                 "Learn",
                 self.action_system.instantiate_conditions(preconditions_dict["Learn"]),
                 effects=effect_dict["Learn"],
                 cost=1,
+                graph_manager=self.graph_manager,
             ),
             Action(
                 "Heal",
                 self.action_system.instantiate_conditions(preconditions_dict["Heal"]),
                 effects=effect_dict["Heal"],
                 cost=2,
+                graph_manager=self.graph_manager,
             ),
             Action(
                 "Gather",
                 self.action_system.instantiate_conditions(preconditions_dict["Gather"]),
                 effects=effect_dict["Gather"],
                 cost=1,
+                graph_manager=self.graph_manager,
             ),
             Action(
                 "Build",
                 self.action_system.instantiate_conditions(preconditions_dict["Build"]),
                 effects=effect_dict["Build"],
                 cost=2,
+                graph_manager=self.graph_manager,
             ),
             Action(
                 "Give Item",
@@ -2226,6 +2235,7 @@ class Character:
                 ),
                 effects=effect_dict["Give Item"],
                 cost=1,
+                graph_manager=self.graph_manager,
             ),
             Action(
                 "Receive Item",
@@ -2234,6 +2244,7 @@ class Character:
                 ),
                 effects=effect_dict["Receive Item"],
                 cost=1,
+                graph_manager=self.graph_manager,
             ),
         ]
         self.possible_interactions = possible_interactions + self.character_actions
@@ -2307,7 +2318,7 @@ class Character:
         else:
             raise ValueError("GameTimeManager instance required.")
         self.memory_manager = MemoryManager(
-            gametime_manager
+            gametime_manager, mode=memory_mode
         )  # Initialize MemoryManager with GameTimeManager instance
         if location is None:
             self.location = Location(name, 0, 0, 0, 0, action_system)
@@ -3184,8 +3195,7 @@ class Character:
 
             else:
                 logging.info(f"Job role not found for job {job}")
-                exit(12)
-                self.job = random.choice(job_rules.ValidJobRoles)
+                raise ValueError(f"Unsupported character job: {job}")
         else:
             self.job = random.choice(job_rules.ValidJobRoles)
         return self.job

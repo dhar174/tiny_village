@@ -15,6 +15,7 @@ import math
 import operator
 import random
 import re
+import threading
 import uuid
 # Graceful fallback for networkx
 try:
@@ -711,8 +712,50 @@ character_attributes = [
 ]
 
 
-class GraphManager:
+_graph_construction_lock = threading.Lock()
+_graph_construction_state = threading.local()
+
+
+class _GraphManagerSingleton(type):
+    """Serialize allocation and initialization, including direct constructor calls."""
+
+    def __call__(cls, *args, **kwargs):
+        if getattr(_graph_construction_state, "active", False):
+            raise RuntimeError("Recursive GraphManager initialization")
+        with _graph_construction_lock:
+            previous_instance = cls._instance
+            _graph_construction_state.active = True
+            try:
+                return super().__call__(*args, **kwargs)
+            except BaseException:
+                cls._instance = previous_instance
+                raise
+            finally:
+                _graph_construction_state.active = False
+
+
+class GraphManager(metaclass=_GraphManagerSingleton):
     _instance = None
+
+    @classmethod
+    def _is_initializing_on_current_thread(cls):
+        return getattr(_graph_construction_state, "active", False)
+
+    @classmethod
+    def _reset_singleton(cls):
+        if cls._is_initializing_on_current_thread():
+            raise RuntimeError("Recursive GraphManager initialization during reset")
+        with _graph_construction_lock:
+            cls._instance = None
+
+    @classmethod
+    def _adopt_singleton(cls, instance):
+        if cls._is_initializing_on_current_thread():
+            raise RuntimeError("Recursive GraphManager initialization during replacement")
+        with _graph_construction_lock:
+            if not getattr(instance, "_GraphManager__initialized", False):
+                raise ValueError("Cannot adopt an uninitialized GraphManager")
+            cls._instance = instance
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
@@ -3343,13 +3386,9 @@ class GraphManager:
             logging.error(traceback.format_exc())
 
     def _get_current_time(self):
-        """Helper method to get current time for social network metadata."""
-        try:
-            import pygame
-            return pygame.time.get_ticks()
-        except (ImportError, AttributeError):
-            import time
-            return int(time.time() * 1000)
+        """Renderer-independent monotonic time for runtime social metadata."""
+        import time
+        return int(time.monotonic() * 1000)
 
     # Including the provided decay functions here for completeness
     def time_based_decay(self, time_since):

@@ -48,17 +48,34 @@ TinyVillage is a 2D simulation game where AI characters autonomously go about th
     ```bash
     cd tinyvillage
     ```
-3. Install the required packages with Python 3.12:
+3. Create an environment and install the locked core profile with Python 3.12:
     ```bash
-    python3.12 -m pip install -r requirements.txt
+    python3.12 -m venv .venv
+    . .venv/bin/activate
+    python -m pip install --require-hashes --only-binary=:all: -r requirements.txt
+    python -m pip check
     ```
+
+The default profile contains graph/planning/state dependencies. For Pygame,
+development tools or NLP/LLM/GPU dependencies, use the separate
+[dependency profiles](docs/guides/DEPENDENCY_PROFILES.md). Hash locks currently
+target Python 3.12 on Linux x86-64; native Windows/macOS support is unverified.
+The original broad manifest remains available as `requirements/legacy-full.txt`
+for historical/experimental feature paths.
 
 ### Running the Game
 
 To start the game, run the following command:
 ```bash
+python -m pip install --require-hashes --only-binary=:all: -r requirements/locks/visual-py312-linux-x86_64.txt
 python main.py
 ```
+
+AI is a core requirement of the final product. The minimal testing profile
+constructs real Characters and shared runtime systems, registers an event, and
+records/recalls basic memory without rendering or AI dependencies. It does not
+execute gameplay turns or prove the accepted MVP economic scenario. See the
+[runtime validation report](docs/testing/issue-654-lightweight-runtime-validation.md).
 
 The game supports multiple modes:
 
@@ -67,10 +84,16 @@ The game supports multiple modes:
 python main.py --mode visual
 ```
 
-**Minimal Demo** (Console output, no display):
+**Minimal Demo** (Bounded startup/event/memory checks, no display or AI services):
 ```bash
 python main.py --mode minimal
+# Explicit two-Character testing run:
+python main.py --mode minimal --headless --no-llm --characters 2
 ```
+
+Select minimal mode explicitly: `--mode visual --headless` is rejected. The
+minimal profile disables model services regardless of installed AI packages;
+the final AI-enabled product requires separate integration validation.
 
 **Integration Tests** (Verify system integration):
 ```bash
@@ -93,7 +116,7 @@ For more detailed instructions, see the [Quickstart Guide](docs/guides/QUICKSTAR
 Comprehensive documentation is available in the `docs/` directory:
 
 - **[User Guides](docs/guides/)** - Getting started and usage guides
-  - [Quickstart Guide](docs/guides/QUICKSTART.md) - Get running in under 5 minutes
+  - [Quickstart Guide](docs/guides/QUICKSTART.md) - Installation and current demo entry points
   - [Checkpoint System Guide](docs/guides/QUICKSTART_CHECKPOINTS.md) - Save system usage
   - [LLM Integration Guide](docs/guides/LLM_INTEGRATION_USAGE_GUIDE.md) - Using LLM features
 

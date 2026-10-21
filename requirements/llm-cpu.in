@@ -1,0 +1,3 @@
+-r llm-common.in
+# compile_requirements.py binds PyTorch to its official CPU wheel index.
+torch>=2.6,<3

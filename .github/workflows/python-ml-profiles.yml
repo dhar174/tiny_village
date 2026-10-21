@@ -1,0 +1,77 @@
+name: Python ML profiles
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: Offline package/runtime profile (no live inference)
+        required: true
+        type: choice
+        default: both
+        options: [nlp, llm-cpu, both]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: python-ml-${{ github.ref }}-${{ inputs.profile }}
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    name: Offline ML (${{ matrix.profile }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: ${{ fromJSON(inputs.profile == 'both' && '["nlp","llm-cpu"]' || format('["{0}"]', inputs.profile)) }}
+    env:
+      PROFILE: ${{ matrix.profile }}
+      HF_HUB_OFFLINE: '1'
+      TRANSFORMERS_OFFLINE: '1'
+      PYTHONNOUSERSITE: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Initialize evidence and isolated model cache
+        shell: bash
+        run: |
+          mkdir -p ".test-artifacts/ci/$PROFILE"
+          git rev-parse HEAD > ".test-artifacts/ci/$PROFILE/revision.txt"
+          echo "HF_HOME=$RUNNER_TEMP/tiny-village-hf-$PROFILE" >> "$GITHUB_ENV"
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+          architecture: x64
+          cache: pip
+          cache-dependency-path: |
+            requirements/locks/core-py312-linux-x86_64.txt
+            requirements/locks/${{ matrix.profile }}-py312-linux-x86_64.txt
+      - name: Install verified profile in a fresh environment
+        timeout-minutes: 20
+        shell: bash
+        run: |
+          evidence=".test-artifacts/ci/$PROFILE"
+          mkdir -p "$evidence"
+          python --version 2>&1 | tee "$evidence/python.log"
+          python -m venv .venv
+          .venv/bin/python -m pip install --require-hashes --only-binary=:all: -r "requirements/locks/$PROFILE-py312-linux-x86_64.txt" 2>&1 | tee "$evidence/install.log"
+          .venv/bin/python -m pip check 2>&1 | tee "$evidence/pip-check.log"
+          .venv/bin/python -m pip freeze > "$evidence/packages.txt"
+      - name: Run offline integration boundaries
+        timeout-minutes: 6
+        shell: bash
+        run: |
+          .venv/bin/python -B scripts/run_ci_checks.py --profile "$PROFILE" --artifacts ".test-artifacts/ci/$PROFILE"
+      - name: Retain profile evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: python-ml-${{ matrix.profile }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .test-artifacts/ci/${{ matrix.profile }}/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
