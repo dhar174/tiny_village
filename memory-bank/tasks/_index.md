@@ -1,13 +1,13 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK020](TASK020-phase2-gate-readiness.md) Phase 2 gate readiness (#732) - Prepared; separate human phase decision pending (Updated: 2026-10-21 America/New_York)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending
 - No additional pending task files.
 
 ## Completed
+- [TASK020](TASK020-phase2-gate-readiness.md) Phase 2 gate readiness (#732) - Complete under D025; #732/#723 closed, Phase 3 ready, Project fields pending 403 (Updated: 2026-10-21 America/New_York)
 - [TASK019](TASK019-phase2-engineering-review.md) Phase 2 engineering review (#731) - Complete under D024; #731 closed, Project fields pending HTTP 403 (Updated: 2026-10-21 America/New_York)
 - [TASK018](TASK018-consolidated-design-walkthrough.md) Consolidated design walkthrough - Complete under D023; #727-#730 closed, Project fields pending HTTP 403 (Updated: 2026-10-21 America/New_York)
 - [TASK017](TASK017-design-review-727-729.md) Remaining design review (#727-#729) - Complete under D023; #727-#730 closed, Project fields pending HTTP 403 (Updated: 2026-10-21 America/New_York)

@@ -1,11 +1,15 @@
 ## What Works
 
-- TASK020 / #732: Phase 2 readiness prepared after explicit #731 approval
-  under D024. #731 closure and all Phase 2 task states are verified; present
-  one separate phase decision.
-  Approval would unlock Phase 3 backlog/PR consolidation (#733, starting #734),
-  not establish UI/gameplay/live-AI readiness. #732/#723 remain open until then.
-  Project fields remain blocked by 403; PR #795 remains open for human merge.
+- Phase 3 #733 is unblocked under D025. Next ordered task is #734: triage
+  the original backlog into canonical subsystem epics with evidence-backed
+  dispositions. #733/#734 remain open; no triage or duplicate closures have
+  been performed by the Phase 2 handoff. Keep #602's blocked-regression limit.
+
+- TASK020 / #732 is complete: dhar174 explicitly approved Phase 2 under D025.
+  #732 and parent #723 are closed/completed with immutable decision links
+  verified; all native Phase 2 children were closed first. #734's native H2
+  dependency is closed. PR #795 merged at a7dea4c; Project fields remain
+  unsynchronized after HTTP 403. Gate #738 retains its own later human decision.
 
 - TASK019 / #731: Approved under D024 within the reviewed Python 3.12/Linux
   foundation, with all documented evidence limits. No new blocking remediation

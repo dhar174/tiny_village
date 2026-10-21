@@ -1,6 +1,6 @@
 # TASK020 — Phase 2 gate readiness (#732)
 
-**Status:** Prepared; human phase decision pending
+**Status:** Complete under D025; gate/parent closure and Phase 3 readiness verified
 **Added/Updated:** 2026-10-21 (America/New_York)
 
 ## Request and scope
@@ -22,8 +22,8 @@ remain only in docs/decisions.md. No runtime/ML cycle or product implementation.
 | Record explicit #731 approval | Complete | D024 |
 | Publish/verify #731 closure | Complete | Existing PR #795 and immutable D024 link; closed/completed response verified |
 | Reconcile Phase 2 work/evidence/limits | Complete | All nine required tasks/reviews closed; native #732 blockers #730/#731 closed; historical evidence retained |
-| Human #732 decision | Pending | Separate phase approval required |
-| Close #732/#723 and unlock #733 | Not authorized | Only after explicit phase approval |
+| Human #732 decision | Approved | D025 records the explicit “Yes, approve” response |
+| Close #732/#723 and unlock #733 | Complete | Both closed/completed with D025 links; Phase 3 handoff updated, #734's native gate dependency closed |
 
 ## Log
 
@@ -34,3 +34,11 @@ remain only in docs/decisions.md. No runtime/ML cycle or product implementation.
   2 work/review issues are closed. The native #732 dependency read lists #730
   and #731, both closed. Updated #732/#723 readiness without approving or
   closing them. Existing PR #795 retains the open publication for human merge.
+- 2026-10-21: user explicitly approved the Phase 2 gate. PR #795 is now merged
+  at `a7dea4c`. Recorded D025 and prepared authorized gate/parent completion
+  plus Phase 3 readiness; no Phase 3 task or later gate is completed here.
+- 2026-10-21: published the D025 commit, closed #732 and #723, and verified
+  their completed states/immutable decision links. All native Phase 2 children
+  were closed before parent completion. Updated #733/#734 readiness and
+  verified #734's native prerequisite #732 is closed. Project API still denies
+  field synchronization with 403; no Phase 3 work or later approval is claimed.

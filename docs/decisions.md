@@ -558,6 +558,40 @@ UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
   Project 10 fields remain unsynchronized after HTTP 403; issue dispositions
   and this file are authoritative. No Project update is claimed.
 
+### D025 — Approve Phase 2 gate #732 and complete parent #723
+
+- **Date:** 2026-10-21 (America/New_York).
+- **Reviewer / decision-maker:** dhar174.
+- **Disposition:** Approved.
+- **Explicit confirmation:** the user answered “Yes, approve” to “Do you
+  approve Phase 2 gate #732?” after the recommendation for the reviewed
+  planning/foundation scope, retained validation limits, Phase 3 handoff and
+  the disclosed Project API limitation.
+- **Reviewed artifacts:** [Phase 2 readiness](testing/phase-2-gate-readiness.md),
+  complete design/engineering reports and D013–D024; PR #795 head `10667f6`,
+  subsequently merged as main `a7dea4c32907d1fea6a6f4a7888d0337f17ad3e9`.
+  Previous gate #722 and all nine required Phase 2 work/review issues
+  (#724/#725/#654/#726/#727/#728/#729/#730/#731) were verified closed.
+- **Rationale:** the agreed MVP/support/budget contract, reproducible supported
+  profiles, real lightweight runtime, required CI and approved UX/visual/UI
+  and engineering foundations meet this phase's planning/foundation scope.
+  No required new phase remediation was identified. Earlier failures and the
+  explicitly retained evidence limitations remain part of the record.
+- **Action:** publish this decision; close #732 and Phase 2 parent #723 as
+  completed. Unlock Phase 3 #733, beginning with #734's evidence-based backlog
+  triage. Keep Phase 3 tasks and gate #738 open until their own work/decisions.
+- **Limits:** this supplies no implemented UI, native font-fit/usability or
+  performance acceptance, economic-turn/episode proof, complete persistence,
+  live-model inference or native Windows/macOS/GPU readiness. D014 preserves
+  the original expansiveness and D015 requires final-product AI. Existing
+  later tasks and D002's issue-backed dispositions are not removed or widened.
+  No arbitrary downstream code implementation or PR merge is authorized by
+  recording this gate decision alone.
+- **Project administration:** Project 10 field synchronization remains blocked
+  by HTTP 403. Preserve issue/decision records as authoritative; do not claim
+  Decision/Status/readiness fields were updated. The disclosed tracking limit
+  is retained with the human phase approval.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
@@ -588,6 +622,9 @@ D023 subsequently records the user's explicit approval of the complete
 issues and prepare #731; #731/#732 remain separate pending human decisions.
 D024 subsequently approves #731 within its reviewed scope. Close that review;
 #732 and Phase 2 parent #723 remain open for the separate phase decision.
+D025 subsequently records explicit Phase 2 gate approval and authorizes
+#732/#723 completion. Phase 3 #733 is unblocked, with #734 next. Its work and
+later gate #738 are not complete or approved by this Phase 2 disposition.
 
 The [#779 investigation plan](superpowers/plans/2026-10-15-issue-779-startup-investigation.md)
 was approved under D007, and its bounded cycle has concluded. Its original
