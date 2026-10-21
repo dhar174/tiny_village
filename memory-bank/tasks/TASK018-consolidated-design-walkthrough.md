@@ -1,6 +1,6 @@
 # TASK018 — Consolidated design journey walkthrough
 
-**Status:** Consistency review prepared; complete written dispositions pending
+**Status:** Approved under D023; GitHub synchronization pending authentication
 **Added/Updated:** 2026-10-21 (America/New_York)
 
 ## Request and scope
@@ -26,12 +26,12 @@ maps all review areas to the artifacts and downstream evidence.
 | --- | --- | --- |
 | Launch and first inspection | Accepted for this journey | D022 J01 |
 | Playback and live inspection | Accepted for this journey | D022 J02 |
-| Keyboard focus and menus | Static review complete; final human disposition pending | #729 input ownership/Escape rules |
-| Save/load/restart/quit | Static review complete; final human disposition pending | #727/#729 persistence and transition rules |
-| Blocked goals and failure recovery | Static review complete; final human disposition pending | Valid blocked outcomes versus untrusted state |
-| Completion and headless behavior | Static review complete; final human disposition pending | Terminal inspection, result evidence and exits |
-| Visual/inclusive interaction and evidence limits | Static review complete; final human disposition pending | #728 trials, both resolutions, later native checks |
-| Complete written dispositions and #730 decision | Pending | Distinct human dispositions required |
+| Keyboard focus and menus | Approved under D023 | #729 input ownership/Escape rules |
+| Save/load/restart/quit | Approved under D023 | #727/#729 persistence and transition rules |
+| Blocked goals and failure recovery | Approved under D023 | Valid blocked outcomes versus untrusted state |
+| Completion and headless behavior | Approved under D023 | Terminal inspection, result evidence and exits |
+| Visual/inclusive interaction and evidence limits | Approved under D023 | #728 trials, both resolutions, later native checks |
+| Complete written dispositions and #730 decision | Approved | [D023](../../docs/decisions.md#d023--approve-design-planning-727729-and-combined-review-730); closure/publishing pending authentication |
 
 ## Log
 
@@ -42,3 +42,8 @@ maps all review areas to the artifacts and downstream evidence.
   Completed static cross-artifact review without finding a blocking design
   inconsistency. Existing choices stand; no additional questionnaire is needed.
   One consolidated final disposition remains; #731/#732 are not approved.
+
+- 2026-10-21 (America/New_York): user explicitly approved complete #727–#729
+  planning and #730 combined review, authorizing #731 preparation. Recorded
+  D023. GitHub issue/Project updates and publishing are blocked by credentials;
+  no external completion claim. TASK019 contains the prepared engineering review.

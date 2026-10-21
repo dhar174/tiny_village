@@ -1,7 +1,8 @@
 # Consolidated design consistency review for #730
 
 Date: 2026-10-21 (America/New_York). Reviewed planning baseline: merged main
-`752bc2e` (PR #794). Reviewer preparation: Codex; human disposition pending.
+`752bc2e` (PR #794). Reviewer preparation: Codex; dhar174 subsequently approved
+the complete planning artifacts and combined review under D023.
 Human selections remain solely in [docs/decisions.md](../decisions.md), D018–D022.
 
 ## Result and scope
@@ -35,6 +36,8 @@ tests were executed. No required design rework issue was identified by this
 bounded consistency review.
 
 Final human planning dispositions for #727/#728/#729 and the distinct combined
-#730 decision remain to be recorded once, with these evidence limitations.
-Do not infer #731 engineering or #732 phase approval. The next ordered review
-after the design dispositions is #731.
+#730 decision are **Approved** under D023, with these evidence limitations.
+No required design remediation was identified. #731 engineering review is
+authorized to begin; its human disposition and #732 phase approval remain
+separate. Project field synchronization is unavailable after HTTP 403; the
+decision record and issue dispositions retain that limitation.

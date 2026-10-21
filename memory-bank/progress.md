@@ -1,29 +1,18 @@
 ## What Works
 
-- TASK018 / #730 preparation: user confirmed two journeys, then identified
-  repeated questioning of settled choices. Stop the repeated questionnaire.
-  D022 retains scoped responses; a consolidated static consistency review found
-  no blocking design inconsistency. One complete planning/design disposition
-  remains before #731; no runtime/phase approval. See tasks/TASK018-consolidated-design-walkthrough.md.
+- TASK019 / #731: engineering review prepared; no new blocking remediation
+  identified within the supported Phase 2 foundation. Verified 3 current CI ZIP
+  digests: 128 cases + 3 probes PASS; runtime/workflows/locks unchanged since
+  #726 rollout, 14 recorded source hashes match. No new runtime/ML cycle.
+  Human #731 disposition and #732 remain pending. See tasks/TASK019-phase2-engineering-review.md.
 
-- TASK017 / #727–#729: D021 records all 13 remaining selections. The three
-  specifications are consolidated for complete written review; #727/#728/#729
-  remain open pending distinct dispositions. Trials are selected; production
-  assets, native validation and runtime implementation remain downstream.
-  #730 is the next combined design review after planning acceptance, followed
-  by #731/#732. See tasks/TASK017-design-review-727-729.md.
-
-- TASK016 / #729: #793 merged at 3e1c7ef after the visible-Quicksave review fix.
-  D020 retains the original 12 choices; D021 settles dimension/session/history
-  proposals. No font-fit, runtime or later human approval is inferred.
-
-- TASK015 / #728: #792 merged at 4c9bbfd. D019 retains pixel art and 13 choices;
-  D021 selects the art/font/palette/spacing trials and animation scope. Exact
-  production files still need the later audit; final written disposition pending.
-
-- TASK014 / #727: #791 merged at 7391861. D018 retains 15 choices; D020 resolves
-  overlapping menu/save/shortcut proposals and D021 selects the walkthrough
-  method. Complete written disposition pending; no executed usability pass.
+- D023 records dhar174's explicit approval of #727/#728/#729 planning and #730
+  combined design review on 2026-10-21. TASK014–TASK018 are accepted for their
+  planning scope; issue closures/publication are authorized but still pending.
+  Project read returned 403, then repository/project authentication returned
+  401. Do not claim external updates or repeat settled design questions.
+  Local approval/report commits must be pushed to existing PR #795 after
+  credential recovery; then synchronize #727–#730 and resume #731 handoff.
 
 - TASK013 / #726 is complete and closed. #789 merged at ac0e25d; main and
   both manual ML profiles pass 132 cases + three CLI probes, all five artifact

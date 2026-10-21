@@ -1,12 +1,19 @@
 # TinyVillage pixel-art visual direction
 
-**Status:** Draft for written review. The user's pixel-art preference and 13
+**Status:** Approved for planning under D023. The user's pixel-art preference and 13
 explicit selections are recorded with their alternatives in the single decision
 file, [D019](../../decisions.md#d019--select-pixel-art-direction-for-728).
 The remaining trial and production-scope selections are recorded in
 [D021 R02–R06](../../decisions.md#d021--review-remaining-design-proposals-for-727729).
 This consolidated written artifact still awaits a complete disposition;
 exact production files require the later audit and native testing.
+
+**Subsequent disposition:** Approved by dhar174 on 2026-10-21
+(America/New_York) under [D023](../../decisions.md#d023--approve-design-planning-727729-and-combined-review-730),
+including the complete written artifact and #730's distinct combined review.
+Draft/pending wording below describes the original publication, superseded by
+this disposition. Production trials, native evidence and downstream
+implementation remain required; #731/#732 are separate decisions.
 
 ## 1. Intent, references and scope
 

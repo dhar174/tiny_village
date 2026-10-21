@@ -1,6 +1,6 @@
 # TASK015 — Pixel-art direction and aesthetic constraints (#728)
 
-**Status:** Awaiting written-specification review; #728 open
+**Status:** Approved under D023; GitHub publication/closure pending authentication
 **Added/Updated:** 2026-10-21 (America/New_York)
 
 ## Request and scope
@@ -31,7 +31,7 @@ tokens/type/spacing values are labeled proposed defaults for written review.
 | Compare palettes | Complete | Generated reference preserved unchanged; user selected A; provenance/hash in receipt. |
 | Research asset/font candidates | Complete | Primary pages/OFL metadata, sheet inspection, hashes and fit/coverage gaps retained. |
 | Consolidate and self-review draft | Complete | Visual spec, static token ratios, local links and scope/choice checks. |
-| Human written-specification review | Pending | #728 remains open; no final written disposition or phase approval recorded. |
+| Complete written review | Approved | [D023](../../docs/decisions.md#d023--approve-design-planning-727729-and-combined-review-730); issue synchronization pending authentication |
 
 ## Log
 
@@ -60,3 +60,7 @@ tokens/type/spacing values are labeled proposed defaults for written review.
 - 2026-10-21 (America/New_York): TASK017 consolidates the remaining selections
   from D021 into this specification. Complete written disposition remains
   pending; no runtime validation or later design/phase approval is inferred.
+
+- 2026-10-21 (America/New_York): complete planning approval recorded in D023.
+  #728 closure is authorized; no closure is claimed while GitHub authentication
+  returns 401. No new runtime or phase approval. TASK019 prepares #731.

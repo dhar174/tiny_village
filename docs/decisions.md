@@ -500,6 +500,38 @@ UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
   complete planning acceptance, #730/#731/#732 and runtime implementation are
   not approved by this response. All human decisions remain in this file.
 
+### D023 — Approve design planning #727–#729 and combined review #730
+
+- **Date:** 2026-10-21 (America/New_York).
+- **Reviewer / decision-maker:** dhar174.
+- **Reviewed artifacts:** complete UX, visual and UI specifications at merged
+  main `752bc2e` (PR #794); D018–D021 selections; the consolidated consistency
+  review in PR #795 at `6bc999d` and D022's scoped responses.
+- **Explicit confirmation:** the user answered “Yes please.” to: “may I record
+  #727–#729's planning specifications and #730's combined design review as
+  approved, then begin #731's engineering review?”
+
+| Issue | Human disposition | Scope and rationale |
+| --- | --- | --- |
+| #727 — UX journeys | Approved | Accept the complete written journeys, controls, truthful feedback, persistence/recovery requirements and later human walkthrough method. |
+| #728 — Visual direction | Approved | Accept the complete pixel-art direction, asset/font/palette trials, spacing/animation constraints, licensing audit and later native-validation requirements. Trial approval is not production-file adoption. |
+| #729 — UI specification | Approved | Accept the complete layout/state specification, documented focus traversal/input ownership/Escape behavior, visible session controls, save/load/history and terminal/close rules. |
+| #730 — Combined design review | Approved | The three artifacts agree with the frozen MVP and broader product requirements; the consistency review identified no required design rework. Accept its explicit evidence limitations. |
+
+- **Result:** synchronize and close #727/#728/#729/#730 as completed under this
+  explicit human approval. Begin #731's engineering review preparation.
+- **Limits:** no executed native usability, font-fit, renderer/performance,
+  gameplay-turn or live-AI acceptance is implied. Existing downstream asset,
+  implementation, persistence, episode and release work remains required.
+  D014's expansive scope and D015's final-product AI remain intact.
+  #731 is not approved by permission to begin it; #732 and parent #723 remain
+  open. This decision does not authorize implementation beyond the existing
+  reviewed scope or skip either later review/gate.
+- **Project synchronization:** the configured API still returns HTTP 403,
+  “Resource not accessible by integration,” for Project 10. Issue updates and
+  the decision record are authoritative; Project Decision/Status fields cannot
+  be claimed synchronized. Preserve that administrative limitation explicitly.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
@@ -525,6 +557,9 @@ final disposition remains open. The user requested #729 next and selected the
 D021 now records thirteen further selections and the consolidated written
 review request. #727/#728/#729 remain open pending complete written acceptance;
 the PR merges and individual choices do not supply #730/#731/#732 approval.
+D023 subsequently records the user's explicit approval of the complete
+#727/#728/#729 planning artifacts and #730 combined review. Close those four
+issues and prepare #731; #731/#732 remain separate pending human decisions.
 
 The [#779 investigation plan](superpowers/plans/2026-10-15-issue-779-startup-investigation.md)
 was approved under D007, and its bounded cycle has concluded. Its original
