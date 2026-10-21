@@ -47,3 +47,8 @@ and release acceptance stay with their mapped downstream issues.
   dependency installs, product code, locks or CI changes for this draft.
 - Proposed defaults are visibly separated for written review. Draft publication
   is for human review; keep #727 and later human gates open.
+
+- 2026-10-20 follow-through: #791 merge verified at 7391861. No final written
+  disposition is recorded; #727 remains open. The user explicitly requested
+  the preliminary #728 design walkthrough, now tracked in TASK015. Do not
+  infer acceptance of the four proposed #727 defaults or phase approval.

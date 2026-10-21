@@ -1,10 +1,16 @@
 ## Current Work Focus
 
-- TASK014 / #727: 15 interaction choices confirmed in D018; consolidated UX
-  specification awaits written review. See tasks/TASK014-ux-journeys-727.md and
-  docs/superpowers/specs/2026-10-20-issue-727-ux-design.md. Proposed connective
-  defaults and walkthrough are labeled for review. #727 stays open; no product
-  implementation, UX pass or later phase/design approval supplied. #728 follows.
+- TASK015 / #728: pixel art plus 13 visual choices recorded in D019. Draft
+  visual specification includes palette reference A, candidate source/license
+  research and proposed tokens/fonts/spacing for written review. #728 stays open;
+  no production art/runtime implementation or later design/phase approval.
+  See tasks/TASK015-visual-direction-728.md. #729 is the next design handoff.
+
+- TASK014 / #727: #791 merged at 7391861; 15 choices are recorded in D018.
+  Final written-specification disposition remains pending; #727 stays open.
+  See tasks/TASK014-ux-journeys-727.md and the #727 UX specification. Proposed
+  connective defaults and walkthrough await review; no product implementation,
+  UX pass or later phase/design approval supplied. TASK015 tracks #728.
 
 - TASK013 / #726 is complete and closed. #789 merged at ac0e25d; main and
   both manual ML profiles pass 132 cases + three CLI probes, all five artifact
