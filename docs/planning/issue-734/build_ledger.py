@@ -267,7 +267,7 @@ acceptance('''
 518|Check full-profile plotting respects the caller's selected backend; basic/headless imports must not force a matplotlib backend or initialize rendering.
 522|Exercise a real controller/strategy/action/state pipeline; never substitute a strategy that always returns success or infer gameplay readiness from mocked display objects.
 528|Induce actual semantic-index normalization failure and verify the result/capability accurately reports failure or a documented partial-load state, retaining the original cause.
-530|Document the supported interaction energy scale/threshold, test values below/at/above it with real Characters and preserve meaningful action gating.
+530|Replace the magic-number interaction energy threshold with a named constant or supported configuration value; document its scale/default, test values below/at/above it with real Characters and preserve meaningful action gating.
 534|Review the viability-cost delegation against actual call cycles and graph ownership; decouple only with preserved cached graph semantics and behavior evidence.
 535|Review the goal-difficulty delegation separately from viability costs; preserve authoritative graph analytics while removing any demonstrated recursive dependency.
 565|Meet the original five relationship-effect types plus missing-edge, invalid-target and symmetry contracts against actual graph edges; basic MVP events do not imply this broader faction scope is complete.

@@ -8011,7 +8011,7 @@
     "disposition": "implement",
     "execution_phase": 6,
     "handoff_issue": 196,
-    "acceptance": "Document the supported interaction energy scale/threshold, test values below/at/above it with real Characters and preserve meaningful action gating.",
+    "acceptance": "Replace the magic-number interaction energy threshold with a named constant or supported configuration value; document its scale/default, test values below/at/above it with real Characters and preserve meaningful action gating.",
     "original_checklist": [],
     "reproduction": "At source 13b8e374d07e7e7ea6f8f562ea6a290fcab967f7, inspect tiny_buildings.py:1; exercise the stated acceptance with actual supported objects/profile. Historical reproduction and discussion are retained in issues-snapshot.json entry #530.",
     "source_anchors": [

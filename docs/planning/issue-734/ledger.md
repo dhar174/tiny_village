@@ -725,7 +725,7 @@
 
 #### #530 — The energy threshold of 5 is a magic number. Consider defining this as a named constant (e.g., MIN_ENERGY_FOR_INTERACTIONS = 5) to improve maintainability and make it easier to adjust this value in the future.
 
-**Acceptance:** Document the supported interaction energy scale/threshold, test values below/at/above it with real Characters and preserve meaningful action gating.
+**Acceptance:** Replace the magic-number interaction energy threshold with a named constant or supported configuration value; document its scale/default, test values below/at/above it with real Characters and preserve meaningful action gating.
 
 **Disposition/evidence:** implement; `source_reviewed_not_executed`. Retain the buildings and ownership acceptance as ordered implementation/integration work in Phase 6; source presence alone does not prove its acceptance.
 

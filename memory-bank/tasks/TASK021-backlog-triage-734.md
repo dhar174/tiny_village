@@ -23,7 +23,7 @@ and these choices. No runtime fixes or Phase 3 gate approval.
 | Baseline and snapshots | Complete | Branch codex/issue-734-backlog-triage from main 13b8e374d07e7e7ea6f8f562ea6a290fcab967f7 |
 | Original and current ledger | Complete | 475 issues/158 comments, 37 PRs, 50 review origins; original 261 plus 46 later open |
 | Six mandatory audits | Complete with failures retained | Four scoped passes; #602/#609 fail with real objects; 12 existing tests pass; isolated map/animation failure |
-| Integrity checks and PR | In progress | Bundle validation passes; preparing final independent review and documentation PR |
+| Integrity checks and PR | Review package prepared | Independent review complete, #530 acceptance restored, catalog checks pass; opening documentation PR |
 | Approved issue publication | Awaiting later review | No issue mutations authorized before package review |
 
 ## Execution record
@@ -59,3 +59,13 @@ and these choices. No runtime fixes or Phase 3 gate approval.
   Narrow closure proposals: #355/#482/#594/#596/#597; duplicate proposals:
   #351→#350 and #382→#380. #602/#609 stay open. No state changes approved yet.
 - Project read still denied HTTP 403; #737 owns pending synchronization.
+
+- Independent fresh-context review found no Critical/Important issue and checked
+  snapshot/proposal/CSV/Markdown parity. Preserved #530's omitted named-constant
+  acceptance through a failing→passing data check; full catalog checks pass.
+- Final: fixed #530 scope omission — named-constant criterion RED→GREEN across
+  ledger, proposed annotation and Markdown; complete catalog validation passes.
+- Final: minor (deferred): validator full artifact-hash/field parity automation;
+  all current hashes and canonical/readable parity independently verified.
+- Final: minor (deferred): reusable Markdown renderer; current rendered package
+  verified, but one-shot generator remains scratch-only.
