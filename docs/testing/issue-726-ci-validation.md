@@ -96,7 +96,7 @@ The four optional ML cases are separate local evidence, not part of that PR run.
 revisions, Python/platform, counts, job links and verified archive digests.
 The check publisher is GitHub Actions app ID **15368**.
 
-## Post-merge rollout — enforcement blocked
+## Post-merge rollout — complete
 
 PR #789 merged at `ac0e25d3674efb03440d2ccce26d7b009d5e82f3`.
 [Main run 39504506879](https://github.com/dhar174/tiny_village/actions/runs/39504506879)
@@ -115,17 +115,22 @@ Full downloaded artifacts and API snapshots remain under
 `/workspace/scratch/issue-726/rollout/`; Actions retains artifacts for 30 days.
 The current main SHA was checked against the verified merged revision.
 
-The authorized PUT to existing active ruleset `tiny_ruleset` (5735164) failed:
-**HTTP 403: Resource not accessible by integration**. Readback confirms its
-rules, conditions, review parameters and bypass actors are unchanged. Effective
-main rules contain **no required-status rule**. Passing workflows therefore do
-not yet enforce this CI requirement. **#726 remains open.**
+The first authorized PUT to `tiny_ruleset` (5735164) was denied with HTTP 403;
+that historical attempt and readback are retained in the receipt. The owner then
+saved the settings. Subsequent API readback verifies the active ruleset **and
+effective main rules** require `Python CI required`, bound to GitHub Actions
+(app **15368**), with `strict_required_status_checks_policy=true`. Existing
+conditions, review rules and bypass actors match the pre-activation snapshot.
+The existing bypass policy still applies; this does not remove bypass access.
 
-Owner action: [edit tiny_ruleset](https://github.com/dhar174/tiny_village/settings/rules/5735164),
-enable **Require status checks to pass**, add **Python CI required** with
-**GitHub Actions** as source (app 15368), enable **Require branches to be up to
-date before merging**, and save. Preserve every other rule and bypass actor.
-After saving, read back ruleset 5735164 and effective main rules; verify context,
-source and strict/up-to-date policy before closing #726. The full
-[operator instructions](supported-profile-ci.md#required-check-activation-and-human-handoff)
-remain authoritative. No credentials were changed and no phase gate is approved.
+Main remains at the verified merged revision, and both main/manual runs remain
+successful. All #726 acceptance and rollout conditions are met: **#726 is closed
+as completed**. Evidence PR #790 remains for human review/merge. Its first CI run
+[39507410646](https://github.com/dhar174/tiny_village/actions/runs/39507410646)
+passed at `da32843`; this is separate from the main/manual acceptance evidence.
+No automatic merge, credentials change or human phase-gate approval occurred.
+The next planning tasks are #727 UX journeys and #728 aesthetic direction.
+
+[Operator instructions](supported-profile-ci.md#required-check-activation-and-human-handoff)
+remain available for future maintenance. Readback snapshots are preserved under
+`/workspace/scratch/issue-726/completion/` and in the structured rollout receipt.

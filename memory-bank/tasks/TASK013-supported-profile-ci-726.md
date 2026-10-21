@@ -1,6 +1,6 @@
 # SDD ledger — plan: docs/superpowers/plans/2026-10-20-issue-726-supported-profile-ci.md
 
-**Status:** Blocked on owner ruleset activation; #789 merged, all hosted checks verified; #726 open
+**Status:** Completed; #726 closed after owner activation and effective-enforcement verification
 **Added/Updated:** 2026-10-20
 
 ## Request / approved scope
@@ -15,7 +15,7 @@ required in the final product (D015).
 2. Bounded runner: complete. Produces --profile / --artifacts and exit/report contract.
 3. Required workflow: implemented. Consumes runner profiles and success-only gate.
 4. Manual ML workflow: implemented. Consumes nlp/llm-cpu profiles; never scheduled.
-5. Validation/review/PR: complete; #789 merged. Main/manual rollout verified; enforcement blocked by HTTP 403.
+5. Validation/review/PR: complete; #789 merged. Main/manual rollout and effective enforcement verified; #726 closed. Evidence PR #790 remains for human merge.
 
 Pre-flight: tasks 3/4 consume task 2's exact profile names and artifact directory.
 Both require existing hash locks; no application runtime API changes.
@@ -95,3 +95,12 @@ Both require existing hash locks; no application runtime API changes.
 - Published structured rollout receipt and owner instructions; no runtime,
   lock, workflow or decision changes. #727/#728 planning is next after this
   enforcement handoff; no phase gate approved.
+
+- 2026-10-20 completion: owner saved tiny_ruleset settings. API readback verifies
+  active ruleset 5735164 and effective main rules require Python CI required,
+  GitHub Actions app 15368, strict/up-to-date policy true. Existing conditions,
+  reviews/rules and bypass actors match the original snapshot exactly.
+- Main remains ac0e25d; main/manual runs still pass. #790's first CI run
+  39507410646 also passed at da32843. Closed #726 as completed and verified
+  its actual body/state/reason. Updated #790 evidence and documentation;
+  no PR merged and no phase gate approved. Next: plan #727/#728 with human review.

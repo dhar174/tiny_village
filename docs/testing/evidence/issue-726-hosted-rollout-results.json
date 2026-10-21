@@ -737,6 +737,151 @@
     }
   },
   "enforcement": {
+    "status": "verified",
+    "verified_at_utc": "2026-10-21T00:21:16.168759+00:00",
+    "activation": "Owner saved configuration; agent verified ruleset and effective main rules",
+    "ruleset_id": 5735164,
+    "name": "tiny_ruleset",
+    "required_context": "Python CI required",
+    "integration_id": 15368,
+    "strict_required_status_checks_policy": true,
+    "existing_policy_preserved": true,
+    "readback": {
+      "name": "tiny_ruleset",
+      "target": "branch",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": [
+            "~DEFAULT_BRANCH"
+          ]
+        }
+      },
+      "bypass_actors": [
+        {
+          "actor_id": null,
+          "actor_type": "DeployKey",
+          "bypass_mode": "always"
+        },
+        {
+          "actor_id": 2,
+          "actor_type": "RepositoryRole",
+          "bypass_mode": "always"
+        },
+        {
+          "actor_id": 5,
+          "actor_type": "RepositoryRole",
+          "bypass_mode": "always"
+        }
+      ],
+      "rules": [
+        {
+          "type": "deletion"
+        },
+        {
+          "type": "non_fast_forward"
+        },
+        {
+          "type": "required_linear_history"
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 0,
+            "dismiss_stale_reviews_on_push": false,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          }
+        },
+        {
+          "type": "required_status_checks",
+          "parameters": {
+            "strict_required_status_checks_policy": true,
+            "do_not_enforce_on_create": false,
+            "required_status_checks": [
+              {
+                "context": "Python CI required",
+                "integration_id": 15368
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "effective_main_rules": [
+      {
+        "type": "deletion",
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "dhar174/tiny_village",
+        "ruleset_id": 5735164
+      },
+      {
+        "type": "non_fast_forward",
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "dhar174/tiny_village",
+        "ruleset_id": 5735164
+      },
+      {
+        "type": "required_linear_history",
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "dhar174/tiny_village",
+        "ruleset_id": 5735164
+      },
+      {
+        "type": "pull_request",
+        "parameters": {
+          "required_approving_review_count": 0,
+          "dismiss_stale_reviews_on_push": false,
+          "required_reviewers": [],
+          "require_code_owner_review": false,
+          "require_last_push_approval": false,
+          "required_review_thread_resolution": false,
+          "require_extra_approval_for_unattributed_changes": true,
+          "allowed_merge_methods": [
+            "merge",
+            "squash",
+            "rebase"
+          ]
+        },
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "dhar174/tiny_village",
+        "ruleset_id": 5735164
+      },
+      {
+        "type": "required_status_checks",
+        "parameters": {
+          "strict_required_status_checks_policy": true,
+          "do_not_enforce_on_create": false,
+          "required_status_checks": [
+            {
+              "context": "Python CI required",
+              "integration_id": 15368
+            }
+          ]
+        },
+        "ruleset_source_type": "Repository",
+        "ruleset_source": "dhar174/tiny_village",
+        "ruleset_id": 5735164
+      }
+    ],
+    "verified_main_revision": "ac0e25d3674efb03440d2ccce26d7b009d5e82f3"
+  },
+  "issue_status": "closed_completed",
+  "limitations": [
+    "Offline supported-profile checks only; no live inference, gameplay, GPU or native Windows/macOS acceptance.",
+    "Existing bypass actors and review policy remain unchanged.",
+    "No phase-gate approval."
+  ],
+  "prior_activation_attempt": {
     "status": "blocked_owner_action_required",
     "ruleset_id": 5735164,
     "name": "tiny_ruleset",
@@ -904,10 +1049,5 @@
       }
     ]
   },
-  "issue_status": "open_until_required_check_enforcement_is_verified",
-  "limitations": [
-    "Offline supported-profile checks only; no live inference, gameplay, GPU or native Windows/macOS acceptance.",
-    "Existing bypass actors and review policy remain unchanged.",
-    "No phase-gate approval."
-  ]
+  "evidence_pr": 790
 }

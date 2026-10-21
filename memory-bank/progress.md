@@ -1,12 +1,12 @@
 ## What Works
 
-- TASK013 / #726: #789 merged at ac0e25d. Main and both manual ML profiles
-  pass 132 cases + three CLI probes; all five artifact digests verified.
-  Required-check activation was denied with HTTP 403. Readback confirms no
-  required-status rule; #726 stays open for owner activation and verification.
-  Preserve reviews/bypasses. See tasks/TASK013-supported-profile-ci-726.md and
-  docs/testing/issue-726-ci-validation.md for exact owner steps. #727/#728
-  UX/aesthetic planning follows; no phase gate is approved.
+- TASK013 / #726 is complete and closed. #789 merged at ac0e25d; main and
+  both manual ML profiles pass 132 cases + three CLI probes, all five artifact
+  digests verified. Owner activated tiny_ruleset; API readback confirms the
+  effective required check, GitHub Actions source and strict/up-to-date policy.
+  Existing rules/reviews/bypasses are preserved. Evidence PR #790 remains for
+  human merge. Next: plan #727 UX journeys and #728 aesthetic direction, with
+  separate human review. No phase gate is approved. See TASK013/validation report.
 
 - The repository has established architecture and documentation for the core
   simulation loop: events, strategy updates, GOAP planning, action execution,

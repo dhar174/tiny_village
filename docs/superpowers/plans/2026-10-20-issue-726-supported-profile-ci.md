@@ -88,15 +88,16 @@ before adding runner regressions and standalone CLI probes; report actual counts
 - [x] Human merged PR #789; no automatic merge.
 - [x] After merge, verify main workflow and trigger both manual profiles once.
   Runs 39504506879 / 39506792633 pass: 132 cases + three CLI probes.
-- [ ] Add Python CI required, bound to GitHub Actions, to the existing active
+- [x] Add Python CI required, bound to GitHub Actions, to the existing active
   ruleset with branches current before merge; preserve review/bypass policy.
-- [ ] Verify effective enforcement. If access is denied, provide exact owner
+- [x] Verify effective enforcement. If access is denied, provide exact owner
   steps and leave enforcement incomplete; never claim running means required.
-- [ ] Close #726 only after hosted results and enforcement are verified.
+- [x] Close #726 only after hosted results and enforcement are verified.
 
-Ruleset PUT was denied with HTTP 403. Readback confirms unchanged policy and
-no required-status rule; owner UI activation and verification remain required.
-See docs/testing/issue-726-ci-validation.md. #726 remains open.
+Owner completed activation after the earlier API denial. Active ruleset and
+effective-main readback confirm the expected context, app 15368 and strict policy;
+other rules/bypasses are preserved. #726 is closed as completed. Evidence/status
+PR #790 remains for human merge. See docs/testing/issue-726-ci-validation.md.
 
 Next planning block: #727 UX journeys and #728 aesthetic direction, with separate
 human review. All human decisions stay in docs/decisions.md.
