@@ -22,7 +22,7 @@ in the specifications, then obtain final written dispositions before #730.
 | Step | Status | Evidence |
 | --- | --- | --- |
 | Reconcile existing choices and remaining proposals | Complete | #727 section 5, #728 section 5 and #729 section 5; D020 resolves three earlier UX proposals. |
-| Review remaining proposals | In progress | D021 R01–R08 recorded; remaining UI defaults pending. |
+| Review remaining proposals | In progress | D021 R01–R09 recorded; remaining UI defaults pending. |
 | Final written-specification dispositions | Pending | #727/#728/#729 remain open. |
 | Combined human design review #730 | Pending | Separate decision after planning acceptance. |
 
@@ -56,3 +56,6 @@ in the specifications, then obtain final written dispositions before #730.
 - 2026-10-21 (America/New_York): recorded the submitted quicksave return policy
   in D021 R08. Next: keyboard focus/Page Up/Down precedence. No runtime save or
   input behavior implemented or tested.
+- 2026-10-21 (America/New_York): recorded the submitted Page Up/Down focus
+  precedence in D021 R09. Next: routine-confirmation duration/placement. No
+  runtime keyboard behavior implemented or tested.
