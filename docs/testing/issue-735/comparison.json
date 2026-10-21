@@ -1,0 +1,46 @@
+[
+  {
+    "pr": 703,
+    "variant": "candidate",
+    "candidate_sha": "c1528b5bf668774a0fd63cab4f81cca3b8ee2ace",
+    "module_sha256": "395c473da70b9ab945c44ed3cda43229cc8c1c2fc163a3f4b3487be1305b44a4",
+    "returncode": 0,
+    "artifact_dir": "/workspace/scratch/issue-735/captures/child-8pcb9eu_",
+    "stdout": "{\"tests\": 10, \"failures\": 0, \"errors\": 0, \"skips\": 0}\n",
+    "stderr": "test_clamped_int_score_init (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_init) ... ok\ntest_clamped_int_score_outside_bounds (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_outside_bounds) ... ok\ntest_clamped_int_score_repr_str (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_repr_str) ... ok\ntest_clamped_int_score_setters (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_setters) ... ok\ntest_clamped_int_score_within_bounds (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_within_bounds) ... ok\ntest_is_numeric_negative (candidate_tests.TestTinyUtilFuncs.test_is_numeric_negative) ... ok\ntest_is_numeric_none (candidate_tests.TestTinyUtilFuncs.test_is_numeric_none) ... ok\ntest_is_numeric_positive (candidate_tests.TestTinyUtilFuncs.test_is_numeric_positive) ... ok\ntest_tweener_boundaries (candidate_tests.TestTinyUtilFuncs.test_tweener_boundaries) ... ok\ntest_tweener_interpolation (candidate_tests.TestTinyUtilFuncs.test_tweener_interpolation) ... ok\n\n----------------------------------------------------------------------\nRan 10 tests in 0.000s\n\nOK\n",
+    "retained_artifact_dir": "comparison-captures/child-8pcb9eu_"
+  },
+  {
+    "pr": 703,
+    "variant": "main",
+    "candidate_sha": "c1528b5bf668774a0fd63cab4f81cca3b8ee2ace",
+    "module_sha256": "72dada18a2bcad43f84fcf97b42d0bb5767d59b8cb8ff5ea86799a4038ed42e7",
+    "returncode": 1,
+    "artifact_dir": "/workspace/scratch/issue-735/captures/child-nl6un0u7",
+    "stdout": "{\"tests\": 10, \"failures\": 0, \"errors\": 2, \"skips\": 0}\n",
+    "stderr": "test_clamped_int_score_init (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_init) ... ok\ntest_clamped_int_score_outside_bounds (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_outside_bounds) ... ok\ntest_clamped_int_score_repr_str (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_repr_str) ... ok\ntest_clamped_int_score_setters (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_setters) ... ok\ntest_clamped_int_score_within_bounds (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_within_bounds) ... ok\ntest_is_numeric_negative (candidate_tests.TestTinyUtilFuncs.test_is_numeric_negative) ... ERROR\ntest_is_numeric_none (candidate_tests.TestTinyUtilFuncs.test_is_numeric_none) ... ERROR\ntest_is_numeric_positive (candidate_tests.TestTinyUtilFuncs.test_is_numeric_positive) ... ok\ntest_tweener_boundaries (candidate_tests.TestTinyUtilFuncs.test_tweener_boundaries) ... ok\ntest_tweener_interpolation (candidate_tests.TestTinyUtilFuncs.test_tweener_interpolation) ... ok\n\n======================================================================\nERROR: test_is_numeric_negative (candidate_tests.TestTinyUtilFuncs.test_is_numeric_negative)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/scratch/issue-735/703/test_tiny_util_funcs.py\", line 18, in test_is_numeric_negative\n    self.assertFalse(is_numeric([]))\n                     ^^^^^^^^^^^^^^\n  File \"tiny_util_funcs.py\", line 43, in is_numeric\n    float(value)\nTypeError: float() argument must be a string or a real number, not 'list'\n\n======================================================================\nERROR: test_is_numeric_none (candidate_tests.TestTinyUtilFuncs.test_is_numeric_none)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/scratch/issue-735/703/test_tiny_util_funcs.py\", line 22, in test_is_numeric_none\n    self.assertFalse(is_numeric(None))\n                     ^^^^^^^^^^^^^^^^\n  File \"tiny_util_funcs.py\", line 43, in is_numeric\n    float(value)\nTypeError: float() argument must be a string or a real number, not 'NoneType'\n\n----------------------------------------------------------------------\nRan 10 tests in 0.000s\n\nFAILED (errors=2)\n",
+    "retained_artifact_dir": "comparison-captures/child-nl6un0u7"
+  },
+  {
+    "pr": 714,
+    "variant": "candidate",
+    "candidate_sha": "f99d49f9d3073719d28069de7751e7a3311242a9",
+    "module_sha256": "395c473da70b9ab945c44ed3cda43229cc8c1c2fc163a3f4b3487be1305b44a4",
+    "returncode": 0,
+    "artifact_dir": "/workspace/scratch/issue-735/captures/child-o7mxnh_j",
+    "stdout": "{\"tests\": 12, \"failures\": 0, \"errors\": 0, \"skips\": 0}\n",
+    "stderr": "test_clamped_int_score_above_max (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_above_max) ... ok\ntest_clamped_int_score_below_min (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_below_min) ... ok\ntest_clamped_int_score_in_range (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_in_range) ... ok\ntest_clamped_int_score_init (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_init) ... ok\ntest_clamped_int_score_large_values (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_large_values) ... ok\ntest_is_numeric_invalid (candidate_tests.TestTinyUtilFuncs.test_is_numeric_invalid) ... ok\ntest_is_numeric_valid (candidate_tests.TestTinyUtilFuncs.test_is_numeric_valid) ... ok\ntest_tweener_above_max (candidate_tests.TestTinyUtilFuncs.test_tweener_above_max) ... ok\ntest_tweener_at_max (candidate_tests.TestTinyUtilFuncs.test_tweener_at_max) ... ok\ntest_tweener_at_zero (candidate_tests.TestTinyUtilFuncs.test_tweener_at_zero) ... ok\ntest_tweener_normal (candidate_tests.TestTinyUtilFuncs.test_tweener_normal) ... ok\ntest_tweener_reversed (candidate_tests.TestTinyUtilFuncs.test_tweener_reversed) ... ok\n\n----------------------------------------------------------------------\nRan 12 tests in 0.000s\n\nOK\n",
+    "retained_artifact_dir": "comparison-captures/child-o7mxnh_j"
+  },
+  {
+    "pr": 714,
+    "variant": "main",
+    "candidate_sha": "f99d49f9d3073719d28069de7751e7a3311242a9",
+    "module_sha256": "72dada18a2bcad43f84fcf97b42d0bb5767d59b8cb8ff5ea86799a4038ed42e7",
+    "returncode": 1,
+    "artifact_dir": "/workspace/scratch/issue-735/captures/child-mva2rate",
+    "stdout": "{\"tests\": 12, \"failures\": 0, \"errors\": 1, \"skips\": 0}\n",
+    "stderr": "test_clamped_int_score_above_max (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_above_max) ... ok\ntest_clamped_int_score_below_min (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_below_min) ... ok\ntest_clamped_int_score_in_range (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_in_range) ... ok\ntest_clamped_int_score_init (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_init) ... ok\ntest_clamped_int_score_large_values (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_large_values) ... ok\ntest_is_numeric_invalid (candidate_tests.TestTinyUtilFuncs.test_is_numeric_invalid) ... ERROR\ntest_is_numeric_valid (candidate_tests.TestTinyUtilFuncs.test_is_numeric_valid) ... ok\ntest_tweener_above_max (candidate_tests.TestTinyUtilFuncs.test_tweener_above_max) ... ok\ntest_tweener_at_max (candidate_tests.TestTinyUtilFuncs.test_tweener_at_max) ... ok\ntest_tweener_at_zero (candidate_tests.TestTinyUtilFuncs.test_tweener_at_zero) ... ok\ntest_tweener_normal (candidate_tests.TestTinyUtilFuncs.test_tweener_normal) ... ok\ntest_tweener_reversed (candidate_tests.TestTinyUtilFuncs.test_tweener_reversed) ... ok\n\n======================================================================\nERROR: test_is_numeric_invalid (candidate_tests.TestTinyUtilFuncs.test_is_numeric_invalid)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/workspace/scratch/issue-735/714/test_tiny_util_funcs.py\", line 14, in test_is_numeric_invalid\n    self.assertFalse(is_numeric(None))\n                     ^^^^^^^^^^^^^^^^\n  File \"tiny_util_funcs.py\", line 43, in is_numeric\n    float(value)\nTypeError: float() argument must be a string or a real number, not 'NoneType'\n\n----------------------------------------------------------------------\nRan 12 tests in 0.000s\n\nFAILED (errors=1)\n",
+    "retained_artifact_dir": "comparison-captures/child-mva2rate"
+  }
+]

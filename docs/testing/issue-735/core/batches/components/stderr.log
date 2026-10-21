@@ -1,0 +1,59 @@
+INFO:root:Note: Using simplified demo approach to avoid ML dependencies.
+INFO:root:In full deployment, this would use the complete Character class.
+WARNING:tiny_utility_functions:Using fallback Goal implementation in tiny_utility_functions
+test_clamped_int_score_init (tests.test_tiny_util_funcs.TestTinyUtilFuncs.test_clamped_int_score_init) ... ok
+test_clamped_int_score_legacy_scaling_outside_bounds (tests.test_tiny_util_funcs.TestTinyUtilFuncs.test_clamped_int_score_legacy_scaling_outside_bounds) ... ok
+test_clamped_int_score_repr_str (tests.test_tiny_util_funcs.TestTinyUtilFuncs.test_clamped_int_score_repr_str) ... ok
+test_clamped_int_score_setters (tests.test_tiny_util_funcs.TestTinyUtilFuncs.test_clamped_int_score_setters) ... ok
+test_clamped_int_score_within_bounds (tests.test_tiny_util_funcs.TestTinyUtilFuncs.test_clamped_int_score_within_bounds) ... ok
+test_is_numeric_negative (tests.test_tiny_util_funcs.TestTinyUtilFuncs.test_is_numeric_negative) ... ok
+test_is_numeric_none (tests.test_tiny_util_funcs.TestTinyUtilFuncs.test_is_numeric_none) ... ok
+test_is_numeric_positive (tests.test_tiny_util_funcs.TestTinyUtilFuncs.test_is_numeric_positive) ... ok
+test_tweener_boundaries (tests.test_tiny_util_funcs.TestTinyUtilFuncs.test_tweener_boundaries) ... ok
+test_tweener_interpolation (tests.test_tiny_util_funcs.TestTinyUtilFuncs.test_tweener_interpolation) ... ok
+test_tweener_reversed (tests.test_tiny_util_funcs.TestTinyUtilFuncs.test_tweener_reversed) ... ok
+test_action_execute_applies_effects_and_updates_graph (tests.test_actions.TestActionExecution.test_action_execute_applies_effects_and_updates_graph) ... ok
+test_action_execute_honors_real_condition_preconditions (tests.test_actions.TestActionExecution.test_action_execute_honors_real_condition_preconditions) ... ok
+test_action_template_passes_graph_manager_into_instantiated_action (tests.test_actions.TestActionExecution.test_action_template_passes_graph_manager_into_instantiated_action) ... ok
+test_talk_action_default_execution_relies_on_target_response (tests.test_actions.TestTalkActionIntegration.test_talk_action_default_execution_relies_on_target_response) ... ok
+test_talk_action_uses_wrapped_real_response_without_hardcoded_delta (tests.test_actions.TestTalkActionIntegration.test_talk_action_uses_wrapped_real_response_without_hardcoded_delta) ... ok
+test_deduplication_no_double_apply (tests.test_action_named_target_resolution.TestActionNamedTargetResolution.test_deduplication_no_double_apply)
+A character appearing twice in visitors is only affected once. ... ok
+test_execute_falls_back_to_registered_characters_when_visitors_missing (tests.test_action_named_target_resolution.TestActionNamedTargetResolution.test_execute_falls_back_to_registered_characters_when_visitors_missing)
+Falls back to graph_manager.characters when current_visitors is empty. ... ok
+test_execute_uses_current_visitors_for_target_character_in_location (tests.test_action_named_target_resolution.TestActionNamedTargetResolution.test_execute_uses_current_visitors_for_target_character_in_location)
+Effect is applied to the co-located character via current_visitors. ... ok
+test_named_token_alongside_initiator_token (tests.test_action_named_target_resolution.TestActionNamedTargetResolution.test_named_token_alongside_initiator_token)
+An effect with both 'initiator' and 'target_character_in_location' targets. ... ok
+test_no_effect_when_no_other_character_in_location (tests.test_action_named_target_resolution.TestActionNamedTargetResolution.test_no_effect_when_no_other_character_in_location)
+No effect applied when the initiator is alone in the location. ... ok
+test_no_effect_when_target_name_not_in_location (tests.test_action_named_target_resolution.TestActionNamedTargetResolution.test_no_effect_when_target_name_not_in_location)
+No effect when the requested target name is not in the location. ... ok
+test_get_current_world_state_inner_exception (tests.test_goap_error_handling.TestGOAPErrorHandling.test_get_current_world_state_inner_exception)
+Test Scenario 2: Inner Exception Handling in get_current_world_state ... ok
+test_get_current_world_state_no_get_state_attr (tests.test_goap_error_handling.TestGOAPErrorHandling.test_get_current_world_state_no_get_state_attr)
+Test when character doesn't have get_state method ... ok
+test_get_current_world_state_non_dict_state (tests.test_goap_error_handling.TestGOAPErrorHandling.test_get_current_world_state_non_dict_state)
+Test when character state is not a dict ... ok
+test_get_current_world_state_outer_exception (tests.test_goap_error_handling.TestGOAPErrorHandling.test_get_current_world_state_outer_exception)
+Test Scenario 1: Outer Exception Handling in get_current_world_state ... ok
+test_get_current_world_state_success_merge (tests.test_goap_error_handling.TestGOAPErrorHandling.test_get_current_world_state_success_merge)
+Test Scenario 3: Normal State Enrichment in get_current_world_state ... ok
+test_dict_payload_triggers_immediately (tests.test_event_handler_payloads.TestEventHandlerPayloads.test_dict_payload_triggers_immediately) ... INFO:root:Added event: payload_trigger
+ok
+test_event_only_helpers_ignore_payloads (tests.test_event_handler_payloads.TestEventHandlerPayloads.test_event_only_helpers_ignore_payloads) ... INFO:root:Added event: Structured Event
+INFO:root:Added event: payload_stats
+ok
+test_failed_payload_processing_removes_payload_from_queue (tests.test_event_handler_payloads.TestEventHandlerPayloads.test_failed_payload_processing_removes_payload_from_queue) ... INFO:root:Added event: payload_failure
+WARNING:root:Failed applying payload effect for payload_failure: Invalid effect type: None. Must be one of ['attribute_change', 'relationship_change', 'location_change', 'world_state_change']
+ok
+test_storytelling_receives_object_context_for_dict_payload (tests.test_event_handler_payloads.TestEventHandlerPayloads.test_storytelling_receives_object_context_for_dict_payload) ... INFO:root:StorytellingEventHandler initialized with narrative capabilities
+INFO:root:Added event: Payload Story
+ok
+test_successful_payload_cleanup_and_context_wrapping (tests.test_event_handler_payloads.TestEventHandlerPayloads.test_successful_payload_cleanup_and_context_wrapping) ... INFO:root:Added event: payload_success
+ok
+
+----------------------------------------------------------------------
+Ran 32 tests in 0.115s
+
+OK

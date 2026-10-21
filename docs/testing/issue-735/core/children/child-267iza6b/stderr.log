@@ -1,0 +1,21 @@
+ERROR:tiny_gameplay_controller:Failed to create character Alice Cooper: Controlled real constructor failure
+ERROR:tiny_gameplay_controller:Error creating character Alice Cooper: Required character Alice Cooper construction failed
+ERROR:tiny_gameplay_controller:Character creation failed: Required character creation incomplete: 0/1
+ERROR:tiny_gameplay_controller:Critical error initializing game systems: Required real character initialization failed; no substitute is installed
+ERROR:tiny_gameplay_controller:Traceback (most recent call last):
+  File "/workspace/tiny_village-735/tiny_gameplay_controller.py", line 2362, in initialize_game_systems
+    sample_characters = self._create_sample_characters(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/tiny_village-735/tiny_gameplay_controller.py", line 2529, in _create_sample_characters
+    raise RuntimeError(f"Required character creation incomplete: {len(characters)}/{character_count}")
+RuntimeError: Required character creation incomplete: 0/1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/workspace/tiny_village-735/tiny_gameplay_controller.py", line 2374, in initialize_game_systems
+    self._create_fallback_characters()
+  File "/workspace/tiny_village-735/tiny_gameplay_controller.py", line 2404, in _create_fallback_characters
+    raise RuntimeError("Required real character initialization failed; no substitute is installed")
+RuntimeError: Required real character initialization failed; no substitute is installed
+

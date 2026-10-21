@@ -1,0 +1,10 @@
+{
+  "validated_source_commit": "80df5fcc8a7878ec3eb87b07f382c42979b81db1",
+  "run_parent_revision": "eeef27186b65cb198398fd01fd00eca59ba232a8",
+  "note": "Runs occurred with the three listed working-tree changes; their exact bytes match the subsequent committed source below. Summary revision is the pre-commit parent, not a false clean-tree assertion.",
+  "files": {
+    "tiny_util_funcs.py": "56298f8f52c1329aa318c4ab9c2b6b7fe324cbc6d570e4087b3970615330a3c8",
+    "tests/test_tiny_util_funcs.py": "196beea40e42e68c56f8c8ee14da499d6e95fbcae171c0d90e21ecf3c1235180",
+    "scripts/run_ci_checks.py": "3918995e5b2233cb642a7aed1bf5bcd1a28bde3a7bf487503d1e731d50e4e9f5"
+  }
+}

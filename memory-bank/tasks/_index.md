@@ -1,6 +1,7 @@
 ## Tasks Index
 
 ## In Progress
+- [TASK022](TASK022-utility-consolidation-735.md) Utility PR consolidation (#735) - #703 selected under D028; 69 local tests + 3 probes pass, #703 awaits review/merge (Updated: 2026-10-21)
 - [TASK021](TASK021-backlog-triage-734.md) Evidence-based backlog triage (#734) - PR #797 full-manifest review fix verified; publication awaits consolidated review (Updated: 2026-10-21)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 

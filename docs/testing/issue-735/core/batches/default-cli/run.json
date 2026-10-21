@@ -1,0 +1,33 @@
+{
+  "status": "PASS",
+  "command": [
+    "/workspace/.venvs/issue726-core/bin/python",
+    "-B",
+    "/workspace/tiny_village-735/scripts/run_ci_checks.py",
+    "--worker",
+    "probe",
+    "--report",
+    "/workspace/tiny_village-735/docs/testing/issue-735/core/batches/default-cli/result.json",
+    "default"
+  ],
+  "parent_timeout": 120,
+  "started_utc": "2026-10-21T23:19:50.782354+00:00",
+  "exit_code": 0,
+  "launcher": [
+    "/workspace/.venvs/issue726-core/bin/python",
+    "-B",
+    "-c",
+    "import os; from scripts.run_ci_checks import register_group; register_group('/workspace/tiny_village-735/docs/testing/issue-735/core/batches/default-cli/groups',166986); os.execvp('/workspace/.venvs/issue726-core/bin/python',['/workspace/.venvs/issue726-core/bin/python', '-B', '/workspace/tiny_village-735/scripts/run_ci_checks.py', '--worker', 'probe', '--report', '/workspace/tiny_village-735/docs/testing/issue-735/core/batches/default-cli/result.json', 'default'])"
+  ],
+  "pid": 167084,
+  "terminated_groups": [],
+  "report": {
+    "kind": "probe",
+    "status": "PASS",
+    "probes_run": 1,
+    "expected_exit_code": 0,
+    "observed_exit_code": 0,
+    "capture_artifacts": "/workspace/tiny_village-735/docs/testing/issue-735/core/children/child-aw66hba3"
+  },
+  "finished_utc": "2026-10-21T23:19:51.347850+00:00"
+}

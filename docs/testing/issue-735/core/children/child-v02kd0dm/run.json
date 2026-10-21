@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "test_id": "tests.test_memory_runtime.TestBasicMemory.test_full_construction_is_lazy_and_missing_service_preserves_cause",
+  "source_sha256": "d6fe76f184a8b674162e75cd5112c5376304c9d69157344db954dcc8050a49f2",
+  "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+  "cwd": "/workspace/tiny_village-735",
+  "pid": 167013,
+  "fatal_timeout": 20,
+  "timeout": 25,
+  "started_utc": "2026-10-21T23:19:45.437458+00:00",
+  "started_monotonic": 93578.294370915,
+  "returncode": 0,
+  "outcome": "EXITED_ZERO",
+  "watchdog_dump_observed": false,
+  "launched_monotonic": 93578.294909679,
+  "wait_started_monotonic": 93578.295106773,
+  "finished_utc": "2026-10-21T23:19:45.601952+00:00",
+  "finished_monotonic": 93578.458876223
+}

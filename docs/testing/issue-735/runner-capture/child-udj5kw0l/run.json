@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "test_id": "issue735-ci-runner",
+  "source_sha256": "fcdf7341c16d937cb493b99506f332fe6856cf63fbe937ba65d34fe8481d6df8",
+  "interpreter": "/workspace/.venvs/issue726-dev/bin/python",
+  "cwd": "/workspace/tiny_village-735",
+  "pid": 167181,
+  "fatal_timeout": 20,
+  "timeout": 25,
+  "started_utc": "2026-10-21T23:20:10.762996+00:00",
+  "started_monotonic": 93603.619913143,
+  "returncode": 0,
+  "outcome": "EXITED_ZERO",
+  "watchdog_dump_observed": false,
+  "launched_monotonic": 93603.6207163,
+  "wait_started_monotonic": 93603.620904962,
+  "finished_utc": "2026-10-21T23:20:23.258427+00:00",
+  "finished_monotonic": 93616.115353463
+}
