@@ -22,7 +22,7 @@ in the specifications, then obtain final written dispositions before #730.
 | Step | Status | Evidence |
 | --- | --- | --- |
 | Reconcile existing choices and remaining proposals | Complete | #727 section 5, #728 section 5 and #729 section 5; D020 resolves three earlier UX proposals. |
-| Review remaining proposals | In progress | D021 R01–R03 recorded; remaining visual/UI defaults pending. |
+| Review remaining proposals | In progress | D021 R01–R04 recorded; remaining visual/UI defaults pending. |
 | Final written-specification dispositions | Pending | #727/#728/#729 remain open. |
 | Combined human design review #730 | Pending | Separate decision after planning acceptance. |
 
@@ -40,3 +40,6 @@ in the specifications, then obtain final written dispositions before #730.
 - 2026-10-21 (America/New_York): recorded acceptance of the existing-color trial
   approach in D021 R03. Font pairing is the next choice. No rendered contrast
   test, palette modification or runtime implementation performed.
+- 2026-10-21 (America/New_York): recorded the submitted font-pairing choice in
+  D021 R04. Type sizes/spacing are next. No font binary imported or native
+  rendering/character-coverage test executed.
