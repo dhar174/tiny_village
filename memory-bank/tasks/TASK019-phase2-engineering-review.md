@@ -43,3 +43,8 @@ and [receipt](../../docs/testing/evidence/issue-731-engineering-review.json).
   fetched successfully and has no non-document changes from the verified
   runtime. Project read still returns 403; only its synchronization remains
   blocked. Earlier authentication failures remain historical evidence.
+- 2026-10-21: PR #795 review follow-up: replaced the generic artifact download
+  placeholder with each of the three recorded IDs and ZIP filenames; quoted
+  the git pathspecs for shell replay. Replayed the three download commands in
+  a fresh scratch directory and verified the retained SHA-256 digests. No
+  runtime tests or new engineering/design approval.

@@ -162,9 +162,11 @@
   "runtime_tests_executed_for_this_review": 0,
   "new_ml_workflow_dispatches": 0,
   "commands": [
-    "git diff --name-only ac0e25d origin/main -- :(exclude)docs/** :(exclude)memory-bank/**",
+    "git diff --name-only ac0e25d origin/main -- ':(exclude)docs/**' ':(exclude)memory-bank/**'",
     "gh api repos/dhar174/tiny_village/actions/runs/39648188081/artifacts",
-    "gh api repos/dhar174/tiny_village/actions/artifacts/ARTIFACT_ID/zip",
+    "gh api repos/dhar174/tiny_village/actions/artifacts/12368557270/zip > python-dev-39648188081-1.zip",
+    "gh api repos/dhar174/tiny_village/actions/artifacts/12368542410/zip > python-visual-39648188081-1.zip",
+    "gh api repos/dhar174/tiny_village/actions/artifacts/12367987858/zip > python-core-39648188081-1.zip",
     "gh api repos/dhar174/tiny_village/actions/runs/39648188081",
     "gh api repos/dhar174/tiny_village/commits/b54bfc6cee5d34192be6fc71c4f274a2444a1a3b",
     "gh api repos/dhar174/tiny_village/rulesets/5735164"
