@@ -1,11 +1,10 @@
 ## What Works
 
-- TASK020 / #732: Phase 2 readiness prepared after explicit #731 approval
-  under D024. #731 closure and all Phase 2 task states are verified; present
-  one separate phase decision.
-  Approval would unlock Phase 3 backlog/PR consolidation (#733, starting #734),
-  not establish UI/gameplay/live-AI readiness. #732/#723 remain open until then.
-  Project fields remain blocked by 403; PR #795 remains open for human merge.
+- TASK020 / #732: Phase 2 explicitly Approved under D025. PR #795 merged at
+  a7dea4c; prior gate and all nine required work/reviews are closed. Synchronize
+  #732/#723 completion and Phase 3 readiness. Next is #734 backlog triage under
+  #733; no Phase 3 work or gate approval is inferred. Project fields remain
+  blocked by HTTP 403. See tasks/TASK020-phase2-gate-readiness.md.
 
 - TASK019 / #731: Approved under D024 within the reviewed Python 3.12/Linux
   foundation, with all documented evidence limits. No new blocking remediation

@@ -1,8 +1,9 @@
 # Phase 2 gate #732 readiness
 
-Prepared 2026-10-21 (America/New_York). **Human phase disposition pending.**
-The maintainer has approved the design planning/review under D023 and the
-engineering review under D024. Those decisions do not themselves approve #732.
+Prepared 2026-10-21 (America/New_York). **Phase 2 Approved by dhar174 under
+D025.** The user explicitly approved #732 after the separate D023 design and
+D024 engineering decisions. This gate approval authorizes #732/#723 completion
+and the Phase 3 handoff within the scope and limitations below.
 
 ## Recommendation and meaning
 
@@ -34,10 +35,10 @@ replay correction at `17bed6d` passed CI; exact download commands were replayed
 and their SHA-256 values matched. Earlier manual ML counts remain separate.
 No new runtime test or manual ML cycle was launched for this gate preparation.
 
-PR #795 remains open for the approval-record/report publication; its head and
-checks are reviewed, and no automatic merge is authorized. Decision records on
-the branch and closed issues use immutable commit links. This report does not
-pretend that an open PR has merged or that its decisions are already on main.
+PR #795 merged as `a7dea4c32907d1fea6a6f4a7888d0337f17ad3e9`, publishing the
+design/engineering approvals and readiness report on main. D025 records the
+subsequent explicit phase approval in its own follow-up; issue dispositions
+link the published decision commit. No PR was merged automatically by Codex.
 
 ## Remaining limits and phase decision
 
@@ -52,8 +53,8 @@ atomic persistence, economic action/episode correctness and actual UI/human
 release verification remain in their existing later tasks. Optional testing
 dependencies do not make final-product AI optional (D015).
 
-The human may choose **Approved**, **Changes requested**, or **Deferred**.
-Any required new remediation must have its own issue/blocker; no such new
-remediation was identified in this preparation. Record the selected disposition
-in docs/decisions.md before closing #732/#723 or unlocking Phase 3. Until then,
-both remain open and downstream work is not started.
+The human selected **Approved**, explicitly recorded under D025 in the single
+decision file. No required new remediation was identified. Close #732/#723 and
+record Phase 3 readiness without closing its tasks or gate. #734's next work
+is backlog triage, including evidence-backed dispositions and human-approved
+duplicate closures; this report does not claim that triage has been performed.
