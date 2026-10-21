@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "test_id": "live_timing",
+  "source_sha256": "600b53ed8229c174ac99c488f171e894b338eb3ddb4263d3d15da9a277a66ae9",
+  "interpreter": "/workspace/.venvs/issue726-visual/bin/python",
+  "cwd": "/workspace/tiny_village",
+  "pid": 154753,
+  "fatal_timeout": 20,
+  "timeout": 25,
+  "started_utc": "2026-10-21T21:28:01.848993+00:00",
+  "started_monotonic": 86874.705910307,
+  "returncode": 0,
+  "outcome": "EXITED_ZERO",
+  "watchdog_dump_observed": false,
+  "launched_monotonic": 86874.706716739,
+  "wait_started_monotonic": 86874.706949686,
+  "finished_utc": "2026-10-21T21:28:02.164148+00:00",
+  "finished_monotonic": 86875.021073759
+}

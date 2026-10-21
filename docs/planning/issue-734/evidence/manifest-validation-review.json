@@ -1,0 +1,249 @@
+{
+  "review_comment": "https://github.com/dhar174/tiny_village/pull/797#discussion_r4342402200",
+  "reviewed_branch_head": "a38b5b41f128baeadc904488cc8e789de9c6d72e",
+  "verification_date": "2026-10-21 America/New_York",
+  "scope": "Bundle validator only; no runtime test rerun or issue publication",
+  "probe_source": "\"\"\"Scratch mutation checks; edits disposable bundle copies only.\"\"\"\nimport hashlib,json,shutil,subprocess,sys,tempfile,time\nfrom pathlib import Path\nROOT=Path('/workspace/tiny_village');BUNDLE=ROOT/'docs/planning/issue-734'\nCASES=[('pristine',None),('changed_ledger','ledger.md'),('changed_publication_review','publication-review.md'),('changed_audit_report','audit-report.md'),('changed_capture_stdout','evidence/captures/child-4kz9nh_s/stdout.log'),('changed_capture_stderr','evidence/captures/child-4kz9nh_s/stderr.log'),('missing_artifact','ledger.md'),('missing_manifest_entry','audit-report.md'),('unlisted_artifact','unlisted-review.md'),('wrong_digest','audit-report.md'),('missing_manifest',None)]\nrows=[]\nfor name,relative in CASES:\n with tempfile.TemporaryDirectory(prefix='issue734-manifest-') as directory:\n  fixture=Path(directory)/'repo';fixture.mkdir();(fixture/'.git').symlink_to(ROOT/'.git',target_is_directory=True)\n  copied=fixture/'docs/planning/issue-734';shutil.copytree(BUNDLE,copied,ignore=shutil.ignore_patterns('__pycache__'))\n  if name.startswith('changed_'):\n   with (copied/relative).open('ab') as stream:stream.write(b'\\nIntegrity mutation probe\\n')\n  elif name=='missing_artifact':(copied/relative).unlink()\n  elif name in ['missing_manifest_entry','wrong_digest']:\n   p=copied/'artifact-hashes.json';d=json.loads(p.read_text())\n   if name=='missing_manifest_entry':del d[relative]\n   else:d[relative]='0'*64\n   p.write_text(json.dumps(d,indent=2)+'\\n')\n  elif name=='unlisted_artifact':(copied/relative).write_text('Unlisted review artifact\\n')\n  elif name=='missing_manifest':(copied/'artifact-hashes.json').unlink()\n  command=[sys.executable,str(copied/'validate_bundle.py')];start=time.monotonic()\n  r=subprocess.run(command,cwd=fixture,capture_output=True,text=True,timeout=25)\n  rows.append({'scenario':name,'mutated_relative_path':relative,'expected_returncode':'zero' if name=='pristine' else 'nonzero','actual_returncode':r.returncode,'expectation_met':r.returncode==0 if name=='pristine' else r.returncode!=0,'elapsed_seconds':round(time.monotonic()-start,4),'stdout':r.stdout,'stderr':r.stderr})\nresult={'review_url':'https://github.com/dhar174/tiny_village/pull/797#discussion_r4342402200','validator_sha256':hashlib.sha256((BUNDLE/'validate_bundle.py').read_bytes()).hexdigest(),'command':'python /workspace/scratch/issue-734/verify_manifest_review.py','fixture_policy':'Disposable complete bundle copy; original Git object database read via .git symlink; no network writes or original artifact mutations','parent_timeout_seconds':25,'scenarios':rows,'expectations_met':sum(r['expectation_met'] for r in rows),'scenario_count':len(rows)}\nPath(sys.argv[1]).write_text(json.dumps(result,indent=2)+'\\n');print(json.dumps({'scenario_count':len(rows),'expectations_met':result['expectations_met'],'mutations_accepted':sum(r['actual_returncode']==0 for r in rows if r['scenario']!='pristine')},indent=2))\n",
+  "before": {
+    "review_url": "https://github.com/dhar174/tiny_village/pull/797#discussion_r4342402200",
+    "validator_sha256": "360b44d9295594a21eef14c4b0923337ed0f7588ce6be68c81233d4bd23c31c3",
+    "command": "python /workspace/scratch/issue-734/verify_manifest_review.py",
+    "fixture_policy": "Disposable complete bundle copy; original Git object database read via .git symlink; no network writes or original artifact mutations",
+    "parent_timeout_seconds": 25,
+    "scenarios": [
+      {
+        "scenario": "pristine",
+        "mutated_relative_path": null,
+        "expected_returncode": "zero",
+        "actual_returncode": 0,
+        "expectation_met": true,
+        "elapsed_seconds": 0.514,
+        "stdout": "{\n  \"status\": \"catalog_integrity_passed\",\n  \"original_issues\": 261,\n  \"current_only_open_issues\": 46,\n  \"ledger_rows\": 307,\n  \"open_pr_handoffs\": 37,\n  \"parent_dependency_cycles\": 0,\n  \"proposed_parent_additions\": 80,\n  \"proposed_duplicate_closures\": [\n    351,\n    382\n  ],\n  \"proposed_completed_closures\": [\n    355,\n    482,\n    594,\n    596,\n    597\n  ],\n  \"retained_capture_attempts\": 12,\n  \"capture_nonzero_exits\": 7,\n  \"existing_focused_tests_passed\": 12,\n  \"runtime_failures_preserved\": [\n    \"named_target\",\n    \"social\",\n    \"visual_interfaces\"\n  ],\n  \"github_issue_mutations_performed\": 0,\n  \"phase_gate_approvals_supplied\": 0\n}\n",
+        "stderr": ""
+      },
+      {
+        "scenario": "changed_ledger",
+        "mutated_relative_path": "ledger.md",
+        "expected_returncode": "nonzero",
+        "actual_returncode": 0,
+        "expectation_met": false,
+        "elapsed_seconds": 0.5152,
+        "stdout": "{\n  \"status\": \"catalog_integrity_passed\",\n  \"original_issues\": 261,\n  \"current_only_open_issues\": 46,\n  \"ledger_rows\": 307,\n  \"open_pr_handoffs\": 37,\n  \"parent_dependency_cycles\": 0,\n  \"proposed_parent_additions\": 80,\n  \"proposed_duplicate_closures\": [\n    351,\n    382\n  ],\n  \"proposed_completed_closures\": [\n    355,\n    482,\n    594,\n    596,\n    597\n  ],\n  \"retained_capture_attempts\": 12,\n  \"capture_nonzero_exits\": 7,\n  \"existing_focused_tests_passed\": 12,\n  \"runtime_failures_preserved\": [\n    \"named_target\",\n    \"social\",\n    \"visual_interfaces\"\n  ],\n  \"github_issue_mutations_performed\": 0,\n  \"phase_gate_approvals_supplied\": 0\n}\n",
+        "stderr": ""
+      },
+      {
+        "scenario": "changed_publication_review",
+        "mutated_relative_path": "publication-review.md",
+        "expected_returncode": "nonzero",
+        "actual_returncode": 0,
+        "expectation_met": false,
+        "elapsed_seconds": 0.4999,
+        "stdout": "{\n  \"status\": \"catalog_integrity_passed\",\n  \"original_issues\": 261,\n  \"current_only_open_issues\": 46,\n  \"ledger_rows\": 307,\n  \"open_pr_handoffs\": 37,\n  \"parent_dependency_cycles\": 0,\n  \"proposed_parent_additions\": 80,\n  \"proposed_duplicate_closures\": [\n    351,\n    382\n  ],\n  \"proposed_completed_closures\": [\n    355,\n    482,\n    594,\n    596,\n    597\n  ],\n  \"retained_capture_attempts\": 12,\n  \"capture_nonzero_exits\": 7,\n  \"existing_focused_tests_passed\": 12,\n  \"runtime_failures_preserved\": [\n    \"named_target\",\n    \"social\",\n    \"visual_interfaces\"\n  ],\n  \"github_issue_mutations_performed\": 0,\n  \"phase_gate_approvals_supplied\": 0\n}\n",
+        "stderr": ""
+      },
+      {
+        "scenario": "changed_audit_report",
+        "mutated_relative_path": "audit-report.md",
+        "expected_returncode": "nonzero",
+        "actual_returncode": 0,
+        "expectation_met": false,
+        "elapsed_seconds": 0.514,
+        "stdout": "{\n  \"status\": \"catalog_integrity_passed\",\n  \"original_issues\": 261,\n  \"current_only_open_issues\": 46,\n  \"ledger_rows\": 307,\n  \"open_pr_handoffs\": 37,\n  \"parent_dependency_cycles\": 0,\n  \"proposed_parent_additions\": 80,\n  \"proposed_duplicate_closures\": [\n    351,\n    382\n  ],\n  \"proposed_completed_closures\": [\n    355,\n    482,\n    594,\n    596,\n    597\n  ],\n  \"retained_capture_attempts\": 12,\n  \"capture_nonzero_exits\": 7,\n  \"existing_focused_tests_passed\": 12,\n  \"runtime_failures_preserved\": [\n    \"named_target\",\n    \"social\",\n    \"visual_interfaces\"\n  ],\n  \"github_issue_mutations_performed\": 0,\n  \"phase_gate_approvals_supplied\": 0\n}\n",
+        "stderr": ""
+      },
+      {
+        "scenario": "changed_capture_stdout",
+        "mutated_relative_path": "evidence/captures/child-4kz9nh_s/stdout.log",
+        "expected_returncode": "nonzero",
+        "actual_returncode": 0,
+        "expectation_met": false,
+        "elapsed_seconds": 0.5055,
+        "stdout": "{\n  \"status\": \"catalog_integrity_passed\",\n  \"original_issues\": 261,\n  \"current_only_open_issues\": 46,\n  \"ledger_rows\": 307,\n  \"open_pr_handoffs\": 37,\n  \"parent_dependency_cycles\": 0,\n  \"proposed_parent_additions\": 80,\n  \"proposed_duplicate_closures\": [\n    351,\n    382\n  ],\n  \"proposed_completed_closures\": [\n    355,\n    482,\n    594,\n    596,\n    597\n  ],\n  \"retained_capture_attempts\": 12,\n  \"capture_nonzero_exits\": 7,\n  \"existing_focused_tests_passed\": 12,\n  \"runtime_failures_preserved\": [\n    \"named_target\",\n    \"social\",\n    \"visual_interfaces\"\n  ],\n  \"github_issue_mutations_performed\": 0,\n  \"phase_gate_approvals_supplied\": 0\n}\n",
+        "stderr": ""
+      },
+      {
+        "scenario": "changed_capture_stderr",
+        "mutated_relative_path": "evidence/captures/child-4kz9nh_s/stderr.log",
+        "expected_returncode": "nonzero",
+        "actual_returncode": 0,
+        "expectation_met": false,
+        "elapsed_seconds": 0.5052,
+        "stdout": "{\n  \"status\": \"catalog_integrity_passed\",\n  \"original_issues\": 261,\n  \"current_only_open_issues\": 46,\n  \"ledger_rows\": 307,\n  \"open_pr_handoffs\": 37,\n  \"parent_dependency_cycles\": 0,\n  \"proposed_parent_additions\": 80,\n  \"proposed_duplicate_closures\": [\n    351,\n    382\n  ],\n  \"proposed_completed_closures\": [\n    355,\n    482,\n    594,\n    596,\n    597\n  ],\n  \"retained_capture_attempts\": 12,\n  \"capture_nonzero_exits\": 7,\n  \"existing_focused_tests_passed\": 12,\n  \"runtime_failures_preserved\": [\n    \"named_target\",\n    \"social\",\n    \"visual_interfaces\"\n  ],\n  \"github_issue_mutations_performed\": 0,\n  \"phase_gate_approvals_supplied\": 0\n}\n",
+        "stderr": ""
+      },
+      {
+        "scenario": "missing_artifact",
+        "mutated_relative_path": "ledger.md",
+        "expected_returncode": "nonzero",
+        "actual_returncode": 0,
+        "expectation_met": false,
+        "elapsed_seconds": 0.4998,
+        "stdout": "{\n  \"status\": \"catalog_integrity_passed\",\n  \"original_issues\": 261,\n  \"current_only_open_issues\": 46,\n  \"ledger_rows\": 307,\n  \"open_pr_handoffs\": 37,\n  \"parent_dependency_cycles\": 0,\n  \"proposed_parent_additions\": 80,\n  \"proposed_duplicate_closures\": [\n    351,\n    382\n  ],\n  \"proposed_completed_closures\": [\n    355,\n    482,\n    594,\n    596,\n    597\n  ],\n  \"retained_capture_attempts\": 12,\n  \"capture_nonzero_exits\": 7,\n  \"existing_focused_tests_passed\": 12,\n  \"runtime_failures_preserved\": [\n    \"named_target\",\n    \"social\",\n    \"visual_interfaces\"\n  ],\n  \"github_issue_mutations_performed\": 0,\n  \"phase_gate_approvals_supplied\": 0\n}\n",
+        "stderr": ""
+      },
+      {
+        "scenario": "missing_manifest_entry",
+        "mutated_relative_path": "audit-report.md",
+        "expected_returncode": "nonzero",
+        "actual_returncode": 0,
+        "expectation_met": false,
+        "elapsed_seconds": 0.4961,
+        "stdout": "{\n  \"status\": \"catalog_integrity_passed\",\n  \"original_issues\": 261,\n  \"current_only_open_issues\": 46,\n  \"ledger_rows\": 307,\n  \"open_pr_handoffs\": 37,\n  \"parent_dependency_cycles\": 0,\n  \"proposed_parent_additions\": 80,\n  \"proposed_duplicate_closures\": [\n    351,\n    382\n  ],\n  \"proposed_completed_closures\": [\n    355,\n    482,\n    594,\n    596,\n    597\n  ],\n  \"retained_capture_attempts\": 12,\n  \"capture_nonzero_exits\": 7,\n  \"existing_focused_tests_passed\": 12,\n  \"runtime_failures_preserved\": [\n    \"named_target\",\n    \"social\",\n    \"visual_interfaces\"\n  ],\n  \"github_issue_mutations_performed\": 0,\n  \"phase_gate_approvals_supplied\": 0\n}\n",
+        "stderr": ""
+      },
+      {
+        "scenario": "unlisted_artifact",
+        "mutated_relative_path": "unlisted-review.md",
+        "expected_returncode": "nonzero",
+        "actual_returncode": 0,
+        "expectation_met": false,
+        "elapsed_seconds": 0.5022,
+        "stdout": "{\n  \"status\": \"catalog_integrity_passed\",\n  \"original_issues\": 261,\n  \"current_only_open_issues\": 46,\n  \"ledger_rows\": 307,\n  \"open_pr_handoffs\": 37,\n  \"parent_dependency_cycles\": 0,\n  \"proposed_parent_additions\": 80,\n  \"proposed_duplicate_closures\": [\n    351,\n    382\n  ],\n  \"proposed_completed_closures\": [\n    355,\n    482,\n    594,\n    596,\n    597\n  ],\n  \"retained_capture_attempts\": 12,\n  \"capture_nonzero_exits\": 7,\n  \"existing_focused_tests_passed\": 12,\n  \"runtime_failures_preserved\": [\n    \"named_target\",\n    \"social\",\n    \"visual_interfaces\"\n  ],\n  \"github_issue_mutations_performed\": 0,\n  \"phase_gate_approvals_supplied\": 0\n}\n",
+        "stderr": ""
+      },
+      {
+        "scenario": "wrong_digest",
+        "mutated_relative_path": "audit-report.md",
+        "expected_returncode": "nonzero",
+        "actual_returncode": 0,
+        "expectation_met": false,
+        "elapsed_seconds": 0.5236,
+        "stdout": "{\n  \"status\": \"catalog_integrity_passed\",\n  \"original_issues\": 261,\n  \"current_only_open_issues\": 46,\n  \"ledger_rows\": 307,\n  \"open_pr_handoffs\": 37,\n  \"parent_dependency_cycles\": 0,\n  \"proposed_parent_additions\": 80,\n  \"proposed_duplicate_closures\": [\n    351,\n    382\n  ],\n  \"proposed_completed_closures\": [\n    355,\n    482,\n    594,\n    596,\n    597\n  ],\n  \"retained_capture_attempts\": 12,\n  \"capture_nonzero_exits\": 7,\n  \"existing_focused_tests_passed\": 12,\n  \"runtime_failures_preserved\": [\n    \"named_target\",\n    \"social\",\n    \"visual_interfaces\"\n  ],\n  \"github_issue_mutations_performed\": 0,\n  \"phase_gate_approvals_supplied\": 0\n}\n",
+        "stderr": ""
+      },
+      {
+        "scenario": "missing_manifest",
+        "mutated_relative_path": null,
+        "expected_returncode": "nonzero",
+        "actual_returncode": 0,
+        "expectation_met": false,
+        "elapsed_seconds": 0.5012,
+        "stdout": "{\n  \"status\": \"catalog_integrity_passed\",\n  \"original_issues\": 261,\n  \"current_only_open_issues\": 46,\n  \"ledger_rows\": 307,\n  \"open_pr_handoffs\": 37,\n  \"parent_dependency_cycles\": 0,\n  \"proposed_parent_additions\": 80,\n  \"proposed_duplicate_closures\": [\n    351,\n    382\n  ],\n  \"proposed_completed_closures\": [\n    355,\n    482,\n    594,\n    596,\n    597\n  ],\n  \"retained_capture_attempts\": 12,\n  \"capture_nonzero_exits\": 7,\n  \"existing_focused_tests_passed\": 12,\n  \"runtime_failures_preserved\": [\n    \"named_target\",\n    \"social\",\n    \"visual_interfaces\"\n  ],\n  \"github_issue_mutations_performed\": 0,\n  \"phase_gate_approvals_supplied\": 0\n}\n",
+        "stderr": ""
+      }
+    ],
+    "expectations_met": 1,
+    "scenario_count": 11
+  },
+  "after": {
+    "review_url": "https://github.com/dhar174/tiny_village/pull/797#discussion_r4342402200",
+    "validator_sha256": "5552cd055fed988d780c94f086eb5a70e8d69d917b23129b1e0aafe861c458f4",
+    "command": "python /workspace/scratch/issue-734/verify_manifest_review.py",
+    "fixture_policy": "Disposable complete bundle copy; original Git object database read via .git symlink; no network writes or original artifact mutations",
+    "parent_timeout_seconds": 25,
+    "scenarios": [
+      {
+        "scenario": "pristine",
+        "mutated_relative_path": null,
+        "expected_returncode": "zero",
+        "actual_returncode": 0,
+        "expectation_met": true,
+        "elapsed_seconds": 0.5079,
+        "stdout": "{\n  \"status\": \"catalog_integrity_passed\",\n  \"artifact_hashes_verified\": 86,\n  \"original_issues\": 261,\n  \"current_only_open_issues\": 46,\n  \"ledger_rows\": 307,\n  \"open_pr_handoffs\": 37,\n  \"parent_dependency_cycles\": 0,\n  \"proposed_parent_additions\": 80,\n  \"proposed_duplicate_closures\": [\n    351,\n    382\n  ],\n  \"proposed_completed_closures\": [\n    355,\n    482,\n    594,\n    596,\n    597\n  ],\n  \"retained_capture_attempts\": 12,\n  \"capture_nonzero_exits\": 7,\n  \"existing_focused_tests_passed\": 12,\n  \"runtime_failures_preserved\": [\n    \"named_target\",\n    \"social\",\n    \"visual_interfaces\"\n  ],\n  \"github_issue_mutations_performed\": 0,\n  \"phase_gate_approvals_supplied\": 0\n}\n",
+        "stderr": ""
+      },
+      {
+        "scenario": "changed_ledger",
+        "mutated_relative_path": "ledger.md",
+        "expected_returncode": "nonzero",
+        "actual_returncode": 1,
+        "expectation_met": true,
+        "elapsed_seconds": 0.0285,
+        "stdout": "",
+        "stderr": "Traceback (most recent call last):\n  File \"/tmp/issue734-manifest-hmes6gc4/repo/docs/planning/issue-734/validate_bundle.py\", line 33, in <module>\n    raise AssertionError(f'Artifact hash mismatch: {name}')\nAssertionError: Artifact hash mismatch: ledger.md\n"
+      },
+      {
+        "scenario": "changed_publication_review",
+        "mutated_relative_path": "publication-review.md",
+        "expected_returncode": "nonzero",
+        "actual_returncode": 1,
+        "expectation_met": true,
+        "elapsed_seconds": 0.0307,
+        "stdout": "",
+        "stderr": "Traceback (most recent call last):\n  File \"/tmp/issue734-manifest-q9zjpw24/repo/docs/planning/issue-734/validate_bundle.py\", line 33, in <module>\n    raise AssertionError(f'Artifact hash mismatch: {name}')\nAssertionError: Artifact hash mismatch: publication-review.md\n"
+      },
+      {
+        "scenario": "changed_audit_report",
+        "mutated_relative_path": "audit-report.md",
+        "expected_returncode": "nonzero",
+        "actual_returncode": 1,
+        "expectation_met": true,
+        "elapsed_seconds": 0.025,
+        "stdout": "",
+        "stderr": "Traceback (most recent call last):\n  File \"/tmp/issue734-manifest-06r46pf1/repo/docs/planning/issue-734/validate_bundle.py\", line 33, in <module>\n    raise AssertionError(f'Artifact hash mismatch: {name}')\nAssertionError: Artifact hash mismatch: audit-report.md\n"
+      },
+      {
+        "scenario": "changed_capture_stdout",
+        "mutated_relative_path": "evidence/captures/child-4kz9nh_s/stdout.log",
+        "expected_returncode": "nonzero",
+        "actual_returncode": 1,
+        "expectation_met": true,
+        "elapsed_seconds": 0.0264,
+        "stdout": "",
+        "stderr": "Traceback (most recent call last):\n  File \"/tmp/issue734-manifest-igqupdu8/repo/docs/planning/issue-734/validate_bundle.py\", line 33, in <module>\n    raise AssertionError(f'Artifact hash mismatch: {name}')\nAssertionError: Artifact hash mismatch: evidence/captures/child-4kz9nh_s/stdout.log\n"
+      },
+      {
+        "scenario": "changed_capture_stderr",
+        "mutated_relative_path": "evidence/captures/child-4kz9nh_s/stderr.log",
+        "expected_returncode": "nonzero",
+        "actual_returncode": 1,
+        "expectation_met": true,
+        "elapsed_seconds": 0.0253,
+        "stdout": "",
+        "stderr": "Traceback (most recent call last):\n  File \"/tmp/issue734-manifest-giekytyk/repo/docs/planning/issue-734/validate_bundle.py\", line 33, in <module>\n    raise AssertionError(f'Artifact hash mismatch: {name}')\nAssertionError: Artifact hash mismatch: evidence/captures/child-4kz9nh_s/stderr.log\n"
+      },
+      {
+        "scenario": "missing_artifact",
+        "mutated_relative_path": "ledger.md",
+        "expected_returncode": "nonzero",
+        "actual_returncode": 1,
+        "expectation_met": true,
+        "elapsed_seconds": 0.026,
+        "stdout": "",
+        "stderr": "Traceback (most recent call last):\n  File \"/tmp/issue734-manifest-shn33jr0/repo/docs/planning/issue-734/validate_bundle.py\", line 26, in <module>\n    raise AssertionError(\nAssertionError: Artifact manifest coverage mismatch: unlisted artifacts []; missing artifacts ['ledger.md']\n"
+      },
+      {
+        "scenario": "missing_manifest_entry",
+        "mutated_relative_path": "audit-report.md",
+        "expected_returncode": "nonzero",
+        "actual_returncode": 1,
+        "expectation_met": true,
+        "elapsed_seconds": 0.0251,
+        "stdout": "",
+        "stderr": "Traceback (most recent call last):\n  File \"/tmp/issue734-manifest-w8g9p2oz/repo/docs/planning/issue-734/validate_bundle.py\", line 26, in <module>\n    raise AssertionError(\nAssertionError: Artifact manifest coverage mismatch: unlisted artifacts ['audit-report.md']; missing artifacts []\n"
+      },
+      {
+        "scenario": "unlisted_artifact",
+        "mutated_relative_path": "unlisted-review.md",
+        "expected_returncode": "nonzero",
+        "actual_returncode": 1,
+        "expectation_met": true,
+        "elapsed_seconds": 0.0255,
+        "stdout": "",
+        "stderr": "Traceback (most recent call last):\n  File \"/tmp/issue734-manifest-hz_2fmh7/repo/docs/planning/issue-734/validate_bundle.py\", line 26, in <module>\n    raise AssertionError(\nAssertionError: Artifact manifest coverage mismatch: unlisted artifacts ['unlisted-review.md']; missing artifacts []\n"
+      },
+      {
+        "scenario": "wrong_digest",
+        "mutated_relative_path": "audit-report.md",
+        "expected_returncode": "nonzero",
+        "actual_returncode": 1,
+        "expectation_met": true,
+        "elapsed_seconds": 0.0251,
+        "stdout": "",
+        "stderr": "Traceback (most recent call last):\n  File \"/tmp/issue734-manifest-xg9lxh4x/repo/docs/planning/issue-734/validate_bundle.py\", line 33, in <module>\n    raise AssertionError(f'Artifact hash mismatch: {name}')\nAssertionError: Artifact hash mismatch: audit-report.md\n"
+      },
+      {
+        "scenario": "missing_manifest",
+        "mutated_relative_path": null,
+        "expected_returncode": "nonzero",
+        "actual_returncode": 1,
+        "expectation_met": true,
+        "elapsed_seconds": 0.0198,
+        "stdout": "",
+        "stderr": "Traceback (most recent call last):\n  File \"/tmp/issue734-manifest-os92rv4i/repo/docs/planning/issue-734/validate_bundle.py\", line 16, in <module>\n    artifact_hashes = load('artifact-hashes.json')\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/issue734-manifest-os92rv4i/repo/docs/planning/issue-734/validate_bundle.py\", line 12, in load\n    return json.loads((HERE / name).read_text())\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py\", line 1027, in read_text\n    with self.open(mode='r', encoding=encoding, errors=errors) as f:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py\", line 1013, in open\n    return io.open(self, mode, buffering, encoding, errors, newline)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: '/tmp/issue734-manifest-os92rv4i/repo/docs/planning/issue-734/artifact-hashes.json'\n"
+      }
+    ],
+    "expectations_met": 11,
+    "scenario_count": 11
+  }
+}

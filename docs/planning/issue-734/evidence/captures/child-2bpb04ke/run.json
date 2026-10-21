@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "test_id": "existing_regressions",
+  "source_sha256": "332de240c1b7503a8a1e9406ecd0224f4d08cc9ffdded1c8f26cb1c2bbde92e6",
+  "interpreter": "/workspace/.venvs/issue726-dev/bin/python",
+  "cwd": "/workspace/tiny_village",
+  "pid": 154861,
+  "fatal_timeout": 20,
+  "timeout": 25,
+  "started_utc": "2026-10-21T21:28:49.881822+00:00",
+  "started_monotonic": 86922.738737954,
+  "returncode": 0,
+  "outcome": "EXITED_ZERO",
+  "watchdog_dump_observed": false,
+  "launched_monotonic": 86922.739264839,
+  "wait_started_monotonic": 86922.739420932,
+  "finished_utc": "2026-10-21T21:28:50.311320+00:00",
+  "finished_monotonic": 86923.168242637
+}

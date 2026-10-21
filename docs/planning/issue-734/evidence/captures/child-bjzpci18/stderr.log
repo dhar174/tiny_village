@@ -1,0 +1,3 @@
+WARNING:tiny_utility_functions:Using fallback Goal implementation in tiny_utility_functions
+DEBUG:root:WorldState initialized with empty graph
+DEBUG:root:GraphAnalytics initialized with WorldState dependency

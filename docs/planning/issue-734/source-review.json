@@ -1,0 +1,985 @@
+[
+  {
+    "issues": [
+      284
+    ],
+    "historical_path": "tiny_prompt_builder.py",
+    "current_paths": [
+      "tiny_prompt_builder.py"
+    ],
+    "relevant_lines": []
+  },
+  {
+    "issues": [
+      315
+    ],
+    "historical_path": "test_enhanced_decision_prompt.py",
+    "current_paths": [
+      "tests/test_enhanced_decision_prompt.py"
+    ],
+    "relevant_lines": [
+      "tests/test_enhanced_decision_prompt.py:10:from unittest.mock import MagicMock, patch",
+      "tests/test_enhanced_decision_prompt.py:14:if 'torch' not in sys.modules:",
+      "tests/test_enhanced_decision_prompt.py:19:sys.modules['torch'] = torch_stub"
+    ]
+  },
+  {
+    "issues": [
+      319
+    ],
+    "historical_path": "test_decision_prompt_memories.py",
+    "current_paths": [
+      "tests/test_decision_prompt_memories.py"
+    ],
+    "relevant_lines": [
+      "tests/test_decision_prompt_memories.py:6:# Import proper MockCharacter instead of using object",
+      "tests/test_decision_prompt_memories.py:8:from mock_character import MockCharacter",
+      "tests/test_decision_prompt_memories.py:11:stub_tc = ModuleType('tiny_characters')",
+      "tests/test_decision_prompt_memories.py:12:stub_tc.Character = MockCharacter",
+      "tests/test_decision_prompt_memories.py:13:stub_attr = ModuleType('attr')",
+      "tests/test_decision_prompt_memories.py:15:class MockMemory:",
+      "tests/test_decision_prompt_memories.py:19:class MockCharacter:",
+      "tests/test_decision_prompt_memories.py:38:with patch.dict(sys.modules, {\"tiny_characters\": stub_tc, \"attr\": stub_attr}):",
+      "tests/test_decision_prompt_memories.py:45:char = MockCharacter()",
+      "tests/test_decision_prompt_memories.py:47:memories = [MockMemory(\"won a pie contest\"), MockMemory(\"lost keys at market\")]"
+    ]
+  },
+  {
+    "issues": [
+      333
+    ],
+    "historical_path": "test_actions.py",
+    "current_paths": [
+      "tests/test_actions.py"
+    ],
+    "relevant_lines": [
+      "tests/test_actions.py:2:from unittest.mock import MagicMock",
+      "tests/test_actions.py:10:self.graph_manager = MagicMock()",
+      "tests/test_actions.py:86:self.graph_manager = MagicMock()",
+      "tests/test_actions.py:93:self.bob.respond_to_talk = MagicMock(wraps=self.bob.respond_to_talk)",
+      "tests/test_actions.py:127:self.bob.respond_to_talk = MagicMock(wraps=self.bob.respond_to_talk)"
+    ]
+  },
+  {
+    "issues": [
+      350,
+      351
+    ],
+    "historical_path": "test_strategy_goap_alignment.py",
+    "current_paths": [],
+    "relevant_lines": []
+  },
+  {
+    "issues": [
+      352
+    ],
+    "historical_path": "test_simple_debug.py",
+    "current_paths": [
+      "tests/test_simple_debug.py"
+    ],
+    "relevant_lines": [
+      "tests/test_simple_debug.py:15:class MockCharacter:",
+      "tests/test_simple_debug.py:36:character = MockCharacter(\"Alice\")"
+    ]
+  },
+  {
+    "issues": [
+      353
+    ],
+    "historical_path": "test_comprehensive_alignment.py",
+    "current_paths": [],
+    "relevant_lines": []
+  },
+  {
+    "issues": [
+      354
+    ],
+    "historical_path": "tiny_goap_system.py",
+    "current_paths": [
+      "tiny_goap_system.py"
+    ],
+    "relevant_lines": [
+      "tiny_goap_system.py:50:class ActionWrapper:",
+      "tiny_goap_system.py:476:class MockAlternativeAction:",
+      "tiny_goap_system.py:493:print(f\"Mock alternative action {self.name} executed successfully\")",
+      "tiny_goap_system.py:496:print(f\"Mock alternative action {self.name} failed\")",
+      "tiny_goap_system.py:499:alternative_action = MockAlternativeAction(alternative_name, failed_action)",
+      "tiny_goap_system.py:749:max_iterations = 1000  # Prevent infinite loops",
+      "tiny_goap_system.py:752:while open_list and iteration_count < max_iterations:",
+      "tiny_goap_system.py:797:if iteration_count >= max_iterations:",
+      "tiny_goap_system.py:798:print(f\"Warning: GOAP planning exceeded max iterations ({max_iterations})\")"
+    ]
+  },
+  {
+    "issues": [
+      355
+    ],
+    "historical_path": "tiny_goap_system.py",
+    "current_paths": [
+      "tiny_goap_system.py"
+    ],
+    "relevant_lines": [
+      "tiny_goap_system.py:50:class ActionWrapper:",
+      "tiny_goap_system.py:476:class MockAlternativeAction:",
+      "tiny_goap_system.py:493:print(f\"Mock alternative action {self.name} executed successfully\")",
+      "tiny_goap_system.py:496:print(f\"Mock alternative action {self.name} failed\")",
+      "tiny_goap_system.py:499:alternative_action = MockAlternativeAction(alternative_name, failed_action)",
+      "tiny_goap_system.py:749:max_iterations = 1000  # Prevent infinite loops",
+      "tiny_goap_system.py:752:while open_list and iteration_count < max_iterations:",
+      "tiny_goap_system.py:797:if iteration_count >= max_iterations:",
+      "tiny_goap_system.py:798:print(f\"Warning: GOAP planning exceeded max iterations ({max_iterations})\")"
+    ]
+  },
+  {
+    "issues": [
+      356
+    ],
+    "historical_path": "tiny_goap_system.py",
+    "current_paths": [
+      "tiny_goap_system.py"
+    ],
+    "relevant_lines": [
+      "tiny_goap_system.py:50:class ActionWrapper:",
+      "tiny_goap_system.py:476:class MockAlternativeAction:",
+      "tiny_goap_system.py:493:print(f\"Mock alternative action {self.name} executed successfully\")",
+      "tiny_goap_system.py:496:print(f\"Mock alternative action {self.name} failed\")",
+      "tiny_goap_system.py:499:alternative_action = MockAlternativeAction(alternative_name, failed_action)",
+      "tiny_goap_system.py:749:max_iterations = 1000  # Prevent infinite loops",
+      "tiny_goap_system.py:752:while open_list and iteration_count < max_iterations:",
+      "tiny_goap_system.py:797:if iteration_count >= max_iterations:",
+      "tiny_goap_system.py:798:print(f\"Warning: GOAP planning exceeded max iterations ({max_iterations})\")"
+    ]
+  },
+  {
+    "issues": [
+      357
+    ],
+    "historical_path": "test_planner_integration.py",
+    "current_paths": [],
+    "relevant_lines": []
+  },
+  {
+    "issues": [
+      358
+    ],
+    "historical_path": "tiny_goap_system.py",
+    "current_paths": [
+      "tiny_goap_system.py"
+    ],
+    "relevant_lines": [
+      "tiny_goap_system.py:50:class ActionWrapper:",
+      "tiny_goap_system.py:476:class MockAlternativeAction:",
+      "tiny_goap_system.py:493:print(f\"Mock alternative action {self.name} executed successfully\")",
+      "tiny_goap_system.py:496:print(f\"Mock alternative action {self.name} failed\")",
+      "tiny_goap_system.py:499:alternative_action = MockAlternativeAction(alternative_name, failed_action)",
+      "tiny_goap_system.py:749:max_iterations = 1000  # Prevent infinite loops",
+      "tiny_goap_system.py:752:while open_list and iteration_count < max_iterations:",
+      "tiny_goap_system.py:797:if iteration_count >= max_iterations:",
+      "tiny_goap_system.py:798:print(f\"Warning: GOAP planning exceeded max iterations ({max_iterations})\")"
+    ]
+  },
+  {
+    "issues": [
+      359
+    ],
+    "historical_path": "test_basic_integration.py",
+    "current_paths": [],
+    "relevant_lines": []
+  },
+  {
+    "issues": [
+      474
+    ],
+    "historical_path": "demo_map_location_integration.py",
+    "current_paths": [
+      "demo_map_location_integration.py"
+    ],
+    "relevant_lines": [
+      "demo_map_location_integration.py:176:# Mock map data with terrain information",
+      "demo_map_location_integration.py:189:# Mock the pygame import for MapController",
+      "demo_map_location_integration.py:195:pygame_mock.math.Vector2 = lambda x, y=None: type('Vector2', (), {'x': x, 'y': y if y is not None else x[1], '__sub__': lambda s, o: type('Vector2', (), {'length': lambda: 5.0, 'normalize': lambda: type('Vector2', (), {'__mul__': lambda s, dt: (x, y if y is not None else x[1])})()})(), '__add__': lambda s, o: (x, y if y is not None else x[1])})()",
+      "demo_map_location_integration.py:200:sys.modules['pygame'] = pygame_mock"
+    ]
+  },
+  {
+    "issues": [
+      475
+    ],
+    "historical_path": "tiny_locations.py",
+    "current_paths": [
+      "tiny_locations.py"
+    ],
+    "relevant_lines": []
+  },
+  {
+    "issues": [
+      478
+    ],
+    "historical_path": "tests/test_tiny_gameplay_controller.py",
+    "current_paths": [
+      "tests/test_tiny_gameplay_controller.py"
+    ],
+    "relevant_lines": [
+      "tests/test_tiny_gameplay_controller.py:4:from unittest.mock import MagicMock, patch",
+      "tests/test_tiny_gameplay_controller.py:14:\"screen_width\": 800,",
+      "tests/test_tiny_gameplay_controller.py:15:\"screen_height\": 600,",
+      "tests/test_tiny_gameplay_controller.py:32:class MockCharacter:",
+      "tests/test_tiny_gameplay_controller.py:37:self.add_memory = MagicMock()",
+      "tests/test_tiny_gameplay_controller.py:59:self.mock_graph_manager = MagicMock()",
+      "tests/test_tiny_gameplay_controller.py:64:self.controller.action_resolver = MagicMock()",
+      "tests/test_tiny_gameplay_controller.py:65:self.mock_action = MagicMock()",
+      "tests/test_tiny_gameplay_controller.py:67:self.mock_character = MockCharacter()",
+      "tests/test_tiny_gameplay_controller.py:70:self.controller.screen = pygame.Surface((800, 600))",
+      "tests/test_tiny_gameplay_controller.py:92:self.mock_action.execute = MagicMock(return_value=True)",
+      "tests/test_tiny_gameplay_controller.py:148:self.mock_action.execute = MagicMock(side_effect=raising_execute)",
+      "tests/test_tiny_gameplay_controller.py:174:specific_graph_manager = MagicMock()",
+      "tests/test_tiny_gameplay_controller.py:256:legacy_controller.screen = pygame.Surface((800, 600))"
+    ]
+  },
+  {
+    "issues": [
+      479
+    ],
+    "historical_path": "tests/test_tiny_gameplay_controller.py",
+    "current_paths": [
+      "tests/test_tiny_gameplay_controller.py"
+    ],
+    "relevant_lines": [
+      "tests/test_tiny_gameplay_controller.py:4:from unittest.mock import MagicMock, patch",
+      "tests/test_tiny_gameplay_controller.py:14:\"screen_width\": 800,",
+      "tests/test_tiny_gameplay_controller.py:15:\"screen_height\": 600,",
+      "tests/test_tiny_gameplay_controller.py:32:class MockCharacter:",
+      "tests/test_tiny_gameplay_controller.py:37:self.add_memory = MagicMock()",
+      "tests/test_tiny_gameplay_controller.py:59:self.mock_graph_manager = MagicMock()",
+      "tests/test_tiny_gameplay_controller.py:64:self.controller.action_resolver = MagicMock()",
+      "tests/test_tiny_gameplay_controller.py:65:self.mock_action = MagicMock()",
+      "tests/test_tiny_gameplay_controller.py:67:self.mock_character = MockCharacter()",
+      "tests/test_tiny_gameplay_controller.py:70:self.controller.screen = pygame.Surface((800, 600))",
+      "tests/test_tiny_gameplay_controller.py:92:self.mock_action.execute = MagicMock(return_value=True)",
+      "tests/test_tiny_gameplay_controller.py:148:self.mock_action.execute = MagicMock(side_effect=raising_execute)",
+      "tests/test_tiny_gameplay_controller.py:174:specific_graph_manager = MagicMock()",
+      "tests/test_tiny_gameplay_controller.py:256:legacy_controller.screen = pygame.Surface((800, 600))"
+    ]
+  },
+  {
+    "issues": [
+      481
+    ],
+    "historical_path": "tests/test_tiny_gameplay_controller.py",
+    "current_paths": [
+      "tests/test_tiny_gameplay_controller.py"
+    ],
+    "relevant_lines": [
+      "tests/test_tiny_gameplay_controller.py:4:from unittest.mock import MagicMock, patch",
+      "tests/test_tiny_gameplay_controller.py:14:\"screen_width\": 800,",
+      "tests/test_tiny_gameplay_controller.py:15:\"screen_height\": 600,",
+      "tests/test_tiny_gameplay_controller.py:32:class MockCharacter:",
+      "tests/test_tiny_gameplay_controller.py:37:self.add_memory = MagicMock()",
+      "tests/test_tiny_gameplay_controller.py:59:self.mock_graph_manager = MagicMock()",
+      "tests/test_tiny_gameplay_controller.py:64:self.controller.action_resolver = MagicMock()",
+      "tests/test_tiny_gameplay_controller.py:65:self.mock_action = MagicMock()",
+      "tests/test_tiny_gameplay_controller.py:67:self.mock_character = MockCharacter()",
+      "tests/test_tiny_gameplay_controller.py:70:self.controller.screen = pygame.Surface((800, 600))",
+      "tests/test_tiny_gameplay_controller.py:92:self.mock_action.execute = MagicMock(return_value=True)",
+      "tests/test_tiny_gameplay_controller.py:148:self.mock_action.execute = MagicMock(side_effect=raising_execute)",
+      "tests/test_tiny_gameplay_controller.py:174:specific_graph_manager = MagicMock()",
+      "tests/test_tiny_gameplay_controller.py:256:legacy_controller.screen = pygame.Surface((800, 600))"
+    ]
+  },
+  {
+    "issues": [
+      482
+    ],
+    "historical_path": "tiny_gameplay_controller.py",
+    "current_paths": [
+      "tiny_gameplay_controller.py"
+    ],
+    "relevant_lines": [
+      "tiny_gameplay_controller.py:1954:self.config.get(\"screen_width\", 800), self.config.get(\"screen_height\", 600)",
+      "tiny_gameplay_controller.py:2824:screen_width = self.config.get(\"screen_width\", 800)",
+      "tiny_gameplay_controller.py:2825:screen_height = self.config.get(\"screen_height\", 600)",
+      "tiny_gameplay_controller.py:3276:screen_width = self.config.get(\"screen_width\", 800)",
+      "tiny_gameplay_controller.py:3277:screen_height = self.config.get(\"screen_height\", 600)",
+      "tiny_gameplay_controller.py:4256:events = self._normalize_and_prioritize_events(events, update_errors)",
+      "tiny_gameplay_controller.py:4306:def _normalize_and_prioritize_events(self, events, update_errors):",
+      "tiny_gameplay_controller.py:4311:normalized_events = []",
+      "tiny_gameplay_controller.py:4326:# Ensure normalized numeric values for stable sorting/dispatch.",
+      "tiny_gameplay_controller.py:4327:normalized_event_type = str(event_type or DEFAULT_EVENT_TYPE).strip().lower()",
+      "tiny_gameplay_controller.py:4332:normalized_event = dict(event)",
+      "tiny_gameplay_controller.py:4333:normalized_event[\"_normalized_event_type\"] = normalized_event_type",
+      "tiny_gameplay_controller.py:4334:normalized_event[\"_normalized_importance\"] = importance",
+      "tiny_gameplay_controller.py:4335:normalized_event[\"_normalized_impact\"] = impact",
+      "tiny_gameplay_controller.py:4337:setattr(event, \"_normalized_event_type\", normalized_event_type)",
+      "tiny_gameplay_controller.py:4338:setattr(event, \"_normalized_importance\", importance)",
+      "tiny_gameplay_controller.py:4339:setattr(event, \"_normalized_impact\", impact)",
+      "tiny_gameplay_controller.py:4340:normalized_event = event",
+      "tiny_gameplay_controller.py:4342:normalized_events.append(normalized_event)",
+      "tiny_gameplay_controller.py:4344:logger.warning(f\"Failed to normalize event {event}: {e}\")",
+      "tiny_gameplay_controller.py:4345:update_errors.append(\"Event normalization failed\")",
+      "tiny_gameplay_controller.py:4350:importance = event.get(\"_normalized_importance\", 0)",
+      "tiny_gameplay_controller.py:4351:impact = event.get(\"_normalized_impact\", 0)",
+      "tiny_gameplay_controller.py:4352:event_type = str(event.get(\"_normalized_event_type\", DEFAULT_EVENT_TYPE))",
+      "tiny_gameplay_controller.py:4355:importance = getattr(event, \"_normalized_importance\", 0)",
+      "tiny_gameplay_controller.py:4356:impact = getattr(event, \"_normalized_impact\", 0)",
+      "tiny_gameplay_controller.py:4357:event_type = str(getattr(event, \"_normalized_event_type\", DEFAULT_EVENT_TYPE))",
+      "tiny_gameplay_controller.py:4362:normalized_events.sort(key=get_sort_key)",
+      "tiny_gameplay_controller.py:4363:return normalized_events",
+      "tiny_gameplay_controller.py:4401:event_type = str(event.get(\"_normalized_event_type\", DEFAULT_EVENT_TYPE)).strip().lower()",
+      "tiny_gameplay_controller.py:4402:impact = event.get(\"_normalized_impact\", 0)",
+      "tiny_gameplay_controller.py:4404:event_type = str(getattr(event, \"_normalized_event_type\", DEFAULT_EVENT_TYPE)).strip().lower()",
+      "tiny_gameplay_controller.py:4405:impact = getattr(event, \"_normalized_impact\", 0)",
+      "tiny_gameplay_controller.py:4953:normalized_size = (int(target_size[0]), int(target_size[1]))",
+      "tiny_gameplay_controller.py:4954:cache_key = (source_surface, source_surface.get_size(), normalized_size)",
+      "tiny_gameplay_controller.py:4960:pygame.transform.smoothscale(source_surface, normalized_size),"
+    ]
+  },
+  {
+    "issues": [
+      491
+    ],
+    "historical_path": "tiny_storytelling_system.py",
+    "current_paths": [
+      "tiny_storytelling_system.py"
+    ],
+    "relevant_lines": []
+  },
+  {
+    "issues": [
+      492
+    ],
+    "historical_path": "test_storytelling_integration.py",
+    "current_paths": [
+      "test_storytelling_integration.py"
+    ],
+    "relevant_lines": [
+      "test_storytelling_integration.py:62:config={\"screen_width\": 800, \"screen_height\": 600},"
+    ]
+  },
+  {
+    "issues": [
+      493
+    ],
+    "historical_path": "test_social_interactions.py",
+    "current_paths": [
+      "test_social_interactions.py"
+    ],
+    "relevant_lines": [
+      "test_social_interactions.py:6:from unittest.mock import MagicMock",
+      "test_social_interactions.py:16:self.graph_manager = MagicMock()",
+      "test_social_interactions.py:24:self.bob.respond_to_talk = MagicMock(wraps=self.bob.respond_to_talk)",
+      "test_social_interactions.py:48:self.bob.respond_to_talk = MagicMock(wraps=self.bob.respond_to_talk)",
+      "test_social_interactions.py:66:self.bob.respond_to_talk = MagicMock(wraps=self.bob.respond_to_talk)",
+      "test_social_interactions.py:89:self.graph_manager.memory_manager = MagicMock()",
+      "test_social_interactions.py:116:self.bob.respond_to_talk = MagicMock(wraps=self.bob.respond_to_talk)"
+    ]
+  },
+  {
+    "issues": [
+      494
+    ],
+    "historical_path": "test_social_integration.py",
+    "current_paths": [
+      "test_social_integration.py"
+    ],
+    "relevant_lines": [
+      "test_social_integration.py:10:from unittest.mock import MagicMock",
+      "test_social_integration.py:18:class MockPersonalityTraits:",
+      "test_social_integration.py:26:class MockCharacter:",
+      "test_social_integration.py:32:self.personality_traits = MockPersonalityTraits()",
+      "test_social_integration.py:73:alice = MockCharacter(\"Alice\")",
+      "test_social_integration.py:74:bob = MockCharacter(\"Bob\")",
+      "test_social_integration.py:77:mock_graph_manager = MagicMock()",
+      "test_social_integration.py:79:mock_graph_manager.add_character_character_edge = MagicMock()",
+      "test_social_integration.py:81:# Mock memory manager",
+      "test_social_integration.py:82:mock_memory_manager = MagicMock()",
+      "test_social_integration.py:122:action.preconditions_met = MagicMock(return_value=True)"
+    ]
+  },
+  {
+    "issues": [
+      495
+    ],
+    "historical_path": "test_social_interactions.py",
+    "current_paths": [
+      "test_social_interactions.py"
+    ],
+    "relevant_lines": [
+      "test_social_interactions.py:6:from unittest.mock import MagicMock",
+      "test_social_interactions.py:16:self.graph_manager = MagicMock()",
+      "test_social_interactions.py:24:self.bob.respond_to_talk = MagicMock(wraps=self.bob.respond_to_talk)",
+      "test_social_interactions.py:48:self.bob.respond_to_talk = MagicMock(wraps=self.bob.respond_to_talk)",
+      "test_social_interactions.py:66:self.bob.respond_to_talk = MagicMock(wraps=self.bob.respond_to_talk)",
+      "test_social_interactions.py:89:self.graph_manager.memory_manager = MagicMock()",
+      "test_social_interactions.py:116:self.bob.respond_to_talk = MagicMock(wraps=self.bob.respond_to_talk)"
+    ]
+  },
+  {
+    "issues": [
+      496
+    ],
+    "historical_path": "test_social_interactions.py",
+    "current_paths": [
+      "test_social_interactions.py"
+    ],
+    "relevant_lines": [
+      "test_social_interactions.py:6:from unittest.mock import MagicMock",
+      "test_social_interactions.py:16:self.graph_manager = MagicMock()",
+      "test_social_interactions.py:24:self.bob.respond_to_talk = MagicMock(wraps=self.bob.respond_to_talk)",
+      "test_social_interactions.py:48:self.bob.respond_to_talk = MagicMock(wraps=self.bob.respond_to_talk)",
+      "test_social_interactions.py:66:self.bob.respond_to_talk = MagicMock(wraps=self.bob.respond_to_talk)",
+      "test_social_interactions.py:89:self.graph_manager.memory_manager = MagicMock()",
+      "test_social_interactions.py:116:self.bob.respond_to_talk = MagicMock(wraps=self.bob.respond_to_talk)"
+    ]
+  },
+  {
+    "issues": [
+      499
+    ],
+    "historical_path": "tests/test_story_integration.py",
+    "current_paths": [
+      "tests/test_story_integration.py"
+    ],
+    "relevant_lines": [
+      "tests/test_story_integration.py:22:class MockCharacter:",
+      "tests/test_story_integration.py:23:\"\"\"Mock character for testing.\"\"\"",
+      "tests/test_story_integration.py:44:self.char_a = MockCharacter(\"Alice\")",
+      "tests/test_story_integration.py:45:self.char_b = MockCharacter(\"Bob\")"
+    ]
+  },
+  {
+    "issues": [
+      500
+    ],
+    "historical_path": "tests/test_story_integration.py",
+    "current_paths": [
+      "tests/test_story_integration.py"
+    ],
+    "relevant_lines": [
+      "tests/test_story_integration.py:22:class MockCharacter:",
+      "tests/test_story_integration.py:23:\"\"\"Mock character for testing.\"\"\"",
+      "tests/test_story_integration.py:44:self.char_a = MockCharacter(\"Alice\")",
+      "tests/test_story_integration.py:45:self.char_b = MockCharacter(\"Bob\")"
+    ]
+  },
+  {
+    "issues": [
+      501
+    ],
+    "historical_path": "tests/test_goap_comprehensive.py",
+    "current_paths": [],
+    "relevant_lines": []
+  },
+  {
+    "issues": [
+      502
+    ],
+    "historical_path": "tests/test_goap_focused.py",
+    "current_paths": [
+      "tests/test_goap_focused.py"
+    ],
+    "relevant_lines": [
+      "tests/test_goap_focused.py:147:# Mock character object",
+      "tests/test_goap_focused.py:148:class MockCharacter:",
+      "tests/test_goap_focused.py:159:character = MockCharacter()",
+      "tests/test_goap_focused.py:160:print(\"\u2713 Mock character created\")",
+      "tests/test_goap_focused.py:279:class MockCharacter:",
+      "tests/test_goap_focused.py:290:character = MockCharacter()"
+    ]
+  },
+  {
+    "issues": [
+      503
+    ],
+    "historical_path": "tests/test_goap_comprehensive.py",
+    "current_paths": [],
+    "relevant_lines": []
+  },
+  {
+    "issues": [
+      504
+    ],
+    "historical_path": "tests/test_goap_comprehensive.py",
+    "current_paths": [],
+    "relevant_lines": []
+  },
+  {
+    "issues": [
+      505
+    ],
+    "historical_path": "test_map_interactivity.py",
+    "current_paths": [
+      "test_map_interactivity.py"
+    ],
+    "relevant_lines": [
+      "test_map_interactivity.py:7:from unittest.mock import Mock, patch",
+      "test_map_interactivity.py:28:def create_controller(self, *, width=800, height=600, buildings=None, fill=(34, 139, 34)):",
+      "test_map_interactivity.py:74:self.assertEqual(self.panel.x, 600)",
+      "test_map_interactivity.py:94:self.menu.show(options, (100, 100), Mock())",
+      "test_map_interactivity.py:108:self.menu.show(options, (100, 100), Mock())",
+      "test_map_interactivity.py:125:\"width\": 800,",
+      "test_map_interactivity.py:126:\"height\": 600,",
+      "test_map_interactivity.py:145:building = self.controller.is_building((125, 125))",
+      "test_map_interactivity.py:151:self.assertIsNone(self.controller.is_building((500, 500)))",
+      "test_map_interactivity.py:154:building = self.controller.is_building((125, 125))",
+      "test_map_interactivity.py:164:mock_character = Mock()",
+      "test_map_interactivity.py:181:general_building = self.controller.is_building((125, 125))",
+      "test_map_interactivity.py:189:shop_building = self.controller.is_building((210, 160))",
+      "test_map_interactivity.py:200:Mock(),",
+      "test_map_interactivity.py:209:self.controller.selected_character = Mock()",
+      "test_map_interactivity.py:210:self.controller.selected_building = Mock()",
+      "test_map_interactivity.py:211:self.controller.selected_location = Mock()",
+      "test_map_interactivity.py:212:self.controller.selected_poi = Mock()",
+      "test_map_interactivity.py:238:building = self.controller.is_building((125, 125))",
+      "test_map_interactivity.py:248:building = self.controller.is_building((125, 125))",
+      "test_map_interactivity.py:257:option = {\"action\": \"unknown_action\", \"target\": Mock()}"
+    ]
+  },
+  {
+    "issues": [
+      506
+    ],
+    "historical_path": "tiny_map_controller.py",
+    "current_paths": [
+      "tiny_map_controller.py"
+    ],
+    "relevant_lines": [
+      "tiny_map_controller.py:36:self.x = min(mouse_pos[0] + 10, 800 - self.width)  # Assume 800px screen width",
+      "tiny_map_controller.py:37:self.y = min(mouse_pos[1] + 10, 600 - self.height)  # Assume 600px screen height",
+      "tiny_map_controller.py:123:self.x = min(mouse_pos[0], 800 - self.width)  # Assume 800px screen width",
+      "tiny_map_controller.py:124:self.y = min(mouse_pos[1], 600 - self.height)  # Assume 600px screen height",
+      "tiny_map_controller.py:276:def _create_default_map_image(self, width=800, height=600):",
+      "tiny_map_controller.py:842:building = self.is_building(position)",
+      "tiny_map_controller.py:856:building = self.is_building(position)",
+      "tiny_map_controller.py:903:building = self.is_building(position)",
+      "tiny_map_controller.py:945:character.position += direction.normalize() * modified_speed * dt",
+      "tiny_map_controller.py:999:def _is_building_target(self, building) -> bool:",
+      "tiny_map_controller.py:1191:if action == 'enter' and self._is_building_target(target):",
+      "tiny_map_controller.py:1220:if self._is_building_target(target):",
+      "tiny_map_controller.py:1318:def is_building(self, position):",
+      "tiny_map_controller.py:1335:building = self.is_building(target)",
+      "tiny_map_controller.py:1737:screen = pygame.display.set_mode((800, 600))"
+    ]
+  },
+  {
+    "issues": [
+      507
+    ],
+    "historical_path": "tiny_map_controller.py",
+    "current_paths": [
+      "tiny_map_controller.py"
+    ],
+    "relevant_lines": [
+      "tiny_map_controller.py:36:self.x = min(mouse_pos[0] + 10, 800 - self.width)  # Assume 800px screen width",
+      "tiny_map_controller.py:37:self.y = min(mouse_pos[1] + 10, 600 - self.height)  # Assume 600px screen height",
+      "tiny_map_controller.py:123:self.x = min(mouse_pos[0], 800 - self.width)  # Assume 800px screen width",
+      "tiny_map_controller.py:124:self.y = min(mouse_pos[1], 600 - self.height)  # Assume 600px screen height",
+      "tiny_map_controller.py:276:def _create_default_map_image(self, width=800, height=600):",
+      "tiny_map_controller.py:842:building = self.is_building(position)",
+      "tiny_map_controller.py:856:building = self.is_building(position)",
+      "tiny_map_controller.py:903:building = self.is_building(position)",
+      "tiny_map_controller.py:945:character.position += direction.normalize() * modified_speed * dt",
+      "tiny_map_controller.py:999:def _is_building_target(self, building) -> bool:",
+      "tiny_map_controller.py:1191:if action == 'enter' and self._is_building_target(target):",
+      "tiny_map_controller.py:1220:if self._is_building_target(target):",
+      "tiny_map_controller.py:1318:def is_building(self, position):",
+      "tiny_map_controller.py:1335:building = self.is_building(target)",
+      "tiny_map_controller.py:1737:screen = pygame.display.set_mode((800, 600))"
+    ]
+  },
+  {
+    "issues": [
+      508
+    ],
+    "historical_path": "tiny_map_controller.py",
+    "current_paths": [
+      "tiny_map_controller.py"
+    ],
+    "relevant_lines": [
+      "tiny_map_controller.py:36:self.x = min(mouse_pos[0] + 10, 800 - self.width)  # Assume 800px screen width",
+      "tiny_map_controller.py:37:self.y = min(mouse_pos[1] + 10, 600 - self.height)  # Assume 600px screen height",
+      "tiny_map_controller.py:123:self.x = min(mouse_pos[0], 800 - self.width)  # Assume 800px screen width",
+      "tiny_map_controller.py:124:self.y = min(mouse_pos[1], 600 - self.height)  # Assume 600px screen height",
+      "tiny_map_controller.py:276:def _create_default_map_image(self, width=800, height=600):",
+      "tiny_map_controller.py:842:building = self.is_building(position)",
+      "tiny_map_controller.py:856:building = self.is_building(position)",
+      "tiny_map_controller.py:903:building = self.is_building(position)",
+      "tiny_map_controller.py:945:character.position += direction.normalize() * modified_speed * dt",
+      "tiny_map_controller.py:999:def _is_building_target(self, building) -> bool:",
+      "tiny_map_controller.py:1191:if action == 'enter' and self._is_building_target(target):",
+      "tiny_map_controller.py:1220:if self._is_building_target(target):",
+      "tiny_map_controller.py:1318:def is_building(self, position):",
+      "tiny_map_controller.py:1335:building = self.is_building(target)",
+      "tiny_map_controller.py:1737:screen = pygame.display.set_mode((800, 600))"
+    ]
+  },
+  {
+    "issues": [
+      514
+    ],
+    "historical_path": "test_social_model_integration.py",
+    "current_paths": [
+      "test_social_model_integration.py"
+    ],
+    "relevant_lines": [
+      "test_social_model_integration.py:13:from mock_character import MockCharacter, MockMotive, MockMotives",
+      "test_social_model_integration.py:22:def _build_stub_modules():",
+      "test_social_model_integration.py:28:mock_characters.Character = MockCharacter",
+      "test_social_model_integration.py:29:mock_characters.PersonalMotives = MockMotives",
+      "test_social_model_integration.py:30:mock_characters.Motive = MockMotive",
+      "test_social_model_integration.py:48:_ORIGINAL_MODULES = {name: sys.modules.get(name) for name in module_names}",
+      "test_social_model_integration.py:51:sys.modules.pop(module_name, None)",
+      "test_social_model_integration.py:53:with patch.dict(sys.modules, _build_stub_modules()):",
+      "test_social_model_integration.py:69:sys.modules.pop(module_name, None)",
+      "test_social_model_integration.py:71:sys.modules[module_name] = original_module"
+    ]
+  },
+  {
+    "issues": [
+      515
+    ],
+    "historical_path": "test_social_model.py",
+    "current_paths": [
+      "test_social_model.py"
+    ],
+    "relevant_lines": []
+  },
+  {
+    "issues": [
+      516
+    ],
+    "historical_path": "test_llm_interface_integration.py",
+    "current_paths": [
+      "test_llm_interface_integration.py"
+    ],
+    "relevant_lines": [
+      "test_llm_interface_integration.py:12:class MockInventory:",
+      "test_llm_interface_integration.py:23:class MockMotive:",
+      "test_llm_interface_integration.py:28:class MockMotives:",
+      "test_llm_interface_integration.py:31:\"health\": MockMotive(5),",
+      "test_llm_interface_integration.py:32:\"wealth\": MockMotive(6),",
+      "test_llm_interface_integration.py:33:\"social_wellbeing\": MockMotive(4),",
+      "test_llm_interface_integration.py:34:\"job_performance\": MockMotive(6),",
+      "test_llm_interface_integration.py:38:class MockCharacter:",
+      "test_llm_interface_integration.py:54:self.motives = MockMotives()",
+      "test_llm_interface_integration.py:55:self.inventory = MockInventory()",
+      "test_llm_interface_integration.py:122:self.character = MockCharacter()"
+    ]
+  },
+  {
+    "issues": [
+      517
+    ],
+    "historical_path": "test_llm_interface_integration.py",
+    "current_paths": [
+      "test_llm_interface_integration.py"
+    ],
+    "relevant_lines": [
+      "test_llm_interface_integration.py:12:class MockInventory:",
+      "test_llm_interface_integration.py:23:class MockMotive:",
+      "test_llm_interface_integration.py:28:class MockMotives:",
+      "test_llm_interface_integration.py:31:\"health\": MockMotive(5),",
+      "test_llm_interface_integration.py:32:\"wealth\": MockMotive(6),",
+      "test_llm_interface_integration.py:33:\"social_wellbeing\": MockMotive(4),",
+      "test_llm_interface_integration.py:34:\"job_performance\": MockMotive(6),",
+      "test_llm_interface_integration.py:38:class MockCharacter:",
+      "test_llm_interface_integration.py:54:self.motives = MockMotives()",
+      "test_llm_interface_integration.py:55:self.inventory = MockInventory()",
+      "test_llm_interface_integration.py:122:self.character = MockCharacter()"
+    ]
+  },
+  {
+    "issues": [
+      518
+    ],
+    "historical_path": "tiny_memories.py",
+    "current_paths": [
+      "tiny_memories.py"
+    ],
+    "relevant_lines": [
+      "tiny_memories.py:163:for name, obj in inspect.getmembers(sys.modules[__name__]):",
+      "tiny_memories.py:1143:normalized_embeddings=False,",
+      "tiny_memories.py:1156:self.normalized_embeddings = normalized_embeddings",
+      "tiny_memories.py:1293:def get_embedding(self, normalize=None):",
+      "tiny_memories.py:1294:if normalize is not None and self.normalized_embeddings != normalize:",
+      "tiny_memories.py:1295:self.normalized_embeddings = normalize",
+      "tiny_memories.py:1299:normalize=self.normalized_embeddings",
+      "tiny_memories.py:1307:def generate_embedding(self, string=None, normalize=None):",
+      "tiny_memories.py:1332:if normalize is not None:",
+      "tiny_memories.py:1333:if normalize:",
+      "tiny_memories.py:1334:outputs.last_hidden_state = faiss.normalize_L2(",
+      "tiny_memories.py:1377:self.index_is_normalized = False",
+      "tiny_memories.py:1432:# Set normalization",
+      "tiny_memories.py:1434:self.set_all_memory_embeddings_to_normalized(self.index_is_normalized)",
+      "tiny_memories.py:1436:logging.warning(f\"Error setting embeddings normalization: {e}\")",
+      "tiny_memories.py:1488:norm_str = \"_normalized\" if self.index_is_normalized else \"\"",
+      "tiny_memories.py:1537:norm_str = \"_normalized\" if self.index_is_normalized else \"\"",
+      "tiny_memories.py:1619:def set_all_memory_embeddings_to_normalized(self, normalized=None):",
+      "tiny_memories.py:1620:if normalized is None:",
+      "tiny_memories.py:1621:normalized = not self.index_is_normalized",
+      "tiny_memories.py:1622:if normalized == self.index_is_normalized:",
+      "tiny_memories.py:1624:self.index_is_normalized = normalized",
+      "tiny_memories.py:1626:memory.normalized_embeddings = normalized",
+      "tiny_memories.py:1630:self, dimension, metric=\"l2\", normalize=False, index_load_filename=None",
+      "tiny_memories.py:1674:self.set_all_memory_embeddings_to_normalized(normalize)",
+      "tiny_memories.py:1771:embeddings.append(specific_memory.get_embedding()[0], normalize)",
+      "tiny_memories.py:1795:# if normalize:",
+      "tiny_memories.py:1796:#     faiss.normalize_L2(embeddings[i])",
+      "tiny_memories.py:1797:if normalize:",
+      "tiny_memories.py:1798:self.index_is_normalized = True",
+      "tiny_memories.py:1800:self.index_is_normalized = False",
+      "tiny_memories.py:1802:# if normalize:",
+      "tiny_memories.py:1803:#     faiss.normalize_L2(embeddings)",
+      "tiny_memories.py:1884:self.index_is_normalized = False",
+      "tiny_memories.py:1926:def load_index_from_file(self, filename, normalize=False):",
+      "tiny_memories.py:1932:normalize (bool): Whether to normalize embeddings",
+      "tiny_memories.py:1963:# Handle normalization settings",
+      "tiny_memories.py:1965:if normalize != self.index_is_normalized:",
+      "tiny_memories.py:1966:self.set_all_memory_embeddings_to_normalized(normalize)",
+      "tiny_memories.py:1967:self.index_is_normalized = normalize",
+      "tiny_memories.py:1968:self.set_all_memory_embeddings_to_normalized(normalize)",
+      "tiny_memories.py:1971:logging.error(f\"Error setting normalization for loaded index: {e}\")",
+      "tiny_memories.py:5702:def normalize_scores(self, scores):",
+      "tiny_memories.py:5738:).total_seconds() / 3600  # Convert to hours",
+      "tiny_memories.py:5744:index_type, normalization, filename, memory_dict, queries, manager",
+      "tiny_memories.py:5767:and global_manager.flat_access.index_is_normalized == normalization",
+      "tiny_memories.py:5771:f\"\\n Index already exists. Type: {index_type}, Normalized: {normalization}, Filename: {filename} \\n\"",
+      "tiny_memories.py:5778:768, index_type, normalize=normalization, index_load_filename=filename",
+      "tiny_memories.py:5784:filename, normalize=normalization",
+      "tiny_memories.py:5810:#     recency_scores = normalize_scores(recency_scores)",
+      "tiny_memories.py:5811:#     relevance_scores = normalize_scores(relevance_scores)",
+      "tiny_memories.py:5812:#     importance_scores = normalize_scores(importance_scores)",
+      "tiny_memories.py:5854:if manager.flat_access.load_index_from_file(\"ip_no_norm.bin\", normalize=False):",
+      "tiny_memories.py:5859:if manager.flat_access.load_index_from_file(\"ip_norm.bin\", normalize=True):",
+      "tiny_memories.py:5864:if manager.flat_access.load_index_from_file(\"l2.bin\", normalize=False):",
+      "tiny_memories.py:6189:# Manage and search memories for IP without normalization",
+      "tiny_memories.py:6203:# Manage and search memories for IP with normalization"
+    ]
+  },
+  {
+    "issues": [
+      519
+    ],
+    "historical_path": "test_llm_integration_pipeline.py",
+    "current_paths": [
+      "test_llm_integration_pipeline.py"
+    ],
+    "relevant_lines": []
+  },
+  {
+    "issues": [
+      520
+    ],
+    "historical_path": "test_llm_integration_pipeline.py",
+    "current_paths": [
+      "test_llm_integration_pipeline.py"
+    ],
+    "relevant_lines": []
+  },
+  {
+    "issues": [
+      522
+    ],
+    "historical_path": "test_system_integration.py",
+    "current_paths": [
+      "test_system_integration.py"
+    ],
+    "relevant_lines": [
+      "test_system_integration.py:10:from unittest.mock import Mock, MagicMock",
+      "test_system_integration.py:17:\"\"\"Mock pygame to avoid dependency issues during testing.\"\"\"",
+      "test_system_integration.py:18:sys.modules['pygame'] = Mock()",
+      "test_system_integration.py:19:sys.modules['pygame.font'] = Mock()",
+      "test_system_integration.py:20:sys.modules['pygame.time'] = Mock()",
+      "test_system_integration.py:21:sys.modules['pygame.display'] = Mock()",
+      "test_system_integration.py:23:# Mock pygame.time.get_ticks to return incrementing time",
+      "test_system_integration.py:24:mock_time = Mock()",
+      "test_system_integration.py:26:sys.modules['pygame.time'] = mock_time",
+      "test_system_integration.py:27:sys.modules['pygame'].time = mock_time",
+      "test_system_integration.py:32:# Mock pygame before importing gameplay controller",
+      "test_system_integration.py:47:# Mock required systems",
+      "test_system_integration.py:48:controller.screen = Mock()",
+      "test_system_integration.py:49:controller.clock = Mock()",
+      "test_system_integration.py:52:# Mock strategy manager",
+      "test_system_integration.py:53:controller.strategy_manager = Mock()",
+      "test_system_integration.py:58:# Mock event handler",
+      "test_system_integration.py:59:controller.event_handler = Mock()",
+      "test_system_integration.py:64:# Mock map controller",
+      "test_system_integration.py:65:controller.map_controller = Mock()",
+      "test_system_integration.py:67:# Mock action resolver",
+      "test_system_integration.py:68:controller.action_resolver = Mock()",
+      "test_system_integration.py:71:test_character = Mock()",
+      "test_system_integration.py:102:controller.strategy_manager.get_daily_actions.return_value = [Mock()]",
+      "test_system_integration.py:104:controller.strategy_manager.get_daily_actions.return_value[0].name = \"Mock Action\""
+    ]
+  },
+  {
+    "issues": [
+      528
+    ],
+    "historical_path": "tiny_memories.py",
+    "current_paths": [
+      "tiny_memories.py"
+    ],
+    "relevant_lines": [
+      "tiny_memories.py:163:for name, obj in inspect.getmembers(sys.modules[__name__]):",
+      "tiny_memories.py:1143:normalized_embeddings=False,",
+      "tiny_memories.py:1156:self.normalized_embeddings = normalized_embeddings",
+      "tiny_memories.py:1293:def get_embedding(self, normalize=None):",
+      "tiny_memories.py:1294:if normalize is not None and self.normalized_embeddings != normalize:",
+      "tiny_memories.py:1295:self.normalized_embeddings = normalize",
+      "tiny_memories.py:1299:normalize=self.normalized_embeddings",
+      "tiny_memories.py:1307:def generate_embedding(self, string=None, normalize=None):",
+      "tiny_memories.py:1332:if normalize is not None:",
+      "tiny_memories.py:1333:if normalize:",
+      "tiny_memories.py:1334:outputs.last_hidden_state = faiss.normalize_L2(",
+      "tiny_memories.py:1377:self.index_is_normalized = False",
+      "tiny_memories.py:1432:# Set normalization",
+      "tiny_memories.py:1434:self.set_all_memory_embeddings_to_normalized(self.index_is_normalized)",
+      "tiny_memories.py:1436:logging.warning(f\"Error setting embeddings normalization: {e}\")",
+      "tiny_memories.py:1488:norm_str = \"_normalized\" if self.index_is_normalized else \"\"",
+      "tiny_memories.py:1537:norm_str = \"_normalized\" if self.index_is_normalized else \"\"",
+      "tiny_memories.py:1619:def set_all_memory_embeddings_to_normalized(self, normalized=None):",
+      "tiny_memories.py:1620:if normalized is None:",
+      "tiny_memories.py:1621:normalized = not self.index_is_normalized",
+      "tiny_memories.py:1622:if normalized == self.index_is_normalized:",
+      "tiny_memories.py:1624:self.index_is_normalized = normalized",
+      "tiny_memories.py:1626:memory.normalized_embeddings = normalized",
+      "tiny_memories.py:1630:self, dimension, metric=\"l2\", normalize=False, index_load_filename=None",
+      "tiny_memories.py:1674:self.set_all_memory_embeddings_to_normalized(normalize)",
+      "tiny_memories.py:1771:embeddings.append(specific_memory.get_embedding()[0], normalize)",
+      "tiny_memories.py:1795:# if normalize:",
+      "tiny_memories.py:1796:#     faiss.normalize_L2(embeddings[i])",
+      "tiny_memories.py:1797:if normalize:",
+      "tiny_memories.py:1798:self.index_is_normalized = True",
+      "tiny_memories.py:1800:self.index_is_normalized = False",
+      "tiny_memories.py:1802:# if normalize:",
+      "tiny_memories.py:1803:#     faiss.normalize_L2(embeddings)",
+      "tiny_memories.py:1884:self.index_is_normalized = False",
+      "tiny_memories.py:1926:def load_index_from_file(self, filename, normalize=False):",
+      "tiny_memories.py:1932:normalize (bool): Whether to normalize embeddings",
+      "tiny_memories.py:1963:# Handle normalization settings",
+      "tiny_memories.py:1965:if normalize != self.index_is_normalized:",
+      "tiny_memories.py:1966:self.set_all_memory_embeddings_to_normalized(normalize)",
+      "tiny_memories.py:1967:self.index_is_normalized = normalize",
+      "tiny_memories.py:1968:self.set_all_memory_embeddings_to_normalized(normalize)",
+      "tiny_memories.py:1971:logging.error(f\"Error setting normalization for loaded index: {e}\")",
+      "tiny_memories.py:5702:def normalize_scores(self, scores):",
+      "tiny_memories.py:5738:).total_seconds() / 3600  # Convert to hours",
+      "tiny_memories.py:5744:index_type, normalization, filename, memory_dict, queries, manager",
+      "tiny_memories.py:5767:and global_manager.flat_access.index_is_normalized == normalization",
+      "tiny_memories.py:5771:f\"\\n Index already exists. Type: {index_type}, Normalized: {normalization}, Filename: {filename} \\n\"",
+      "tiny_memories.py:5778:768, index_type, normalize=normalization, index_load_filename=filename",
+      "tiny_memories.py:5784:filename, normalize=normalization",
+      "tiny_memories.py:5810:#     recency_scores = normalize_scores(recency_scores)",
+      "tiny_memories.py:5811:#     relevance_scores = normalize_scores(relevance_scores)",
+      "tiny_memories.py:5812:#     importance_scores = normalize_scores(importance_scores)",
+      "tiny_memories.py:5854:if manager.flat_access.load_index_from_file(\"ip_no_norm.bin\", normalize=False):",
+      "tiny_memories.py:5859:if manager.flat_access.load_index_from_file(\"ip_norm.bin\", normalize=True):",
+      "tiny_memories.py:5864:if manager.flat_access.load_index_from_file(\"l2.bin\", normalize=False):",
+      "tiny_memories.py:6189:# Manage and search memories for IP without normalization",
+      "tiny_memories.py:6203:# Manage and search memories for IP with normalization"
+    ]
+  },
+  {
+    "issues": [
+      530
+    ],
+    "historical_path": "tiny_buildings.py",
+    "current_paths": [
+      "tiny_buildings.py"
+    ],
+    "relevant_lines": []
+  },
+  {
+    "issues": [
+      534
+    ],
+    "historical_path": "goap_evaluator.py",
+    "current_paths": [
+      "goap_evaluator.py"
+    ],
+    "relevant_lines": [
+      "goap_evaluator.py:527:if not world_state or not world_state.graph_manager:",
+      "goap_evaluator.py:533:result = world_state.graph_manager.calculate_goal_difficulty(goal, character)",
+      "goap_evaluator.py:693:if not world_state or not world_state.graph_manager:",
+      "goap_evaluator.py:701:result = world_state.graph_manager.calculate_action_viability_cost(node, goal, character)"
+    ]
+  },
+  {
+    "issues": [
+      535
+    ],
+    "historical_path": "goap_evaluator.py",
+    "current_paths": [
+      "goap_evaluator.py"
+    ],
+    "relevant_lines": [
+      "goap_evaluator.py:527:if not world_state or not world_state.graph_manager:",
+      "goap_evaluator.py:533:result = world_state.graph_manager.calculate_goal_difficulty(goal, character)",
+      "goap_evaluator.py:693:if not world_state or not world_state.graph_manager:",
+      "goap_evaluator.py:701:result = world_state.graph_manager.calculate_action_viability_cost(node, goal, character)"
+    ]
+  },
+  {
+    "issues": [
+      539
+    ],
+    "historical_path": "test_social_travel_prompt.py",
+    "current_paths": [
+      "test_social_travel_prompt.py"
+    ],
+    "relevant_lines": [
+      "test_social_travel_prompt.py:23:return mock_character.MockCharacter",
+      "test_social_travel_prompt.py:43:stub_tiny_characters = ModuleType(\"tiny_characters\")",
+      "test_social_travel_prompt.py:44:stub_tiny_characters.Character = realistic_mock_character",
+      "test_social_travel_prompt.py:45:stub_attr = ModuleType(\"attr\")",
+      "test_social_travel_prompt.py:46:previous_prompt_builder = sys.modules.get(\"tiny_prompt_builder\")",
+      "test_social_travel_prompt.py:50:sys.modules,",
+      "test_social_travel_prompt.py:51:{\"tiny_characters\": stub_tiny_characters, \"attr\": stub_attr},",
+      "test_social_travel_prompt.py:53:sys.modules.pop(\"tiny_prompt_builder\", None)",
+      "test_social_travel_prompt.py:61:sys.modules[\"tiny_prompt_builder\"] = previous_prompt_builder",
+      "test_social_travel_prompt.py:63:sys.modules.pop(\"tiny_prompt_builder\", None)"
+    ]
+  },
+  {
+    "issues": [
+      540
+    ],
+    "historical_path": "test_social_travel_prompt.py",
+    "current_paths": [
+      "test_social_travel_prompt.py"
+    ],
+    "relevant_lines": [
+      "test_social_travel_prompt.py:23:return mock_character.MockCharacter",
+      "test_social_travel_prompt.py:43:stub_tiny_characters = ModuleType(\"tiny_characters\")",
+      "test_social_travel_prompt.py:44:stub_tiny_characters.Character = realistic_mock_character",
+      "test_social_travel_prompt.py:45:stub_attr = ModuleType(\"attr\")",
+      "test_social_travel_prompt.py:46:previous_prompt_builder = sys.modules.get(\"tiny_prompt_builder\")",
+      "test_social_travel_prompt.py:50:sys.modules,",
+      "test_social_travel_prompt.py:51:{\"tiny_characters\": stub_tiny_characters, \"attr\": stub_attr},",
+      "test_social_travel_prompt.py:53:sys.modules.pop(\"tiny_prompt_builder\", None)",
+      "test_social_travel_prompt.py:61:sys.modules[\"tiny_prompt_builder\"] = previous_prompt_builder",
+      "test_social_travel_prompt.py:63:sys.modules.pop(\"tiny_prompt_builder\", None)"
+    ]
+  },
+  {
+    "issues": [
+      541
+    ],
+    "historical_path": "test_social_travel_prompt.py",
+    "current_paths": [
+      "test_social_travel_prompt.py"
+    ],
+    "relevant_lines": [
+      "test_social_travel_prompt.py:23:return mock_character.MockCharacter",
+      "test_social_travel_prompt.py:43:stub_tiny_characters = ModuleType(\"tiny_characters\")",
+      "test_social_travel_prompt.py:44:stub_tiny_characters.Character = realistic_mock_character",
+      "test_social_travel_prompt.py:45:stub_attr = ModuleType(\"attr\")",
+      "test_social_travel_prompt.py:46:previous_prompt_builder = sys.modules.get(\"tiny_prompt_builder\")",
+      "test_social_travel_prompt.py:50:sys.modules,",
+      "test_social_travel_prompt.py:51:{\"tiny_characters\": stub_tiny_characters, \"attr\": stub_attr},",
+      "test_social_travel_prompt.py:53:sys.modules.pop(\"tiny_prompt_builder\", None)",
+      "test_social_travel_prompt.py:61:sys.modules[\"tiny_prompt_builder\"] = previous_prompt_builder",
+      "test_social_travel_prompt.py:63:sys.modules.pop(\"tiny_prompt_builder\", None)"
+    ]
+  }
+]

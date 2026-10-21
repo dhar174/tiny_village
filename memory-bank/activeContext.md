@@ -1,5 +1,14 @@
 ## Current Work Focus
 
+- TASK021 / #734: approved triage plan executing under D026. The review package
+  catalogs all 261 original issues plus 46 later open issues and inventories 37
+  open PR heads. Four mandatory probes pass their narrow scope; real #602/#609
+  failures and isolated map/animation defects remain retained. 12 existing tests
+  pass; no runtime fixes or issue mutations. Exact annotations, 80 missing-parent
+  links, seven specific closures and three remediation drafts await consolidated
+  review. #734/#733/#738 stay open; Project read remains HTTP 403. Next after
+  reviewed publication: #735/#736, then #737. Existing design choices stand.
+
 - Phase 3 #733 is unblocked under D025. Next ordered task is #734: triage
   the original backlog into canonical subsystem epics with evidence-backed
   dispositions. #733/#734 remain open; no triage or duplicate closures have

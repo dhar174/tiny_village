@@ -1,0 +1,1 @@
+import pytest; raise SystemExit(pytest.main(['-q','tests/test_action_named_target_resolution.py','tests/test_goap_planner_integration_real.py','--tb=short']))

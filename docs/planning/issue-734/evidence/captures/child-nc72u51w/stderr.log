@@ -1,0 +1,79 @@
+WARNING:tiny_utility_functions:Using fallback Goal implementation in tiny_utility_functions
+DEBUG:root:WorldState initialized with empty graph
+DEBUG:root:GraphAnalytics initialized with WorldState dependency
+INFO:tiny_gameplay_controller:Checkpoint directory ready: /tmp/tiny-village-smh__5cn
+INFO:tiny_gameplay_controller:Checkpoint interval set to 300000ms (300.0s)
+INFO:tiny_gameplay_controller:Automatic checkpointing disabled
+INFO:tiny_gameplay_controller:Checkpoint manager initialized (interval: 300000ms, auto: False)
+INFO:root:StorytellingEventHandler initialized with narrative capabilities
+INFO:tiny_storytelling_system:Storytelling system initialized
+INFO:tiny_gameplay_controller:Storytelling system initialized and wired to event handler
+INFO:tiny_gameplay_controller:Action system initialized successfully
+INFO:tiny_gameplay_controller:Time management system initialized
+INFO:tiny_gameplay_controller:Animation system initialized
+INFO:tiny_gameplay_controller:Building management system initialized
+ERROR:tiny_gameplay_controller:Failed to create character Alice Cooper: [Errno 2] No such file or directory: 'job_roles.json'
+ERROR:tiny_gameplay_controller:Error creating character Alice Cooper: Required character Alice Cooper construction failed
+ERROR:tiny_gameplay_controller:Failed to create character Bob Wilson: [Errno 2] No such file or directory: 'job_roles.json'
+ERROR:tiny_gameplay_controller:Error creating character Bob Wilson: Required character Bob Wilson construction failed
+ERROR:tiny_gameplay_controller:Character creation failed: Required character creation incomplete: 0/2
+ERROR:tiny_gameplay_controller:Critical error initializing game systems: Required real character initialization failed; no substitute is installed
+ERROR:tiny_gameplay_controller:Traceback (most recent call last):
+  File "/workspace/tiny_village/tiny_gameplay_controller.py", line 2362, in initialize_game_systems
+    sample_characters = self._create_sample_characters(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/tiny_village/tiny_gameplay_controller.py", line 2529, in _create_sample_characters
+    raise RuntimeError(f"Required character creation incomplete: {len(characters)}/{character_count}")
+RuntimeError: Required character creation incomplete: 0/2
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/workspace/tiny_village/tiny_gameplay_controller.py", line 2374, in initialize_game_systems
+    self._create_fallback_characters()
+  File "/workspace/tiny_village/tiny_gameplay_controller.py", line 2404, in _create_fallback_characters
+    raise RuntimeError("Required real character initialization failed; no substitute is installed")
+RuntimeError: Required real character initialization failed; no substitute is installed
+
+Traceback (most recent call last):
+  File "/workspace/tiny_village/tiny_gameplay_controller.py", line 2362, in initialize_game_systems
+    sample_characters = self._create_sample_characters(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/tiny_village/tiny_gameplay_controller.py", line 2529, in _create_sample_characters
+    raise RuntimeError(f"Required character creation incomplete: {len(characters)}/{character_count}")
+RuntimeError: Required character creation incomplete: 0/2
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/workspace/tiny_village/tiny_gameplay_controller.py", line 2374, in initialize_game_systems
+    self._create_fallback_characters()
+  File "/workspace/tiny_village/tiny_gameplay_controller.py", line 2404, in _create_fallback_characters
+    raise RuntimeError("Required real character initialization failed; no substitute is installed")
+RuntimeError: Required real character initialization failed; no substitute is installed
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<string>", line 15, in <module>
+  File "<string>", line 13, in _tiny_capture_run
+  File "<string>", line 1, in <module>
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/workspace/tiny_village/docs/planning/issue-734/evidence/audit_probes.py", line 136, in <module>
+    globals()[sys.argv[1]]()
+  File "/workspace/tiny_village/docs/planning/issue-734/evidence/audit_probes.py", line 69, in named_target
+    with controller(count=2) as c:
+         ^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "/workspace/tiny_village/docs/planning/issue-734/evidence/audit_probes.py", line 27, in controller
+    instance = GameplayController(GraphManager(), config)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/tiny_village/tiny_gameplay_controller.py", line 1904, in __init__
+    self.initialize_game_systems()
+  File "/workspace/tiny_village/tiny_gameplay_controller.py", line 2396, in initialize_game_systems
+    raise RuntimeError("Required character/system initialization failed") from e
+RuntimeError: Required character/system initialization failed

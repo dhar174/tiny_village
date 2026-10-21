@@ -1,0 +1,3 @@
+Warning: Effect for action 'Rest' specifies 'initiator' but action has no initiator.
+Warning: Effect for action 'Rest' specifies 'initiator' but action has no initiator.
+{"issue": 596, "summary": {"frames_observed": 1, "last_frame_ms": 4.377165008918382, "average_frame_ms": 4.377165008918382, "peak_frame_ms": 4.377165008918382, "effective_fps": 228.45837384757507, "target_frame_time_ms": 16.666666666666668, "stage_timings_ms": {"tick": 1.119138003559783, "events": 0.0316179939545691, "update": 0.8243980119004846, "render": 2.400528988800943, "checkpoint": 0.0014820107026025653}, "optimization_suggestions": ["Rendering dominates frame time; reduce expensive draw work or visual effects."]}}

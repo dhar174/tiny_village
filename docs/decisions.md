@@ -592,6 +592,22 @@ UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
   Decision/Status/readiness fields were updated. The disclosed tracking limit
   is retained with the human phase approval.
 
+### D026 — Execute #734 triage with review before issue publication
+
+- **Date:** 2026-10-21.
+- **Decision-maker:** dhar174.
+- **Disposition:** Implementation plan approved, not backlog dispositions.
+- **Explicit instruction:** “Implement the proposed plan.”
+- **Publication choice:** “Review first”: prepare the complete ledger and exact
+  proposed issue updates, review the package once, then publish approved changes.
+  Duplicate closures require approval of the specific proposals and evidence.
+- **Ownership choice:** “Ledger owner”: preserve existing GitHub assignees;
+  record dhar174 as accountable maintainer for unassigned items, without mass
+  GitHub assignments.
+- **Boundary:** this does not approve triage results, issue closures, PR merges,
+  reparenting, Project synchronization, or Phase 3 gate #738. #602 retains its
+  blocked-regression and Phase 4 prerequisite limits. D014/D015 remain intact.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
