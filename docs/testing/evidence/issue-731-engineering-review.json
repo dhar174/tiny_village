@@ -1,0 +1,222 @@
+{
+  "status": "engineering_review_approved_under_D024",
+  "recorded_at_utc": "2026-10-21T20:26:10.341206+00:00",
+  "reviewed_main_revision": "752bc2efaacfadfae2c32d6f3df4ce9241087fe2",
+  "reviewed_pr": 795,
+  "reviewed_pr_head": "6bc999dac7fe289c557805dd79f26eaff9737dd3",
+  "design_approval_record": "docs/decisions.md#d023--approve-design-planning-727729-and-combined-review-730",
+  "prior_verified_runtime_revision": "ac0e25d3674efb03440d2ccce26d7b009d5e82f3",
+  "non_document_changes_since_verified_runtime": [],
+  "prior_source_hashes_verified": 14,
+  "reviewed_source_sha256": {
+    ".github/workflows/python-ci.yml": "632e75472a44dc7a44340308de48b098055843b703169b0ade40a873e5737c4d",
+    ".github/workflows/python-ml-profiles.yml": "463aeffcaeebda3d9153b7ecaf257a0ca6216e7503da4a0fe12e524bbdd6a921",
+    "demo_minimal_integration.py": "92466957763297499fbc92903cee1a42ccd18b832f09d77c325791ea2c4ab641",
+    "main.py": "7aec70b6986facc4b1660551ad9c4e93dc8b2d05adba740f0c967183e9b26084",
+    "requirements.txt": "31a86733cd29040e8807fa70b9794f513763eee76209d8f82a38c2bce5fd1073",
+    "requirements/locks/analytics-py312-linux-x86_64.txt": "1d9c0ace096aaf7dd86788596d3fb2b98eee7a8ea4e5f6e57b9319e92d0b9756",
+    "requirements/locks/core-py312-linux-x86_64.txt": "2a037e6923b1f4e0f19d14109adc4217a5e4b7e0583a780639dd476a1451c908",
+    "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5",
+    "requirements/locks/llm-cpu-py312-linux-x86_64.txt": "a7aa20681fd3af915dc9f0b75adb8c4fd9ef3d852b430b76aa346e2a861b2b5a",
+    "requirements/locks/llm-gpu-py312-linux-x86_64.txt": "9ecd95a340b9d96b69db933f9b6e70c7c3d3a0fd6ae2f6f6239d20153ce3487d",
+    "requirements/locks/nlp-py312-linux-x86_64.txt": "d3cba0d3cb6ecb1796da85b0882bd84db0a8ac2a290c5f9ebdc19f3e3128ef15",
+    "requirements/locks/retrieval-py312-linux-x86_64.txt": "be0117f80355481168b137c48051c322781abe63da33e48f8797b96290c8897d",
+    "requirements/locks/visual-py312-linux-x86_64.txt": "a6db9f00d612e0b715961e9f1565c90066eb0872f165ad3984d3fcb414eaed73",
+    "scripts/run_ci_checks.py": "23be3b5869b495444d03dd569801b37d4df1cd3ff868125c87d4e7d211e50bad",
+    "tests/subprocess_capture.py": "a10f3ff792aa9ea9165f5d0bb91e865c09fa181944069e6c5017a5e44abdd278",
+    "tests/test_ci_checks.py": "25890c81d8d2dc51dc6ba541531130805b8f201aeae24b16e91aebe9c43eea5e",
+    "tiny_gameplay_controller.py": "e20b047efdb728fe1f644802195403e654d7933d02255807a919756cabec79bf",
+    "tiny_memories.py": "f2fb60544a9eeefbc76e95e390449c279f94ec06ee5099d689832753a966adef",
+    "tiny_strategy_manager.py": "710c36cd93422d56f955e86bdfdfb53838235c9692c01fe8825e1149d3f0ee78"
+  },
+  "current_existing_hosted_run": {
+    "id": 39648188081,
+    "url": "https://github.com/dhar174/tiny_village/actions/runs/39648188081",
+    "conclusion": "success",
+    "head_sha": "6bc999dac7fe289c557805dd79f26eaff9737dd3",
+    "executed_merge_revision": "b54bfc6cee5d34192be6fc71c4f274a2444a1a3b",
+    "merge_parents": [
+      "752bc2efaacfadfae2c32d6f3df4ce9241087fe2",
+      "6bc999dac7fe289c557805dd79f26eaff9737dd3"
+    ],
+    "profiles": {
+      "dev": {
+        "status": "PASS",
+        "revision": "b54bfc6cee5d34192be6fc71c4f274a2444a1a3b",
+        "counts": {
+          "tests_run": 20,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "expected_failures": 0,
+          "unexpected_successes": 0
+        },
+        "probes_run": 0,
+        "locks": {
+          "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5"
+        },
+        "artifact_name": "python-dev-39648188081-1",
+        "artifact_id": 12368557270,
+        "verified_zip_digest": "sha256:9f363a894b455d2456ffc0688fc72671741e2bb6e90310b62dab91940d1dddbb",
+        "batch_statuses": {
+          "runner": "PASS",
+          "cli-smoke": "PASS"
+        },
+        "python": "3.12.15 (main, Oct  1 2026, 02:35:59) [GCC 13.3.0]",
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39"
+      },
+      "visual": {
+        "status": "PASS",
+        "revision": "b54bfc6cee5d34192be6fc71c4f274a2444a1a3b",
+        "counts": {
+          "tests_run": 68,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "expected_failures": 0,
+          "unexpected_successes": 0
+        },
+        "probes_run": 0,
+        "locks": {
+          "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5",
+          "requirements/locks/visual-py312-linux-x86_64.txt": "a6db9f00d612e0b715961e9f1565c90066eb0872f165ad3984d3fcb414eaed73"
+        },
+        "artifact_name": "python-visual-39648188081-1",
+        "artifact_id": 12368542410,
+        "verified_zip_digest": "sha256:d0376153be260ce801a230766ebb252ceeaec3af0de2c7450b3b205757663e3d",
+        "batch_statuses": {
+          "lifecycle": "PASS",
+          "graph": "PASS",
+          "cache": "PASS",
+          "capture": "PASS"
+        },
+        "python": "3.12.15 (main, Oct  1 2026, 02:35:59) [GCC 13.3.0]",
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39"
+      },
+      "core": {
+        "status": "PASS",
+        "revision": "b54bfc6cee5d34192be6fc71c4f274a2444a1a3b",
+        "counts": {
+          "tests_run": 40,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "expected_failures": 0,
+          "unexpected_successes": 0
+        },
+        "probes_run": 3,
+        "locks": {
+          "requirements/locks/core-py312-linux-x86_64.txt": "2a037e6923b1f4e0f19d14109adc4217a5e4b7e0583a780639dd476a1451c908"
+        },
+        "artifact_name": "python-core-39648188081-1",
+        "artifact_id": 12367987858,
+        "verified_zip_digest": "sha256:b2174083778c41426fc5eb75d4095947fecbdb9e79a6d5b0733f1c9ba3213ca0",
+        "batch_statuses": {
+          "components": "PASS",
+          "runtime": "PASS",
+          "canonical-cli": "PASS",
+          "default-cli": "PASS",
+          "invalid-cli": "PASS"
+        },
+        "python": "3.12.15 (main, Oct  1 2026, 02:35:59) [GCC 13.3.0]",
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39"
+      }
+    },
+    "tests_run": 128,
+    "cli_probes": 3
+  },
+  "prior_optional_evidence": {
+    "receipt": "docs/testing/evidence/issue-726-hosted-rollout-results.json",
+    "revision": "ac0e25d3674efb03440d2ccce26d7b009d5e82f3",
+    "nlp_cases": 2,
+    "llm_cpu_cases": 2,
+    "optional_profiles_rerun_for_this_review": false
+  },
+  "ruleset_readback": {
+    "id": 5735164,
+    "name": "tiny_ruleset",
+    "enforcement": "active",
+    "required_status_checks": {
+      "strict_required_status_checks_policy": true,
+      "do_not_enforce_on_create": false,
+      "required_status_checks": [
+        {
+          "context": "Python CI required",
+          "integration_id": 15368
+        }
+      ]
+    },
+    "bypass_policy_modified": false
+  },
+  "prerequisite_issue_states_before_authentication_failure": {
+    "722": "closed",
+    "725": "closed",
+    "654": "closed",
+    "726": "closed"
+  },
+  "administrative_limitations": [
+    "Project 10 read still returns HTTP 403: Resource not accessible by integration; fields are not synchronized.",
+    "Repository/configured-project requests temporarily returned HTTP 401 and the first CI merge fetch failed. Repository access later recovered; issue updates and the approval push succeeded.",
+    "After recovery the CI merge fetch succeeded; direct comparison with ac0e25d shows no non-document changes. Earlier failures remain preserved in scratch artifacts."
+  ],
+  "runtime_tests_executed_for_this_review": 0,
+  "new_ml_workflow_dispatches": 0,
+  "commands": [
+    "git diff --name-only ac0e25d origin/main -- ':(exclude)docs/**' ':(exclude)memory-bank/**'",
+    "gh api repos/dhar174/tiny_village/actions/runs/39648188081/artifacts",
+    "gh api repos/dhar174/tiny_village/actions/artifacts/12368557270/zip > python-dev-39648188081-1.zip",
+    "gh api repos/dhar174/tiny_village/actions/artifacts/12368542410/zip > python-visual-39648188081-1.zip",
+    "gh api repos/dhar174/tiny_village/actions/artifacts/12367987858/zip > python-core-39648188081-1.zip",
+    "gh api repos/dhar174/tiny_village/actions/runs/39648188081",
+    "gh api repos/dhar174/tiny_village/commits/b54bfc6cee5d34192be6fc71c4f274a2444a1a3b",
+    "gh api repos/dhar174/tiny_village/rulesets/5735164"
+  ],
+  "limits": [
+    "No native Windows/macOS/GPU support or live inference claim.",
+    "No economic-turn, canonical episode, complete persistence or native UX/rendering/performance acceptance.",
+    "No #731/#732 human approval inferred."
+  ],
+  "executed_merge_non_document_changes_since_verified_runtime": [],
+  "repository_synchronization": {
+    "approval_commit_pushed": "f5fb0ab6bb61cf9c17121332d5ca2ea7608a35b9",
+    "issue_updates": [
+      {
+        "issue": 727,
+        "state": "closed",
+        "state_reason": "completed",
+        "url": "https://github.com/dhar174/tiny_village/issues/727",
+        "decision_link_verified": true
+      },
+      {
+        "issue": 728,
+        "state": "closed",
+        "state_reason": "completed",
+        "url": "https://github.com/dhar174/tiny_village/issues/728",
+        "decision_link_verified": true
+      },
+      {
+        "issue": 729,
+        "state": "closed",
+        "state_reason": "completed",
+        "url": "https://github.com/dhar174/tiny_village/issues/729",
+        "decision_link_verified": true
+      },
+      {
+        "issue": 730,
+        "state": "closed",
+        "state_reason": "completed",
+        "url": "https://github.com/dhar174/tiny_village/issues/730",
+        "decision_link_verified": true
+      }
+    ],
+    "project_fields_synchronized": false
+  },
+  "subsequent_human_disposition": {
+    "reviewer": "dhar174",
+    "date": "2026-10-21 America/New_York",
+    "decision": "Approved",
+    "record": "docs/decisions.md#d024--approve-phase-2-engineering-review-731",
+    "reviewed_pr_head": "17bed6dcdf345c28dd9477969578a4e94525129d",
+    "scope": "Reviewed Python 3.12/Linux x86-64 foundation; retained evidence limitations; no #732 approval"
+  }
+}

@@ -1,6 +1,6 @@
 # TASK016 — Pygame UI structure, wireframes and states (#729)
 
-**Status:** Awaiting written-specification review; #729 open
+**Status:** Complete under D023; issue closure verified
 **Added/Updated:** 2026-10-21 (America/New_York)
 
 ## Request and scope
@@ -31,7 +31,7 @@ the user explicitly authorized this preliminary design walkthrough.
 | Review interface choices | Complete | D020 records all 12 explicit selections and alternatives. |
 | Consolidate geometry/state/input specification | Complete | Two dimensioned layouts, state matrix, focus/shortcut and failure requirements. |
 | Self-review bounds/links/claims | Complete | 18 region rectangles and 18 header slots checked; local links, choice counts and documentation-only scope. |
-| Human written review | Pending | #729 remains open; #730/#732 and implementation are not approved. |
+| Complete written review | Approved | [D023](../../docs/decisions.md#d023--approve-design-planning-727729-and-combined-review-730); issue closure verified; Project fields pending |
 
 ## Log
 
@@ -60,3 +60,12 @@ the user explicitly authorized this preliminary design walkthrough.
 - 2026-10-21 (America/New_York): TASK017 consolidates the remaining selections
   from D021 into this specification. Complete written disposition remains
   pending; no runtime validation or later design/phase approval is inferred.
+
+- 2026-10-21 (America/New_York): complete planning approval recorded in D023.
+  #729 closure is authorized; no closure is claimed while GitHub authentication
+  returns 401. No new runtime or phase approval. TASK019 prepares #731.
+
+- 2026-10-21 (America/New_York): repository access recovered; the D023
+  approval commit was published in #795 and #727–#730 closures were applied
+  and verified. Project fields alone remain blocked by HTTP 403. TASK019
+  retains engineering-review preparation and the outstanding human decision.

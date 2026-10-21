@@ -1,23 +1,24 @@
 ## Current Work Focus
 
-- TASK017 / #727–#729: D021 records all 13 remaining selections. The three
-  specifications are consolidated for complete written review; #727/#728/#729
-  remain open pending distinct dispositions. Trials are selected; production
-  assets, native validation and runtime implementation remain downstream.
-  #730 is the next combined design review after planning acceptance, followed
-  by #731/#732. See tasks/TASK017-design-review-727-729.md.
+- TASK020 / #732: Phase 2 readiness prepared after explicit #731 approval
+  under D024. #731 closure and all Phase 2 task states are verified; present
+  one separate phase decision.
+  Approval would unlock Phase 3 backlog/PR consolidation (#733, starting #734),
+  not establish UI/gameplay/live-AI readiness. #732/#723 remain open until then.
+  Project fields remain blocked by 403; PR #795 remains open for human merge.
 
-- TASK016 / #729: #793 merged at 3e1c7ef after the visible-Quicksave review fix.
-  D020 retains the original 12 choices; D021 settles dimension/session/history
-  proposals. No font-fit, runtime or later human approval is inferred.
+- TASK019 / #731: Approved under D024 within the reviewed Python 3.12/Linux
+  foundation, with all documented evidence limits. No new blocking remediation
+  identified; current hosted/retained source evidence stands. Published in #795,
+  #731 is closed/completed with its immutable approval link verified. See TASK019.
 
-- TASK015 / #728: #792 merged at 4c9bbfd. D019 retains pixel art and 13 choices;
-  D021 selects the art/font/palette/spacing trials and animation scope. Exact
-  production files still need the later audit; final written disposition pending.
-
-- TASK014 / #727: #791 merged at 7391861. D018 retains 15 choices; D020 resolves
-  overlapping menu/save/shortcut proposals and D021 selects the walkthrough
-  method. Complete written disposition pending; no executed usability pass.
+- D023 records dhar174's explicit approval of #727/#728/#729 planning and #730
+  combined design review on 2026-10-21. TASK014–TASK018 are complete for their
+  planning scope. All four issues are closed/completed; immutable decision
+  links and states were verified after repository authentication recovered.
+  Existing PR #795 carries the record and engineering handoff. Project 10
+  fields remain unsynchronized after HTTP 403. #731/#732 and #723 stay open;
+  do not repeat settled design choices or infer further human approval.
 
 - TASK013 / #726 is complete and closed. #789 merged at ac0e25d; main and
   both manual ML profiles pass 132 cases + three CLI probes, all five artifact

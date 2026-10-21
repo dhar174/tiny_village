@@ -1,6 +1,6 @@
 # TinyVillage Pygame interface, wireframes and interaction states
 
-**Status:** Draft for written review. Twelve choices were explicitly selected
+**Status:** Approved for planning under D023. Twelve choices were explicitly selected
 by dhar174; their authoritative record, alternatives and rationale are
 [D020](../../decisions.md#d020--select-interface-behavior-for-729). The remaining
 dimension, quicksave, paging, confirmation, history and terminal/close selections
@@ -8,6 +8,13 @@ are recorded in [D021 R07–R13](../../decisions.md#d021--review-remaining-desig
 The complete written artifact, including documented focus traversal and input
 ownership details, still awaits a disposition. No UI implementation or human
 design/phase approval is supplied by this document.
+
+**Subsequent disposition:** Approved by dhar174 on 2026-10-21
+(America/New_York) under [D023](../../decisions.md#d023--approve-design-planning-727729-and-combined-review-730),
+including the complete written artifact and #730's distinct combined review.
+Draft/pending wording below describes the original publication, superseded by
+this disposition. Production trials, native evidence and downstream
+implementation remain required; #731/#732 are separate decisions.
 
 ## 1. Intent and research boundary
 

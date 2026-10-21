@@ -1,6 +1,6 @@
 # TinyVillage MVP journeys, controls and simulation feedback
 
-**Status:** Draft for written-specification review. Fifteen interaction choices
+**Status:** Approved for planning under D023. Fifteen interaction choices
 were confirmed individually by dhar174; their authoritative record, alternatives
 and rationale are [D018](../../decisions.md#d018--select-mvp-ux-behavior-for-727).
 This document applies those choices to #727. It authorizes no product-code work,
@@ -9,6 +9,13 @@ The remaining walkthrough choice is now recorded in
 [D021 R01](../../decisions.md#d021--review-remaining-design-proposals-for-727729);
 D020 settles the overlapping menu/save/shortcut proposals. This consolidated
 written artifact still awaits a complete disposition.
+
+**Subsequent disposition:** Approved by dhar174 on 2026-10-21
+(America/New_York) under [D023](../../decisions.md#d023--approve-design-planning-727729-and-combined-review-730),
+including the complete written artifact and #730's distinct combined review.
+Draft/pending wording below describes the original publication, superseded by
+this disposition. Production trials, native evidence and downstream
+implementation remain required; #731/#732 are separate decisions.
 
 ## 1. Purpose, boundaries and research
 

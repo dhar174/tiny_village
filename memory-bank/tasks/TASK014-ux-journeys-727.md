@@ -1,6 +1,6 @@
 # TASK014 — MVP journeys, controls and simulation feedback (#727)
 
-**Status:** Awaiting written-specification review; #727 open
+**Status:** Complete under D023; issue closure verified
 **Added/Updated:** 2026-10-21 (America/New_York)
 
 ## Request and scope
@@ -32,7 +32,7 @@ and release acceptance stay with their mapped downstream issues.
 | Review interaction alternatives | Complete | D018 records all 15 explicit selections, alternatives and rationale. |
 | Consolidate journeys/controls/walkthrough | Complete | Draft sections 2–4; proposed connective defaults separated in section 5. |
 | Self-review consistency and scope | Complete | Cross-checked choices, links, ownership and planning-versus-runtime claims. |
-| Human review of written specification | Pending | #727 remains open; no final written-spec acceptance recorded. |
+| Complete written review | Approved | [D023](../../docs/decisions.md#d023--approve-design-planning-727729-and-combined-review-730); issue closure verified; Project fields pending |
 
 ## Log
 
@@ -56,3 +56,12 @@ and release acceptance stay with their mapped downstream issues.
 - 2026-10-21 (America/New_York): TASK017 consolidates the remaining selections
   from D021 into this specification. Complete written disposition remains
   pending; no runtime validation or later design/phase approval is inferred.
+
+- 2026-10-21 (America/New_York): complete planning approval recorded in D023.
+  #727 closure is authorized; no closure is claimed while GitHub authentication
+  returns 401. No new runtime or phase approval. TASK019 prepares #731.
+
+- 2026-10-21 (America/New_York): repository access recovered; the D023
+  approval commit was published in #795 and #727–#730 closures were applied
+  and verified. Project fields alone remain blocked by HTTP 403. TASK019
+  retains engineering-review preparation and the outstanding human decision.
