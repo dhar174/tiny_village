@@ -337,6 +337,45 @@ should link to this file rather than maintain separate decision records.
   authorized or established by this record. All subsequent human dispositions
   remain in this file under D003.
 
+### D019 — Select pixel-art direction for #728
+
+- **Date:** 2026-10-20 (America/New_York).
+- **Decision-maker:** dhar174.
+- **Disposition:** Pixel-art preference and 13 individual visual choices
+  confirmed; consolidated written specification and proposed defaults await review.
+- **Artifact:** [Draft #728 visual specification](superpowers/specs/2026-10-20-issue-728-visual-design.md).
+- **Starting preference:** “It should be pixel art though I think. Lets go
+  through the options.” Retain the previously agreed warm, readable 2D direction.
+- **Confirmation:** The user explicitly submitted the selected answer for each
+  row below after reviewing alternatives and recommendations. The palette
+  comparison was generated after the user selected visual comparisons, then
+  the user chose A. No choice is inferred from silence or a PR merge.
+
+| ID / topic | Confirmed selection | Other options presented | Recommendation rationale |
+| --- | --- | --- | --- |
+| V01 — Perspective | Angled top-down: building fronts, roofs and faces on a straightforward 2D map. | Strict overhead; isometric; side-view/cutaway. | Balance expressive village art and readable geography with the existing 2D runtime. |
+| V02 — Source scale | 32×32 ground tiles and moderately detailed character sprites. | 16×16 simplified art; 48×48/64×64 higher-detail art. | Recognizable objects and expression with manageable asset work. Buildings may span tiles; this sets no village-size limit. |
+| V03 — Atmosphere | Warm, grounded village life: natural colors, expressive villagers and believable materials. | Whimsical storybook; rustic/subdued. | Support everyday activity and emergent stories without flattening hardship or important status. |
+| V04 — HUD treatment | Restrained pixel-art frames, quiet high-contrast backgrounds and readable text. | Decorative wood/parchment panels; minimally decorated flat panels. | Keep the interface cohesive while prioritizing explanations and controls. |
+| V05 — Typography | Conventional readable information text; pixel lettering only for short headings/decorative labels. | Pixel fonts throughout; conventional fonts throughout. | Preserve readability of explanations, punctuation and numbers at both supported sizes. |
+| V06 — Palette | A — Meadow & Terracotta: welcoming greens, warm timber/clay roofs and restrained teal accents. | B Forest & Ochre; C Sage & Slate, shown on the same sample scene/HUD. | Match the selected warm, grounded atmosphere. The generated board is a palette reference, not an exact spritesheet, wireframe or measured contrast result. |
+| V07 — Selection | Contrasting ground ring plus thin sprite outline; selected identity also appears in the inspector. | Sprite outline alone; overhead selection marker/chevron. | Locate the selected villager against varied ground using shape and light/dark contrast alongside color. |
+| V08 — Occlusion | Fade occluding foreground art locally while the villager is selected. | Opaque scenery with through-scenery silhouette; temporary position marker above the occlusion. | Keep the actual selected sprite/activity visible. Requires foreground layering and a stable paused/reduced-motion treatment. |
+| V09 — Individuality | Shared proportions/reusable art templates with curated hair, clothing and accessory variation. | Bespoke sprite/animation sets per villager; a small shared set identified mainly through names/details. | Give growing populations recognizable appearances without requiring runtime customization or identity-by-color alone. |
+| V10 — Animation | Short walk cycles, clear activity poses and a small amount of ambient motion. | Minimal movement frames/static activity/no ambient motion; rich activity/scenery/weather/lighting animation. | Communicate activity and life with controlled asset/performance scope; retain static cues and reduced motion. |
+| V11 — Sourcing | Coherent free/permissively licensed foundation plus original art where needed. | Entirely original; one purchased asset family; several deliberately restyled packs. | Avoid mandatory purchases while preserving style and verified source/notice records. Prefer suitable CC0; evaluate other permitted terms explicitly. |
+| V12 — Scaling | Whole-number world scaling, flexible viewport and independently sized HUD text. | Fixed low-resolution canvas with borders; fractional fill scaling. | Keep world pixels crisp and information readable; this does not require camera zoom controls. |
+| V13 — Map status | Small contextual icons for the selected villager; explanations and village-wide alerts in the HUD. | Icons over every villager; activity/status entirely in inspectors/HUD. | Connect visible activity to explanations without crowding larger villages. Use distinct shapes/labels for blocked/error states. |
+
+- **Boundary:** These selections permit consolidation and asset/font research,
+  not product implementation or approval of a written artifact that did not yet
+  exist. Specific production packs/fonts, exact colors, type/spacing values and
+  layer/frame details are explicitly proposed for written review. The generated
+  reference and candidate metadata supply no actual renderer, performance,
+  font-coverage or accessibility pass. #728 stays open; outstanding #727 written
+  disposition, #729, #730, #731/#732 and later gates remain separate. No changes
+  to D014's broader vision or D015's final-product AI requirement.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
@@ -351,8 +390,11 @@ TinyVillage vision remains intact. #784 integrated the accepted contract to
 main and closed #724. #725 merged through #785; #654/#776 merged through #788.
 D017's #726 work is complete: #789/#790 merged, hosted main/manual results and
 effective required-check enforcement verified; #726 closed. D018 records the
-15 confirmed #727 interaction choices. Its consolidated specification awaits
-written review; #727 and later human gates remain open.
+15 confirmed #727 interaction choices. #791 merged the written artifact at
+7391861; its final written-review disposition and #727 remain open. The user
+explicitly requested the subsequent preliminary #728 design walkthrough. D019
+records those visual choices; the consolidated specification and proposed
+defaults await written review. #728 and later human gates remain open.
 
 The [#779 investigation plan](superpowers/plans/2026-10-15-issue-779-startup-investigation.md)
 was approved under D007, and its bounded cycle has concluded. Its original
