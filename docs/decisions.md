@@ -419,6 +419,30 @@ should link to this file rather than maintain separate decision records.
   reviews remain separate. No runtime, font-fit, accessibility or performance
   pass is supplied. Continue recording all human decisions only in this file.
 
+### D021 — Review remaining design proposals for #727–#729
+
+- **Date:** 2026-10-21 (UTC).
+- **Decision-maker:** dhar174.
+- **Disposition:** Review in progress; only submitted selections below are
+  confirmed. Complete written-specification dispositions remain pending.
+- **Artifacts:** [UX specification](superpowers/specs/2026-10-20-issue-727-ux-design.md),
+  [visual specification](superpowers/specs/2026-10-20-issue-728-visual-design.md),
+  and [UI specification](superpowers/specs/2026-10-20-issue-729-ui-design.md),
+  reviewed from merged main `3e1c7ef` after PR #793.
+- **Purpose:** Settle remaining proposals without repeating choices already
+  confirmed in D018–D020, then obtain the separate written dispositions and
+  proceed to #730's combined design review.
+
+| ID / topic | Confirmed selection | Other options presented | Recommendation rationale |
+| --- | --- | --- | --- |
+| R01 — Later UX walkthrough method (#727) | A maintainer exercises every scenario using only in-product guidance; include first-time observers when available and report their results separately. | Maintainer only (less coordination, weaker newcomer evidence); require an external participant group (stronger newcomer evidence, recruitment effort/delays). | Keep the required walkthrough practical while distinguishing maintainer familiarity from newcomer usability. |
+
+- **Boundary:** R01 selects the later working-interface test method; no human
+  walkthrough has been executed. This selection does not approve the complete
+  #727/#728/#729 written artifacts, close issues, authorize UI implementation,
+  or approve #730/#731/#732. Production asset/font trials and other unselected
+  defaults remain pending. Record subsequent selections in this table.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
