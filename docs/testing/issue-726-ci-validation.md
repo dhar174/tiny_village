@@ -4,7 +4,7 @@
 
 Approved plan: [supported-profile CI](../superpowers/plans/2026-10-20-issue-726-supported-profile-ci.md).
 D017 selects manual-only ML checks. D015 preserves required final-product AI.
-No gameplay, live inference, GPU or native Windows/macOS claim is supplied.
+No gameplay, live inference, GPU or native Windows/macOS claim is supplied. 
 
 Base main is `eb5f4c935e87abe53570d0d949ffd8a6f9dd5cfa` (#788 merged).
 Post-merge verification passes 47 methods: 19 core runtime, four real Pygame
