@@ -635,6 +635,19 @@ UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
   review bundle retains its historical proposed/not-applied status; current
   publication evidence is recorded separately.
 
+### D028 — Retain PR #703 as the #735 utility consolidation carrier
+
+- **Date:** 2026-10-21.
+- **Decision-maker:** dhar174.
+- **Choice:** “Keep #703; consolidate useful tests from #714 (recommended).”
+- **Scope:** Rebase #703 onto current main, retain its shared `is_numeric`
+  TypeError fix and useful numeric/score tests, add #714's reversed-range
+  interpolation coverage, and document existing utility semantics and limits.
+  Validate the selected result before closing #714 as superseded with crosslinks.
+- **Boundary:** This chooses the PR carrier and duplicate disposition; it does
+  not merge #703, approve human phase gate #738 or authorize changing the
+  existing interpolation/score-scaling behavior into a different contract.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
