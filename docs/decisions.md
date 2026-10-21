@@ -439,6 +439,7 @@ should link to this file rather than maintain separate decision records.
 | R02 — Environment artwork foundation (#728) | Trial Slates with matching original artwork for missing pieces; retain CC BY 4.0 attribution and modification notices. Audit coverage/style and a compatible villager family before production adoption. | CC0-only source assets plus more original buildings/props (fewer attribution obligations, more art work); entirely original environment artwork (maximum control, largest workload). | Best researched 32×32 village foundation for the selected direction without mandatory asset purchases. The user explicitly accepted the recommendation. |
 | R03 — Exact palette approach (#728) | Trial the existing section 3 Meadow & Terracotta color values, refining them against real scenes and contrast checks. | Revise the palette within the selected mood and compare visually before implementation; develop an original constrained palette from scratch (more design work and another visual review). | Provide a reproducible starting point while allowing refinements supported by rendered-scene evidence. The user accepted the recommendation; no rendered palette validation has been executed. |
 | R04 — Font pairing trial (#728) | Trial Atkinson Hyperlegible for information and Pixelify Sans for short headings; use conventional headings if pixel lettering fails readability testing. Verify real Pygame rendering and character coverage at both supported sizes. | Noto Sans information text with Pixelify Sans headings (more neutral appearance); conventional text throughout, starting with Atkinson Hyperlegible (simpler typography, pixel identity carried by artwork/frames). | Distinguishable letters/numbers for information with restrained pixel-art character in headings. The user explicitly selected this pairing; no font has been imported or renderer/font-coverage pass established. |
+| R05 — Type-size and spacing baseline (#728) | Trial 18px body/control text, 16px secondary text and 24px headings; 4px spacing increments, 8px control padding, 12px panel padding and 16px group gaps. Check actual fonts at both supported sizes; wrap or scroll essential text rather than shrink it to fit. | Same text sizes with a roomier 8px spacing grid (less information visible/more scrolling); larger text such as 20px body, 18px secondary and 28px headings (requires revised panel fit/wrapping/scrolling). | Use a concrete readable starting point that balances information density and map area, subject to actual font-fit checks. The user explicitly selected this baseline. |
 
 - **Boundary:** R01 selects the later working-interface test method; R02 selects
   an environment-art trial. No human walkthrough or asset trial has been
@@ -446,9 +447,9 @@ should link to this file rather than maintain separate decision records.
   #727/#728/#729 written artifacts, close issues, authorize UI implementation,
   or approve #730/#731/#732. R03 selects a palette-trial approach, not a rendered
   contrast pass. R04 selects the font pairing to trial, not final validated
-  font files. Exact imported assets, villager artwork and other unselected
-  defaults remain pending. Record subsequent
-  selections in this table.
+  font files. R05 selects initial sizes/spacing, not a measured font-fit result.
+  Exact imported assets, villager artwork and other unselected defaults remain
+  pending. Record subsequent selections in this table.
 
 ## Review status
 
