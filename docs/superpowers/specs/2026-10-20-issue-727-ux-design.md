@@ -5,6 +5,10 @@ were confirmed individually by dhar174; their authoritative record, alternatives
 and rationale are [D018](../../decisions.md#d018--select-mvp-ux-behavior-for-727).
 This document applies those choices to #727. It authorizes no product-code work,
 supplies no phase approval and does not claim these journeys work today.
+The remaining walkthrough choice is now recorded in
+[D021 R01](../../decisions.md#d021--review-remaining-design-proposals-for-727729);
+D020 settles the overlapping menu/save/shortcut proposals. This consolidated
+written artifact still awaits a complete disposition.
 
 ## 1. Purpose, boundaries and research
 
@@ -89,8 +93,12 @@ execution failure uses the recovery journey below instead.
 Space and a visible control explicitly toggle normal playback. Selection and
 opening an inspector do not toggle it. Escape dismisses the topmost dismissible
 panel/dialog; with none open it opens the session menu and pauses advancement.
-The menu exposes Resume, Save, Load, Restart and Quit. Final-state inspection
-and recovery cannot use Resume to advance an ended or untrusted world.
+The menu exposes Resume, Quicksave (S), Save… for named saves, Load, Restart and
+Quit. Each is labelled and focusable; menu Quicksave uses the same dedicated
+slot and state checks as S, while keeping the menu open and playback stopped.
+An unfinished menu session stays paused; a completed world retains Finished.
+Final-state inspection and recovery cannot use Resume to advance an ended or
+untrusted world.
 
 Closing a dialog must not silently start playback. Text input and focused
 controls consume their keys before global shortcuts; typing a save name cannot
@@ -110,8 +118,8 @@ Input focus is visible, ordered and contained within an active modal dialog,
 then returns to its invoking control. Help documents the actual bindings and
 current mode; essential actions are never hover-only, color-only or available
 only through memorized keys. #729 owns exact panel placement and final shortcut
-mapping; #728 owns palette/type/spacing/assets. Proposed defaults are discussed
-in section 5 rather than treated as individually approved choices.
+mapping; #728 owns palette/type/spacing/assets. Section 5 identifies the
+confirmed selections and the remaining complete written-review boundary.
 
 ### Save, load, restart and exit
 
@@ -134,8 +142,10 @@ Load lets users identify a save before replacing the world. Validate the complet
 snapshot and scenario/version compatibility before committing restoration. A
 failed or corrupt load leaves the live world intact and offers another save,
 cancel or diagnostic details. A successful load restores the real world, pending
-events, memory, logical time and RNG state, then displays it **paused** with the
-save and restored tick identified. Play is explicit. This presentation choice
+events, memory, logical time and RNG state, with the save and restored tick
+identified. An unfinished world loads **paused**; a completed world loads as
+**Finished**, with inspection available and Play/Step disabled.
+Play is explicit for unfinished worlds. This presentation choice
 does not change the saved causal trace or continuation equivalence.
 
 Restart requests the identical scenario/seed from tick 0, using the same unsaved
@@ -182,9 +192,12 @@ smoke and existing legacy exit behavior are not proof of this future contract.
 
 These are proposed executable review scenarios, not executed results. Use real
 domain objects and actual state; no staged successes or simplified replacement
-characters. Each row must pass with mouse and keyboard access at 1280×720 and
-1024×768 where relevant. The human records pass/fail, unexpected behavior and
-assistance required; SDL automation alone cannot approve human usability.
+characters. Under D021 R01, a maintainer exercises every scenario without
+coaching beyond in-product guidance; include first-time observers when available
+and report their experience separately. Each row must pass with mouse and
+keyboard access at 1280×720 and 1024×768 where relevant. The human records
+pass/fail, unexpected behavior and assistance required; SDL automation alone
+cannot approve human usability.
 
 | Scenario | Observable success criterion |
 | --- | --- |
@@ -195,7 +208,7 @@ assistance required; SDL automation alone cannot approve human usability.
 | Blocked goal | Run the zero-stock or unpaid-employer variation: explain the unmet condition from inspector/history while other feasible activity continues. No partial transfer or false success appears. |
 | Navigation and menus | Complete essential journeys with visible keyboard focus and without hover. Escape consumes one intended dismiss/menu action; naming input never triggers global shortcuts; opening the session menu stops advancement. |
 | Save and overwrite | Create a named milestone, cancel then confirm replacement, and quicksave twice. Metadata identifies each successful save. Inject write failure: previous valid save survives; no success message or pending transition occurs. |
-| Load and continuation | From unsaved progress exercise all three guard choices. Valid load returns paused at the saved tick; after Play its continuation matches uninterrupted execution. Corrupt/incompatible saves preserve the live world and explain recovery. |
+| Load and continuation | From unsaved progress exercise all three guard choices. An unfinished valid load returns paused at the saved tick; after Play its continuation matches uninterrupted execution. Completed saves load as Finished with inspection and disabled Play/Step. Corrupt/incompatible saves preserve the live world and explain recovery. |
 | Restart and quit | Cancel leaves the world intact; confirmed restart returns the same fixture/seed paused at tick 0. Menu Quit and window-close honor the same guard; owned resources terminate within the accepted budget. |
 | Runtime recovery | Controlled safe failure stops advancement and preserves evidence. Only safe actions appear, an unavailable reason is understandable, and no unsafe Save/Resume/Retry or unannounced rollback is possible. |
 | End of episode | At tick 120, distinguish Finished from Paused; inspect final entities and find the non-modal outcome/invariants/report. Tick does not increase; Restart/Load/Quit remain accessible. |
@@ -235,20 +248,21 @@ is a planning deliverable; it does not close #381/#382, approve #730/#732 or
 demonstrate future features. No new runtime API/schema, dependency, lock, CI
 configuration or platform-support claim is introduced here.
 
-## 5. Remaining written-specification review
+## 5. Consolidated selections and written-specification review
 
-The 15 individually confirmed choices are fixed for this draft through D018.
-The following connective details are **proposed defaults for written review**,
-not additional choices already approved by the conversation:
+The 15 initial choices are recorded in D018. The earlier connective proposals
+now have explicit selections in D020 and D021; those single-file records retain
+their alternatives and rationale. Their implementation requirements are:
 
-| Detail | Recommendation in this draft | Alternatives and tradeoffs |
+| Detail | Selected requirement | Record |
 | --- | --- | --- |
-| Leaving menus/dialogs | Remain paused; Play/Resume is explicit. | Restore previous playback automatically (fewer clicks, more surprise); ask on each close (more interruption). |
-| Data during save/load | Stop advancement at a coherent tick boundary until the operation completes. | Immutable asynchronous snapshots (more engineering/concurrency scope); stop for saves but load in background (more intermediate states). |
-| Keyboard shortcuts beyond confirmed Space/H/F1/Escape/list keys | Keep essential actions fully reachable through focusable controls; #729 reconciles existing S/L/R and chooses optional direct Step/speed bindings. | Freeze the complete current mapping now (retains known conflicts); adopt a new conventional mapping now (more relearning before wireframes). |
-| Walkthrough method | A maintainer exercises every scenario without coaching beyond in-product guidance; add first-time observers when available and report their experience separately. | Maintainer-only evidence (less onboarding confidence); require a larger external participant panel (higher recruitment cost). |
+| Leaving menus/dialogs | Remain paused; Play/Resume is explicit. | D020 U07 |
+| Data during save/load | Hold a coherent tick boundary until saving finishes, with responsive UI; load validates before replacement and remains non-advancing. | D020 U08 |
+| Session/Step/speed shortcuts | S Quicksave, L Load selection, R guarded Restart, period single Step and Page Up/Down speed, with focusable controls. Focused paging consumes Page Up/Down before global speed. | D020 U05/U11; D021 R09 |
+| Walkthrough method | Maintainer exercises every scenario with only in-product guidance; include first-time observers when available and report their results separately. | D021 R01 |
 
-Review the complete specification and these proposed defaults before acceptance.
-Any requested change is recorded in the single decision file and reflected here.
-After #727 acceptance, #728 is the next ordered design task; UI implementation
-still awaits the roadmap's written planning and human review prerequisites.
+Review this complete specification, including the journey and evidence tables,
+before recording #727's written disposition in docs/decisions.md. #728 and #729
+are also consolidated for review; keep their dispositions distinct. UI
+implementation still awaits the roadmap's combined design and later review
+prerequisites. No executed usability evidence is supplied by these selections.

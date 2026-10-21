@@ -1,0 +1,56 @@
+{
+  "status": "consolidated_for_complete_written_review_not_approved",
+  "recorded_at_utc": "2026-10-21T15:28:18.813844+00:00",
+  "review_base_revision": "3e1c7ef4e0ac2d5246124c249791b879380ae8a2",
+  "decision_record": "docs/decisions.md#d021--review-remaining-design-proposals-for-727729",
+  "confirmed_choice_counts": {
+    "D018": 15,
+    "D019": 13,
+    "D020": 12,
+    "D021": 13
+  },
+  "current_document_sha256": {
+    "docs/decisions.md": "0fb1bdd2624b38fdbc9be7f7f27b4bfcd98b2f18caaf83ee2238b891689851b2",
+    "docs/superpowers/specs/2026-10-20-issue-727-ux-design.md": "672be52b6bd2401d3189a2983e42317eed3308d1bf7c5a2659203dc157da0cdf",
+    "docs/superpowers/specs/2026-10-20-issue-728-visual-design.md": "2d4a851136f33391011c3b48840b4aa502a456213e46770d066c216dacefb84e",
+    "docs/superpowers/specs/2026-10-20-issue-729-ui-design.md": "22e1f0a859692f7c8779dea5aaf585bdb7f2af5060e42aee47feca5046fa8027"
+  },
+  "historical_receipt": {
+    "path": "docs/testing/evidence/issue-729-ui-design-checks.json",
+    "sha256": "7dde88dc058207ef64a3527e0dacee907a05b986266637904deda83d7a6bf653",
+    "source_hashes_verified_at_revision": "4c9bbfd106d721a0b714990653edce8b01b4c041",
+    "verified_source_count": 6
+  },
+  "reference_hashes_verified": [
+    {
+      "path": "docs/superpowers/specs/references/issue-728-palette-comparison.png",
+      "sha256": "031b523d88467643c2fbff5053fbe677dfea282a14f33990b68b370f28860997"
+    },
+    {
+      "path": "docs/superpowers/specs/references/issue-729-layout-comparison.png",
+      "sha256": "a749ae1f2e458b9bab38541d2053e686a0d621ba34441f0e4d750d949869d3c5"
+    }
+  ],
+  "static_geometry": {
+    "regions": 18,
+    "header_slots": 18,
+    "window_sizes": [
+      [
+        1280,
+        720
+      ],
+      [
+        1024,
+        768
+      ]
+    ],
+    "result": "bounds and pairwise main-region non-overlap verified; dimension table unchanged"
+  },
+  "validation_command": "python /workspace/scratch/design-review-727-729/check_consolidation.py",
+  "limitations": [
+    "Static documentation/source/geometry checks only; no runtime tests, native font fit, human usability, rendering or performance evidence.",
+    "Historical receipts are preserved unchanged and checked at their recorded revision, not misrepresented as hashes of the consolidated documents.",
+    "No product code, assets/fonts, dependencies, locks or workflows changed.",
+    "Complete #727/#728/#729 written dispositions and #730/#731/#732 decisions remain pending."
+  ]
+}

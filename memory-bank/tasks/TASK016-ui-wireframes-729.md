@@ -1,7 +1,7 @@
 # TASK016 — Pygame UI structure, wireframes and states (#729)
 
 **Status:** Awaiting written-specification review; #729 open
-**Added/Updated:** 2026-10-20 (America/New_York)
+**Added/Updated:** 2026-10-21 (America/New_York)
 
 ## Request and scope
 
@@ -56,3 +56,7 @@ the user explicitly authorized this preliminary design walkthrough.
   return-to-prior-playback policy applies only to S outside the menu and still
   needs written review. Static documentation checks passed; no runtime behavior
   was implemented or tested.
+
+- 2026-10-21 (America/New_York): TASK017 consolidates the remaining selections
+  from D021 into this specification. Complete written disposition remains
+  pending; no runtime validation or later design/phase approval is inferred.

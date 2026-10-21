@@ -421,10 +421,10 @@ should link to this file rather than maintain separate decision records.
 
 ### D021 — Review remaining design proposals for #727–#729
 
-- **Date:** 2026-10-21 (UTC).
+- **Date:** 2026-10-21 (UTC; later selections on the same date in America/New_York).
 - **Decision-maker:** dhar174.
-- **Disposition:** Review in progress; only submitted selections below are
-  confirmed. Complete written-specification dispositions remain pending.
+- **Disposition:** All thirteen remaining selections confirmed; consolidated
+  complete written-specification dispositions remain pending.
 - **Artifacts:** [UX specification](superpowers/specs/2026-10-20-issue-727-ux-design.md),
   [visual specification](superpowers/specs/2026-10-20-issue-728-visual-design.md),
   and [UI specification](superpowers/specs/2026-10-20-issue-729-ui-design.md),
@@ -447,6 +447,7 @@ should link to this file rather than maintain separate decision records.
 | R10 — Routine-confirmation duration/placement (#729) | Show routine confirmations for five seconds in the existing HUD status lane; retain each message in event history and do not steal focus. Actionable errors remain persistent. | Longer configurable duration in the same lane (more reading time, longer occupancy); separate reserved notification lane (requires revised layout and consumes space without covering villagers/controls). | Provide consistent acknowledgment without another interface region or map obstruction. The user explicitly selected this policy. |
 | R11 — Displayed event-history buffer (#729) | Keep 200 recent UI entries with a labelled count and access to the complete canonical result trace; preserve reading position and indicate new events. Trimming the UI never deletes the separately retained simulation evidence. | 1,000 recent entries (more immediate scrollback, greater memory/display-management cost); paginated history (older entries accessible through additional navigation/implementation complexity). | Bound immediate UI work while keeping the complete trace available and the visible subset honest. The user explicitly selected this policy. |
 | R12 — Completed-scenario saves (#729) | Allow completed saves and load them as Finished, keeping the village, final summary and history inspectable with Play/Step disabled. Never advance beyond the scenario endpoint. | Load as Paused with an explicit completion notice (less clear state label); restrict saves to unfinished sessions (requires a design revision and removes completed-world save/reload inspection). | Preserve the authoritative terminal state and useful inspection without implying that playback can resume. The user explicitly selected this behavior. |
+| R13 — Window-close during commit (#729) | Remember the close request during a non-cancellable save/load commit, show closing as pending, finish or report the operation, then apply unsaved-progress protection and failure-appropriate recovery rules at the safe boundary before exiting. Keep UI event handling responsive. | Decline the request while committing, explain why, and require another Quit request after completion (simpler pending state, extra user action). | Honor the user's request without interrupting an in-flight commit or bypassing state/unsaved-progress safeguards. The user explicitly selected this policy. |
 
 - **Boundary:** R01 selects the later working-interface test method; R02 selects
   an environment-art trial. No human walkthrough or asset trial has been
@@ -457,8 +458,18 @@ should link to this file rather than maintain separate decision records.
   font files. R05 selects initial sizes/spacing, not a measured font-fit result.
   R06 selects production scope, not completed artwork or renderer validation.
   R07 selects initial layout dimensions, not a native readability/fit pass.
-  Exact imported assets, villager-family selection and other unselected defaults
-  remain pending. Record subsequent selections in this table.
+  Exact imported assets and the compatible villager-family choice remain work
+  for the later production plan and audit, not unresolved changes to the
+  selected sourcing strategy. No save/load, history or input behavior was run.
+
+**Complete written review now requested:** read the three linked specifications
+together, including their journey/state tables, documented focus traversal,
+input ownership/Escape ordering, recovery restrictions and later evidence
+requirements. The thirteen selections settle the individually presented
+proposals; they do not yet supply acceptance of the complete documents.
+Record a distinct Approved / Changes requested / Deferred disposition for each
+of #727, #728 and #729 after that review. #730 remains a separate combined
+UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
 
 ## Review status
 
@@ -482,6 +493,9 @@ final disposition remains open. The user requested #729 next and selected the
 12 choices in D020; its consolidated written specification/defaults await review.
 #729 and later human gates remain open. The explicitly selected overlapping
 #727 defaults are clarified in D020 without approving the remaining artifacts.
+D021 now records thirteen further selections and the consolidated written
+review request. #727/#728/#729 remain open pending complete written acceptance;
+the PR merges and individual choices do not supply #730/#731/#732 approval.
 
 The [#779 investigation plan](superpowers/plans/2026-10-15-issue-779-startup-investigation.md)
 was approved under D007, and its bounded cycle has concluded. Its original

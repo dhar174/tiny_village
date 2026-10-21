@@ -2,10 +2,12 @@
 
 **Status:** Draft for written review. Twelve choices were explicitly selected
 by dhar174; their authoritative record, alternatives and rationale are
-[D020](../../decisions.md#d020--select-interface-behavior-for-729). Exact geometry,
-input precedence and other connective defaults below are proposals for review,
-not additional choices inferred from those answers. No UI implementation or
-human design/phase approval is supplied by this document.
+[D020](../../decisions.md#d020--select-interface-behavior-for-729). The remaining
+dimension, quicksave, paging, confirmation, history and terminal/close selections
+are recorded in [D021 R07–R13](../../decisions.md#d021--review-remaining-design-proposals-for-727729).
+The complete written artifact, including documented focus traversal and input
+ownership details, still awaits a disposition. No UI implementation or human
+design/phase approval is supplied by this document.
 
 ## 1. Intent and research boundary
 
@@ -32,8 +34,11 @@ artwork are illustrative, not scenario facts, final wireframes or a native
 Pygame screenshot. In particular, icon inventories and hunger bars must never
 override real quantities or #724's higher-hunger-is-worse meaning. Exact region
 coordinates below supersede the board's approximate spacing. Reference hash,
-source hashes and static bounds checks are retained in the
-[design receipt](../../testing/evidence/issue-729-ui-design-checks.json).
+source hashes and static bounds checks are retained in the historical
+[design receipt](../../testing/evidence/issue-729-ui-design-checks.json) against
+its recorded base revision. The current consolidation is covered by the
+[written-review receipt](../../testing/evidence/issue-727-729-written-review.json);
+neither receipt supplies native font-fit or runtime evidence.
 
 ## 2. Main-screen wireframes and information architecture
 
@@ -43,10 +48,11 @@ The sidebar remains visible when the drawer expands; neither covers villagers.
 At 1024×768 retain this arrangement, narrowing the sidebar and using wrapping
 and local scrolling. Do not switch to another layout or shrink essential text.
 
-### Proposed dimensioned wireframes
+### Selected initial dimensioned wireframes
 
 Coordinates are `(x, y, width, height)` in logical screen pixels. These initial
-dimensions are configurable layout values, not new hard-coded simulation limits.
+dimensions are the D021 R07 trial baseline: configurable layout values, not new
+hard-coded simulation limits.
 Outer margin and inter-region gap are 8; top bar is 64 high, collapsed strip 40,
 expanded drawer 240. Sidebar width interpolates from 280 at width 1024 to 304
 at 1280, then clamps at those values for this initial supported range. Outside
@@ -93,8 +99,9 @@ focusable, with mouse and Enter/Space activation. Quicksave is distinct from
 the named-save dialog: its menu control and S invoke the same command, dedicated
 slot and enabled/busy/world-validity checks. While saving or when the world is
 untrusted, both routes are disabled. Invoking Quicksave from the menu keeps the
-menu open and playback paused, retains focus on the action, and reports the
+menu open and playback stopped, retains focus on the action, and reports the
 actual result without opening a naming or overwrite dialog.
+Unfinished worlds stay paused; completed worlds retain Finished.
 
 Maintain crisp integer world scaling and independent HUD text sizing. Map
 clipping/hit testing use the same camera transform. Resizing preserves selected
@@ -142,10 +149,14 @@ actor/target, recorded reason and committed/rejected/blocked outcome; show real
 changes, not implied success from an action name. While reading older entries,
 hold reading position, accumulate a new-event count and offer Jump to Latest.
 
-Routine confirmations appear briefly in a consistent HUD location and are
-retained in history. Proposed location is the existing compact strip/status
-lane rather than a map-covering toast; hold the confirmation long enough to
-read while retaining incoming events in history. Do not steal focus. Failed
+Keep 200 recent UI entries with a labelled count and access to the complete
+canonical result trace (D021 R11). Trimming the UI never deletes that retained
+evidence. If the trace cannot be accessed, report that limitation or failure
+instead of presenting the recent buffer as complete.
+
+Routine confirmations appear for five seconds in the existing HUD status lane
+and are retained in history (D021 R10). Keep incoming events in history while
+the confirmation is visible; do not cover villagers or steal focus. Failed
 saves and other actionable errors have persistent text/actions; blocked goals
 retain inspector/history indicators while other villagers continue. Notification
 severity and selection/focus use distinct shapes/labels as well as color.
@@ -171,10 +182,10 @@ not a mandated runtime class, enum or wire schema.
 | Selected while Running or Paused | Ring/outline plus actual entity details; selecting, expanding sections or reading history never changes playback. |
 | Running | Header shows Running; Play becomes Pause; Step unavailable with a visible explanation. Speed changes pacing only. |
 | Explicitly Paused | Header shows Paused; UI/selection remain responsive; Step advances exactly one complete tick and remains paused. |
-| Menu / ordinary modal open | World paused; only active dialog can receive modal input; close/Cancel leaves paused until Play/Resume. |
+| Menu / ordinary modal open | World non-advancing; only active dialog can receive modal input. Close/Cancel leaves unfinished sessions paused until Play/Resume; completed worlds retain Finished. |
 | Saving | Hold a complete world tick; show Saving/busy and operation target. Keep inspection/history/Help responsive; disable Play/Pause, speed and duplicate Save/Load/Restart/Step requests until the safe boundary. Never signal success before durable completion. |
 | Loading / validating | Stay paused; identify source save and validation progress. Keep the live world until the complete replacement is valid. Commit once; replace stale entity/view references. |
-| Successful Load | Restored world is non-advancing and identified by save/tick; unfinished episodes require explicit Play. Proposed terminal-save rule preserves Finished and disabled Play/Step rather than relabeling it resumable. |
+| Successful Load | Restored world is non-advancing and identified by save/tick; unfinished episodes load paused and require explicit Play. Completed worlds retain Finished and disabled Play/Step (D021 R12). |
 | Save/Load failure, world still valid | Persistent operation error and next actions; keep typed name/selection where possible. Failed writes preserve the old save; invalid loads preserve the live world. No successful transition is inferred. |
 | Unsaved transition | Save and Continue / Discard and Continue / Cancel. Track the requested Load/Restart/Quit; complete it only after successful requested save or explicit discard. Cancel preserves the live world. If state is untrusted, Save and Continue is unavailable with its safety reason; Cancel returns to recovery, not playback. |
 | Ordinary blocked goal | Persistent, explained blocked state; other villagers continue; no fake replenishment, recovery or completion. |
@@ -202,21 +213,23 @@ permission to block the event loop with file I/O. Load validates before world
 replacement. Never permit duplicate commits from repeated keys or button clicks.
 The UI must preserve old valid data when writing fails.
 
-**Proposed quicksave return policy:** for S invoked outside the session menu,
+**Selected quicksave return policy (D021 R08):** for S outside the session menu,
 capture whether the valid world was running or paused and restore that state
 after its temporary save hold. A save I/O error alone does not imply world
 corruption; show a persistent error and preserve that same prior state when safe.
-A concurrent runtime/invariant failure overrides this and stays stopped. This recommendation
-was discussed alongside the save choice, but not independently selected; it
-requires written review. Menu Quicksave and named saves/loads remain paused;
+A concurrent runtime/invariant failure overrides this and stays stopped.
+Menu Quicksave and named saves/loads remain non-advancing; completed worlds
+retain Finished (D021 R12), and unfinished menu sessions remain paused;
 failed Save and Continue never completes the pending destructive transition.
 
 Ordinary dialogs can cancel before commit. During a non-cancellable save/load
 commit, keep visible busy status and explain unavailable dismissal; keep pumping
 input/window events. Do not silently discard an in-flight transaction or queue
-world mutations. Proposed window-close handling defers an exit request until
-the safe operation boundary, then applies the same unsaved guard; a process-level
-forced termination remains incomplete failure evidence, not successful Quit.
+world mutations. Under D021 R13, remember a window-close request and show
+closing as pending until the safe operation boundary. Finish or report the
+operation, then apply the unsaved guard and failure-appropriate recovery rules
+before exiting. A process-level forced termination remains incomplete failure
+evidence, not successful Quit.
 
 Recovery shows what failed, the last validated tick/evidence reference and safe
 Load/Restart/Export Diagnostics/Quit actions as applicable. Retry is visible only
@@ -231,7 +244,7 @@ own visible result. Headless failures remain console/result/exit behavior from
 Every essential operation has a visible labelled control reachable by Tab and
 Enter/Space. Focus, selection, hover, disabled and error states are distinct.
 Buttons do not depend on hover-only text or color-only severity. Reuse #728's
-proposed readable type/contrast tokens subject to native review; world pixel
+selected trial type/contrast values subject to native review; world pixel
 scaling does not force tiny HUD text. Reduced motion removes decorative
 transitions while preserving immediate selected-actor visibility and static
 activity/status cues. No flash or animation is required to understand state.
@@ -240,7 +253,7 @@ activity/status cues. No flash or animation is required to understand state.
 | --- | --- |
 | Space | Toggle playback when map/global playback context owns input; a focused control uses Space for its own activation. |
 | `.` | One tick only when unfinished, paused and no modal/operation owns input. |
-| Page Up / Page Down | Next faster/slower preset, clamped to 0.5×/1×/2×/4×. Proposed focus rule lets a focused scrolling view page locally first. |
+| Page Up / Page Down | Next faster/slower preset, clamped to 0.5×/1×/2×/4×, only when unconsumed. A focused scrolling view pages locally first (D021 R09). |
 | S | Quicksave; matches visible Menu → Quicksave (S), with no naming/overwrite modal for its dedicated slot. |
 | L | Open Load selection/validation flow, never directly load a hard-coded file. |
 | R | Request identical-scenario Restart through the unsaved guard, never regenerate random characters. |
@@ -258,10 +271,10 @@ focus. Rebuild focus safely by stable identity after removal, resize or load.
 Input ownership is **text composition/editing → active modal/popover → focused
 widget → global shortcut → map hit testing**. A consumed event cannot also
 reach the map/global action. S/L/R/`.` typed into a save name never cause an
-operation. Widget arrows/Enter/Space act locally. Proposed Page Up/Down precedence
+operation. Widget arrows/Enter/Space act locally. Selected Page Up/Down precedence
 lets scrollable lists/history use paging while focused; speed controls remain
 visible and focused/map context can use the agreed shortcut. This focus detail
-is a written-review proposal, not a change silently attributed to D020.
+is recorded in D021 R09; it is not a change silently attributed to D020.
 
 Mapped shortcuts share the visible control's enabled predicate. During a
 non-cancellable commit, consume unavailable playback/session shortcuts without
@@ -312,7 +325,8 @@ actual screenshots, state/event traces, focus observations and timing evidence:
 - Invoke Menu → Quicksave (S) using mouse and Tab/Enter without using the
   shortcut. Compare with S: same dedicated slot, command and state checks;
   saving/untrusted state disables both. Menu invocation retains menu focus and
-  paused playback on success or save I/O failure, with the actual result visible.
+  stopped playback on success or save I/O failure, with the actual result visible
+  and Finished retained for completed worlds.
 - Create/overwrite/cancel named saves and quicksave; show busy/success/failure;
   exercise all guard branches and a failed requested Save and Continue.
 - Reject corrupt/incompatible saves without world mutation; load valid state
@@ -321,6 +335,10 @@ actual screenshots, state/event traces, focus observations and timing evidence:
   actions and no ordinary save/resume of untrusted state.
 - Finish the bounded episode with honest outcomes/report status; inspect and
   switch Summary/Events, collapse it, and verify Play/Step cannot extend ticks.
+- Save/reload a completed world as Finished; retain inspection, summary/history
+  and disabled Play/Step. During non-cancellable save/load, request window close,
+  observe pending status, then verify safe completion/failure reporting and the
+  applicable unsaved/recovery checks before exit.
 - Verify text/non-color cues, keyboard focus, local occluder fading and reduced
   motion against #727/#728 and #724's actual measurement workloads.
 
@@ -331,22 +349,25 @@ reading a guard is not shutdown execution time. Preserve all other accepted
 startup/simulation/memory budgets and diagnostic deadlines. Dummy SDL and
 passing CI do not replace human native-display evidence or approve #730.
 
-### Additional defaults needing written review
+### Consolidated selections for complete written review
 
-| Detail | Recommendation in this draft | Alternatives / tradeoff |
+| Detail | Selected requirement | Record |
 | --- | --- | --- |
-| Exact dimensions | Use the region/header table and bounded 240-high drawer as the initial wireframe. | Wider inspector or taller drawer improves details at a cost to map area; requires revised bounds and real font checks. |
-| Temporary quicksave hold | Return to prior playback only if world validity permits; menu operations remain paused. | Always leave paused after S; prompt to resume. These add explicit interaction after routine quicksave. |
-| Focus and Page Up/Down | Focused-widget paging wins; globals consume only unhandled input; use the documented traversal/Escape order. | Global speed keys outside text override paging; or revise speed shortcuts. Either needs another focused review. |
-| Routine confirmation | Show for five seconds in the existing HUD strip/status lane, retain history and focus. Do not auto-dismiss actionable errors. | A longer configurable duration; a separate toast lane that reserves space. Neither should cover villagers or lose evidence. |
-| History display | Start with 200 recent UI entries and a labelled count/route to the complete canonical result trace. Never trim the canonical evidence. | Paginated history increases navigation; a larger buffer uses more memory. Exact trace availability must be reported honestly. |
-| Terminal saves / window close | Preserve Finished when loading a terminal world; defer a requested close during non-cancellable commit to its safe boundary. | Showing Paused with explicit terminal explanation is more ambiguous; rejecting terminal saves narrows persistence scope. Immediate forced termination cannot claim successful save/Quit. |
+| Dimensions | Trial the region/header table: 304px/280px sidebar, 40px collapsed strip and 240px expanded drawer; verify native font fit. | D021 R07 |
+| Quicksave return | S outside the menu returns to prior playback only when safe; menu operations stay non-advancing. Runtime/invariant failures always stop. | D021 R08 |
+| Page Up/Down | Focused paging wins; global speed consumes only unhandled input. | D021 R09 |
+| Routine confirmation | Five seconds in the HUD status lane; retain history/focus. Actionable errors persist. | D021 R10 |
+| History display | 200 recent UI entries, labelled count and access to complete canonical evidence. Never trim that evidence with the UI buffer. | D021 R11 |
+| Completed saves | Load completed worlds as Finished with inspection and no Play/Step. | D021 R12 |
+| Window close | Retain/display a pending close through non-cancellable commit, then apply safe-boundary unsaved/recovery rules. | D021 R13 |
 
-These are not additional confirmed decisions. The existing #727 walkthrough
-method, #728 production assets/fonts/tokens and remaining defaults still need
-their written dispositions. #791/#792 are merged, while #727/#728 remain open
-at this snapshot. The user explicitly requested this preliminary #729 review;
-no prerequisite closure or human approval is inferred from merged documents.
+These individually selected requirements are consolidated from D021, which
+retains all presented alternatives/rationale. They do not yet accept this
+complete written artifact. Review the full state matrix, focus traversal,
+input ownership/Escape ordering, initial focus and recovery behavior as well
+as the selected table. #727/#728/#729 remain open pending distinct written
+dispositions; #791/#792/#793 merges supply no automatic approval. Specific
+production art/font files and later native evidence remain downstream work.
 
 | Owner | Handoff |
 | --- | --- |

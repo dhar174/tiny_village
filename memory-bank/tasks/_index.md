@@ -1,10 +1,10 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK017](TASK017-design-review-727-729.md) Remaining design review (#727-#729) - D021 R01-R12 recorded; window-close choice and final dispositions pending (Updated: 2026-10-21 America/New_York)
-- [TASK016](TASK016-ui-wireframes-729.md) UI wireframes/states (#729) - D020 records 12 choices; consolidated written specification awaits review (Updated: 2026-10-20)
-- [TASK015](TASK015-visual-direction-728.md) Visual direction (#728) - #792 merged at 4c9bbfd; final written disposition pending (Updated: 2026-10-20)
-- [TASK014](TASK014-ux-journeys-727.md) UX journeys (#727) - #791 merged at 7391861; final written disposition pending (Updated: 2026-10-20)
+- [TASK017](TASK017-design-review-727-729.md) Remaining design review (#727-#729) - D021 R01-R13 recorded; specifications consolidated, final written dispositions pending (Updated: 2026-10-21 America/New_York)
+- [TASK016](TASK016-ui-wireframes-729.md) UI wireframes/states (#729) - Consolidated under TASK017/D021; complete written disposition pending (Updated: 2026-10-21 America/New_York)
+- [TASK015](TASK015-visual-direction-728.md) Visual direction (#728) - Consolidated under TASK017/D021; complete written disposition pending (Updated: 2026-10-21 America/New_York)
+- [TASK014](TASK014-ux-journeys-727.md) UX journeys (#727) - Consolidated under TASK017/D021; complete written disposition pending (Updated: 2026-10-21 America/New_York)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending
