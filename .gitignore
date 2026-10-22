@@ -287,3 +287,4 @@ compare_lda_tfidf.py
 /.test-artifacts/
 /.venv/
 /.venv-*/
+/.mimosa/hook-state
