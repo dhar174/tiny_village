@@ -1,0 +1,148 @@
+{
+  "schema_version": "mimosa-task-review/v2",
+  "run_id": "20261022T063801849Z-42736-72b328f9f8e4",
+  "run_status": "completed",
+  "errors": [],
+  "coverage": {
+    "schema_version": "mimosa-hook-coverage/v1",
+    "status": "complete",
+    "scope": "hook_observed_diff",
+    "baseline": {
+      "complete": true,
+      "captured_files": 459,
+      "candidate_limit": 5000,
+      "truncated": false,
+      "enumeration_error_count": 0,
+      "snapshot_error_count": 0,
+      "compensated_target_count": 2
+    },
+    "change_tracking": {
+      "touched_observed": 2,
+      "touched_retained": 2,
+      "truncated": false,
+      "bash_mutation": true,
+      "bash_discovered": 2,
+      "bash_discovery_limit": 80,
+      "bash_discovery_truncated": false
+    },
+    "candidates": {
+      "eligible_files": 2,
+      "selected_files": 2,
+      "limit": 20,
+      "truncated": false
+    },
+    "scanning": {
+      "required_files": 0,
+      "scanned_files": 0,
+      "skipped_files": 0,
+      "failed_files": 0,
+      "project_checks_required": 1,
+      "project_checks_completed": 1
+    },
+    "notification": {
+      "eligible_findings": 0,
+      "detailed_findings": 0,
+      "detail_limit": 3,
+      "truncated": false
+    },
+    "reason_counts": {},
+    "reasons": [],
+    "reasons_truncated": false
+  },
+  "generated_at": "2026-10-22T06:38:01.849Z",
+  "session_id": "session_65124aa357976e88c958ad5c36b2e07d",
+  "target": ".",
+  "revision": "11b6e93595a70ce9f24cfb239a31ac873847ff56",
+  "rules_version": "unavailable",
+  "diff_hash": "bc8941b85cb3fbfb62ab3382b9d697bca15a50bf45096b7f28866f3de00eab83",
+  "diff": {
+    "algorithm": "sha256",
+    "changed_file_count": 2,
+    "changed_files": [
+      {
+        "file": "AGENTS.md",
+        "ranges": [
+          {
+            "start": 30,
+            "end": 30
+          },
+          {
+            "start": 33,
+            "end": 33
+          },
+          {
+            "start": 94,
+            "end": 94
+          },
+          {
+            "start": 104,
+            "end": 104
+          }
+        ],
+        "before_hash": "186865615b91413fcd0512f4ea659d6e01ee39bcce5814fffe01a02763be0904",
+        "after_hash": "317afb4150813666d8d59e846ff52eddfa5e72d135183d622ab7a7fee0fcb713"
+      },
+      {
+        "file": "GEMINI.md",
+        "ranges": [
+          {
+            "start": 1,
+            "end": 38
+          }
+        ],
+        "before_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "after_hash": "999edf2adae2d6353cfd1344105532816f86d36b905c833d1924b95aa7f8097a"
+      }
+    ]
+  },
+  "timing": {
+    "started_at": "2026-10-22T06:37:59.254Z",
+    "completed_at": "2026-10-22T06:38:01.849Z",
+    "duration_ms": 2595,
+    "measurement": "hook_wall_clock"
+  },
+  "tokens": {
+    "input": 0,
+    "output": 0,
+    "total": 0,
+    "model_calls": 0,
+    "measurement": "known-zero"
+  },
+  "telemetry": {
+    "schemaVersion": "mimosa-gate-telemetry/v1",
+    "profile": "gate",
+    "operation": "Stop",
+    "outcome": "complete",
+    "latencyMs": 2595,
+    "peakMemoryBytes": 113188864,
+    "memoryMeasurement": "max-observed-process-rss",
+    "scannedFiles": 0,
+    "cache": {
+      "hits": 0,
+      "misses": 0,
+      "measurement": "not-applicable"
+    },
+    "denyCount": 0,
+    "tokens": {
+      "input": 0,
+      "output": 0,
+      "total": 0,
+      "modelCalls": 0,
+      "measurement": "known-zero"
+    }
+  },
+  "finding_count": 0,
+  "rewake_finding_count": 0,
+  "evidence_boundary": {
+    "scan": "candidate",
+    "static_fix_verification": "observed_static_only",
+    "runtime_verification": "not_performed"
+  },
+  "finding_events": [],
+  "findings": [],
+  "artifacts": {
+    "immutable_report": ".mimosa/reports/task-review-session_65124aa357976e88c958ad5c36b2e07d-20261022T063801849Z-42736-72b328f9f8e4.json",
+    "latest_report": ".mimosa/reports/task-review-session_65124aa357976e88c958ad5c36b2e07d.json",
+    "history_summary": ".mimosa/history/run-20261022T063801849Z-42736-72b328f9f8e4.json"
+  }
+}

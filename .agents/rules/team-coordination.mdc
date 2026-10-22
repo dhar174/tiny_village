@@ -1,0 +1,24 @@
+---
+description: Tiny Village contributor agent team coordination - the primary session coordinates read-only specialists and is the only repository writer, under the canonical policy in docs/agents/team-coordination.md.
+alwaysApply: true
+---
+
+# Tiny Village team coordination (always on)
+
+Full policy: [`docs/agents/team-coordination.md`](../../docs/agents/team-coordination.md).
+Root `AGENTS.md` stays the canonical contributor guide; this rule only binds
+delegated work to that policy.
+
+- Before substantive delegated work, read `docs/agents/team-coordination.md`
+  (routing table §4, assignment template §6, return contract §7, invariants §9).
+- The primary session coordinates and is the only repository writer.
+  Specialists investigate, review, and propose; they never edit, run commands,
+  or repair what they review, and their recommendations are not human
+  acceptance.
+- Schedule independent investigations concurrently and dependent work in
+  order; reconcile conflicting findings against repository evidence.
+- Durable human decisions live only in `docs/decisions.md`; resumable task
+  context lives in `memory-bank/`. Do not create competing logs.
+- If specialist invocation is unavailable, the primary agent performs the
+  checks itself and reports plainly that no independent specialist review
+  occurred.

@@ -1,7 +1,10 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK023](TASK023-functional-test-review-736.md) Functional-test PR walkthrough (#736) - D030 accepted; runtime issue bodies/native ordering verified; #804 ready for review, merge/verification pending (Updated: 2026-10-22 America/New_York)
+- [TASK023](TASK024-functional-test-review-736.md) Functional-test PR walkthrough (#736) - D030 accepted; runtime issue bodies/native ordering verified; #804 ready for review, merge/verification pending (Updated: 2026-10-22 America/New_York)
+- [TASK023](TASK023-zcode-specialist-team.md) Zcode specialist team - nine read-only specialist definitions + canonical coordination policy created, entry points wired, installed to ~/.zcode/agents; static checks + independent review pass, fixes applied; runtime invocation re-verification pending fresh session (Updated: 2026-10-22)
+- [TASK022](TASK022-utility-consolidation-735.md) Utility PR consolidation (#735) - #703 selected under D028; 69 local tests + 3 probes pass, #703 awaits review/merge (Updated: 2026-10-21)
+- [TASK021](TASK021-backlog-triage-734.md) Evidence-based backlog triage (#734) - PR #797 full-manifest review fix verified; publication awaits consolidated review (Updated: 2026-10-21)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending
@@ -37,6 +40,7 @@
 
 - Present task files:
   - `_index.md`
+  - `TASK023-zcode-specialist-team.md`
   - `TASK001-initialize-memory-bank.md`
   - `TASK002-goal-fallback-718.md`
   - `TASK003-graph-initialization-719.md`
