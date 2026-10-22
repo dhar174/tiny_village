@@ -672,9 +672,12 @@ UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
   of the #393 question. Its earlier answer selected rework/rebase into a test-only
   PR; its later answer selected salvage then supersede. The later answer is
   recorded as the final choice and replaces the earlier one.
-- **Status:** all nine dispositions selected, not applied. The walkthrough is
-  complete; the [scoped consolidation plan](superpowers/plans/2026-10-22-issue-736-functional-test-consolidation.md)
-  awaits review before execution. No test port, PR closure or rebase has been performed.
+- **Plan approval:** on 2026-10-22 America/New_York, dhar174 confirmed:
+  “Approved. Please begin. Use subagents where helpful.” This approves the
+  [scoped consolidation plan](superpowers/plans/2026-10-22-issue-736-functional-test-consolidation.md)
+  and helpful delegation, retaining its runtime-repair and closure boundaries.
+- **Status:** execution started; all nine dispositions selected. No candidate
+  closure is permitted before its mapped evidence and replacement merge.
 - **Boundary:** Keep existing #736 acceptance and recorded failures intact;
   this supplies no approval of #737, phase gate #738, runtime repairs or broader
   gameplay/AI readiness. Evidence is in [the walkthrough](planning/issue-736/README.md).
