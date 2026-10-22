@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "test_id": "review798-owned-resume-corrected",
+  "source_sha256": "75e5c83df86f928e67a70f9c4878aed48a23020f55b2c8978cb131020bbeb56b",
+  "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+  "cwd": "/workspace/tiny_village",
+  "pid": 176797,
+  "fatal_timeout": 20,
+  "timeout": 25,
+  "started_utc": "2026-10-22T00:41:08.340187+00:00",
+  "started_monotonic": 98461.197106486,
+  "returncode": 0,
+  "outcome": "EXITED_ZERO",
+  "watchdog_dump_observed": false,
+  "launched_monotonic": 98461.197840129,
+  "wait_started_monotonic": 98461.198058014,
+  "finished_utc": "2026-10-22T00:41:10.461301+00:00",
+  "finished_monotonic": 98463.318228669
+}

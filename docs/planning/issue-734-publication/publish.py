@@ -98,12 +98,67 @@ def no_cycles(edges):
         visit(n)
 
 
+def metadata(issue):
+    """Compare reviewed identities, not connection order or display fields."""
+    return {
+        'state': issue['state'], 'stateReason': issue['stateReason'],
+        'assignees': sorted(x['login'] for x in issue['assignees']['nodes']),
+        'parent': issue['parent']['number'] if issue['parent'] else None,
+        'blockedBy': sorted(x['number'] for x in issue['blockedBy']['nodes']),
+        'updatedAt': issue['updatedAt'],
+    }
+
+
+def metadata_drift(issue, reviewed, proposal, state):
+    """Only checkpointed publication writes may advance the reviewed baseline.
+
+    Timestamp-only changes also stop publication: a comment/label change may
+    need human inspection even when these selected fields are identical.
+    Interrupted writes without a readback checkpoint fail closed for review.
+    """
+    n = str(issue['number'])
+    expected = metadata(reviewed)
+    expected['updatedAt'] = proposal['base_updated_at']
+    if n in state['parents']:
+        expected['parent'] = state['parents'][n]
+    if n in state['closures']:
+        expected['state'] = 'CLOSED'
+        expected['stateReason'] = state['closures'][n].upper()
+    expected['blockedBy'] = sorted(set(expected['blockedBy']) | {
+        int(edge.split('<-')[1]) for edge in state['edges'] if edge.startswith(n + '<-')})
+    observed = state.get('observed_metadata', {}).get(n)
+    if observed:
+        # A readback supplies a timestamp, never permission to adopt unrelated
+        # state/assignment/relationship changes as a new approved baseline.
+        expected['updatedAt'] = observed['updatedAt']
+    actual = metadata(issue)
+    return [{'number': issue['number'], 'kind': key,
+             'expected': value, 'actual': actual[key]}
+            for key, value in expected.items() if actual[key] != value]
+
+
+def remember_metadata(state, issues):
+    state.setdefault('observed_metadata', {}).update(
+        {str(n): metadata(issue) for n, issue in issues.items()})
+
+
+def require_reviewed_metadata(issues, reviewed, proposals, state):
+    by_number = {p['number']: p for p in proposals}
+    changed = [change for n, issue in issues.items() if n in by_number
+               for change in metadata_drift(issue, reviewed[n], by_number[n], state)]
+    if changed:
+        save('write-drift.json', changed)
+        raise RuntimeError('Metadata changed before write; inspect write-drift.json')
+
+
 def run(apply):
     if apply and (OUT / 'completion.json').exists():
         raise SystemExit('Publication is finalized; use read-only preflight or inspect the retained completion/readback receipts. No further writes attempted.')
     subprocess.run(['python', str(BUNDLE / 'validate_bundle.py')], cwd=ROOT, check=True,
                    stdout=subprocess.DEVNULL)
     proposals = json.loads((BUNDLE / 'proposed-issue-updates.json').read_text())['updates']
+    reviewed = {i['number']: i for i in
+                json.loads((BUNDLE / 'issues-snapshot.json').read_text())['issues']}
     followups = json.loads((BUNDLE / 'proposed-followups.json').read_text())['items']
     assert len(proposals) == 307 and len(followups) == 3
     assert {p['number'] for p in proposals if p['state_operation'] == 'CLOSED:COMPLETED'} == COMPLETED
@@ -117,12 +172,11 @@ def run(apply):
     assert state['proposal_sha256'] == digest((BUNDLE / 'proposed-issue-updates.json').read_text())
     assert state['followup_sha256'] == digest((BUNDLE / 'proposed-followups.json').read_text())
     current = all_issues()
-    if not (OUT / 'before.json').exists():
-        save('before.json', current)
     drift = []
     parents = {n: [i['parent']['number']] if i['parent'] else [] for n, i in current.items()}
     for p in proposals:
         n = p['number']; i = current[n]
+        drift.extend(metadata_drift(i, reviewed[n], p, state))
         if str(n) not in state['annotations'] and START not in i['body'] and digest(i['body']) != p['base_body_sha256']:
             drift.append({'number': n, 'kind': 'body', 'current_sha256': digest(i['body'])})
         op = p['parent_operation']
@@ -138,6 +192,8 @@ def run(apply):
     print(f'Preflight: {len(current)} issues, {len(drift)} material drifts', flush=True)
     if drift:
         raise RuntimeError('Material drift retained in preflight.json; inspect before publication')
+    if not (OUT / 'before.json').exists():
+        save('before.json', current)
     if not apply:
         return
     save('checkpoint.json', state)
@@ -149,6 +205,10 @@ def run(apply):
         variables, definitions, mutations, expected = {}, [], [], {}
         for p in batch:
             n = p['number']; i = live[n]; body = i['body']
+            changed = metadata_drift(i, reviewed[n], p, state)
+            if changed:
+                save('write-drift.json', changed)
+                raise RuntimeError(f'Metadata changed before annotation #{n}; inspect write-drift.json')
             annotation = p['proposed_annotation'].replace(END, f'- Publication approved under [D027]({APPROVAL}); preserved source evidence remains scoped as above.\n\n' + END)
             desired = annotation + '\n\n' + body
             if START in body:
@@ -176,6 +236,7 @@ def run(apply):
                 assert after['body'] == desired
                 state['annotations'][str(n)] = {'before_sha256': digest(before['body']), 'after_sha256': digest(desired),
                                                'updatedAt': after['updatedAt']}
+                remember_metadata(state, {n: after})
             save('checkpoint.json', state)
             time.sleep(1)
         if offset % 25 == 0 or offset + 5 >= len(proposals):
@@ -185,6 +246,7 @@ def run(apply):
             continue
         n, target = p['number'], p['parent_operation']['add_if_unparented']
         live = read([n, target]); child = live[n]
+        require_reviewed_metadata(live, reviewed, proposals, state)
         if child['parent']:
             assert child['parent']['number'] == target, n
         else:
@@ -192,6 +254,7 @@ def run(apply):
             api(f'{REPO}/issues/{target}/sub_issues', {'sub_issue_id': int(child['fullDatabaseId'])}, 'POST')
             assert read([n])[n]['parent']['number'] == target
         state['parents'][str(n)] = target
+        remember_metadata(state, read([n, target]))
         save('checkpoint.json', state)
         if len(state['parents']) % 10 == 0:
             print(f'Parent links verified: {len(state["parents"])}/80', flush=True)
@@ -213,13 +276,18 @@ def run(apply):
         state['followups'][key] = {'number': n, 'url': f'https://github.com/dhar174/tiny_village/issues/{n}'}
         save('checkpoint.json', state)
         live = read([n, item['parent']])
+        require_reviewed_metadata(live, reviewed, proposals, state)
         if not live[n]['parent']:
             assert live[item['parent']]['subIssues']['totalCount'] < 100
             api(f'{REPO}/issues/{item["parent"]}/sub_issues', {'sub_issue_id': int(new['fullDatabaseId'])}, 'POST')
         assert read([n])[n]['parent']['number'] == item['parent']
+        remember_metadata(state, read([n, item['parent']]))
+        save('checkpoint.json', state)
         pairs = [(n,b) for b in item['blocked_by']] + [(b,n) for b in item['blocks']]
         for dependent, blocker in pairs:
             current = all_issues()
+            require_reviewed_metadata({v: current[v] for v in (dependent, blocker)},
+                                      reviewed, proposals, state)
             edges = {v: [x['number'] for x in i['blockedBy']['nodes']] for v, i in current.items()}
             if blocker not in edges[dependent]:
                 edges[dependent].append(blocker); no_cycles(edges)
@@ -227,16 +295,19 @@ def run(apply):
                     {'issue_id': int(current[blocker]['fullDatabaseId'])}, 'POST')
             assert blocker in [x['number'] for x in read([dependent])[dependent]['blockedBy']['nodes']]
             state['edges'][f'{dependent}<-{blocker}'] = 'verified'
+            remember_metadata(state, read([dependent, blocker]))
             save('checkpoint.json', state)
         print(f'{key} created/verified: #{n}', flush=True)
     for n in sorted(COMPLETED | set(DUPLICATES)):
         reason = 'completed' if n in COMPLETED else 'not_planned'
-        live = api(f'{REPO}/issues/{n}')
-        if live['state'] != 'closed' or live['state_reason'] != reason:
+        live = read([n])
+        require_reviewed_metadata(live, reviewed, proposals, state)
+        if live[n]['state'] != 'CLOSED' or live[n]['stateReason'] != reason.upper():
             api(f'{REPO}/issues/{n}', {'state': 'closed', 'state_reason': reason}, 'PATCH')
         after = api(f'{REPO}/issues/{n}')
         assert after['state'] == 'closed' and after['state_reason'] == reason
         state['closures'][str(n)] = reason
+        remember_metadata(state, read([n]))
         save('checkpoint.json', state)
     after = all_issues(); before = json.loads((OUT / 'before.json').read_text())
     for p in proposals:

@@ -92,3 +92,14 @@ eight checks green. Local validation is 51 core tests + three CLI probes and
 until #703 merges. #736 reconciles the older functional-test PRs, then #737
 handles PR ownership, merge ordering and Project synchronization before #738's
 separate human review.
+
+## PR #798 review corrections
+
+[Review evidence](../issue-734-publication-review/README.md) records the metadata
+and completion-order fixes. Publication now checks reviewed metadata/timestamps,
+including before writes; only its own checkpointed operations can advance that
+baseline. Uncheckpointed interruptions or timestamp-only drift stop for review.
+Completion verifies live publication before either completion mutation and again
+afterward. Offline comparison: 78 cases pass, with 33 stale inputs rejected by
+the fixed code before any write and six valid controls preserved. No live
+publication was replayed and no archived publication evidence was rewritten.

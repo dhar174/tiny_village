@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "<string>", line 15, in <module>
+  File "<string>", line 13, in _tiny_capture_run
+  File "<string>", line 1, in <module>
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/workspace/scratch/review-798/check.py", line 130, in <module>
+    assert (r['write_attempts']>0)==(kind is None or version=='original'),r
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'scenario': 'publication/owned-parent-edge-closure-resume/valid', 'version': 'fixed', 'write_attempts': 0, 'failure': 'RuntimeError: Material drift retained in preflight.json; inspect before publication'}

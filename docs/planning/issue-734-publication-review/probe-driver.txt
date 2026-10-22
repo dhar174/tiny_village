@@ -1,0 +1,144 @@
+"""Bounded offline probes of the exact publication entry points; never GitHub writes."""
+import copy, contextlib, io, json, subprocess, tempfile, types
+from pathlib import Path
+ROOT=Path('/workspace/tiny_village'); OUT=ROOT/'docs/planning/issue-734-publication'
+BASE='244daf3f800dcba5b0cddf8ccf06bc30c9072431'
+before=json.loads((OUT/'before.json').read_text()); after=json.loads((OUT/'after.json').read_text())
+checkpoint=json.loads((OUT/'checkpoint.json').read_text())
+results=[]
+class WouldWrite(RuntimeError): pass
+
+def module(version, target):
+ source=(OUT/'publish.py').read_text() if version=='fixed' else subprocess.check_output(['git','show',BASE+':docs/planning/issue-734-publication/publish.py'],cwd=ROOT,text=True)
+ mod=types.ModuleType('publication');mod.__file__=str(OUT/'publish.py');exec(compile(source,'publish.py','exec'),mod.__dict__)
+ mod.OUT=target
+ # Bundle integrity is verified separately; the probe exercises only the gate.
+ mod.subprocess=types.SimpleNamespace(run=lambda *a,**k:None, DEVNULL=subprocess.DEVNULL)
+ return mod
+
+def change(issues, kind):
+ issue=issues[11]
+ if kind=='state':issue['state']='CLOSED';issue['stateReason']='COMPLETED'
+ elif kind=='reason':issue['stateReason']='NOT_PLANNED'
+ elif kind=='assignees':issue['assignees']['nodes']=[{'login':'new-owner'}]
+ elif kind=='parent':issue['parent']={'number':14}
+ elif kind=='dependencies':issue['blockedBy']['nodes']=[]
+ elif kind=='timestamp':issue['updatedAt']='2099-01-01T00:00:00Z'
+ elif kind=='body':issue['body']+='new content'
+ else:raise ValueError(kind)
+
+def publisher(version, kind, phase='preflight', resume=False):
+ with tempfile.TemporaryDirectory() as directory:
+  target=Path(directory);p=module(version,target);live={int(n):copy.deepcopy(i)for n,i in before.items()};writes=[]
+  if resume:
+   live[11]=copy.deepcopy(after['11'])
+   state={k:copy.deepcopy(v)for k,v in checkpoint.items()if k not in ('annotations','parents','closures','followups','edges')}
+   state.update(annotations={'11':copy.deepcopy(checkpoint['annotations']['11'])},parents={},closures={},followups={},edges={})
+   if version=='fixed':state['observed_metadata']={'11':p.metadata(live[11])}
+   (target/'checkpoint.json').write_text(json.dumps(state))
+  if kind and phase=='preflight':change(live,kind)
+  p.all_issues=lambda:copy.deepcopy(live)
+  def read(numbers):
+   found={n:copy.deepcopy(live[n])for n in numbers}
+   if kind and phase=='batch':change(found,kind)
+   return found
+  p.read=read
+  def api(path,payload=None,method=None):
+   writes.append(path);raise WouldWrite('stopped at first controlled mutation')
+  p.api=api
+  failure=None
+  with contextlib.redirect_stdout(io.StringIO()):
+   try:p.run(True)
+   except (RuntimeError,AssertionError,SystemExit)as e:failure=type(e).__name__+': '+str(e)
+  return {'scenario':f'publication/{phase}/{"resume"if resume else "fresh"}/{kind or "valid"}',
+          'version':version,'write_attempts':len(writes),'failure':failure}
+
+def owned_resume(version, kind):
+ with tempfile.TemporaryDirectory()as directory:
+  target=Path(directory);p=module(version,target);live={int(n):copy.deepcopy(i)for n,i in before.items()};writes=[]
+  for n in (49,220,355,799):live[n]=copy.deepcopy(after[str(n)])
+  state=copy.deepcopy(checkpoint)
+  state.update(annotations={str(n):copy.deepcopy(checkpoint['annotations'][str(n)])for n in (49,220,355)},
+               parents={'49':14,'355':182},closures={'355':'completed'},followups={'R734-01':checkpoint['followups']['R734-01']},
+               edges={'220<-799':'verified'})
+  if version=='fixed':state['observed_metadata']={str(n):p.metadata(live[n])for n in (49,220,355,799)}
+  if kind=='parent':live[49]['parent']=None
+  elif kind=='closure':live[355]['state']='OPEN';live[355]['stateReason']=None
+  elif kind=='edge':live[220]['blockedBy']['nodes']=[x for x in live[220]['blockedBy']['nodes']if x['number']!=799]
+  elif kind=='assignees':live[49]['assignees']['nodes']=[]
+  elif kind=='timestamp':live[220]['updatedAt']='2099-01-01T00:00:00Z'
+  (target/'checkpoint.json').write_text(json.dumps(state))
+  p.all_issues=lambda:copy.deepcopy(live);p.read=lambda numbers:{n:copy.deepcopy(live[n])for n in numbers}
+  def api(*a,**k):writes.append(a[0]);raise WouldWrite('stopped at first controlled mutation')
+  p.api=api;failure=None
+  with contextlib.redirect_stdout(io.StringIO()):
+   try:p.run(True)
+   except (RuntimeError,AssertionError,SystemExit)as e:failure=type(e).__name__+': '+str(e)
+  return {'scenario':'publication/owned-parent-edge-closure-resume/'+(kind or'valid'),
+          'version':version,'write_attempts':len(writes),'failure':failure}
+
+def completion(version, kind, existing_comment=None):
+ with tempfile.TemporaryDirectory()as directory:
+  target=Path(directory)/'docs/planning/issue-734-publication';target.mkdir(parents=True)
+  for f in ('verification.json','checkpoint.json','before.json'):(target/f).write_bytes((OUT/f).read_bytes())
+  p=module(version,target);live={int(n):copy.deepcopy(i)for n,i in after.items()};events=[];posted=[]
+  if kind in ('state','reason','assignees','parent','dependencies','timestamp','body'):change(live,kind)
+  elif kind=='reopen_completed':live[355]['state']='OPEN';live[355]['stateReason']=None
+  elif kind=='closed_gate':live[738]['state']='CLOSED';live[738]['stateReason']='COMPLETED'
+  elif kind=='new_issue_body':live[799]['body']+='edited' # substring contract permits additions; mutate draft text instead
+  elif kind=='new_issue_parent':live[799]['parent']={'number':14}
+  elif kind=='new_issue_dependency':live[799]['blockedBy']['nodes']=[]
+  elif kind=='new_issue_state':live[799]['state']='CLOSED';live[799]['stateReason']='COMPLETED'
+  elif kind=='new_issue_title':live[799]['title']+='changed'
+  elif kind=='closed_target':live[734]['state']='CLOSED';live[734]['stateReason']='COMPLETED'
+  elif kind is not None:raise ValueError(kind)
+  if kind=='new_issue_body':live[799]['body']=live[799]['body'].replace('## Acceptance','## Changed scope')
+  p.all_issues=lambda:(events.append('live_read')or copy.deepcopy(live))
+  def api(path,payload=None,method=None):
+   if method in ('POST','PATCH'):
+    events.append(method);posted.append(payload)
+    if method=='POST':return {'html_url':'https://example.invalid/retained-comment','body':payload['body']}
+    live[734]['state']='CLOSED';live[734]['stateReason']='COMPLETED';return {}
+   if path.endswith('/pulls/797'):return {'merged':True,'merge_commit_sha':'2c3bc5753b15aad4a1e345c020c5872d6ba8b25c'}
+   if '/comments?'in path:return [existing_comment]if existing_comment else[]
+   raise RuntimeError('Unexpected fixture API '+path)
+  p.api=api
+  source=(OUT/'complete.py').read_text()if version=='fixed'else subprocess.check_output(['git','show',BASE+':docs/planning/issue-734-publication/complete.py'],cwd=ROOT,text=True)
+  line=next(x for x in source.splitlines()if x.startswith("spec=importlib.util.spec_from_file_location"))
+  source=source.replace(line,'p=injected_publication')
+  failure=None
+  with contextlib.redirect_stdout(io.StringIO()):
+   try:exec(compile(source,'complete.py','exec'),{'__file__':str(target/'complete.py'),'injected_publication':p})
+   except (RuntimeError,AssertionError,SystemExit)as e:failure=type(e).__name__+': '+str(e)
+  return {'scenario':'completion/'+('existing-comment/'if existing_comment else'')+(kind or'valid'),
+    'version':version,'write_attempts':sum(x in ('POST','PATCH')for x in events),'events':events,
+    'completion_receipt_written':(target/'completion.json').exists(),'failure':failure},posted
+
+# Both versions are exercised against unchanged evidence. All write endpoints
+# are local counters/controlled failures, so the comparison cannot touch GitHub.
+for version in ('original','fixed'):
+ for phase in ('preflight','batch'):
+  for kind in (None,'state','reason','assignees','parent','dependencies','timestamp','body'):
+   r=publisher(version,kind,phase);results.append(r)
+   expected=kind is None or(version=='original'and kind!='body')
+   assert (r['write_attempts']>0)==expected,r
+ for kind in (None,'assignees','timestamp'):
+  r=publisher(version,kind,resume=True);results.append(r)
+  assert (r['write_attempts']>0)==(kind is None or version=='original'),r
+ for kind in (None,'parent','closure','edge','assignees','timestamp'):
+  r=owned_resume(version,kind);results.append(r)
+  assert (r['write_attempts']>0)==(kind is None or version=='original'),r
+ valid,posted=completion(version,None);results.append(valid)
+ assert valid['completion_receipt_written']and valid['failure']is None,valid
+ assert valid['events']==(['POST','PATCH','live_read']if version=='original'else['live_read','POST','PATCH','live_read']),valid
+ existing={'body':posted[0]['body'],'html_url':'https://example.invalid/retained-comment'}
+ for kind in ('body','assignees','parent','dependencies','reopen_completed','closed_gate','new_issue_body','new_issue_parent','new_issue_dependency','new_issue_state','new_issue_title'):
+  r,_=completion(version,kind);results.append(r)
+  assert r['write_attempts']==(2 if version=='original'else 0),r
+  assert not r['completion_receipt_written'],r
+ for kind in (None,'body'):
+  r,_=completion(version,kind,existing);results.append(r)
+  assert r['write_attempts']==(1 if version=='original'or kind is None else 0),r
+  assert r['completion_receipt_written']==(kind is None),r
+Path('/workspace/scratch/review-798/results.json').write_text(json.dumps({'base':BASE,'cases':results,'github_writes':0},indent=2)+'\n')
+print(json.dumps({'cases':len(results),'status':'PASS','github_writes':0}))

@@ -1,0 +1,6 @@
+{
+  "returncode": 1,
+  "artifact_dir": "/workspace/scratch/review-798/captures/child-yce687r0",
+  "stdout": "",
+  "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 15, in <module>\n  File \"<string>\", line 13, in _tiny_capture_run\n  File \"<string>\", line 1, in <module>\n  File \"<frozen runpy>\", line 287, in run_path\n  File \"<frozen runpy>\", line 98, in _run_module_code\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/workspace/scratch/review-798/check.py\", line 130, in <module>\n    assert (r['write_attempts']>0)==(kind is None or version=='original'),r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: {'scenario': 'publication/owned-parent-edge-closure-resume/valid', 'version': 'fixed', 'write_attempts': 0, 'failure': 'RuntimeError: Material drift retained in preflight.json; inspect before publication'}\n"
+}

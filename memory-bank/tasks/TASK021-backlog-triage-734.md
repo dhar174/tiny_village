@@ -118,3 +118,16 @@ and these choices. No runtime fixes or Phase 3 gate approval.
   #714 closed as superseded with explanation. Local 69 tests + three CLI probes
   pass and all eight current hosted checks are green. #735 remains open until
   merge. TASK022 and its exact validation live in #703; #736/#737 follow.
+
+### 2026-10-21 — PR #798 review corrections
+
+- Validated both Codex findings: publication omitted metadata/timestamp drift;
+  completion mutations preceded live verification. Added frozen metadata checks
+  and owned-write checkpoint timestamps, with pre-write rechecks. Moved complete
+  live validation before either completion mutation and retained post-checks.
+- Bounded offline comparison passes 78 cases; fixed code rejects 33 stale inputs
+  with zero attempted writes and retains six valid controls. Two harness/fixture
+  errors and the earlier 66-case pass remain retained; no timeouts or GitHub
+  issue/Project writes. Historical metadata audit: 307 matches, zero differences.
+- [Review evidence](../../docs/planning/issue-734-publication-review/README.md).
+  Original frozen bundle and publication receipts retained; no gate decision.

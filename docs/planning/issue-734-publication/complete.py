@@ -10,6 +10,35 @@ assert verification['status']=='publication_verified'
 assert verification['annotations']==307 and verification['parent_links']==80
 assert len(verification['closures'])==7 and len(verification['followups'])==3
 assert verification['remediation_dependency_edges']==7
+state=json.loads((out/'checkpoint.json').read_text());before=json.loads((out/'before.json').read_text())
+assert set(state['annotations'])=={str(x['number']) for x in json.loads((p.BUNDLE/'proposed-issue-updates.json').read_text())['updates']}
+
+def validate_live(actual, *, completed):
+ for n,rec in state['annotations'].items():
+  issue=actual[int(n)];old=before[n]
+  assert p.digest(issue['body'])==rec['after_sha256'],n
+  assert issue['body'].endswith('\n\n'+old['body']),n
+  assert issue['assignees']==old['assignees'],n
+  assert issue['parent']==({'number':state['parents'][n]} if n in state['parents'] else old['parent']),n
+  expected={x['number'] for x in old['blockedBy']['nodes']}
+  expected.update(int(k.split('<-')[1])for k in state['edges'] if k.startswith(n+'<-'))
+  assert {x['number']for x in issue['blockedBy']['nodes']}==expected,n
+  if int(n) not in p.COMPLETED|set(p.DUPLICATES)|{734}:
+   assert (issue['state'],issue['stateReason'])==(old['state'],old['stateReason']),n
+ for n in p.COMPLETED|({734} if completed else set()):assert actual[n]['state']=='CLOSED' and actual[n]['stateReason']=='COMPLETED',n
+ for n in p.DUPLICATES:assert actual[n]['state']=='CLOSED' and actual[n]['stateReason']=='NOT_PLANNED',n
+ for n in [602,609,733,738]:assert actual[n]['state']=='OPEN',n
+ for draft in json.loads((p.BUNDLE/'proposed-followups.json').read_text())['items']:
+  n=state['followups'][draft['key']]['number'];i=actual[n]
+  assert i['title']==draft['title'] and draft['body'] in i['body'] and i['state']=='OPEN'
+  assert i['parent']['number']==draft['parent']
+  assert {x['number']for x in i['blockedBy']['nodes']}==set(draft['blocked_by'])
+  for dependent in draft['blocks']:assert n in {x['number']for x in actual[dependent]['blockedBy']['nodes']}
+ p.no_cycles({n:[i['parent']['number']]if i['parent']else[]for n,i in actual.items()})
+ p.no_cycles({n:[x['number']for x in i['blockedBy']['nodes']]for n,i in actual.items()})
+ if not completed:
+  assert (actual[734]['state'],actual[734]['stateReason'])==(before['734']['state'],before['734']['stateReason']),734
+
 merge=p.api(p.REPO+'/pulls/797'); assert merge['merged'] and merge['merge_commit_sha']=='2c3bc5753b15aad4a1e345c020c5872d6ba8b25c'
 followups=verification['followups'];refs=', '.join(f'{k}: #{v["number"]}' for k,v in followups.items())
 comment=('<!-- issue-734-publication-complete:v1 -->\n'
@@ -28,33 +57,16 @@ comment=('<!-- issue-734-publication-complete:v1 -->\n'
 comments=p.api(p.REPO+'/issues/734/comments?per_page=100')
 found=[c for c in comments if '<!-- issue-734-publication-complete:v1 -->' in c['body']]
 assert len(found)<=1
+if found:
+ assert found[0]['body']==comment
+# A historical receipt cannot authorize completion against changed live data.
+# Validate every published item before either the comment or the close write.
+validate_live(p.all_issues(), completed=False)
 if not found:
  found=[p.api(p.REPO+'/issues/734/comments',{'body':comment},'POST')]
-else:assert found[0]['body']==comment
 p.api(p.REPO+'/issues/734',{'state':'closed','state_reason':'completed'},'PATCH')
-actual=p.all_issues();state=json.loads((out/'checkpoint.json').read_text());before=json.loads((out/'before.json').read_text())
-for n,rec in state['annotations'].items():
- issue=actual[int(n)];old=before[n]
- assert p.digest(issue['body'])==rec['after_sha256'],n
- assert issue['body'].endswith('\n\n'+old['body']),n
- assert issue['assignees']==old['assignees'],n
- assert issue['parent']==({'number':state['parents'][n]} if n in state['parents'] else old['parent']),n
- expected={x['number'] for x in old['blockedBy']['nodes']}
- expected.update(int(k.split('<-')[1])for k in state['edges'] if k.startswith(n+'<-'))
- assert {x['number']for x in issue['blockedBy']['nodes']}==expected,n
- if int(n) not in p.COMPLETED|set(p.DUPLICATES)|{734}:
-  assert (issue['state'],issue['stateReason'])==(old['state'],old['stateReason']),n
-for n in p.COMPLETED|{734}:assert actual[n]['state']=='CLOSED' and actual[n]['stateReason']=='COMPLETED',n
-for n in p.DUPLICATES:assert actual[n]['state']=='CLOSED' and actual[n]['stateReason']=='NOT_PLANNED',n
-for n in [602,609,733,738]:assert actual[n]['state']=='OPEN',n
-for draft in json.loads((p.BUNDLE/'proposed-followups.json').read_text())['items']:
- n=state['followups'][draft['key']]['number'];i=actual[n]
- assert i['title']==draft['title'] and draft['body'] in i['body'] and i['state']=='OPEN'
- assert i['parent']['number']==draft['parent']
- assert {x['number']for x in i['blockedBy']['nodes']}==set(draft['blocked_by'])
- for dependent in draft['blocks']:assert n in {x['number']for x in actual[dependent]['blockedBy']['nodes']}
-p.no_cycles({n:[i['parent']['number']]if i['parent']else[]for n,i in actual.items()})
-p.no_cycles({n:[x['number']for x in i['blockedBy']['nodes']]for n,i in actual.items()})
+actual=p.all_issues()
+validate_live(actual, completed=True)
 p.save('completion.json',{'status':'issue_734_completed_and_verified','state':'CLOSED','state_reason':'COMPLETED',
  'completion_comment':found[0]['html_url'],'followups':followups,'annotation_original_body_and_assignment_checks':307,
  'parent_checks':80,'seven_scoped_closures_verified':True,'remediation_dependency_checks':7,'cycles':0,
