@@ -1,6 +1,6 @@
 # #736 — Functional-test PR walkthrough
 
-**Review in progress; Six dispositions selected under D029, not yet applied.** Baseline: merged
+**Review in progress; Seven dispositions selected under D029, not yet applied.** Baseline: merged
 main `11b6e93595a70ce9f24cfb239a31ac873847ff56`, including #703/#798. #735 is
 closed; #736's prerequisites are closed. #737 and human gate #738 remain later
 steps. No test/runtime changes, PR closures, rebases or GitHub metadata writes
@@ -54,8 +54,9 @@ mapping. #406 is selected for salvage of useful public memory API assertions,
 then superseding after validation; existing memory tests and unresolved
 requirements remain intact. #404 is selected for superseding as an obsolete fix
 with no current caller. #397 is selected for superseding with maintained
-counting-coverage links, retaining its diagnostic evidence. The other three
-dispositions remain pending.
+counting-coverage links, retaining its diagnostic evidence. #395 is selected for
+salvage of strict planner state/goal-completion assertions, then superseding after
+validation. The other two dispositions remain pending.
 
 | PR | Finding to discuss; no final disposition yet |
 | --- | --- |

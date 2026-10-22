@@ -1,6 +1,6 @@
 # TASK023 — Review functional-test PRs (#736)
 
-**Status:** In Progress — six dispositions selected; reviewing #395  
+**Status:** In Progress — seven dispositions selected; reviewing #391  
 **Added:** 2026-10-21 America/New_York  
 **Updated:** 2026-10-21 America/New_York
 
@@ -60,3 +60,7 @@ with evidence before implementation or closures.
 - User selected #397 supersede with maintained counting-coverage links; recorded
   D029. #395 planner-scenario salvage recommendation is pending. Preserve real
   runtime defects and reject false-positive success paths; no code changes.
+
+- User selected #395 salvage strict planner assertions then supersede; recorded
+  D029. #391 happiness keyword-threshold disposition is pending. Preserve
+  required behavior and legitimate absent-relationship cases; no implementation.
