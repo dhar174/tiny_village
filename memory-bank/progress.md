@@ -10,12 +10,12 @@
 - TASK022 / #735 complete: #703 merged at 323dad6 and #735 closed; #714
   remains superseded under D028. #798 merged at 11b6e93 with review fixes and
   retained publication receipts. Required merged-main checks pass.
-- TASK023 / #736: eight dispositions selected under D029; #393 is the last
-  pending choice. Review baseline is main 11b6e93 and merged #349. #420's five
-  original methods and one selected #417 utility method pass; other findings
-  retain their documented source-review/probe limits. Finish the walkthrough
-  and scoped consolidation plan before execution. No implementation, rebase
-  or closure; #737 and human gate #738 remain later steps.
+- TASK023 / #736: all nine dispositions selected under D029; final #393 answer
+  selects real graph/goal assertion salvage then superseding, replacing the
+  earlier rework/rebase choice. Consolidation plan dated 2026-10-22 awaits review.
+  Baseline main 11b6e93; six original candidate methods pass in retained probes.
+  Other findings retain their source-review/probe limits. No implementation,
+  rebase or closure; #737 and human gate #738 remain later steps.
 
 - TASK020 / #732 is complete: dhar174 explicitly approved Phase 2 under D025.
   #732 and parent #723 are closed/completed with immutable decision links

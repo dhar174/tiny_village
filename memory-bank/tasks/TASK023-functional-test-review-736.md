@@ -1,8 +1,8 @@
 # TASK023 — Review functional-test PRs (#736)
 
-**Status:** In Progress — eight dispositions selected; reviewing #393  
+**Status:** In Progress — all nine dispositions selected; consolidation plan awaiting review  
 **Added:** 2026-10-21 America/New_York  
-**Updated:** 2026-10-21 America/New_York
+**Updated:** 2026-10-22 UTC
 
 ## Request
 
@@ -69,3 +69,22 @@ with evidence before implementation or closures.
   D029. Include applicable and absent relationship cases and preserve broken
   required behavior as failures or tracked blockers. #393 is the last disposition;
   no implementation, rebase or closure has been performed.
+
+## Progress log — 2026-10-22 UTC
+
+- Completed the nine-PR walkthrough. Recorded the final #393 choice under D029,
+  including reconciliation of the two differently answered question versions.
+- Prepared the scoped consolidation plan in
+  docs/superpowers/plans/2026-10-22-issue-736-functional-test-consolidation.md.
+  Source inspection also identifies Goal.check_completion signature/container
+  inconsistencies and swallowed motive-path errors as risks to verify, not
+  newly proven runtime failures. No new execution probe was run this turn.
+- Awaiting plan review; no test/runtime implementation, closure or GitHub write.
+
+| Subtask | Status | Updated |
+| --- | --- | --- |
+| Pin candidate sources and inspect maintained suites | Complete | 2026-10-21 |
+| Record all nine human dispositions in D029 | Complete | 2026-10-22 |
+| Prepare scoped consolidation plan | Complete; awaiting review | 2026-10-22 |
+| Implement and validate assertion consolidation | Not started | 2026-10-22 |
+| Publish replacement PR and verified closure crosslinks | Not started | 2026-10-22 |

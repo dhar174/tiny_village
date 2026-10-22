@@ -666,10 +666,15 @@ UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
   | #397 | Supersede with links to maintained CI-runner counting coverage; retain the old helper’s negative passed-count evidence and any genuinely missing edge case found during mapping. | “Supersede #397 with maintained counting-coverage links (recommended)” |
   | #395 | Salvage useful planner scenarios into maintained tests with strict state/goal-completion assertions; preserve real defects as failures or tracked blockers, validate, then supersede. | “Salvage strict planner assertions, then supersede #395 (recommended)” |
   | #391 | Use behavior-focused happiness checks, including applicable and absent relationship cases; retain broken required behavior as failures or tracked blockers, validate, then supersede the source-keyword threshold PR. | “Use behavior-focused happiness checks, then supersede #391 (recommended)” |
+  | #393 | Salvage useful graph/planner contract scenarios using the real GraphManager and actual goal outcomes; exclude simulated planner logic and incompatible production-call edits, validate, then supersede. | Latest answer: “Salvage real graph/goal contract tests, then supersede #393 (recommended)” |
 
-- **Status:** eight dispositions selected, not applied. The #393
-  disposition is pending. Finish the walkthrough and scoped consolidation plan
-  before execution; no test port, PR closure or rebase has been performed.
+- **Confirmation reconciliation:** the final reply bundle answered two versions
+  of the #393 question. Its earlier answer selected rework/rebase into a test-only
+  PR; its later answer selected salvage then supersede. The later answer is
+  recorded as the final choice and replaces the earlier one.
+- **Status:** all nine dispositions selected, not applied. The walkthrough is
+  complete; the [scoped consolidation plan](superpowers/plans/2026-10-22-issue-736-functional-test-consolidation.md)
+  awaits review before execution. No test port, PR closure or rebase has been performed.
 - **Boundary:** Keep existing #736 acceptance and recorded failures intact;
   this supplies no approval of #737, phase gate #738, runtime repairs or broader
   gameplay/AI readiness. Evidence is in [the walkthrough](planning/issue-736/README.md).

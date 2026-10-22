@@ -1,6 +1,6 @@
 # #736 — Functional-test PR walkthrough
 
-**Review in progress; Eight dispositions selected under D029, not yet applied.** Baseline: merged
+**Walkthrough complete; all nine dispositions selected under D029, not yet applied.** Baseline: merged
 main `11b6e93595a70ce9f24cfb239a31ac873847ff56`, including #703/#798. #735 is
 closed; #736's prerequisites are closed. #737 and human gate #738 remain later
 steps. No test/runtime changes, PR closures, rebases or GitHub metadata writes
@@ -58,10 +58,13 @@ counting-coverage links, retaining its diagnostic evidence. #395 is selected for
 salvage of strict planner state/goal-completion assertions, then superseding after
 validation. #391 is selected for behavior-focused happiness checks, including
 applicable and absent relationship cases, then superseding after validation.
-Broken required behavior remains a failure or tracked blocker. Only #393
-remains pending.
+Broken required behavior remains a failure or tracked blocker. #393 is selected
+for salvage of real graph/goal contract tests, then superseding after validation;
+the latest answer replaces the earlier rework/rebase choice (D029). The
+[consolidation plan](../../superpowers/plans/2026-10-22-issue-736-functional-test-consolidation.md)
+awaits review before implementation or closures.
 
-| PR | Source finding; selected dispositions above, #393 pending |
+| PR | Source finding; selected dispositions recorded above |
 | --- | --- |
 | #417 | Mixed real utility/Action checks, source-text happiness checks and generic Python demonstrations across four files. One selected original utility method passes against current main; that narrow result does not validate the entire PR. Inspect useful assertions against existing utility/#425 coverage before choosing a split/carrier. |
 | #408 | Overlapping earlier test_fix_validation and demonstration files; several checks inspect names/source rather than behavior. Compare against #417 and maintained suites before superseding. |
@@ -90,5 +93,5 @@ injected subtest failures are expected evidence of the counter defect, not passi
 product tests. None of these runs validates an entire other PR. All three captures
 use the established 20s diagnostic / 25s parent deadline, with zero timeouts.
 Remaining findings are source-reviewed, not executed. Production/graph/gameplay acceptance and existing recorded failures
-remain unchanged. Continue the walkthrough before any consolidation plan or
-specific superseding action is approved.
+remain unchanged. The walkthrough is complete. The consolidation plan is proposed; no specific
+superseding action or test implementation has been applied.
