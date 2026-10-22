@@ -700,6 +700,41 @@ UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
   this supplies no approval of #737, phase gate #738, runtime repairs or broader
   gameplay/AI readiness. Evidence is in [the walkthrough](planning/issue-736/README.md).
 
+
+### D030 — Accept #736 reconciliation and retain runtime requirements
+
+- **Date:** 2026-10-22 America/New_York.
+- **Decision-maker:** dhar174.
+- **Confirmation:** “Option 1. Just be sure not to forget the runtime gaps, they
+  need to be referenced in the correct issues”. This selects the scoped test
+  reconciliation and explicit carry-forward proposed in #804's report.
+- **Accepted scope:** the #736 test consolidation can proceed for merge with
+  its demonstrated runtime limitations carried into the issues below. Failed
+  runtime criteria remain requirements, with original evidence preserved;
+  they are neither repaired nor certified as passing by this acceptance.
+
+  | Requirement / gap | Runtime owner issue | Roadmap placement |
+  | --- | --- | --- |
+  | Full Goal condition container, state interface, Plan evaluation/feasibility and actual goal outcomes | #802, under #218 | Phase 4, after separate human gate #738; coordinate #740/#218 contracts. |
+  | Real motive-satisfaction contribution and visible evaluation errors | #803, under #139 | Phase 4 Character completion, after #738. |
+  | Stable Character/Location identity, graph state/action provenance and synchronized world updates | #799, existing parent #222 | Preserve approved after-#738 and before-#220/#602 ordering. |
+  | Explicit replanning result/failure handling and verified alternative action behavior | #741 | Preserve its #218/#738 prerequisites and end-to-end execution criteria. |
+  | Utility Goal/fixture mismatch and explicit falsy action IDs | #774 | Existing Phase 4 test debt, coordinated with #740/#218; no runtime-readiness claim. |
+
+- **Tracking:** retain each reproduction and link the decision, #804 report and
+  exact evidence on the owning issue and the broader #218/#139 work. #802/#803
+  are to have native parents #218/#139 and remain blocked by #738; their parent
+  acceptance must retain the corresponding child requirement. Preserve all
+  original issue bodies, checklists, existing relationships and assignees.
+- **Closure condition:** replacement #804 must merge and receive bounded
+  post-merge verification before the selected superseding closures and scoped
+  #736 completion. This decision resolves the earlier carry-forward question;
+  it does not authorize a merge here, close runtime issues or approve #738.
+- **Scope retained:** no runtime repair, dependency change or broader gameplay,
+  graph, happiness or AI-product readiness is established. #737 remains the
+  subsequent ownership/order/Project synchronization task; phase gate #738
+  retains its separate human decision.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721

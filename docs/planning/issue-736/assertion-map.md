@@ -79,3 +79,12 @@ The [validation report](../../testing/issue-736-functional-test-consolidation.md
 | #393 | Supported contextual cost/heuristic and real action selection pass. Full Goal satisfied/reachable/cost outcomes remain #802; real graph state/action/world/identity failures remain #799. Negative no-plan observations meet their expectation but fail positive completion controls. |
 
 Core integrated profile:72 tests+3 CLI probes pass; dev profile20 tests pass. These green profiles do not include the explicitly failed text reproductions and do not satisfy those requirements. Every required failure remains named; closure needs the separate reviewed acceptance described in the report.
+
+## Accepted gap disposition — D030
+
+On 2026-10-22 dhar174 selected scoped reconciliation with explicit runtime
+carry-forward. See D030 in docs/decisions.md and the report's accepted
+carry-forward section. Required failed outcomes remain #802/#803/#799/#741;
+existing utility test debt remains #774. Replacement merge and post-merge
+verification still precede candidate closures or scoped #736 completion. No
+failed behavior is reclassified as passed.

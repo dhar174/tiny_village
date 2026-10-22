@@ -1,6 +1,6 @@
 # #736 functional-test consolidation — validation and handoff
 
-The approved test consolidation is implemented, with **21 new maintained test methods passing in core and development environments**. Required full-Goal, graph/world and motive-satisfaction contracts remain unfulfilled. **#736 is not complete; no candidate PR is closed.** This report requests review of a partial acceptance result, not approval of a runtime repair or phase gate.
+The approved test consolidation is implemented, with **21 new maintained test methods passing in core and development environments**. Required full-Goal, graph/world and motive-satisfaction contracts remain unfulfilled. **D030 accepts the scoped reconciliation with these requirements carried into their runtime issues.** #804 merge and post-merge verification remain prerequisites to scoped #736 completion or candidate closures; no runtime repair or phase gate is approved.
 
 The nine human dispositions and execution approval are in [D029](../decisions.md#d029--review-736-functional-test-pr-dispositions-step-by-step). The [assertion map](../planning/issue-736/assertion-map.md) identifies retained, redundant, obsolete and blocked assertions. [The approved plan](../superpowers/plans/2026-10-22-issue-736-functional-test-consolidation.md) supplies the scope and closure boundaries.
 
@@ -87,7 +87,7 @@ There are three reasonable dispositions for the remaining #736 gap:
 2. Keep #736 and its candidate closures pending while planning narrowly scoped runtime repairs before completing this acceptance. That changes the current after-#738 runtime order and needs an explicit ordering/design decision.
 3. Defer this consolidation's merge and leave the current roadmap blocked until that ordering/acceptance question is settled.
 
-No such disposition is inferred from approval to implement the test-only plan. The replacement must merge before any selected superseding closures. No linked runtime issue, PR review or phase gate has been automatically approved or closed.
+The options above were presented for review. dhar174 explicitly selected option 1 under [D030](../decisions.md#d030--accept-736-reconciliation-and-retain-runtime-requirements) on 2026-10-22, requiring the runtime gaps to remain referenced in their correct issues. This records scoped reconciliation acceptance with retained runtime requirements; options 2/3 were not selected. The replacement must merge before any selected superseding closures. No linked runtime issue, PR review or phase gate has been automatically approved or closed.
 
 ## Independent review
 
@@ -107,3 +107,13 @@ Published as [draft PR #804](https://github.com/dhar174/tiny_village/pull/804).
 Evidence was linked on #736, #802/#803, #799 and #741, with candidate-specific
 handoff comments on all nine old PRs. Publication receipts are retained under
 execution/. No candidate, runtime issue, #736 or human gate is closed or approved.
+
+## Accepted carry-forward — D030
+
+Runtime tracking is explicit: #802 under #218 for full Goal contracts; #803 under
+#139 for motive satisfaction; #799 for graph identity/authority/synchronization;
+#741 for replanning/alternative behavior; #774 for existing utility test debt.
+Original acceptance text, failed captures and existing prerequisites remain.
+#802/#803 follow separate gate #738; their parent acceptance includes these child
+requirements. #736 remains open until #804 merges and is verified. Scoped
+acceptance does not mean any failed runtime outcome has passed.

@@ -1,6 +1,6 @@
 # #736 — Functional-test PR walkthrough
 
-**Approved consolidation implemented for review; acceptance remains partial under D029.** Baseline: merged
+**Scoped reconciliation accepted under D030; runtime requirements remain open.** Baseline: merged
 main `11b6e93595a70ce9f24cfb239a31ac873847ff56`, including #703/#798. #735 is
 closed; #736's prerequisites are closed. #737 and human gate #738 remain later
 steps. Test ports and local selectors are implemented; runtime files remain unchanged.

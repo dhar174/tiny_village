@@ -1,6 +1,6 @@
 # TASK023 — Review functional-test PRs (#736)
 
-**Status:** In Progress — draft PR #804 published; required runtime gaps await human disposition  
+**Status:** In Progress — D030 carry-forward accepted; runtime issue references being synchronized  
 **Added:** 2026-10-21 America/New_York  
 **Updated:** 2026-10-22 America/New_York
 
@@ -131,3 +131,13 @@ with evidence before implementation or closures.
 - Task7 publication complete; replacement merge, gap disposition and specific
   superseding closures remain pending. No runtime repair or acceptance
   exception is approved by this handoff.
+
+## D030 carry-forward — 2026-10-22 America/New_York
+
+- User selected Option1 and explicitly required gaps to remain in correct issues.
+  Recorded in the single decision file under D030. Runtime requirements remain
+  #802/#218, #803/#139, #799, #741 and utility debt #774, with failed evidence.
+- Synchronize owning issue bodies and native parents/gate dependencies for the
+  two new follow-ups, preserving original requirements and existing relations.
+- Finalize #804 for review; no merge, runtime closure or #738 approval. Replacement
+  merge and bounded post-merge verification precede superseding dispositions.
