@@ -1,0 +1,48 @@
+"""Required #736 contract; run from repository root with python < this file.
+
+This is intentionally retained outside test discovery because the required
+contract is unresolved. A failing run is a blocker, never passing coverage.
+"""
+import inspect
+import json
+import logging
+import random
+from unittest.mock import patch
+logging.basicConfig(level=logging.ERROR)
+random.seed(736)
+from actions import Action, Condition, State
+from tiny_characters import Character, Goal
+from tiny_gameplay_controller import GameplayController
+from tiny_goap_system import GOAPPlanner, Plan
+from tiny_graph_manager import GraphManager
+from networkx import MultiDiGraph
+
+graph = GraphManager()
+controller = GameplayController(graph, {
+    'headless': True, 'memory': {'mode': 'basic'},
+    'characters': {'count': 1, 'use_llm': False, 'use_custom': True,
+        'character_data': [{'name': 'ContractActor', 'age': 30,
+            'job': 'unemployed', 'energy': 20}]},
+    'checkpoint': {'auto_enabled': False}})
+try:
+    character = next(c for c in controller.characters.values() if c.name == 'ContractActor')
+    assert isinstance(character, Character) and character._initialized
+    assert isinstance(graph.G, MultiDiGraph)
+    assert graph.characters[character.name] is character
+    assert any(node is character for node in graph.G)
+    planner = GOAPPlanner(graph)
+    condition = Condition('energy_target', 'energy', character, 30)
+    goal = Goal('Recover energy', character, character, 1, 'recover',
+        {False: [condition]}, None, None, None, None, None, None, [],
+        graph, 'Basic Needs', {'energy': 30})
+    state = State({'energy': 20})
+    plan = planner.plan_actions(character, goal, state, [])
+    control = planner._goal_satisfied(goal, State({'energy': 30}))
+    print(json.dumps({'initial_energy': state.get('energy'), 'available_actions': [],
+        'actual_plan': plan, 'expected_no_plan': None, 'satisfied_control': control}), flush=True)
+    assert plan is None, 'Unreachable goal must report the documented no-plan result'
+    assert state.get('energy') == 20
+    assert control is True, 'No-plan is insufficient when all completion checks are broken'
+
+finally:
+    controller.close()

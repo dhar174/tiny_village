@@ -1,0 +1,49 @@
+"""Required #736 contract; run from repository root with python < this file.
+
+This is intentionally retained outside test discovery because the required
+contract is unresolved. A failing run is a blocker, never passing coverage.
+"""
+import inspect
+import json
+import logging
+import random
+from unittest.mock import patch
+logging.basicConfig(level=logging.ERROR)
+random.seed(736)
+from actions import Action, Condition, State
+from tiny_characters import Character, Goal
+from tiny_gameplay_controller import GameplayController
+from tiny_goap_system import GOAPPlanner, Plan
+from tiny_graph_manager import GraphManager
+from networkx import MultiDiGraph
+
+graph = GraphManager()
+controller = GameplayController(graph, {
+    'headless': True, 'memory': {'mode': 'basic'},
+    'characters': {'count': 1, 'use_llm': False, 'use_custom': True,
+        'character_data': [{'name': 'ContractActor', 'age': 30,
+            'job': 'unemployed', 'energy': 20}]},
+    'checkpoint': {'auto_enabled': False}})
+try:
+    character = next(c for c in controller.characters.values() if c.name == 'ContractActor')
+    assert isinstance(character, Character) and character._initialized
+    assert isinstance(graph.G, MultiDiGraph)
+    assert graph.characters[character.name] is character
+    assert any(node is character for node in graph.G)
+    planner = GOAPPlanner(graph)
+    action = Action('GraphRecovery', [],
+        [{'targets': ['initiator'], 'attribute': 'energy', 'change_value': 10}],
+        cost=1, initiator=character, graph_manager=graph)
+    node_data = next(data for node, data in graph.G.nodes(data=True) if node is character)
+    assert character.energy == node_data['energy'] == 20
+    with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as observed:
+        success = action.execute(character=character, graph_manager=graph)
+        update_calls = [(str(call.args[0]), *call.args[1:]) for call in observed.call_args_list]
+    print(json.dumps({'success': success, 'object_energy': character.energy,
+        'graph_energy': node_data['energy'], 'expected_final_energy': 30,
+        'graph_update_calls': update_calls}), flush=True)
+    assert success is True and character.energy >= 30
+    assert node_data['energy'] >= 30, 'Executed action must update authoritative graph state'
+
+finally:
+    controller.close()

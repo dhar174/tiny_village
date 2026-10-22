@@ -1,0 +1,47 @@
+"""Required #736 contract; run from repository root with python < this file.
+
+This is intentionally retained outside test discovery because the required
+contract is unresolved. A failing run is a blocker, never passing coverage.
+"""
+import inspect
+import json
+import logging
+import random
+from unittest.mock import patch
+logging.basicConfig(level=logging.ERROR)
+random.seed(736)
+from actions import Action, Condition, State
+from tiny_characters import Character, Goal
+from tiny_gameplay_controller import GameplayController
+from tiny_goap_system import GOAPPlanner, Plan
+from tiny_graph_manager import GraphManager
+from networkx import MultiDiGraph
+
+graph = GraphManager()
+controller = GameplayController(graph, {
+    'headless': True, 'memory': {'mode': 'basic'},
+    'characters': {'count': 1, 'use_llm': False, 'use_custom': True,
+        'character_data': [{'name': 'ContractActor', 'age': 30,
+            'job': 'unemployed', 'energy': 20}]},
+    'checkpoint': {'auto_enabled': False}})
+try:
+    character = next(c for c in controller.characters.values() if c.name == 'ContractActor')
+    assert isinstance(character, Character) and character._initialized
+    assert isinstance(graph.G, MultiDiGraph)
+    assert graph.characters[character.name] is character
+    assert any(node is character for node in graph.G)
+    planner = GOAPPlanner(graph)
+    node_data = next(data for node, data in graph.G.nodes(data=True) if node is character)
+    node_data['energy'] = 77
+    assert character.energy == 20
+    with patch.object(graph, 'get_character_state', wraps=graph.get_character_state) as observed:
+        retrieved = planner.get_current_world_state(character)
+        observed.assert_called_once_with(character.name)
+    print(json.dumps({'graph_energy': node_data['energy'], 'character_energy': character.energy,
+        'retrieved_energy': retrieved.get('energy'),
+        'retrieved_backing_type': type(retrieved.dict_or_obj).__name__,
+        'registered_by_object_identity': any(node is character for node in graph.G)}), flush=True)
+    assert retrieved.get('energy') == node_data['energy'], 'Planner must use authoritative graph state'
+
+finally:
+    controller.close()
