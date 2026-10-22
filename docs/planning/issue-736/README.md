@@ -1,6 +1,6 @@
 # #736 — Functional-test PR walkthrough
 
-**Review in progress; #420 disposition selected under D029, not yet applied.** Baseline: merged
+**Review in progress; #420/#417 dispositions selected under D029, not yet applied.** Baseline: merged
 main `11b6e93595a70ce9f24cfb239a31ac873847ff56`, including #703/#798. #735 is
 closed; #736's prerequisites are closed. #737 and human gate #738 remain later
 steps. No test/runtime changes, PR closures, rebases or GitHub metadata writes
@@ -47,16 +47,19 @@ No implementation or closure yet; finish the walkthrough before execution.
 
 ## Remaining review queue — preliminary source findings only
 
+#417: user selected split/salvage unique utility assertions, then supersede after
+validation (D029). The other seven dispositions remain pending.
+
 | PR | Finding to discuss; no final disposition yet |
 | --- | --- |
 | #417 | Mixed real utility/Action checks, source-text happiness checks and generic Python demonstrations across four files. One selected original utility method passes against current main; that narrow result does not validate the entire PR. Inspect useful assertions against existing utility/#425 coverage before choosing a split/carrier. |
 | #408 | Overlapping earlier test_fix_validation and demonstration files; several checks inspect names/source rather than behavior. Compare against #417 and maintained suites before superseding. |
 | #406 | Nine illustrative tests include Python operations and locally invented UserRepository/DataProcessingService implementations, not TinyVillage domain behavior. Also touches the old memory suite and an agent session log; separate any useful memory assertion from unrelated examples. |
 | #404 | Adds format_traceback only to tests/test_completed_implementations.py, absent in current main. The current root-level file from #349 has no such wrapper/call. Check whether any live caller still needs this fix before porting it. |
-| #397 | Adds a counting helper and competing test_fix_validation file. The current bounded CI runner already has targeted counting/failure/subtest coverage. Examine any unique counting case without restoring the obsolete wrapper or weaker happiness checks. |
+| #397 | Adds a counting helper and competing test_fix_validation file. A controlled two-failing-subtest probe makes its helper report minus one passed test for one executed method. The current bounded CI runner already has explicit subtest-counting coverage. Examine any unique counting case without restoring the obsolete wrapper or weaker happiness checks. |
 | #395 | More planner calls, but explicitly treats some None results/exceptions as successful bug detection. Those paths must fail on broken behavior; map useful scenarios to maintained planner tests and retained #799 defects. |
 | #391 | Replaces four happiness source-keyword requirements with a three-feature threshold and warnings. Neither source keyword counts nor relaxed thresholds prove happiness behavior; discuss replacing them with concrete behavior criteria rather than weakening acceptance. |
-| #393 | Introduces a dict-backed MockGraphManager and changes production planner call signatures. Current methods require state/character/goal arguments that this PR removes. The claimed heuristic constant already exists in its diff context. Do not treat this as a test-only merge; evaluate graph/planner assertions separately from those production regressions. |
+| #393 | Introduces a dict-backed MockGraphManager and changes production planner call signatures. Signature binding confirms its reduced-argument calls do not match current production methods; required character/state/goal context would be lost. The claimed heuristic constant already exists in its diff context. Do not treat this as a test-only merge; evaluate graph/planner assertions separately from those production regressions. |
 
 ## #349 baseline and verification limits
 
@@ -68,9 +71,13 @@ modify a different tests/ path; they must not revive competing layouts or weaken
 assertions merely because #349 is merged. #349 is a comparison baseline, not
 proof that all current functional coverage is sufficient.
 
-Only #420's five methods and #417's one selected utility method have been executed
-in this walkthrough so far. Both bounded subprocess captures use the established
-20s diagnostic / 25s parent deadline. Other findings are source-reviewed, not
-executed. Production/graph/gameplay acceptance and existing recorded failures
+#420's five methods and #417's one selected utility method pass on current main.
+A third bounded capture checks #393's reduced argument counts against current
+production signatures and exercises #397's original counter with one method
+and two controlled failing subtests: total=1, failures=2, passed=-1. Those two
+injected subtest failures are expected evidence of the counter defect, not passing
+product tests. None of these runs validates an entire other PR. All three captures
+use the established 20s diagnostic / 25s parent deadline, with zero timeouts.
+Remaining findings are source-reviewed, not executed. Production/graph/gameplay acceptance and existing recorded failures
 remain unchanged. Continue the walkthrough before any consolidation plan or
 specific superseding action is approved.

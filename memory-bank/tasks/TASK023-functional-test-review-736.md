@@ -1,6 +1,6 @@
 # TASK023 — Review functional-test PRs (#736)
 
-**Status:** In Progress — #420 disposition selected; reviewing #417  
+**Status:** In Progress — #420/#417 dispositions selected; reviewing #408  
 **Added:** 2026-10-21 America/New_York  
 **Updated:** 2026-10-21 America/New_York
 
@@ -36,3 +36,12 @@ with evidence before implementation or closures.
   method passes (one test), not a full-PR validation. Others remain unexecuted.
 - [Walkthrough and evidence](../../docs/planning/issue-736/README.md).
   No implementation, PR closure/rebase or GitHub metadata mutation.
+
+- User selected #417 split/salvage unique real-object utility assertions, then
+  supersede after validation; recorded D029. #408 is the next disposition.
+
+- Independent contract probes: #393's reduced calls fail current signature binding;
+  #397's original helper reports passed=-1 for one method with two controlled
+  failing subtests. Retained expected-failure capture exits zero as a diagnostic;
+  it is not a claim those injected product tests pass. No implementation change.
+- #408 superseding recommendation presented; user choice remains pending.

@@ -14,7 +14,7 @@
   and merged #349, one disposition at a time. #420's five original methods
   and one selected #417 utility method pass on current main. #420 choice selected under D029:
   recommend salvaging unique State/Action/Condition assertions into maintained
-  suites, then superseding the old demonstration. Reviewing #417 next; no
+  suites, then superseding the old demonstration. Also selected #417 salvage under D029; reviewing #408 next; no
   implementation/closures.
   Remaining source findings are preliminary; #737 and human gate #738 follow.
 

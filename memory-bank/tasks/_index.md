@@ -1,7 +1,7 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK023](TASK023-functional-test-review-736.md) Functional-test PR walkthrough (#736) - #420 split/salvage selected under D029; reviewing #417, no implementation yet (Updated: 2026-10-21 America/New_York)
+- [TASK023](TASK023-functional-test-review-736.md) Functional-test PR walkthrough (#736) - #420/#417 split/salvage selected under D029; reviewing #408, no implementation yet (Updated: 2026-10-21 America/New_York)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending
