@@ -1,6 +1,6 @@
 # #736 — Functional-test PR walkthrough
 
-**Review in progress; #420/#417/#408 dispositions selected under D029, not yet applied.** Baseline: merged
+**Review in progress; #420/#417/#408/#406 dispositions selected under D029, not yet applied.** Baseline: merged
 main `11b6e93595a70ce9f24cfb239a31ac873847ff56`, including #703/#798. #735 is
 closed; #736's prerequisites are closed. #737 and human gate #738 remain later
 steps. No test/runtime changes, PR closures, rebases or GitHub metadata writes
@@ -50,14 +50,16 @@ No implementation or closure yet; finish the walkthrough before execution.
 #417: user selected split/salvage unique utility assertions, then supersede after
 validation (D029). #408 is selected for superseding through the verified
 consolidation, preserving any additional unique useful assertion found during
-mapping. The other six dispositions remain pending.
+mapping. #406 is selected for salvage of useful public memory API assertions,
+then superseding after validation; existing memory tests and unresolved
+requirements remain intact. The other five dispositions remain pending.
 
 | PR | Finding to discuss; no final disposition yet |
 | --- | --- |
 | #417 | Mixed real utility/Action checks, source-text happiness checks and generic Python demonstrations across four files. One selected original utility method passes against current main; that narrow result does not validate the entire PR. Inspect useful assertions against existing utility/#425 coverage before choosing a split/carrier. |
 | #408 | Overlapping earlier test_fix_validation and demonstration files; several checks inspect names/source rather than behavior. Compare against #417 and maintained suites before superseding. |
 | #406 | Nine illustrative tests include Python operations and locally invented UserRepository/DataProcessingService implementations, not TinyVillage domain behavior. Also touches the old memory suite and an agent session log; separate any useful memory assertion from unrelated examples. |
-| #404 | Adds format_traceback only to tests/test_completed_implementations.py, absent in current main. The current root-level file from #349 has no such wrapper/call. Check whether any live caller still needs this fix before porting it. |
+| #404 | Adds format_traceback only to tests/test_completed_implementations.py, absent in current main. The current root-level file from #349 has no such wrapper/call. A repository search finds no current Python format_traceback caller; the maintained runner preserves stderr/full failure output. No current caller requires the old helper. |
 | #397 | Adds a counting helper and competing test_fix_validation file. A controlled two-failing-subtest probe makes its helper report minus one passed test for one executed method. The current bounded CI runner already has explicit subtest-counting coverage. Examine any unique counting case without restoring the obsolete wrapper or weaker happiness checks. |
 | #395 | More planner calls, but explicitly treats some None results/exceptions as successful bug detection. Those paths must fail on broken behavior; map useful scenarios to maintained planner tests and retained #799 defects. |
 | #391 | Replaces four happiness source-keyword requirements with a three-feature threshold and warnings. Neither source keyword counts nor relaxed thresholds prove happiness behavior; discuss replacing them with concrete behavior criteria rather than weakening acceptance. |

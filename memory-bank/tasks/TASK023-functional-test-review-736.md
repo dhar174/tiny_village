@@ -1,6 +1,6 @@
 # TASK023 — Review functional-test PRs (#736)
 
-**Status:** In Progress — three dispositions selected; reviewing #406  
+**Status:** In Progress — four dispositions selected; reviewing #404  
 **Added:** 2026-10-21 America/New_York  
 **Updated:** 2026-10-21 America/New_York
 
@@ -48,3 +48,7 @@ with evidence before implementation or closures.
 
 - User selected #408 supersede through verified consolidation, retaining any
   unique useful assertion found during mapping; recorded D029. #406 is next.
+
+- User selected #406 salvage useful memory API assertions, then supersede;
+  recorded D029. #404 has no current Python format_traceback caller; its obsolete
+  wrapper recommendation is pending. No code/closure changes.
