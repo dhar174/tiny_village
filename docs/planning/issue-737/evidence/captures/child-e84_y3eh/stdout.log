@@ -1,0 +1,1 @@
+{"real_locations": 3, "shared_graph": true, "absent_zero_one_two_hop": "pass", "graph_sizes_preserved": true, "networkx_available": true, "networkx_free_execution": "not verified", "initial_probe_fixture_issue": "controller character graph already connected; isolated locations used without deleting existing edges"}

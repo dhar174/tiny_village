@@ -868,3 +868,12 @@ The decision file and evidence are published in
 [documentation PR #780](https://github.com/dhar174/tiny_village/pull/780).
 That PR closes no issues and supplies no new human review or phase approval.
 Project Decision synchronization remains outstanding as described above.
+
+### D031 — Approve #737 coordination execution and full-backlog synchronization
+
+- **Date:** 2026-10-22 UTC.
+- **Decision-maker:** dhar174.
+- **Confirmation:** “PLEASE IMPLEMENT THIS PLAN” following the #737 plan and explicit choices: coordination first, Codex technical review plus human acceptance, full reviewed backlog.
+- **Approved scope:** review all remaining PRs, investigate the five direct handoffs, reconcile the 328 unique reviewed issues, prepare a safe Project synchronization preview/updater and publish one focused review PR. Existing assignees, hierarchy, dependencies, human edits and evidence must be preserved.
+- **Review boundary:** PR retain/rebase/split/supersede/defer findings require a disposition review before closing or rewriting PRs. This decision authorizes preparing the synchronization package; it does not approve unknown field conflicts, PR dispositions or proposed new scope.
+- **Completion boundary:** authorization failure remains a blocker. #737 stays open until its merged changes and GitHub acceptance are verified; #738 remains Pending and requires a separate human decision. Runtime requirements #799–#803/#741/#774 remain unresolved and keep their established ordering.

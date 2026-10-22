@@ -1,5 +1,7 @@
 ## What Works
 
+- TASK025 / #737: approved coordination package prepared on main4821378;332 issues/26 PRs, four ordered follow-ups806-809, no cycles. Five dispositions pending review. Core72+3/cache27/offline43 pass; helper/prompt failures retained under807/808. Project403 blocks publication; #737/#738 remain open. See docs/planning/issue-737/README.md.
+
 - TASK021 / #734 complete under D027: #797 merged at 2c3bc57, approved
   publication independently verified and #734 closed. All 307 annotations
   preserve original bodies/assignees; 80 missing-parent links, seven narrow
