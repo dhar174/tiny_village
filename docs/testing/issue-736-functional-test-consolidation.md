@@ -1,6 +1,6 @@
 # #736 functional-test consolidation — validation and handoff
 
-The approved test consolidation is implemented, with **21 new maintained test methods passing in core and development environments**. Required full-Goal, graph/world and motive-satisfaction contracts remain unfulfilled. **D030 accepts the scoped reconciliation with these requirements carried into their runtime issues.** #804 merge and post-merge verification remain prerequisites to scoped #736 completion or candidate closures; no runtime repair or phase gate is approved.
+The approved test consolidation is implemented, with **21 new maintained test methods passing in core and development environments**. Required full-Goal, graph/world and motive-satisfaction contracts remain unfulfilled. **D030 accepts the scoped reconciliation with these requirements carried into their runtime issues.** #804 subsequently merged at6cc576e and passed the agreed post-merge checks; #736 and the nine superseded candidates are now closed for the accepted scope. See [post-merge closeout](issue-736-post-merge-verification.md). No runtime repair or phase gate is approved.
 
 The nine human dispositions and execution approval are in [D029](../decisions.md#d029--review-736-functional-test-pr-dispositions-step-by-step). The [assertion map](../planning/issue-736/assertion-map.md) identifies retained, redundant, obsolete and blocked assertions. [The approved plan](../superpowers/plans/2026-10-22-issue-736-functional-test-consolidation.md) supplies the scope and closure boundaries.
 
@@ -79,7 +79,7 @@ The [validation index](../planning/issue-736/execution/validation/README.md) exp
 
 ## Review and closure handoff
 
-The test ports and local profile integration are ready for review. Required behavioral acceptance remains partial. #802/#803 record specific later runtime work; existing #799/#741/#774 remain open. Proposed scheduling is after separate gate #738, with no new reverse dependency, runtime design approval or automatic Project change. #737 remains responsible for subsequent ownership/order/Project synchronization.
+The test ports and local profile integration were accepted under D030 and merged. Required runtime behavioral acceptance remains unfulfilled in the owner issues. #802/#803 record specific later runtime work; existing #799/#741/#774 remain open. Proposed scheduling is after separate gate #738, with no new reverse dependency, runtime design approval or automatic Project change. #737 remains responsible for subsequent ownership/order/Project synchronization.
 
 There are three reasonable dispositions for the remaining #736 gap:
 
@@ -115,7 +115,7 @@ Runtime tracking is explicit: #802 under #218 for full Goal contracts; #803 unde
 #741 for replanning/alternative behavior; #774 for existing utility test debt.
 Original acceptance text, failed captures and existing prerequisites remain.
 #802/#803 follow separate gate #738; their parent acceptance includes these child
-requirements. #736 remains open until #804 merges and is verified. Scoped
+requirements. #736 was subsequently completed after #804 merged and was verified, as recorded in the post-merge report. Scoped
 acceptance does not mean any failed runtime outcome has passed.
 
 ### Carry-forward tracking readback

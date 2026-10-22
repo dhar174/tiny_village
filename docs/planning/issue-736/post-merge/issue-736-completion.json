@@ -1,0 +1,16 @@
+{
+  "issue": 736,
+  "state": "closed",
+  "state_reason": "completed",
+  "original_body_preserved": true,
+  "runtime_requirements_retained": [
+    802,
+    803,
+    799,
+    741,
+    774
+  ],
+  "decision": "https://github.com/dhar174/tiny_village/blob/6cc576edcb465c154ba7f56a508116ec1b247975/docs/decisions.md#d030--accept-736-reconciliation-and-retain-runtime-requirements",
+  "proof": "https://github.com/dhar174/tiny_village/blob/3dd587f/docs/testing/issue-736-post-merge-verification.md",
+  "readback_verified": true
+}

@@ -10,12 +10,12 @@
 - TASK022 / #735 complete: #703 merged at 323dad6 and #735 closed; #714
   remains superseded under D028. #798 merged at 11b6e93 with review fixes and
   retained publication receipts. Required merged-main checks pass.
-- TASK024 / #736: D030 accepts scoped test reconciliation with explicit runtime
-  carry-forward. #804 holds21 new maintained methods; localcore72+3probes/dev20
-  pass. Runtime gaps remain #802/#218, #803/#139, #799/#741 and utilitydebt #774.
-  Runtime issue references/native follow-up ordering verified; #804 ready for
-  review. Merge/verification precede #736/candidate closure; no runtime repair
-  or #738 approval.
+- TASK024 / #736 complete under D030: #804 merged at6cc576e; bounded merged
+  checks pass72 core tests+3 CLI probes and20 dev tests. All9 pinned candidate
+  PRs closed as superseded and #736 closed as scoped reconciliation; readbacks
+  verified. Runtime requirements #802/#803/#799/#741/#774 remain open, as do
+  #733/#738. Next #737 has0 open native blockers: ownership/reviewers, merge
+  order and Project synchronization. Evidence docs/planning/issue-736/post-merge/.
 
 - TASK020 / #732 is complete: dhar174 explicitly approved Phase 2 under D025.
   #732 and parent #723 are closed/completed with immutable decision links

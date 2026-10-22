@@ -1,6 +1,6 @@
 # #736 — Functional-test PR walkthrough
 
-**Scoped reconciliation accepted under D030; runtime requirements remain open.** Baseline: merged
+**Scoped reconciliation complete under D030; #804 merged/verified, #736 and nine superseded candidates closed. Runtime requirements remain open.** Baseline: merged
 main `11b6e93595a70ce9f24cfb239a31ac873847ff56`, including #703/#798. #735 is
 closed; #736's prerequisites are closed. #737 and human gate #738 remain later
 steps. Test ports and local selectors are implemented; runtime files remain unchanged.
@@ -97,3 +97,5 @@ use the established 20s diagnostic / 25s parent deadline, with zero timeouts.
 Remaining findings are source-reviewed, not executed. Production/graph/gameplay acceptance and existing recorded failures
 remain unchanged. The walkthrough and approved test implementation are complete for review; required
 acceptance remains partial. No superseding closure has been applied.
+
+[Post-merge verification and closure readbacks](../../testing/issue-736-post-merge-verification.md) record the final outcome. Next task: #737; no #738 approval is supplied.

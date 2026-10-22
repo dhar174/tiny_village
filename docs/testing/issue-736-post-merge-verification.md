@@ -55,3 +55,19 @@ ownership/reviewers, merge sequence and Project configuration. #738 remains a
 separate human decision gate. Closure readbacks are retained alongside the
 post-merge evidence after publication; no phase approval or runtime fix is
 supplied by scoped #736 completion.
+
+## Verified closure outcome
+
+#420/#417/#408/#406/#404/#397/#395/#391/#393 are CLOSED as superseded, with
+unchanged reviewed heads and no merge. #736 is CLOSED/completed for the accepted
+D030 scope; its original requirement text and runtime carry-forward remain.
+[Candidate closure receipts](../planning/issue-736/post-merge/candidate-closure-receipts.json),
+[scoped completion](../planning/issue-736/post-merge/issue-736-completion.json)
+and [final states](../planning/issue-736/post-merge/final-states.json) retain
+readback evidence. #737 is OPEN with zero open native prerequisite blockers;
+#733/#738 and all five runtime/test-debt owner issues remain OPEN.
+
+The functional task file is now TASK024, matching the merged task-index link;
+the separate Zcode-team TASK023 is preserved. Duplicate in-progress index rows
+for the verified completed #734/#735 predecessors were removed, preserving their
+completed records. No runtime, test, dependency or team configuration changed.

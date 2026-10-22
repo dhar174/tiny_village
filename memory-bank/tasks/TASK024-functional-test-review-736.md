@@ -1,6 +1,6 @@
 # TASK024 — Review functional-test PRs (#736)
 
-**Status:** In Progress — D030 accepted; runtime ownership/dependencies synchronized; #804 ready for review  
+**Status:** Complete — #804 merged/verified; #736 completed and nine candidates superseded under D030  
 **Added:** 2026-10-21 America/New_York  
 **Updated:** 2026-10-22 America/New_York
 
@@ -169,3 +169,17 @@ with evidence before implementation or closures.
   link and preserve the separate Zcode-team TASK023; no team files modified.
 - Evidence: docs/planning/issue-736/post-merge/ and
   docs/testing/issue-736-post-merge-verification.md.
+
+## Closeout — 2026-10-22 America/New_York
+
+- Completed #736 with reason completed under the explicit scoped D030 acceptance,
+  after #804 merge and bounded merged-source verification.
+- Closed #420/#417/#408/#406/#404/#397/#395/#391/#393 as superseded, not merged;
+  each head remained pinned and each closure comment links #804, D030, assertion
+  mapping and post-merge evidence. Readbacks verify all9 closures.
+- #802/#803/#799/#741/#774 remain open with original runtime requirements and
+  native ordering intact; parent phase #733 and human gate #738 remain open.
+- #737 is next and has zero open native prerequisite blockers. Its ownership,
+  reviewer/merge sequence and Project configuration acceptance is not yet done.
+- Source/closure evidence: docs/planning/issue-736/post-merge/. Documentation
+  closeout is on codex/issue-736-post-merge; runtime/runner/test files unchanged.
