@@ -1,0 +1,31 @@
+"""Unfulfilled #391 motive-satisfaction contract, also inherited by #395.
+
+Run from the repository root (using the locked core or dev interpreter):
+    PYTHONPATH=. python docs/planning/issue-736/execution/blocked/happiness-motive-satisfaction.py.txt
+
+This is deliberately a failing requirement, retained outside test discovery.
+It uses the same complete real Character fixture as the passing contracts.
+The FreshPythonTestCase diagnostic/parent deadlines remain 20/25 seconds.
+"""
+
+import unittest
+
+from tests.test_character_happiness_contracts import happiness_source
+from tests.test_graph_initialization import FreshPythonTestCase
+
+
+class TestRequiredMotiveSatisfaction(FreshPythonTestCase):
+    def test_basic_motive_satisfaction_changes_happiness(self):
+        self.run_python(happiness_source('''
+for name in ('hunger', 'shelter', 'stability', 'social_wellbeing'):
+    getattr(character.motives, 'get_' + name + '_motive')().set_score(2)
+low = evaluate('basic_motive_satisfaction_2')
+for name in ('hunger', 'shelter', 'stability', 'social_wellbeing'):
+    getattr(character.motives, 'get_' + name + '_motive')().set_score(8)
+high = evaluate('basic_motive_satisfaction_8')
+assert high > low, ('required motive contribution missing', low, high)
+'''))
+
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)
