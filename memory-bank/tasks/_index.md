@@ -1,7 +1,7 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK023](TASK023-functional-test-review-736.md) Functional-test PR walkthrough (#736) - D030 accepts scoped reconciliation; synchronizing explicit runtime references; #804 merge/verification still pending (Updated: 2026-10-22 America/New_York)
+- [TASK023](TASK023-functional-test-review-736.md) Functional-test PR walkthrough (#736) - D030 accepted; runtime issue bodies/native ordering verified; #804 ready for review, merge/verification pending (Updated: 2026-10-22 America/New_York)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending

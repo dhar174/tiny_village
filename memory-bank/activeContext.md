@@ -13,8 +13,9 @@
 - TASK023 / #736: D030 accepts scoped test reconciliation with explicit runtime
   carry-forward. #804 holds21 new maintained methods; localcore72+3probes/dev20
   pass. Runtime gaps remain #802/#218, #803/#139, #799/#741 and utilitydebt #774.
-  Synchronize issue references/native follow-up ordering; #804 merge and bounded
-  verification precede #736/candidate closure. No runtime repair or #738 approval.
+  Runtime issue references/native follow-up ordering verified; #804 ready for
+  review. Merge/verification precede #736/candidate closure; no runtime repair
+  or #738 approval.
 
 - TASK020 / #732 is complete: dhar174 explicitly approved Phase 2 under D025.
   #732 and parent #723 are closed/completed with immutable decision links

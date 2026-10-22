@@ -1,6 +1,6 @@
 # TASK023 — Review functional-test PRs (#736)
 
-**Status:** In Progress — D030 carry-forward accepted; runtime issue references being synchronized  
+**Status:** In Progress — D030 accepted; runtime ownership/dependencies synchronized; #804 ready for review  
 **Added:** 2026-10-21 America/New_York  
 **Updated:** 2026-10-22 America/New_York
 
@@ -141,3 +141,17 @@ with evidence before implementation or closures.
   two new follow-ups, preserving original requirements and existing relations.
 - Finalize #804 for review; no merge, runtime closure or #738 approval. Replacement
   merge and bounded post-merge verification precede superseding dispositions.
+
+## Verified carry-forward publication — 2026-10-22 America/New_York
+
+- Owning issues #802/#803/#799/#741/#774 and parents #218/#139 have additive
+  carry-forward sections with immutable D030/report/reproduction links and
+  unchecked runtime requirements; original bodies/assignees/states preserved.
+- #802 is native child of #218 and #803 of #139. Both are blocked by #738;
+  each parent is blocked by its child. Verified an acyclic affected prerequisite
+  graph over28 issues and preserved #799/#741/#774 existing relations.
+- #736 records scoped acceptance with merge/verification pending. #737 receives
+  Project/ownership handoff and #738 receives the retained-gap review note.
+- #804 description updated to D030 acceptance; finalize for human review without
+  merging. Receipt files live in docs/planning/issue-736/execution/option1/.
+- Documentation/tracking only; tested runtime/runner/test source remains unchanged.

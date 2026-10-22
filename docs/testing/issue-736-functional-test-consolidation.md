@@ -117,3 +117,14 @@ Original acceptance text, failed captures and existing prerequisites remain.
 #802/#803 follow separate gate #738; their parent acceptance includes these child
 requirements. #736 remains open until #804 merges and is verified. Scoped
 acceptance does not mean any failed runtime outcome has passed.
+
+### Carry-forward tracking readback
+
+The eight owning/parent/reconciliation issue bodies retain their original text
+and now include D030/evidence links and unchecked runtime requirements. Native
+parents are #218→#802 and #139→#803; both children depend on #738 and each parent
+on its child. The affected28-node prerequisite ancestry was checked for cycles.
+Existing #799/#741/#774 relationships remain unchanged. #737 and #738 receive
+explicit handoffs so Project synchronization and later gate review retain the
+gaps. Readback and body-preservation receipts are in
+[execution/option1](../planning/issue-736/execution/option1).
