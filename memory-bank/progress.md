@@ -10,7 +10,7 @@
 - TASK022 / #735 complete: #703 merged at 323dad6 and #735 closed; #714
   remains superseded under D028. #798 merged at 11b6e93 with review fixes and
   retained publication receipts. Required merged-main checks pass.
-- TASK023 / #736: D030 accepts scoped test reconciliation with explicit runtime
+- TASK024 / #736: D030 accepts scoped test reconciliation with explicit runtime
   carry-forward. #804 holds21 new maintained methods; localcore72+3probes/dev20
   pass. Runtime gaps remain #802/#218, #803/#139, #799/#741 and utilitydebt #774.
   Runtime issue references/native follow-up ordering verified; #804 ready for
