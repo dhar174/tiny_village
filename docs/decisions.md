@@ -662,8 +662,9 @@ UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
   | #417 | Split: preserve only unique real-object utility/plan assertions in maintained suites, excluding source scans, generic examples and duplicated action logic; validate, then supersede. | “Split: salvage unique utility assertions, then supersede #417 (recommended)” |
   | #408 | Supersede through the #420/#417 consolidation after coverage mapping and validation; retain any additional unique useful assertion found during mapping. | “Supersede through the verified consolidation (recommended)” |
   | #406 | Salvage useful public memory API assertions into maintained coverage, validate in the appropriate dependency profile, then supersede; preserve existing memory tests and unresolved requirements. | “Salvage useful memory API assertions, then supersede” |
+  | #404 | Supersede as an obsolete fix: its retired wrapper has no current format_traceback caller, and the maintained runner preserves full failure output. | “Supersede #404 as an obsolete fix (recommended)” |
 
-- **Status:** four dispositions selected, not applied. The remaining five
+- **Status:** five dispositions selected, not applied. The remaining four
   dispositions are pending. Finish the walkthrough and scoped consolidation plan
   before execution; no test port, PR closure or rebase has been performed.
 - **Boundary:** Keep existing #736 acceptance and recorded failures intact;
