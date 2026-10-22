@@ -1,0 +1,17 @@
+test_clamped_int_score_above_max (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_above_max) ... ok
+test_clamped_int_score_below_min (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_below_min) ... ok
+test_clamped_int_score_in_range (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_in_range) ... ok
+test_clamped_int_score_init (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_init) ... ok
+test_clamped_int_score_large_values (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_large_values) ... ok
+test_is_numeric_invalid (candidate_tests.TestTinyUtilFuncs.test_is_numeric_invalid) ... ok
+test_is_numeric_valid (candidate_tests.TestTinyUtilFuncs.test_is_numeric_valid) ... ok
+test_tweener_above_max (candidate_tests.TestTinyUtilFuncs.test_tweener_above_max) ... ok
+test_tweener_at_max (candidate_tests.TestTinyUtilFuncs.test_tweener_at_max) ... ok
+test_tweener_at_zero (candidate_tests.TestTinyUtilFuncs.test_tweener_at_zero) ... ok
+test_tweener_normal (candidate_tests.TestTinyUtilFuncs.test_tweener_normal) ... ok
+test_tweener_reversed (candidate_tests.TestTinyUtilFuncs.test_tweener_reversed) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.000s
+
+OK

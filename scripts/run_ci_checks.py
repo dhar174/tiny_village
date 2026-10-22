@@ -25,7 +25,7 @@ LIGHTWEIGHT_EXTRAS = {'pygame', 'faiss-cpu', 'spacy', 'nltk', 'torch', 'transfor
                       'sentence-transformers', 'pandas', 'scipy', 'scikit-learn',
                       'rake-nltk', 'textblob', 'matplotlib', 'seaborn'}
 PROFILES = {
-    'core': [('components', 'unittest', ['tests.test_actions', 'tests.test_action_named_target_resolution',
+    'core': [('components', 'unittest', ['tests.test_tiny_util_funcs', 'tests.test_actions', 'tests.test_action_named_target_resolution',
               'tests.test_goap_error_handling', 'tests.test_event_handler_payloads']),
              ('runtime', 'unittest', ['tests.test_memory_runtime', 'tests.test_lightweight_runtime.TestHeadlessRuntime',
               'tests.test_lightweight_runtime.TestMinimalRunner']),

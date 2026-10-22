@@ -1,0 +1,27 @@
+import hashlib,json,os,subprocess,sys
+from pathlib import Path
+root=Path('/workspace/tiny_village'); sys.path.insert(0,str(root))
+from tests.subprocess_capture import capture_python
+out=Path('/workspace/scratch/issue-735'); env=os.environ.copy()
+env['TINY_TEST_ARTIFACT_DIR']=str(out/'captures'); env['PYTHONDONTWRITEBYTECODE']='1'
+results=[]
+for num in (703,714):
+ ref=f'origin/pr-{num}'; target=out/str(num); target.mkdir(exist_ok=True)
+ for filename in ('tiny_util_funcs.py','tests/test_tiny_util_funcs.py'):
+  text=subprocess.check_output(['git','show',f'{ref}:{filename}'],cwd=root,text=True)
+  (target/Path(filename).name).write_text(text)
+ for variant in ('candidate','main'):
+  module=(target/'tiny_util_funcs.py').read_text() if variant=='candidate' else (root/'tiny_util_funcs.py').read_text()
+  source=f'''import sys,types,unittest,json,importlib.util
+module=types.ModuleType('tiny_util_funcs'); exec(compile({module!r},'tiny_util_funcs.py','exec'),module.__dict__); sys.modules['tiny_util_funcs']=module
+spec=importlib.util.spec_from_file_location('candidate_tests',{str(target/'test_tiny_util_funcs.py')!r}); test=importlib.util.module_from_spec(spec); spec.loader.exec_module(test)
+suite=unittest.defaultTestLoader.loadTestsFromModule(test); r=unittest.TextTestRunner(verbosity=2).run(suite)
+print(json.dumps({{'tests':r.testsRun,'failures':len(r.failures),'errors':len(r.errors),'skips':len(r.skipped)}})); raise SystemExit(not r.wasSuccessful())
+'''
+  (target/f'{variant}.source.txt').write_text(source)
+  r=capture_python(source,cwd=root,env=env,test_id=f'issue735-pr{num}-{variant}',fatal_timeout=20,timeout=25)
+  rec={'pr':num,'variant':variant,'candidate_sha':subprocess.check_output(['git','rev-parse',ref],cwd=root,text=True).strip(),
+       'module_sha256':hashlib.sha256(module.encode()).hexdigest(),'returncode':r.completed.returncode,
+       'artifact_dir':str(r.artifact_dir),'stdout':r.completed.stdout,'stderr':r.completed.stderr}
+  results.append(rec); print(json.dumps(rec),flush=True)
+(out/'comparison.json').write_text(json.dumps(results,indent=2)+'\n')

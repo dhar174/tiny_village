@@ -1,0 +1,8 @@
+{
+  "kind": "probe",
+  "status": "PASS",
+  "probes_run": 1,
+  "expected_exit_code": 0,
+  "observed_exit_code": 0,
+  "capture_artifacts": "/workspace/tiny_village-735/docs/testing/issue-735/core/children/child-plr3bztv"
+}

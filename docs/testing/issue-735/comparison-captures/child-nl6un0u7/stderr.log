@@ -1,0 +1,37 @@
+test_clamped_int_score_init (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_init) ... ok
+test_clamped_int_score_outside_bounds (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_outside_bounds) ... ok
+test_clamped_int_score_repr_str (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_repr_str) ... ok
+test_clamped_int_score_setters (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_setters) ... ok
+test_clamped_int_score_within_bounds (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_within_bounds) ... ok
+test_is_numeric_negative (candidate_tests.TestTinyUtilFuncs.test_is_numeric_negative) ... ERROR
+test_is_numeric_none (candidate_tests.TestTinyUtilFuncs.test_is_numeric_none) ... ERROR
+test_is_numeric_positive (candidate_tests.TestTinyUtilFuncs.test_is_numeric_positive) ... ok
+test_tweener_boundaries (candidate_tests.TestTinyUtilFuncs.test_tweener_boundaries) ... ok
+test_tweener_interpolation (candidate_tests.TestTinyUtilFuncs.test_tweener_interpolation) ... ok
+
+======================================================================
+ERROR: test_is_numeric_negative (candidate_tests.TestTinyUtilFuncs.test_is_numeric_negative)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/issue-735/703/test_tiny_util_funcs.py", line 18, in test_is_numeric_negative
+    self.assertFalse(is_numeric([]))
+                     ^^^^^^^^^^^^^^
+  File "tiny_util_funcs.py", line 43, in is_numeric
+    float(value)
+TypeError: float() argument must be a string or a real number, not 'list'
+
+======================================================================
+ERROR: test_is_numeric_none (candidate_tests.TestTinyUtilFuncs.test_is_numeric_none)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/issue-735/703/test_tiny_util_funcs.py", line 22, in test_is_numeric_none
+    self.assertFalse(is_numeric(None))
+                     ^^^^^^^^^^^^^^^^
+  File "tiny_util_funcs.py", line 43, in is_numeric
+    float(value)
+TypeError: float() argument must be a string or a real number, not 'NoneType'
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.000s
+
+FAILED (errors=2)

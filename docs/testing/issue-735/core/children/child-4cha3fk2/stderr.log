@@ -1,0 +1,2 @@
+ERROR:root:Not all job roles parsed correctly, counted 117 but parsed 116
+ERROR:root:Missing job roles: ['Bookstore owner', 'Comic store owner', 'Customer Service', 'Stay-at-home Mom']
