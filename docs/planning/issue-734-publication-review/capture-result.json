@@ -1,0 +1,6 @@
+{
+  "returncode": 0,
+  "artifact_dir": "/workspace/scratch/review-798/captures/child-wmh_f1jk",
+  "stdout": "{\"cases\": 78, \"status\": \"PASS\", \"github_writes\": 0}\n",
+  "stderr": ""
+}

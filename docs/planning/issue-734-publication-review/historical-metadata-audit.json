@@ -1,0 +1,14 @@
+{
+  "issues_checked": 307,
+  "fields": [
+    "state",
+    "stateReason",
+    "assignees",
+    "parent",
+    "blockedBy",
+    "updatedAt"
+  ],
+  "differences": [],
+  "source_snapshot_sha256": "45406f882241acd095b2b34f99093924e1dfa44d667ef495d1b4f819c404ff27",
+  "before_sha256": "2390855a9ebdae25bbf9df31e5eb1b8b621f8e5fa22a6c93fef584cc154d81c4"
+}

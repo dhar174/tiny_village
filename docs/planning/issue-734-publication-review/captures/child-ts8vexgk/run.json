@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "test_id": "review798-stale-metadata-and-completion",
+  "source_sha256": "75e5c83df86f928e67a70f9c4878aed48a23020f55b2c8978cb131020bbeb56b",
+  "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+  "cwd": "/workspace/tiny_village",
+  "pid": 176340,
+  "fatal_timeout": 20,
+  "timeout": 25,
+  "started_utc": "2026-10-22T00:39:09.405624+00:00",
+  "started_monotonic": 98342.262542932,
+  "returncode": 1,
+  "outcome": "EXITED_NONZERO",
+  "watchdog_dump_observed": false,
+  "launched_monotonic": 98342.263073743,
+  "wait_started_monotonic": 98342.263227743,
+  "finished_utc": "2026-10-22T00:39:09.520143+00:00",
+  "finished_monotonic": 98342.377070631
+}

@@ -1,0 +1,32 @@
+{
+  "status": "issue_734_completed_and_verified",
+  "state": "CLOSED",
+  "state_reason": "COMPLETED",
+  "completion_comment": "https://github.com/dhar174/tiny_village/issues/734#issuecomment-6328866835",
+  "followups": {
+    "R734-01": {
+      "number": 799,
+      "url": "https://github.com/dhar174/tiny_village/issues/799"
+    },
+    "R734-02": {
+      "number": 800,
+      "url": "https://github.com/dhar174/tiny_village/issues/800"
+    },
+    "R734-03": {
+      "number": 801,
+      "url": "https://github.com/dhar174/tiny_village/issues/801"
+    }
+  },
+  "annotation_original_body_and_assignment_checks": 307,
+  "parent_checks": 80,
+  "seven_scoped_closures_verified": true,
+  "remediation_dependency_checks": 7,
+  "cycles": 0,
+  "phase_733_state": "OPEN",
+  "phase_gate_738_state": "OPEN",
+  "retained_open_failures": [
+    602,
+    609
+  ],
+  "project_mutations": 0
+}

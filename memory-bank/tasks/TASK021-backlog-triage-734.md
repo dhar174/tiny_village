@@ -1,6 +1,6 @@
 # TASK021 — Evidence-based backlog triage (#734)
 
-**Status:** In Progress — awaiting consolidated publication review  
+**Status:** Completed — D027 publication verified; #734 closed  
 **Added:** 2026-10-21  
 **Updated:** 2026-10-21
 
@@ -24,7 +24,7 @@ and these choices. No runtime fixes or Phase 3 gate approval.
 | Original and current ledger | Complete | 475 issues/158 comments, 37 PRs, 50 review origins; original 261 plus 46 later open |
 | Six mandatory audits | Complete with failures retained | Four scoped passes; #602/#609 fail with real objects; 12 existing tests pass; isolated map/animation failure |
 | Integrity checks and PR | Complete for review | PR #797; independent review complete, #530 acceptance restored, catalog checks pass |
-| Approved issue publication | Awaiting later review | No issue mutations authorized before package review |
+| Approved issue publication | Complete | 307 annotations, 80 parents, seven closures, three new issues/seven blockers independently read back; #734 closed |
 
 ## Execution record
 
@@ -90,3 +90,44 @@ and these choices. No runtime fixes or Phase 3 gate approval.
   in evidence/manifest-validation-review.json. No original captures modified.
 - Rehashed the bundle and refreshed its validation receipt. No gameplay/runtime
   changes, triage publication, issue closures or phase approval were performed.
+
+### 2026-10-21 — Approved publication
+
+- dhar174 approved the complete package and reported #797 merged. Verified
+  main merge `2c3bc5753b15aad4a1e345c020c5872d6ba8b25c`; recorded D027.
+- Fresh current-state read covers all 475 issues and finds no material body or
+  parent drift from the 307 approved proposals. The frozen historical bundle
+  passes all 87 artifact hashes and stays unchanged.
+- Executing the approved annotations, missing parents, seven specific closures
+  and three separately scoped remediation issues using checkpointed operations.
+  [Publication receipts](../../docs/planning/issue-734-publication/) are separate
+  from the immutable review input. #734 remains open until final readback.
+- #735 investigated independently: identical TypeError fix; #703's 10 tests
+  and #714's 12 pass on candidate modules, fail with two/one errors on main.
+  Both PRs behind main. Maintainer choice of carrier requested as #735 requires;
+  no duplicate PR closed or utility implementation changed.
+
+- Publication complete: all 307 original bodies/assignees and existing parents/
+  dependencies retained; 80 missing-parent additions, five narrow completions
+  and two approved duplicates verified. Created #799/#800/#801 with native
+  parents and seven blocker edges; complete graph has zero cycles.
+- Closed #734 after publication verification and #797 merge confirmation;
+  completion comment/readback retained. #602/#609/#733/#738 remain open.
+  No Project writes or human gate approvals. PR #798 retains current receipts.
+- Under D028 the selected #703 is rebased/published at c65496d, ready for review;
+  #714 closed as superseded with explanation. Local 69 tests + three CLI probes
+  pass and all eight current hosted checks are green. #735 remains open until
+  merge. TASK022 and its exact validation live in #703; #736/#737 follow.
+
+### 2026-10-21 — PR #798 review corrections
+
+- Validated both Codex findings: publication omitted metadata/timestamp drift;
+  completion mutations preceded live verification. Added frozen metadata checks
+  and owned-write checkpoint timestamps, with pre-write rechecks. Moved complete
+  live validation before either completion mutation and retained post-checks.
+- Bounded offline comparison passes 78 cases; fixed code rejects 33 stale inputs
+  with zero attempted writes and retains six valid controls. Two harness/fixture
+  errors and the earlier 66-case pass remain retained; no timeouts or GitHub
+  issue/Project writes. Historical metadata audit: 307 matches, zero differences.
+- [Review evidence](../../docs/planning/issue-734-publication-review/README.md).
+  Original frozen bundle and publication receipts retained; no gate decision.

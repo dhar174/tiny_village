@@ -9,6 +9,7 @@
 - No additional pending task files.
 
 ## Completed
+- [TASK021](TASK021-backlog-triage-734.md) Evidence-based backlog triage (#734) - Complete under D027; verified publication, #734 closed; #798 metadata/completion review fixes verified (78 offline cases) (Updated: 2026-10-21)
 - [TASK020](TASK020-phase2-gate-readiness.md) Phase 2 gate readiness (#732) - Complete under D025; #732/#723 closed, Phase 3 ready, Project fields pending 403 (Updated: 2026-10-21 America/New_York)
 - [TASK019](TASK019-phase2-engineering-review.md) Phase 2 engineering review (#731) - Complete under D024; #731 closed, Project fields pending HTTP 403 (Updated: 2026-10-21 America/New_York)
 - [TASK018](TASK018-consolidated-design-walkthrough.md) Consolidated design walkthrough - Complete under D023; #727-#730 closed, Project fields pending HTTP 403 (Updated: 2026-10-21 America/New_York)

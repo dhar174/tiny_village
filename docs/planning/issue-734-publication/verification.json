@@ -1,0 +1,38 @@
+{
+  "status": "publication_verified",
+  "annotations": 307,
+  "parent_links": 80,
+  "closures": {
+    "351": "not_planned",
+    "355": "completed",
+    "382": "not_planned",
+    "482": "completed",
+    "594": "completed",
+    "596": "completed",
+    "597": "completed"
+  },
+  "followups": {
+    "R734-01": {
+      "number": 799,
+      "url": "https://github.com/dhar174/tiny_village/issues/799"
+    },
+    "R734-02": {
+      "number": 800,
+      "url": "https://github.com/dhar174/tiny_village/issues/800"
+    },
+    "R734-03": {
+      "number": 801,
+      "url": "https://github.com/dhar174/tiny_village/issues/801"
+    }
+  },
+  "remediation_dependency_edges": 7,
+  "original_bodies_preserved": true,
+  "assignees_preserved": true,
+  "existing_parents_preserved": true,
+  "existing_dependencies_preserved": true,
+  "relationship_cycles": 0,
+  "phase_gate_approvals": 0,
+  "project_mutations": 0,
+  "issue_734_closure": "pending final completion comment and readback",
+  "approval": "https://github.com/dhar174/tiny_village/blob/eb3f1e2/docs/decisions.md#d027--approve-and-publish-the-734-backlog-triage-package"
+}

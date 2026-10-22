@@ -1,0 +1,7 @@
+{
+  "baseline": "244daf3f800dcba5b0cddf8ccf06bc30c9072431",
+  "fixed_source_sha256": {
+    "docs/planning/issue-734-publication/publish.py": "09dad08cd46e6daf056c11ce20aa8243509c7ad26a555d0461ae2930ded03d74",
+    "docs/planning/issue-734-publication/complete.py": "cad77b82eed2783eddb86350c5c17ac642746021569528a9bb100d7998d6d663"
+  }
+}

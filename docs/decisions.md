@@ -608,6 +608,46 @@ UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
   reparenting, Project synchronization, or Phase 3 gate #738. #602 retains its
   blocked-regression and Phase 4 prerequisite limits. D014/D015 remain intact.
 
+
+### D027 — Approve and publish the #734 backlog triage package
+
+- **Date:** 2026-10-21.
+- **Decision-maker:** dhar174.
+- **Confirmation:** “Approved and merged. Lets move forward.” after review PR
+  [#797](https://github.com/dhar174/tiny_village/pull/797), verified merged at
+  `2c3bc5753b15aad4a1e345c020c5872d6ba8b25c` (reviewed head
+  `fb0a0d834e48598b66f139ec268cd7d42aa008b8`).
+- **Approved publication:** the complete [review package](planning/issue-734/publication-review.md):
+  307 marked issue annotations, 80 missing-parent additions only if still
+  unparented, and all three separately scoped remediation drafts with their
+  specified parent/blocker links. Preserve existing bodies, assignees, parents
+  and dependencies; checkpoint and verify publication against current GitHub.
+- **Specific closures approved:** #355, #482, #594, #596 and #597 as completed;
+  #351 as duplicate of #350 and #382 as duplicate of #380, both not planned.
+  These are the reviewed narrow acceptances, not broader gameplay readiness.
+- **Next work:** finish publication/readback and then close #734; proceed to
+  #735 utility consolidation, followed by the remaining Phase 3 work. Preserve
+  #602/#609 as open and retain all captured failures. New identity/interface
+  repairs remain after gate #738, with their own scoped implementation review.
+- **Boundary:** #733 and human phase gate #738 remain open; no gate approval,
+  duplicate-PR selection, runtime repair or Project synchronization is implied.
+  Project configuration remains #737's disclosed pending handoff. The frozen
+  review bundle retains its historical proposed/not-applied status; current
+  publication evidence is recorded separately.
+
+### D028 — Retain PR #703 as the #735 utility consolidation carrier
+
+- **Date:** 2026-10-21.
+- **Decision-maker:** dhar174.
+- **Choice:** “Keep #703; consolidate useful tests from #714 (recommended).”
+- **Scope:** Rebase #703 onto current main, retain its shared `is_numeric`
+  TypeError fix and useful numeric/score tests, add #714's reversed-range
+  interpolation coverage, and document existing utility semantics and limits.
+  Validate the selected result before closing #714 as superseded with crosslinks.
+- **Boundary:** This chooses the PR carrier and duplicate disposition; it does
+  not merge #703, approve human phase gate #738 or authorize changing the
+  existing interpolation/score-scaling behavior into a different contract.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721
