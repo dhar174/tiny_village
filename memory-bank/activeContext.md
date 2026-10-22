@@ -10,13 +10,12 @@
 - TASK022 / #735 complete: #703 merged at 323dad6 and #735 closed; #714
   remains superseded under D028. #798 merged at 11b6e93 with review fixes and
   retained publication receipts. Required merged-main checks pass.
-- TASK023 / #736: reviewing nine old functional-test PRs against main 11b6e93
-  and merged #349, one disposition at a time. #420's five original methods
-  and one selected #417 utility method pass on current main. #420 choice selected under D029:
-  recommend salvaging unique State/Action/Condition assertions into maintained
-  suites, then superseding the old demonstration. D029 also records #417 utility salvage, #408 superseding, and #406 memory API salvage; also selected #404 obsolete/supersede; also selected #397 counting/supersede; also selected #395 strict planner salvage; reviewing #391 next; no
-  implementation/closures.
-  Remaining source findings are preliminary; #737 and human gate #738 follow.
+- TASK023 / #736: eight dispositions selected under D029; #393 is the last
+  pending choice. Review baseline is main 11b6e93 and merged #349. #420's five
+  original methods and one selected #417 utility method pass; other findings
+  retain their documented source-review/probe limits. Finish the walkthrough
+  and scoped consolidation plan before execution. No implementation, rebase
+  or closure; #737 and human gate #738 remain later steps.
 
 - TASK020 / #732 is complete: dhar174 explicitly approved Phase 2 under D025.
   #732 and parent #723 are closed/completed with immutable decision links

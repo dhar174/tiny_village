@@ -665,9 +665,10 @@ UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
   | #404 | Supersede as an obsolete fix: its retired wrapper has no current format_traceback caller, and the maintained runner preserves full failure output. | “Supersede #404 as an obsolete fix (recommended)” |
   | #397 | Supersede with links to maintained CI-runner counting coverage; retain the old helper’s negative passed-count evidence and any genuinely missing edge case found during mapping. | “Supersede #397 with maintained counting-coverage links (recommended)” |
   | #395 | Salvage useful planner scenarios into maintained tests with strict state/goal-completion assertions; preserve real defects as failures or tracked blockers, validate, then supersede. | “Salvage strict planner assertions, then supersede #395 (recommended)” |
+  | #391 | Use behavior-focused happiness checks, including applicable and absent relationship cases; retain broken required behavior as failures or tracked blockers, validate, then supersede the source-keyword threshold PR. | “Use behavior-focused happiness checks, then supersede #391 (recommended)” |
 
-- **Status:** seven dispositions selected, not applied. The remaining two
-  dispositions are pending. Finish the walkthrough and scoped consolidation plan
+- **Status:** eight dispositions selected, not applied. The #393
+  disposition is pending. Finish the walkthrough and scoped consolidation plan
   before execution; no test port, PR closure or rebase has been performed.
 - **Boundary:** Keep existing #736 acceptance and recorded failures intact;
   this supplies no approval of #737, phase gate #738, runtime repairs or broader

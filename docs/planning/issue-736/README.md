@@ -1,6 +1,6 @@
 # #736 — Functional-test PR walkthrough
 
-**Review in progress; Seven dispositions selected under D029, not yet applied.** Baseline: merged
+**Review in progress; Eight dispositions selected under D029, not yet applied.** Baseline: merged
 main `11b6e93595a70ce9f24cfb239a31ac873847ff56`, including #703/#798. #735 is
 closed; #736's prerequisites are closed. #737 and human gate #738 remain later
 steps. No test/runtime changes, PR closures, rebases or GitHub metadata writes
@@ -56,9 +56,12 @@ requirements remain intact. #404 is selected for superseding as an obsolete fix
 with no current caller. #397 is selected for superseding with maintained
 counting-coverage links, retaining its diagnostic evidence. #395 is selected for
 salvage of strict planner state/goal-completion assertions, then superseding after
-validation. The other two dispositions remain pending.
+validation. #391 is selected for behavior-focused happiness checks, including
+applicable and absent relationship cases, then superseding after validation.
+Broken required behavior remains a failure or tracked blocker. Only #393
+remains pending.
 
-| PR | Finding to discuss; no final disposition yet |
+| PR | Source finding; selected dispositions above, #393 pending |
 | --- | --- |
 | #417 | Mixed real utility/Action checks, source-text happiness checks and generic Python demonstrations across four files. One selected original utility method passes against current main; that narrow result does not validate the entire PR. Inspect useful assertions against existing utility/#425 coverage before choosing a split/carrier. |
 | #408 | Overlapping earlier test_fix_validation and demonstration files; several checks inspect names/source rather than behavior. Compare against #417 and maintained suites before superseding. |

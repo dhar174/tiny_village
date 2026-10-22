@@ -1,6 +1,6 @@
 # TASK023 — Review functional-test PRs (#736)
 
-**Status:** In Progress — seven dispositions selected; reviewing #391  
+**Status:** In Progress — eight dispositions selected; reviewing #393  
 **Added:** 2026-10-21 America/New_York  
 **Updated:** 2026-10-21 America/New_York
 
@@ -64,3 +64,8 @@ with evidence before implementation or closures.
 - User selected #395 salvage strict planner assertions then supersede; recorded
   D029. #391 happiness keyword-threshold disposition is pending. Preserve
   required behavior and legitimate absent-relationship cases; no implementation.
+
+- User selected #391 behavior-focused happiness checks then supersede; recorded
+  D029. Include applicable and absent relationship cases and preserve broken
+  required behavior as failures or tracked blockers. #393 is the last disposition;
+  no implementation, rebase or closure has been performed.
