@@ -1,6 +1,6 @@
-# TASK023 — Review functional-test PRs (#736)
+# TASK024 — Review functional-test PRs (#736)
 
-**Status:** In Progress — D030 accepted; runtime ownership/dependencies synchronized; #804 ready for review  
+**Status:** Complete — #804 merged/verified; #736 completed and nine candidates superseded under D030  
 **Added:** 2026-10-21 America/New_York  
 **Updated:** 2026-10-22 America/New_York
 
@@ -155,3 +155,40 @@ with evidence before implementation or closures.
 - #804 description updated to D030 acceptance; finalize for human review without
   merging. Receipt files live in docs/planning/issue-736/execution/option1/.
 - Documentation/tracking only; tested runtime/runner/test source remains unchanged.
+
+## Post-merge verification — 2026-10-22 America/New_York
+
+- #804 merged at6cc576e; merged source matches all15 validated source hashes.
+  The additional upstream changes are agent-team configuration/docs, not runtime.
+- One bounded merged-source core profile passes72 tests+3 CLI probes; dev20 pass.
+  A dev shell redirection failed before Python launch; no tests started in that
+  attempt. Retained that setup failure and then started the unrun profile once.
+- All9 candidate heads match their pinned review heads. Applying the selected
+  D029/D030 superseding closures; runtime gaps and #738 remain open.
+- Renamed the functional task from TASK023 to TASK024 to match the merged index
+  link and preserve the separate Zcode-team TASK023; no team files modified.
+- Evidence: docs/planning/issue-736/post-merge/ and
+  docs/testing/issue-736-post-merge-verification.md.
+
+## Closeout — 2026-10-22 America/New_York
+
+- Completed #736 with reason completed under the explicit scoped D030 acceptance,
+  after #804 merge and bounded merged-source verification.
+- Closed #420/#417/#408/#406/#404/#397/#395/#391/#393 as superseded, not merged;
+  each head remained pinned and each closure comment links #804, D030, assertion
+  mapping and post-merge evidence. Readbacks verify all9 closures.
+- #802/#803/#799/#741/#774 remain open with original runtime requirements and
+  native ordering intact; parent phase #733 and human gate #738 remain open.
+- #737 is next and has zero open native prerequisite blockers. Its ownership,
+  reviewer/merge sequence and Project configuration acceptance is not yet done.
+- Source/closure evidence: docs/planning/issue-736/post-merge/. Documentation
+  closeout is on codex/issue-736-post-merge; runtime/runner/test files unchanged.
+
+## PR #805 review correction — 2026-10-22 America/New_York
+
+- Addressed Codex thread discussion_r4345899804: reconciled all four stale
+  no-closure statements in the walkthrough with the final D029/D030 closeout.
+- Labeled the preliminary queue/probe results as historical at11b6e93; the
+  completed review now points to the maintained-test and merged-source reports.
+- Documentation only. Verify local links, retained closure records, live issue/PR
+  states and unchanged tested-source hashes; no new tests or runtime rerun.

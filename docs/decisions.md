@@ -730,6 +730,12 @@ UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
   post-merge verification before the selected superseding closures and scoped
   #736 completion. This decision resolves the earlier carry-forward question;
   it does not authorize a merge here, close runtime issues or approve #738.
+- **Verified execution status:** #804 merged at `6cc576e`; bounded post-merge
+  core72 tests+3 probes and dev20 tests pass. The nine unchanged-head candidates
+  are closed as superseded and #736 as scoped reconciliation/completed. Runtime
+  owner issues and #738 remain open; #737 is next. This is execution of the
+  recorded decision, not a new human approval. See the
+  [post-merge report](testing/issue-736-post-merge-verification.md).
 - **Scope retained:** no runtime repair, dependency change or broader gameplay,
   graph, happiness or AI-product readiness is established. #737 remains the
   subsequent ownership/order/Project synchronization task; phase gate #738

@@ -1,23 +1,26 @@
 # #736 — Functional-test PR walkthrough
 
-**Scoped reconciliation accepted under D030; runtime requirements remain open.** Baseline: merged
+**Scoped reconciliation complete under D030; #804 merged/verified, #736 and nine superseded candidates closed. Runtime requirements remain open.** Baseline: merged
 main `11b6e93595a70ce9f24cfb239a31ac873847ff56`, including #703/#798. #735 is
 closed; #736's prerequisites are closed. #737 and human gate #738 remain later
 steps. Test ports and local selectors are implemented; runtime files remain unchanged.
-No candidate closure or rebase has been applied. New runtime follow-ups #802/#803
+All nine candidates were closed as superseded after #804 merged and its merged
+source passed the agreed checks, under D029/D030. No candidate was rebased or
+merged. Runtime follow-ups #802/#803
 track demonstrated gaps; see the [validation report](../../testing/issue-736-functional-test-consolidation.md).
 
-The user requested a step-by-step review of all nine candidates. Preserve
-choices in the single docs/decisions.md file after the user answers. Current
-[heads](heads.md), [PR descriptions/reviews/discussion](evidence/prs.json) and
-bounded captures are retained. Inspect current heads again before any future
-mutation; old branch check results alone do not establish compatibility.
+The completed step-by-step review and confirmed choices are recorded in the
+single docs/decisions.md file under D029; D030 accepts the scoped reconciliation
+with runtime requirements carried forward. Pinned [heads](heads.md),
+[PR descriptions/reviews/discussion](evidence/prs.json) and bounded captures are
+retained. The sections below preserve the historical walkthrough at review
+baseline `11b6e93`; the final closeout is in the linked post-merge report.
 
-## First decision — #420
+## Historical first decision — #420
 
 Head `264d07e660bb`; 55 main-only commits and seven PR-only commits at review.
-It changes tests/verify_genuine_failures.py, a path absent from current main.
-All **five existing candidate test methods pass** against current main in the
+It changes tests/verify_genuine_failures.py, a path absent from review baseline main.
+All **five existing candidate test methods passed** against `11b6e93` in the
 locked core environment, with no errors, failures, skips or timeout. The full
 original candidate source executes in an isolated module with its expected
 repository-relative path, importing the actual current production systems.
@@ -44,9 +47,11 @@ Options:
 
 **User choice: split/salvage, then supersede after validation**, recorded in
 [D029](../../decisions.md#d029--review-736-functional-test-pr-dispositions-step-by-step).
-The walkthrough and plan approval are complete. Implementation evidence and remaining blockers are in the validation report; no closures.
+The selected salvage was implemented and validated in #804. #420 is now closed
+as superseded; implementation evidence and retained runtime gaps are in the
+validation and post-merge reports.
 
-## Remaining review queue — preliminary source findings only
+## Historical review queue — preliminary source findings at `11b6e93`
 
 #417: user selected split/salvage unique utility assertions, then supersede after
 validation (D029). #408 is selected for superseding through the verified
@@ -63,7 +68,9 @@ Broken required behavior remains a failure or tracked blocker. #393 is selected
 for salvage of real graph/goal contract tests, then superseding after validation;
 the latest answer replaces the earlier rework/rebase choice (D029). The
 [consolidation plan](../../superpowers/plans/2026-10-22-issue-736-functional-test-consolidation.md)
-was approved and executed for review. Required failed contracts remain open; no closures.
+was approved, implemented and merged in #804. All nine selected superseding
+closures have been applied. Required failed runtime contracts remain open in
+#802/#803/#799/#741/#774 under the explicit D030 carry-forward acceptance.
 
 | PR | Source finding; selected dispositions recorded above |
 | --- | --- |
@@ -87,13 +94,18 @@ modify a different tests/ path; they must not revive competing layouts or weaken
 assertions merely because #349 is merged. #349 is a comparison baseline, not
 proof that all current functional coverage is sufficient.
 
-#420's five methods and #417's one selected utility method pass on current main.
-A third bounded capture checks #393's reduced argument counts against current
-production signatures and exercises #397's original counter with one method
+#420's five methods and #417's one selected utility method passed on the review
+baseline `11b6e93`. A third bounded capture checked #393's reduced argument counts
+against that revision's production signatures and exercised #397's original counter with one method
 and two controlled failing subtests: total=1, failures=2, passed=-1. Those two
 injected subtest failures are expected evidence of the counter defect, not passing
 product tests. None of these runs validates an entire other PR. All three captures
 use the established 20s diagnostic / 25s parent deadline, with zero timeouts.
-Remaining findings are source-reviewed, not executed. Production/graph/gameplay acceptance and existing recorded failures
-remain unchanged. The walkthrough and approved test implementation are complete for review; required
-acceptance remains partial. No superseding closure has been applied.
+Those initial source findings and three captures were the historical review
+inputs, not the later implementation's complete validation. The validation report
+records the subsequent maintained tests and failed runtime reproductions; the
+post-merge report records the passing merged-source checks, all nine superseding
+closures and scoped #736 completion. Runtime/graph/gameplay requirements and
+recorded failures remain outstanding in their owning issues under D030.
+
+[Post-merge verification and closure readbacks](../../testing/issue-736-post-merge-verification.md) record the final outcome. Next task: #737; no #738 approval is supplied.

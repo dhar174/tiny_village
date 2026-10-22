@@ -1,0 +1,22 @@
+{
+  "merged_pr": 804,
+  "merged_revision": "6cc576edcb465c154ba7f56a508116ec1b247975",
+  "original_validated_source_hashes_match": true,
+  "candidate_heads_unchanged": true,
+  "profiles": {
+    "core": {
+      "tests": 72,
+      "cli_probes": 3,
+      "exit_code": 0
+    },
+    "dev": {
+      "tests": 20,
+      "exit_code": 0
+    }
+  },
+  "product_failures": 0,
+  "skips": 0,
+  "timeouts": 0,
+  "dev_initial_shell_launch_failure_before_python": true,
+  "raw_members": 278
+}

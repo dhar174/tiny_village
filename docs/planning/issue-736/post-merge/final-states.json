@@ -1,0 +1,68 @@
+{
+  "readback": {
+    "i734": {
+      "number": 734,
+      "state": "CLOSED",
+      "url": "https://github.com/dhar174/tiny_village/issues/734"
+    },
+    "i735": {
+      "number": 735,
+      "state": "CLOSED",
+      "url": "https://github.com/dhar174/tiny_village/issues/735"
+    },
+    "i736": {
+      "number": 736,
+      "state": "CLOSED",
+      "url": "https://github.com/dhar174/tiny_village/issues/736"
+    },
+    "i737": {
+      "number": 737,
+      "state": "OPEN",
+      "url": "https://github.com/dhar174/tiny_village/issues/737"
+    },
+    "i738": {
+      "number": 738,
+      "state": "OPEN",
+      "url": "https://github.com/dhar174/tiny_village/issues/738"
+    },
+    "i802": {
+      "number": 802,
+      "state": "OPEN",
+      "url": "https://github.com/dhar174/tiny_village/issues/802"
+    },
+    "i803": {
+      "number": 803,
+      "state": "OPEN",
+      "url": "https://github.com/dhar174/tiny_village/issues/803"
+    },
+    "i799": {
+      "number": 799,
+      "state": "OPEN",
+      "url": "https://github.com/dhar174/tiny_village/issues/799"
+    },
+    "i741": {
+      "number": 741,
+      "state": "OPEN",
+      "url": "https://github.com/dhar174/tiny_village/issues/741"
+    },
+    "i774": {
+      "number": 774,
+      "state": "OPEN",
+      "url": "https://github.com/dhar174/tiny_village/issues/774"
+    },
+    "i733": {
+      "number": 733,
+      "state": "OPEN",
+      "url": "https://github.com/dhar174/tiny_village/issues/733"
+    }
+  },
+  "next_issue_737_dependencies": {
+    "blocked_by": 0,
+    "total_blocked_by": 2,
+    "blocking": 1,
+    "total_blocking": 1
+  },
+  "all_9_candidates_closed_superseded": true,
+  "runtime_gaps_open": true,
+  "human_gate_738_open": true
+}
