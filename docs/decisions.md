@@ -687,6 +687,12 @@ UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
   ports; no production change is manufactured for RED/GREEN. Failed required
   runtime paths stay visible outside discovery as the approved plan requires.
   Core utility Goal coverage is explicitly lightweight, not full Goal readiness.
+- **Review correction/ruling:** the #395 conditional alternative-action shape
+  assertion is excluded as nonfunctional evidence (None always passes); real
+  alternative behavior remains unverified under #741. Fresh review found this
+  mapping omission; it is now explicit. The stale #349 byte-identity statement
+  was corrected as a provenance issue. No runtime behavior or acceptance was
+  repaired or waived by these documentation corrections.
 - **Boundary:** Keep existing #736 acceptance and recorded failures intact;
   this supplies no approval of #737, phase gate #738, runtime repairs or broader
   gameplay/AI readiness. Evidence is in [the walkthrough](planning/issue-736/README.md).

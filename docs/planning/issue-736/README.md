@@ -78,9 +78,10 @@ was approved and executed for review. Required failed contracts remain open; no 
 
 ## #349 baseline and verification limits
 
-The current root test_completed_implementations.py is byte-for-byte identical
-to #349's final root file. Its deterministic building collision assertions were
-retained. Its other tests still include manual pause-attribute toggling, happiness
+At baseline main `11b6e93`, root test_completed_implementations.py is byte-for-byte
+identical to #349's final root file. This branch retains its deterministic building
+collision assertions and adds an explicit assertion that the supplied map object
+is retained. Its other tests still include manual pause-attribute toggling, happiness
 source scans and planner method-existence checks. The stale candidates generally
 modify a different tests/ path; they must not revive competing layouts or weaken
 assertions merely because #349 is merged. #349 is a comparison baseline, not

@@ -41,6 +41,7 @@ The initial planner module used a mistaken name lookup in the controller's UUID-
 - One memory API test: direct concrete MemoryManager/SpecificMemory/GeneralMemory class imports without service initialization. Existing real record/recall tests remain. This proves neither semantic memory construction nor inference.
 - Seven happiness tests: supported motive caps, social quality, partner/family contributions and legitimate absent relationships, all on complete real Characters. Character-local relationship input is not presented as graph-derived relationship integration.
 - Five planner primitives: real Goal/action queue identities, blocked real action execution, isolated simulated effects, contextual cost/heuristic behavior and real Action-sequence utility selection. **None proves successful full-Goal planning or synchronized world execution.**
+- #395's alternative-action None-or-dict/action/name shape check is explicitly excluded: it cannot distinguish successful replacement from an implementation returning None forever. Actual alternative selection/replanning remains unverified under #741; no new test or diagnostic is misrepresented as having exercised it.
 - The unique old building map-retention assertion is now explicit in the existing deterministic root building test. Generic Python demonstrations, fabricated missing names and copied production implementations were not ported.
 
 ## Strict reproductions and classification
@@ -87,3 +88,15 @@ There are three reasonable dispositions for the remaining #736 gap:
 3. Defer this consolidation's merge and leave the current roadmap blocked until that ordering/acceptance question is settled.
 
 No such disposition is inferred from approval to implement the test-only plan. The replacement must merge before any selected superseding closures. No linked runtime issue, PR review or phase gate has been automatically approved or closed.
+
+## Independent review
+
+A fresh reviewer inspected branch `a259efe` against main `11b6e93`, including the
+seven changed test/selector files, retained source and all772 archive hashes.
+It found no Critical issue and judged publication as a partial draft safe.
+One Important gap was the missing explicit disposition of #395's conditional
+alternative-action shape assertion; the map/report now explain its exclusion
+and retain real alternative behavior under #741. A stale current/baseline
+byte-identity statement was also corrected. These are documentation corrections;
+validated test/runner source and all captured outcomes are unchanged. No second
+review or test rerun is claimed for this correction.
