@@ -1,14 +1,14 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK022](TASK022-utility-consolidation-735.md) Utility PR consolidation (#735) - #703 selected under D028; 69 local tests + 3 probes pass, #703 awaits review/merge (Updated: 2026-10-21)
-- [TASK021](TASK021-backlog-triage-734.md) Evidence-based backlog triage (#734) - PR #797 full-manifest review fix verified; publication awaits consolidated review (Updated: 2026-10-21)
+- [TASK023](TASK023-functional-test-review-736.md) Functional-test PR walkthrough (#736) - #420 split/salvage selected under D029; reviewing #417, no implementation yet (Updated: 2026-10-21 America/New_York)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending
 - No additional pending task files.
 
 ## Completed
+- [TASK022](TASK022-utility-consolidation-735.md) Utility consolidation (#735) - #703 merged at 323dad6; #735 closed, merged-main required check passes (Updated: 2026-10-21 America/New_York)
 - [TASK021](TASK021-backlog-triage-734.md) Evidence-based backlog triage (#734) - Complete under D027; verified publication, #734 closed; #798 metadata/completion review fixes verified (78 offline cases) (Updated: 2026-10-21)
 - [TASK020](TASK020-phase2-gate-readiness.md) Phase 2 gate readiness (#732) - Complete under D025; #732/#723 closed, Phase 3 ready, Project fields pending 403 (Updated: 2026-10-21 America/New_York)
 - [TASK019](TASK019-phase2-engineering-review.md) Phase 2 engineering review (#731) - Complete under D024; #731 closed, Project fields pending HTTP 403 (Updated: 2026-10-21 America/New_York)

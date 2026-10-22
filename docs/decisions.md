@@ -648,6 +648,24 @@ UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
   not merge #703, approve human phase gate #738 or authorize changing the
   existing interpolation/score-scaling behavior into a different contract.
 
+
+### D029 — Review #736 functional-test PR dispositions step by step
+
+- **Date:** 2026-10-21 America/New_York.
+- **Decision-maker:** dhar174.
+- **Review baseline:** merged main `11b6e93595a70ce9f24cfb239a31ac873847ff56`.
+- **#420 choice:** “Split: salvage useful assertions, then supersede #420
+  (recommended).” Preserve unique real State/Action/Condition contract assertions
+  in maintained test modules, validate the result, then supersede the old PR with
+  a precise crosslink. Do not restore its unrelated demonstration checks merely
+  because its five methods pass on current main.
+- **Status:** #420 disposition selected; execution follows the consolidated
+  walkthrough/plan. No port, closure or rebase has been performed. The other
+  eight dispositions are pending and are not approved by this choice.
+- **Boundary:** Keep existing #736 acceptance and recorded failures intact;
+  this supplies no approval of #737, phase gate #738, runtime repairs or broader
+  gameplay/AI readiness. Evidence is in [the walkthrough](planning/issue-736/README.md).
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721

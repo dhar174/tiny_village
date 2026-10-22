@@ -1,0 +1,10 @@
+test_utility_calculation_validation (candidate417.TestCountingFix.test_utility_calculation_validation)
+Test that validates utility calculation system with complex edge cases. ... WARNING:tiny_utility_functions:Using fallback Goal implementation in tiny_utility_functions
+DEBUG:root:WorldState initialized with empty graph
+DEBUG:root:GraphAnalytics initialized with WorldState dependency
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.154s
+
+OK

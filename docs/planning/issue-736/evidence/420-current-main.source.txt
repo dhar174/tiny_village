@@ -1,0 +1,5 @@
+import types,unittest,json,sys
+from pathlib import Path
+m=types.ModuleType('candidate420');m.__file__=str(Path.cwd()/'tests/verify_genuine_failures.py');sys.modules[m.__name__]=m
+exec(compile(Path('/workspace/scratch/issue-736/420/tests/verify_genuine_failures.py').read_text(),m.__file__,'exec'),m.__dict__)
+r=unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromModule(m));print(json.dumps({'tests':r.testsRun,'errors':len(r.errors),'failures':len(r.failures),'skips':len(r.skipped)}));raise SystemExit(not r.wasSuccessful())

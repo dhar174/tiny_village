@@ -1,6 +1,6 @@
 # TASK022 — Consolidate utility PRs (#735)
 
-**Status:** In Progress — implementation verified; awaiting #703 review/merge  
+**Status:** Completed — #703 merged; #735 closed  
 **Added:** 2026-10-21  
 **Updated:** 2026-10-21
 
@@ -37,3 +37,7 @@ approve phase gate #738 automatically.
   within runner tests is retained, not omitted from the evidence.
 - [Validation and handoff](../../docs/testing/issue-735-utility-consolidation.md).
   #734 publication is completing separately; #735 remains open until merge.
+
+- 2026-10-21 America/New_York: verified #703 merged at 323dad6 and #735
+  closed/completed; merged-main required CI passed. #714 remains superseded.
+  TASK023 now reviews #736; no phase-gate approval inferred.
