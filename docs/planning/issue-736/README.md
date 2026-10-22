@@ -1,6 +1,6 @@
 # #736 — Functional-test PR walkthrough
 
-**Review in progress; #420/#417 dispositions selected under D029, not yet applied.** Baseline: merged
+**Review in progress; #420/#417/#408 dispositions selected under D029, not yet applied.** Baseline: merged
 main `11b6e93595a70ce9f24cfb239a31ac873847ff56`, including #703/#798. #735 is
 closed; #736's prerequisites are closed. #737 and human gate #738 remain later
 steps. No test/runtime changes, PR closures, rebases or GitHub metadata writes
@@ -48,7 +48,9 @@ No implementation or closure yet; finish the walkthrough before execution.
 ## Remaining review queue — preliminary source findings only
 
 #417: user selected split/salvage unique utility assertions, then supersede after
-validation (D029). The other seven dispositions remain pending.
+validation (D029). #408 is selected for superseding through the verified
+consolidation, preserving any additional unique useful assertion found during
+mapping. The other six dispositions remain pending.
 
 | PR | Finding to discuss; no final disposition yet |
 | --- | --- |

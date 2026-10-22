@@ -1,6 +1,6 @@
 # TASK023 — Review functional-test PRs (#736)
 
-**Status:** In Progress — #420/#417 dispositions selected; reviewing #408  
+**Status:** In Progress — three dispositions selected; reviewing #406  
 **Added:** 2026-10-21 America/New_York  
 **Updated:** 2026-10-21 America/New_York
 
@@ -45,3 +45,6 @@ with evidence before implementation or closures.
   failing subtests. Retained expected-failure capture exits zero as a diagnostic;
   it is not a claim those injected product tests pass. No implementation change.
 - #408 superseding recommendation presented; user choice remains pending.
+
+- User selected #408 supersede through verified consolidation, retaining any
+  unique useful assertion found during mapping; recorded D029. #406 is next.
