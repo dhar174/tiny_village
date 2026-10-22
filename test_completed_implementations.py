@@ -31,6 +31,8 @@ class TestCompletedImplementations(unittest.TestCase):
         map_data = {"width": 50, "height": 50, "buildings": []}
 
         builder = CreateBuilding(map_data)
+        self.assertIs(builder.map_data, map_data,
+                      "Building creation should retain the supplied village map")
 
         with patch(
             "tiny_buildings.random.randint",
