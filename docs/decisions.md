@@ -663,8 +663,9 @@ UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
   | #408 | Supersede through the #420/#417 consolidation after coverage mapping and validation; retain any additional unique useful assertion found during mapping. | “Supersede through the verified consolidation (recommended)” |
   | #406 | Salvage useful public memory API assertions into maintained coverage, validate in the appropriate dependency profile, then supersede; preserve existing memory tests and unresolved requirements. | “Salvage useful memory API assertions, then supersede” |
   | #404 | Supersede as an obsolete fix: its retired wrapper has no current format_traceback caller, and the maintained runner preserves full failure output. | “Supersede #404 as an obsolete fix (recommended)” |
+  | #397 | Supersede with links to maintained CI-runner counting coverage; retain the old helper’s negative passed-count evidence and any genuinely missing edge case found during mapping. | “Supersede #397 with maintained counting-coverage links (recommended)” |
 
-- **Status:** five dispositions selected, not applied. The remaining four
+- **Status:** six dispositions selected, not applied. The remaining three
   dispositions are pending. Finish the walkthrough and scoped consolidation plan
   before execution; no test port, PR closure or rebase has been performed.
 - **Boundary:** Keep existing #736 acceptance and recorded failures intact;

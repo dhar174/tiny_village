@@ -1,6 +1,6 @@
 # TASK023 — Review functional-test PRs (#736)
 
-**Status:** In Progress — five dispositions selected; reviewing #397  
+**Status:** In Progress — six dispositions selected; reviewing #395  
 **Added:** 2026-10-21 America/New_York  
 **Updated:** 2026-10-21 America/New_York
 
@@ -56,3 +56,7 @@ with evidence before implementation or closures.
 - User selected #404 supersede as obsolete; recorded D029. #397 counting
   disposition is pending, backed by the retained negative-passed-count probe
   and existing CI-runner subtest coverage. No implementation/closures.
+
+- User selected #397 supersede with maintained counting-coverage links; recorded
+  D029. #395 planner-scenario salvage recommendation is pending. Preserve real
+  runtime defects and reject false-positive success paths; no code changes.
