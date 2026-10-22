@@ -18,6 +18,20 @@ sys.meta_path.insert(0, NoAIImports())
 
 
 class TestLazyMemory(FreshPythonTestCase):
+    def test_public_memory_classes_are_available_without_initializing_services(self):
+        """Preserve #406's public API checks without claiming semantic readiness."""
+        self.run_python(NO_AI_IMPORTS + '''
+import inspect
+import tiny_memories as memory
+from tiny_memories import MemoryManager, SpecificMemory, GeneralMemory
+for exported in (MemoryManager, SpecificMemory, GeneralMemory):
+    assert inspect.isclass(exported), exported
+    assert exported.__module__ == 'tiny_memories', exported
+assert memory.model is None and memory.nlp is None
+assert memory.sentiment_analysis is None
+assert not (blocked & sys.modules.keys())
+''')
+
     def test_public_integration_helper_preserves_requested_lazy_ai(self):
         self.run_python(NO_AI_IMPORTS + '''
 from llm_integration_utils import setup_full_llm_integration

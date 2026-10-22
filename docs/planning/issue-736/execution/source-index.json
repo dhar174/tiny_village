@@ -1,0 +1,1165 @@
+[
+  {
+    "pr": 420,
+    "head": "264d07e660bb985abb15cc6daad3140959158063",
+    "path": "tests/verify_genuine_failures.py",
+    "snapshot": "sources/420/tests/verify_genuine_failures.py.txt",
+    "sha256": "993b99f3e698f8471e76288785a21669037b03f2d3d149bfd1bfb249eb148550",
+    "test_methods": [
+      {
+        "method": "TestThatCanGenuinelyFail.test_file_content_validation_can_fail",
+        "line": 25,
+        "end_line": 43
+      },
+      {
+        "method": "TestThatCanGenuinelyFail.test_arithmetic_can_fail",
+        "line": 45,
+        "end_line": 56
+      },
+      {
+        "method": "TestThatCanGenuinelyFail.test_actual_module_with_wrong_expectations",
+        "line": 58,
+        "end_line": 86
+      },
+      {
+        "method": "TestThatCanGenuinelyFail.test_module_functionality_with_wrong_expectations",
+        "line": 88,
+        "end_line": 161
+      },
+      {
+        "method": "TestThatCanGenuinelyFail.test_wrong_file_structure_expectations",
+        "line": 163,
+        "end_line": 180
+      }
+    ]
+  },
+  {
+    "pr": 417,
+    "head": "4d0571405de40cef6bab8826b669cf8c89a5fd9b",
+    "path": "tests/demo_artificial_vs_real_tests.py",
+    "snapshot": "sources/417/tests/demo_artificial_vs_real_tests.py.txt",
+    "sha256": "d62ae98ebeb11a5d156053ebd6750079e46aa04795c8061acaf6b989f01031ee",
+    "test_methods": [
+      {
+        "method": "ProblematicTestExample.test_pass",
+        "line": 20,
+        "end_line": 22
+      },
+      {
+        "method": "ProblematicTestExample.test_fail",
+        "line": 24,
+        "end_line": 26
+      },
+      {
+        "method": "BasicTestExample.test_pass",
+        "line": 32,
+        "end_line": 45
+      },
+      {
+        "method": "EnhancedTestExample.test_pass",
+        "line": 51,
+        "end_line": 146
+      }
+    ]
+  },
+  {
+    "pr": 417,
+    "head": "4d0571405de40cef6bab8826b669cf8c89a5fd9b",
+    "path": "tests/test_fix_validation.py",
+    "snapshot": "sources/417/tests/test_fix_validation.py.txt",
+    "sha256": "d4e3fbed18dc0c5fa37b5fb00b9c0ee84519630c8075e38be09312275c1bfd49",
+    "test_methods": [
+      {
+        "method": "TestCountingFix.test_pass",
+        "line": 39,
+        "end_line": 218
+      },
+      {
+        "method": "TestCountingFix.test_character_validation",
+        "line": 220,
+        "end_line": 252
+      },
+      {
+        "method": "TestCountingFix.test_utility_calculation_validation",
+        "line": 254,
+        "end_line": 335
+      },
+      {
+        "method": "TestCountingFix.test_happiness_feature_validation",
+        "line": 337,
+        "end_line": 379
+      },
+      {
+        "method": "TestCountingFix.test_building_functionality",
+        "line": 381,
+        "end_line": 423
+      },
+      {
+        "method": "TestCountingFix.test_memory_system_functionality",
+        "line": 425,
+        "end_line": 464
+      },
+      {
+        "method": "TestFixValidation.test_fixed_with_real_action",
+        "line": 526,
+        "end_line": 554
+      },
+      {
+        "method": "TestFixValidation.test_fixed_with_test_class",
+        "line": 556,
+        "end_line": 582
+      },
+      {
+        "method": "TestFixValidation.test_mock_vs_real_comparison",
+        "line": 584,
+        "end_line": 612
+      }
+    ]
+  },
+  {
+    "pr": 417,
+    "head": "4d0571405de40cef6bab8826b669cf8c89a5fd9b",
+    "path": "tests/test_issue_425_fix.py",
+    "snapshot": "sources/417/tests/test_issue_425_fix.py.txt",
+    "sha256": "fb7e90b49bc0ab51f343f17e4525bfed4975743b1adbe6f88c19197eba772654",
+    "test_methods": [
+      {
+        "method": "TestIssue425Fix.test_problematic_pattern_from_issue",
+        "line": 112,
+        "end_line": 145
+      },
+      {
+        "method": "TestIssue425Fix.test_correct_fix_no_fallback_needed",
+        "line": 147,
+        "end_line": 190
+      },
+      {
+        "method": "TestIssue425Fix.test_direct_comparison_mock_vs_real",
+        "line": 192,
+        "end_line": 233
+      },
+      {
+        "method": "TestIssue425Fix.test_recommended_pattern_for_tests",
+        "line": 235,
+        "end_line": 299
+      }
+    ]
+  },
+  {
+    "pr": 417,
+    "head": "4d0571405de40cef6bab8826b669cf8c89a5fd9b",
+    "path": "tests/verify_genuine_failures.py",
+    "snapshot": "sources/417/tests/verify_genuine_failures.py.txt",
+    "sha256": "b25a4e8f0308189dee4372e97904e221481b5b264c2d2632745b0024e9adff2e",
+    "test_methods": [
+      {
+        "method": "TestThatCanGenuinelyFail.test_complex_calculation_edge_cases_can_fail",
+        "line": 32,
+        "end_line": 63
+      },
+      {
+        "method": "TestThatCanGenuinelyFail.test_string_parsing_edge_cases_can_fail",
+        "line": 65,
+        "end_line": 107
+      },
+      {
+        "method": "TestThatCanGenuinelyFail.test_data_integrity_validation_can_fail",
+        "line": 109,
+        "end_line": 162
+      },
+      {
+        "method": "TestThatCanGenuinelyFail.test_json_handling_edge_cases_can_fail",
+        "line": 164,
+        "end_line": 210
+      },
+      {
+        "method": "TestThatCanGenuinelyFail.test_file_operations_can_fail",
+        "line": 212,
+        "end_line": 253
+      },
+      {
+        "method": "TestThatCanGenuinelyFail.test_module_integration_can_fail",
+        "line": 255,
+        "end_line": 324
+      }
+    ]
+  },
+  {
+    "pr": 408,
+    "head": "72fc125ae0cdf4b68472c8646296e264b4af80d5",
+    "path": "tests/demo_artificial_vs_real_tests.py",
+    "snapshot": "sources/408/tests/demo_artificial_vs_real_tests.py.txt",
+    "sha256": "86c9a3ffdb012961bcd19e7e10d3ac0bb011fb821a29cd95242bcf30ff2c323c",
+    "test_methods": [
+      {
+        "method": "ProblematicTestExample.test_pass",
+        "line": 17,
+        "end_line": 19
+      },
+      {
+        "method": "ProblematicTestExample.test_fail",
+        "line": 21,
+        "end_line": 23
+      },
+      {
+        "method": "ImprovedTestExample.test_pass",
+        "line": 29,
+        "end_line": 37
+      },
+      {
+        "method": "ImprovedTestExample.test_real_functionality_validation",
+        "line": 39,
+        "end_line": 49
+      }
+    ]
+  },
+  {
+    "pr": 408,
+    "head": "72fc125ae0cdf4b68472c8646296e264b4af80d5",
+    "path": "tests/test_fix_validation.py",
+    "snapshot": "sources/408/tests/test_fix_validation.py.txt",
+    "sha256": "c74c915f85cc24830ddcfb61838f8b3a361bd16cc2e175bfa8622a71e5935424",
+    "test_methods": [
+      {
+        "method": "TestCountingFix.test_pass",
+        "line": 32,
+        "end_line": 45
+      },
+      {
+        "method": "TestCountingFix.test_character_validation",
+        "line": 47,
+        "end_line": 79
+      },
+      {
+        "method": "TestCountingFix.test_happiness_feature_validation",
+        "line": 81,
+        "end_line": 123
+      },
+      {
+        "method": "TestCountingFix.test_building_functionality",
+        "line": 125,
+        "end_line": 167
+      },
+      {
+        "method": "TestCountingFix.test_memory_system_functionality",
+        "line": 169,
+        "end_line": 208
+      }
+    ]
+  },
+  {
+    "pr": 408,
+    "head": "72fc125ae0cdf4b68472c8646296e264b4af80d5",
+    "path": "tests/verify_genuine_failures.py",
+    "snapshot": "sources/408/tests/verify_genuine_failures.py.txt",
+    "sha256": "30efff1255f2711380aa0598cb3d58db98cc70090f801bf8896489af86aceb99",
+    "test_methods": [
+      {
+        "method": "TestThatCanGenuinelyFail.test_file_content_validation_can_fail",
+        "line": 21,
+        "end_line": 39
+      },
+      {
+        "method": "TestThatCanGenuinelyFail.test_arithmetic_can_fail",
+        "line": 41,
+        "end_line": 52
+      },
+      {
+        "method": "TestThatCanGenuinelyFail.test_import_can_fail",
+        "line": 54,
+        "end_line": 72
+      }
+    ]
+  },
+  {
+    "pr": 406,
+    "head": "38b909b07d338f6acc3b82cd2b237cd77d720aa4",
+    "path": "tests/test_fix_validation.py",
+    "snapshot": "sources/406/tests/test_fix_validation.py.txt",
+    "sha256": "101bca162637d595cc6effb1ae82e89bb75590e48829a33e084ddfd344d22497",
+    "test_methods": [
+      {
+        "method": "TestValidationExamples.test_string_operation_validation",
+        "line": 21,
+        "end_line": 29
+      },
+      {
+        "method": "TestValidationExamples.test_arithmetic_validation",
+        "line": 31,
+        "end_line": 43
+      },
+      {
+        "method": "TestValidationExamples.test_list_operations_validation",
+        "line": 45,
+        "end_line": 57
+      },
+      {
+        "method": "TestRealDependencyValidation.test_dependency_validation_uses_real_logic",
+        "line": 105,
+        "end_line": 113
+      },
+      {
+        "method": "TestRealDependencyValidation.test_service_behavior_validation",
+        "line": 115,
+        "end_line": 130
+      },
+      {
+        "method": "TestErrorConditionValidation.test_validation_can_fail",
+        "line": 136,
+        "end_line": 153
+      },
+      {
+        "method": "TestErrorConditionValidation.test_boundary_conditions",
+        "line": 155,
+        "end_line": 172
+      },
+      {
+        "method": "TestImportValidation.test_module_import_and_functionality",
+        "line": 178,
+        "end_line": 192
+      },
+      {
+        "method": "TestImportValidation.test_conditional_import_validation",
+        "line": 194,
+        "end_line": 207
+      }
+    ]
+  },
+  {
+    "pr": 406,
+    "head": "38b909b07d338f6acc3b82cd2b237cd77d720aa4",
+    "path": "tests/test_tiny_memories.py",
+    "snapshot": "sources/406/tests/test_tiny_memories.py.txt",
+    "sha256": "1d2deeb3708e04f3436415aa7e1a83885a58cfd29a65f7e3976ce74546f675ba",
+    "test_methods": [
+      {
+        "method": "TestImport.test_module_import",
+        "line": 42,
+        "end_line": 65
+      },
+      {
+        "method": "TestEmbeddingModel.test_embedding_model_initialization",
+        "line": 100,
+        "end_line": 104
+      },
+      {
+        "method": "TestEmbeddingModel.test_embedding_model_forward_pass",
+        "line": 106,
+        "end_line": 118
+      },
+      {
+        "method": "TestSentimentAnalysis.test_get_sentiment_score",
+        "line": 125,
+        "end_line": 130
+      },
+      {
+        "method": "TestSentimentAnalysis.test_get_emotion_classification",
+        "line": 132,
+        "end_line": 137
+      },
+      {
+        "method": "TestSentimentAnalysis.test_extract_simple_words_string",
+        "line": 139,
+        "end_line": 163
+      },
+      {
+        "method": "TestSentimentAnalysis.test_extract_simple_words_list",
+        "line": 165,
+        "end_line": 180
+      },
+      {
+        "method": "TestSentimentAnalysis.test_extract_simple_words_empty_string",
+        "line": 182,
+        "end_line": 183
+      },
+      {
+        "method": "TestSentimentAnalysis.test_extract_simple_words_empty_list",
+        "line": 185,
+        "end_line": 186
+      },
+      {
+        "method": "TestMemoryQuery.test_add_complex_query",
+        "line": 197,
+        "end_line": 199
+      },
+      {
+        "method": "TestMemoryQuery.test_add_query_function",
+        "line": 201,
+        "end_line": 206
+      },
+      {
+        "method": "TestMemoryQuery.test_by_complex_function",
+        "line": 208,
+        "end_line": 222
+      },
+      {
+        "method": "TestMemoryQuery.test_by_tags_function",
+        "line": 224,
+        "end_line": 235
+      },
+      {
+        "method": "TestMemoryQuery.test_by_time_function",
+        "line": 237,
+        "end_line": 257
+      },
+      {
+        "method": "TestMemoryQuery.test_get_embedding",
+        "line": 260,
+        "end_line": 282
+      },
+      {
+        "method": "TestMemoryQuery.test_generate_embedding",
+        "line": 285,
+        "end_line": 323
+      },
+      {
+        "method": "TestMemoryQuery.test_by_importance_function",
+        "line": 325,
+        "end_line": 339
+      },
+      {
+        "method": "TestMemoryQuery.test_by_sentiment_function",
+        "line": 341,
+        "end_line": 359
+      },
+      {
+        "method": "TestMemoryQuery.test_by_emotion_function",
+        "line": 361,
+        "end_line": 373
+      },
+      {
+        "method": "TestMemoryQuery.test_by_keywords_function",
+        "line": 375,
+        "end_line": 395
+      },
+      {
+        "method": "TestMemoryQuery.test_by_similarity_function",
+        "line": 398,
+        "end_line": 428
+      },
+      {
+        "method": "TestMemoryQuery.test_by_attribute_function",
+        "line": 430,
+        "end_line": 442
+      },
+      {
+        "method": "TestMemoryManager.test_init_memories",
+        "line": 453,
+        "end_line": 459
+      },
+      {
+        "method": "TestMemoryManager.test_index_recent_queries",
+        "line": 462,
+        "end_line": 468
+      },
+      {
+        "method": "TestMemoryManager.test_add_general_memory",
+        "line": 470,
+        "end_line": 476
+      },
+      {
+        "method": "TestMemoryManager.test_extract_entities",
+        "line": 479,
+        "end_line": 486
+      },
+      {
+        "method": "TestMemoryManager.test_update_embeddings_specific_memory",
+        "line": 488,
+        "end_line": 505
+      },
+      {
+        "method": "TestMemoryManager.test_add_memory",
+        "line": 507,
+        "end_line": 516
+      },
+      {
+        "method": "TestMemoryManager.test_extract_keywords",
+        "line": 525,
+        "end_line": 541
+      },
+      {
+        "method": "TestMemoryManager.test_is_relevant_general_memory",
+        "line": 544,
+        "end_line": 565
+      },
+      {
+        "method": "TestMemoryManager.test_update_embeddings_with_specific_memory",
+        "line": 577,
+        "end_line": 594
+      },
+      {
+        "method": "TestMemoryManager.test_update_embeddings_with_general_memory",
+        "line": 596,
+        "end_line": 617
+      },
+      {
+        "method": "TestMemoryManager.test_extract_entities",
+        "line": 620,
+        "end_line": 626
+      },
+      {
+        "method": "TestMemoryManager.test_extract_lda_keywords",
+        "line": 631,
+        "end_line": 636
+      },
+      {
+        "method": "TestMemoryManager.test_extract_tfidf_keywords",
+        "line": 639,
+        "end_line": 647
+      },
+      {
+        "method": "TestMemoryManager.test_extract_rake_keywords",
+        "line": 650,
+        "end_line": 656
+      },
+      {
+        "method": "TestMemoryManager.test_get_query_embedding",
+        "line": 660,
+        "end_line": 666
+      },
+      {
+        "method": "TestMemoryManager.test_cosine_similarity",
+        "line": 670,
+        "end_line": 676
+      },
+      {
+        "method": "TestMemoryManager.test_keyword_specificity",
+        "line": 678,
+        "end_line": 683
+      },
+      {
+        "method": "TestMemoryManager.test_normalize_scores",
+        "line": 686,
+        "end_line": 692
+      },
+      {
+        "method": "TestMemoryManager.test_retrieve_from_hierarchy",
+        "line": 698,
+        "end_line": 729
+      },
+      {
+        "method": "TestMemoryManager.test_traverse_specific_memories_with_key",
+        "line": 731,
+        "end_line": 752
+      },
+      {
+        "method": "TestMemoryManager.test_is_relevant_general_memory_with_tags",
+        "line": 755,
+        "end_line": 778
+      },
+      {
+        "method": "TestMemoryManager.test_retrieve_memories_bst",
+        "line": 780,
+        "end_line": 800
+      },
+      {
+        "method": "TestMemoryManager.test_search_memories_with_string_query",
+        "line": 803,
+        "end_line": 808
+      },
+      {
+        "method": "TestMemoryManager.test_search_memories_with_memory_query_object",
+        "line": 811,
+        "end_line": 816
+      },
+      {
+        "method": "TestMemoryManager.test_retrieve_memories_for_complex_query",
+        "line": 821,
+        "end_line": 833
+      },
+      {
+        "method": "TestMemoryManagerIntegration.test_memory_integration_flow",
+        "line": 843,
+        "end_line": 891
+      },
+      {
+        "method": "TestMemory.test_update_access_time",
+        "line": 898,
+        "end_line": 901
+      },
+      {
+        "method": "TestBSTNode.test_update_height",
+        "line": 908,
+        "end_line": 910
+      },
+      {
+        "method": "TestBSTNode.test_get_balance",
+        "line": 912,
+        "end_line": 914
+      },
+      {
+        "method": "TestMemoryBST.test_get_height",
+        "line": 921,
+        "end_line": 923
+      },
+      {
+        "method": "TestMemoryBST.test_update_height",
+        "line": 925,
+        "end_line": 927
+      },
+      {
+        "method": "TestMemoryBST.test_get_balance",
+        "line": 929,
+        "end_line": 931
+      },
+      {
+        "method": "TestMemoryBST.test_right_rotate",
+        "line": 933,
+        "end_line": 935
+      },
+      {
+        "method": "TestMemoryBST.test_left_rotate",
+        "line": 937,
+        "end_line": 939
+      },
+      {
+        "method": "TestMemoryBST.test_insert",
+        "line": 941,
+        "end_line": 944
+      },
+      {
+        "method": "TestGeneralMemory.test_initialization",
+        "line": 997,
+        "end_line": 1004
+      },
+      {
+        "method": "TestGeneralMemory.test_add_keyword",
+        "line": 1006,
+        "end_line": 1008
+      },
+      {
+        "method": "TestGeneralMemory.test_get_keywords",
+        "line": 1010,
+        "end_line": 1011
+      },
+      {
+        "method": "TestGeneralMemory.test_get_embedding",
+        "line": 1013,
+        "end_line": 1026
+      },
+      {
+        "method": "TestGeneralMemory.test_generate_embedding",
+        "line": 1028,
+        "end_line": 1045
+      },
+      {
+        "method": "TestGeneralMemory.test_init_specific_memories",
+        "line": 1048,
+        "end_line": 1074
+      },
+      {
+        "method": "TestGeneralMemory.test_get_specific_memories_empty",
+        "line": 1076,
+        "end_line": 1077
+      },
+      {
+        "method": "TestGeneralMemory.test_get_specific_memories_with_items",
+        "line": 1080,
+        "end_line": 1111
+      },
+      {
+        "method": "TestGeneralMemory.test_find_specific_memory_not_found",
+        "line": 1113,
+        "end_line": 1114
+      },
+      {
+        "method": "TestGeneralMemory.test_search_by_key_in_general_memory",
+        "line": 1118,
+        "end_line": 1151
+      },
+      {
+        "method": "TestGeneralMemory.test_add_specific_memory",
+        "line": 1155,
+        "end_line": 1211
+      },
+      {
+        "method": "TestGeneralMemory.test_index_memories",
+        "line": 1216,
+        "end_line": 1268
+      },
+      {
+        "method": "TestSpecificMemory.test_initialization",
+        "line": 1327,
+        "end_line": 1342
+      },
+      {
+        "method": "TestSpecificMemory.test_get_parent_memory_from_string_found",
+        "line": 1344,
+        "end_line": 1356
+      },
+      {
+        "method": "TestSpecificMemory.test_get_parent_memory_from_string_not_found",
+        "line": 1358,
+        "end_line": 1365
+      },
+      {
+        "method": "TestSpecificMemory.test_analyze_description",
+        "line": 1367,
+        "end_line": 1379
+      },
+      {
+        "method": "TestSpecificMemory.test_update_parent_memory",
+        "line": 1384,
+        "end_line": 1389
+      },
+      {
+        "method": "TestSpecificMemory.test_get_embedding_cached",
+        "line": 1396,
+        "end_line": 1402
+      },
+      {
+        "method": "TestSpecificMemory.test_generate_facts_embeddings",
+        "line": 1405,
+        "end_line": 1433
+      },
+      {
+        "method": "TestSpecificMemory.test_get_facts",
+        "line": 1435,
+        "end_line": 1436
+      },
+      {
+        "method": "TestSpecificMemory.test_extract_facts",
+        "line": 1439,
+        "end_line": 1461
+      },
+      {
+        "method": "TestSpecificMemory.test_add_tag",
+        "line": 1463,
+        "end_line": 1471
+      },
+      {
+        "method": "TestSpecificMemory.test_get_tags",
+        "line": 1473,
+        "end_line": 1475
+      },
+      {
+        "method": "TestSpecificMemory.test_get_subject",
+        "line": 1477,
+        "end_line": 1479
+      },
+      {
+        "method": "TestSpecificMemory.test_set_subject",
+        "line": 1481,
+        "end_line": 1483
+      },
+      {
+        "method": "TestSpecificMemory.test_getstate_setstate",
+        "line": 1485,
+        "end_line": 1516
+      },
+      {
+        "method": "TestSigmoidFunction.test_sigmoid_with_positive_value",
+        "line": 1526,
+        "end_line": 1534
+      },
+      {
+        "method": "TestSigmoidFunction.test_sigmoid_computed_expected",
+        "line": 1536,
+        "end_line": 1554
+      },
+      {
+        "method": "TestMemoryAntipatternDemonstration.test_over_mocking_problem_demonstration",
+        "line": 1565,
+        "end_line": 1586
+      },
+      {
+        "method": "TestMemoryAntipatternDemonstration.test_proper_memory_testing_approach",
+        "line": 1588,
+        "end_line": 1622
+      },
+      {
+        "method": "TestMemoryAntipatternDemonstration.test_memory_manager_processing_validation",
+        "line": 1624,
+        "end_line": 1667
+      }
+    ]
+  },
+  {
+    "pr": 404,
+    "head": "22f5b3b63f1d960321cb116fc5a04eece8cbc352",
+    "path": "tests/test_completed_implementations.py",
+    "snapshot": "sources/404/tests/test_completed_implementations.py.txt",
+    "sha256": "4d30be4333e6c6e166c2ff15c3c086e3ad6daeb9ff4132effebc8c51b5009af1",
+    "test_methods": [
+      {
+        "method": "test_building_coordinate_selection",
+        "line": 14,
+        "end_line": 67
+      },
+      {
+        "method": "test_pause_functionality",
+        "line": 70,
+        "end_line": 93
+      },
+      {
+        "method": "TestHappinessCalculation.test_core_happiness_features_required",
+        "line": 106,
+        "end_line": 125
+      },
+      {
+        "method": "TestHappinessCalculation.test_relationship_features_adequate_coverage",
+        "line": 127,
+        "end_line": 148
+      },
+      {
+        "method": "TestHappinessCalculation.test_all_todos_replaced",
+        "line": 150,
+        "end_line": 176
+      },
+      {
+        "method": "TestHappinessCalculation.test_comprehensive_happiness_validation",
+        "line": 178,
+        "end_line": 219
+      },
+      {
+        "method": "test_happiness_calculation",
+        "line": 232,
+        "end_line": 251
+      },
+      {
+        "method": "test_goap_implementations",
+        "line": 254,
+        "end_line": 295
+      }
+    ]
+  },
+  {
+    "pr": 397,
+    "head": "ec76a141e89d33b516d2df38d2418ba50ed937d3",
+    "path": "tests/test_completed_implementations.py",
+    "snapshot": "sources/397/tests/test_completed_implementations.py.txt",
+    "sha256": "02ab1fa19b9e3697177cc033ace6c0024b65016f83361da519a19e2b66a45e55",
+    "test_methods": [
+      {
+        "method": "test_building_coordinate_selection",
+        "line": 48,
+        "end_line": 101
+      },
+      {
+        "method": "test_pause_functionality",
+        "line": 104,
+        "end_line": 127
+      },
+      {
+        "method": "TestHappinessCalculation.test_core_happiness_features_required",
+        "line": 140,
+        "end_line": 159
+      },
+      {
+        "method": "TestHappinessCalculation.test_relationship_features_adequate_coverage",
+        "line": 161,
+        "end_line": 182
+      },
+      {
+        "method": "TestHappinessCalculation.test_all_todos_replaced",
+        "line": 184,
+        "end_line": 210
+      },
+      {
+        "method": "TestHappinessCalculation.test_comprehensive_happiness_validation",
+        "line": 212,
+        "end_line": 253
+      },
+      {
+        "method": "test_happiness_calculation",
+        "line": 256,
+        "end_line": 275
+      },
+      {
+        "method": "TestHappinessCalculation.test_happiness_features_implementation",
+        "line": 291,
+        "end_line": 330
+      },
+      {
+        "method": "TestHappinessCalculation.test_individual_happiness_features",
+        "line": 332,
+        "end_line": 358
+      },
+      {
+        "method": "test_goap_implementations",
+        "line": 361,
+        "end_line": 402
+      }
+    ]
+  },
+  {
+    "pr": 397,
+    "head": "ec76a141e89d33b516d2df38d2418ba50ed937d3",
+    "path": "tests/test_counting_demo.py",
+    "snapshot": "sources/397/tests/test_counting_demo.py.txt",
+    "sha256": "615d6cb5b74022e1b3d0186a4a1241f715826e55788a77fff1b972a93e157948",
+    "test_methods": [
+      {
+        "method": "DemoTestCase.test_method_one",
+        "line": 21,
+        "end_line": 23
+      },
+      {
+        "method": "DemoTestCase.test_method_two",
+        "line": 25,
+        "end_line": 27
+      },
+      {
+        "method": "DemoTestCase.test_method_three",
+        "line": 29,
+        "end_line": 43
+      }
+    ]
+  },
+  {
+    "pr": 397,
+    "head": "ec76a141e89d33b516d2df38d2418ba50ed937d3",
+    "path": "tests/test_fix_validation.py",
+    "snapshot": "sources/397/tests/test_fix_validation.py.txt",
+    "sha256": "da020521d0d9713fbfad9d5b4a78d102df15dd1a781898c306947705e3cb6730",
+    "test_methods": [
+      {
+        "method": "TestCountingFix.test_proper_counting_utility_function",
+        "line": 24,
+        "end_line": 50
+      },
+      {
+        "method": "TestCountingFix.test_counting_with_failures",
+        "line": 52,
+        "end_line": 72
+      },
+      {
+        "method": "TestCountingFix.test_mixed_test_scenario",
+        "line": 74,
+        "end_line": 107
+      }
+    ]
+  },
+  {
+    "pr": 395,
+    "head": "d73a20465eba0e643583e87430a3154c71a46c75",
+    "path": "tests/test_completed_implementations.py",
+    "snapshot": "sources/395/tests/test_completed_implementations.py.txt",
+    "sha256": "bfae2bc9c28f541a80fe176a05d83ce73ef0729b95b9b76da7de972d09808f19",
+    "test_methods": [
+      {
+        "method": "test_building_coordinate_selection",
+        "line": 16,
+        "end_line": 69
+      },
+      {
+        "method": "test_pause_functionality",
+        "line": 72,
+        "end_line": 95
+      },
+      {
+        "method": "TestHappinessCalculation.test_core_happiness_features_required",
+        "line": 108,
+        "end_line": 127
+      },
+      {
+        "method": "TestHappinessCalculation.test_relationship_features_adequate_coverage",
+        "line": 129,
+        "end_line": 150
+      },
+      {
+        "method": "TestHappinessCalculation.test_all_todos_replaced",
+        "line": 152,
+        "end_line": 178
+      },
+      {
+        "method": "TestHappinessCalculation.test_comprehensive_happiness_validation",
+        "line": 180,
+        "end_line": 221
+      },
+      {
+        "method": "test_happiness_calculation",
+        "line": 224,
+        "end_line": 243
+      },
+      {
+        "method": "test_goap_implementations",
+        "line": 246,
+        "end_line": 451
+      }
+    ]
+  },
+  {
+    "pr": 391,
+    "head": "311d65fedc38dbe4f19a9faf03d123419b85fd3d",
+    "path": "tests/test_completed_implementations.py",
+    "snapshot": "sources/391/tests/test_completed_implementations.py.txt",
+    "sha256": "1de64e2c01b384fffb61ddc3effa05e144044fbcc4bdda37ae11a4546968c743",
+    "test_methods": [
+      {
+        "method": "test_building_coordinate_selection",
+        "line": 14,
+        "end_line": 67
+      },
+      {
+        "method": "test_pause_functionality",
+        "line": 70,
+        "end_line": 93
+      },
+      {
+        "method": "TestHappinessCalculation.test_happiness_features_implementation",
+        "line": 109,
+        "end_line": 148
+      },
+      {
+        "method": "TestHappinessCalculation.test_individual_happiness_features",
+        "line": 150,
+        "end_line": 176
+      },
+      {
+        "method": "test_goap_implementations",
+        "line": 179,
+        "end_line": 220
+      }
+    ]
+  },
+  {
+    "pr": 393,
+    "head": "e720cc6e45fe9788e2915c0bd33cf2cc1c25829b",
+    "path": "tests/mock_graph_manager.py",
+    "snapshot": "sources/393/tests/mock_graph_manager.py.txt",
+    "sha256": "d8484c762fe12f9322c2818871ab0fba9079ca0e677e594873fd2844d2913e95",
+    "test_methods": []
+  },
+  {
+    "pr": 393,
+    "head": "e720cc6e45fe9788e2915c0bd33cf2cc1c25829b",
+    "path": "tests/test_action_definitions_resolution.py",
+    "snapshot": "sources/393/tests/test_action_definitions_resolution.py.txt",
+    "sha256": "1000597c047210ab14e3a76e498289610d0db476fb31b20380be683837794da2",
+    "test_methods": []
+  },
+  {
+    "pr": 393,
+    "head": "e720cc6e45fe9788e2915c0bd33cf2cc1c25829b",
+    "path": "tests/test_basic_integration.py",
+    "snapshot": "sources/393/tests/test_basic_integration.py.txt",
+    "sha256": "4092766780bdf0a91babf9b67612bdfba71dbe416644d65a4ba63688840cfc91",
+    "test_methods": [
+      {
+        "method": "test_core_integration",
+        "line": 14,
+        "end_line": 109
+      }
+    ]
+  },
+  {
+    "pr": 393,
+    "head": "e720cc6e45fe9788e2915c0bd33cf2cc1c25829b",
+    "path": "tests/test_cost_integration.py",
+    "snapshot": "sources/393/tests/test_cost_integration.py.txt",
+    "sha256": "265706952f147ec44961080b423233fd63114f891476f93206a5c5a2fda77b76",
+    "test_methods": [
+      {
+        "method": "TestCostIntegration.test_cost_based_planning_selects_cheaper_actions",
+        "line": 31,
+        "end_line": 70
+      },
+      {
+        "method": "TestCostIntegration.test_utility_influences_action_selection",
+        "line": 72,
+        "end_line": 107
+      },
+      {
+        "method": "TestCostIntegration.test_calculate_action_cost_method",
+        "line": 109,
+        "end_line": 127
+      },
+      {
+        "method": "TestCostIntegration.test_estimate_cost_to_goal_method",
+        "line": 129,
+        "end_line": 146
+      },
+      {
+        "method": "TestCostIntegration.test_plan_replan_uses_costs",
+        "line": 148,
+        "end_line": 187
+      },
+      {
+        "method": "TestCostIntegrationEdgeCases.test_fallback_when_utility_calculation_fails",
+        "line": 198,
+        "end_line": 218
+      },
+      {
+        "method": "TestCostIntegrationEdgeCases.test_no_goal_heuristic",
+        "line": 220,
+        "end_line": 234
+      }
+    ]
+  },
+  {
+    "pr": 393,
+    "head": "e720cc6e45fe9788e2915c0bd33cf2cc1c25829b",
+    "path": "tests/test_goap_implementations.py",
+    "snapshot": "sources/393/tests/test_goap_implementations.py.txt",
+    "sha256": "8205eeb69a238fa6b91f500bcaacd85c3242ac590c9a41473b6a270bebf5be7e",
+    "test_methods": [
+      {
+        "method": "test_plan_methods",
+        "line": 14,
+        "end_line": 108
+      },
+      {
+        "method": "test_goap_planner_methods",
+        "line": 111,
+        "end_line": 219
+      }
+    ]
+  },
+  {
+    "pr": 393,
+    "head": "e720cc6e45fe9788e2915c0bd33cf2cc1c25829b",
+    "path": "tests/test_planner_integration.py",
+    "snapshot": "sources/393/tests/test_planner_integration.py.txt",
+    "sha256": "24995bc286a3b8c98c16c419da8b64112960639ddaf5cca05159bd1095995909",
+    "test_methods": [
+      {
+        "method": "test_dynamic_state_retrieval",
+        "line": 14,
+        "end_line": 46
+      },
+      {
+        "method": "test_dynamic_action_retrieval",
+        "line": 49,
+        "end_line": 81
+      },
+      {
+        "method": "test_enhanced_planning",
+        "line": 84,
+        "end_line": 128
+      },
+      {
+        "method": "test_strategy_manager_integration",
+        "line": 131,
+        "end_line": 149
+      }
+    ]
+  },
+  {
+    "pr": 393,
+    "head": "e720cc6e45fe9788e2915c0bd33cf2cc1c25829b",
+    "path": "tests/test_unified_goap.py",
+    "snapshot": "sources/393/tests/test_unified_goap.py.txt",
+    "sha256": "9b3d15a3c55ac0d3a73f4f6a97580f8dab0c4ccb24965129c15c0522e1290215",
+    "test_methods": [
+      {
+        "method": "test_unified_goap_planning",
+        "line": 14,
+        "end_line": 151
+      },
+      {
+        "method": "test_goal_already_satisfied",
+        "line": 154,
+        "end_line": 223
+      }
+    ]
+  },
+  {
+    "pr": 393,
+    "head": "e720cc6e45fe9788e2915c0bd33cf2cc1c25829b",
+    "path": "tiny_goap_system.py",
+    "snapshot": "sources/393/tiny_goap_system.py.txt",
+    "sha256": "2b83dd8724a9133edece56852551c053177258766d3438f894a5ce20a9250966",
+    "test_methods": []
+  }
+]

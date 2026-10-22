@@ -1,0 +1,12 @@
+{
+  "kind": "unittest",
+  "status": "FAIL",
+  "counts": {
+    "tests_run": 1,
+    "failures": 0,
+    "errors": 1,
+    "skipped": 0,
+    "expected_failures": 0,
+    "unexpected_successes": 0
+  }
+}

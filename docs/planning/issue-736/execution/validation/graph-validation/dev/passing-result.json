@@ -1,0 +1,10 @@
+{
+  "profile": "dev",
+  "interpreter": "/workspace/.venvs/issue726-dev/bin/python",
+  "python": "3.12.14",
+  "tests_run": 5,
+  "failures": 0,
+  "errors": 0,
+  "skips": 0,
+  "successful": true
+}

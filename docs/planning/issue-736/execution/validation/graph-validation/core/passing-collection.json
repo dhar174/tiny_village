@@ -1,0 +1,7 @@
+[
+  "tests.test_goap_graph_contracts.TestSupportedPlannerPrimitives.test_blocked_real_condition_prevents_action_execution",
+  "tests.test_goap_graph_contracts.TestSupportedPlannerPrimitives.test_cost_and_heuristic_use_current_context_signatures",
+  "tests.test_goap_graph_contracts.TestSupportedPlannerPrimitives.test_plan_retains_real_goal_and_action_queue_entries",
+  "tests.test_goap_graph_contracts.TestSupportedPlannerPrimitives.test_planner_effect_simulation_isolated_from_input_and_character",
+  "tests.test_goap_graph_contracts.TestSupportedPlannerPrimitives.test_planner_utility_selects_a_real_action_from_sequence"
+]

@@ -1,0 +1,16 @@
+import ast,inspect,json,unittest
+from pathlib import Path
+from tiny_goap_system import GOAPPlanner
+bindings={}
+for name,argc in [('_calculate_action_cost',3),('_estimate_cost_to_goal',3)]:
+ signature=inspect.signature(getattr(GOAPPlanner,name))
+ try: signature.bind(*([None]*argc))
+ except TypeError as e:bindings[name]={'current_signature':str(signature),'pr393_call_rejected':str(e)}
+ else:raise AssertionError('PR393 argument reduction unexpectedly matches current API')
+path=Path('/workspace/scratch/issue-736/397/tests/test_completed_implementations.py');tree=ast.parse(path.read_text());fn=next(n for n in tree.body if isinstance(n,ast.FunctionDef)and n.name=='run_unittest_with_proper_counting');ns={'unittest':unittest};exec(compile(ast.fix_missing_locations(ast.Module(body=[fn],type_ignores=[])),str(path),'exec'),ns)
+class ControlledFailure(unittest.TestCase):
+ def test_one(self):
+  for i in range(2):
+   with self.subTest(i=i):self.fail('controlled subtest failure')
+r=ns['run_unittest_with_proper_counting'](ControlledFailure);assert r['total']==1 and r['failures']==2 and r['passed']==-1
+print(json.dumps({'pr393':bindings,'pr397':{k:r[k]for k in ['total','passed','failures','errors']},'note':'Expected failures expose the old counter; no production tests or methods were changed.'}))

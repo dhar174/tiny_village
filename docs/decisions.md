@@ -648,6 +648,93 @@ UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
   not merge #703, approve human phase gate #738 or authorize changing the
   existing interpolation/score-scaling behavior into a different contract.
 
+
+### D029 — Review #736 functional-test PR dispositions step by step
+
+- **Date:** 2026-10-21 America/New_York.
+- **Decision-maker:** dhar174.
+- **Review baseline:** merged main `11b6e93595a70ce9f24cfb239a31ac873847ff56`.
+- **Confirmed choices:**
+
+  | PR | Selected disposition | User confirmation |
+  | --- | --- | --- |
+  | #420 | Split: preserve unique real State/Action/Condition assertions in maintained modules; validate, then supersede the old demonstration PR. | “Split: salvage useful assertions, then supersede #420 (recommended)” |
+  | #417 | Split: preserve only unique real-object utility/plan assertions in maintained suites, excluding source scans, generic examples and duplicated action logic; validate, then supersede. | “Split: salvage unique utility assertions, then supersede #417 (recommended)” |
+  | #408 | Supersede through the #420/#417 consolidation after coverage mapping and validation; retain any additional unique useful assertion found during mapping. | “Supersede through the verified consolidation (recommended)” |
+  | #406 | Salvage useful public memory API assertions into maintained coverage, validate in the appropriate dependency profile, then supersede; preserve existing memory tests and unresolved requirements. | “Salvage useful memory API assertions, then supersede” |
+  | #404 | Supersede as an obsolete fix: its retired wrapper has no current format_traceback caller, and the maintained runner preserves full failure output. | “Supersede #404 as an obsolete fix (recommended)” |
+  | #397 | Supersede with links to maintained CI-runner counting coverage; retain the old helper’s negative passed-count evidence and any genuinely missing edge case found during mapping. | “Supersede #397 with maintained counting-coverage links (recommended)” |
+  | #395 | Salvage useful planner scenarios into maintained tests with strict state/goal-completion assertions; preserve real defects as failures or tracked blockers, validate, then supersede. | “Salvage strict planner assertions, then supersede #395 (recommended)” |
+  | #391 | Use behavior-focused happiness checks, including applicable and absent relationship cases; retain broken required behavior as failures or tracked blockers, validate, then supersede the source-keyword threshold PR. | “Use behavior-focused happiness checks, then supersede #391 (recommended)” |
+  | #393 | Salvage useful graph/planner contract scenarios using the real GraphManager and actual goal outcomes; exclude simulated planner logic and incompatible production-call edits, validate, then supersede. | Latest answer: “Salvage real graph/goal contract tests, then supersede #393 (recommended)” |
+
+- **Confirmation reconciliation:** the final reply bundle answered two versions
+  of the #393 question. Its earlier answer selected rework/rebase into a test-only
+  PR; its later answer selected salvage then supersede. The later answer is
+  recorded as the final choice and replaces the earlier one.
+- **Plan approval:** on 2026-10-22 America/New_York, dhar174 confirmed:
+  “Approved. Please begin. Use subagents where helpful.” This approves the
+  [scoped consolidation plan](superpowers/plans/2026-10-22-issue-736-functional-test-consolidation.md)
+  and helpful delegation, retaining its runtime-repair and closure boundaries.
+- **Status:** execution started; all nine dispositions selected. No candidate
+  closure is permitted before its mapped evidence and replacement merge.
+- **Execution handoff:** 21 new maintained methods pass in core/dev; local
+  integrated profiles pass72 tests+3 probes (core) and20 tests (dev). Required
+  full-Goal/graph/motive contracts remain failed in retained reproductions;
+  #802/#803 record the newly demonstrated runtime gaps, with #799/#741/#774
+  preserved. No limitation acceptance or candidate/#736 closure is inferred.
+- **Execution ruling:** existing correct behavior is preserved with test-only
+  ports; no production change is manufactured for RED/GREEN. Failed required
+  runtime paths stay visible outside discovery as the approved plan requires.
+  Core utility Goal coverage is explicitly lightweight, not full Goal readiness.
+- **Review correction/ruling:** the #395 conditional alternative-action shape
+  assertion is excluded as nonfunctional evidence (None always passes); real
+  alternative behavior remains unverified under #741. Fresh review found this
+  mapping omission; it is now explicit. The stale #349 byte-identity statement
+  was corrected as a provenance issue. No runtime behavior or acceptance was
+  repaired or waived by these documentation corrections.
+- **Publication:** draft PR #804 carries the test consolidation and evidence.
+  Required gap disposition remains for human review; all nine candidates and
+  #736 remain open. No acceptance exception is inferred from publication.
+- **Boundary:** Keep existing #736 acceptance and recorded failures intact;
+  this supplies no approval of #737, phase gate #738, runtime repairs or broader
+  gameplay/AI readiness. Evidence is in [the walkthrough](planning/issue-736/README.md).
+
+
+### D030 — Accept #736 reconciliation and retain runtime requirements
+
+- **Date:** 2026-10-22 America/New_York.
+- **Decision-maker:** dhar174.
+- **Confirmation:** “Option 1. Just be sure not to forget the runtime gaps, they
+  need to be referenced in the correct issues”. This selects the scoped test
+  reconciliation and explicit carry-forward proposed in #804's report.
+- **Accepted scope:** the #736 test consolidation can proceed for merge with
+  its demonstrated runtime limitations carried into the issues below. Failed
+  runtime criteria remain requirements, with original evidence preserved;
+  they are neither repaired nor certified as passing by this acceptance.
+
+  | Requirement / gap | Runtime owner issue | Roadmap placement |
+  | --- | --- | --- |
+  | Full Goal condition container, state interface, Plan evaluation/feasibility and actual goal outcomes | #802, under #218 | Phase 4, after separate human gate #738; coordinate #740/#218 contracts. |
+  | Real motive-satisfaction contribution and visible evaluation errors | #803, under #139 | Phase 4 Character completion, after #738. |
+  | Stable Character/Location identity, graph state/action provenance and synchronized world updates | #799, existing parent #222 | Preserve approved after-#738 and before-#220/#602 ordering. |
+  | Explicit replanning result/failure handling and verified alternative action behavior | #741 | Preserve its #218/#738 prerequisites and end-to-end execution criteria. |
+  | Utility Goal/fixture mismatch and explicit falsy action IDs | #774 | Existing Phase 4 test debt, coordinated with #740/#218; no runtime-readiness claim. |
+
+- **Tracking:** retain each reproduction and link the decision, #804 report and
+  exact evidence on the owning issue and the broader #218/#139 work. #802/#803
+  are to have native parents #218/#139 and remain blocked by #738; their parent
+  acceptance must retain the corresponding child requirement. Preserve all
+  original issue bodies, checklists, existing relationships and assignees.
+- **Closure condition:** replacement #804 must merge and receive bounded
+  post-merge verification before the selected superseding closures and scoped
+  #736 completion. This decision resolves the earlier carry-forward question;
+  it does not authorize a merge here, close runtime issues or approve #738.
+- **Scope retained:** no runtime repair, dependency change or broader gameplay,
+  graph, happiness or AI-product readiness is established. #737 remains the
+  subsequent ownership/order/Project synchronization task; phase gate #738
+  retains its separate human decision.
+
 ## Review status
 
 The current scope questions have been answered (D002, D004–D006). Review #721

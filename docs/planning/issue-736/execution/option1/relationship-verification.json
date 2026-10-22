@@ -1,0 +1,30 @@
+[
+  {
+    "child": 802,
+    "parent": 218,
+    "child_blocked_by": 738,
+    "parent_blocked_by_child": true,
+    "state": "open",
+    "verified": true
+  },
+  {
+    "child": 803,
+    "parent": 139,
+    "child_blocked_by": 738,
+    "parent_blocked_by_child": true,
+    "state": "open",
+    "verified": true
+  },
+  {
+    "issue": 799,
+    "existing_parent_and_dependency_counts_preserved": true
+  },
+  {
+    "issue": 741,
+    "existing_parent_and_dependency_counts_preserved": true
+  },
+  {
+    "issue": 774,
+    "existing_parent_and_dependency_counts_preserved": true
+  }
+]

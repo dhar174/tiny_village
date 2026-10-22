@@ -1,0 +1,1173 @@
+{
+  "core": {
+    "command": {
+      "command": [
+        "/workspace/.venvs/issue726-core/bin/python",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.test_character_happiness_contracts"
+      ],
+      "cwd": "/workspace/tiny_village",
+      "profile": "core",
+      "started_utc": "2026-10-22T04:19:54.300214+00:00",
+      "finished_utc": "2026-10-22T04:19:55.861835+00:00",
+      "returncode": 0
+    },
+    "captured_children": 7,
+    "cases": [
+      {
+        "test_id": "tests.test_character_happiness_contracts.TestCharacterHappinessContracts.test_supported_motive_caps_change_happiness",
+        "returncode": 0,
+        "outcome": "EXITED_ZERO",
+        "fatal_timeout": 20,
+        "timeout": 25,
+        "artifact_dir": "/workspace/scratch/issue-736/execution/happiness-validation/core/children/child-8ayktjj7",
+        "traces": [
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "supported_motive_caps_2",
+            "family_members": [],
+            "happiness": 0.3608813990593682,
+            "motive_scores": {
+              "beauty": 2,
+              "community": 5,
+              "control": 2,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 2,
+              "luxury": 5,
+              "material_goods": 2,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 2,
+              "wealth": 5
+            },
+            "relationships": {},
+            "romantic_partner": null
+          },
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "supported_motive_caps_8",
+            "family_members": [],
+            "happiness": 0.3610225808639045,
+            "motive_scores": {
+              "beauty": 8,
+              "community": 5,
+              "control": 8,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 8,
+              "luxury": 5,
+              "material_goods": 8,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 8,
+              "wealth": 5
+            },
+            "relationships": {},
+            "romantic_partner": null
+          }
+        ],
+        "stderr": "ERROR:root:Not all job roles parsed correctly, counted 117 but parsed 116\nERROR:root:Missing job roles: ['Bookstore owner', 'Comic store owner', 'Customer Service', 'Stay-at-home Mom']\n"
+      },
+      {
+        "test_id": "tests.test_character_happiness_contracts.TestCharacterHappinessContracts.test_no_family_has_finite_happiness",
+        "returncode": 0,
+        "outcome": "EXITED_ZERO",
+        "fatal_timeout": 20,
+        "timeout": 25,
+        "artifact_dir": "/workspace/scratch/issue-736/execution/happiness-validation/core/children/child-bsm3b35h",
+        "traces": [
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "no_family",
+            "family_members": [],
+            "happiness": 0.3618667295633971,
+            "motive_scores": {
+              "beauty": 5,
+              "community": 5,
+              "control": 5,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 5,
+              "luxury": 5,
+              "material_goods": 5,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 5,
+              "wealth": 5
+            },
+            "relationships": {
+              "peer": 0.8
+            },
+            "romantic_partner": "peer"
+          }
+        ],
+        "stderr": "ERROR:root:Not all job roles parsed correctly, counted 117 but parsed 116\nERROR:root:Missing job roles: ['Bookstore owner', 'Comic store owner', 'Customer Service', 'Stay-at-home Mom']\n"
+      },
+      {
+        "test_id": "tests.test_character_happiness_contracts.TestCharacterHappinessContracts.test_empty_relationships_have_finite_happiness",
+        "returncode": 0,
+        "outcome": "EXITED_ZERO",
+        "fatal_timeout": 20,
+        "timeout": 25,
+        "artifact_dir": "/workspace/scratch/issue-736/execution/happiness-validation/core/children/child-js609zcz",
+        "traces": [
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "empty_relationships",
+            "family_members": [],
+            "happiness": 0.3610225808639045,
+            "motive_scores": {
+              "beauty": 5,
+              "community": 5,
+              "control": 5,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 5,
+              "luxury": 5,
+              "material_goods": 5,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 5,
+              "wealth": 5
+            },
+            "relationships": {},
+            "romantic_partner": null
+          }
+        ],
+        "stderr": "ERROR:root:Not all job roles parsed correctly, counted 117 but parsed 116\nERROR:root:Missing job roles: ['Bookstore owner', 'Comic store owner', 'Customer Service', 'Stay-at-home Mom']\n"
+      },
+      {
+        "test_id": "tests.test_character_happiness_contracts.TestCharacterHappinessContracts.test_no_partner_has_finite_happiness",
+        "returncode": 0,
+        "outcome": "EXITED_ZERO",
+        "fatal_timeout": 20,
+        "timeout": 25,
+        "artifact_dir": "/workspace/scratch/issue-736/execution/happiness-validation/core/children/child-oxbnirg3",
+        "traces": [
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "no_partner",
+            "family_members": [],
+            "happiness": 0.3615446840436287,
+            "motive_scores": {
+              "beauty": 5,
+              "community": 5,
+              "control": 5,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 5,
+              "luxury": 5,
+              "material_goods": 5,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 5,
+              "wealth": 5
+            },
+            "relationships": {
+              "peer": 0.8
+            },
+            "romantic_partner": null
+          }
+        ],
+        "stderr": "ERROR:root:Not all job roles parsed correctly, counted 117 but parsed 116\nERROR:root:Missing job roles: ['Bookstore owner', 'Comic store owner', 'Customer Service', 'Stay-at-home Mom']\n"
+      },
+      {
+        "test_id": "tests.test_character_happiness_contracts.TestCharacterHappinessContracts.test_social_relationship_quality_changes_happiness",
+        "returncode": 0,
+        "outcome": "EXITED_ZERO",
+        "fatal_timeout": 20,
+        "timeout": 25,
+        "artifact_dir": "/workspace/scratch/issue-736/execution/happiness-validation/core/children/child-qvcu9782",
+        "traces": [
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "social_quality_0.2",
+            "family_members": [],
+            "happiness": 0.3612834438265318,
+            "motive_scores": {
+              "beauty": 5,
+              "community": 5,
+              "control": 5,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 5,
+              "luxury": 5,
+              "material_goods": 5,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 5,
+              "wealth": 5
+            },
+            "relationships": {
+              "peer": 0.2
+            },
+            "romantic_partner": null
+          },
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "social_quality_0.8",
+            "family_members": [],
+            "happiness": 0.3615446840436287,
+            "motive_scores": {
+              "beauty": 5,
+              "community": 5,
+              "control": 5,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 5,
+              "luxury": 5,
+              "material_goods": 5,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 5,
+              "wealth": 5
+            },
+            "relationships": {
+              "peer": 0.8
+            },
+            "romantic_partner": null
+          }
+        ],
+        "stderr": "ERROR:root:Not all job roles parsed correctly, counted 117 but parsed 116\nERROR:root:Missing job roles: ['Bookstore owner', 'Comic store owner', 'Customer Service', 'Stay-at-home Mom']\n"
+      },
+      {
+        "test_id": "tests.test_character_happiness_contracts.TestCharacterHappinessContracts.test_romantic_partner_adds_happiness",
+        "returncode": 0,
+        "outcome": "EXITED_ZERO",
+        "fatal_timeout": 20,
+        "timeout": 25,
+        "artifact_dir": "/workspace/scratch/issue-736/execution/happiness-validation/core/children/child-rho5ko4s",
+        "traces": [
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "same_relationship_without_partner",
+            "family_members": [],
+            "happiness": 0.3615446840436287,
+            "motive_scores": {
+              "beauty": 5,
+              "community": 5,
+              "control": 5,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 5,
+              "luxury": 5,
+              "material_goods": 5,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 5,
+              "wealth": 5
+            },
+            "relationships": {
+              "peer": 0.8
+            },
+            "romantic_partner": null
+          },
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "same_relationship_with_partner",
+            "family_members": [],
+            "happiness": 0.3618667295633971,
+            "motive_scores": {
+              "beauty": 5,
+              "community": 5,
+              "control": 5,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 5,
+              "luxury": 5,
+              "material_goods": 5,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 5,
+              "wealth": 5
+            },
+            "relationships": {
+              "peer": 0.8
+            },
+            "romantic_partner": "peer"
+          }
+        ],
+        "stderr": "ERROR:root:Not all job roles parsed correctly, counted 117 but parsed 116\nERROR:root:Missing job roles: ['Bookstore owner', 'Comic store owner', 'Customer Service', 'Stay-at-home Mom']\n"
+      },
+      {
+        "test_id": "tests.test_character_happiness_contracts.TestCharacterHappinessContracts.test_family_membership_adds_happiness",
+        "returncode": 0,
+        "outcome": "EXITED_ZERO",
+        "fatal_timeout": 20,
+        "timeout": 25,
+        "artifact_dir": "/workspace/scratch/issue-736/execution/happiness-validation/core/children/child-wsv227k3",
+        "traces": [
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "same_relationship_without_family",
+            "family_members": [],
+            "happiness": 0.3615446840436287,
+            "motive_scores": {
+              "beauty": 5,
+              "community": 5,
+              "control": 5,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 5,
+              "luxury": 5,
+              "material_goods": 5,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 5,
+              "wealth": 5
+            },
+            "relationships": {
+              "peer": 0.8
+            },
+            "romantic_partner": null
+          },
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "same_relationship_with_family",
+            "family_members": [
+              "peer"
+            ],
+            "happiness": 0.36194733060758244,
+            "motive_scores": {
+              "beauty": 5,
+              "community": 5,
+              "control": 5,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 5,
+              "luxury": 5,
+              "material_goods": 5,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 5,
+              "wealth": 5
+            },
+            "relationships": {
+              "peer": 0.8
+            },
+            "romantic_partner": null
+          }
+        ],
+        "stderr": "ERROR:root:Not all job roles parsed correctly, counted 117 but parsed 116\nERROR:root:Missing job roles: ['Bookstore owner', 'Comic store owner', 'Customer Service', 'Stay-at-home Mom']\n"
+      }
+    ]
+  },
+  "dev": {
+    "command": {
+      "command": [
+        "/workspace/.venvs/issue726-dev/bin/python",
+        "-m",
+        "unittest",
+        "-v",
+        "tests.test_character_happiness_contracts"
+      ],
+      "cwd": "/workspace/tiny_village",
+      "profile": "dev",
+      "started_utc": "2026-10-22T04:19:55.862246+00:00",
+      "finished_utc": "2026-10-22T04:19:57.420770+00:00",
+      "returncode": 0
+    },
+    "captured_children": 7,
+    "cases": [
+      {
+        "test_id": "tests.test_character_happiness_contracts.TestCharacterHappinessContracts.test_family_membership_adds_happiness",
+        "returncode": 0,
+        "outcome": "EXITED_ZERO",
+        "fatal_timeout": 20,
+        "timeout": 25,
+        "artifact_dir": "/workspace/scratch/issue-736/execution/happiness-validation/dev/children/child-1cgb9d6v",
+        "traces": [
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "same_relationship_without_family",
+            "family_members": [],
+            "happiness": 0.3615446840436287,
+            "motive_scores": {
+              "beauty": 5,
+              "community": 5,
+              "control": 5,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 5,
+              "luxury": 5,
+              "material_goods": 5,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 5,
+              "wealth": 5
+            },
+            "relationships": {
+              "peer": 0.8
+            },
+            "romantic_partner": null
+          },
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "same_relationship_with_family",
+            "family_members": [
+              "peer"
+            ],
+            "happiness": 0.36194733060758244,
+            "motive_scores": {
+              "beauty": 5,
+              "community": 5,
+              "control": 5,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 5,
+              "luxury": 5,
+              "material_goods": 5,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 5,
+              "wealth": 5
+            },
+            "relationships": {
+              "peer": 0.8
+            },
+            "romantic_partner": null
+          }
+        ],
+        "stderr": "ERROR:root:Not all job roles parsed correctly, counted 117 but parsed 116\nERROR:root:Missing job roles: ['Bookstore owner', 'Comic store owner', 'Customer Service', 'Stay-at-home Mom']\n"
+      },
+      {
+        "test_id": "tests.test_character_happiness_contracts.TestCharacterHappinessContracts.test_social_relationship_quality_changes_happiness",
+        "returncode": 0,
+        "outcome": "EXITED_ZERO",
+        "fatal_timeout": 20,
+        "timeout": 25,
+        "artifact_dir": "/workspace/scratch/issue-736/execution/happiness-validation/dev/children/child-3k88t9m4",
+        "traces": [
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "social_quality_0.2",
+            "family_members": [],
+            "happiness": 0.3612834438265318,
+            "motive_scores": {
+              "beauty": 5,
+              "community": 5,
+              "control": 5,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 5,
+              "luxury": 5,
+              "material_goods": 5,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 5,
+              "wealth": 5
+            },
+            "relationships": {
+              "peer": 0.2
+            },
+            "romantic_partner": null
+          },
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "social_quality_0.8",
+            "family_members": [],
+            "happiness": 0.3615446840436287,
+            "motive_scores": {
+              "beauty": 5,
+              "community": 5,
+              "control": 5,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 5,
+              "luxury": 5,
+              "material_goods": 5,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 5,
+              "wealth": 5
+            },
+            "relationships": {
+              "peer": 0.8
+            },
+            "romantic_partner": null
+          }
+        ],
+        "stderr": "ERROR:root:Not all job roles parsed correctly, counted 117 but parsed 116\nERROR:root:Missing job roles: ['Bookstore owner', 'Comic store owner', 'Customer Service', 'Stay-at-home Mom']\n"
+      },
+      {
+        "test_id": "tests.test_character_happiness_contracts.TestCharacterHappinessContracts.test_romantic_partner_adds_happiness",
+        "returncode": 0,
+        "outcome": "EXITED_ZERO",
+        "fatal_timeout": 20,
+        "timeout": 25,
+        "artifact_dir": "/workspace/scratch/issue-736/execution/happiness-validation/dev/children/child-iojo55j8",
+        "traces": [
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "same_relationship_without_partner",
+            "family_members": [],
+            "happiness": 0.3615446840436287,
+            "motive_scores": {
+              "beauty": 5,
+              "community": 5,
+              "control": 5,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 5,
+              "luxury": 5,
+              "material_goods": 5,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 5,
+              "wealth": 5
+            },
+            "relationships": {
+              "peer": 0.8
+            },
+            "romantic_partner": null
+          },
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "same_relationship_with_partner",
+            "family_members": [],
+            "happiness": 0.3618667295633971,
+            "motive_scores": {
+              "beauty": 5,
+              "community": 5,
+              "control": 5,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 5,
+              "luxury": 5,
+              "material_goods": 5,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 5,
+              "wealth": 5
+            },
+            "relationships": {
+              "peer": 0.8
+            },
+            "romantic_partner": "peer"
+          }
+        ],
+        "stderr": "ERROR:root:Not all job roles parsed correctly, counted 117 but parsed 116\nERROR:root:Missing job roles: ['Bookstore owner', 'Comic store owner', 'Customer Service', 'Stay-at-home Mom']\n"
+      },
+      {
+        "test_id": "tests.test_character_happiness_contracts.TestCharacterHappinessContracts.test_supported_motive_caps_change_happiness",
+        "returncode": 0,
+        "outcome": "EXITED_ZERO",
+        "fatal_timeout": 20,
+        "timeout": 25,
+        "artifact_dir": "/workspace/scratch/issue-736/execution/happiness-validation/dev/children/child-lhymjc85",
+        "traces": [
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "supported_motive_caps_2",
+            "family_members": [],
+            "happiness": 0.3608813990593682,
+            "motive_scores": {
+              "beauty": 2,
+              "community": 5,
+              "control": 2,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 2,
+              "luxury": 5,
+              "material_goods": 2,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 2,
+              "wealth": 5
+            },
+            "relationships": {},
+            "romantic_partner": null
+          },
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "supported_motive_caps_8",
+            "family_members": [],
+            "happiness": 0.3610225808639045,
+            "motive_scores": {
+              "beauty": 8,
+              "community": 5,
+              "control": 8,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 8,
+              "luxury": 5,
+              "material_goods": 8,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 8,
+              "wealth": 5
+            },
+            "relationships": {},
+            "romantic_partner": null
+          }
+        ],
+        "stderr": "ERROR:root:Not all job roles parsed correctly, counted 117 but parsed 116\nERROR:root:Missing job roles: ['Bookstore owner', 'Comic store owner', 'Customer Service', 'Stay-at-home Mom']\n"
+      },
+      {
+        "test_id": "tests.test_character_happiness_contracts.TestCharacterHappinessContracts.test_no_family_has_finite_happiness",
+        "returncode": 0,
+        "outcome": "EXITED_ZERO",
+        "fatal_timeout": 20,
+        "timeout": 25,
+        "artifact_dir": "/workspace/scratch/issue-736/execution/happiness-validation/dev/children/child-ngwkrfh_",
+        "traces": [
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "no_family",
+            "family_members": [],
+            "happiness": 0.3618667295633971,
+            "motive_scores": {
+              "beauty": 5,
+              "community": 5,
+              "control": 5,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 5,
+              "luxury": 5,
+              "material_goods": 5,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 5,
+              "wealth": 5
+            },
+            "relationships": {
+              "peer": 0.8
+            },
+            "romantic_partner": "peer"
+          }
+        ],
+        "stderr": "ERROR:root:Not all job roles parsed correctly, counted 117 but parsed 116\nERROR:root:Missing job roles: ['Bookstore owner', 'Comic store owner', 'Customer Service', 'Stay-at-home Mom']\n"
+      },
+      {
+        "test_id": "tests.test_character_happiness_contracts.TestCharacterHappinessContracts.test_empty_relationships_have_finite_happiness",
+        "returncode": 0,
+        "outcome": "EXITED_ZERO",
+        "fatal_timeout": 20,
+        "timeout": 25,
+        "artifact_dir": "/workspace/scratch/issue-736/execution/happiness-validation/dev/children/child-uvarbxg5",
+        "traces": [
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "empty_relationships",
+            "family_members": [],
+            "happiness": 0.3610225808639045,
+            "motive_scores": {
+              "beauty": 5,
+              "community": 5,
+              "control": 5,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 5,
+              "luxury": 5,
+              "material_goods": 5,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 5,
+              "wealth": 5
+            },
+            "relationships": {},
+            "romantic_partner": null
+          }
+        ],
+        "stderr": "ERROR:root:Not all job roles parsed correctly, counted 117 but parsed 116\nERROR:root:Missing job roles: ['Bookstore owner', 'Comic store owner', 'Customer Service', 'Stay-at-home Mom']\n"
+      },
+      {
+        "test_id": "tests.test_character_happiness_contracts.TestCharacterHappinessContracts.test_no_partner_has_finite_happiness",
+        "returncode": 0,
+        "outcome": "EXITED_ZERO",
+        "fatal_timeout": 20,
+        "timeout": 25,
+        "artifact_dir": "/workspace/scratch/issue-736/execution/happiness-validation/dev/children/child-y9dv41qb",
+        "traces": [
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "no_partner",
+            "family_members": [],
+            "happiness": 0.3615446840436287,
+            "motive_scores": {
+              "beauty": 5,
+              "community": 5,
+              "control": 5,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 5,
+              "job_performance": 5,
+              "luxury": 5,
+              "material_goods": 5,
+              "mental_health": 5,
+              "shelter": 5,
+              "social_wellbeing": 5,
+              "stability": 5,
+              "success": 5,
+              "wealth": 5
+            },
+            "relationships": {
+              "peer": 0.8
+            },
+            "romantic_partner": null
+          }
+        ],
+        "stderr": "ERROR:root:Not all job roles parsed correctly, counted 117 but parsed 116\nERROR:root:Missing job roles: ['Bookstore owner', 'Comic store owner', 'Customer Service', 'Stay-at-home Mom']\n"
+      }
+    ]
+  },
+  "blocked-core": {
+    "command": {
+      "command": [
+        "/workspace/.venvs/issue726-core/bin/python",
+        "docs/planning/issue-736/execution/blocked/happiness-motive-satisfaction.py.txt"
+      ],
+      "cwd": "/workspace/tiny_village",
+      "profile": "core",
+      "env": {
+        "PYTHONPATH": "/workspace/tiny_village",
+        "TINY_TEST_ARTIFACT_DIR": "/workspace/scratch/issue-736/execution/happiness-validation/blocked-core/children"
+      },
+      "started_utc": "2026-10-22T04:20:08.542648+00:00",
+      "finished_utc": "2026-10-22T04:20:08.814049+00:00",
+      "returncode": 1
+    },
+    "captured_children": 1,
+    "cases": [
+      {
+        "test_id": "__main__.TestRequiredMotiveSatisfaction.test_basic_motive_satisfaction_changes_happiness",
+        "returncode": 1,
+        "outcome": "EXITED_NONZERO",
+        "fatal_timeout": 20,
+        "timeout": 25,
+        "artifact_dir": "/workspace/scratch/issue-736/execution/happiness-validation/blocked-core/children/child-ibi_ux6z",
+        "traces": [
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "basic_motive_satisfaction_2",
+            "family_members": [],
+            "happiness": 0.3610225808639045,
+            "motive_scores": {
+              "beauty": 5,
+              "community": 5,
+              "control": 5,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 2,
+              "job_performance": 5,
+              "luxury": 5,
+              "material_goods": 5,
+              "mental_health": 5,
+              "shelter": 2,
+              "social_wellbeing": 2,
+              "stability": 2,
+              "success": 5,
+              "wealth": 5
+            },
+            "relationships": {},
+            "romantic_partner": null
+          },
+          {
+            "attributes": {
+              "beauty": 50,
+              "community": 40,
+              "control": 50,
+              "hope": 40,
+              "job_performance": 50,
+              "material_goods": 50,
+              "mental_health": 40,
+              "social_wellbeing": 40,
+              "stability": 40,
+              "success": 50
+            },
+            "case": "basic_motive_satisfaction_8",
+            "family_members": [],
+            "happiness": 0.3610225808639045,
+            "motive_scores": {
+              "beauty": 5,
+              "community": 5,
+              "control": 5,
+              "family": 5,
+              "happiness": 5,
+              "health": 5,
+              "hope": 5,
+              "hunger": 8,
+              "job_performance": 5,
+              "luxury": 5,
+              "material_goods": 5,
+              "mental_health": 5,
+              "shelter": 8,
+              "social_wellbeing": 8,
+              "stability": 8,
+              "success": 5,
+              "wealth": 5
+            },
+            "relationships": {},
+            "romantic_partner": null
+          }
+        ],
+        "stderr": "ERROR:root:Not all job roles parsed correctly, counted 117 but parsed 116\nERROR:root:Missing job roles: ['Bookstore owner', 'Comic store owner', 'Customer Service', 'Stay-at-home Mom']\nTraceback (most recent call last):\n  File \"<string>\", line 15, in <module>\n  File \"<string>\", line 13, in _tiny_capture_run\n  File \"<string>\", line 77, in <module>\nAssertionError: ('required motive contribution missing', 0.3610225808639045, 0.3610225808639045)\n"
+      }
+    ]
+  }
+}

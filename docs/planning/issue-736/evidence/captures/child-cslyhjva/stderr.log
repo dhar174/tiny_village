@@ -1,0 +1,17 @@
+test_actual_module_with_wrong_expectations (candidate420.TestThatCanGenuinelyFail.test_actual_module_with_wrong_expectations)
+Test real modules with intentionally wrong expectations to demonstrate genuine failures. ... ok
+test_arithmetic_can_fail (candidate420.TestThatCanGenuinelyFail.test_arithmetic_can_fail)
+Test that shows our arithmetic tests can genuinely fail if broken. ... ok
+test_file_content_validation_can_fail (candidate420.TestThatCanGenuinelyFail.test_file_content_validation_can_fail)
+Test that shows our content validation can genuinely fail. ... ok
+test_module_functionality_with_wrong_expectations (candidate420.TestThatCanGenuinelyFail.test_module_functionality_with_wrong_expectations)
+Test actual module functionality with wrong expectations to show genuine failure capability. ... DEBUG:root:WorldState initialized with empty graph
+DEBUG:root:GraphAnalytics initialized with WorldState dependency
+ok
+test_wrong_file_structure_expectations (candidate420.TestThatCanGenuinelyFail.test_wrong_file_structure_expectations)
+Test file structure with wrong expectations to demonstrate genuine testing. ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.202s
+
+OK

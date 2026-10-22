@@ -1,0 +1,6 @@
+{
+  "returncode": 0,
+  "artifact_dir": "/workspace/scratch/issue-736/captures/child-f5lm5vii",
+  "stdout": "{\"tests\": 1, \"errors\": 0, \"failures\": 0, \"skips\": 0}\n",
+  "stderr": "test_utility_calculation_validation (candidate417.TestCountingFix.test_utility_calculation_validation)\nTest that validates utility calculation system with complex edge cases. ... WARNING:tiny_utility_functions:Using fallback Goal implementation in tiny_utility_functions\nDEBUG:root:WorldState initialized with empty graph\nDEBUG:root:GraphAnalytics initialized with WorldState dependency\nok\n\n----------------------------------------------------------------------\nRan 1 test in 0.154s\n\nOK\n"
+}

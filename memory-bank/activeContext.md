@@ -7,12 +7,15 @@
   #602/#609 and #733/#738 remain open. PR #798 retains current publication
   receipts separately from the frozen historical review package. No Project
   writes; configuration remains #737's pending handoff after retained HTTP 403.
-- TASK022 / #735 ready for review in maintainer-selected #703 under D028,
-  rebased head c65496d: one utility test module, documented retained behavior,
-  core CI inclusion. #714 closed as superseded with explanation. Local 69 tests
-  + three CLI probes pass; all eight hosted checks green. #735 closes after
-  #703 merges. Then #736 reconciles functional-test PRs, #737 assigns ownership/
-  merge ordering and Project configuration, and #738 gets separate human review.
+- TASK022 / #735 complete: #703 merged at 323dad6 and #735 closed; #714
+  remains superseded under D028. #798 merged at 11b6e93 with review fixes and
+  retained publication receipts. Required merged-main checks pass.
+- TASK023 / #736: D030 accepts scoped test reconciliation with explicit runtime
+  carry-forward. #804 holds21 new maintained methods; localcore72+3probes/dev20
+  pass. Runtime gaps remain #802/#218, #803/#139, #799/#741 and utilitydebt #774.
+  Runtime issue references/native follow-up ordering verified; #804 ready for
+  review. Merge/verification precede #736/candidate closure; no runtime repair
+  or #738 approval.
 
 - TASK020 / #732 is complete: dhar174 explicitly approved Phase 2 under D025.
   #732 and parent #723 are closed/completed with immutable decision links

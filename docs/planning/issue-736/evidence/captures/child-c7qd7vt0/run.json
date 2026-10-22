@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "test_id": "issue736-pr393-signatures-pr397-counting",
+  "source_sha256": "c5208033ca4055f6ffb196d6111e00cd41b3a177925e3d7fb5a1ef48b02310c0",
+  "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+  "cwd": "/workspace/tiny_village",
+  "pid": 184116,
+  "fatal_timeout": 20,
+  "timeout": 25,
+  "started_utc": "2026-10-22T02:22:39.099610+00:00",
+  "started_monotonic": 104551.956527888,
+  "returncode": 0,
+  "outcome": "EXITED_ZERO",
+  "watchdog_dump_observed": false,
+  "launched_monotonic": 104551.957049155,
+  "wait_started_monotonic": 104551.957199019,
+  "finished_utc": "2026-10-22T02:22:39.214018+00:00",
+  "finished_monotonic": 104552.070940802
+}
