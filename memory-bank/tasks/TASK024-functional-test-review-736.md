@@ -183,3 +183,12 @@ with evidence before implementation or closures.
   reviewer/merge sequence and Project configuration acceptance is not yet done.
 - Source/closure evidence: docs/planning/issue-736/post-merge/. Documentation
   closeout is on codex/issue-736-post-merge; runtime/runner/test files unchanged.
+
+## PR #805 review correction — 2026-10-22 America/New_York
+
+- Addressed Codex thread discussion_r4345899804: reconciled all four stale
+  no-closure statements in the walkthrough with the final D029/D030 closeout.
+- Labeled the preliminary queue/probe results as historical at11b6e93; the
+  completed review now points to the maintained-test and merged-source reports.
+- Documentation only. Verify local links, retained closure records, live issue/PR
+  states and unchanged tested-source hashes; no new tests or runtime rerun.

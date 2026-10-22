@@ -8,7 +8,7 @@
 - No additional pending task files.
 
 ## Completed
-- [TASK024](TASK024-functional-test-review-736.md) Functional-test consolidation (#736) - #804 merged at6cc576e; core72+3 probes/dev20 pass; #736 and9 superseded PRs closed under D030; runtime gaps open, next #737 (Updated: 2026-10-22 America/New_York)
+- [TASK024](TASK024-functional-test-review-736.md) Functional-test consolidation (#736) - #804 merged at6cc576e; core72+3 probes/dev20 pass; #736 and9 superseded PRs closed under D030; runtime gaps open, next #737; #805 walkthrough review corrected (Updated: 2026-10-22 America/New_York)
 - [TASK022](TASK022-utility-consolidation-735.md) Utility consolidation (#735) - #703 merged at 323dad6; #735 closed, merged-main required check passes (Updated: 2026-10-21 America/New_York)
 - [TASK021](TASK021-backlog-triage-734.md) Evidence-based backlog triage (#734) - Complete under D027; verified publication, #734 closed; #798 metadata/completion review fixes verified (78 offline cases) (Updated: 2026-10-21)
 - [TASK020](TASK020-phase2-gate-readiness.md) Phase 2 gate readiness (#732) - Complete under D025; #732/#723 closed, Phase 3 ready, Project fields pending 403 (Updated: 2026-10-21 America/New_York)
