@@ -100,3 +100,10 @@ and retain real alternative behavior under #741. A stale current/baseline
 byte-identity statement was also corrected. These are documentation corrections;
 validated test/runner source and all captured outcomes are unchanged. No second
 review or test rerun is claimed for this correction.
+
+## Publication
+
+Published as [draft PR #804](https://github.com/dhar174/tiny_village/pull/804).
+Evidence was linked on #736, #802/#803, #799 and #741, with candidate-specific
+handoff comments on all nine old PRs. Publication receipts are retained under
+execution/. No candidate, runtime issue, #736 or human gate is closed or approved.

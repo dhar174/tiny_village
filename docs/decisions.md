@@ -693,6 +693,9 @@ UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
   mapping omission; it is now explicit. The stale #349 byte-identity statement
   was corrected as a provenance issue. No runtime behavior or acceptance was
   repaired or waived by these documentation corrections.
+- **Publication:** draft PR #804 carries the test consolidation and evidence.
+  Required gap disposition remains for human review; all nine candidates and
+  #736 remain open. No acceptance exception is inferred from publication.
 - **Boundary:** Keep existing #736 acceptance and recorded failures intact;
   this supplies no approval of #737, phase gate #738, runtime repairs or broader
   gameplay/AI readiness. Evidence is in [the walkthrough](planning/issue-736/README.md).

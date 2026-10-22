@@ -1,0 +1,183 @@
+{
+  "readback": {
+    "p420": {
+      "number": 420,
+      "state": "OPEN",
+      "headRefOid": "264d07e660bb985abb15cc6daad3140959158063",
+      "isDraft": false,
+      "url": "https://github.com/dhar174/tiny_village/pull/420"
+    },
+    "p417": {
+      "number": 417,
+      "state": "OPEN",
+      "headRefOid": "4d0571405de40cef6bab8826b669cf8c89a5fd9b",
+      "isDraft": false,
+      "url": "https://github.com/dhar174/tiny_village/pull/417"
+    },
+    "p408": {
+      "number": 408,
+      "state": "OPEN",
+      "headRefOid": "72fc125ae0cdf4b68472c8646296e264b4af80d5",
+      "isDraft": false,
+      "url": "https://github.com/dhar174/tiny_village/pull/408"
+    },
+    "p406": {
+      "number": 406,
+      "state": "OPEN",
+      "headRefOid": "38b909b07d338f6acc3b82cd2b237cd77d720aa4",
+      "isDraft": false,
+      "url": "https://github.com/dhar174/tiny_village/pull/406"
+    },
+    "p404": {
+      "number": 404,
+      "state": "OPEN",
+      "headRefOid": "22f5b3b63f1d960321cb116fc5a04eece8cbc352",
+      "isDraft": true,
+      "url": "https://github.com/dhar174/tiny_village/pull/404"
+    },
+    "p397": {
+      "number": 397,
+      "state": "OPEN",
+      "headRefOid": "ec76a141e89d33b516d2df38d2418ba50ed937d3",
+      "isDraft": false,
+      "url": "https://github.com/dhar174/tiny_village/pull/397"
+    },
+    "p395": {
+      "number": 395,
+      "state": "OPEN",
+      "headRefOid": "d73a20465eba0e643583e87430a3154c71a46c75",
+      "isDraft": false,
+      "url": "https://github.com/dhar174/tiny_village/pull/395"
+    },
+    "p391": {
+      "number": 391,
+      "state": "OPEN",
+      "headRefOid": "311d65fedc38dbe4f19a9faf03d123419b85fd3d",
+      "isDraft": false,
+      "url": "https://github.com/dhar174/tiny_village/pull/391"
+    },
+    "p393": {
+      "number": 393,
+      "state": "OPEN",
+      "headRefOid": "e720cc6e45fe9788e2915c0bd33cf2cc1c25829b",
+      "isDraft": false,
+      "url": "https://github.com/dhar174/tiny_village/pull/393"
+    },
+    "p804": {
+      "number": 804,
+      "state": "OPEN",
+      "headRefOid": "bd513cef30a55c0a062d66d9d483e455dffcf24b",
+      "isDraft": true,
+      "url": "https://github.com/dhar174/tiny_village/pull/804"
+    },
+    "i736": {
+      "number": 736,
+      "state": "OPEN",
+      "url": "https://github.com/dhar174/tiny_village/issues/736"
+    },
+    "i738": {
+      "number": 738,
+      "state": "OPEN",
+      "url": "https://github.com/dhar174/tiny_village/issues/738"
+    },
+    "i802": {
+      "number": 802,
+      "state": "OPEN",
+      "url": "https://github.com/dhar174/tiny_village/issues/802"
+    },
+    "i803": {
+      "number": 803,
+      "state": "OPEN",
+      "url": "https://github.com/dhar174/tiny_village/issues/803"
+    },
+    "i799": {
+      "number": 799,
+      "state": "OPEN",
+      "url": "https://github.com/dhar174/tiny_village/issues/799"
+    },
+    "i741": {
+      "number": 741,
+      "state": "OPEN",
+      "url": "https://github.com/dhar174/tiny_village/issues/741"
+    },
+    "i774": {
+      "number": 774,
+      "state": "OPEN",
+      "url": "https://github.com/dhar174/tiny_village/issues/774"
+    }
+  },
+  "verified_comments": [
+    {
+      "comment_id": 6332775456,
+      "url": "https://github.com/dhar174/tiny_village/issues/736#issuecomment-6332775456",
+      "verified": true
+    },
+    {
+      "comment_id": 6332775949,
+      "url": "https://github.com/dhar174/tiny_village/issues/802#issuecomment-6332775949",
+      "verified": true
+    },
+    {
+      "comment_id": 6332776432,
+      "url": "https://github.com/dhar174/tiny_village/issues/803#issuecomment-6332776432",
+      "verified": true
+    },
+    {
+      "comment_id": 6332776919,
+      "url": "https://github.com/dhar174/tiny_village/issues/799#issuecomment-6332776919",
+      "verified": true
+    },
+    {
+      "comment_id": 6332777416,
+      "url": "https://github.com/dhar174/tiny_village/issues/741#issuecomment-6332777416",
+      "verified": true
+    },
+    {
+      "comment_id": 6332784491,
+      "url": "https://github.com/dhar174/tiny_village/pull/420#issuecomment-6332784491",
+      "verified": true
+    },
+    {
+      "comment_id": 6332784982,
+      "url": "https://github.com/dhar174/tiny_village/pull/417#issuecomment-6332784982",
+      "verified": true
+    },
+    {
+      "comment_id": 6332785619,
+      "url": "https://github.com/dhar174/tiny_village/pull/408#issuecomment-6332785619",
+      "verified": true
+    },
+    {
+      "comment_id": 6332786106,
+      "url": "https://github.com/dhar174/tiny_village/pull/406#issuecomment-6332786106",
+      "verified": true
+    },
+    {
+      "comment_id": 6332786537,
+      "url": "https://github.com/dhar174/tiny_village/pull/404#issuecomment-6332786537",
+      "verified": true
+    },
+    {
+      "comment_id": 6332787015,
+      "url": "https://github.com/dhar174/tiny_village/pull/397#issuecomment-6332787015",
+      "verified": true
+    },
+    {
+      "comment_id": 6332787505,
+      "url": "https://github.com/dhar174/tiny_village/pull/395#issuecomment-6332787505",
+      "verified": true
+    },
+    {
+      "comment_id": 6332787988,
+      "url": "https://github.com/dhar174/tiny_village/pull/391#issuecomment-6332787988",
+      "verified": true
+    },
+    {
+      "comment_id": 6332788457,
+      "url": "https://github.com/dhar174/tiny_village/pull/393#issuecomment-6332788457",
+      "verified": true
+    }
+  ],
+  "no_candidate_closed": true,
+  "no_gate_approved": true
+}

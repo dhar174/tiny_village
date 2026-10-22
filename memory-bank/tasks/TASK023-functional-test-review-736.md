@@ -1,6 +1,6 @@
 # TASK023 — Review functional-test PRs (#736)
 
-**Status:** In Progress — approved consolidation implemented; required runtime gaps await review  
+**Status:** In Progress — draft PR #804 published; required runtime gaps await human disposition  
 **Added:** 2026-10-21 America/New_York  
 **Updated:** 2026-10-22 America/New_York
 
@@ -115,3 +115,19 @@ with evidence before implementation or closures.
 | Tasks4–5 happiness + planner/graph | Passing ports retained; required acceptance partial |
 | Task6 local CI and evidence report | Local checks complete; blocker disposition pending |
 | Task7 publish/review and supersede | Publication pending; no closures |
+
+## Publication — 2026-10-22 America/New_York
+
+- Draft PR #804 published and attached. Fresh independent review found no
+  Critical issues; its alternative-action mapping gap and stale baseline
+  statement were corrected in bd513ce before publication. No test/runner
+  content changed in the correction.
+- Evidence comments link #736/#802/#803/#799/#741 and all nine candidates to
+  immutable replacement sources. All candidates and #736 remain open.
+- Required next human decision: review partial acceptance and select whether
+  failed requirements carry forward explicitly, runtime order changes for
+  scoped repairs, or consolidation merge is deferred. Recommended explicit
+  carry-forward remains a proposal, not a recorded approval.
+- Task7 publication complete; replacement merge, gap disposition and specific
+  superseding closures remain pending. No runtime repair or acceptance
+  exception is approved by this handoff.

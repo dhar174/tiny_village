@@ -10,7 +10,7 @@
 - TASK022 / #735 complete: #703 merged at 323dad6 and #735 closed; #714
   remains superseded under D028. #798 merged at 11b6e93 with review fixes and
   retained publication receipts. Required merged-main checks pass.
-- TASK023 / #736: D029 plan approved and implemented for review;21 new tests
+- TASK023 / #736: D029 plan implemented in draft PR #804;21 new tests
   pass in core/dev. Integrated local core72 tests+3 probes and dev20 pass;
   existing utility10 failures reproduce identically on exact main. Required
   full-Goal/motive/graph acceptance remains partial: #802/#803 new follow-ups,
