@@ -10,12 +10,12 @@
 - TASK022 / #735 complete: #703 merged at 323dad6 and #735 closed; #714
   remains superseded under D028. #798 merged at 11b6e93 with review fixes and
   retained publication receipts. Required merged-main checks pass.
-- TASK023 / #736: all nine dispositions selected under D029; final #393 answer
-  selects real graph/goal assertion salvage then superseding, replacing the
-  earlier rework/rebase choice. Consolidation plan dated 2026-10-22 awaits review.
-  Baseline main 11b6e93; six original candidate methods pass in retained probes.
-  Other findings retain their source-review/probe limits. No implementation,
-  rebase or closure; #737 and human gate #738 remain later steps.
+- TASK023 / #736: D029 plan approved and implemented for review;21 new tests
+  pass in core/dev. Integrated local core72 tests+3 probes and dev20 pass;
+  existing utility10 failures reproduce identically on exact main. Required
+  full-Goal/motive/graph acceptance remains partial: #802/#803 new follow-ups,
+  #799/#741/#774 preserved. Report docs/testing/issue-736-functional-test-consolidation.md.
+  No runtime repairs, candidate closures or #736 completion; #737/#738 remain separate.
 
 - TASK020 / #732 is complete: dhar174 explicitly approved Phase 2 under D025.
   #732 and parent #723 are closed/completed with immutable decision links

@@ -1,8 +1,8 @@
 # TASK023 — Review functional-test PRs (#736)
 
-**Status:** In Progress — all nine dispositions selected; consolidation plan awaiting review  
+**Status:** In Progress — approved consolidation implemented; required runtime gaps await review  
 **Added:** 2026-10-21 America/New_York  
-**Updated:** 2026-10-22 UTC
+**Updated:** 2026-10-22 America/New_York
 
 ## Request
 
@@ -88,3 +88,30 @@ with evidence before implementation or closures.
 | Prepare scoped consolidation plan | Complete; awaiting review | 2026-10-22 |
 | Implement and validate assertion consolidation | Not started | 2026-10-22 |
 | Publish replacement PR and verified closure crosslinks | Not started | 2026-10-22 |
+
+## Approved execution — 2026-10-22 America/New_York
+
+- User approved the plan and helpful subagents. Three scoped agents handled
+  Action/utility, happiness and graph/planner ports; parent handled provenance,
+  memory API, CI integration, report and publication.
+- Main and all candidate heads unchanged. Retained24 source snapshots/190
+  inventoried methods, distinguishing inherited assertions from PR deltas.
+- Added21 maintained methods; core/dev isolated runs pass. Integrated local core
+  72 tests+3 probes and dev20 tests pass. Existing40-method suite retains10
+  failures identically reproduced on exact main; #774 remains open.
+- Required runtime diagnostics remain failed: full Goal/Plan contracts #802,
+  additional motive contribution #803; graph/world identity #799 and replan
+  return contract #741 remain. No runtime repair, skip/xfail or fake planner.
+- Full report: docs/testing/issue-736-functional-test-consolidation.md. Raw
+  captures retained in a hashed archive; five initial graph-fixture failures,
+  excluded candidate interface misuse and duplicate validations are explicit.
+- #736 and all nine candidates stay open; replacement publication/review and
+  explicit blocker disposition remain. #737/#738 retain separate approval.
+
+| Execution subtask | Status |
+| --- | --- |
+| Task1 pin/map/source inventory | Complete |
+| Tasks2–3 Action/utility + memory ports | Implemented; targeted checks pass |
+| Tasks4–5 happiness + planner/graph | Passing ports retained; required acceptance partial |
+| Task6 local CI and evidence report | Local checks complete; blocker disposition pending |
+| Task7 publish/review and supersede | Publication pending; no closures |

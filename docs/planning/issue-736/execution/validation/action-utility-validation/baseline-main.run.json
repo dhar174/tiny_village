@@ -1,0 +1,74 @@
+{
+  "command": [
+    "/workspace/.venvs/issue726-core/bin/python",
+    "-m",
+    "unittest",
+    "-v",
+    "tests.test_actions",
+    "tests.test_tiny_utility_functions",
+    "tests.test_utility_with_real_classes",
+    "tests.test_issue_425_fix"
+  ],
+  "cwd": "/workspace/scratch/issue-736/execution/baseline-main",
+  "revision": "11b6e93595a70ce9f24cfb239a31ac873847ff56",
+  "exit_code": 1,
+  "source_sha256": {
+    "tests/test_actions.py": "4f34273317e0f9c9652b1a1c26a9f90f9d86038ebad5d7f6efc83426dc4bb7c3",
+    "tests/test_tiny_utility_functions.py": "58d58eb2b1491acc6eab2bd1ccb27542108553b2c367aef5ff25fe94ea01daaf",
+    "tests/test_utility_with_real_classes.py": "53a8872a1aa1d09828c0b01bbdbc310c1050206b6a71de800dfa5c306d46f954",
+    "tests/test_issue_425_fix.py": "05b73affdfc1b24a76613f07716c4c146f73690a6ff9050635750bb547ba1ac9"
+  },
+  "unsuccessful_tests": [
+    [
+      "ERROR",
+      "test_action_priority_in_goal_contexts",
+      "tests.test_tiny_utility_functions.TestTinyUtilityFunctions.test_action_priority_in_goal_contexts"
+    ],
+    [
+      "ERROR",
+      "test_calculate_action_utility_goal_effect_opposite_direction",
+      "tests.test_tiny_utility_functions.TestTinyUtilityFunctions.test_calculate_action_utility_goal_effect_opposite_direction"
+    ],
+    [
+      "ERROR",
+      "test_calculate_action_utility_with_goal_match",
+      "tests.test_tiny_utility_functions.TestTinyUtilityFunctions.test_calculate_action_utility_with_goal_match"
+    ],
+    [
+      "ERROR",
+      "test_calculate_action_utility_with_goal_no_match_effect",
+      "tests.test_tiny_utility_functions.TestTinyUtilityFunctions.test_calculate_action_utility_with_goal_no_match_effect"
+    ],
+    [
+      "ERROR",
+      "test_enhanced_mock_action_utility_calculation_compatibility",
+      "tests.test_tiny_utility_functions.TestTinyUtilityFunctions.test_enhanced_mock_action_utility_calculation_compatibility"
+    ],
+    [
+      "ERROR",
+      "test_enhanced_mock_goal_with_urgency",
+      "tests.test_tiny_utility_functions.TestTinyUtilityFunctions.test_enhanced_mock_goal_with_urgency"
+    ],
+    [
+      "ERROR",
+      "test_plan_utility_with_goal",
+      "tests.test_tiny_utility_functions.TestTinyUtilityFunctions.test_plan_utility_with_goal"
+    ],
+    [
+      "ERROR",
+      "test_realistic_action_scenario_with_enhanced_mocks",
+      "tests.test_tiny_utility_functions.TestTinyUtilityFunctions.test_realistic_action_scenario_with_enhanced_mocks"
+    ],
+    [
+      "ERROR",
+      "test_utility_evaluator_with_urgent_goal",
+      "tests.test_tiny_utility_functions.TestTinyUtilityFunctions.test_utility_evaluator_with_urgent_goal"
+    ],
+    [
+      "FAIL",
+      "test_mock_action_preserves_explicit_falsy_action_ids",
+      "tests.test_tiny_utility_functions.TestTinyUtilityFunctions.test_mock_action_preserves_explicit_falsy_action_ids"
+    ]
+  ],
+  "same_failure_ids_as_working_tree": true
+}

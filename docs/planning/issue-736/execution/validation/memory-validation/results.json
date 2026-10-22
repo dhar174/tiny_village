@@ -1,0 +1,41 @@
+{
+  "records": [
+    {
+      "profile": "core",
+      "python": "/workspace/.venvs/issue726-core/bin/python",
+      "command": [
+        "-m",
+        "unittest",
+        "-v",
+        "tests.test_memory_runtime",
+        "tests.test_lightweight_runtime.TestMinimalRunner"
+      ],
+      "tests_run": 14,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "exit_code": 0,
+      "stdout": "core.stdout",
+      "stderr": "core.stderr"
+    },
+    {
+      "profile": "dev",
+      "python": "/workspace/.venvs/issue726-dev/bin/python",
+      "command": [
+        "-m",
+        "unittest",
+        "-v",
+        "tests.test_memory_runtime",
+        "tests.test_lightweight_runtime.TestMinimalRunner"
+      ],
+      "tests_run": 14,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "exit_code": 0,
+      "stdout": "dev.stdout",
+      "stderr": "dev.stderr"
+    }
+  ],
+  "source_sha256": "75bb5eb2d987ad944de3ba82a3c9d6d1b31583289b2d303e1e7efbe9d06c25ab"
+}

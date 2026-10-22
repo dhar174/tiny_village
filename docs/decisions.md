@@ -678,6 +678,15 @@ UX/UI/aesthetic review; #731/#732 remain separate engineering/phase decisions.
   and helpful delegation, retaining its runtime-repair and closure boundaries.
 - **Status:** execution started; all nine dispositions selected. No candidate
   closure is permitted before its mapped evidence and replacement merge.
+- **Execution handoff:** 21 new maintained methods pass in core/dev; local
+  integrated profiles pass72 tests+3 probes (core) and20 tests (dev). Required
+  full-Goal/graph/motive contracts remain failed in retained reproductions;
+  #802/#803 record the newly demonstrated runtime gaps, with #799/#741/#774
+  preserved. No limitation acceptance or candidate/#736 closure is inferred.
+- **Execution ruling:** existing correct behavior is preserved with test-only
+  ports; no production change is manufactured for RED/GREEN. Failed required
+  runtime paths stay visible outside discovery as the approved plan requires.
+  Core utility Goal coverage is explicitly lightweight, not full Goal readiness.
 - **Boundary:** Keep existing #736 acceptance and recorded failures intact;
   this supplies no approval of #737, phase gate #738, runtime repairs or broader
   gameplay/AI readiness. Evidence is in [the walkthrough](planning/issue-736/README.md).

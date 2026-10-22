@@ -8,7 +8,7 @@
 
 **Tech stack:** Existing Python 3.12 locks, unittest/pytest, NetworkX MultiDiGraph, the durable subprocess capture helper and existing CI runner.
 
-**Spec:** [#736](https://github.com/dhar174/tiny_village/issues/736), [D029](../../decisions.md#d029--review-736-functional-test-pr-dispositions-step-by-step), and the [pinned walkthrough](../../planning/issue-736/README.md). D029 is the single decision record; all nine choices are selected. **This implementation plan awaits review.**
+**Spec:** [#736](https://github.com/dhar174/tiny_village/issues/736), [D029](../../decisions.md#d029--review-736-functional-test-pr-dispositions-step-by-step), and the [pinned walkthrough](../../planning/issue-736/README.md). D029 is the single decision record; all nine choices are selected. **Approved 2026-10-22 under D029; execution report linked below.**
 
 ## Global constraints
 
@@ -165,3 +165,13 @@ reproductions remain explicitly unfulfilled coverage.
 - [ ] Replacement publication and candidate closures occur in dependency order with verified crosslinks and original issues preserved.
 
 **Handoff:** Review this plan before implementation. The nine dispositions authorize the intended direction; they do not themselves establish that the ports pass or that any candidate is ready to close.
+
+## Execution status
+
+See [validation and handoff](../../testing/issue-736-functional-test-consolidation.md).
+Tasks1–3 implemented and validated. Tasks4–5 supply passing ports and retained
+required failures; acceptance remains partial. Task6 local core/dev profiles pass,
+with existing baseline failures and all strict diagnostic failures reported.
+Task7 publication is prepared for review; candidate closures await replacement
+merge and explicit disposition of the remaining required gaps. Approval to
+implement did not waive them or authorize runtime repairs.

@@ -1,10 +1,11 @@
 # #736 — Functional-test PR walkthrough
 
-**Walkthrough complete; all nine dispositions selected under D029, not yet applied.** Baseline: merged
+**Approved consolidation implemented for review; acceptance remains partial under D029.** Baseline: merged
 main `11b6e93595a70ce9f24cfb239a31ac873847ff56`, including #703/#798. #735 is
 closed; #736's prerequisites are closed. #737 and human gate #738 remain later
-steps. No test/runtime changes, PR closures, rebases or GitHub metadata writes
-have been performed for this walkthrough.
+steps. Test ports and local selectors are implemented; runtime files remain unchanged.
+No candidate closure or rebase has been applied. New runtime follow-ups #802/#803
+track demonstrated gaps; see the [validation report](../../testing/issue-736-functional-test-consolidation.md).
 
 The user requested a step-by-step review of all nine candidates. Preserve
 choices in the single docs/decisions.md file after the user answers. Current
@@ -43,7 +44,7 @@ Options:
 
 **User choice: split/salvage, then supersede after validation**, recorded in
 [D029](../../decisions.md#d029--review-736-functional-test-pr-dispositions-step-by-step).
-No implementation or closure yet; finish the walkthrough before execution.
+The walkthrough and plan approval are complete. Implementation evidence and remaining blockers are in the validation report; no closures.
 
 ## Remaining review queue — preliminary source findings only
 
@@ -62,7 +63,7 @@ Broken required behavior remains a failure or tracked blocker. #393 is selected
 for salvage of real graph/goal contract tests, then superseding after validation;
 the latest answer replaces the earlier rework/rebase choice (D029). The
 [consolidation plan](../../superpowers/plans/2026-10-22-issue-736-functional-test-consolidation.md)
-awaits review before implementation or closures.
+was approved and executed for review. Required failed contracts remain open; no closures.
 
 | PR | Source finding; selected dispositions recorded above |
 | --- | --- |
@@ -93,5 +94,5 @@ injected subtest failures are expected evidence of the counter defect, not passi
 product tests. None of these runs validates an entire other PR. All three captures
 use the established 20s diagnostic / 25s parent deadline, with zero timeouts.
 Remaining findings are source-reviewed, not executed. Production/graph/gameplay acceptance and existing recorded failures
-remain unchanged. The walkthrough is complete. The consolidation plan is proposed; no specific
-superseding action or test implementation has been applied.
+remain unchanged. The walkthrough and approved test implementation are complete for review; required
+acceptance remains partial. No superseding closure has been applied.

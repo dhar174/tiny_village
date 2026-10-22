@@ -60,3 +60,21 @@ Main remains `11b6e93595a70ce9f24cfb239a31ac873847ff56`. All nine candidate head
 ## Execution and closure rules
 
 Each row gains exact executed selectors/commands and results in the validation report before it counts as verified. New regression tests are allowed to pass existing correct behavior; no production change is needed merely to manufacture RED/GREEN. Required broken behavior remains a failed reproduction under a named blocker, not skip/xfail or fabricated green evidence. All nine dispositions are selected; none is applied. #736 remains open until required coverage gaps receive an explicit disposition. Candidate closures follow replacement merge and fresh-head checks; #737/#738 remain separate.
+
+## Execution outcome — 2026-10-22 America/New_York
+
+The [validation report](../../testing/issue-736-functional-test-consolidation.md) supplies exact commands, result counts, limitations and blocker classification for each domain above. It is the evidence reference for this map; no candidate is closed.
+
+| Candidate / domain | Executed destination and disposition status |
+| --- | --- |
+| #420 | tests.test_action_contracts (3 methods) core/dev pass; all unique State/Action/Condition assertions accounted for. |
+| #417 | tests.test_utility_contracts (5 methods) core/dev pass; existing Action/real-class utility/#425 cases pass. Existing tiny-utility 10 failures reproduce on exact main and remain #774; happiness/memory/building requirements map separately below. |
+| #408 | No extra Action/utility behavior found. Character construction is exercised by the real fixtures; memory record intent is covered by 14-method memory/minimal selection; building map identity now explicit in existing root test (4/4 visual). Happiness remains blocked as recorded. |
+| #406 | New TestLazyMemory.test_public_memory_classes_are_available_without_initializing_services, with full memory/minimal selection14/14 core/dev. Semantic/full-memory readiness is unverified. |
+| #404 | Controlled nested-error worker correctly FAILS; full traceback retained and outer evidence check exits0. Maintained runner profile tests pass. Obsolete helper is not restored. |
+| #397 | Maintained CI-runner method/subtest/error counting executes in dev profile20/20; original expected failing-subtest diagnostic retained. |
+| #391 | Seven real happiness methods pass core/dev; strict added motive-satisfaction requirement fails at unchanged numeric result. New #803 retains required gap; root source check is not removed. |
+| #395 | Five supported Plan/planner primitives pass core/dev. Full Goal evaluation/feasibility gaps are #802; replan None expectation is tracked under #741. evaluate_utility(Plan) is excluded candidate misuse, not a production defect. |
+| #393 | Supported contextual cost/heuristic and real action selection pass. Full Goal satisfied/reachable/cost outcomes remain #802; real graph state/action/world/identity failures remain #799. Negative no-plan observations meet their expectation but fail positive completion controls. |
+
+Core integrated profile:72 tests+3 CLI probes pass; dev profile20 tests pass. These green profiles do not include the explicitly failed text reproductions and do not satisfy those requirements. Every required failure remains named; closure needs the separate reviewed acceptance described in the report.

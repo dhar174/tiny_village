@@ -1,7 +1,7 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK023](TASK023-functional-test-review-736.md) Functional-test PR walkthrough (#736) - All nine dispositions selected under D029; consolidation plan awaiting review, no implementation (Updated: 2026-10-22 UTC)
+- [TASK023](TASK023-functional-test-review-736.md) Functional-test PR walkthrough (#736) - Approved test ports implemented; local core72+3 probes/dev20 pass; required runtime gaps #802/#803/#799 await review, no closures (Updated: 2026-10-22 America/New_York)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
 ## Pending

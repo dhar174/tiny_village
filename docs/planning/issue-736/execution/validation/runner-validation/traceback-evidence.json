@@ -1,0 +1,63 @@
+{
+  "kind": "expected-error diagnostic",
+  "fixture_errors": 1,
+  "outer_validation_exit": 0,
+  "full_traceback_retained": true,
+  "command": [
+    "/workspace/.venvs/issue726-dev/bin/python",
+    "scripts/run_ci_checks.py",
+    "--worker",
+    "unittest",
+    "--report",
+    "/workspace/scratch/issue-736/execution/runner-validation/traceback-report.json",
+    "/workspace/scratch/issue-736/execution/runner-validation/test_traceback_fixture.py"
+  ],
+  "batch": {
+    "status": "FAIL",
+    "command": [
+      "/workspace/.venvs/issue726-dev/bin/python",
+      "scripts/run_ci_checks.py",
+      "--worker",
+      "unittest",
+      "--report",
+      "/workspace/scratch/issue-736/execution/runner-validation/traceback-report.json",
+      "/workspace/scratch/issue-736/execution/runner-validation/test_traceback_fixture.py"
+    ],
+    "parent_timeout": 25,
+    "started_utc": "2026-10-22T04:19:44.244111+00:00",
+    "exit_code": 1,
+    "launcher": [
+      "/workspace/.venvs/issue726-dev/bin/python",
+      "-B",
+      "-c",
+      "import os; from scripts.run_ci_checks import register_group; register_group('/workspace/scratch/issue-736/execution/runner-validation/traceback-batch/groups',193552); os.execvp('/workspace/.venvs/issue726-dev/bin/python',['/workspace/.venvs/issue726-dev/bin/python', 'scripts/run_ci_checks.py', '--worker', 'unittest', '--report', '/workspace/scratch/issue-736/execution/runner-validation/traceback-report.json', '/workspace/scratch/issue-736/execution/runner-validation/test_traceback_fixture.py'])"
+    ],
+    "pid": 193569,
+    "terminated_groups": [],
+    "report": {
+      "kind": "unittest",
+      "status": "FAIL",
+      "counts": {
+        "tests_run": 1,
+        "failures": 0,
+        "errors": 1,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      }
+    },
+    "finished_utc": "2026-10-22T04:19:44.409107+00:00"
+  },
+  "report": {
+    "kind": "unittest",
+    "status": "FAIL",
+    "counts": {
+      "tests_run": 1,
+      "failures": 0,
+      "errors": 1,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0
+    }
+  }
+}
