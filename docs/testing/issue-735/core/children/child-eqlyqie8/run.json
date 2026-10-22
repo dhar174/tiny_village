@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "test_id": "tests.test_lightweight_runtime.TestHeadlessRuntime.test_controller_creates_real_characters_without_rendering",
+  "source_sha256": "fbf7b286849ad1e1a3544149f6fa20a929748c4564160dc7803e709bf6fdea7e",
+  "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+  "cwd": "/workspace/tiny_village-735",
+  "pid": 167059,
+  "fatal_timeout": 20,
+  "timeout": 25,
+  "started_utc": "2026-10-21T23:19:48.092176+00:00",
+  "started_monotonic": 93580.949088015,
+  "returncode": 0,
+  "outcome": "EXITED_ZERO",
+  "watchdog_dump_observed": false,
+  "launched_monotonic": 93580.949602572,
+  "wait_started_monotonic": 93580.949714679,
+  "finished_utc": "2026-10-21T23:19:48.457046+00:00",
+  "finished_monotonic": 93581.313972107
+}

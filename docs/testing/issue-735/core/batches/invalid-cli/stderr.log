@@ -1,0 +1,3 @@
+usage: main.py [-h] [--mode {visual,minimal,test}] [--characters CHARACTERS]
+               [--no-llm] [--fps FPS] [--headless] [--verbose]
+main.py: error: --headless requires --mode minimal (or test); visual mode needs a renderer

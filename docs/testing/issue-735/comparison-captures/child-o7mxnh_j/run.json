@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "test_id": "issue735-pr714-candidate",
+  "source_sha256": "78f501f9782c428edc7a7e31c0afc7b8b32c9823729ee4f1c6ae35ec81f54f11",
+  "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+  "cwd": "/workspace/tiny_village",
+  "pid": 165946,
+  "fatal_timeout": 20,
+  "timeout": 25,
+  "started_utc": "2026-10-21T23:16:16.677858+00:00",
+  "started_monotonic": 93369.534771944,
+  "returncode": 0,
+  "outcome": "EXITED_ZERO",
+  "watchdog_dump_observed": false,
+  "launched_monotonic": 93369.535135215,
+  "wait_started_monotonic": 93369.535236265,
+  "finished_utc": "2026-10-21T23:16:16.741892+00:00",
+  "finished_monotonic": 93369.598809564
+}

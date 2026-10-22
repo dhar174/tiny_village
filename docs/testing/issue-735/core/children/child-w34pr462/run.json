@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "test_id": "tests.test_lightweight_runtime.TestHeadlessRuntime.test_headless_checkpoint_clock_does_not_start_already_due",
+  "source_sha256": "a942af1996df96406fbc0c4c6274656e7e13bc3fc0d330d7b15ecb3de7c12830",
+  "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+  "cwd": "/workspace/tiny_village-735",
+  "pid": 167062,
+  "fatal_timeout": 20,
+  "timeout": 25,
+  "started_utc": "2026-10-21T23:19:48.457875+00:00",
+  "started_monotonic": 93581.314787503,
+  "returncode": 0,
+  "outcome": "EXITED_ZERO",
+  "watchdog_dump_observed": false,
+  "launched_monotonic": 93581.31527579,
+  "wait_started_monotonic": 93581.315420176,
+  "finished_utc": "2026-10-21T23:19:48.772596+00:00",
+  "finished_monotonic": 93581.629522371
+}

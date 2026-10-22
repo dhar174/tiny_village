@@ -1,0 +1,24 @@
+test_basic_state_restores_without_importing_ai (tests.test_memory_runtime.TestBasicMemory.test_basic_state_restores_without_importing_ai) ... ok
+test_complete_real_characters_keep_independent_basic_memories (tests.test_memory_runtime.TestBasicMemory.test_complete_real_characters_keep_independent_basic_memories) ... ok
+test_full_construction_is_lazy_and_missing_service_preserves_cause (tests.test_memory_runtime.TestBasicMemory.test_full_construction_is_lazy_and_missing_service_preserves_cause) ... ok
+test_loaded_flat_store_obeys_receiving_basic_mode (tests.test_memory_runtime.TestBasicMemory.test_loaded_flat_store_obeys_receiving_basic_mode) ... ok
+test_modes_and_semantic_operations_fail_explicitly (tests.test_memory_runtime.TestBasicMemory.test_modes_and_semantic_operations_fail_explicitly) ... ok
+test_real_records_retain_fields_and_evict_oldest (tests.test_memory_runtime.TestBasicMemory.test_real_records_retain_fields_and_evict_oldest) ... ok
+test_import_does_not_initialize_ai (tests.test_memory_runtime.TestLazyMemory.test_import_does_not_initialize_ai) ... ok
+test_public_integration_helper_preserves_requested_lazy_ai (tests.test_memory_runtime.TestLazyMemory.test_public_integration_helper_preserves_requested_lazy_ai) ... ok
+test_requested_llm_remains_lazy_and_observable (tests.test_memory_runtime.TestLazyMemory.test_requested_llm_remains_lazy_and_observable) ... ok
+test_strategy_without_llm_does_not_import_ai (tests.test_memory_runtime.TestLazyMemory.test_strategy_without_llm_does_not_import_ai) ... ok
+test_configured_ai_load_failure_is_recorded_and_not_retried_per_turn (tests.test_lightweight_runtime.TestHeadlessRuntime.test_configured_ai_load_failure_is_recorded_and_not_retried_per_turn) ... ok
+test_configured_ai_reuses_ready_real_provider (tests.test_lightweight_runtime.TestHeadlessRuntime.test_configured_ai_reuses_ready_real_provider) ... ok
+test_controller_creates_real_characters_without_rendering (tests.test_lightweight_runtime.TestHeadlessRuntime.test_controller_creates_real_characters_without_rendering) ... ok
+test_headless_checkpoint_clock_does_not_start_already_due (tests.test_lightweight_runtime.TestHeadlessRuntime.test_headless_checkpoint_clock_does_not_start_already_due) ... ok
+test_invalid_character_input_raises_instead_of_exiting_process (tests.test_lightweight_runtime.TestHeadlessRuntime.test_invalid_character_input_raises_instead_of_exiting_process) ... ok
+test_required_character_failure_is_not_replaced_by_a_fake (tests.test_lightweight_runtime.TestHeadlessRuntime.test_required_character_failure_is_not_replaced_by_a_fake) ... ok
+test_demo_returns_real_registered_state_and_memories (tests.test_lightweight_runtime.TestMinimalRunner.test_demo_returns_real_registered_state_and_memories) ... ok
+test_invalid_visual_headless_and_empty_minimal_fail_before_imports (tests.test_lightweight_runtime.TestMinimalRunner.test_invalid_visual_headless_and_empty_minimal_fail_before_imports) ... ok
+test_required_demo_failure_produces_nonzero_cli_result (tests.test_lightweight_runtime.TestMinimalRunner.test_required_demo_failure_produces_nonzero_cli_result) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 5.398s
+
+OK

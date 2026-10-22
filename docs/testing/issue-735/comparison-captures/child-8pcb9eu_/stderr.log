@@ -1,0 +1,15 @@
+test_clamped_int_score_init (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_init) ... ok
+test_clamped_int_score_outside_bounds (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_outside_bounds) ... ok
+test_clamped_int_score_repr_str (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_repr_str) ... ok
+test_clamped_int_score_setters (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_setters) ... ok
+test_clamped_int_score_within_bounds (candidate_tests.TestTinyUtilFuncs.test_clamped_int_score_within_bounds) ... ok
+test_is_numeric_negative (candidate_tests.TestTinyUtilFuncs.test_is_numeric_negative) ... ok
+test_is_numeric_none (candidate_tests.TestTinyUtilFuncs.test_is_numeric_none) ... ok
+test_is_numeric_positive (candidate_tests.TestTinyUtilFuncs.test_is_numeric_positive) ... ok
+test_tweener_boundaries (candidate_tests.TestTinyUtilFuncs.test_tweener_boundaries) ... ok
+test_tweener_interpolation (candidate_tests.TestTinyUtilFuncs.test_tweener_interpolation) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.000s
+
+OK

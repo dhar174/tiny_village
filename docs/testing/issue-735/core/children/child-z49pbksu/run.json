@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "test_id": "tests.test_memory_runtime.TestBasicMemory.test_loaded_flat_store_obeys_receiving_basic_mode",
+  "source_sha256": "7378793e134e82d101b4a3a1f46aa540b3e565ee74329e7aaf4cde228821fc29",
+  "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+  "cwd": "/workspace/tiny_village-735",
+  "pid": 167016,
+  "fatal_timeout": 20,
+  "timeout": 25,
+  "started_utc": "2026-10-21T23:19:45.602654+00:00",
+  "started_monotonic": 93578.459566593,
+  "returncode": 0,
+  "outcome": "EXITED_ZERO",
+  "watchdog_dump_observed": false,
+  "launched_monotonic": 93578.46019795,
+  "wait_started_monotonic": 93578.46037183,
+  "finished_utc": "2026-10-21T23:19:45.867382+00:00",
+  "finished_monotonic": 93578.724320127
+}

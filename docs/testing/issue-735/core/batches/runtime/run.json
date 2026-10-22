@@ -1,0 +1,39 @@
+{
+  "status": "PASS",
+  "command": [
+    "/workspace/.venvs/issue726-core/bin/python",
+    "-B",
+    "/workspace/tiny_village-735/scripts/run_ci_checks.py",
+    "--worker",
+    "unittest",
+    "--report",
+    "/workspace/tiny_village-735/docs/testing/issue-735/core/batches/runtime/result.json",
+    "tests.test_memory_runtime",
+    "tests.test_lightweight_runtime.TestHeadlessRuntime",
+    "tests.test_lightweight_runtime.TestMinimalRunner"
+  ],
+  "parent_timeout": 120,
+  "started_utc": "2026-10-21T23:19:44.740430+00:00",
+  "exit_code": 0,
+  "launcher": [
+    "/workspace/.venvs/issue726-core/bin/python",
+    "-B",
+    "-c",
+    "import os; from scripts.run_ci_checks import register_group; register_group('/workspace/tiny_village-735/docs/testing/issue-735/core/batches/runtime/groups',166986); os.execvp('/workspace/.venvs/issue726-core/bin/python',['/workspace/.venvs/issue726-core/bin/python', '-B', '/workspace/tiny_village-735/scripts/run_ci_checks.py', '--worker', 'unittest', '--report', '/workspace/tiny_village-735/docs/testing/issue-735/core/batches/runtime/result.json', 'tests.test_memory_runtime', 'tests.test_lightweight_runtime.TestHeadlessRuntime', 'tests.test_lightweight_runtime.TestMinimalRunner'])"
+  ],
+  "pid": 166995,
+  "terminated_groups": [],
+  "report": {
+    "kind": "unittest",
+    "status": "PASS",
+    "counts": {
+      "tests_run": 19,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0
+    }
+  },
+  "finished_utc": "2026-10-21T23:19:50.265468+00:00"
+}

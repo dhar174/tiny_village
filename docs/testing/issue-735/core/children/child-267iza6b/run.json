@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "test_id": "tests.test_lightweight_runtime.TestHeadlessRuntime.test_required_character_failure_is_not_replaced_by_a_fake",
+  "source_sha256": "ead0cbbe97f76f73a5ca3039fc41b950945d57a153c9c9b6806b77369a2c0efc",
+  "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+  "cwd": "/workspace/tiny_village-735",
+  "pid": 167068,
+  "fatal_timeout": 20,
+  "timeout": 25,
+  "started_utc": "2026-10-21T23:19:49.138978+00:00",
+  "started_monotonic": 93581.99589021,
+  "returncode": 0,
+  "outcome": "EXITED_ZERO",
+  "watchdog_dump_observed": false,
+  "launched_monotonic": 93581.996728459,
+  "wait_started_monotonic": 93581.996948007,
+  "finished_utc": "2026-10-21T23:19:49.504451+00:00",
+  "finished_monotonic": 93582.361377428
+}

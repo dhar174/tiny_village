@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "test_id": "tests.test_lightweight_runtime.TestMinimalRunner.test_demo_returns_real_registered_state_and_memories",
+  "source_sha256": "cadd9353808108d293d0a26a50a12379e5b08be815d7bd4abf83678aeb240cc3",
+  "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+  "cwd": "/workspace/tiny_village-735",
+  "pid": 167071,
+  "fatal_timeout": 20,
+  "timeout": 25,
+  "started_utc": "2026-10-21T23:19:49.505225+00:00",
+  "started_monotonic": 93582.362139283,
+  "returncode": 0,
+  "outcome": "EXITED_ZERO",
+  "watchdog_dump_observed": false,
+  "launched_monotonic": 93582.362819868,
+  "wait_started_monotonic": 93582.363036351,
+  "finished_utc": "2026-10-21T23:19:49.920603+00:00",
+  "finished_monotonic": 93582.777528419
+}

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "test_id": "tests.test_lightweight_runtime.TestHeadlessRuntime.test_invalid_character_input_raises_instead_of_exiting_process",
+  "source_sha256": "bcd525602105dba6221e3e285e55836a744e97862bcd28710b49d59c175dae08",
+  "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+  "cwd": "/workspace/tiny_village-735",
+  "pid": 167065,
+  "fatal_timeout": 20,
+  "timeout": 25,
+  "started_utc": "2026-10-21T23:19:48.773305+00:00",
+  "started_monotonic": 93581.630217767,
+  "returncode": 0,
+  "outcome": "EXITED_ZERO",
+  "watchdog_dump_observed": false,
+  "launched_monotonic": 93581.630738423,
+  "wait_started_monotonic": 93581.630845282,
+  "finished_utc": "2026-10-21T23:19:49.138224+00:00",
+  "finished_monotonic": 93581.995150297
+}

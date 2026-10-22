@@ -1,0 +1,23 @@
+test_cancellation_retains_evidence_and_cleans_up (tests.test_ci_checks.TestCIChecks.test_cancellation_retains_evidence_and_cleans_up) ... ok
+test_child_written_probe_reports_require_complete_integer_exit_codes (tests.test_ci_checks.TestCIChecks.test_child_written_probe_reports_require_complete_integer_exit_codes) ... ok
+test_empty_suite_cannot_pass (tests.test_ci_checks.TestCIChecks.test_empty_suite_cannot_pass) ... ok
+test_failed_subtests_are_not_reported_as_extra_methods (tests.test_ci_checks.TestCIChecks.test_failed_subtests_are_not_reported_as_extra_methods) ... ok
+test_failing_and_erroring_tests_fail_the_gate (tests.test_ci_checks.TestCIChecks.test_failing_and_erroring_tests_fail_the_gate) ... ok
+test_import_error_is_a_reported_failure (tests.test_ci_checks.TestCIChecks.test_import_error_is_a_reported_failure) ... ok
+test_invalid_profile_is_an_argument_error (tests.test_ci_checks.TestCIChecks.test_invalid_profile_is_an_argument_error) ... ok
+test_missing_or_incomplete_report_cannot_pass (tests.test_ci_checks.TestCIChecks.test_missing_or_incomplete_report_cannot_pass) ... ok
+test_nested_process_groups_are_cleaned_after_outer_timeout (tests.test_ci_checks.TestCIChecks.test_nested_process_groups_are_cleaned_after_outer_timeout) ... ok
+test_nested_process_groups_are_cleaned_after_worker_watchdog_exit (tests.test_ci_checks.TestCIChecks.test_nested_process_groups_are_cleaned_after_worker_watchdog_exit) ... ok
+test_profile_audit_rejects_visual_package_in_core (tests.test_ci_checks.TestCIChecks.test_profile_audit_rejects_visual_package_in_core) ... ok
+test_pytest_counts_parameterized_cases (tests.test_ci_checks.TestCIChecks.test_pytest_counts_parameterized_cases) ... ok
+test_pytest_expected_failure_is_reported (tests.test_ci_checks.TestCIChecks.test_pytest_expected_failure_is_reported) ... ok
+test_pytest_unexpected_pass_cannot_pass (tests.test_ci_checks.TestCIChecks.test_pytest_unexpected_pass_cannot_pass) ... ok
+test_skipped_suite_cannot_pass (tests.test_ci_checks.TestCIChecks.test_skipped_suite_cannot_pass) ... ok
+test_success_counts_real_methods (tests.test_ci_checks.TestCIChecks.test_success_counts_real_methods) ... ok
+test_success_report_cannot_override_nonzero_exit (tests.test_ci_checks.TestCIChecks.test_success_report_cannot_override_nonzero_exit) ... ok
+test_timeout_kills_owned_descendants_and_preserves_unrelated_process (tests.test_ci_checks.TestCIChecks.test_timeout_kills_owned_descendants_and_preserves_unrelated_process) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 12.433s
+
+OK

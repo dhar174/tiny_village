@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "test_id": "tests.test_memory_runtime.TestLazyMemory.test_public_integration_helper_preserves_requested_lazy_ai",
+  "source_sha256": "17545d6c0e238cb8d476a527fb02545747217c1520515268cefecf7408bd2cb7",
+  "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+  "cwd": "/workspace/tiny_village-735",
+  "pid": 167044,
+  "fatal_timeout": 20,
+  "timeout": 25,
+  "started_utc": "2026-10-21T23:19:46.414272+00:00",
+  "started_monotonic": 93579.271184336,
+  "returncode": 0,
+  "outcome": "EXITED_ZERO",
+  "watchdog_dump_observed": false,
+  "launched_monotonic": 93579.271640436,
+  "wait_started_monotonic": 93579.271734486,
+  "finished_utc": "2026-10-21T23:19:46.678789+00:00",
+  "finished_monotonic": 93579.535715692
+}
