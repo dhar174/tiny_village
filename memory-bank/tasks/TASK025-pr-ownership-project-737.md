@@ -22,9 +22,11 @@ Implement the approved #737 coordination plan; review all 26 PRs, investigate fi
 - Created #806 access blocker (parent737), #807 helper contracts (parent585), #808 prompt failures (parent137), #809 graph coverage (parent222), preserving gate order. Owners737/585/137/222 are blocked by their respective children. Original assignees/parents/bodies preserved.
 - Five disposition recommendations prepared; no PR rewrite/closure. Core72+3 CLI probes and cache27 pass. Offline synchronization32 and ordering11 pass; failed runtime criteria under807/808 and invalid original graph fixture remain captured.
 - Independent read-only review supplied two Important findings. Fix pass added owner blockers and required/documented edit window; remote API has no CAS. A controlled race-boundary test explicitly demonstrates the remaining API limitation. New-item reads now avoid unrelated private Project permissions.
-- Live prepare passes repository source guards then Project403. #737/#806 publication verification and #738 human decision remain pending. Portable package and focused review PR being prepared.
+- Live prepare passes repository source guards then Project403. #737/#806 publication verification and #738 human decision remain pending. Portable package published in draft PR #810: https://github.com/dhar174/tiny_village/pull/810. Human disposition/configuration review and authenticated publication remain pending.
 - Technical ruling: preserve non-managed Status; an open issue with Done-like Status blocks prepare for review. No automatic status or phase-decision repair.
 - Technical ruling: a failed/unacknowledged write requires inspect and a newly reviewed plan/checkpoint; do not infer ownership of ambiguous writes or silently retry.
 
 - Portable archive extracts and validates outside Git on Linux. Deliberately modified preview/capture and missing hash manifest are rejected; the missing-manifest weakness was first reproduced, then corrected. Native Windows and real Project adapter behavior remain unverified.
 - All145 retained runtime/runner/lock file hashes were compared against git show4821378; zero mismatches.
+
+- Draft PR #810 published and attached to the task; implementation commit ad58fd0. No #737/#806/#738 closure or PR disposition. Hosted checks were queued at publication; local checks/evidence are the verified result.
