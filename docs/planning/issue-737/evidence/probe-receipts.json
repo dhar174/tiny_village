@@ -1,0 +1,57 @@
+{
+  "source_revision": "48213783e2ee0864594af4a3f26667e1269d394a",
+  "started_by": "coordinator",
+  "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+  "receipts": [
+    {
+      "probe": "cache",
+      "exit_code": 0,
+      "artifact_dir": "evidence/captures/child-tpx94gg7",
+      "timeout": false,
+      "source_sha256": "8ca9eb8cf11e765857afcdfa733f40acab5c0b0826697d9f3aa0becdc6d7ff40"
+    },
+    {
+      "probe": "dependency",
+      "exit_code": 0,
+      "artifact_dir": "evidence/captures/child-lwzir26b",
+      "timeout": false,
+      "source_sha256": "cf0869b3873c9cc76bf7d2b7669fbeaf5f271975c0bd3e698669c615c7e2cb92"
+    },
+    {
+      "probe": "distance",
+      "exit_code": 1,
+      "artifact_dir": "evidence/captures/child-i7wvur62",
+      "timeout": false,
+      "source_sha256": "651f4b71475b98d0c48439987b6892fde4f523372b49897240383792d931e629"
+    },
+    {
+      "probe": "helper_failure",
+      "exit_code": 1,
+      "artifact_dir": "evidence/captures/child-hqlgsjo9",
+      "timeout": false,
+      "source_sha256": "24018c1c804d6b3813a061a950aa31590d19a506ee39748efae03a3dcd4846c7"
+    },
+    {
+      "probe": "helper_selection",
+      "exit_code": 0,
+      "artifact_dir": "evidence/captures/child-p_dqqjf2",
+      "timeout": false,
+      "source_sha256": "2e70a92130429e394b0569d3d420cdad1d3eb7308dccabe53d3c8636ecc2a1c4"
+    },
+    {
+      "probe": "prompt_failure",
+      "exit_code": 1,
+      "artifact_dir": "evidence/captures/child-h2vcac9l",
+      "timeout": false,
+      "source_sha256": "a15e71a42bb6723106f0c14283a7047a0595ca5635ebd7bb996e37dd99b87bb0"
+    },
+    {
+      "probe": "distance_isolated_locations",
+      "exit_code": 0,
+      "artifact_dir": "evidence/captures/child-e84_y3eh",
+      "timeout": false,
+      "source_sha256": "e9b851eeb8f6479b6b3639684829cbeda87ac513ec795c3160ad9fe766311f3d",
+      "initial_probe_classification": "retained invalid fixture assumption, not a demonstrated runtime defect"
+    }
+  ]
+}

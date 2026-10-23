@@ -1,6 +1,7 @@
 ## Tasks Index
 
 ## In Progress
+- [TASK025](TASK025-pr-ownership-project-737.md) PR ownership and Project configuration (#737) - 332 issues/26 PRs inventoried; draft PR #810 carries disposition review and portable sync package; Project403 blocks publication (Updated: 2026-10-22 UTC)
 - [TASK023](TASK023-zcode-specialist-team.md) Zcode specialist team - nine read-only specialist definitions + canonical coordination policy created, entry points wired, installed to ~/.zcode/agents; static checks + independent review pass, fixes applied; runtime invocation re-verification pending fresh session (Updated: 2026-10-22)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
