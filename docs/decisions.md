@@ -877,3 +877,26 @@ Project Decision synchronization remains outstanding as described above.
 - **Approved scope:** review all remaining PRs, investigate the five direct handoffs, reconcile the 328 unique reviewed issues, prepare a safe Project synchronization preview/updater and publish one focused review PR. Existing assignees, hierarchy, dependencies, human edits and evidence must be preserved.
 - **Review boundary:** PR retain/rebase/split/supersede/defer findings require a disposition review before closing or rewriting PRs. This decision authorizes preparing the synchronization package; it does not approve unknown field conflicts, PR dispositions or proposed new scope.
 - **Completion boundary:** authorization failure remains a blocker. #737 stays open until its merged changes and GitHub acceptance are verified; #738 remains Pending and requires a separate human decision. Runtime requirements #799–#803/#741/#774 remain unresolved and keep their established ordering.
+
+### D032 — Approve #737 PR dispositions and local board closeout
+
+- **Date:** 2026-10-23 UTC.
+- **Decision-maker:** dhar174.
+- **Confirmation:** individually selected disposition options, local authenticated
+  publishing route, then “Implement the proposed plan.”
+- **PR choices:** close #701/#704 unmerged as superseded by the reviewed merged
+  implementations; split useful #709 helper work into #807, #711 failure-reporting
+  intent into #808, and #715 real graph coverage into #809. Keep #709/#711/#715
+  open until verified/reviewed replacements justify supersession. Preserve
+  existing heads, assignments, parents and phase prerequisites.
+- **Closeout:** reopen #737 while #806 publication acceptance remains incomplete;
+  retain #810's package unchanged as historical evidence and prepare a separate
+  refreshed 332-issue/24-candidate package. Apply approved repository dispositions
+  now. Use the owner's authenticated computer for read-only board preparation,
+  review its concrete delta/digest, and coordinate a quiet edit window before apply.
+- **Completion boundary:** only authenticated publication and independent readback
+  permit closing #806/#737. Refresh and publish resulting readiness afterward.
+  Offline verification, PR merge and a stage flag cannot substitute for that
+  evidence. #738 remains Pending and needs its own human walkthrough/decision;
+  runtime gaps #799–#803/#741/#774 remain unresolved. No runtime implementation,
+  future-phase rebase, automatic review approval or phase approval is supplied.

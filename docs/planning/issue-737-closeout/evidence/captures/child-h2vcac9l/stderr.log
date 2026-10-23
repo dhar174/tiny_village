@@ -1,0 +1,11 @@
+ERROR:root:Not all job roles parsed correctly, counted 117 but parsed 116
+ERROR:root:Missing job roles: ['Bookstore owner', 'Comic store owner', 'Customer Service', 'Stay-at-home Mom']
+ERROR:root:Not all job roles parsed correctly, counted 117 but parsed 116
+ERROR:root:Missing job roles: ['Bookstore owner', 'Comic store owner', 'Customer Service', 'Stay-at-home Mom']
+ERROR:root:Not all job roles parsed correctly, counted 117 but parsed 116
+ERROR:root:Missing job roles: ['Bookstore owner', 'Comic store owner', 'Customer Service', 'Stay-at-home Mom']
+Traceback (most recent call last):
+  File "<string>", line 15, in <module>
+  File "<string>", line 13, in _tiny_capture_run
+  File "<string>", line 22, in <module>
+AssertionError: Goal/needs failures remain silent; see #808

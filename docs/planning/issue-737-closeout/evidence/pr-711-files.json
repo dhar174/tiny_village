@@ -1,0 +1,14 @@
+[
+  {
+    "sha": "5cbfb8a47be6de880be0a1f6aa3458162390a2e6",
+    "filename": "tiny_prompt_builder.py",
+    "status": "modified",
+    "additions": 2,
+    "deletions": 2,
+    "changes": 4,
+    "blob_url": "https://github.com/dhar174/tiny_village/blob/3e2c0c6156f03cc14227ff6ac644f65c410da555/tiny_prompt_builder.py",
+    "raw_url": "https://github.com/dhar174/tiny_village/raw/3e2c0c6156f03cc14227ff6ac644f65c410da555/tiny_prompt_builder.py",
+    "contents_url": "https://api.github.com/repos/dhar174/tiny_village/contents/tiny_prompt_builder.py?ref=3e2c0c6156f03cc14227ff6ac644f65c410da555",
+    "patch": "@@ -142,14 +142,14 @@ def gather_goal_context(self):\n                 goal_queue = self.character.evaluate_goals()\n                 context['active_goals'] = goal_queue[:3]  # Top 3 goals\n         except Exception:\n-            pass\n+            logger.exception(\"Exception in gather_goal_context\")\n             \n         # Calculate needs priorities\n         try:\n             needs_calculator = NeedsPriorities()\n             context['needs_priorities'] = needs_calculator.calculate_needs_priorities(self.character)\n         except Exception:\n-            pass\n+            logger.exception(\"Exception in gather_goal_context\")\n             \n         return context\n         "
+  }
+]
