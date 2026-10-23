@@ -1,6 +1,6 @@
 ## Current Work Focus
 
-- TASK025 / #737 closeout under D032: #810 merged at10569c0; #737 reopened pending #806 authenticated board publication. #701/#704 closed superseded; #709/#711/#715 retained with807/808/809 follow-ups. Separate332-issue/24-candidate portable package in docs/planning/issue-737-closeout. #738 remains Pending; runtime gaps open. Updated2026-10-23 UTC.
+- TASK025 / #737 closeout under D032: #810 merged at10569c0; #737 reopened pending #806 authenticated board publication. #701/#704 closed superseded; #709/#711/#715 retained with807/808/809 follow-ups. PR #811 carries the separate332-issue/24-candidate portable package in docs/planning/issue-737-closeout. #738 remains Pending; runtime gaps open. Updated2026-10-23 UTC.
 
 - TASK021 / #734 complete under D027: #797 merged at 2c3bc57, approved
   publication independently verified and #734 closed. All 307 annotations

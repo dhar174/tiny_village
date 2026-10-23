@@ -8,5 +8,5 @@ issues 350 / 484
 issues 400 / 484
 issues 450 / 484
 issues 484 / 484
-pullRequests 24 / 24
+pullRequests 25 / 25
 {"issues": 484, "managed": 332, "prs": 24, "main": "10569c06cc01075c70d5b39ec1b9e6804eb7f5cd", "project_access": "blocked"}
