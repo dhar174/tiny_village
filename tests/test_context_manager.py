@@ -7,6 +7,32 @@ import types
 
 # Create minimal character stub to avoid heavy dependencies
 tc_stub = types.ModuleType('tiny_characters')
+class MockInventory:
+    def to_prompt_context(self):
+        return {
+            "summary": {
+                "total_items": 4,
+                "total_stacks": 2,
+                "total_value": 9,
+                "total_weight": 3,
+                "counts_by_type": {"food": 3, "tools": 1},
+            },
+            "items_by_type": {
+                "food": [{"name": "Apple", "quantity": 3, "item_type": "food"}],
+                "tools": [{"name": "Hammer", "quantity": 1, "item_type": "tools"}],
+            },
+            "all_items": [
+                {"name": "Apple", "quantity": 3, "item_type": "food"},
+                {"name": "Hammer", "quantity": 1, "item_type": "tools"},
+            ],
+            "surplus_items": [{"name": "Apple", "quantity": 3, "item_type": "food"}],
+            "trade_candidates": [
+                {"name": "Apple", "quantity": 3, "item_type": "food"},
+                {"name": "Hammer", "quantity": 1, "item_type": "tools"},
+            ],
+            "drop_candidates": [{"name": "Apple", "quantity": 3, "item_type": "food"}],
+        }
+
 class MockCharacter:
     def __init__(self):
         self.name = "TestCharacter"
@@ -20,6 +46,7 @@ class MockCharacter:
         self.long_term_goal = "become a better engineer"
         self.recent_event = "default"
         self.personality_traits = {"extraversion": 60, "conscientiousness": 80}
+        self.inventory = MockInventory()
         
     def evaluate_goals(self):
         return [(0.8, MagicMock(name="Goal1", description="Learn new technology")),
@@ -58,6 +85,11 @@ class TestContextManager(unittest.TestCase):
         # Test motivations structure
         self.assertIn('motivations', context)
         self.assertEqual(context['motivations']['long_term_goal'], "become a better engineer")
+
+        # Test AI-facing inventory structure
+        self.assertIn('inventory', context)
+        self.assertEqual(context['inventory']['summary']['total_items'], 4)
+        self.assertEqual(context['inventory']['trade_candidates'][0]['name'], "Apple")
         
     def test_gather_environmental_context(self):
         """Test gathering environmental context."""
