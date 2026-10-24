@@ -1,0 +1,46 @@
+{
+  "status": "verified",
+  "original_uploaded_files": [
+    "final-results.json",
+    "final-inspect.json",
+    "final-checkpoint.json"
+  ],
+  "plan_provenance": "Original final plan not attached; reproduced exactly from the retained reconstruction using Windows CRLF serialization. Exact byte count and SHA256 match owner-supplied manifest; canonical approved digest matches receipt and checkpoint.",
+  "observed_at": "2026-10-24T03:27:42.362185+00:00",
+  "project_id": "PVT_kwHOAE_6m84Bm2UC",
+  "desired_digest": "0a85047a3665c9d7bedecf91211dae2c4ccb039d5f8c96fd36b5f1610342c207",
+  "plan_digest": "8e7d27f6f9dbdd2b83be6d14ed146146122197b5ad625e5f70adaba250161acf",
+  "confirmed_operations": 3,
+  "pending_write": null,
+  "approved_result_matches": true,
+  "remaining_operations": 0,
+  "fresh_repository_source_matches": true,
+  "inspection_mutations": 0,
+  "gate_738": "OPEN/Pending/Human review",
+  "files": {
+    "final-plan.reproduced.json": {
+      "bytes": 366566,
+      "sha256": "b05839ac94e67157e02120227267a1917ec664c70998562d3bc0c6698d6b645b"
+    },
+    "final-checkpoint.json": {
+      "bytes": 3294,
+      "sha256": "59227fd7c38304681032bf24a703bb80d9c7aa6990cfeeca9bbfbe0e32177885"
+    },
+    "final-inspect.json": {
+      "bytes": 389832,
+      "sha256": "7f8b413845b242a223521b0c49c88803bf8fcbeb04402566ca8e711161542e82"
+    },
+    "fresh-source-and-issue-readback.json": {
+      "bytes": 37103,
+      "sha256": "5de4638c7863e23c4b9b4d8b4faba192c0784d03583c3c8b8bbe92df8016de68"
+    },
+    "final-results.json": {
+      "bytes": 1563,
+      "sha256": "1badb747bde023fcad942bf16a1eab88195c4b879186d5280fcf93c72b5d1f7f"
+    },
+    "final-desired.json": {
+      "bytes": 247915,
+      "sha256": "0c034967eac57c3e535516be9c840aa37f48cddc389f1aaf13e68045683afd9a"
+    }
+  }
+}

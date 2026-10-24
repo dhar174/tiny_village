@@ -1,7 +1,7 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK025](TASK025-pr-ownership-project-737.md) PR ownership and Project configuration (#737) - initial Project10 readback verified; #806/#737 closed/completed in order. Final readiness plan/readback pending; #738 open/Pending (Updated: 2026-10-23 America/New_York)
+- [TASK026](TASK026-phase3-human-gate-738.md) Phase3 human gate (#738) - walkthrough/evidence ready; human decision Pending, original backlog/runtime acceptance preserved; no Phase4 activation (Updated: 2026-10-23 America/New_York)
 - [TASK023](TASK023-zcode-specialist-team.md) Zcode specialist team - nine read-only specialist definitions + canonical coordination policy created, entry points wired, installed to ~/.zcode/agents; static checks + independent review pass, fixes applied; runtime invocation re-verification pending fresh session (Updated: 2026-10-22)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
@@ -9,6 +9,7 @@
 - No additional pending task files.
 
 ## Completed
+- [TASK025](TASK025-pr-ownership-project-737.md) PR ownership and Project configuration (#737) - both authenticated receipts verified,806 then737 completed,3 final Readiness updates confirmed; evidence PR813,738 remains Pending (Updated: 2026-10-23 America/New_York)
 - [TASK024](TASK024-functional-test-review-736.md) Functional-test consolidation (#736) - #804 merged at6cc576e; core72+3 probes/dev20 pass; #736 and9 superseded PRs closed under D030; runtime gaps open, next #737; #805 walkthrough review corrected (Updated: 2026-10-22 America/New_York)
 - [TASK022](TASK022-utility-consolidation-735.md) Utility consolidation (#735) - #703 merged at 323dad6; #735 closed, merged-main required check passes (Updated: 2026-10-21 America/New_York)
 - [TASK021](TASK021-backlog-triage-734.md) Evidence-based backlog triage (#734) - Complete under D027; verified publication, #734 closed; #798 metadata/completion review fixes verified (78 offline cases) (Updated: 2026-10-21)

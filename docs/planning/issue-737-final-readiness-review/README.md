@@ -1,6 +1,6 @@
 # Final readiness delta review
 
-The owner pasted the complete final plan in the chat. Its desired digest matches the frozen completed-stage package. It contains exactly three Readiness changes:806 Ready→Tracking,737 Blocked→Tracking,738 Blocked→Human review. Decision738 remains Pending; all six delivery views and runtime gaps remain unchanged. GitHub has automatically set StatusDone on the two closed issues; the plan preserves those baseline statuses. The unrelated new item for PR813 is also preserved.
+The owner pasted the complete final plan in the chat. Its desired digest matches the frozen completed-stage package. It contains exactly three Readiness changes:806 Ready→Tracking,737 Blocked→Tracking,738 Blocked→Human review. Decision738 remains Pending; all six delivery views and runtime gaps remain unchanged. The baseline shows StatusDone on the two closed issues; the plan preserves those baseline statuses. The unrelated new item for PR813 is also preserved.
 
 The original saved final-plan file and printed digest were not attached in this turn. To avoid another upload round before these narrow writes, the coordinator reconstructed the expected full plan from the retained original authenticated baseline plus the visible baseline changes (StatusDone on737/806 and the exact unrelated PR813 item), then regenerated all operations using the unchanged merged `prepare` implementation. `validate_plan` passes. Only Readiness differs in the three operations. Fresh repository reads match333 issue signatures,24 candidate heads/states and merged main.
 
