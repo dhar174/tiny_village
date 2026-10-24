@@ -1,0 +1,257 @@
+test_api_failure_writes_no_success_claim (__main__.ReceiptCliTests.test_api_failure_writes_no_success_claim) ... ERROR
+test_cli_retains_real_read_only_receipt (__main__.ReceiptCliTests.test_cli_retains_real_read_only_receipt) ... usage: sync_project.py [-h] (--prepare | --apply | --inspect)
+                       [--desired DESIRED] [--plan PLAN]
+                       [--checkpoint CHECKPOINT] [--approval APPROVAL]
+                       [--edit-window-confirmed]
+sync_project.py: error: unrecognized arguments: --receipt /tmp/tmp7yxdz7on/proof.json
+ERROR
+test_receipt_inside_frozen_package_rejected_before_network (__main__.ReceiptCliTests.test_receipt_inside_frozen_package_rejected_before_network) ... ok
+test_receipt_only_allowed_with_inspect (__main__.ReceiptCliTests.test_receipt_only_allowed_with_inspect) ... ok
+test_edited_plan_operations_are_rejected_even_with_new_digest (__main__.ReceiptTests.test_edited_plan_operations_are_rejected_even_with_new_digest) ... ERROR
+test_incomplete_board_cannot_be_claimed_verified (__main__.ReceiptTests.test_incomplete_board_cannot_be_claimed_verified) ... ERROR
+test_independent_inspection_is_read_only_and_recomputable (__main__.ReceiptTests.test_independent_inspection_is_read_only_and_recomputable) ... ERROR
+test_managed_value_tampering_is_rejected (__main__.ReceiptTests.test_managed_value_tampering_is_rejected) ... ERROR
+test_receipt_digest_binding_is_required (__main__.ReceiptTests.test_receipt_digest_binding_is_required) ... ERROR
+test_source_change_during_inspection_is_rejected (__main__.ReceiptTests.test_source_change_during_inspection_is_rejected) ... ERROR
+test_stale_sources_are_rejected (__main__.ReceiptTests.test_stale_sources_are_rejected) ... ERROR
+test_timestamp_requires_timezone (__main__.ReceiptTests.test_timestamp_requires_timezone) ... ERROR
+test_unrelated_item_edits_do_not_count_as_preservation (__main__.ReceiptTests.test_unrelated_item_edits_do_not_count_as_preservation) ... ERROR
+test_view_sorting_change_is_rejected (__main__.ReceiptTests.test_view_sorting_change_is_rejected) ... ERROR
+test_wrong_plan_is_rejected (__main__.ReceiptTests.test_wrong_plan_is_rejected) ... ERROR
+test_wrong_project_identity_is_rejected (__main__.ReceiptTests.test_wrong_project_identity_is_rejected) ... ERROR
+test_changed_prior_candidate_heads_rejected (__main__.StageTests.test_changed_prior_candidate_heads_rejected) ... ERROR
+test_closure_before_receipt_rejected (__main__.StageTests.test_closure_before_receipt_rejected) ... ERROR
+test_completed_stage_accepts_verified_prior_publication (__main__.StageTests.test_completed_stage_accepts_verified_prior_publication) ... ERROR
+test_completed_stage_requires_evidence (__main__.StageTests.test_completed_stage_requires_evidence) ... ERROR
+test_gate_approval_is_never_inferred (__main__.StageTests.test_gate_approval_is_never_inferred) ... ERROR
+test_not_planned_closure_rejected (__main__.StageTests.test_not_planned_closure_rejected) ... ERROR
+test_preserved_scope_cannot_hide_gate_readiness (__main__.StageTests.test_preserved_scope_cannot_hide_gate_readiness) ... ERROR
+test_prior_receipt_must_cover_same_managed_cohort (__main__.StageTests.test_prior_receipt_must_cover_same_managed_cohort) ... ERROR
+test_success_label_without_actual_readback_rejected (__main__.StageTests.test_success_label_without_actual_readback_rejected) ... ERROR
+test_unresolved_runtime_closure_rejected (__main__.StageTests.test_unresolved_runtime_closure_rejected) ... ERROR
+test_wrong_final_readiness_rejected (__main__.StageTests.test_wrong_final_readiness_rejected) ... ERROR
+
+======================================================================
+ERROR: test_api_failure_writes_no_success_claim (__main__.ReceiptCliTests.test_api_failure_writes_no_success_claim)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 215, in test_api_failure_writes_no_success_claim
+    self.assertEqual(sync.main(),1)
+                     ^^^^^^^^^^^
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/sync_project.py", line 497, in main
+    args = parser.parse_args()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/argparse.py", line 1908, in parse_args
+    self.error(msg)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/argparse.py", line 2650, in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/argparse.py", line 2637, in exit
+    _sys.exit(status)
+SystemExit: 2
+
+======================================================================
+ERROR: test_cli_retains_real_read_only_receipt (__main__.ReceiptCliTests.test_cli_retains_real_read_only_receipt)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 204, in test_cli_retains_real_read_only_receipt
+    self.assertEqual(sync.main(),0)
+                     ^^^^^^^^^^^
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/sync_project.py", line 497, in main
+    args = parser.parse_args()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/argparse.py", line 1908, in parse_args
+    self.error(msg)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/argparse.py", line 2650, in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/argparse.py", line 2637, in exit
+    _sys.exit(status)
+SystemExit: 2
+
+======================================================================
+ERROR: test_edited_plan_operations_are_rejected_even_with_new_digest (__main__.ReceiptTests.test_edited_plan_operations_are_rejected_even_with_new_digest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 28, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_incomplete_board_cannot_be_claimed_verified (__main__.ReceiptTests.test_incomplete_board_cannot_be_claimed_verified)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 28, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_independent_inspection_is_read_only_and_recomputable (__main__.ReceiptTests.test_independent_inspection_is_read_only_and_recomputable)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 28, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_managed_value_tampering_is_rejected (__main__.ReceiptTests.test_managed_value_tampering_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 28, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_receipt_digest_binding_is_required (__main__.ReceiptTests.test_receipt_digest_binding_is_required)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 28, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_source_change_during_inspection_is_rejected (__main__.ReceiptTests.test_source_change_during_inspection_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 28, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_stale_sources_are_rejected (__main__.ReceiptTests.test_stale_sources_are_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 28, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_timestamp_requires_timezone (__main__.ReceiptTests.test_timestamp_requires_timezone)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 28, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_unrelated_item_edits_do_not_count_as_preservation (__main__.ReceiptTests.test_unrelated_item_edits_do_not_count_as_preservation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 28, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_view_sorting_change_is_rejected (__main__.ReceiptTests.test_view_sorting_change_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 28, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_wrong_plan_is_rejected (__main__.ReceiptTests.test_wrong_plan_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 28, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_wrong_project_identity_is_rejected (__main__.ReceiptTests.test_wrong_project_identity_is_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 28, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_changed_prior_candidate_heads_rejected (__main__.StageTests.test_changed_prior_candidate_heads_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 113, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_closure_before_receipt_rejected (__main__.StageTests.test_closure_before_receipt_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 113, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_completed_stage_accepts_verified_prior_publication (__main__.StageTests.test_completed_stage_accepts_verified_prior_publication)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 113, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_completed_stage_requires_evidence (__main__.StageTests.test_completed_stage_requires_evidence)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 113, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_gate_approval_is_never_inferred (__main__.StageTests.test_gate_approval_is_never_inferred)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 113, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_not_planned_closure_rejected (__main__.StageTests.test_not_planned_closure_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 113, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_preserved_scope_cannot_hide_gate_readiness (__main__.StageTests.test_preserved_scope_cannot_hide_gate_readiness)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 113, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_prior_receipt_must_cover_same_managed_cohort (__main__.StageTests.test_prior_receipt_must_cover_same_managed_cohort)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 113, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_success_label_without_actual_readback_rejected (__main__.StageTests.test_success_label_without_actual_readback_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 113, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_unresolved_runtime_closure_rejected (__main__.StageTests.test_unresolved_runtime_closure_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 113, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+======================================================================
+ERROR: test_wrong_final_readiness_rejected (__main__.StageTests.test_wrong_final_readiness_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-publication/docs/planning/issue-737-publication/test_publication_evidence.py", line 113, in setUp
+    import publication_evidence
+ModuleNotFoundError: No module named 'publication_evidence'
+
+----------------------------------------------------------------------
+Ran 27 tests in 0.006s
+
+FAILED (errors=25)

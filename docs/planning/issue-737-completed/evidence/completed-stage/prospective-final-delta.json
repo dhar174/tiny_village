@@ -1,0 +1,228 @@
+{
+  "basis": "Prospective comparison against the initial verified board at 2026-10-24T02:43:39.646747+00:00; not a fresh live final plan or mutation approval.",
+  "desired_digest": "0a85047a3665c9d7bedecf91211dae2c4ccb039d5f8c96fd36b5f1610342c207",
+  "operations": [
+    {
+      "kind": "item",
+      "number": 806,
+      "node_id": "I_kwDOMEkjkc8AAAABZJ7clQ",
+      "before": {
+        "id": "PVTI_lAHOAE_6m84Bm2UCzhCwxM8",
+        "number": 806,
+        "node_id": "I_kwDOMEkjkc8AAAABZJ7clQ",
+        "repository": "dhar174/tiny_village",
+        "archived": false,
+        "values": {
+          "Title": "Restore verified access to Project 10 for #737 synchronization",
+          "Status": "Todo",
+          "Decision": "Not applicable",
+          "Depends on": "Native prerequisites:\nhttps://github.com/dhar174/tiny_village/issues/732",
+          "Kind": "Task",
+          "Phase": "03 Consolidate backlog and pull requests",
+          "Priority": "P1",
+          "Readiness": "Ready",
+          "Review owner": "dhar174",
+          "Scope": "MVP",
+          "Sequence": 3018.0,
+          "Task key": "ISSUE-806",
+          "Workstream": "Planning"
+        }
+      },
+      "after": {
+        "id": "PVTI_lAHOAE_6m84Bm2UCzhCwxM8",
+        "number": 806,
+        "node_id": "I_kwDOMEkjkc8AAAABZJ7clQ",
+        "repository": "dhar174/tiny_village",
+        "archived": false,
+        "values": {
+          "Title": "Restore verified access to Project 10 for #737 synchronization",
+          "Status": "Todo",
+          "Decision": "Not applicable",
+          "Depends on": "Native prerequisites:\nhttps://github.com/dhar174/tiny_village/issues/732",
+          "Kind": "Task",
+          "Phase": "03 Consolidate backlog and pull requests",
+          "Priority": "P1",
+          "Readiness": "Tracking",
+          "Review owner": "dhar174",
+          "Scope": "MVP",
+          "Sequence": 3018,
+          "Task key": "ISSUE-806",
+          "Workstream": "Planning"
+        }
+      },
+      "managed_fields": [
+        "Candidate PRs",
+        "Decision",
+        "Depends on",
+        "Kind",
+        "Phase",
+        "Priority",
+        "Readiness",
+        "Review owner",
+        "Scope",
+        "Sequence",
+        "Task key",
+        "Workstream"
+      ]
+    },
+    {
+      "kind": "item",
+      "number": 737,
+      "node_id": "I_kwDOMEkjkc8AAAABW0dj9A",
+      "before": {
+        "id": "PVTI_lAHOAE_6m84Bm2UCzhAcbL0",
+        "number": 737,
+        "node_id": "I_kwDOMEkjkc8AAAABW0dj9A",
+        "repository": "dhar174/tiny_village",
+        "archived": false,
+        "values": {
+          "Title": "[P3-04] Reconcile PR ownership, merge sequence, and dependency configuration",
+          "Status": "In Progress",
+          "Phase": "03 Consolidate backlog and pull requests",
+          "Sequence": 3019.0,
+          "Priority": "P1",
+          "Kind": "Task",
+          "Workstream": "Planning",
+          "Scope": "MVP",
+          "Readiness": "Blocked",
+          "Decision": "Not applicable",
+          "Depends on": "Native prerequisites:\nhttps://github.com/dhar174/tiny_village/issues/735\nhttps://github.com/dhar174/tiny_village/issues/736\nhttps://github.com/dhar174/tiny_village/issues/806\nPlanned activation (not added native edges):\nhttps://github.com/dhar174/tiny_village/issues/732\nhttps://github.com/dhar174/tiny_village/issues/734",
+          "Task key": "P3-04",
+          "Review owner": "dhar174"
+        }
+      },
+      "after": {
+        "id": "PVTI_lAHOAE_6m84Bm2UCzhAcbL0",
+        "number": 737,
+        "node_id": "I_kwDOMEkjkc8AAAABW0dj9A",
+        "repository": "dhar174/tiny_village",
+        "archived": false,
+        "values": {
+          "Title": "[P3-04] Reconcile PR ownership, merge sequence, and dependency configuration",
+          "Status": "In Progress",
+          "Phase": "03 Consolidate backlog and pull requests",
+          "Sequence": 3019,
+          "Priority": "P1",
+          "Kind": "Task",
+          "Workstream": "Planning",
+          "Scope": "MVP",
+          "Readiness": "Tracking",
+          "Decision": "Not applicable",
+          "Depends on": "Native prerequisites:\nhttps://github.com/dhar174/tiny_village/issues/735\nhttps://github.com/dhar174/tiny_village/issues/736\nhttps://github.com/dhar174/tiny_village/issues/806\nPlanned activation (not added native edges):\nhttps://github.com/dhar174/tiny_village/issues/732\nhttps://github.com/dhar174/tiny_village/issues/734",
+          "Task key": "P3-04",
+          "Review owner": "dhar174"
+        }
+      },
+      "managed_fields": [
+        "Candidate PRs",
+        "Decision",
+        "Depends on",
+        "Kind",
+        "Phase",
+        "Priority",
+        "Readiness",
+        "Review owner",
+        "Scope",
+        "Sequence",
+        "Task key",
+        "Workstream"
+      ]
+    },
+    {
+      "kind": "item",
+      "number": 738,
+      "node_id": "I_kwDOMEkjkc8AAAABW0dlhQ",
+      "before": {
+        "id": "PVTI_lAHOAE_6m84Bm2UCzhAcbL4",
+        "number": 738,
+        "node_id": "I_kwDOMEkjkc8AAAABW0dlhQ",
+        "repository": "dhar174/tiny_village",
+        "archived": false,
+        "values": {
+          "Title": "[H3] Human decision gate 3: Consolidate backlog and pull requests",
+          "Status": "Todo",
+          "Phase": "03 Consolidate backlog and pull requests",
+          "Sequence": 3900.0,
+          "Priority": "P1",
+          "Kind": "Phase gate",
+          "Workstream": "Review",
+          "Scope": "MVP",
+          "Readiness": "Blocked",
+          "Decision": "Pending",
+          "Depends on": "Native prerequisites:\nhttps://github.com/dhar174/tiny_village/issues/737\nPlanned activation (not added native edges):\nhttps://github.com/dhar174/tiny_village/issues/732\nhttps://github.com/dhar174/tiny_village/issues/734\nhttps://github.com/dhar174/tiny_village/issues/735\nhttps://github.com/dhar174/tiny_village/issues/736",
+          "Review owner": "dhar174",
+          "Task key": "H3"
+        }
+      },
+      "after": {
+        "id": "PVTI_lAHOAE_6m84Bm2UCzhAcbL4",
+        "number": 738,
+        "node_id": "I_kwDOMEkjkc8AAAABW0dlhQ",
+        "repository": "dhar174/tiny_village",
+        "archived": false,
+        "values": {
+          "Title": "[H3] Human decision gate 3: Consolidate backlog and pull requests",
+          "Status": "Todo",
+          "Phase": "03 Consolidate backlog and pull requests",
+          "Sequence": 3900,
+          "Priority": "P1",
+          "Kind": "Phase gate",
+          "Workstream": "Review",
+          "Scope": "MVP",
+          "Readiness": "Human review",
+          "Decision": "Pending",
+          "Depends on": "Native prerequisites:\nhttps://github.com/dhar174/tiny_village/issues/737\nPlanned activation (not added native edges):\nhttps://github.com/dhar174/tiny_village/issues/732\nhttps://github.com/dhar174/tiny_village/issues/734\nhttps://github.com/dhar174/tiny_village/issues/735\nhttps://github.com/dhar174/tiny_village/issues/736",
+          "Review owner": "dhar174",
+          "Task key": "H3"
+        }
+      },
+      "managed_fields": [
+        "Candidate PRs",
+        "Decision",
+        "Depends on",
+        "Kind",
+        "Phase",
+        "Priority",
+        "Readiness",
+        "Review owner",
+        "Scope",
+        "Sequence",
+        "Task key",
+        "Workstream"
+      ]
+    }
+  ],
+  "source_issue_changes": {
+    "737": [
+      "body",
+      "state",
+      "stateReason",
+      "updatedAt",
+      "closedAt",
+      "blockedBy"
+    ],
+    "738": [
+      "blockedBy"
+    ],
+    "806": [
+      "body",
+      "state",
+      "stateReason",
+      "updatedAt",
+      "closedAt"
+    ]
+  },
+  "all_484_original_issue_parents_assignees_labels_native_edges_preserved": true,
+  "unrelated_issue_bodies_states_preserved": true,
+  "candidate_heads_unchanged": true,
+  "main_unchanged": true,
+  "unchanged_merged_python_files": [
+    "capture_snapshot.py",
+    "package.py",
+    "validate_package.py",
+    "publication_evidence.py",
+    "build_preview.py",
+    "sync_project.py"
+  ],
+  "github_mutations_performed": 0
+}

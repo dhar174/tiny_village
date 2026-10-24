@@ -1,0 +1,95 @@
+test_changed_head_requires_new_review (__main__.CloseoutTests.test_changed_head_requires_new_review) ... ERROR
+test_closed_737_rejected_before_publication (__main__.CloseoutTests.test_closed_737_rejected_before_publication) ... ERROR
+test_closed_runtime_requirement_rejected (__main__.CloseoutTests.test_closed_runtime_requirement_rejected) ... ERROR
+test_human_gate_not_unlocked (__main__.CloseoutTests.test_human_gate_not_unlocked) ... ERROR
+test_only_explicit_coordinator_branches_excluded (__main__.CloseoutTests.test_only_explicit_coordinator_branches_excluded) ... ERROR
+test_reviewed_24_candidates_pass_publication_stage (__main__.CloseoutTests.test_reviewed_24_candidates_pass_publication_stage) ... ERROR
+test_same_count_replacement_is_not_the_reviewed_cohort (__main__.CloseoutTests.test_same_count_replacement_is_not_the_reviewed_cohort) ... ERROR
+test_unreviewed_stage_cannot_claim_completion (__main__.CloseoutTests.test_unreviewed_stage_cannot_claim_completion) ... ERROR
+test_windows_manifest_uses_posix_paths (__main__.CloseoutTests.test_windows_manifest_uses_posix_paths) ... ERROR
+
+======================================================================
+ERROR: test_changed_head_requires_new_review (__main__.CloseoutTests.test_changed_head_requires_new_review)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-closeout/docs/planning/issue-737-closeout/test_closeout.py", line 30, in test_changed_head_requires_new_review
+    validator.validate_closeout(self.snapshot, self.rows, self.scope)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'validate_package' has no attribute 'validate_closeout'
+
+======================================================================
+ERROR: test_closed_737_rejected_before_publication (__main__.CloseoutTests.test_closed_737_rejected_before_publication)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-closeout/docs/planning/issue-737-closeout/test_closeout.py", line 38, in test_closed_737_rejected_before_publication
+    validator.validate_closeout(self.snapshot, self.rows, self.scope)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'validate_package' has no attribute 'validate_closeout'
+
+======================================================================
+ERROR: test_closed_runtime_requirement_rejected (__main__.CloseoutTests.test_closed_runtime_requirement_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-closeout/docs/planning/issue-737-closeout/test_closeout.py", line 42, in test_closed_runtime_requirement_rejected
+    validator.validate_closeout(self.snapshot, self.rows, self.scope)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'validate_package' has no attribute 'validate_closeout'
+
+======================================================================
+ERROR: test_human_gate_not_unlocked (__main__.CloseoutTests.test_human_gate_not_unlocked)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-closeout/docs/planning/issue-737-closeout/test_closeout.py", line 46, in test_human_gate_not_unlocked
+    validator.validate_closeout(self.snapshot, self.rows, self.scope)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'validate_package' has no attribute 'validate_closeout'
+
+======================================================================
+ERROR: test_only_explicit_coordinator_branches_excluded (__main__.CloseoutTests.test_only_explicit_coordinator_branches_excluded)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-closeout/docs/planning/issue-737-closeout/test_closeout.py", line 50, in test_only_explicit_coordinator_branches_excluded
+    self.assertTrue(sync.excluded_coordinator('codex/issue-737-closeout'))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'sync_project' has no attribute 'excluded_coordinator'
+
+======================================================================
+ERROR: test_reviewed_24_candidates_pass_publication_stage (__main__.CloseoutTests.test_reviewed_24_candidates_pass_publication_stage)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-closeout/docs/planning/issue-737-closeout/test_closeout.py", line 22, in test_reviewed_24_candidates_pass_publication_stage
+    validator.validate_closeout(self.snapshot, self.rows, self.scope)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'validate_package' has no attribute 'validate_closeout'
+
+======================================================================
+ERROR: test_same_count_replacement_is_not_the_reviewed_cohort (__main__.CloseoutTests.test_same_count_replacement_is_not_the_reviewed_cohort)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-closeout/docs/planning/issue-737-closeout/test_closeout.py", line 26, in test_same_count_replacement_is_not_the_reviewed_cohort
+    validator.validate_closeout(self.snapshot, self.rows, self.scope)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'validate_package' has no attribute 'validate_closeout'
+
+======================================================================
+ERROR: test_unreviewed_stage_cannot_claim_completion (__main__.CloseoutTests.test_unreviewed_stage_cannot_claim_completion)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-closeout/docs/planning/issue-737-closeout/test_closeout.py", line 34, in test_unreviewed_stage_cannot_claim_completion
+    validator.validate_closeout(self.snapshot, self.rows, self.scope)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'validate_package' has no attribute 'validate_closeout'
+
+======================================================================
+ERROR: test_windows_manifest_uses_posix_paths (__main__.CloseoutTests.test_windows_manifest_uses_posix_paths)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737-closeout/docs/planning/issue-737-closeout/test_closeout.py", line 48, in test_windows_manifest_uses_posix_paths
+    self.assertEqual(validator.manifest_name(PureWindowsPath('C:/bundle/evidence/a.json'), PureWindowsPath('C:/bundle')), 'evidence/a.json')
+                     ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'validate_package' has no attribute 'manifest_name'
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.002s
+
+FAILED (errors=9)

@@ -1,0 +1,44 @@
+{
+  "environment": "CPython3.12/Linux, extracted outside Git; no native Windows execution",
+  "results": [
+    {
+      "command": "validate_package.py",
+      "returncode": 0,
+      "stdout": "{\"status\": \"offline_package_verified\", \"issues\": 332, \"prs\": 24, \"fields\": 12, \"views\": 6, \"cycles\": 0, \"gate_738\": \"Pending\", \"project_publication\": \"blocked_not_verified\", \"preview_digest\": \"e5f05612c6bf126215d1e0d83c1a558e04555e49c6ae7b2dc518c5dc79dedd21\"}\n",
+      "stderr": ""
+    },
+    {
+      "command": "test_sync_project.py",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "test_scoped_synchronizer_exists (__main__.AvailabilityTests.test_scoped_synchronizer_exists) ... ok\ntest_apply_requires_edit_window_before_reading_credentials_or_files (__main__.SyncTests.test_apply_requires_edit_window_before_reading_credentials_or_files) ... ok\ntest_apply_requires_exact_reviewed_digest (__main__.SyncTests.test_apply_requires_exact_reviewed_digest) ... ok\ntest_archived_managed_item_requires_review (__main__.SyncTests.test_archived_managed_item_requires_review) ... ok\ntest_clear_text_is_explicitly_previewed_as_removal (__main__.SyncTests.test_clear_text_is_explicitly_previewed_as_removal) ... ok\ntest_confirmed_checkpoint_resumes_after_interruption (__main__.SyncTests.test_confirmed_checkpoint_resumes_after_interruption) ... ok\ntest_corrupt_checkpoint_is_rejected_before_writes (__main__.SyncTests.test_corrupt_checkpoint_is_rejected_before_writes) ... ok\ntest_documents_unavoidable_remote_same_field_race (__main__.SyncTests.test_documents_unavoidable_remote_same_field_race) ... ok\ntest_duplicate_field_names_are_rejected (__main__.SyncTests.test_duplicate_field_names_are_rejected) ... ok\ntest_duplicate_same_repository_issue_is_rejected (__main__.SyncTests.test_duplicate_same_repository_issue_is_rejected) ... ok\ntest_empty_optional_fields_do_not_invent_readback_values (__main__.SyncTests.test_empty_optional_fields_do_not_invent_readback_values) ... ok\ntest_existing_scope_and_review_owner_are_preserved (__main__.SyncTests.test_existing_scope_and_review_owner_are_preserved) ... ok\ntest_foreign_issue_same_number_is_not_selected (__main__.SyncTests.test_foreign_issue_same_number_is_not_selected) ... ok\ntest_human_field_edit_stops_before_any_write (__main__.SyncTests.test_human_field_edit_stops_before_any_write) ... ok\ntest_missing_field_is_rejected_without_schema_creation (__main__.SyncTests.test_missing_field_is_rejected_without_schema_creation) ... ok\ntest_missing_item_is_added_once (__main__.SyncTests.test_missing_item_is_added_once) ... ok\ntest_missing_saved_view_requires_explicit_schema_review (__main__.SyncTests.test_missing_saved_view_requires_explicit_schema_review) ... ok\ntest_new_item_lookup_does_not_require_other_private_projects (__main__.SyncTests.test_new_item_lookup_does_not_require_other_private_projects) ... ok\ntest_new_item_preserves_automatic_unmanaged_status (__main__.SyncTests.test_new_item_preserves_automatic_unmanaged_status) ... ok\ntest_open_issue_with_done_status_requires_review (__main__.SyncTests.test_open_issue_with_done_status_requires_review) ... ok\ntest_pagination_reads_later_pages_and_rejects_missing_cursor (__main__.SyncTests.test_pagination_reads_later_pages_and_rejects_missing_cursor) ... ok\ntest_preview_has_before_after_and_preserves_status_and_foreign_item (__main__.SyncTests.test_preview_has_before_after_and_preserves_status_and_foreign_item) ... ok\ntest_schema_drift_stops_before_any_write (__main__.SyncTests.test_schema_drift_stops_before_any_write) ... ok\ntest_schema_type_is_checked_even_for_string_shaped_values (__main__.SyncTests.test_schema_type_is_checked_even_for_string_shaped_values) ... ok\ntest_second_local_publisher_cannot_acquire_lock (__main__.SyncTests.test_second_local_publisher_cannot_acquire_lock) ... ok\ntest_stale_issue_input_stops_before_any_write (__main__.SyncTests.test_stale_issue_input_stops_before_any_write) ... ok\ntest_stale_pr_head_stops_before_any_write (__main__.SyncTests.test_stale_pr_head_stops_before_any_write) ... ok\ntest_successful_apply_and_repeat_are_idempotent (__main__.SyncTests.test_successful_apply_and_repeat_are_idempotent) ... ok\ntest_unacknowledged_write_requires_inspection_and_fresh_prepare (__main__.SyncTests.test_unacknowledged_write_requires_inspection_and_fresh_prepare) ... ok\ntest_unknown_option_is_rejected (__main__.SyncTests.test_unknown_option_is_rejected) ... ok\ntest_unrecorded_gate_approval_is_not_overwritten (__main__.SyncTests.test_unrecorded_gate_approval_is_not_overwritten) ... ok\ntest_view_filter_and_sort_drift_is_previewed (__main__.SyncTests.test_view_filter_and_sort_drift_is_previewed) ... ok\n\n----------------------------------------------------------------------\nRan 32 tests in 0.012s\n\nOK\n"
+    },
+    {
+      "command": "test_build_preview.py",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "test_builder_exists (__main__.PreviewAvailabilityTests.test_builder_exists) ... ok\ntest_738_approval_cannot_be_invented_from_coordinator_approval (__main__.PreviewTests.test_738_approval_cannot_be_invented_from_coordinator_approval) ... ok\ntest_closed_gate_without_human_approval_keeps_dependents_blocked (__main__.PreviewTests.test_closed_gate_without_human_approval_keeps_dependents_blocked) ... ok\ntest_closed_task_is_tracking_and_not_reported_ready (__main__.PreviewTests.test_closed_task_is_tracking_and_not_reported_ready) ... ok\ntest_missing_managed_issue_is_rejected (__main__.PreviewTests.test_missing_managed_issue_is_rejected) ... ok\ntest_missing_prerequisite_is_rejected (__main__.PreviewTests.test_missing_prerequisite_is_rejected) ... ok\ntest_native_dependency_cycle_is_rejected (__main__.PreviewTests.test_native_dependency_cycle_is_rejected) ... ok\ntest_open_dependency_blocks_even_if_decision_says_approved (__main__.PreviewTests.test_open_dependency_blocks_even_if_decision_says_approved) ... ok\ntest_ordered_sequences_follow_prerequisites (__main__.PreviewTests.test_ordered_sequences_follow_prerequisites) ... ok\ntest_phase_parent_does_not_become_a_dependency (__main__.PreviewTests.test_phase_parent_does_not_become_a_dependency) ... ok\ntest_recorded_human_approval_unlocks_only_immediate_ready_task (__main__.PreviewTests.test_recorded_human_approval_unlocks_only_immediate_ready_task) ... ok\n\n----------------------------------------------------------------------\nRan 11 tests in 0.010s\n\nOK\n"
+    },
+    {
+      "command": "test_closeout.py",
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "test_changed_head_requires_new_review (__main__.CloseoutTests.test_changed_head_requires_new_review) ... ok\ntest_closed_737_rejected_before_publication (__main__.CloseoutTests.test_closed_737_rejected_before_publication) ... ok\ntest_closed_runtime_requirement_rejected (__main__.CloseoutTests.test_closed_runtime_requirement_rejected) ... ok\ntest_foreign_fork_with_same_coordinator_branch_stays_in_inventory (__main__.CloseoutTests.test_foreign_fork_with_same_coordinator_branch_stays_in_inventory) ... ok\ntest_human_gate_not_unlocked (__main__.CloseoutTests.test_human_gate_not_unlocked) ... ok\ntest_live_inventory_keeps_unreviewed_pr_and_excludes_closeout (__main__.CloseoutTests.test_live_inventory_keeps_unreviewed_pr_and_excludes_closeout) ... ok\ntest_only_explicit_coordinator_branches_excluded (__main__.CloseoutTests.test_only_explicit_coordinator_branches_excluded) ... ok\ntest_reviewed_24_candidates_pass_publication_stage (__main__.CloseoutTests.test_reviewed_24_candidates_pass_publication_stage) ... ok\ntest_same_count_replacement_is_not_the_reviewed_cohort (__main__.CloseoutTests.test_same_count_replacement_is_not_the_reviewed_cohort) ... ok\ntest_unreviewed_stage_cannot_claim_completion (__main__.CloseoutTests.test_unreviewed_stage_cannot_claim_completion) ... ok\ntest_windows_manifest_uses_posix_paths (__main__.CloseoutTests.test_windows_manifest_uses_posix_paths) ... ok\n\n----------------------------------------------------------------------\nRan 11 tests in 0.001s\n\nOK\n"
+    },
+    {
+      "modified": "project-preview.json",
+      "rejected": true,
+      "returncode": 1
+    },
+    {
+      "modified": "evidence/core-raw.tar.gz",
+      "rejected": true,
+      "returncode": 1
+    },
+    {
+      "modified": "artifact-hashes.json",
+      "rejected": true,
+      "returncode": 1
+    }
+  ]
+}

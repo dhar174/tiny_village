@@ -1,0 +1,31 @@
+{
+  "merged_source": "dc9fcc023b4ee37b3efd579195caaab80993c64a",
+  "python_files_identical_to_merged_main": true,
+  "environment": "CPython3.12/Linux, extracted outside Git; native Windows not executed",
+  "results": [
+    {
+      "command": [
+        "-B",
+        "validate_package.py"
+      ],
+      "returncode": 0,
+      "stdout": "{\"status\": \"offline_package_verified\", \"issues\": 332, \"prs\": 24, \"fields\": 12, \"views\": 6, \"cycles\": 0, \"gate_738\": \"Pending\", \"stage\": \"publication\", \"project_publication\": \"blocked_not_verified\", \"preview_digest\": \"4d77d37afc2fe8ee547926194a88eba4c36d04ad49535e6933eeb16c24fd2d75\"}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_*.py"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ".........................................................................................\n----------------------------------------------------------------------\nRan 89 tests in 1.459s\n\nOK\n"
+    }
+  ]
+}
