@@ -1,0 +1,12 @@
+issues 50 / 484
+issues 100 / 484
+issues 150 / 484
+issues 200 / 484
+issues 250 / 484
+issues 300 / 484
+issues 350 / 484
+issues 400 / 484
+issues 450 / 484
+issues 484 / 484
+pullRequests 24 / 24
+{"issues": 484, "managed": 332, "prs": 24, "main": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599", "project_access": "blocked"}

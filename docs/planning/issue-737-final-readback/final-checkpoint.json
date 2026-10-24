@@ -1,0 +1,82 @@
+{
+  "completed": [
+    {
+      "index": 0,
+      "actual": {
+        "id": "PVTI_lAHOAE_6m84Bm2UCzhCwxM8",
+        "number": 806,
+        "node_id": "I_kwDOMEkjkc8AAAABZJ7clQ",
+        "repository": "dhar174/tiny_village",
+        "archived": false,
+        "values": {
+          "Title": "Restore verified access to Project 10 for #737 synchronization",
+          "Status": "Done",
+          "Decision": "Not applicable",
+          "Depends on": "Native prerequisites:\nhttps://github.com/dhar174/tiny_village/issues/732",
+          "Kind": "Task",
+          "Phase": "03 Consolidate backlog and pull requests",
+          "Priority": "P1",
+          "Readiness": "Tracking",
+          "Review owner": "dhar174",
+          "Scope": "MVP",
+          "Sequence": 3018.0,
+          "Task key": "ISSUE-806",
+          "Workstream": "Planning"
+        }
+      }
+    },
+    {
+      "index": 1,
+      "actual": {
+        "id": "PVTI_lAHOAE_6m84Bm2UCzhAcbL0",
+        "number": 737,
+        "node_id": "I_kwDOMEkjkc8AAAABW0dj9A",
+        "repository": "dhar174/tiny_village",
+        "archived": false,
+        "values": {
+          "Title": "[P3-04] Reconcile PR ownership, merge sequence, and dependency configuration",
+          "Status": "Done",
+          "Phase": "03 Consolidate backlog and pull requests",
+          "Sequence": 3019.0,
+          "Priority": "P1",
+          "Kind": "Task",
+          "Workstream": "Planning",
+          "Scope": "MVP",
+          "Readiness": "Tracking",
+          "Decision": "Not applicable",
+          "Depends on": "Native prerequisites:\nhttps://github.com/dhar174/tiny_village/issues/735\nhttps://github.com/dhar174/tiny_village/issues/736\nhttps://github.com/dhar174/tiny_village/issues/806\nPlanned activation (not added native edges):\nhttps://github.com/dhar174/tiny_village/issues/732\nhttps://github.com/dhar174/tiny_village/issues/734",
+          "Task key": "P3-04",
+          "Review owner": "dhar174"
+        }
+      }
+    },
+    {
+      "index": 2,
+      "actual": {
+        "id": "PVTI_lAHOAE_6m84Bm2UCzhAcbL4",
+        "number": 738,
+        "node_id": "I_kwDOMEkjkc8AAAABW0dlhQ",
+        "repository": "dhar174/tiny_village",
+        "archived": false,
+        "values": {
+          "Title": "[H3] Human decision gate 3: Consolidate backlog and pull requests",
+          "Status": "Todo",
+          "Phase": "03 Consolidate backlog and pull requests",
+          "Sequence": 3900.0,
+          "Priority": "P1",
+          "Kind": "Phase gate",
+          "Workstream": "Review",
+          "Scope": "MVP",
+          "Readiness": "Human review",
+          "Decision": "Pending",
+          "Depends on": "Native prerequisites:\nhttps://github.com/dhar174/tiny_village/issues/737\nPlanned activation (not added native edges):\nhttps://github.com/dhar174/tiny_village/issues/732\nhttps://github.com/dhar174/tiny_village/issues/734\nhttps://github.com/dhar174/tiny_village/issues/735\nhttps://github.com/dhar174/tiny_village/issues/736",
+          "Review owner": "dhar174",
+          "Task key": "H3"
+        }
+      }
+    }
+  ],
+  "plan_digest": "8e7d27f6f9dbdd2b83be6d14ed146146122197b5ad625e5f70adaba250161acf",
+  "status": "verified",
+  "operations_confirmed": 3
+}

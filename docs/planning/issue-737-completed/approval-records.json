@@ -1,0 +1,47 @@
+{
+  "decision_source": "docs/decisions.md",
+  "source_commit": "48213783e2ee0864594af4a3f26667e1269d394a",
+  "approved": {
+    "721": {
+      "decision": "Approved",
+      "record": "D011",
+      "reviewer": "dhar174"
+    },
+    "722": {
+      "decision": "Approved",
+      "record": "D012",
+      "reviewer": "dhar174"
+    },
+    "727": {
+      "decision": "Approved",
+      "record": "D023",
+      "reviewer": "dhar174"
+    },
+    "728": {
+      "decision": "Approved",
+      "record": "D023",
+      "reviewer": "dhar174"
+    },
+    "729": {
+      "decision": "Approved",
+      "record": "D023",
+      "reviewer": "dhar174"
+    },
+    "730": {
+      "decision": "Approved",
+      "record": "D023",
+      "reviewer": "dhar174"
+    },
+    "731": {
+      "decision": "Approved",
+      "record": "D024",
+      "reviewer": "dhar174"
+    },
+    "732": {
+      "decision": "Approved",
+      "record": "D025",
+      "reviewer": "dhar174"
+    }
+  },
+  "unapproved_gate_738": "Pending"
+}

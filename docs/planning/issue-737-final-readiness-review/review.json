@@ -1,0 +1,43 @@
+{
+  "origin": "Reconstructed from the retained initial plan baseline plus the changes visible in the user pasted final plan: Status Done on737/806, and unrelated Project item813. This is not a parsed copy of the original saved final-plan file. The apply command enforces exact canonical digest equality before any mutation.",
+  "desired_digest": "0a85047a3665c9d7bedecf91211dae2c4ccb039d5f8c96fd36b5f1610342c207",
+  "expected_plan_digest": "8e7d27f6f9dbdd2b83be6d14ed146146122197b5ad625e5f70adaba250161acf",
+  "changes": [
+    {
+      "issue": 806,
+      "changes": {
+        "Readiness": [
+          "Ready",
+          "Tracking"
+        ]
+      }
+    },
+    {
+      "issue": 737,
+      "changes": {
+        "Readiness": [
+          "Blocked",
+          "Tracking"
+        ]
+      }
+    },
+    {
+      "issue": 738,
+      "changes": {
+        "Readiness": [
+          "Blocked",
+          "Human review"
+        ]
+      }
+    }
+  ],
+  "project_id": "PVT_kwHOAE_6m84Bm2UC",
+  "github_mutations_performed": 0,
+  "reviewed_at": "2026-10-24T03:21:39.011448+00:00",
+  "fresh_repository_sources_match": true,
+  "source_issues": 333,
+  "candidate_prs": 24,
+  "main": "dc9fcc023b4ee37b3efd579195caaab80993c64a",
+  "actual_saved_final_plan_received_as_file": false,
+  "apply_and_independent_inspection_pending": true
+}

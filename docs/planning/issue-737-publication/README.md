@@ -1,7 +1,8 @@
 # #737 authenticated publication tooling
 
-**Tooling review package. Freeze the authenticated ZIP only after this tooling
-PR merges. Board publication and #806/#737 completion remain unverified.**
+**Frozen publication-stage bundle. Tooling PR #812 merged at `dc9fcc023b4ee37b3efd579195caaab80993c64a`.
+Board publication and #806/#737 completion remain unverified; the next step is
+owner-authenticated read-only preparation.**
 Approval for this workflow is D033 in `docs/decisions.md`; it does not approve an
 unseen live delta or #738. This package extends the merged #811 publisher with
 independently recomputable inspection receipts and evidence-backed completed-stage

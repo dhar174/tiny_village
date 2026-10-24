@@ -1,0 +1,42 @@
+{
+  "purpose": "Tooling candidate extraction test; not the post-merge authenticated publication freeze",
+  "environment": "CPython3.12/Linux; not native Windows",
+  "results": [
+    {
+      "command": [
+        "-B",
+        "validate_package.py"
+      ],
+      "returncode": 0,
+      "stdout": "{\"status\": \"offline_package_verified\", \"issues\": 332, \"prs\": 24, \"fields\": 12, \"views\": 6, \"cycles\": 0, \"gate_738\": \"Pending\", \"stage\": \"publication\", \"project_publication\": \"blocked_not_verified\", \"preview_digest\": \"ed3867e1a6147ef4ddf2d1158799e451f527602ce274bef34a19f444a008eae1\"}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        ".",
+        "-p",
+        "test_*.py"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ".........................................................................................\n----------------------------------------------------------------------\nRan 89 tests in 1.613s\n\nOK\n"
+    },
+    {
+      "tampered": "project-preview.json",
+      "rejected": true
+    },
+    {
+      "tampered": "artifact-hashes.json",
+      "rejected": true
+    },
+    {
+      "tampered": "evidence/publication-tooling/core-raw.tar.gz",
+      "rejected": true
+    }
+  ]
+}
