@@ -1,7 +1,7 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK025](TASK025-pr-ownership-project-737.md) PR ownership and Project configuration (#737) - D032 closeout: #810 merged, approved PR dispositions applied, D033 publication tooling after merged #811; inspection receipts/stage validation pending, authenticated board evidence still blocks closure (Updated: 2026-10-23 UTC)
+- [TASK025](TASK025-pr-ownership-project-737.md) PR ownership and Project configuration (#737) - D032 closeout: #810 merged, approved PR dispositions applied, D033 tooling #812 merged;89 tests/core72+3 pass, frozen local bundle pending owner live-plan/readback; board evidence still blocks closure (Updated: 2026-10-23 UTC)
 - [TASK023](TASK023-zcode-specialist-team.md) Zcode specialist team - nine read-only specialist definitions + canonical coordination policy created, entry points wired, installed to ~/.zcode/agents; static checks + independent review pass, fixes applied; runtime invocation re-verification pending fresh session (Updated: 2026-10-22)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
 
