@@ -142,14 +142,14 @@ class ContextManager:
                 goal_queue = self.character.evaluate_goals()
                 context['active_goals'] = goal_queue[:3]  # Top 3 goals
         except Exception:
-            pass
+            logger.exception("Exception in gather_goal_context")
             
         # Calculate needs priorities
         try:
             needs_calculator = NeedsPriorities()
             context['needs_priorities'] = needs_calculator.calculate_needs_priorities(self.character)
         except Exception:
-            pass
+            logger.exception("Exception in gather_goal_context")
             
         return context
         
