@@ -205,18 +205,32 @@ class TestErrorHandling:
 
     def test_empty_input(self, graph):
         """Test graph behavior with empty input."""
-        # TODO: Test empty input handling
-        pass
+        test_input = {"messages": []}
+        try:
+            result = graph.invoke(test_input)
+            assert result is not None
+        except Exception as e:
+            pytest.fail(f"Graph failed on empty input: {e}")
 
     def test_invalid_input(self, graph):
         """Test graph behavior with invalid input."""
-        # TODO: Test invalid input handling
-        pass
+        test_input = {"invalid_key": "data"}
+        # Expecting a ValueError or similar for invalid input schema
+        with pytest.raises((ValueError, KeyError, TypeError)):
+            graph.invoke(test_input)
 
-    def test_llm_error_handling(self, graph):
+    def test_llm_error_handling(self, graph, monkeypatch):
         """Test graph behavior when LLM calls fail."""
-        # TODO: Mock LLM to raise errors
-        # TODO: Verify graceful error handling
+        # This is a template - replace 'your_module.llm.invoke' with the actual path
+        def mock_fail(*args, **kwargs):
+            raise Exception("LLM call failed")
+
+        # Uncomment and update the following line to mock your LLM
+        # monkeypatch.setattr("your_module.llm.invoke", mock_fail)
+
+        # test_input = {"messages": [{"role": "user", "content": "hi"}]}
+        # with pytest.raises(Exception):
+        #     graph.invoke(test_input)
         pass
 '''
 
@@ -235,6 +249,7 @@ Edit these tests to add specific assertions and test data.
 """
 
 import unittest
+from unittest.mock import patch
 from {graph_module} import {graph_attr}
 
 
@@ -308,6 +323,41 @@ class TestEndToEnd(unittest.TestCase):
 
         # TODO: Create realistic test input
         # TODO: Execute and verify
+        pass
+
+
+class TestErrorHandling(unittest.TestCase):
+    """Test error handling and edge cases."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        self.graph = ''' + graph_attr + f'''
+
+    def test_empty_input(self):
+        """Test graph behavior with empty input."""
+        test_input = {{"messages": []}}
+        try:
+            result = self.graph.invoke(test_input)
+            self.assertIsNotNone(result)
+        except Exception as e:
+            self.fail(f"Graph failed on empty input: {{e}}")
+
+    def test_invalid_input(self):
+        """Test graph behavior with invalid input."""
+        test_input = {{"invalid_key": "data"}}
+        # Expecting a ValueError or similar for invalid input schema
+        with self.assertRaises((ValueError, KeyError, TypeError)):
+            self.graph.invoke(test_input)
+
+    def test_llm_error_handling(self):
+        """Test graph behavior when LLM calls fail."""
+        # This is a template - replace 'your_module.llm.invoke' with the actual path
+        # with patch("your_module.llm.invoke") as mock_invoke:
+        #     mock_invoke.side_effect = Exception("LLM call failed")
+        #
+        #     # test_input = {{"messages": [{{"role": "user", "content": "hi"}}]}}
+        #     # with self.assertRaises(Exception):
+        #     #     self.graph.invoke(test_input)
         pass
 
 
