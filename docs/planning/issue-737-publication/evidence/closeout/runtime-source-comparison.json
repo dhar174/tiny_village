@@ -1,0 +1,8 @@
+{
+  "base_evidence_revision": "48213783e2ee0864594af4a3f26667e1269d394a",
+  "compared_main": "10569c06cc01075c70d5b39ec1b9e6804eb7f5cd",
+  "observed_at": "2026-10-23T06:07:50.219902+00:00",
+  "files_checked": 145,
+  "mismatches": [],
+  "execution": "source-hash comparison, not a new runtime test run"
+}

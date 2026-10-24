@@ -1,0 +1,218 @@
+{
+  "schema_version": 1,
+  "status": "PASS",
+  "profile": "core",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+  "machine": "x86_64",
+  "revision": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+  "locks": {
+    "requirements/locks/core-py312-linux-x86_64.txt": "2a037e6923b1f4e0f19d14109adc4217a5e4b7e0583a780639dd476a1451c908"
+  },
+  "batches": {
+    "components": {
+      "status": "PASS",
+      "command": [
+        "/workspace/.venvs/issue726-core/bin/python",
+        "-B",
+        "/workspace/tiny_village-737-publication/scripts/run_ci_checks.py",
+        "--worker",
+        "unittest",
+        "--report",
+        "/tmp/issue737-publication-core/batches/components/result.json",
+        "tests.test_tiny_util_funcs",
+        "tests.test_actions",
+        "tests.test_action_named_target_resolution",
+        "tests.test_action_contracts",
+        "tests.test_utility_contracts",
+        "tests.test_goap_graph_contracts",
+        "tests.test_goap_error_handling",
+        "tests.test_event_handler_payloads"
+      ],
+      "parent_timeout": 120,
+      "started_utc": "2026-10-24T01:21:15.935622+00:00",
+      "exit_code": 0,
+      "launcher": [
+        "/workspace/.venvs/issue726-core/bin/python",
+        "-B",
+        "-c",
+        "import os; from scripts.run_ci_checks import register_group; register_group('/tmp/issue737-publication-core/batches/components/groups',380762); os.execvp('/workspace/.venvs/issue726-core/bin/python',['/workspace/.venvs/issue726-core/bin/python', '-B', '/workspace/tiny_village-737-publication/scripts/run_ci_checks.py', '--worker', 'unittest', '--report', '/tmp/issue737-publication-core/batches/components/result.json', 'tests.test_tiny_util_funcs', 'tests.test_actions', 'tests.test_action_named_target_resolution', 'tests.test_action_contracts', 'tests.test_utility_contracts', 'tests.test_goap_graph_contracts', 'tests.test_goap_error_handling', 'tests.test_event_handler_payloads'])"
+      ],
+      "pid": 380768,
+      "terminated_groups": [],
+      "report": {
+        "kind": "unittest",
+        "status": "PASS",
+        "counts": {
+          "tests_run": 45,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "expected_failures": 0,
+          "unexpected_successes": 0
+        }
+      },
+      "finished_utc": "2026-10-24T01:21:19.977756+00:00"
+    },
+    "runtime": {
+      "status": "PASS",
+      "command": [
+        "/workspace/.venvs/issue726-core/bin/python",
+        "-B",
+        "/workspace/tiny_village-737-publication/scripts/run_ci_checks.py",
+        "--worker",
+        "unittest",
+        "--report",
+        "/tmp/issue737-publication-core/batches/runtime/result.json",
+        "tests.test_memory_runtime",
+        "tests.test_lightweight_runtime.TestHeadlessRuntime",
+        "tests.test_character_happiness_contracts",
+        "tests.test_lightweight_runtime.TestMinimalRunner"
+      ],
+      "parent_timeout": 120,
+      "started_utc": "2026-10-24T01:21:19.978051+00:00",
+      "exit_code": 0,
+      "launcher": [
+        "/workspace/.venvs/issue726-core/bin/python",
+        "-B",
+        "-c",
+        "import os; from scripts.run_ci_checks import register_group; register_group('/tmp/issue737-publication-core/batches/runtime/groups',380762); os.execvp('/workspace/.venvs/issue726-core/bin/python',['/workspace/.venvs/issue726-core/bin/python', '-B', '/workspace/tiny_village-737-publication/scripts/run_ci_checks.py', '--worker', 'unittest', '--report', '/tmp/issue737-publication-core/batches/runtime/result.json', 'tests.test_memory_runtime', 'tests.test_lightweight_runtime.TestHeadlessRuntime', 'tests.test_character_happiness_contracts', 'tests.test_lightweight_runtime.TestMinimalRunner'])"
+      ],
+      "pid": 380828,
+      "terminated_groups": [],
+      "report": {
+        "kind": "unittest",
+        "status": "PASS",
+        "counts": {
+          "tests_run": 27,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "expected_failures": 0,
+          "unexpected_successes": 0
+        }
+      },
+      "finished_utc": "2026-10-24T01:21:27.564052+00:00"
+    },
+    "canonical-cli": {
+      "status": "PASS",
+      "command": [
+        "/workspace/.venvs/issue726-core/bin/python",
+        "-B",
+        "/workspace/tiny_village-737-publication/scripts/run_ci_checks.py",
+        "--worker",
+        "probe",
+        "--report",
+        "/tmp/issue737-publication-core/batches/canonical-cli/result.json",
+        "canonical"
+      ],
+      "parent_timeout": 120,
+      "started_utc": "2026-10-24T01:21:27.564371+00:00",
+      "exit_code": 0,
+      "launcher": [
+        "/workspace/.venvs/issue726-core/bin/python",
+        "-B",
+        "-c",
+        "import os; from scripts.run_ci_checks import register_group; register_group('/tmp/issue737-publication-core/batches/canonical-cli/groups',380762); os.execvp('/workspace/.venvs/issue726-core/bin/python',['/workspace/.venvs/issue726-core/bin/python', '-B', '/workspace/tiny_village-737-publication/scripts/run_ci_checks.py', '--worker', 'probe', '--report', '/tmp/issue737-publication-core/batches/canonical-cli/result.json', 'canonical'])"
+      ],
+      "pid": 380960,
+      "terminated_groups": [],
+      "report": {
+        "kind": "probe",
+        "status": "PASS",
+        "probes_run": 1,
+        "expected_exit_code": 0,
+        "observed_exit_code": 0,
+        "capture_artifacts": "/tmp/issue737-publication-core/children/child-gx6y0x7c"
+      },
+      "finished_utc": "2026-10-24T01:21:28.029654+00:00"
+    },
+    "default-cli": {
+      "status": "PASS",
+      "command": [
+        "/workspace/.venvs/issue726-core/bin/python",
+        "-B",
+        "/workspace/tiny_village-737-publication/scripts/run_ci_checks.py",
+        "--worker",
+        "probe",
+        "--report",
+        "/tmp/issue737-publication-core/batches/default-cli/result.json",
+        "default"
+      ],
+      "parent_timeout": 120,
+      "started_utc": "2026-10-24T01:21:28.029998+00:00",
+      "exit_code": 0,
+      "launcher": [
+        "/workspace/.venvs/issue726-core/bin/python",
+        "-B",
+        "-c",
+        "import os; from scripts.run_ci_checks import register_group; register_group('/tmp/issue737-publication-core/batches/default-cli/groups',380762); os.execvp('/workspace/.venvs/issue726-core/bin/python',['/workspace/.venvs/issue726-core/bin/python', '-B', '/workspace/tiny_village-737-publication/scripts/run_ci_checks.py', '--worker', 'probe', '--report', '/tmp/issue737-publication-core/batches/default-cli/result.json', 'default'])"
+      ],
+      "pid": 380975,
+      "terminated_groups": [],
+      "report": {
+        "kind": "probe",
+        "status": "PASS",
+        "probes_run": 1,
+        "expected_exit_code": 0,
+        "observed_exit_code": 0,
+        "capture_artifacts": "/tmp/issue737-publication-core/children/child-2lzost82"
+      },
+      "finished_utc": "2026-10-24T01:21:28.545298+00:00"
+    },
+    "invalid-cli": {
+      "status": "PASS",
+      "command": [
+        "/workspace/.venvs/issue726-core/bin/python",
+        "-B",
+        "/workspace/tiny_village-737-publication/scripts/run_ci_checks.py",
+        "--worker",
+        "probe",
+        "--report",
+        "/tmp/issue737-publication-core/batches/invalid-cli/result.json",
+        "invalid"
+      ],
+      "parent_timeout": 120,
+      "started_utc": "2026-10-24T01:21:28.545686+00:00",
+      "exit_code": 0,
+      "launcher": [
+        "/workspace/.venvs/issue726-core/bin/python",
+        "-B",
+        "-c",
+        "import os; from scripts.run_ci_checks import register_group; register_group('/tmp/issue737-publication-core/batches/invalid-cli/groups',380762); os.execvp('/workspace/.venvs/issue726-core/bin/python',['/workspace/.venvs/issue726-core/bin/python', '-B', '/workspace/tiny_village-737-publication/scripts/run_ci_checks.py', '--worker', 'probe', '--report', '/tmp/issue737-publication-core/batches/invalid-cli/result.json', 'invalid'])"
+      ],
+      "pid": 380980,
+      "terminated_groups": [],
+      "report": {
+        "kind": "probe",
+        "status": "PASS",
+        "probes_run": 1,
+        "expected_exit_code": 2,
+        "observed_exit_code": 2,
+        "capture_artifacts": "/tmp/issue737-publication-core/children/child-jtonnysb"
+      },
+      "finished_utc": "2026-10-24T01:21:28.710317+00:00"
+    }
+  },
+  "packages": {
+    "typing-inspection": "0.4.4",
+    "pydantic-core": "2.50.1",
+    "attrs": "23.2.0",
+    "annotated-types": "0.8.0",
+    "numpy": "1.26.4",
+    "pyparsing": "3.1.2",
+    "pydantic": "2.14.1",
+    "pip": "25.0.1",
+    "typing-extensions": "4.16.0",
+    "networkx": "3.1"
+  },
+  "counts": {
+    "tests_run": 72,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "expected_failures": 0,
+    "unexpected_successes": 0
+  },
+  "probes_run": 3
+}

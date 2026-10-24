@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "test_id": "issue737-distance-isolated-locations",
+  "source_sha256": "e9b851eeb8f6479b6b3639684829cbeda87ac513ec795c3160ad9fe766311f3d",
+  "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+  "cwd": "/workspace/tiny_village-737",
+  "pid": 248386,
+  "fatal_timeout": 20,
+  "timeout": 25,
+  "started_utc": "2026-10-22T16:21:46.839213+00:00",
+  "started_monotonic": 154899.696129861,
+  "returncode": 0,
+  "outcome": "EXITED_ZERO",
+  "watchdog_dump_observed": false,
+  "launched_monotonic": 154899.696576326,
+  "wait_started_monotonic": 154899.696728974,
+  "finished_utc": "2026-10-22T16:21:47.254354+00:00",
+  "finished_monotonic": 154900.111280026
+}

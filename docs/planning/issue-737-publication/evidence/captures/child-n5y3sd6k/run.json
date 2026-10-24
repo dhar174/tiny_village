@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "test_id": "tests.test_model_cache.TestModelCacheIntegration.test_real_model_loaders_receive_selected_cache_and_preserve_verification",
+  "source_sha256": "e45cf0b88cff3e7122047ba2c99a46bd0a2d762813ea9625168d9ba7cb0798a0",
+  "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+  "cwd": "/workspace/tiny_village-737",
+  "pid": 248115,
+  "fatal_timeout": 25,
+  "timeout": 30,
+  "started_utc": "2026-10-22T16:20:17.972701+00:00",
+  "started_monotonic": 154810.829613804,
+  "returncode": 0,
+  "outcome": "EXITED_ZERO",
+  "watchdog_dump_observed": false,
+  "launched_monotonic": 154810.83001319,
+  "wait_started_monotonic": 154810.830115462,
+  "finished_utc": "2026-10-22T16:20:18.187046+00:00",
+  "finished_monotonic": 154811.043971733
+}

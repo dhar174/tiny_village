@@ -1,0 +1,16 @@
+test_builder_exists (__main__.PreviewAvailabilityTests.test_builder_exists) ... ok
+test_738_approval_cannot_be_invented_from_coordinator_approval (__main__.PreviewTests.test_738_approval_cannot_be_invented_from_coordinator_approval) ... ok
+test_closed_gate_without_human_approval_keeps_dependents_blocked (__main__.PreviewTests.test_closed_gate_without_human_approval_keeps_dependents_blocked) ... ok
+test_closed_task_is_tracking_and_not_reported_ready (__main__.PreviewTests.test_closed_task_is_tracking_and_not_reported_ready) ... ok
+test_missing_managed_issue_is_rejected (__main__.PreviewTests.test_missing_managed_issue_is_rejected) ... ok
+test_missing_prerequisite_is_rejected (__main__.PreviewTests.test_missing_prerequisite_is_rejected) ... ok
+test_native_dependency_cycle_is_rejected (__main__.PreviewTests.test_native_dependency_cycle_is_rejected) ... ok
+test_open_dependency_blocks_even_if_decision_says_approved (__main__.PreviewTests.test_open_dependency_blocks_even_if_decision_says_approved) ... ok
+test_ordered_sequences_follow_prerequisites (__main__.PreviewTests.test_ordered_sequences_follow_prerequisites) ... ok
+test_phase_parent_does_not_become_a_dependency (__main__.PreviewTests.test_phase_parent_does_not_become_a_dependency) ... ok
+test_recorded_human_approval_unlocks_only_immediate_ready_task (__main__.PreviewTests.test_recorded_human_approval_unlocks_only_immediate_ready_task) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.009s
+
+OK

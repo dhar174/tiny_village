@@ -1,0 +1,33 @@
+{
+  "platform": "Linux; extracted archive outside git; native Windows not executed",
+  "results": [
+    {
+      "case": "clean_extracted_package",
+      "exit_code": 0,
+      "expected": "success",
+      "stdout": "{\"status\": \"offline_package_verified\", \"issues\": 332, \"prs\": 26, \"fields\": 12, \"views\": 6, \"cycles\": 0, \"gate_738\": \"Pending\", \"project_publication\": \"blocked_not_verified\", \"preview_digest\": \"38953ddacac8a7b6c4412eaf56ed6277efcdbfc3d94c5cdbce5a102b0011dc65\"}\n",
+      "stderr": ""
+    },
+    {
+      "case": "modified_preview_rejected",
+      "exit_code": 1,
+      "expected": "failure",
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/tmp/tmp5gdtuv6u/tiny-village-project-737/validate_package.py\", line 86, in <module>\n    print(json.dumps(validate()))\n                     ^^^^^^^^^^\n  File \"/tmp/tmp5gdtuv6u/tiny-village-project-737/validate_package.py\", line 20, in validate\n    raise ValueError(\"Retained preview differs from regenerated source inputs\")\nValueError: Retained preview differs from regenerated source inputs\n"
+    },
+    {
+      "case": "missing_manifest_rejected_GREEN",
+      "exit_code": 1,
+      "expected": "failure",
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/tmp/tmp5gdtuv6u/tiny-village-project-737/validate_package.py\", line 86, in <module>\n    print(json.dumps(validate()))\n                     ^^^^^^^^^^\n  File \"/tmp/tmp5gdtuv6u/tiny-village-project-737/validate_package.py\", line 69, in validate\n    raise ValueError(\"Missing artifact hashes; rebuild a new review package, not an approval\")\nValueError: Missing artifact hashes; rebuild a new review package, not an approval\n"
+    },
+    {
+      "case": "modified_raw_capture_rejected",
+      "exit_code": 1,
+      "expected": "failure",
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/tmp/tmp5gdtuv6u/tiny-village-project-737/validate_package.py\", line 86, in <module>\n    print(json.dumps(validate()))\n                     ^^^^^^^^^^\n  File \"/tmp/tmp5gdtuv6u/tiny-village-project-737/validate_package.py\", line 74, in validate\n    raise ValueError(\"Changed/missing retained artifact: \" + name)\nValueError: Changed/missing retained artifact: evidence/captures/child-hqlgsjo9/stdout.log\n"
+    }
+  ]
+}

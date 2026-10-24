@@ -1,0 +1,19 @@
+{
+  "managed_issues": 332,
+  "inventoried_prs": 24,
+  "direct_handoff_prs": [
+    709,
+    711,
+    715
+  ],
+  "source_issues": 484,
+  "native_edge_count": 112,
+  "planned_activation_edge_count": 387,
+  "cycles": 0,
+  "ordering_conflicts": [],
+  "source_guard_issues": 333,
+  "project_readback": "not_verified",
+  "github_mutations_performed_by_builder": 0,
+  "preview_digest": "ed3867e1a6147ef4ddf2d1158799e451f527602ce274bef34a19f444a008eae1",
+  "gate_738": "Pending"
+}

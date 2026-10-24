@@ -1,0 +1,2193 @@
+[
+  {
+    "number": 363,
+    "url": "https://github.com/dhar174/tiny_village/pull/363",
+    "title": "Add memory summaries to decision prompts",
+    "head_sha": "645ee6472492d49de2ba0f4cc385c919c2ab15cb",
+    "head_ref": "codex/extend-generate_decision_prompt-with-memory-summaries",
+    "base_ref": "main",
+    "base_sha_reported": "76f9df3a708307055be8072c2161b68c26cca11d",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": false,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [],
+    "actual_review_requests": [],
+    "reviews": [
+      {
+        "url": "https://github.com/dhar174/tiny_village/pull/363#pullrequestreview-3035284399",
+        "state": "COMMENTED",
+        "body": "## Pull Request Overview\n\nThis PR adds memory integration to decision prompts by introducing an `include_memories` parameter to the `generate_decision_prompt` method. When enabled, the method retrieves and appends recent memories and relationship summaries to help inform character decision-making.\n\nKey changes:\n- Added `include_memories` boolean parameter to `generate_decision_prompt` method signature\n- Implemented memory and relationship retrieval logic with error handling\n- Added comprehensive unit test to verify the new functionality\n\n### Reviewed Changes\n\nCopilot reviewed 2 out of 2 changed files in this pull request and generated 2 comments.\n\n| File | Description |\n| ---- | ----------- |\n| tiny_prompt_builder.py | Enhanced decision prompt generation with optional memory summaries and relationship data |\n| test_enhanced_decision_prompt.py | Added unit test to verify memory inclusion functionality works correctly |\n\n\n<details>\n<summary>Comments suppressed due to low confidence (1)</summary>\n\n**test_enhanced_decision_prompt.py:463**\n* The test assertions are too permissive and may pass even if the memory functionality is broken. Consider testing that memories are properly formatted and that the specific memory content appears in the expected format, rather than just checking for the presence of header text.\n```\n        self.assertIn(\"Recent memories\", prompt)\n```\n</details>\n\n",
+        "submittedAt": "2025-07-19T08:16:15Z",
+        "author": {
+          "login": "copilot-pull-request-reviewer"
+        },
+        "commit": {
+          "oid": "67a3954a35721668bd427809f2dd862b5c80c91f"
+        }
+      }
+    ],
+    "closing_issue_references": [],
+    "owner_issue": 155,
+    "original_handoff": 155,
+    "phase": 9,
+    "sequence": 9003,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      607
+    ],
+    "planned_activation": [
+      768
+    ],
+    "blocking_issues": [
+      607,
+      768
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-03-22T19:42:10Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/23410947470/job/68097921803"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "submit-pypi",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-03-22T19:46:23Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/23410947135/job/68097921122"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-03-22T19:42:34Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/23410947470/job/68097921813"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-03-22T19:42:02Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/68097959406"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Show relevant memories change actual goal/plan choice through StrategyManager/GOAP; recording/recall or prompt inclusion alone is insufficient.",
+    "files": [
+      {
+        "path": "test_decision_prompt_memories.py",
+        "additions": 81,
+        "deletions": 0
+      },
+      {
+        "path": "test_enhanced_decision_prompt.py",
+        "additions": 41,
+        "deletions": 0
+      },
+      {
+        "path": "tiny_prompt_builder.py",
+        "additions": 1313,
+        "deletions": 209
+      },
+      {
+        "path": "tiny_strategy_manager.py",
+        "additions": 1731,
+        "deletions": 131
+      }
+    ]
+  },
+  {
+    "number": 592,
+    "url": "https://github.com/dhar174/tiny_village/pull/592",
+    "title": "Add AI Algorithm Mentor workflow",
+    "head_sha": "a2bda6ace451ab0b774553067c820d581c85fc83",
+    "head_ref": "copilot/add-ai-algorithm-mentor-workflow",
+    "base_ref": "main",
+    "base_sha_reported": "a32b4dbb31677600249a3e753afb6ef5b8c04696",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": false,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "actual_review_requests": [
+      {
+        "requestedReviewer": {
+          "login": "dhar174"
+        }
+      }
+    ],
+    "reviews": [
+      {
+        "url": "https://github.com/dhar174/tiny_village/pull/592#pullrequestreview-3960792404",
+        "state": "COMMENTED",
+        "body": "## Pull request overview\n\nAdds a GitHub Actions workflow to run the third-party **AI Algorithm Mentor** action on pushes to `main`, supplying LLM provider configuration and required secrets.\n\n**Changes:**\n- Introduces `.github/workflows/ai-algorithm-mentor.yml` workflow triggered on `push` to `main`\n- Runs `choam2426/AI-Algorithm-Mentor@v5` with Google/Gemini configuration and repository write permissions\n\n\n\n\n\n---\n\nYou can also share your feedback on Copilot code review. [Take the survey](https://www.surveymonkey.com/r/XP6L3XJ).",
+        "submittedAt": "2026-03-17T13:31:53Z",
+        "author": {
+          "login": "copilot-pull-request-reviewer"
+        },
+        "commit": {
+          "oid": "a2bda6ace451ab0b774553067c820d581c85fc83"
+        }
+      }
+    ],
+    "closing_issue_references": [],
+    "owner_issue": 770,
+    "original_handoff": 770,
+    "phase": 9,
+    "sequence": 9011,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      768
+    ],
+    "planned_activation": [],
+    "blocking_issues": [
+      768
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-03-17T13:30:36Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/23196625013/job/67406730099"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "submit-pypi",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-03-17T13:35:08Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/23196624976/job/67406730100"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-03-17T13:30:30Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/67406865006"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Record keep/separate/defer/supersede decisions for #705/#707/#708/#592/#702/#700.; Treat AI Algorithm Mentor as optional automation with distinct permission/provider prerequisites, not required test CI.; Do not ship generated dummy fixtures, unrelated LangGraph tooling, or experimental sleep changes as MVP runtime work.; Human reviewer: dhar174, or a maintainer explicitly delegated in the Project.; Check prerequisite issues and the previous phase's recorded decision.; Review artifacts, current commit/PR heads, executed checks, known failures, and proposed scope.; Walk through the phase's success/failure scenarios and relevant design/engineering evidence.; Record reviewer, date, evidence links, rationale, and exactly one decision: Approved / Changes requested / Deferred.; Create a separate issue for each required remediation and add it as a blocker.; Set Project Decision to the human's recorded decision. Close this issue only after Approved.",
+    "files": [
+      {
+        "path": ".github/workflows/ai-algorithm-mentor.yml",
+        "additions": 21,
+        "deletions": 0
+      }
+    ]
+  },
+  {
+    "number": 687,
+    "url": "https://github.com/dhar174/tiny_village/pull/687",
+    "title": "Align documentation with current demo, testing, and integration behavior",
+    "head_sha": "532bf14edaba95a06ded13227e7be0ea43bafb94",
+    "head_ref": "copilot/fix-documentation-incongruities",
+    "base_ref": "main",
+    "base_sha_reported": "2d40e6b6b9cabcfe6099c471a0de35298c1af83f",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "actual_review_requests": [
+      {
+        "requestedReviewer": {
+          "login": "dhar174"
+        }
+      }
+    ],
+    "reviews": [],
+    "closing_issue_references": [
+      681
+    ],
+    "owner_issue": 656,
+    "original_handoff": 656,
+    "phase": 8,
+    "sequence": 8001,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      759
+    ],
+    "planned_activation": [],
+    "blocking_issues": [
+      759
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:28:19Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24125686552/job/70389558596"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "submit-pypi",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:32:24Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24125685733/job/70389557564"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:28:24Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24125686552/job/70389558629"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:28:10Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/70389675795"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Reconcile README/Quickstart/status claims with current minimal/visual/canonical commands, archive labels and executed scenario evidence.",
+    "files": [
+      {
+        "path": "BUILDING_SYSTEM_DOCUMENTATION.md",
+        "additions": 53,
+        "deletions": 15
+      },
+      {
+        "path": "CUSTOM_BUILDINGS_GUIDE.md",
+        "additions": 13,
+        "deletions": 3
+      },
+      {
+        "path": "CUSTOM_BUILDINGS_IMPLEMENTATION.md",
+        "additions": 23,
+        "deletions": 21
+      },
+      {
+        "path": "docs/README.md",
+        "additions": 1,
+        "deletions": 1
+      },
+      {
+        "path": "docs/archived/MISSING_FUNCTIONALITY_OVERVIEW.md",
+        "additions": 6,
+        "deletions": 1
+      },
+      {
+        "path": "docs/archived/missing_demo_elements.md",
+        "additions": 6,
+        "deletions": 0
+      },
+      {
+        "path": "docs/archived/missing_demo_requirements.md",
+        "additions": 6,
+        "deletions": 0
+      },
+      {
+        "path": "docs/reference/CHECKPOINT_SYSTEM_DOCUMENTATION.md",
+        "additions": 20,
+        "deletions": 0
+      },
+      {
+        "path": "docs/reference/MINIMUM_DEMO_STATUS.md",
+        "additions": 91,
+        "deletions": 185
+      },
+      {
+        "path": "docs/reference/SYSTEM_INTEGRATION_COMPLETE.md",
+        "additions": 83,
+        "deletions": 233
+      },
+      {
+        "path": "logs/copilot/governance/audit.log",
+        "additions": 0,
+        "deletions": 6
+      },
+      {
+        "path": "logs/copilot/session.log",
+        "additions": 0,
+        "deletions": 3
+      }
+    ]
+  },
+  {
+    "number": 688,
+    "url": "https://github.com/dhar174/tiny_village/pull/688",
+    "title": "Add current repository context map and refresh folder structure blueprint",
+    "head_sha": "b33d741a9b7bd874416231e540fe7f2e13f7c07b",
+    "head_ref": "copilot/generate-context-map-file-structure",
+    "base_ref": "main",
+    "base_sha_reported": "babb65770c4c53c1155ab38e8bb29a0673e1236a",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "actual_review_requests": [
+      {
+        "requestedReviewer": {
+          "login": "dhar174"
+        }
+      }
+    ],
+    "reviews": [],
+    "closing_issue_references": [
+      633
+    ],
+    "owner_issue": 633,
+    "original_handoff": 633,
+    "phase": 8,
+    "sequence": 8046,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [],
+    "planned_activation": [
+      759
+    ],
+    "blocking_issues": [
+      759
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:30:42Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24125786482/job/70389894466"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "submit-pypi",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:34:37Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24125786631/job/70389894543"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:30:47Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24125786482/job/70389894494"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:30:34Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/70390014710"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Validate the existing context map/folder blueprint against current tracked files/modules and state explicit risks/relationships; stale generated artifacts are not current evidence.",
+    "files": [
+      {
+        "path": "design_docs/project_folder_blueprint.md",
+        "additions": 292,
+        "deletions": 97
+      },
+      {
+        "path": "docs/README.md",
+        "additions": 4,
+        "deletions": 0
+      },
+      {
+        "path": "docs/reference/PROJECT_CONTEXT_MAP.md",
+        "additions": 134,
+        "deletions": 0
+      },
+      {
+        "path": "memory-bank/tasks/TASK002-context-mapping-and-file-system-exploration.md",
+        "additions": 77,
+        "deletions": 0
+      },
+      {
+        "path": "memory-bank/tasks/_index.md",
+        "additions": 15,
+        "deletions": 14
+      }
+    ]
+  },
+  {
+    "number": 689,
+    "url": "https://github.com/dhar174/tiny_village/pull/689",
+    "title": "Align StrategyManager with real GOAP multi-step planning",
+    "head_sha": "93c069420f18a8ad3e64cd3cd89eadc04332329b",
+    "head_ref": "copilot/fix-strategymanager-goapplanner-interaction",
+    "base_ref": "main",
+    "base_sha_reported": "babb65770c4c53c1155ab38e8bb29a0673e1236a",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "actual_review_requests": [
+      {
+        "requestedReviewer": {
+          "login": "dhar174"
+        }
+      }
+    ],
+    "reviews": [],
+    "closing_issue_references": [
+      218
+    ],
+    "owner_issue": 218,
+    "original_handoff": 218,
+    "phase": 4,
+    "sequence": 4025,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      740,
+      802
+    ],
+    "planned_activation": [
+      220,
+      738
+    ],
+    "blocking_issues": [
+      220,
+      738,
+      740,
+      802
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:44:31Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24126351524/job/70391795411"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "submit-pypi",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:48:44Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24126353546/job/70391801843"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:44:30Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24126351524/job/70391795458"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:44:23Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/70391913204"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Connect StrategyManager to real multi-step GOAP with supported Goal/Action contracts; execute plans across ticks and replan on failure.",
+    "files": [
+      {
+        "path": "tests/test_goap_planner_resilience.py",
+        "additions": 255,
+        "deletions": 0
+      },
+      {
+        "path": "tests/test_strategy_manager_event_planning.py",
+        "additions": 7,
+        "deletions": 22
+      },
+      {
+        "path": "tiny_goap_system.py",
+        "additions": 551,
+        "deletions": 279
+      },
+      {
+        "path": "tiny_strategy_manager.py",
+        "additions": 51,
+        "deletions": 91
+      },
+      {
+        "path": "tiny_utility_functions.py",
+        "additions": 21,
+        "deletions": 13
+      }
+    ]
+  },
+  {
+    "number": 690,
+    "url": "https://github.com/dhar174/tiny_village/pull/690",
+    "title": "Route EventHandler-driven strategy updates through character-aware execution",
+    "head_sha": "40d344d6cd317485dec8ff63cb0214c960efc356",
+    "head_ref": "copilot/eventhandler-integration",
+    "base_ref": "main",
+    "base_sha_reported": "babb65770c4c53c1155ab38e8bb29a0673e1236a",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "actual_review_requests": [
+      {
+        "requestedReviewer": {
+          "login": "dhar174"
+        }
+      }
+    ],
+    "reviews": [],
+    "closing_issue_references": [
+      219
+    ],
+    "owner_issue": 219,
+    "original_handoff": 219,
+    "phase": 5,
+    "sequence": 5001,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      743
+    ],
+    "planned_activation": [],
+    "blocking_issues": [
+      743
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:48:23Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24126519124/job/70392351196"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "submit-pypi",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:52:32Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24126518858/job/70392351347"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:48:40Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24126519124/job/70392351324"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:48:15Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/70392454730"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Route detected event strategies through the proper Character and action executor, asserting authoritative outcomes and exactly-once feedback.",
+    "files": [
+      {
+        "path": "critical_analysis/IMPLEMENTATION_PLAN.md",
+        "additions": 4,
+        "deletions": 0
+      },
+      {
+        "path": "tests/test_event_handler_loop_integration.py",
+        "additions": 214,
+        "deletions": 0
+      },
+      {
+        "path": "tiny_gameplay_controller.py",
+        "additions": 263,
+        "deletions": 49
+      }
+    ]
+  },
+  {
+    "number": 691,
+    "url": "https://github.com/dhar174/tiny_village/pull/691",
+    "title": "Implement owner-based building access and income effects",
+    "head_sha": "2b0f5a1087d916f0086ad2e42dc617e035fd0884",
+    "head_ref": "copilot/flesh-out-owner-attribute-effects",
+    "base_ref": "main",
+    "base_sha_reported": "babb65770c4c53c1155ab38e8bb29a0673e1236a",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "actual_review_requests": [
+      {
+        "requestedReviewer": {
+          "login": "dhar174"
+        }
+      }
+    ],
+    "reviews": [],
+    "closing_issue_references": [
+      174
+    ],
+    "owner_issue": 174,
+    "original_handoff": 174,
+    "phase": 6,
+    "sequence": 6006,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      198
+    ],
+    "planned_activation": [
+      748
+    ],
+    "blocking_issues": [
+      198,
+      748
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:47:23Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24126473000/job/70392195774"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "submit-pypi",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:51:58Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24126472663/job/70392195801"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:47:31Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24126473000/job/70392195764"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:47:14Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/70392315219"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Resolve the existing in-scope decision, then prove owner-based access/income rules and graph/economic effects with non-owner cases; do not silently add this to the MVP.",
+    "files": [
+      {
+        "path": "tests/test_building_ownership.py",
+        "additions": 203,
+        "deletions": 0
+      },
+      {
+        "path": "tiny_buildings.py",
+        "additions": 81,
+        "deletions": 2
+      }
+    ]
+  },
+  {
+    "number": 692,
+    "url": "https://github.com/dhar174/tiny_village/pull/692",
+    "title": "Expand default item interactions for tools, clothing, and crafting resources",
+    "head_sha": "e0803c13d5cf5429689288c9d90bc171a3fa174f",
+    "head_ref": "copilot/expand-possible-interactions",
+    "base_ref": "main",
+    "base_sha_reported": "babb65770c4c53c1155ab38e8bb29a0673e1236a",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "actual_review_requests": [
+      {
+        "requestedReviewer": {
+          "login": "dhar174"
+        }
+      }
+    ],
+    "reviews": [],
+    "closing_issue_references": [
+      196
+    ],
+    "owner_issue": 196,
+    "original_handoff": 196,
+    "phase": 6,
+    "sequence": 6002,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      195
+    ],
+    "planned_activation": [
+      748
+    ],
+    "blocking_issues": [
+      195,
+      748
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:58:38Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24126943369/job/70393766873"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "submit-pypi",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T09:02:40Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24126943276/job/70393766851"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:58:37Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24126943369/job/70393766802"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T08:58:28Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/70393887498"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Execute actual equip/wear/craft/consume interactions against valid state, retaining effects and explicit failure behavior.",
+    "files": [
+      {
+        "path": "tests/test_tiny_items_interactions.py",
+        "additions": 124,
+        "deletions": 0
+      },
+      {
+        "path": "tiny_items.py",
+        "additions": 66,
+        "deletions": 1
+      }
+    ]
+  },
+  {
+    "number": 693,
+    "url": "https://github.com/dhar174/tiny_village/pull/693",
+    "title": "Surface AI-facing inventory state and trade/drop options in prompt context",
+    "head_sha": "6c40b629ef1bab26d1a060695ac05b9893a18081",
+    "head_ref": "copilot/enhance-ui-inventory-management",
+    "base_ref": "main",
+    "base_sha_reported": "babb65770c4c53c1155ab38e8bb29a0673e1236a",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "actual_review_requests": [
+      {
+        "requestedReviewer": {
+          "login": "dhar174"
+        }
+      }
+    ],
+    "reviews": [],
+    "closing_issue_references": [
+      197
+    ],
+    "owner_issue": 750,
+    "original_handoff": 750,
+    "phase": 6,
+    "sequence": 6005,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      198
+    ],
+    "planned_activation": [
+      748
+    ],
+    "blocking_issues": [
+      198,
+      748
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T09:09:49Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24127419196/job/70395338447"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "submit-pypi",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T09:13:49Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24127418416/job/70395337317"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T09:09:44Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24127419196/job/70395338473"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T09:09:36Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/70395446787"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Review PR #693 against the chosen inventory and economic APIs.; Unavailable items/actions are not offered as valid choices.; Decision and prompt contexts show consistent quantities and useful choices without duplicate aliases.",
+    "files": [
+      {
+        "path": "tests/test_context_manager.py",
+        "additions": 33,
+        "deletions": 1
+      },
+      {
+        "path": "tests/test_inventory_management.py",
+        "additions": 122,
+        "deletions": 0
+      },
+      {
+        "path": "tests/test_inventory_prompt_context.py",
+        "additions": 97,
+        "deletions": 0
+      },
+      {
+        "path": "tiny_items.py",
+        "additions": 141,
+        "deletions": 76
+      },
+      {
+        "path": "tiny_prompt_builder.py",
+        "additions": 114,
+        "deletions": 3
+      }
+    ]
+  },
+  {
+    "number": 694,
+    "url": "https://github.com/dhar174/tiny_village/pull/694",
+    "title": "Integrate jobs, item needs, and trading into economic simulation",
+    "head_sha": "d51a7eb5f6f307e92d8e77cfbe013cfd24d210d0",
+    "head_ref": "copilot/connect-item-availability-production-consumption",
+    "base_ref": "main",
+    "base_sha_reported": "babb65770c4c53c1155ab38e8bb29a0673e1236a",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "actual_review_requests": [
+      {
+        "requestedReviewer": {
+          "login": "dhar174"
+        }
+      }
+    ],
+    "reviews": [],
+    "closing_issue_references": [
+      198
+    ],
+    "owner_issue": 198,
+    "original_handoff": 198,
+    "phase": 6,
+    "sequence": 6004,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      196,
+      199
+    ],
+    "planned_activation": [
+      195,
+      748
+    ],
+    "blocking_issues": [
+      195,
+      196,
+      199,
+      748
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T09:02:01Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24127095022/job/70394259825"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "submit-pypi",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T09:06:14Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24127095411/job/70394259873"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T09:02:09Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24127095022/job/70394259808"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T09:01:52Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/70394370003"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Demonstrate goods produced, traded and consumed with conserved supported balances and real job/need consequences.",
+    "files": [
+      {
+        "path": "tests/test_economic_simulation.py",
+        "additions": 139,
+        "deletions": 0
+      },
+      {
+        "path": "tiny_economic_simulation.py",
+        "additions": 488,
+        "deletions": 0
+      },
+      {
+        "path": "tiny_gameplay_controller.py",
+        "additions": 11,
+        "deletions": 1
+      }
+    ]
+  },
+  {
+    "number": 695,
+    "url": "https://github.com/dhar174/tiny_village/pull/695",
+    "title": "Expand item modeling with concrete item types and inventory category support",
+    "head_sha": "b1b889c0bab6a8d902372790c1ba1058a90275cf",
+    "head_ref": "copilot/define-more-item-types",
+    "base_ref": "main",
+    "base_sha_reported": "babb65770c4c53c1155ab38e8bb29a0673e1236a",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "actual_review_requests": [
+      {
+        "requestedReviewer": {
+          "login": "dhar174"
+        }
+      }
+    ],
+    "reviews": [],
+    "closing_issue_references": [
+      195
+    ],
+    "owner_issue": 195,
+    "original_handoff": 195,
+    "phase": 6,
+    "sequence": 6001,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      748
+    ],
+    "planned_activation": [],
+    "blocking_issues": [
+      748
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T09:04:37Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24127203324/job/70394617057"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "submit-pypi",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T09:08:48Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24127203085/job/70394617178"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T09:04:42Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24127203324/job/70394617030"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T09:04:29Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/70394731819"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Construct supported food/tool/resource/clothing/quest items with required properties and categorization; preserve the unresolved default Door action #775.",
+    "files": [
+      {
+        "path": "tests/test_item_types.py",
+        "additions": 251,
+        "deletions": 0
+      },
+      {
+        "path": "tiny_items.py",
+        "additions": 486,
+        "deletions": 191
+      }
+    ]
+  },
+  {
+    "number": 696,
+    "url": "https://github.com/dhar174/tiny_village/pull/696",
+    "title": "Align action defaults with GraphManager state semantics",
+    "head_sha": "8016a3f467719afa4b795207c14f40502b161410",
+    "head_ref": "copilot/update-preconditions-effects-graph-manager",
+    "base_ref": "main",
+    "base_sha_reported": "babb65770c4c53c1155ab38e8bb29a0673e1236a",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "actual_review_requests": [
+      {
+        "requestedReviewer": {
+          "login": "dhar174"
+        }
+      }
+    ],
+    "reviews": [],
+    "closing_issue_references": [
+      184
+    ],
+    "owner_issue": 220,
+    "original_handoff": 220,
+    "phase": 4,
+    "sequence": 4020,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      738,
+      799
+    ],
+    "planned_activation": [],
+    "blocking_issues": [
+      738,
+      799
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T09:24:40Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24128047666/job/70397426456"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "submit-pypi",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T09:29:13Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24128047414/job/70397426345"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T09:24:47Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/24128047666/job/70397426380"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-04-08T09:24:32Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/70397540465"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Apply effects and graph updates through the supported action contract with consistent units/identities, including real named targets and failed preconditions.",
+    "files": [
+      {
+        "path": "actions.py",
+        "additions": 273,
+        "deletions": 99
+      },
+      {
+        "path": "tests/test_action_catalog_graph_integration.py",
+        "additions": 292,
+        "deletions": 0
+      },
+      {
+        "path": "tiny_graph_manager.py",
+        "additions": 83,
+        "deletions": 5
+      }
+    ]
+  },
+  {
+    "number": 697,
+    "url": "https://github.com/dhar174/tiny_village/pull/697",
+    "title": "Implement job assignment, work outcomes, and career progression in `tiny_jobs.py`",
+    "head_sha": "a3beb371fabdc6433734f05dceb16651cb4beb4d",
+    "head_ref": "copilot/implement-job-system-features",
+    "base_ref": "main",
+    "base_sha_reported": "3e1c7ef4e0ac2d5246124c249791b879380ae8a2",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "actual_review_requests": [
+      {
+        "requestedReviewer": {
+          "login": "dhar174"
+        }
+      }
+    ],
+    "reviews": [],
+    "closing_issue_references": [
+      199
+    ],
+    "owner_issue": 199,
+    "original_handoff": 199,
+    "phase": 6,
+    "sequence": 6003,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      748
+    ],
+    "planned_activation": [],
+    "blocking_issues": [
+      748
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (actions)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-10-21T04:33:44Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/39544649702/job/119039959927"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Python (core)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-10-21T04:33:35Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/39544650845/job/119039960186"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-10-21T04:33:51Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/39544649702/job/119039959696"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Python (dev)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-10-21T04:33:39Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/39544650845/job/119039960077"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-10-21T04:33:58Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/39544649702/job/119039960009"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Python (visual)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-10-21T04:33:54Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/39544650845/job/119039959897"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Python CI required",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-10-21T04:33:59Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/39544650845/job/119040204573"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-10-21T04:33:36Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/119040109194"
+      }
+    ],
+    "required_check": [
+      {
+        "__typename": "CheckRun",
+        "name": "Python CI required",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-10-21T04:33:59Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/39544650845/job/119040204573"
+      }
+    ],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Verify job assignment/leaving, prerequisites, work outcomes, progression and income with valid catalog data and real Characters; resolve #787 diagnostics separately.",
+    "files": [
+      {
+        "path": "tests/test_tiny_jobs.py",
+        "additions": 155,
+        "deletions": 0
+      },
+      {
+        "path": "tiny_jobs.py",
+        "additions": 685,
+        "deletions": 4
+      }
+    ]
+  },
+  {
+    "number": 700,
+    "url": "https://github.com/dhar174/tiny_village/pull/700",
+    "title": "Remove implemented mini-map TODO from tiny_gameplay_controller.py",
+    "head_sha": "537e6244d4324fd60c3d6a893515dd46172508a8",
+    "head_ref": "remove-implemented-todo-minimap-12688847924616371434",
+    "base_ref": "main",
+    "base_sha_reported": "de134632bd4832087dac49f5819a75d2e0aa0747",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [],
+    "actual_review_requests": [],
+    "reviews": [],
+    "closing_issue_references": [],
+    "owner_issue": 770,
+    "original_handoff": 770,
+    "phase": 9,
+    "sequence": 9011,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      768
+    ],
+    "planned_activation": [],
+    "blocking_issues": [
+      768
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:07:51Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34677298527/job/103509327310"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:08:16Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34677298527/job/103509327179"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:07:46Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/103509396273"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Record keep/separate/defer/supersede decisions for #705/#707/#708/#592/#702/#700.; Treat AI Algorithm Mentor as optional automation with distinct permission/provider prerequisites, not required test CI.; Do not ship generated dummy fixtures, unrelated LangGraph tooling, or experimental sleep changes as MVP runtime work.; Human reviewer: dhar174, or a maintainer explicitly delegated in the Project.; Check prerequisite issues and the previous phase's recorded decision.; Review artifacts, current commit/PR heads, executed checks, known failures, and proposed scope.; Walk through the phase's success/failure scenarios and relevant design/engineering evidence.; Record reviewer, date, evidence links, rationale, and exactly one decision: Approved / Changes requested / Deferred.; Create a separate issue for each required remediation and add it as a blocker.; Set Project Decision to the human's recorded decision. Close this issue only after Approved.",
+    "files": [
+      {
+        "path": "tiny_gameplay_controller.py",
+        "additions": 0,
+        "deletions": 1
+      }
+    ]
+  },
+  {
+    "number": 702,
+    "url": "https://github.com/dhar174/tiny_village/pull/702",
+    "title": "\u26a1 Replace hardcoded sleep delays with configurable environment variable",
+    "head_sha": "fb7625547502bbf46d5416eafd45342572348977",
+    "head_ref": "optimize-sleep-delays-15120772840434346062",
+    "base_ref": "main",
+    "base_sha_reported": "de134632bd4832087dac49f5819a75d2e0aa0747",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [],
+    "actual_review_requests": [],
+    "reviews": [],
+    "closing_issue_references": [],
+    "owner_issue": 770,
+    "original_handoff": 770,
+    "phase": 9,
+    "sequence": 9011,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      768
+    ],
+    "planned_activation": [],
+    "blocking_issues": [
+      768
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:09:46Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34677370519/job/103509522554"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:09:54Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34677370519/job/103509522669"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:09:39Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/103509614738"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Record keep/separate/defer/supersede decisions for #705/#707/#708/#592/#702/#700.; Treat AI Algorithm Mentor as optional automation with distinct permission/provider prerequisites, not required test CI.; Do not ship generated dummy fixtures, unrelated LangGraph tooling, or experimental sleep changes as MVP runtime work.; Human reviewer: dhar174, or a maintainer explicitly delegated in the Project.; Check prerequisite issues and the previous phase's recorded decision.; Review artifacts, current commit/PR heads, executed checks, known failures, and proposed scope.; Walk through the phase's success/failure scenarios and relevant design/engineering evidence.; Record reviewer, date, evidence links, rationale, and exactly one decision: Approved / Changes requested / Deferred.; Create a separate issue for each required remediation and add it as a blocker.; Set Project Decision to the human's recorded decision. Close this issue only after Approved.",
+    "files": [
+      {
+        "path": "tiny_memories_alpha.py",
+        "additions": 42,
+        "deletions": 41
+      }
+    ]
+  },
+  {
+    "number": 705,
+    "url": "https://github.com/dhar174/tiny_village/pull/705",
+    "title": "Configure supervisor routing decision using LLM",
+    "head_sha": "ba414d9964dd72384dd024bf062865ee8ef49f4a",
+    "head_ref": "configure-routing-decision-llm-2152187401863127435",
+    "base_ref": "main",
+    "base_sha_reported": "de134632bd4832087dac49f5819a75d2e0aa0747",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [],
+    "actual_review_requests": [],
+    "reviews": [],
+    "closing_issue_references": [],
+    "owner_issue": 770,
+    "original_handoff": 770,
+    "phase": 9,
+    "sequence": 9011,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      768
+    ],
+    "planned_activation": [],
+    "blocking_issues": [
+      768
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:12:37Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34677499167/job/103509874343"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:12:51Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34677499167/job/103509874474"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:12:32Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/103509949114"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Record keep/separate/defer/supersede decisions for #705/#707/#708/#592/#702/#700.; Treat AI Algorithm Mentor as optional automation with distinct permission/provider prerequisites, not required test CI.; Do not ship generated dummy fixtures, unrelated LangGraph tooling, or experimental sleep changes as MVP runtime work.; Human reviewer: dhar174, or a maintainer explicitly delegated in the Project.; Check prerequisite issues and the previous phase's recorded decision.; Review artifacts, current commit/PR heads, executed checks, known failures, and proposed scope.; Walk through the phase's success/failure scenarios and relevant design/engineering evidence.; Record reviewer, date, evidence links, rationale, and exactly one decision: Approved / Changes requested / Deferred.; Create a separate issue for each required remediation and add it as a blocker.; Set Project Decision to the human's recorded decision. Close this issue only after Approved.",
+    "files": [
+      {
+        "path": ".github/skills/langgraph-agent-patterns/scripts/generate_supervisor_graph.py",
+        "additions": 23,
+        "deletions": 17
+      },
+      {
+        "path": "tests/test_generate_supervisor_graph.py",
+        "additions": 51,
+        "deletions": 0
+      }
+    ]
+  },
+  {
+    "number": 707,
+    "url": "https://github.com/dhar174/tiny_village/pull/707",
+    "title": "Implement LLM mocking in test case generation scripts",
+    "head_sha": "7e580e1a168205c63a5e1944d767048bc98a0b8d",
+    "head_ref": "implement-llm-mocking-16846857035163634778",
+    "base_ref": "main",
+    "base_sha_reported": "de134632bd4832087dac49f5819a75d2e0aa0747",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [],
+    "actual_review_requests": [],
+    "reviews": [],
+    "closing_issue_references": [],
+    "owner_issue": 770,
+    "original_handoff": 770,
+    "phase": 9,
+    "sequence": 9011,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      768
+    ],
+    "planned_activation": [],
+    "blocking_issues": [
+      768
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:17:19Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34677694947/job/103510403819"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:17:25Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34677694947/job/103510403900"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:17:12Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/103510501205"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Record keep/separate/defer/supersede decisions for #705/#707/#708/#592/#702/#700.; Treat AI Algorithm Mentor as optional automation with distinct permission/provider prerequisites, not required test CI.; Do not ship generated dummy fixtures, unrelated LangGraph tooling, or experimental sleep changes as MVP runtime work.; Human reviewer: dhar174, or a maintainer explicitly delegated in the Project.; Check prerequisite issues and the previous phase's recorded decision.; Review artifacts, current commit/PR heads, executed checks, known failures, and proposed scope.; Walk through the phase's success/failure scenarios and relevant design/engineering evidence.; Record reviewer, date, evidence links, rationale, and exactly one decision: Approved / Changes requested / Deferred.; Create a separate issue for each required remediation and add it as a blocker.; Set Project Decision to the human's recorded decision. Close this issue only after Approved.",
+    "files": [
+      {
+        "path": ".github/skills/langgraph-testing-evaluation/scripts/generate_test_cases.js",
+        "additions": 42,
+        "deletions": 4
+      },
+      {
+        "path": ".github/skills/langgraph-testing-evaluation/scripts/generate_test_cases.py",
+        "additions": 65,
+        "deletions": 7
+      },
+      {
+        "path": "dummy_graph.py",
+        "additions": 6,
+        "deletions": 0
+      },
+      {
+        "path": "generated_tests/test_graph_pytest.py",
+        "additions": 140,
+        "deletions": 0
+      },
+      {
+        "path": "generated_tests/test_graph_unittest.py",
+        "additions": 118,
+        "deletions": 0
+      }
+    ]
+  },
+  {
+    "number": 708,
+    "url": "https://github.com/dhar174/tiny_village/pull/708",
+    "title": "Implement functional test boilerplate for invalid input handling in LangGraph generator",
+    "head_sha": "25798624e457c15202b162ebcc529119715fddb6",
+    "head_ref": "feat-langgraph-invalid-input-tests-8037667525486822111",
+    "base_ref": "main",
+    "base_sha_reported": "de134632bd4832087dac49f5819a75d2e0aa0747",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [],
+    "actual_review_requests": [],
+    "reviews": [],
+    "closing_issue_references": [],
+    "owner_issue": 770,
+    "original_handoff": 770,
+    "phase": 9,
+    "sequence": 9011,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      768
+    ],
+    "planned_activation": [],
+    "blocking_issues": [
+      768
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:18:12Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34677733878/job/103510511662"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:18:34Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34677733878/job/103510511585"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:18:07Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/103510604437"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Record keep/separate/defer/supersede decisions for #705/#707/#708/#592/#702/#700.; Treat AI Algorithm Mentor as optional automation with distinct permission/provider prerequisites, not required test CI.; Do not ship generated dummy fixtures, unrelated LangGraph tooling, or experimental sleep changes as MVP runtime work.; Human reviewer: dhar174, or a maintainer explicitly delegated in the Project.; Check prerequisite issues and the previous phase's recorded decision.; Review artifacts, current commit/PR heads, executed checks, known failures, and proposed scope.; Walk through the phase's success/failure scenarios and relevant design/engineering evidence.; Record reviewer, date, evidence links, rationale, and exactly one decision: Approved / Changes requested / Deferred.; Create a separate issue for each required remediation and add it as a blocker.; Set Project Decision to the human's recorded decision. Close this issue only after Approved.",
+    "files": [
+      {
+        "path": ".github/skills/langgraph-testing-evaluation/scripts/generate_test_cases.py",
+        "additions": 57,
+        "deletions": 7
+      }
+    ]
+  },
+  {
+    "number": 709,
+    "url": "https://github.com/dhar174/tiny_village/pull/709",
+    "title": "\ud83e\uddea Add tests for llm_character_utils.py",
+    "head_sha": "200dfc2d2e968539d2740394f2619e7010798d1e",
+    "head_ref": "testing-improvement-llm-utils-10001432173928286125",
+    "base_ref": "main",
+    "base_sha_reported": "de134632bd4832087dac49f5819a75d2e0aa0747",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [],
+    "actual_review_requests": [],
+    "reviews": [],
+    "closing_issue_references": [],
+    "owner_issue": 807,
+    "original_handoff": 737,
+    "phase": 9,
+    "sequence": 9115,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      584,
+      768
+    ],
+    "planned_activation": [],
+    "blocking_issues": [
+      584,
+      768
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:19:05Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34677775618/job/103510624395"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:19:12Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34677775618/job/103510624312"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:18:57Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/103510701087"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "#737 inspected PR #709 at 200dfc2d2e968539d2740394f2619e7010798d1e. It proposes 12 helper tests, mostly MockCharacter/MagicMock composition; checking non-None mocked services does not prove actual initialization or failure behavior. The current real StrategyManager uses lazy LLM initialization and capability reporting, so these older assertions need mapping to the current contract.\n\n- [ ] Map each proposed assertion to existing maintained coverage; retain only distinct useful contracts.\n- [ ] Verify all/selective enablement, filtering/empty/missing-attribute handling and multiple-character independence using complete real basic-memory Characters and their real shared graph.\n- [ ] Exercise the real StrategyManager for requested-versus-ready LLM state, idempotent configuration and unavailable-service failures; use controlled doubles only at external provider initialization boundaries.\n- [ ] Avoid model downloads in offline checks; retain live inference validation separately under #585.\n- [ ] Propose the disposition of #709 only after evidence and human review; no closure or rebase is authorized by creating this issue.\n\nPhase 9 retains its existing activation gates. D015 requires AI in the final product; this scheduling does not reduce that requirement or claim live AI readiness.",
+    "files": [
+      {
+        "path": "tests/test_llm_character_utils.py",
+        "additions": 151,
+        "deletions": 0
+      }
+    ]
+  },
+  {
+    "number": 710,
+    "url": "https://github.com/dhar174/tiny_village/pull/710",
+    "title": "Implement Map Rendering Fallback",
+    "head_sha": "732010b4172dee5b4a7f349292f42dcd8cc8d56b",
+    "head_ref": "fix-map-rendering-fallback-16589395124874569833",
+    "base_ref": "main",
+    "base_sha_reported": "de134632bd4832087dac49f5819a75d2e0aa0747",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [],
+    "actual_review_requests": [],
+    "reviews": [],
+    "closing_issue_references": [],
+    "owner_issue": 761,
+    "original_handoff": 761,
+    "phase": 8,
+    "sequence": 8004,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      655,
+      801
+    ],
+    "planned_activation": [
+      658,
+      730,
+      759
+    ],
+    "blocking_issues": [
+      655,
+      658,
+      759,
+      801
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:19:17Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34677777379/job/103510628506"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:19:33Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34677777379/job/103510628581"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:19:10Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/103510726216"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Implement agreed HUD/inspection/notification/control and save/load feedback behavior.; Provide legible selection, focus, paused/error/recovery states and supported-resolution handling.; Review PR #710 for graceful map-render failure feedback; track discovered UI fixes as separate linked issues.",
+    "files": [
+      {
+        "path": "tiny_gameplay_controller.py",
+        "additions": 33,
+        "deletions": 1
+      }
+    ]
+  },
+  {
+    "number": 711,
+    "url": "https://github.com/dhar174/tiny_village/pull/711",
+    "title": "\ud83d\udd12 [security fix] replace silenced exceptions with logging in tiny_prompt_builder.py",
+    "head_sha": "3e2c0c6156f03cc14227ff6ac644f65c410da555",
+    "head_ref": "fix-silenced-exception-needs-calculation-6924617275890846487",
+    "base_ref": "main",
+    "base_sha_reported": "de134632bd4832087dac49f5819a75d2e0aa0747",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [],
+    "actual_review_requests": [],
+    "reviews": [],
+    "closing_issue_references": [],
+    "owner_issue": 808,
+    "original_handoff": 737,
+    "phase": 5,
+    "sequence": 5032,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      743,
+      746
+    ],
+    "planned_activation": [],
+    "blocking_issues": [
+      743,
+      746
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:19:56Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34677807603/job/103510710190"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:20:16Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34677807603/job/103510710327"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:19:49Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/103510797528"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "#737 inspected PR #711 at 3e2c0c6156f03cc14227ff6ac644f65c410da555. ContextManager.gather_goal_context still catches exceptions from goal evaluation and needs-priority calculation with bare pass at main 4821378. The patch logs both using the same generic message; logging alone neither establishes safe fallback behavior nor distinguishes a valid empty context from a failed computation. The security label does not establish a demonstrated vulnerability.\n\n- [ ] Define the caller-visible contract for valid empty goal/needs context versus failed computation, preserving prompt/interpreter/action alignment.\n- [ ] Retain the original cause and distinguish the failing operation in diagnostics; do not expose full sensitive prompt/memory contents by default.\n- [ ] Verify a real Character's supported success path and controlled failure of each calculation; prove the documented caller behavior rather than merely asserting a logger call.\n- [ ] Coordinate with #137 failure-appropriate recovery and #802/#803 underlying goal/motive failures; do not silently swallow or certify those runtime gaps as repaired.\n- [ ] Keep broader LLM prompt expansion under #158/#583. Human review of the retained #711 patch/disposition precedes any rewrite or closure.\n\nThis is Phase 5 work after its existing gate and execution contract, not a Phase 3 runtime change.",
+    "files": [
+      {
+        "path": "tiny_prompt_builder.py",
+        "additions": 2,
+        "deletions": 2
+      }
+    ]
+  },
+  {
+    "number": 712,
+    "url": "https://github.com/dhar174/tiny_village/pull/712",
+    "title": "\u26a1 Optimize A* Pathfinding Membership Checks",
+    "head_sha": "0ece3315a40ea80a2d2053166ac16d334de72021",
+    "head_ref": "optimize-astar-membership-3618820070716013826",
+    "base_ref": "main",
+    "base_sha_reported": "de134632bd4832087dac49f5819a75d2e0aa0747",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [],
+    "actual_review_requests": [],
+    "reviews": [],
+    "closing_issue_references": [],
+    "owner_issue": 177,
+    "original_handoff": 177,
+    "phase": 9,
+    "sequence": 9009,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      768
+    ],
+    "planned_activation": [],
+    "blocking_issues": [
+      768
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:21:07Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34677857550/job/103510843766"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:21:23Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34677857550/job/103510843604"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:21:01Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/103510939447"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Compare weighted A* results against a correctness reference on dynamic obstacles/complex maps, including unreachable goals, before optimizing membership queues.",
+    "files": [
+      {
+        "path": "tiny_map_controller.py",
+        "additions": 15,
+        "deletions": 3
+      }
+    ]
+  },
+  {
+    "number": 713,
+    "url": "https://github.com/dhar174/tiny_village/pull/713",
+    "title": "Add anti-aliasing options",
+    "head_sha": "1761d9bd7fd2b120aea0766e61e7728716154f63",
+    "head_ref": "feature-anti-aliasing-options-3287520818134766357",
+    "base_ref": "main",
+    "base_sha_reported": "de134632bd4832087dac49f5819a75d2e0aa0747",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [],
+    "actual_review_requests": [],
+    "reviews": [],
+    "closing_issue_references": [],
+    "owner_issue": 115,
+    "original_handoff": 115,
+    "phase": 9,
+    "sequence": 9010,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      177
+    ],
+    "planned_activation": [
+      762,
+      763,
+      765,
+      768
+    ],
+    "blocking_issues": [
+      177,
+      762,
+      763,
+      765,
+      768
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:21:47Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34677881054/job/103510908389"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:22:00Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34677881054/job/103510908178"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:21:38Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/103511009147"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "Scope antialiasing to approved elements; preserve crisp nearest-neighbor world art, measure performance and retain required visual review before enabling it.",
+    "files": [
+      {
+        "path": "tests/test_anti_aliasing.py",
+        "additions": 51,
+        "deletions": 0
+      },
+      {
+        "path": "tiny_gameplay_controller.py",
+        "additions": 51,
+        "deletions": 44
+      },
+      {
+        "path": "tiny_map_controller.py",
+        "additions": 24,
+        "deletions": 7
+      }
+    ]
+  },
+  {
+    "number": 715,
+    "url": "https://github.com/dhar174/tiny_village/pull/715",
+    "title": "\ud83e\uddea Improve testing for find_nodes_within_distance in graph_analytics.py",
+    "head_sha": "6f10f11a0deea7451608643e5d8a731ead9c45ba",
+    "head_ref": "improve-graph-analytics-testing-10642955540156560093",
+    "base_ref": "main",
+    "base_sha_reported": "de134632bd4832087dac49f5819a75d2e0aa0747",
+    "snapshot_main_sha": "5f2bf989c26ffdb0d40778b88947dd5d1d7a3599",
+    "is_draft": true,
+    "mergeable": "UNKNOWN",
+    "merge_state": "UNKNOWN",
+    "actual_assignees": [],
+    "actual_review_requests": [],
+    "reviews": [],
+    "closing_issue_references": [],
+    "owner_issue": 809,
+    "original_handoff": 737,
+    "phase": 4,
+    "sequence": 4031,
+    "accountable_owner": "dhar174",
+    "technical_reviewer": "Codex",
+    "human_acceptance": "dhar174",
+    "native_prerequisites": [
+      738,
+      799
+    ],
+    "planned_activation": [],
+    "blocking_issues": [
+      738,
+      799
+    ],
+    "checks": [
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (javascript-typescript)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:30:20Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34678253189/job/103511911303"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "Analyze (python)",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:30:38Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/actions/runs/34678253189/job/103511911186"
+      },
+      {
+        "__typename": "CheckRun",
+        "name": "CodeQL",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "completedAt": "2026-09-12T06:30:18Z",
+        "detailsUrl": "https://github.com/dhar174/tiny_village/runs/103512005234"
+      }
+    ],
+    "required_check": [],
+    "validation_status": "historical head checks only; current-main integration not executed",
+    "refresh_policy": "After owning-issue activation and prerequisite merges, refresh the retained carrier against latest main; rerun applicable supported profiles and exact issue acceptance, then re-review the new head. No rewrite/merge approval from this matrix.",
+    "required_validation": "#737 inspected PR #715 at 6f10f11a0deea7451608643e5d8a731ead9c45ba. Its added cases cover an absent source, an injected NetworkX failure and a direct-neighbor fallback, while its fixture uses Mock entities and does not establish authoritative graph ownership, multi-hop cutoff correctness or parity beyond direct neighbors.\n\n- [ ] Map the useful added assertions to maintained coverage and state the currently supported GraphAnalytics/WorldState ownership boundary. The existing WorldState exception must not grow into a second authoritative simulation.\n- [ ] Verify real production graph objects/entities for absent source, source distance zero, one/multiple-hop cutoffs and stable identity after relevant mutations, coordinating #799.\n- [ ] Test controlled external-library failure separately from ordinary empty results; retain explicit fallback limits and do not claim unsupported NetworkX-free production execution.\n- [ ] Prove query operations leave the graph unchanged and retain any actual contract failures under separately scoped issues.\n- [ ] Present #715's final keep/split/supersede disposition for human review before rewriting or closing it.\n\nPhase 4 follows #738 and stable identity work; no graph correctness is inferred from the existing mock fixture.",
+    "files": [
+      {
+        "path": "test_graph_analytics.py",
+        "additions": 37,
+        "deletions": 0
+      }
+    ]
+  }
+]
