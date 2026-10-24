@@ -1,0 +1,14 @@
+test_builder_exists (__main__.PreviewAvailabilityTests.test_builder_exists) ... FAIL
+
+======================================================================
+FAIL: test_builder_exists (__main__.PreviewAvailabilityTests.test_builder_exists)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737/docs/planning/issue-737/test_build_preview.py", line 28, in test_builder_exists
+    self.assertTrue((ROOT / "build_preview.py").exists(), "Ordering/preview builder is missing")
+AssertionError: False is not true : Ordering/preview builder is missing
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (failures=1)

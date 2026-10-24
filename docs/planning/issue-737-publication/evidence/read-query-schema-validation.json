@@ -1,0 +1,26 @@
+{
+  "method": "Read-only query validation using public Issue node; incompatible node fragments do not resolve Project data. This is not live Project adapter/mutation verification.",
+  "results": {
+    "project_item_page": {
+      "schema_validation": "accepted",
+      "response": {
+        "node": {}
+      }
+    },
+    "existing_item_selection": {
+      "schema_validation": "accepted",
+      "response": {
+        "node": {}
+      }
+    },
+    "view_selection": {
+      "schema_validation": "accepted",
+      "response": {
+        "node": {}
+      }
+    },
+    "issue_project_membership": {
+      "error": "gh: Resource not accessible by integration {\"data\":{\"node\":{\"projectItems\":{\"pageInfo\":{\"hasNextPage\":false},\"nodes\":[null]}}},\"errors\":[{\"type\":\"FORBIDDEN\",\"path\":[\"node\",\"projectItems\",\"nodes\",0],\"extensions\":{\"saml_failure\":false,\"ip_allow_list_failure\":false},\"locations\":[{\"line\":1,\"column\":88}],\"message\":\"Resource not accessible by integration\"}]}"
+    }
+  }
+}

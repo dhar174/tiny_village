@@ -1,0 +1,52 @@
+{
+  "published_at": "2026-10-22T16:12:53.999169+00:00",
+  "receipts": [
+    {
+      "key": "R737-ACCESS",
+      "number": 806,
+      "url": "https://github.com/dhar174/tiny_village/issues/806",
+      "parent": 737,
+      "blocked_by": [
+        732
+      ],
+      "blocks": [
+        737
+      ]
+    },
+    {
+      "key": "R737-709",
+      "number": 807,
+      "url": "https://github.com/dhar174/tiny_village/issues/807",
+      "parent": 585,
+      "blocked_by": [
+        584,
+        768
+      ],
+      "blocks": []
+    },
+    {
+      "key": "R737-711",
+      "number": 808,
+      "url": "https://github.com/dhar174/tiny_village/issues/808",
+      "parent": 137,
+      "blocked_by": [
+        743,
+        746
+      ],
+      "blocks": []
+    },
+    {
+      "key": "R737-715",
+      "number": 809,
+      "url": "https://github.com/dhar174/tiny_village/issues/809",
+      "parent": 222,
+      "blocked_by": [
+        738,
+        799
+      ],
+      "blocks": []
+    }
+  ],
+  "no_pr_dispositions_performed": true,
+  "no_gates_approved": true
+}

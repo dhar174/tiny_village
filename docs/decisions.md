@@ -900,3 +900,20 @@ Project Decision synchronization remains outstanding as described above.
   evidence. #738 remains Pending and needs its own human walkthrough/decision;
   runtime gaps #799–#803/#741/#774 remain unresolved. No runtime implementation,
   future-phase rebase, automatic review approval or phase approval is supplied.
+
+### D033 — Approve #737 authenticated publication and evidence tooling
+
+- **Date:** 2026-10-23 America/New_York.
+- **Decision-maker:** dhar174.
+- **Confirmation:** “Implement the proposed plan” after the four-step publication
+  and #738 walkthrough plan.
+- **Scope:** preserve earlier packages; prepare independently verifiable inspection
+  receipts and publication/completed stage validation; review/merge tooling before
+  freezing the authenticated local bundle; review actual live deltas and their
+  digests before applying them in a quiet edit window.
+- **Closure:** successful authenticated publication/readback must precede #806/#737
+  completion. Regenerate and review all332 final readiness rows afterward. #738
+  remains open/Pending, with runtime gaps preserved, until its own human decision.
+- **Boundaries:** plan approval does not approve an unseen board delta or #738.
+  No runtime changes, dependency changes, future-phase rebases or automatic phase
+  approvals. Record subsequent human decisions only in this file.

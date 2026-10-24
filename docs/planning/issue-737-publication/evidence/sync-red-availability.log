@@ -1,0 +1,14 @@
+test_scoped_synchronizer_exists (__main__.AvailabilityTests.test_scoped_synchronizer_exists) ... FAIL
+
+======================================================================
+FAIL: test_scoped_synchronizer_exists (__main__.AvailabilityTests.test_scoped_synchronizer_exists)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/tiny_village-737/docs/planning/issue-737/test_sync_project.py", line 75, in test_scoped_synchronizer_exists
+    self.assertTrue((ROOT / "sync_project.py").is_file(), "Scoped synchronizer is missing")
+AssertionError: False is not true : Scoped synchronizer is missing
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (failures=1)

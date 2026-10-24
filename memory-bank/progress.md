@@ -1,6 +1,6 @@
 ## What Works
 
-- TASK025 / #737 closeout under D032: #810 merged at10569c0; #737 reopened pending #806 authenticated board publication. #701/#704 closed superseded; #709/#711/#715 retained with807/808/809 follow-ups. PR #811 carries the separate332-issue/24-candidate portable package in docs/planning/issue-737-closeout. #738 remains Pending; runtime gaps open. Updated2026-10-23 UTC.
+- TASK025 / #737: #811 merged at5f2bf989; D033 publication tooling adds independent receipts and evidence-backed final stages.89 focused tests and72 core+3 probes pass. New publication package under review; authenticated ZIP freezes after tooling merge.806/737 stay open until owner local evidence;738Pending and runtime gaps open. Updated2026-10-23 America/New_York.
 
 - TASK021 / #734 complete under D027: #797 merged at 2c3bc57, approved
   publication independently verified and #734 closed. All 307 annotations
