@@ -1,5 +1,11 @@
 # Missing Elements for Minimal Tiny Village Demo
 
+> Archived note (2026-04-08): This file is preserved as historical analysis
+> only. It predates the current repository state: `main.py` now exists in the
+> repo root, `assets/default_map.png` exists, and current runtime guidance lives
+> in `README.md`, `docs/guides/QUICKSTART.md`, and
+> `docs/reference/MINIMUM_DEMO_STATUS.md`.
+
 This document summarizes the gaps preventing a basic demonstration of the Tiny Village game.
 
 ## Missing Assets
