@@ -1,6 +1,6 @@
 ## Current Work Focus
 
-- TASK025 / #737: draft PR #810 publishes the coordination package on main4821378;332 issues/26 PRs, four ordered follow-ups806-809, no cycles. Five dispositions pending review. Core72+3/cache27/offline43 pass; helper/prompt failures retained under807/808. Project403 blocks publication; #737/#738 remain open. See docs/planning/issue-737/README.md.
+- TASK025 / #737 closeout under D032: #810 merged at10569c0; #737 reopened pending #806 authenticated board publication. #701/#704 closed superseded; #709/#711/#715 retained with807/808/809 follow-ups. PR #811 carries the separate332-issue/24-candidate portable package in docs/planning/issue-737-closeout. #738 remains Pending; runtime gaps open. Updated2026-10-23 UTC.
 
 - TASK021 / #734 complete under D027: #797 merged at 2c3bc57, approved
   publication independently verified and #734 closed. All 307 annotations

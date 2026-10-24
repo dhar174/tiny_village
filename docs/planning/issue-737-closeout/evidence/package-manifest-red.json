@@ -1,0 +1,6 @@
+{
+  "case": "missing_hash_manifest_RED",
+  "observed_exit": 0,
+  "stdout": "{\"status\": \"offline_package_verified\", \"issues\": 332, \"prs\": 26, \"fields\": 12, \"views\": 6, \"cycles\": 0, \"gate_738\": \"Pending\", \"project_publication\": \"blocked_not_verified\", \"preview_digest\": \"38953ddacac8a7b6c4412eaf56ed6277efcdbfc3d94c5cdbce5a102b0011dc65\"}\n",
+  "stderr": ""
+}

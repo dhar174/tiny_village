@@ -1,0 +1,16 @@
+test_changed_head_requires_new_review (__main__.CloseoutTests.test_changed_head_requires_new_review) ... ok
+test_closed_737_rejected_before_publication (__main__.CloseoutTests.test_closed_737_rejected_before_publication) ... ok
+test_closed_runtime_requirement_rejected (__main__.CloseoutTests.test_closed_runtime_requirement_rejected) ... ok
+test_foreign_fork_with_same_coordinator_branch_stays_in_inventory (__main__.CloseoutTests.test_foreign_fork_with_same_coordinator_branch_stays_in_inventory) ... ok
+test_human_gate_not_unlocked (__main__.CloseoutTests.test_human_gate_not_unlocked) ... ok
+test_live_inventory_keeps_unreviewed_pr_and_excludes_closeout (__main__.CloseoutTests.test_live_inventory_keeps_unreviewed_pr_and_excludes_closeout) ... ok
+test_only_explicit_coordinator_branches_excluded (__main__.CloseoutTests.test_only_explicit_coordinator_branches_excluded) ... ok
+test_reviewed_24_candidates_pass_publication_stage (__main__.CloseoutTests.test_reviewed_24_candidates_pass_publication_stage) ... ok
+test_same_count_replacement_is_not_the_reviewed_cohort (__main__.CloseoutTests.test_same_count_replacement_is_not_the_reviewed_cohort) ... ok
+test_unreviewed_stage_cannot_claim_completion (__main__.CloseoutTests.test_unreviewed_stage_cannot_claim_completion) ... ok
+test_windows_manifest_uses_posix_paths (__main__.CloseoutTests.test_windows_manifest_uses_posix_paths) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.001s
+
+OK

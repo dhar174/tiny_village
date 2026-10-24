@@ -1,0 +1,3242 @@
+{
+  "source_commit": "de134632bd4832087dac49f5819a75d2e0aa0747",
+  "project": {
+    "owner": "dhar174",
+    "repository": "dhar174/tiny_village",
+    "title": "Tiny Village - MVP Delivery and Human Review",
+    "description": "Ordered simulation delivery with issue-backed tasks, native dependencies, human phase gates, and explicit UX, UI, aesthetics, accessibility, and engineering reviews.",
+    "visibility_for_new_project": "PRIVATE",
+    "fields": [
+      {
+        "name": "Phase",
+        "data_type": "single_select",
+        "options": [
+          "Program",
+          "01 Restore reliable startup",
+          "02 Freeze MVP, dependencies, and design foundations",
+          "03 Consolidate backlog and pull requests",
+          "04 Align actions, world state, and GOAP",
+          "05 Complete event-driven execution",
+          "06 Deliver the village economic loop",
+          "07 Restore saved simulation state",
+          "08 Validate UX, UI, aesthetics, and MVP release",
+          "09 Expand optional features deliberately"
+        ]
+      },
+      {
+        "name": "Sequence",
+        "data_type": "number"
+      },
+      {
+        "name": "Priority",
+        "data_type": "single_select",
+        "options": [
+          "P0",
+          "P1",
+          "P2"
+        ]
+      },
+      {
+        "name": "Kind",
+        "data_type": "single_select",
+        "options": [
+          "Program",
+          "Phase",
+          "Task",
+          "Human review",
+          "Phase gate"
+        ]
+      },
+      {
+        "name": "Workstream",
+        "data_type": "single_select",
+        "options": [
+          "Accessibility",
+          "Aesthetics",
+          "Delivery",
+          "Documentation",
+          "Economy",
+          "Engineering",
+          "LLM",
+          "Memory",
+          "Persistence",
+          "Planning",
+          "Review",
+          "Runtime",
+          "Social",
+          "Testing",
+          "UI",
+          "UX"
+        ]
+      },
+      {
+        "name": "Scope",
+        "data_type": "single_select",
+        "options": [
+          "MVP",
+          "Optional",
+          "Post-MVP"
+        ]
+      },
+      {
+        "name": "Readiness",
+        "data_type": "single_select",
+        "options": [
+          "Tracking",
+          "Blocked",
+          "Ready",
+          "Human review",
+          "Deferred"
+        ]
+      },
+      {
+        "name": "Decision",
+        "data_type": "single_select",
+        "options": [
+          "Not applicable",
+          "Pending",
+          "Approved",
+          "Changes requested",
+          "Deferred"
+        ]
+      },
+      {
+        "name": "Depends on",
+        "data_type": "text"
+      },
+      {
+        "name": "Review owner",
+        "data_type": "text"
+      },
+      {
+        "name": "Candidate PRs",
+        "data_type": "text"
+      },
+      {
+        "name": "Task key",
+        "data_type": "text"
+      }
+    ],
+    "views": [
+      {
+        "name": "01 Ordered delivery",
+        "layout": "table",
+        "filter": "",
+        "group_by": [
+          "Phase"
+        ],
+        "sort_by": [
+          [
+            "Sequence",
+            "asc"
+          ]
+        ]
+      },
+      {
+        "name": "02 Execution board",
+        "layout": "board",
+        "filter": "scope:MVP kind:Task,\"Human review\",\"Phase gate\"",
+        "group_by": [
+          "Phase"
+        ],
+        "vertical_group_by": [
+          "Readiness"
+        ],
+        "sort_by": [
+          [
+            "Sequence",
+            "asc"
+          ]
+        ]
+      },
+      {
+        "name": "03 Human decisions",
+        "layout": "table",
+        "filter": "kind:\"Human review\",\"Phase gate\"",
+        "group_by": [
+          "Phase"
+        ],
+        "sort_by": [
+          [
+            "Sequence",
+            "asc"
+          ]
+        ]
+      },
+      {
+        "name": "04 UX UI and aesthetics",
+        "layout": "table",
+        "filter": "workstream:UX,UI,Aesthetics,Accessibility",
+        "group_by": [
+          "Workstream"
+        ],
+        "sort_by": [
+          [
+            "Sequence",
+            "asc"
+          ]
+        ]
+      },
+      {
+        "name": "05 Engineering reviews",
+        "layout": "table",
+        "filter": "kind:\"Human review\" workstream:Engineering",
+        "group_by": [
+          "Phase"
+        ],
+        "sort_by": [
+          [
+            "Sequence",
+            "asc"
+          ]
+        ]
+      },
+      {
+        "name": "06 Optional and post-MVP",
+        "layout": "table",
+        "filter": "scope:Optional,Post-MVP",
+        "group_by": [
+          "Phase"
+        ],
+        "sort_by": [
+          [
+            "Sequence",
+            "asc"
+          ]
+        ]
+      }
+    ],
+    "do_not_merge_prs_or_close_issues": true,
+    "never_auto_approve_reviews": true,
+    "target_project_number": 10,
+    "target_project_url": "https://github.com/users/dhar174/projects/10",
+    "preserve_existing_project_title_and_visibility": true
+  },
+  "phases": {
+    "1": {
+      "name": "Restore reliable startup",
+      "outcome": "Fresh-process startup and graph initialization complete without import errors, deadlocks, or unsafe shared-cache handling.",
+      "gate": "H1"
+    },
+    "2": {
+      "name": "Freeze MVP, dependencies, and design foundations",
+      "outcome": "A maintainer approves MVP scope, reproducible CPU setup, CI, user journeys, visual direction, and engineering constraints.",
+      "gate": "H2"
+    },
+    "3": {
+      "name": "Consolidate backlog and pull requests",
+      "outcome": "Every original backlog item has an evidence-based disposition, and the selected PR queue has current owners and prerequisites.",
+      "gate": "H3"
+    },
+    "4": {
+      "name": "Align actions, world state, and GOAP",
+      "outcome": "Real characters execute complete plans across ticks with consistent state, bounded replanning, and correct target resolution.",
+      "gate": "H4"
+    },
+    "5": {
+      "name": "Complete event-driven execution",
+      "outcome": "Events affect the intended actor and update state, memory, and accounting once while isolating failures.",
+      "gate": "H5"
+    },
+    "6": {
+      "name": "Deliver the village economic loop",
+      "outcome": "Work, wages, production, trade, consumption, and recovery form one demonstrable behavior loop.",
+      "gate": "H6"
+    },
+    "7": {
+      "name": "Restore saved simulation state",
+      "outcome": "A versioned save/restart/load round trip preserves world identity and subsequent simulation behavior.",
+      "gate": "H7"
+    },
+    "8": {
+      "name": "Validate UX, UI, aesthetics, and MVP release",
+      "outcome": "Documented demo, visual and accessibility reviews, engineering review, and measured stability have human sign-off.",
+      "gate": "H8"
+    },
+    "9": {
+      "name": "Expand optional features deliberately",
+      "outcome": "Post-MVP social, memory, LLM, and graphics increments have verified fallbacks and an explicit human release decision.",
+      "gate": "H9"
+    }
+  },
+  "items": [
+    {
+      "key": "PROGRAM",
+      "phase": 0,
+      "title": "Tiny Village: ordered MVP delivery and human review program",
+      "goal": "Deliver the approved nine-phase roadmap through issue-backed work, native dependencies, human phase decisions, and explicit design reviews.",
+      "acceptance": [
+        "Every work item and review has a repository issue and Project row.",
+        "Phase, Sequence, Readiness, Scope, Depends on, Review owner, and Decision communicate execution order.",
+        "A phase cannot advance until its human gate records Approved; no automated process approves a gate.",
+        "MVP release is Phase 8; Phase 9 and optional tasks do not block the Phase 8 release."
+      ],
+      "depends_on": [],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Planning",
+      "kind": "Program",
+      "scope": "MVP",
+      "priority": "P0",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": null,
+      "native_blocked_by": [],
+      "sequence": 0,
+      "initial_readiness": "Tracking",
+      "initial_status": "Todo",
+      "number": 716
+    },
+    {
+      "key": "E1",
+      "phase": 1,
+      "title": "Phase 1: Restore reliable startup",
+      "goal": "Fresh-process startup and graph initialization complete without import errors, deadlocks, or unsafe shared-cache handling.",
+      "acceptance": [
+        "All phase work is tracked as individual issues.",
+        "Phase gate H1 records the human decision and evidence.",
+        "Optional/deferred work is explicitly documented and does not silently become a release prerequisite."
+      ],
+      "depends_on": [],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Planning",
+      "kind": "Phase",
+      "scope": "MVP",
+      "priority": "P0",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "PROGRAM",
+      "native_blocked_by": [],
+      "sequence": 1000,
+      "initial_readiness": "Tracking",
+      "initial_status": "Todo",
+      "number": 717
+    },
+    {
+      "key": "P1-01",
+      "phase": 1,
+      "title": "Fix Goal fallback import failure and validate PR #706",
+      "goal": "Remove the unreachable fallback handler in tiny_utility_functions.py and prove cold imports work.",
+      "acceptance": [
+        "Rebase/review PR #706 against current main, retaining real fallback behavior.",
+        "Run main.py minimal/test entry points and GOAP imports in fresh subprocesses with timeouts.",
+        "Report passing, failing, skipped, and unexecuted checks distinctly."
+      ],
+      "depends_on": [],
+      "existing_issue": null,
+      "candidate_prs": [
+        706
+      ],
+      "related_issues": [
+        14,
+        218
+      ],
+      "workstream": "Runtime",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P0",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E1",
+      "native_blocked_by": [],
+      "sequence": 1001,
+      "initial_readiness": "Ready",
+      "initial_status": "Todo",
+      "number": 718
+    },
+    {
+      "key": "P1-02",
+      "phase": 1,
+      "title": "Remove recursive global GraphManager initialization deadlock",
+      "goal": "Eliminate the reproduced lock re-entry: graph import constructs character/event/action objects that call get_global_graph_manager while its non-reentrant lock is held.",
+      "acceptance": [
+        "Remove import-time world construction and explicitly wire graph ownership.",
+        "Reproduce and resolve the named-target initialization hang; do not merely swap locks without checking recursive initialization.",
+        "Fresh-process import-order and singleton checks complete within a bounded timeout and return the same graph instance."
+      ],
+      "depends_on": [
+        "P1-01"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [
+        245,
+        14,
+        222,
+        602
+      ],
+      "workstream": "Runtime",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P0",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E1",
+      "native_blocked_by": [
+        "P1-01"
+      ],
+      "sequence": 1002,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 719
+    },
+    {
+      "key": "P1-03",
+      "phase": 1,
+      "title": "Use an owned cache directory and safely validate PR #701",
+      "goal": "Replace world-writable temporary cache handling with a supported directory owned by the runtime user.",
+      "acceptance": [
+        "Review PR #701 and verify cache ownership, permissions, and repeat startup.",
+        "Exclude the repro_check.py script that deletes an existing shared cache; use an isolated temporary fixture.",
+        "Preserve TLS/checksum verification and avoid importing models solely to initialize a cache."
+      ],
+      "depends_on": [
+        "P1-02"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [
+        701
+      ],
+      "related_issues": [
+        11
+      ],
+      "workstream": "Engineering",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P0",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E1",
+      "native_blocked_by": [
+        "P1-02"
+      ],
+      "sequence": 1003,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 720
+    },
+    {
+      "key": "P1-04",
+      "phase": 1,
+      "title": "Human engineering review: startup, imports, and graph lifecycle",
+      "goal": "A maintainer reviews the startup repairs and their evidence before approving broader development.",
+      "acceptance": [
+        "Walk through both reproduced blockers and inspect the repairs at their current commit SHA.",
+        "Check dependency injection, graph ownership, thread initialization, import side effects, and error propagation.",
+        "Record Approved, Changes requested, or Deferred with reviewer identity, rationale, evidence, and follow-up issues."
+      ],
+      "depends_on": [
+        "P1-01",
+        "P1-02",
+        "P1-03"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Engineering",
+      "kind": "Human review",
+      "scope": "MVP",
+      "priority": "P0",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E1",
+      "native_blocked_by": [
+        "P1-03"
+      ],
+      "sequence": 1004,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 721
+    },
+    {
+      "key": "H1",
+      "phase": 1,
+      "title": "Human decision gate 1: Restore reliable startup",
+      "goal": "A human maintainer decides whether the phase satisfies its acceptance criteria and may unlock the next phase.",
+      "acceptance": [
+        "Review every required task, current PR head, commands/results, and the phase-specific evidence.",
+        "Walk through the supported behavior, failure cases, and applicable design/engineering artifacts.",
+        "Choose exactly Approved, Changes requested, or Deferred; record reviewer, date, rationale, evidence, and issue-backed remediation.",
+        "Only close this gate after a human records Approved; keep rework/deferred gates open and downstream work blocked.",
+        "Do not auto-approve based on a passing suite, a bot action, elapsed time, or a completed checklist."
+      ],
+      "depends_on": [
+        "P1-01",
+        "P1-02",
+        "P1-03",
+        "P1-04"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Review",
+      "kind": "Phase gate",
+      "scope": "MVP",
+      "priority": "P0",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E1",
+      "native_blocked_by": [
+        "P1-04"
+      ],
+      "sequence": 1900,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 722
+    },
+    {
+      "key": "E2",
+      "phase": 2,
+      "title": "Phase 2: Freeze MVP, dependencies, and design foundations",
+      "goal": "A maintainer approves MVP scope, reproducible CPU setup, CI, user journeys, visual direction, and engineering constraints.",
+      "acceptance": [
+        "All phase work is tracked as individual issues.",
+        "Phase gate H2 records the human decision and evidence.",
+        "Optional/deferred work is explicitly documented and does not silently become a release prerequisite."
+      ],
+      "depends_on": [],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Planning",
+      "kind": "Phase",
+      "scope": "MVP",
+      "priority": "P0",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "PROGRAM",
+      "native_blocked_by": [],
+      "sequence": 2000,
+      "initial_readiness": "Tracking",
+      "initial_status": "Todo",
+      "number": 723
+    },
+    {
+      "key": "P2-01",
+      "phase": 2,
+      "title": "Define the MVP scenario, support matrix, and release budgets",
+      "goal": "Specify fixed villagers, simulation ticks/events, the canonical headless command, visible state changes, supported visual surfaces, and measurable budgets.",
+      "acceptance": [
+        "Define the work/earn/acquire-food/eat/recover scenario with fixed seed and deterministic inputs.",
+        "Decide supported console and Pygame user flows and explicitly defer unrelated quests, VR, multiplayer, and tooling.",
+        "Agree latency, frame-time, memory, stability, and review evidence requirements without inventing delivery dates."
+      ],
+      "depends_on": [
+        "H1"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [
+        658,
+        223
+      ],
+      "workstream": "Planning",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P0",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E2",
+      "native_blocked_by": [
+        "H1"
+      ],
+      "sequence": 2001,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 724
+    },
+    {
+      "key": "P2-02",
+      "phase": 2,
+      "title": "Provide repository-supported core dependencies and optional ML extras",
+      "goal": "Turn the tested cloud setup into reproducible repository-supported Python 3.12 installation profiles.",
+      "acceptance": [
+        "Define and lock core runtime/development dependencies separately from optional GPU, NLP, and LLM packages.",
+        "Review PR #704 so optional FAISS is not an entry-point requirement.",
+        "Validate clean installation and repeat installation with artifact and TLS verification enabled."
+      ],
+      "depends_on": [
+        "P2-01",
+        "H1"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [
+        704
+      ],
+      "related_issues": [
+        654,
+        260
+      ],
+      "workstream": "Delivery",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P0",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E2",
+      "native_blocked_by": [
+        "P2-01"
+      ],
+      "sequence": 2002,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 725
+    },
+    {
+      "key": "P2-03",
+      "phase": 2,
+      "title": "Make the minimal demo independent of heavy and graphics initialization",
+      "goal": "Complete the existing lightweight-demo issue with real runtime boundaries instead of global sys.modules patches.",
+      "acceptance": [
+        "Minimal mode works without display initialization, model downloads, and optional pygame/NLP/LLM dependencies.",
+        "Separate renderer/model initialization from simulation construction using repository-supported interfaces.",
+        "Optional dependency failure is observable and does not substitute fake production implementations."
+      ],
+      "depends_on": [
+        "P2-02",
+        "H1"
+      ],
+      "existing_issue": 654,
+      "candidate_prs": [],
+      "related_issues": [
+        14
+      ],
+      "workstream": "Runtime",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P0",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E2",
+      "native_blocked_by": [
+        "P2-02"
+      ],
+      "sequence": 2003,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 654
+    },
+    {
+      "key": "P2-04",
+      "phase": 2,
+      "title": "Add required Python 3.12 CI for the supported simulation profiles",
+      "goal": "Run meaningful checks on pull requests and main; optional AI-review automation is not a test gate.",
+      "acceptance": [
+        "Run cold startup, minimal smoke, component tests, and focused graph/GOAP/event/action checks with bounded timeouts.",
+        "Use actual exit status and executed test counts; keep optional ML checks separate and visible.",
+        "Cache verified dependencies, use minimal workflow permissions, and pin external workflow actions appropriately."
+      ],
+      "depends_on": [
+        "P2-02",
+        "P2-03",
+        "H1"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [
+        260
+      ],
+      "workstream": "Delivery",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P0",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E2",
+      "native_blocked_by": [
+        "P2-03"
+      ],
+      "sequence": 2004,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 726
+    },
+    {
+      "key": "P2-05",
+      "phase": 2,
+      "title": "Plan user journeys, controls, and understandable simulation feedback",
+      "goal": "Define what players, observers, and contributors need to understand and control in the console and Pygame workflows.",
+      "acceptance": [
+        "Map launch, observe, inspect character/building, pause, save, load, failure recovery, and exit journeys.",
+        "Specify keyboard/mouse controls, discoverability, feedback, and action/event explanations.",
+        "Define usability scenarios and success criteria to use during the Phase 8 human walkthrough."
+      ],
+      "depends_on": [
+        "P2-01",
+        "H1"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [
+        381,
+        382,
+        658
+      ],
+      "workstream": "UX",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P0",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E2",
+      "native_blocked_by": [
+        "P2-01"
+      ],
+      "sequence": 2005,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 727
+    },
+    {
+      "key": "P2-06",
+      "phase": 2,
+      "title": "Plan visual direction and aesthetic constraints for the village and HUD",
+      "goal": "Choose a coherent visual direction suitable for the existing 2D Pygame runtime and available resources.",
+      "acceptance": [
+        "Document palette, typography, spacing, hierarchy, icon/selection language, and map/character readability.",
+        "Specify asset provenance/licensing, resolution constraints, and legibility against map backgrounds.",
+        "Include representative visual references and human review questions; decorative effects must respect performance budgets."
+      ],
+      "depends_on": [
+        "P2-05",
+        "H1"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Aesthetics",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P0",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E2",
+      "native_blocked_by": [
+        "P2-05"
+      ],
+      "sequence": 2006,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 728
+    },
+    {
+      "key": "P2-07",
+      "phase": 2,
+      "title": "Plan UI information architecture, wireframes, and interaction states",
+      "goal": "Translate the approved user journeys and visual direction into implementable Pygame screen/panel specifications.",
+      "acceptance": [
+        "Specify HUD, inspection panels, inventory/plan feedback, notifications, and supported save/load controls.",
+        "Cover idle, selected, paused, unavailable, error, saving/loading, and recovery states.",
+        "Plan configurable dimensions, focus/keyboard operation, contrast, non-color cues, and reduced-motion options where applicable."
+      ],
+      "depends_on": [
+        "P2-05",
+        "P2-06",
+        "H1"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "UI",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P0",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E2",
+      "native_blocked_by": [
+        "P2-06"
+      ],
+      "sequence": 2007,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 729
+    },
+    {
+      "key": "P2-08",
+      "phase": 2,
+      "title": "Human design planning review: UX, UI, and visual direction",
+      "goal": "Walk through the design artifacts and record distinct decisions about usability, interface scope, and visual direction.",
+      "acceptance": [
+        "Review persona journeys and wireframes against the frozen MVP rather than unrelated web-app conventions.",
+        "Review aesthetics, text/selection contrast, supported resolutions, controls, and error feedback.",
+        "Record specific approved decisions and linked rework issues before authorizing UI implementation."
+      ],
+      "depends_on": [
+        "P2-05",
+        "P2-06",
+        "P2-07",
+        "H1"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "UX",
+      "kind": "Human review",
+      "scope": "MVP",
+      "priority": "P0",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E2",
+      "native_blocked_by": [
+        "P2-07"
+      ],
+      "sequence": 2008,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 730
+    },
+    {
+      "key": "P2-09",
+      "phase": 2,
+      "title": "Human modern-practices review: architecture, dependencies, and CI plan",
+      "goal": "Review the engineering foundation against Python 3.12, Pygame, and the repository's actual architecture.",
+      "acceptance": [
+        "Review import boundaries, dependency/version profiles, runtime configuration, and explicit error/state contracts.",
+        "Check behavioral validation, model/service initialization, package integrity, and CI result reporting.",
+        "Document architecture decisions and scoped remediation without requiring a wholesale framework rewrite."
+      ],
+      "depends_on": [
+        "P2-02",
+        "P2-03",
+        "P2-04",
+        "H1"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Engineering",
+      "kind": "Human review",
+      "scope": "MVP",
+      "priority": "P0",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E2",
+      "native_blocked_by": [
+        "P2-04"
+      ],
+      "sequence": 2009,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 731
+    },
+    {
+      "key": "H2",
+      "phase": 2,
+      "title": "Human decision gate 2: Freeze MVP, dependencies, and design foundations",
+      "goal": "A human maintainer decides whether the phase satisfies its acceptance criteria and may unlock the next phase.",
+      "acceptance": [
+        "Review every required task, current PR head, commands/results, and the phase-specific evidence.",
+        "Walk through the supported behavior, failure cases, and applicable design/engineering artifacts.",
+        "Choose exactly Approved, Changes requested, or Deferred; record reviewer, date, rationale, evidence, and issue-backed remediation.",
+        "Only close this gate after a human records Approved; keep rework/deferred gates open and downstream work blocked.",
+        "Do not auto-approve based on a passing suite, a bot action, elapsed time, or a completed checklist."
+      ],
+      "depends_on": [
+        "P2-01",
+        "P2-02",
+        "P2-03",
+        "P2-04",
+        "P2-05",
+        "P2-06",
+        "P2-07",
+        "P2-08",
+        "P2-09",
+        "H1"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Review",
+      "kind": "Phase gate",
+      "scope": "MVP",
+      "priority": "P0",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E2",
+      "native_blocked_by": [
+        "P2-08",
+        "P2-09"
+      ],
+      "sequence": 2900,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 732
+    },
+    {
+      "key": "E3",
+      "phase": 3,
+      "title": "Phase 3: Consolidate backlog and pull requests",
+      "goal": "Every original backlog item has an evidence-based disposition, and the selected PR queue has current owners and prerequisites.",
+      "acceptance": [
+        "All phase work is tracked as individual issues.",
+        "Phase gate H3 records the human decision and evidence.",
+        "Optional/deferred work is explicitly documented and does not silently become a release prerequisite."
+      ],
+      "depends_on": [],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Planning",
+      "kind": "Phase",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "PROGRAM",
+      "native_blocked_by": [],
+      "sequence": 3000,
+      "initial_readiness": "Tracking",
+      "initial_status": "Todo",
+      "number": 733
+    },
+    {
+      "key": "P3-01",
+      "phase": 3,
+      "title": "Triage the original issue backlog into canonical subsystem epics",
+      "goal": "Review the original 261 issue summaries and current live backlog against code and reproduction evidence.",
+      "acceptance": [
+        "Give each original item an owner, reproduction/acceptance criteria, parent topic, prerequisite, and implement/verify/duplicate/defer disposition.",
+        "Recheck apparently implemented #482/#355/#602/#596/#597/#609; do not close #602 while its regression checks are blocked.",
+        "Preserve useful historical context and require human-approved evidence before duplicate closures."
+      ],
+      "depends_on": [
+        "H2"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [
+        681,
+        658,
+        222,
+        609
+      ],
+      "workstream": "Planning",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E3",
+      "native_blocked_by": [
+        "H2"
+      ],
+      "sequence": 3001,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 734
+    },
+    {
+      "key": "P3-02",
+      "phase": 3,
+      "title": "Consolidate duplicate utility changes in PRs #703 and #714",
+      "goal": "Select one implementation of the shared is_numeric TypeError fix and combine only useful, behavior-oriented tests.",
+      "acceptance": [
+        "Avoid creating two competing tests/test_tiny_util_funcs.py files.",
+        "Confirm tweener, numeric conversion, and clamping expectations reflect documented semantics.",
+        "Rebase the selected change and close/supersede the duplicate only after a maintainer decision."
+      ],
+      "depends_on": [
+        "P3-01",
+        "H2"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [
+        703,
+        714
+      ],
+      "related_issues": [],
+      "workstream": "Testing",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E3",
+      "native_blocked_by": [
+        "P3-01"
+      ],
+      "sequence": 3002,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 735
+    },
+    {
+      "key": "P3-03",
+      "phase": 3,
+      "title": "Reconcile older functional-test PRs with current test locations",
+      "goal": "Consolidate overlapping test rewrites instead of merging stale branches that restore obsolete file layouts or weaken assertions.",
+      "acceptance": [
+        "Review #420/#417/#408/#406 and #404/#397/#395/#391 plus #393 against current main and merged #349.",
+        "Salvage tests that validate real behavior, actual goal completion, and graph contracts; avoid copied production logic in mocks.",
+        "Document each PR's keep/rebase/split/supersede decision and targeted validation evidence."
+      ],
+      "depends_on": [
+        "P3-01",
+        "H2"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [
+        420,
+        417,
+        408,
+        406,
+        404,
+        397,
+        395,
+        391,
+        393
+      ],
+      "related_issues": [
+        351,
+        352,
+        353,
+        683
+      ],
+      "workstream": "Testing",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E3",
+      "native_blocked_by": [
+        "P3-01"
+      ],
+      "sequence": 3003,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 736
+    },
+    {
+      "key": "P3-04",
+      "phase": 3,
+      "title": "Reconcile PR ownership, merge sequence, and dependency configuration",
+      "goal": "Maintain the issue-backed Project as the live execution plan after backlog triage.",
+      "acceptance": [
+        "Assign a reviewer and owner to each selected implementation PR and verify current CI/mergeability.",
+        "Rebase each dependent PR after its prerequisite lands; retain existing native parents and dependency links.",
+        "Update Phase/Sequence/Readiness/Depends on and create a distinct issue for every newly discovered remediation."
+      ],
+      "depends_on": [
+        "P3-01",
+        "P3-02",
+        "P3-03",
+        "H2"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Planning",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E3",
+      "native_blocked_by": [
+        "P3-02",
+        "P3-03"
+      ],
+      "sequence": 3004,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 737
+    },
+    {
+      "key": "H3",
+      "phase": 3,
+      "title": "Human decision gate 3: Consolidate backlog and pull requests",
+      "goal": "A human maintainer decides whether the phase satisfies its acceptance criteria and may unlock the next phase.",
+      "acceptance": [
+        "Review every required task, current PR head, commands/results, and the phase-specific evidence.",
+        "Walk through the supported behavior, failure cases, and applicable design/engineering artifacts.",
+        "Choose exactly Approved, Changes requested, or Deferred; record reviewer, date, rationale, evidence, and issue-backed remediation.",
+        "Only close this gate after a human records Approved; keep rework/deferred gates open and downstream work blocked.",
+        "Do not auto-approve based on a passing suite, a bot action, elapsed time, or a completed checklist."
+      ],
+      "depends_on": [
+        "P3-01",
+        "P3-02",
+        "P3-03",
+        "P3-04",
+        "H2"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Review",
+      "kind": "Phase gate",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E3",
+      "native_blocked_by": [
+        "P3-04"
+      ],
+      "sequence": 3900,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 738
+    },
+    {
+      "key": "E4",
+      "phase": 4,
+      "title": "Phase 4: Align actions, world state, and GOAP",
+      "goal": "Real characters execute complete plans across ticks with consistent state, bounded replanning, and correct target resolution.",
+      "acceptance": [
+        "All phase work is tracked as individual issues.",
+        "Phase gate H4 records the human decision and evidence.",
+        "Optional/deferred work is explicitly documented and does not silently become a release prerequisite."
+      ],
+      "depends_on": [],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Planning",
+      "kind": "Phase",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "PROGRAM",
+      "native_blocked_by": [],
+      "sequence": 4000,
+      "initial_readiness": "Tracking",
+      "initial_status": "Todo",
+      "number": 739
+    },
+    {
+      "key": "P4-01",
+      "phase": 4,
+      "title": "Align Action.execute and the action catalog with GraphManager",
+      "goal": "Complete the existing action-execution integration request using canonical fields, concrete preconditions, and graph propagation.",
+      "acceptance": [
+        "Review PR #696 with real character/graph state, canonical aliases, and string/UUID target resolution.",
+        "Successful effects update character and graph consistently; rejected actions do not apply effects.",
+        "Use one responsible execution layer and prevent duplicate mutations or reward accounting."
+      ],
+      "depends_on": [
+        "H3"
+      ],
+      "existing_issue": 220,
+      "candidate_prs": [
+        696
+      ],
+      "related_issues": [
+        182,
+        184,
+        185
+      ],
+      "workstream": "Runtime",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E4",
+      "native_blocked_by": [
+        "H3"
+      ],
+      "sequence": 4001,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 220
+    },
+    {
+      "key": "P4-02",
+      "phase": 4,
+      "title": "Document and reconcile need/resource scales at runtime boundaries",
+      "goal": "Resolve the current 0-1, 0-10, and 0-100 inconsistencies between demo characters, effects, graph state, and goal targets.",
+      "acceptance": [
+        "Choose documented units per canonical field and explicit conversions at planner/prompt boundaries.",
+        "Validate clamps, thresholds, costs, and target effects on real scenarios.",
+        "Record representative before/after states so apparent action success cannot hide unchanged or incorrectly clamped values."
+      ],
+      "depends_on": [
+        "P4-01",
+        "H3"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [
+        187,
+        184
+      ],
+      "workstream": "Engineering",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E4",
+      "native_blocked_by": [
+        "P4-01"
+      ],
+      "sequence": 4002,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 740
+    },
+    {
+      "key": "P4-03",
+      "phase": 4,
+      "title": "Use GOAP for valid multi-step StrategyManager plans",
+      "goal": "Complete the StrategyManager/GOAP integration request without collapsing plans into immediate utility selection.",
+      "acceptance": [
+        "Review/rebase PR #689 after action contracts and the #706 fallback repair.",
+        "Distinguish no plan from an already-satisfied goal; validate/copy simulated state and bound caching/replanning.",
+        "Show that executing a returned plan actually reaches the target state."
+      ],
+      "depends_on": [
+        "P4-01",
+        "P4-02",
+        "H3"
+      ],
+      "existing_issue": 218,
+      "candidate_prs": [
+        689
+      ],
+      "related_issues": [
+        166,
+        351,
+        352,
+        353
+      ],
+      "workstream": "Runtime",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E4",
+      "native_blocked_by": [
+        "P4-02"
+      ],
+      "sequence": 4003,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 218
+    },
+    {
+      "key": "P4-04",
+      "phase": 4,
+      "title": "Execute active plans across simulation ticks and replan on failure",
+      "goal": "Wire planner output into the actual daily character execution loop, which currently chooses the first available action.",
+      "acceptance": [
+        "Track a per-character active plan/cursor and execute the intended next step at each tick.",
+        "Invalidate or replan when preconditions/world state change and hand failures back to StrategyManager.",
+        "Assert end-to-end actor identity, plan progress, goal achievement, and consistent graph state."
+      ],
+      "depends_on": [
+        "P4-03",
+        "H3"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [
+        166,
+        218
+      ],
+      "workstream": "Runtime",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E4",
+      "native_blocked_by": [
+        "P4-03"
+      ],
+      "sequence": 4004,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 741
+    },
+    {
+      "key": "P4-05",
+      "phase": 4,
+      "title": "Complete named-target regressions against the initialized world",
+      "goal": "Validate the existing target_character_in_location implementation after startup and execution repairs.",
+      "acceptance": [
+        "All existing named-target checks finish instead of hanging in global initialization.",
+        "Co-location, requested identity, absent targets, duplicate visitor entries, and graph updates behave correctly.",
+        "Use real graph-backed state where feasible and decide #602's disposition from executed evidence."
+      ],
+      "depends_on": [
+        "P4-01",
+        "P4-04",
+        "H3"
+      ],
+      "existing_issue": 602,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Testing",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E4",
+      "native_blocked_by": [
+        "P4-04"
+      ],
+      "sequence": 4005,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 602
+    },
+    {
+      "key": "P4-06",
+      "phase": 4,
+      "title": "Human contract review: actions, state units, planning, and execution",
+      "goal": "Review a complete multi-step scenario and failure/replan path using production contracts.",
+      "acceptance": [
+        "Inspect actual before/after character and graph state, not only mock call counts.",
+        "Review identity/units/preconditions/effects, cache validity, bounded failures, and plan continuation.",
+        "Record an explicit approval or linked rework before the event-integration phase."
+      ],
+      "depends_on": [
+        "P4-01",
+        "P4-02",
+        "P4-03",
+        "P4-04",
+        "P4-05",
+        "H3"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Engineering",
+      "kind": "Human review",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E4",
+      "native_blocked_by": [
+        "P4-05"
+      ],
+      "sequence": 4006,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 742
+    },
+    {
+      "key": "H4",
+      "phase": 4,
+      "title": "Human decision gate 4: Align actions, world state, and GOAP",
+      "goal": "A human maintainer decides whether the phase satisfies its acceptance criteria and may unlock the next phase.",
+      "acceptance": [
+        "Review every required task, current PR head, commands/results, and the phase-specific evidence.",
+        "Walk through the supported behavior, failure cases, and applicable design/engineering artifacts.",
+        "Choose exactly Approved, Changes requested, or Deferred; record reviewer, date, rationale, evidence, and issue-backed remediation.",
+        "Only close this gate after a human records Approved; keep rework/deferred gates open and downstream work blocked.",
+        "Do not auto-approve based on a passing suite, a bot action, elapsed time, or a completed checklist."
+      ],
+      "depends_on": [
+        "P4-01",
+        "P4-02",
+        "P4-03",
+        "P4-04",
+        "P4-05",
+        "P4-06",
+        "H3"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Review",
+      "kind": "Phase gate",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E4",
+      "native_blocked_by": [
+        "P4-06"
+      ],
+      "sequence": 4900,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 743
+    },
+    {
+      "key": "E5",
+      "phase": 5,
+      "title": "Phase 5: Complete event-driven execution",
+      "goal": "Events affect the intended actor and update state, memory, and accounting once while isolating failures.",
+      "acceptance": [
+        "All phase work is tracked as individual issues.",
+        "Phase gate H5 records the human decision and evidence.",
+        "Optional/deferred work is explicitly documented and does not silently become a release prerequisite."
+      ],
+      "depends_on": [],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Planning",
+      "kind": "Phase",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "PROGRAM",
+      "native_blocked_by": [],
+      "sequence": 5000,
+      "initial_readiness": "Tracking",
+      "initial_status": "Todo",
+      "number": 744
+    },
+    {
+      "key": "P5-01",
+      "phase": 5,
+      "title": "Route event strategy output through character-aware execution",
+      "goal": "Complete the existing EventHandler integration request without bare action.execute calls or default-subject routing.",
+      "acceptance": [
+        "Rebase PR #690 against the merged #698 payload and #699 consequence changes.",
+        "Resolve and preserve the intended actor through event, strategy, execution, and memory.",
+        "Exercise real multi-character event-to-action paths in addition to interface-level doubles."
+      ],
+      "depends_on": [
+        "H4"
+      ],
+      "existing_issue": 219,
+      "candidate_prs": [
+        690
+      ],
+      "related_issues": [
+        190,
+        192,
+        54
+      ],
+      "workstream": "Runtime",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E5",
+      "native_blocked_by": [
+        "H4"
+      ],
+      "sequence": 5001,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 219
+    },
+    {
+      "key": "P5-02",
+      "phase": 5,
+      "title": "Validate event payloads, prioritization, consequences, and scheduling",
+      "goal": "Verify the integrated event lifecycle rather than reimplementing features already merged.",
+      "acceptance": [
+        "Typed and event-like payloads trigger deterministic, bounded processing.",
+        "Priority and consequence dispatch preserve actor/location context and required order.",
+        "No duplicate handling, unbounded cascades, or unexpected cross-character effects occur."
+      ],
+      "depends_on": [
+        "P5-01",
+        "H4"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [
+        190,
+        192,
+        106,
+        107,
+        108,
+        109
+      ],
+      "workstream": "Testing",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E5",
+      "native_blocked_by": [
+        "P5-01"
+      ],
+      "sequence": 5002,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 745
+    },
+    {
+      "key": "P5-03",
+      "phase": 5,
+      "title": "Record event/action outcomes in memory and accounting once",
+      "goal": "Use one post-action path for successful effects, memory, statistics, and user-facing feedback.",
+      "acceptance": [
+        "Count and remember each successful action once across daily and event-driven routes.",
+        "Failed actions produce accurate failure evidence without successful reward/memory accounting.",
+        "A trace connects event, actor, selected plan, applied effect, and resulting state."
+      ],
+      "depends_on": [
+        "P5-01",
+        "P5-02",
+        "H4"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [
+        111,
+        112,
+        155
+      ],
+      "workstream": "Runtime",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E5",
+      "native_blocked_by": [
+        "P5-02"
+      ],
+      "sequence": 5003,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 746
+    },
+    {
+      "key": "P5-04",
+      "phase": 5,
+      "title": "Recover subsystem failures without losing simulation state",
+      "goal": "Address the existing recovery request with state-preserving, failure-isolated runtime behavior.",
+      "acceptance": [
+        "One actor/action failure does not prevent other villagers from progressing.",
+        "Recovery does not silently rebuild away valid world state or replay applied effects.",
+        "Bound retries, preserve diagnostic cause, and verify the intended recovery with actual outcomes."
+      ],
+      "depends_on": [
+        "P5-03",
+        "H4"
+      ],
+      "existing_issue": 137,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Engineering",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E5",
+      "native_blocked_by": [
+        "P5-03"
+      ],
+      "sequence": 5004,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 137
+    },
+    {
+      "key": "P5-05",
+      "phase": 5,
+      "title": "Human walkthrough: event-driven decisions and understandable feedback",
+      "goal": "A reviewer observes an event affecting the correct villagers and checks both behavior and explanations.",
+      "acceptance": [
+        "Walk through success, invalid input, actor-specific failure, and recovery.",
+        "Confirm understandable event/decision/action feedback without exposing irrelevant implementation details.",
+        "Record approval or issue-backed remediation before economic integration."
+      ],
+      "depends_on": [
+        "P5-01",
+        "P5-02",
+        "P5-03",
+        "P5-04",
+        "H4"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "UX",
+      "kind": "Human review",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E5",
+      "native_blocked_by": [
+        "P5-04"
+      ],
+      "sequence": 5005,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 747
+    },
+    {
+      "key": "H5",
+      "phase": 5,
+      "title": "Human decision gate 5: Complete event-driven execution",
+      "goal": "A human maintainer decides whether the phase satisfies its acceptance criteria and may unlock the next phase.",
+      "acceptance": [
+        "Review every required task, current PR head, commands/results, and the phase-specific evidence.",
+        "Walk through the supported behavior, failure cases, and applicable design/engineering artifacts.",
+        "Choose exactly Approved, Changes requested, or Deferred; record reviewer, date, rationale, evidence, and issue-backed remediation.",
+        "Only close this gate after a human records Approved; keep rework/deferred gates open and downstream work blocked.",
+        "Do not auto-approve based on a passing suite, a bot action, elapsed time, or a completed checklist."
+      ],
+      "depends_on": [
+        "P5-01",
+        "P5-02",
+        "P5-03",
+        "P5-04",
+        "P5-05",
+        "H4"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Review",
+      "kind": "Phase gate",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E5",
+      "native_blocked_by": [
+        "P5-05"
+      ],
+      "sequence": 5900,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 748
+    },
+    {
+      "key": "E6",
+      "phase": 6,
+      "title": "Phase 6: Deliver the village economic loop",
+      "goal": "Work, wages, production, trade, consumption, and recovery form one demonstrable behavior loop.",
+      "acceptance": [
+        "All phase work is tracked as individual issues.",
+        "Phase gate H6 records the human decision and evidence.",
+        "Optional/deferred work is explicitly documented and does not silently become a release prerequisite."
+      ],
+      "depends_on": [],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Planning",
+      "kind": "Phase",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "PROGRAM",
+      "native_blocked_by": [],
+      "sequence": 6000,
+      "initial_readiness": "Tracking",
+      "initial_status": "Todo",
+      "number": 749
+    },
+    {
+      "key": "P6-01",
+      "phase": 6,
+      "title": "Add concrete item types and inventory category support",
+      "goal": "Complete the existing item-type request with usable, consistently categorized objects.",
+      "acceptance": [
+        "Review PR #695 for concrete metadata, inventory grouping, aliases, and fallback category behavior.",
+        "Item construction works under the supported core profile.",
+        "Verify quantities and interactions against real inventory operations."
+      ],
+      "depends_on": [
+        "H5"
+      ],
+      "existing_issue": 195,
+      "candidate_prs": [
+        695
+      ],
+      "related_issues": [
+        194
+      ],
+      "workstream": "Economy",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E6",
+      "native_blocked_by": [
+        "H5"
+      ],
+      "sequence": 6001,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 195
+    },
+    {
+      "key": "P6-02",
+      "phase": 6,
+      "title": "Implement concrete item interactions with valid effects",
+      "goal": "Complete the existing item-interactions request using the agreed action contracts.",
+      "acceptance": [
+        "Review PR #692 after item models and Phase 4 action/state changes.",
+        "Use, equip, consume, and applicable crafting interactions enforce real requirements.",
+        "Effects change actual state and quantities without duplicated inventory mutation."
+      ],
+      "depends_on": [
+        "P6-01",
+        "H5"
+      ],
+      "existing_issue": 196,
+      "candidate_prs": [
+        692
+      ],
+      "related_issues": [],
+      "workstream": "Economy",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E6",
+      "native_blocked_by": [
+        "P6-01"
+      ],
+      "sequence": 6002,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 196
+    },
+    {
+      "key": "P6-03",
+      "phase": 6,
+      "title": "Implement job assignment, work outcomes, and career progression",
+      "goal": "Complete the existing job-system request with operational work and measurable outcomes.",
+      "acceptance": [
+        "Review PR #697 for application/assignment/leave-job, role metadata, wages, skills, production, and progression.",
+        "Use module-relative role-data paths and explicit validation for unavailable/invalid roles.",
+        "Prove one work execution produces its intended wages, costs, and goods once."
+      ],
+      "depends_on": [
+        "H5"
+      ],
+      "existing_issue": 199,
+      "candidate_prs": [
+        697
+      ],
+      "related_issues": [],
+      "workstream": "Economy",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E6",
+      "native_blocked_by": [
+        "H5"
+      ],
+      "sequence": 6003,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 199
+    },
+    {
+      "key": "P6-04",
+      "phase": 6,
+      "title": "Integrate production, trade, consumption, and economic state",
+      "goal": "Complete the existing economic-integration request as a concrete work/food loop.",
+      "acceptance": [
+        "Review PR #694 after job and item contracts.",
+        "Trade conserves money and inventory; production and consumption are measurable and rate-limited.",
+        "Prevent double wages or rewards across Action, JobManager, EconomicSimulation, and controller paths."
+      ],
+      "depends_on": [
+        "P6-01",
+        "P6-02",
+        "P6-03",
+        "H5"
+      ],
+      "existing_issue": 198,
+      "candidate_prs": [
+        694
+      ],
+      "related_issues": [
+        204
+      ],
+      "workstream": "Economy",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E6",
+      "native_blocked_by": [
+        "P6-02",
+        "P6-03"
+      ],
+      "sequence": 6004,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 198
+    },
+    {
+      "key": "P6-05",
+      "phase": 6,
+      "title": "Expose inventory needs and trade/drop choices to decisions",
+      "goal": "Use real inventory availability in character decisions and prompt context.",
+      "acceptance": [
+        "Review PR #693 against the chosen inventory and economic APIs.",
+        "Unavailable items/actions are not offered as valid choices.",
+        "Decision and prompt contexts show consistent quantities and useful choices without duplicate aliases."
+      ],
+      "depends_on": [
+        "P6-04",
+        "H5"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [
+        693
+      ],
+      "related_issues": [
+        197
+      ],
+      "workstream": "Economy",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E6",
+      "native_blocked_by": [
+        "P6-04"
+      ],
+      "sequence": 6005,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 750
+    },
+    {
+      "key": "P6-06",
+      "phase": 6,
+      "title": "Review owner-based building access and income when in scope",
+      "goal": "Complete the existing ownership request only if the approved MVP scenario requires it.",
+      "acceptance": [
+        "Review PR #691 for owner identity, access requirements, and income effects.",
+        "Apply financial effects once through canonical state paths.",
+        "Phase 2/6 reviewers explicitly activate or defer this optional task; it is not an implicit MVP prerequisite."
+      ],
+      "depends_on": [
+        "P6-04",
+        "H5"
+      ],
+      "existing_issue": 174,
+      "candidate_prs": [
+        691
+      ],
+      "related_issues": [],
+      "workstream": "Economy",
+      "kind": "Task",
+      "scope": "Optional",
+      "priority": "P2",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E6",
+      "native_blocked_by": [
+        "P6-04"
+      ],
+      "sequence": 6006,
+      "initial_readiness": "Deferred",
+      "initial_status": "Todo",
+      "number": 174
+    },
+    {
+      "key": "P6-07",
+      "phase": 6,
+      "title": "Demonstrate the full work-to-food-to-recovery scenario",
+      "goal": "Run the selected villagers through the first complete useful behavior loop.",
+      "acceptance": [
+        "Goals drive work, wages, food acquisition, eating, and recovery rather than name-based fake wealth increments.",
+        "Different needs/scarcity produce explainable changes in chosen actions.",
+        "Verify actor/graph/inventory state and conserved totals over multiple ticks."
+      ],
+      "depends_on": [
+        "P6-04",
+        "P6-05",
+        "H5"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [
+        223,
+        204
+      ],
+      "workstream": "Testing",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E6",
+      "native_blocked_by": [
+        "P6-05"
+      ],
+      "sequence": 6007,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 751
+    },
+    {
+      "key": "P6-08",
+      "phase": 6,
+      "title": "Human review: economic behavior, balance, and data integrity",
+      "goal": "Review the scenario outcomes and whether they produce a believable and understandable village loop.",
+      "acceptance": [
+        "Walk through success, insufficient money, unavailable goods, and failed work/trade.",
+        "Inspect wage/item conservation, meaningful need changes, and the scope decision for ownership.",
+        "Record approved tuning/behavior or create specific remediation issues."
+      ],
+      "depends_on": [
+        "P6-07",
+        "H5"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Economy",
+      "kind": "Human review",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E6",
+      "native_blocked_by": [
+        "P6-07"
+      ],
+      "sequence": 6008,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 752
+    },
+    {
+      "key": "H6",
+      "phase": 6,
+      "title": "Human decision gate 6: Deliver the village economic loop",
+      "goal": "A human maintainer decides whether the phase satisfies its acceptance criteria and may unlock the next phase.",
+      "acceptance": [
+        "Review every required task, current PR head, commands/results, and the phase-specific evidence.",
+        "Walk through the supported behavior, failure cases, and applicable design/engineering artifacts.",
+        "Choose exactly Approved, Changes requested, or Deferred; record reviewer, date, rationale, evidence, and issue-backed remediation.",
+        "Only close this gate after a human records Approved; keep rework/deferred gates open and downstream work blocked.",
+        "Do not auto-approve based on a passing suite, a bot action, elapsed time, or a completed checklist."
+      ],
+      "depends_on": [
+        "P6-01",
+        "P6-02",
+        "P6-03",
+        "P6-04",
+        "P6-05",
+        "P6-07",
+        "P6-08",
+        "H5"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Review",
+      "kind": "Phase gate",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E6",
+      "native_blocked_by": [
+        "P6-08"
+      ],
+      "sequence": 6900,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 753
+    },
+    {
+      "key": "E7",
+      "phase": 7,
+      "title": "Phase 7: Restore saved simulation state",
+      "goal": "A versioned save/restart/load round trip preserves world identity and subsequent simulation behavior.",
+      "acceptance": [
+        "All phase work is tracked as individual issues.",
+        "Phase gate H7 records the human decision and evidence.",
+        "Optional/deferred work is explicitly documented and does not silently become a release prerequisite."
+      ],
+      "depends_on": [],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Planning",
+      "kind": "Phase",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "PROGRAM",
+      "native_blocked_by": [],
+      "sequence": 7000,
+      "initial_readiness": "Tracking",
+      "initial_status": "Todo",
+      "number": 754
+    },
+    {
+      "key": "P7-01",
+      "phase": 7,
+      "title": "Define versioned snapshots and atomic save behavior",
+      "goal": "Create a supported state contract before expanding the current partial loader.",
+      "acceptance": [
+        "Specify stable IDs, schema version, world/actor state, inventories, relationships, events, time, and supported memory data.",
+        "Validate input before replacing live state and write saves atomically.",
+        "Document incompatible/corrupt save handling and supported migrations."
+      ],
+      "depends_on": [
+        "H6"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [
+        214
+      ],
+      "workstream": "Persistence",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E7",
+      "native_blocked_by": [
+        "H6"
+      ],
+      "sequence": 7001,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 755
+    },
+    {
+      "key": "P7-02",
+      "phase": 7,
+      "title": "Restore map, buildings, and world entities by stable ID",
+      "goal": "Complete the existing world-restoration request before recreating dependent actors.",
+      "acceptance": [
+        "Restore required world/building state and item locations.",
+        "Use stable identity so subsequent character and relationship restoration resolves correctly.",
+        "Validate missing/incompatible world references without partial silent success."
+      ],
+      "depends_on": [
+        "P7-01",
+        "H6"
+      ],
+      "existing_issue": 103,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Persistence",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E7",
+      "native_blocked_by": [
+        "P7-01"
+      ],
+      "sequence": 7002,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 103
+    },
+    {
+      "key": "P7-03",
+      "phase": 7,
+      "title": "Restore complete supported character state and inventory",
+      "goal": "Complete the existing character-restoration request instead of returning success without restoring actors.",
+      "acceptance": [
+        "Restore supported attributes, positions/locations, inventory, jobs, goals, and plan progress.",
+        "Rebind restored objects to the authoritative graph and world entities.",
+        "Verify saved values actually replace the running state."
+      ],
+      "depends_on": [
+        "P7-02",
+        "H6"
+      ],
+      "existing_issue": 102,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Persistence",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E7",
+      "native_blocked_by": [
+        "P7-02"
+      ],
+      "sequence": 7003,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 102
+    },
+    {
+      "key": "P7-04",
+      "phase": 7,
+      "title": "Restore relationships and graph-backed social state",
+      "goal": "Complete the existing relationship-restoration request rather than only logging that data was present.",
+      "acceptance": [
+        "Rebuild relationships against restored actor/world IDs.",
+        "Controller and graph read/write the same authoritative relationship state.",
+        "Validate invalid/missing references and preserve supported relationship attributes."
+      ],
+      "depends_on": [
+        "P7-03",
+        "H6"
+      ],
+      "existing_issue": 104,
+      "candidate_prs": [],
+      "related_issues": [
+        222,
+        609
+      ],
+      "workstream": "Persistence",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E7",
+      "native_blocked_by": [
+        "P7-03"
+      ],
+      "sequence": 7004,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 104
+    },
+    {
+      "key": "P7-05",
+      "phase": 7,
+      "title": "Restore economic state and production/trade bookkeeping",
+      "goal": "Complete the existing economic-state restoration request.",
+      "acceptance": [
+        "Restore supported balances, availability, job assignments, production state, and rate-limit bookkeeping.",
+        "Restart does not duplicate wages, production, or already applied trades.",
+        "Verify the next economic tick agrees with an equivalent uninterrupted simulation."
+      ],
+      "depends_on": [
+        "P7-04",
+        "H6"
+      ],
+      "existing_issue": 105,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Persistence",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E7",
+      "native_blocked_by": [
+        "P7-04"
+      ],
+      "sequence": 7005,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 105
+    },
+    {
+      "key": "P7-06",
+      "phase": 7,
+      "title": "Persist basic memory records, pending events, time, and randomness",
+      "goal": "Preserve the core simulation's continuation state while keeping model/index persistence explicitly separate.",
+      "acceptance": [
+        "Restore supported plain memory records and pending event/plan state.",
+        "Preserve simulation time and deterministic RNG state needed by the approved scenario.",
+        "Document that full NLP/FAISS model/index persistence is addressed separately by #614 in Phase 9."
+      ],
+      "depends_on": [
+        "P7-05",
+        "H6"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [
+        214,
+        614
+      ],
+      "workstream": "Persistence",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E7",
+      "native_blocked_by": [
+        "P7-05"
+      ],
+      "sequence": 7006,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 756
+    },
+    {
+      "key": "P7-07",
+      "phase": 7,
+      "title": "Validate restart/load continuation and corrupted saves",
+      "goal": "Prove persistence works by comparing actual resulting simulation state.",
+      "acceptance": [
+        "Save, restart, load, and continue produce equivalent state and subsequent behavior.",
+        "Missing/invalid/version-mismatched data fail clearly before mutating valid live state.",
+        "Verify restored actor/graph/inventory identities and no double application of events or rewards."
+      ],
+      "depends_on": [
+        "P7-06",
+        "H6"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [
+        214,
+        137
+      ],
+      "workstream": "Testing",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E7",
+      "native_blocked_by": [
+        "P7-06"
+      ],
+      "sequence": 7007,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 757
+    },
+    {
+      "key": "P7-08",
+      "phase": 7,
+      "title": "Human review: save/load correctness and recoverability",
+      "goal": "Walk through supported save/load journeys and their failure feedback.",
+      "acceptance": [
+        "Review snapshot versions, actual restored values, identity consistency, and corruption behavior.",
+        "Inspect user-facing recovery instructions and ensure errors do not conceal partial restores.",
+        "Record approval or linked remediation before release-facing UI validation."
+      ],
+      "depends_on": [
+        "P7-07",
+        "H6"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Engineering",
+      "kind": "Human review",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E7",
+      "native_blocked_by": [
+        "P7-07"
+      ],
+      "sequence": 7008,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 758
+    },
+    {
+      "key": "H7",
+      "phase": 7,
+      "title": "Human decision gate 7: Restore saved simulation state",
+      "goal": "A human maintainer decides whether the phase satisfies its acceptance criteria and may unlock the next phase.",
+      "acceptance": [
+        "Review every required task, current PR head, commands/results, and the phase-specific evidence.",
+        "Walk through the supported behavior, failure cases, and applicable design/engineering artifacts.",
+        "Choose exactly Approved, Changes requested, or Deferred; record reviewer, date, rationale, evidence, and issue-backed remediation.",
+        "Only close this gate after a human records Approved; keep rework/deferred gates open and downstream work blocked.",
+        "Do not auto-approve based on a passing suite, a bot action, elapsed time, or a completed checklist."
+      ],
+      "depends_on": [
+        "P7-01",
+        "P7-02",
+        "P7-03",
+        "P7-04",
+        "P7-05",
+        "P7-06",
+        "P7-07",
+        "P7-08",
+        "H6"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Review",
+      "kind": "Phase gate",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E7",
+      "native_blocked_by": [
+        "P7-08"
+      ],
+      "sequence": 7900,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 759
+    },
+    {
+      "key": "E8",
+      "phase": 8,
+      "title": "Phase 8: Validate UX, UI, aesthetics, and MVP release",
+      "goal": "Documented demo, visual and accessibility reviews, engineering review, and measured stability have human sign-off.",
+      "acceptance": [
+        "All phase work is tracked as individual issues.",
+        "Phase gate H8 records the human decision and evidence.",
+        "Optional/deferred work is explicitly documented and does not silently become a release prerequisite."
+      ],
+      "depends_on": [],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Planning",
+      "kind": "Phase",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "PROGRAM",
+      "native_blocked_by": [],
+      "sequence": 8000,
+      "initial_readiness": "Tracking",
+      "initial_status": "Todo",
+      "number": 760
+    },
+    {
+      "key": "P8-01",
+      "phase": 8,
+      "title": "Reconcile MVP and integration documentation with executed evidence",
+      "goal": "Complete the existing MVP-documentation request using current behavior instead of unsupported readiness claims.",
+      "acceptance": [
+        "Refresh PRs #687/#688 and reconcile README, Quickstart, status/reference docs, and Memory Bank.",
+        "Remove generated session/audit logs from documentation changes and contextualize archived claims.",
+        "Document the same commands, optional features, actual failures, and support matrix everywhere."
+      ],
+      "depends_on": [
+        "H7"
+      ],
+      "existing_issue": 656,
+      "candidate_prs": [
+        687,
+        688
+      ],
+      "related_issues": [
+        681,
+        684,
+        685
+      ],
+      "workstream": "Documentation",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E8",
+      "native_blocked_by": [
+        "H7"
+      ],
+      "sequence": 8001,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 656
+    },
+    {
+      "key": "P8-02",
+      "phase": 8,
+      "title": "Freeze and document the canonical deterministic MVP demo",
+      "goal": "Complete the existing MVP-path issue, including its implementation and documentation criteria.",
+      "acceptance": [
+        "One official command runs fixed villagers, world, events, and seed under the supported profile.",
+        "Document what users will see and how to reproduce it from scratch.",
+        "The demo exhibits real integrated behavior and reports a verifiable final summary."
+      ],
+      "depends_on": [
+        "P8-01",
+        "H7"
+      ],
+      "existing_issue": 658,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Delivery",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E8",
+      "native_blocked_by": [
+        "P8-01"
+      ],
+      "sequence": 8002,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 658
+    },
+    {
+      "key": "P8-03",
+      "phase": 8,
+      "title": "Explain goals, decisions, events, and outcomes in demo feedback",
+      "goal": "Complete the existing narrative-log clarity issue.",
+      "acceptance": [
+        "Explain why a villager chose an action and how events/needs influenced it.",
+        "Report successful, failed, recovered, and deferred outcomes accurately.",
+        "Keep implementation details out of ordinary product feedback unless needed for a user decision."
+      ],
+      "depends_on": [
+        "P8-02",
+        "H7"
+      ],
+      "existing_issue": 655,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "UX",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E8",
+      "native_blocked_by": [
+        "P8-02"
+      ],
+      "sequence": 8003,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 655
+    },
+    {
+      "key": "P8-04",
+      "phase": 8,
+      "title": "Implement the approved MVP UI and UX specification",
+      "goal": "Apply the Phase 2 human-approved interaction and visual plans to the supported Pygame/console surfaces.",
+      "acceptance": [
+        "Implement agreed HUD/inspection/notification/control and save/load feedback behavior.",
+        "Provide legible selection, focus, paused/error/recovery states and supported-resolution handling.",
+        "Review PR #710 for graceful map-render failure feedback; track discovered UI fixes as separate linked issues."
+      ],
+      "depends_on": [
+        "P8-02",
+        "P8-03",
+        "P2-08",
+        "H7"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [
+        710
+      ],
+      "related_issues": [
+        381,
+        382,
+        128,
+        129
+      ],
+      "workstream": "UI",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E8",
+      "native_blocked_by": [
+        "P8-03"
+      ],
+      "sequence": 8004,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 761
+    },
+    {
+      "key": "P8-09",
+      "phase": 8,
+      "title": "Measure MVP stability, frame times, memory, and failure recovery",
+      "goal": "Use existing performance instrumentation to establish evidence for release readiness.",
+      "acceptance": [
+        "Run the fixed scenario, then a bounded multi-villager soak using the Phase 2 budgets.",
+        "Record frame/decision timings, memory growth, crashes, stuck plans, and recovery behavior.",
+        "Create issues for actionable findings; verify #596/#597 from evidence instead of duplicating implemented instrumentation."
+      ],
+      "depends_on": [
+        "P8-02",
+        "P8-04",
+        "H7"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [
+        596,
+        597,
+        11
+      ],
+      "workstream": "Testing",
+      "kind": "Task",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E8",
+      "native_blocked_by": [
+        "P8-04"
+      ],
+      "sequence": 8005,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 762
+    },
+    {
+      "key": "P8-05",
+      "phase": 8,
+      "title": "Human aesthetic review of the village, HUD, and visual states",
+      "goal": "Judge visual coherence and readability against the approved direction using actual captured screens.",
+      "acceptance": [
+        "Review palette, typography, spacing, hierarchy, map/character legibility, and selection/error visual language.",
+        "Check supported resolutions/backgrounds and asset consistency/provenance.",
+        "Record approved visual decisions or individual remediation issues with examples."
+      ],
+      "depends_on": [
+        "P8-04",
+        "H7"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Aesthetics",
+      "kind": "Human review",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E8",
+      "native_blocked_by": [
+        "P8-04"
+      ],
+      "sequence": 8006,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 763
+    },
+    {
+      "key": "P8-06",
+      "phase": 8,
+      "title": "Human UX usability walkthrough of all supported MVP journeys",
+      "goal": "Observe users/reviewers completing the agreed journeys without inventing successful usability results.",
+      "acceptance": [
+        "Walk through launch, observe, inspect, pause, save/load, recover, and exit.",
+        "Check discoverability, feedback timing, narrative clarity, and meaningful user control.",
+        "Record observations, friction, approved decisions, and issue-backed fixes."
+      ],
+      "depends_on": [
+        "P8-04",
+        "H7"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "UX",
+      "kind": "Human review",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E8",
+      "native_blocked_by": [
+        "P8-04"
+      ],
+      "sequence": 8007,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 764
+    },
+    {
+      "key": "P8-07",
+      "phase": 8,
+      "title": "Human UI interaction and state consistency review",
+      "goal": "Review the functioning interface, its controls, and its integration with simulation state.",
+      "acceptance": [
+        "Verify panels, controls, labels, state transitions, and unavailable/error states.",
+        "Ensure displayed needs, inventory, goals, and save/load outcomes match authoritative state.",
+        "Review resolution/layout behavior and record required fixes separately."
+      ],
+      "depends_on": [
+        "P8-04",
+        "H7"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "UI",
+      "kind": "Human review",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E8",
+      "native_blocked_by": [
+        "P8-04"
+      ],
+      "sequence": 8008,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 765
+    },
+    {
+      "key": "P8-08",
+      "phase": 8,
+      "title": "Human accessibility and inclusive-interaction review",
+      "goal": "Assess accessibility expectations appropriate to the Pygame/console surfaces.",
+      "acceptance": [
+        "Check text/selection contrast, non-color status cues, readable sizes, keyboard operation, and focus visibility.",
+        "Review configurable controls, motion settings where applicable, and actionable error/recovery feedback.",
+        "Document platform constraints honestly; do not claim browser/ARIA support for a Pygame interface."
+      ],
+      "depends_on": [
+        "P8-04",
+        "H7"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Accessibility",
+      "kind": "Human review",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E8",
+      "native_blocked_by": [
+        "P8-04"
+      ],
+      "sequence": 8009,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 766
+    },
+    {
+      "key": "P8-10",
+      "phase": 8,
+      "title": "Human modern-practices and release-readiness review",
+      "goal": "Review the final supported runtime, CI, package profiles, persistence, and interface evidence.",
+      "acceptance": [
+        "Review cold startup, state contracts, behavioral test results, bounds/caches, configuration, and error handling.",
+        "Confirm design/UX/UI/accessibility decisions and performance results are recorded.",
+        "Verify reproducible commands, clean changes, optional-feature boundaries, and any remaining release blockers."
+      ],
+      "depends_on": [
+        "P8-01",
+        "P8-02",
+        "P8-03",
+        "P8-05",
+        "P8-06",
+        "P8-07",
+        "P8-08",
+        "P8-09",
+        "H7"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Engineering",
+      "kind": "Human review",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E8",
+      "native_blocked_by": [
+        "P8-05",
+        "P8-06",
+        "P8-07",
+        "P8-08",
+        "P8-09"
+      ],
+      "sequence": 8010,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 767
+    },
+    {
+      "key": "H8",
+      "phase": 8,
+      "title": "Human decision gate 8: Validate UX, UI, aesthetics, and MVP release",
+      "goal": "A human maintainer decides whether the phase satisfies its acceptance criteria and may unlock the next phase.",
+      "acceptance": [
+        "Review every required task, current PR head, commands/results, and the phase-specific evidence.",
+        "Walk through the supported behavior, failure cases, and applicable design/engineering artifacts.",
+        "Choose exactly Approved, Changes requested, or Deferred; record reviewer, date, rationale, evidence, and issue-backed remediation.",
+        "Only close this gate after a human records Approved; keep rework/deferred gates open and downstream work blocked.",
+        "Do not auto-approve based on a passing suite, a bot action, elapsed time, or a completed checklist."
+      ],
+      "depends_on": [
+        "P8-01",
+        "P8-02",
+        "P8-03",
+        "P8-04",
+        "P8-05",
+        "P8-06",
+        "P8-07",
+        "P8-08",
+        "P8-09",
+        "P8-10",
+        "H7"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Review",
+      "kind": "Phase gate",
+      "scope": "MVP",
+      "priority": "P1",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E8",
+      "native_blocked_by": [
+        "P8-10"
+      ],
+      "sequence": 8900,
+      "initial_readiness": "Blocked",
+      "initial_status": "Todo",
+      "number": 768
+    },
+    {
+      "key": "E9",
+      "phase": 9,
+      "title": "Phase 9: Expand optional features deliberately",
+      "goal": "Post-MVP social, memory, LLM, and graphics increments have verified fallbacks and an explicit human release decision.",
+      "acceptance": [
+        "All phase work is tracked as individual issues.",
+        "Phase gate H9 records the human decision and evidence.",
+        "Optional/deferred work is explicitly documented and does not silently become a release prerequisite."
+      ],
+      "depends_on": [],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Planning",
+      "kind": "Phase",
+      "scope": "Post-MVP",
+      "priority": "P2",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "PROGRAM",
+      "native_blocked_by": [],
+      "sequence": 9000,
+      "initial_readiness": "Tracking",
+      "initial_status": "Todo",
+      "number": 769
+    },
+    {
+      "key": "P9-01",
+      "phase": 9,
+      "title": "Implement meaningful graph-backed relationship dynamics",
+      "goal": "Complete the existing social-interaction dynamics issue after MVP release approval.",
+      "acceptance": [
+        "Interactions change relationships through the authoritative graph.",
+        "State changes reflect actual outcomes and remain consistent after save/load.",
+        "Validate success/failure behavior and human-readable social consequences."
+      ],
+      "depends_on": [
+        "H8"
+      ],
+      "existing_issue": 606,
+      "candidate_prs": [],
+      "related_issues": [
+        609
+      ],
+      "workstream": "Social",
+      "kind": "Task",
+      "scope": "Post-MVP",
+      "priority": "P2",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E9",
+      "native_blocked_by": [
+        "H8"
+      ],
+      "sequence": 9001,
+      "initial_readiness": "Deferred",
+      "initial_status": "Todo",
+      "number": 606
+    },
+    {
+      "key": "P9-02",
+      "phase": 9,
+      "title": "Make relationships influence character decisions",
+      "goal": "Complete the existing relationship-aware decision issue.",
+      "acceptance": [
+        "Relationship context changes goal selection, ranking, or planning in explainable scenarios.",
+        "Preserve the stable non-LLM runtime path.",
+        "Verify effects on real behavior rather than only prompt substrings."
+      ],
+      "depends_on": [
+        "P9-01",
+        "H8"
+      ],
+      "existing_issue": 607,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Social",
+      "kind": "Task",
+      "scope": "Post-MVP",
+      "priority": "P2",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E9",
+      "native_blocked_by": [
+        "P9-01"
+      ],
+      "sequence": 9002,
+      "initial_readiness": "Deferred",
+      "initial_status": "Todo",
+      "number": 607
+    },
+    {
+      "key": "P9-03",
+      "phase": 9,
+      "title": "Use memory and relationship summaries in actual decisions",
+      "goal": "Complete the existing memory-to-decision integration issue with scoped, current-code changes.",
+      "acceptance": [
+        "Review PR #363 for stale/unrelated changes before selecting its useful parts.",
+        "Memory/relationship data influence real prompt/planning decisions and optional absence degrades gracefully.",
+        "Validate retrieval context, relevance, and supported memory records without mock-only success."
+      ],
+      "depends_on": [
+        "P9-02",
+        "H8"
+      ],
+      "existing_issue": 155,
+      "candidate_prs": [
+        363
+      ],
+      "related_issues": [],
+      "workstream": "Memory",
+      "kind": "Task",
+      "scope": "Post-MVP",
+      "priority": "P2",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E9",
+      "native_blocked_by": [
+        "P9-02"
+      ],
+      "sequence": 9003,
+      "initial_readiness": "Deferred",
+      "initial_status": "Todo",
+      "number": 155
+    },
+    {
+      "key": "P9-04",
+      "phase": 9,
+      "title": "Harden structured LLM output parsing and fallback behavior",
+      "goal": "Complete the existing robust-output issue against the supported Action contracts.",
+      "acceptance": [
+        "Validate schema, parameters, identity, allowed actions, and malformed/unknown responses.",
+        "Reject invalid output and retain a meaningful deterministic fallback.",
+        "Verify real parser-to-action behavior without weakening assertions."
+      ],
+      "depends_on": [
+        "P9-03",
+        "H8"
+      ],
+      "existing_issue": 207,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "LLM",
+      "kind": "Task",
+      "scope": "Post-MVP",
+      "priority": "P2",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E9",
+      "native_blocked_by": [
+        "P9-03"
+      ],
+      "sequence": 9004,
+      "initial_readiness": "Deferred",
+      "initial_status": "Todo",
+      "number": 207
+    },
+    {
+      "key": "P9-08",
+      "phase": 9,
+      "title": "Bound model, memory, cache, and index resource usage",
+      "goal": "Complete the existing MemoryManager resource-management request before expanding model-enabled usage.",
+      "acceptance": [
+        "Measure and bound model instances, retrieval caches, and index lifecycle.",
+        "Use owned cache configuration and explicit initialization/cleanup instead of repeated import-time loading.",
+        "Verify long-running behavior and preserve artifact/TLS verification."
+      ],
+      "depends_on": [
+        "P9-03",
+        "H8"
+      ],
+      "existing_issue": 11,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Memory",
+      "kind": "Task",
+      "scope": "Post-MVP",
+      "priority": "P2",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E9",
+      "native_blocked_by": [
+        "P9-03"
+      ],
+      "sequence": 9005,
+      "initial_readiness": "Deferred",
+      "initial_status": "Todo",
+      "number": 11
+    },
+    {
+      "key": "P9-09",
+      "phase": 9,
+      "title": "Persist or rebuild supported NLP and memory indexes",
+      "goal": "Complete the existing full memory-persistence request beyond the basic Phase 7 snapshot.",
+      "acceptance": [
+        "Persist supported memory records/index metadata and reliably rebuild indexes after restart.",
+        "Do not serialize entire live model objects as the save format.",
+        "Verify equivalent retrieval/decision behavior after load and documented version compatibility."
+      ],
+      "depends_on": [
+        "P9-03",
+        "P9-08",
+        "P7-06",
+        "H8"
+      ],
+      "existing_issue": 614,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Persistence",
+      "kind": "Task",
+      "scope": "Post-MVP",
+      "priority": "P2",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E9",
+      "native_blocked_by": [
+        "P9-08"
+      ],
+      "sequence": 9006,
+      "initial_readiness": "Deferred",
+      "initial_status": "Todo",
+      "number": 614
+    },
+    {
+      "key": "P9-05",
+      "phase": 9,
+      "title": "Implement strategic and bounded LLM invocation",
+      "goal": "Complete the existing strategic invocation issue after memory/resource safeguards are ready.",
+      "acceptance": [
+        "Review criteria for crisis/social/novelty/explicit requests and preserve routine non-LLM behavior.",
+        "Review PR #709 helpers and #711 diagnostics where relevant.",
+        "Document provider/model choice, timeouts, budgets, and secure prerequisites before any live inference."
+      ],
+      "depends_on": [
+        "P9-04",
+        "P9-08",
+        "P9-09",
+        "H8"
+      ],
+      "existing_issue": 583,
+      "candidate_prs": [
+        709,
+        711
+      ],
+      "related_issues": [
+        208
+      ],
+      "workstream": "LLM",
+      "kind": "Task",
+      "scope": "Post-MVP",
+      "priority": "P2",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E9",
+      "native_blocked_by": [
+        "P9-04",
+        "P9-09"
+      ],
+      "sequence": 9007,
+      "initial_readiness": "Deferred",
+      "initial_status": "Todo",
+      "number": 583
+    },
+    {
+      "key": "P9-06",
+      "phase": 9,
+      "title": "Trace LLM calls, reasons, outcomes, and fallbacks",
+      "goal": "Complete the existing LLM observability request.",
+      "acceptance": [
+        "Each invocation/fallback records actor, trigger, goal, outcome, and bounded timing.",
+        "Avoid credential or unnecessary personal-data logging.",
+        "Connect diagnostics to the supported user-facing behavior and review evidence."
+      ],
+      "depends_on": [
+        "P9-05",
+        "H8"
+      ],
+      "existing_issue": 584,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "LLM",
+      "kind": "Task",
+      "scope": "Post-MVP",
+      "priority": "P2",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E9",
+      "native_blocked_by": [
+        "P9-05"
+      ],
+      "sequence": 9008,
+      "initial_readiness": "Deferred",
+      "initial_status": "Todo",
+      "number": 584
+    },
+    {
+      "key": "P9-07",
+      "phase": 9,
+      "title": "Verify strategic LLM paths with meaningful integration evidence",
+      "goal": "Complete the existing strategic-LLM testing request.",
+      "acceptance": [
+        "Cover routine/crisis/social/explicit request/failure fallback paths using real parser/strategy contracts.",
+        "Keep live-model checks separate from deterministic core CI and report their executed results honestly.",
+        "Prove model/service unavailability cannot break the approved MVP."
+      ],
+      "depends_on": [
+        "P9-06",
+        "H8"
+      ],
+      "existing_issue": 585,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Testing",
+      "kind": "Task",
+      "scope": "Post-MVP",
+      "priority": "P2",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E9",
+      "native_blocked_by": [
+        "P9-06"
+      ],
+      "sequence": 9009,
+      "initial_readiness": "Deferred",
+      "initial_status": "Todo",
+      "number": 585
+    },
+    {
+      "key": "P9-10",
+      "phase": 9,
+      "title": "Validate weighted pathfinding correctness before optimizing queues",
+      "goal": "Complete the existing pathfinding robustness request and review PR #712's priority-update risk.",
+      "acceptance": [
+        "An improved route to an already-queued node updates the effective heap priority or safely adds a fresh entry.",
+        "Verify weighted optimal paths, unreachable goals, obstacles, and stale entries.",
+        "Benchmark only after correctness is established."
+      ],
+      "depends_on": [
+        "H8"
+      ],
+      "existing_issue": 177,
+      "candidate_prs": [
+        712
+      ],
+      "related_issues": [],
+      "workstream": "Engineering",
+      "kind": "Task",
+      "scope": "Post-MVP",
+      "priority": "P2",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E9",
+      "native_blocked_by": [
+        "H8"
+      ],
+      "sequence": 9010,
+      "initial_readiness": "Deferred",
+      "initial_status": "Todo",
+      "number": 177
+    },
+    {
+      "key": "P9-11",
+      "phase": 9,
+      "title": "Add scoped anti-aliasing consistent with visual and performance budgets",
+      "goal": "Complete the existing anti-aliasing request only after the stable rendering baseline.",
+      "acceptance": [
+        "Review PR #713 against approved visual direction and current render/map code.",
+        "Validate configuration/toggle behavior and supported visual surfaces.",
+        "Measure frame-time impact and retain an explicit fallback/disable option."
+      ],
+      "depends_on": [
+        "P9-10",
+        "P8-05",
+        "P8-07",
+        "P8-09",
+        "H8"
+      ],
+      "existing_issue": 115,
+      "candidate_prs": [
+        713
+      ],
+      "related_issues": [],
+      "workstream": "Aesthetics",
+      "kind": "Task",
+      "scope": "Post-MVP",
+      "priority": "P2",
+      "review_owner": "",
+      "decision": "Not applicable",
+      "parent": "E9",
+      "native_blocked_by": [
+        "P9-10"
+      ],
+      "sequence": 9011,
+      "initial_readiness": "Deferred",
+      "initial_status": "Todo",
+      "number": 115
+    },
+    {
+      "key": "P9-12",
+      "phase": 9,
+      "title": "Human disposition review of optional tooling and experimental PRs",
+      "goal": "Keep contributor tooling and experimental modules separate from the product delivery path.",
+      "acceptance": [
+        "Record keep/separate/defer/supersede decisions for #705/#707/#708/#592/#702/#700.",
+        "Treat AI Algorithm Mentor as optional automation with distinct permission/provider prerequisites, not required test CI.",
+        "Do not ship generated dummy fixtures, unrelated LangGraph tooling, or experimental sleep changes as MVP runtime work."
+      ],
+      "depends_on": [
+        "H8"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [
+        705,
+        707,
+        708,
+        592,
+        702,
+        700
+      ],
+      "related_issues": [],
+      "workstream": "Planning",
+      "kind": "Human review",
+      "scope": "Post-MVP",
+      "priority": "P2",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E9",
+      "native_blocked_by": [
+        "H8"
+      ],
+      "sequence": 9012,
+      "initial_readiness": "Deferred",
+      "initial_status": "Todo",
+      "number": 770
+    },
+    {
+      "key": "P9-13",
+      "phase": 9,
+      "title": "Human review of optional feature behavior and operational readiness",
+      "goal": "Review the selected post-MVP capabilities before treating them as supported product behavior.",
+      "acceptance": [
+        "Review social/memory/LLM fallbacks, persistence, instrumentation, budgets, and rendering correctness.",
+        "Run the unchanged supported MVP as a regression control.",
+        "Record remaining deferred increments and approval/rework decisions with evidence."
+      ],
+      "depends_on": [
+        "P9-01",
+        "P9-02",
+        "P9-03",
+        "P9-04",
+        "P9-05",
+        "P9-06",
+        "P9-07",
+        "P9-08",
+        "P9-09",
+        "P9-10",
+        "P9-11",
+        "P9-12",
+        "H8"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Engineering",
+      "kind": "Human review",
+      "scope": "Post-MVP",
+      "priority": "P2",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E9",
+      "native_blocked_by": [
+        "P9-07",
+        "P9-11",
+        "P9-12"
+      ],
+      "sequence": 9013,
+      "initial_readiness": "Deferred",
+      "initial_status": "Todo",
+      "number": 771
+    },
+    {
+      "key": "H9",
+      "phase": 9,
+      "title": "Human decision gate 9: Expand optional features deliberately",
+      "goal": "A human maintainer decides whether the phase satisfies its acceptance criteria and may unlock the next phase.",
+      "acceptance": [
+        "Review every required task, current PR head, commands/results, and the phase-specific evidence.",
+        "Walk through the supported behavior, failure cases, and applicable design/engineering artifacts.",
+        "Choose exactly Approved, Changes requested, or Deferred; record reviewer, date, rationale, evidence, and issue-backed remediation.",
+        "Only close this gate after a human records Approved; keep rework/deferred gates open and downstream work blocked.",
+        "Do not auto-approve based on a passing suite, a bot action, elapsed time, or a completed checklist."
+      ],
+      "depends_on": [
+        "P9-01",
+        "P9-02",
+        "P9-03",
+        "P9-04",
+        "P9-05",
+        "P9-06",
+        "P9-07",
+        "P9-08",
+        "P9-09",
+        "P9-10",
+        "P9-11",
+        "P9-12",
+        "P9-13",
+        "H8"
+      ],
+      "existing_issue": null,
+      "candidate_prs": [],
+      "related_issues": [],
+      "workstream": "Review",
+      "kind": "Phase gate",
+      "scope": "Post-MVP",
+      "priority": "P2",
+      "review_owner": "dhar174",
+      "decision": "Pending",
+      "parent": "E9",
+      "native_blocked_by": [
+        "P9-13"
+      ],
+      "sequence": 9900,
+      "initial_readiness": "Deferred",
+      "initial_status": "Todo",
+      "number": 772
+    }
+  ]
+}

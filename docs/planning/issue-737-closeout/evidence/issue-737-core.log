@@ -1,0 +1,6 @@
+core/components: PASS
+core/runtime: PASS
+core/canonical-cli: PASS
+core/default-cli: PASS
+core/invalid-cli: PASS
+{"profile": "core", "status": "PASS", "counts": {"tests_run": 72, "failures": 0, "errors": 0, "skipped": 0, "expected_failures": 0, "unexpected_successes": 0}, "probes_run": 3}

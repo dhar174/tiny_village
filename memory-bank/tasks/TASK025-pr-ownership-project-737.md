@@ -1,6 +1,6 @@
 # TASK025 — PR ownership and Project configuration (#737)
 
-Status: In progress. Updated 2026-10-22 UTC.
+Status: In progress. Updated 2026-10-23 UTC.
 
 ## Request and approved scope
 Implement the approved #737 coordination plan; review all 26 PRs, investigate five direct handoffs, reconcile 328 issue-backed tasks, and prepare safe Project synchronization. Runtime changes and PR dispositions require their own review; #738 is a separate human gate.
@@ -30,3 +30,16 @@ Implement the approved #737 coordination plan; review all 26 PRs, investigate fi
 - All145 retained runtime/runner/lock file hashes were compared against git show4821378; zero mismatches.
 
 - Draft PR #810 published and attached to the task; implementation commit ad58fd0. No #737/#806/#738 closure or PR disposition. Hosted checks were queued at publication; local checks/evidence are the verified result.
+
+## Closeout execution — 2026-10-23 UTC
+- D032 records the approved dispositions/local route; plan saved at docs/superpowers/plans/2026-10-23-issue-737-closeout.md. New branch codex/issue-737-closeout starts from merged main10569c0.
+- Reopened737 while806 remains open; closed701/704 unmerged after unchanged-head and145 runtime/runner/lock hash checks; annotated709/711/715 and807/808/809, preserving heads/assignees. Before/after receipts retained.
+- Ruling: retain the original810 package untouched; self-contained refreshed artifacts live in docs/planning/issue-737-closeout. Historical probe results remain historical.
+- Ruling: this package supports publication stage only; reject completion flags until authenticated evidence and a separate final-stage review exist. This prevents offline tests from appearing to authorize closure.
+- Closeout regressions9 RED (missing interfaces) then9 GREEN; existing32 publisher and11 ordering tests pass. Windows path normalization is tested; native Windows remains unverified.
+- Pending: refreshed capture/validation, independent review, focused closeout PR and owner-authenticated local prepare.806/737 cannot close before actual publication/readback;738 remains Pending.
+- Fresh snapshot484/332/24 and preview validate;112 native edges,387 planned activation references,333 source guards, zero cycles/conflicts. Portable extraction validates and53 tests pass; three tamper cases reject. Actual prepare reaches GraphQL FORBIDDEN after source guards, exit1, zero board writes.
+- Independent reviewer identified a fork/branch collision in candidate exclusions. Fixed with canonical headRepository plus exact branch; real source-collector regression RED1 then GREEN. Full54 tests pass; null/foreign identities stay inventoried. No other findings.
+- PR #811 published: https://github.com/dhar174/tiny_village/pull/811. No automatic closure keywords. Refreshed local PowerShell handoff awaits authenticated live-plan/digest; actual board delta remains unreviewed until supplied.
+- Final snapshot includes25 open PRs with only canonical-repository closeout811 excluded, leaving the approved24 candidates. All332 managed issues and333 guards validate; final exact ZIP validates outside Git. Fresh prepare again passes source checks then403. Initial #811 hosted core/dev/visual/required/CodeQL checks all succeeded at6bdf736; later source/evidence commit requires its own check result.
+- Remaining work requires owner-supplied authenticated live-plan/digest. Apply only after concrete delta review;806/737 closure and final readiness refresh remain blocked. No native Windows or successful Project readback claim.
