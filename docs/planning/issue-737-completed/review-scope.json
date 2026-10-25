@@ -1,0 +1,44 @@
+{
+  "stage": "completed",
+  "decision_record": "D033",
+  "managed_issues": 332,
+  "candidate_heads": {
+    "363": "645ee6472492d49de2ba0f4cc385c919c2ab15cb",
+    "592": "a2bda6ace451ab0b774553067c820d581c85fc83",
+    "687": "532bf14edaba95a06ded13227e7be0ea43bafb94",
+    "688": "b33d741a9b7bd874416231e540fe7f2e13f7c07b",
+    "689": "93c069420f18a8ad3e64cd3cd89eadc04332329b",
+    "690": "40d344d6cd317485dec8ff63cb0214c960efc356",
+    "691": "2b0f5a1087d916f0086ad2e42dc617e035fd0884",
+    "692": "e0803c13d5cf5429689288c9d90bc171a3fa174f",
+    "693": "6c40b629ef1bab26d1a060695ac05b9893a18081",
+    "694": "d51a7eb5f6f307e92d8e77cfbe013cfd24d210d0",
+    "695": "b1b889c0bab6a8d902372790c1ba1058a90275cf",
+    "696": "8016a3f467719afa4b795207c14f40502b161410",
+    "697": "a3beb371fabdc6433734f05dceb16651cb4beb4d",
+    "700": "537e6244d4324fd60c3d6a893515dd46172508a8",
+    "702": "fb7625547502bbf46d5416eafd45342572348977",
+    "705": "ba414d9964dd72384dd024bf062865ee8ef49f4a",
+    "707": "7e580e1a168205c63a5e1944d767048bc98a0b8d",
+    "708": "25798624e457c15202b162ebcc529119715fddb6",
+    "709": "200dfc2d2e968539d2740394f2619e7010798d1e",
+    "710": "732010b4172dee5b4a7f349292f42dcd8cc8d56b",
+    "711": "3e2c0c6156f03cc14227ff6ac644f65c410da555",
+    "712": "0ece3315a40ea80a2d2053166ac16d334de72021",
+    "713": "1761d9bd7fd2b120aea0766e61e7728716154f63",
+    "715": "6f10f11a0deea7451608643e5d8a731ead9c45ba"
+  },
+  "excluded_coordinator_branches": [
+    "codex/issue-737-coordination",
+    "codex/issue-737-closeout",
+    "codex/issue-737-publication"
+  ],
+  "completion": "Completed stage requires reviewed prior publication plan and a recomputable independent inspection receipt; no phase approval.",
+  "project_url": "https://github.com/users/dhar174/projects/10",
+  "project_id": "PVT_kwHOAE_6m84Bm2UC",
+  "publication_evidence": {
+    "desired": "evidence/approved-publication/desired.json",
+    "plan": "evidence/approved-publication/plan.json",
+    "receipt": "evidence/approved-publication/receipt.json"
+  }
+}

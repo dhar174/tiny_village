@@ -1,0 +1,36 @@
+test_scoped_synchronizer_exists (__main__.AvailabilityTests.test_scoped_synchronizer_exists) ... ok
+test_apply_requires_edit_window_before_reading_credentials_or_files (__main__.SyncTests.test_apply_requires_edit_window_before_reading_credentials_or_files) ... ok
+test_apply_requires_exact_reviewed_digest (__main__.SyncTests.test_apply_requires_exact_reviewed_digest) ... ok
+test_archived_managed_item_requires_review (__main__.SyncTests.test_archived_managed_item_requires_review) ... ok
+test_clear_text_is_explicitly_previewed_as_removal (__main__.SyncTests.test_clear_text_is_explicitly_previewed_as_removal) ... ok
+test_confirmed_checkpoint_resumes_after_interruption (__main__.SyncTests.test_confirmed_checkpoint_resumes_after_interruption) ... ok
+test_corrupt_checkpoint_is_rejected_before_writes (__main__.SyncTests.test_corrupt_checkpoint_is_rejected_before_writes) ... ok
+test_documents_unavoidable_remote_same_field_race (__main__.SyncTests.test_documents_unavoidable_remote_same_field_race) ... ok
+test_duplicate_field_names_are_rejected (__main__.SyncTests.test_duplicate_field_names_are_rejected) ... ok
+test_duplicate_same_repository_issue_is_rejected (__main__.SyncTests.test_duplicate_same_repository_issue_is_rejected) ... ok
+test_empty_optional_fields_do_not_invent_readback_values (__main__.SyncTests.test_empty_optional_fields_do_not_invent_readback_values) ... ok
+test_existing_scope_and_review_owner_are_preserved (__main__.SyncTests.test_existing_scope_and_review_owner_are_preserved) ... ok
+test_foreign_issue_same_number_is_not_selected (__main__.SyncTests.test_foreign_issue_same_number_is_not_selected) ... ok
+test_human_field_edit_stops_before_any_write (__main__.SyncTests.test_human_field_edit_stops_before_any_write) ... ok
+test_missing_field_is_rejected_without_schema_creation (__main__.SyncTests.test_missing_field_is_rejected_without_schema_creation) ... ok
+test_missing_item_is_added_once (__main__.SyncTests.test_missing_item_is_added_once) ... ok
+test_missing_saved_view_requires_explicit_schema_review (__main__.SyncTests.test_missing_saved_view_requires_explicit_schema_review) ... ok
+test_new_item_preserves_automatic_unmanaged_status (__main__.SyncTests.test_new_item_preserves_automatic_unmanaged_status) ... ok
+test_open_issue_with_done_status_requires_review (__main__.SyncTests.test_open_issue_with_done_status_requires_review) ... ok
+test_pagination_reads_later_pages_and_rejects_missing_cursor (__main__.SyncTests.test_pagination_reads_later_pages_and_rejects_missing_cursor) ... ok
+test_preview_has_before_after_and_preserves_status_and_foreign_item (__main__.SyncTests.test_preview_has_before_after_and_preserves_status_and_foreign_item) ... ok
+test_schema_drift_stops_before_any_write (__main__.SyncTests.test_schema_drift_stops_before_any_write) ... ok
+test_schema_type_is_checked_even_for_string_shaped_values (__main__.SyncTests.test_schema_type_is_checked_even_for_string_shaped_values) ... ok
+test_second_local_publisher_cannot_acquire_lock (__main__.SyncTests.test_second_local_publisher_cannot_acquire_lock) ... ok
+test_stale_issue_input_stops_before_any_write (__main__.SyncTests.test_stale_issue_input_stops_before_any_write) ... ok
+test_stale_pr_head_stops_before_any_write (__main__.SyncTests.test_stale_pr_head_stops_before_any_write) ... ok
+test_successful_apply_and_repeat_are_idempotent (__main__.SyncTests.test_successful_apply_and_repeat_are_idempotent) ... ok
+test_unacknowledged_write_requires_inspection_and_fresh_prepare (__main__.SyncTests.test_unacknowledged_write_requires_inspection_and_fresh_prepare) ... ok
+test_unknown_option_is_rejected (__main__.SyncTests.test_unknown_option_is_rejected) ... ok
+test_unrecorded_gate_approval_is_not_overwritten (__main__.SyncTests.test_unrecorded_gate_approval_is_not_overwritten) ... ok
+test_view_filter_and_sort_drift_is_previewed (__main__.SyncTests.test_view_filter_and_sort_drift_is_previewed) ... ok
+
+----------------------------------------------------------------------
+Ran 31 tests in 0.012s
+
+OK

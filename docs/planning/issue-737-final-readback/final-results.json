@@ -1,0 +1,49 @@
+{
+  "status": "verified",
+  "approval_digest": "8e7d27f6f9dbdd2b83be6d14ed146146122197b5ad625e5f70adaba250161acf",
+  "observed_at": "2026-10-24T03:27:42.362185+00:00",
+  "project_url": "https://github.com/users/dhar174/projects/10",
+  "source_matches": true,
+  "approved_result_matches": true,
+  "remaining_operations": 0,
+  "operations_confirmed": 3,
+  "terminal_results": {
+    "apply": {
+      "exit_code": 0,
+      "stdout": {
+        "status": "verified",
+        "operations_confirmed": 3,
+        "checkpoint": "..\\final-evidence\\final-checkpoint.json"
+      },
+      "stderr": ""
+    },
+    "inspect": {
+      "exit_code": 0,
+      "stdout": {
+        "status": "verified",
+        "source_matches": true,
+        "remaining_operations": 0,
+        "github_mutations_performed": 0
+      },
+      "stderr": ""
+    }
+  },
+  "files": [
+    {
+      "name": "final-plan.json",
+      "bytes": 366566,
+      "sha256": "b05839ac94e67157e02120227267a1917ec664c70998562d3bc0c6698d6b645b"
+    },
+    {
+      "name": "final-checkpoint.json",
+      "bytes": 3294,
+      "sha256": "59227fd7c38304681032bf24a703bb80d9c7aa6990cfeeca9bbfbe0e32177885"
+    },
+    {
+      "name": "final-inspect.json",
+      "bytes": 389832,
+      "sha256": "7f8b413845b242a223521b0c49c88803bf8fcbeb04402566ca8e711161542e82"
+    }
+  ],
+  "verification": "Full saved receipt passed verify_receipt against the saved final plan and frozen desired preview. All three checkpoint receipts match approved operations. #738 remains OPEN/Pending."
+}

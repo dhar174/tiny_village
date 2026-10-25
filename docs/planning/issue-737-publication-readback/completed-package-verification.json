@@ -1,0 +1,15 @@
+{
+  "observed_at": "2026-10-24T02:53:26.195906+00:00",
+  "stage": "completed",
+  "archive_sha256": "40b03674c3e6b32fc1e8e1c85276167d75c9d91ce693a175cd658382e6712e18",
+  "archive_bytes": 816889,
+  "desired_digest": "0a85047a3665c9d7bedecf91211dae2c4ccb039d5f8c96fd36b5f1610342c207",
+  "exact_archive_validates_outside_git": true,
+  "original_publication_package_unchanged": true,
+  "packaged_python_matches_merged_tooling": true,
+  "original_regression_tests": 89,
+  "original_regression_failures": 0,
+  "final_live_plan_received": false,
+  "final_readback_verified": false,
+  "gate_738": "Pending"
+}

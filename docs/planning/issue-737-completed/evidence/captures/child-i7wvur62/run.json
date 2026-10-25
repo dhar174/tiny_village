@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "test_id": "issue737-distance",
+  "source_sha256": "651f4b71475b98d0c48439987b6892fde4f523372b49897240383792d931e629",
+  "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+  "cwd": "/workspace/tiny_village-737",
+  "pid": 248127,
+  "fatal_timeout": 20,
+  "timeout": 25,
+  "started_utc": "2026-10-22T16:20:18.869729+00:00",
+  "started_monotonic": 154811.726641645,
+  "returncode": 1,
+  "outcome": "EXITED_NONZERO",
+  "watchdog_dump_observed": false,
+  "launched_monotonic": 154811.72708749,
+  "wait_started_monotonic": 154811.727453906,
+  "finished_utc": "2026-10-22T16:20:19.235151+00:00",
+  "finished_monotonic": 154812.092077241
+}

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "test_id": "tests.test_model_cache.TestModelCacheIntegration.test_import_orders_and_repeat_startup_preserve_owned_and_shared_data",
+  "source_sha256": "bf5966043d952efc6b2a7977f84231303086c81a5421bccf3ddcbdadc97071b2",
+  "interpreter": "/workspace/.venvs/issue726-core/bin/python",
+  "cwd": "/workspace/tiny_village-737",
+  "pid": 248112,
+  "fatal_timeout": 25,
+  "timeout": 30,
+  "started_utc": "2026-10-22T16:20:17.757063+00:00",
+  "started_monotonic": 154810.613976049,
+  "returncode": 0,
+  "outcome": "EXITED_ZERO",
+  "watchdog_dump_observed": false,
+  "launched_monotonic": 154810.614625437,
+  "wait_started_monotonic": 154810.614737915,
+  "finished_utc": "2026-10-22T16:20:17.971699+00:00",
+  "finished_monotonic": 154810.828623839
+}

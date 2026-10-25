@@ -1,0 +1,32 @@
+test_cache_configuration_does_not_import_models (tests.test_model_cache.TestModelCache.test_cache_configuration_does_not_import_models) ... ok
+test_default_uses_user_huggingface_cache (tests.test_model_cache.TestModelCache.test_default_uses_user_huggingface_cache) ... ok
+test_descriptor_walk_rechecks_ancestor_ownership (tests.test_model_cache.TestModelCache.test_descriptor_walk_rechecks_ancestor_ownership) ... ok
+test_distinct_hub_and_legacy_overrides_are_preserved (tests.test_model_cache.TestModelCache.test_distinct_hub_and_legacy_overrides_are_preserved) ... ok
+test_existing_owned_directories_are_restricted_without_touching_files (tests.test_model_cache.TestModelCache.test_existing_owned_directories_are_restricted_without_touching_files) ... ok
+test_explicit_hf_home_does_not_resolve_user_home (tests.test_model_cache.TestModelCache.test_explicit_hf_home_does_not_resolve_user_home) ... ok
+test_explicit_home_takes_precedence_over_xdg (tests.test_model_cache.TestModelCache.test_explicit_home_takes_precedence_over_xdg) ... ok
+test_filesystem_error_is_actionable_and_does_not_change_environment (tests.test_model_cache.TestModelCache.test_filesystem_error_is_actionable_and_does_not_change_environment) ... ok
+test_foreign_0755_ancestor_is_rejected_before_mutation (tests.test_model_cache.TestModelCache.test_foreign_0755_ancestor_is_rejected_before_mutation) ... ok
+test_foreign_ownership_is_rejected_before_chmod (tests.test_model_cache.TestModelCache.test_foreign_ownership_is_rejected_before_chmod) ... ok
+test_hub_override_is_used_without_legacy_override (tests.test_model_cache.TestModelCache.test_hub_override_is_used_without_legacy_override) ... ok
+test_non_directory_cache_is_rejected_without_environment_changes (tests.test_model_cache.TestModelCache.test_non_directory_cache_is_rejected_without_environment_changes) ... ok
+test_non_posix_directory_preparation_checks_prefix_before_creation (tests.test_model_cache.TestModelCache.test_non_posix_directory_preparation_checks_prefix_before_creation) ... ok
+test_non_posix_public_preflight_rejects_existing_symlink_before_creation (tests.test_model_cache.TestModelCache.test_non_posix_public_preflight_rejects_existing_symlink_before_creation) ... ok
+test_non_posix_reparse_prefix_is_rejected_before_creation (tests.test_model_cache.TestModelCache.test_non_posix_reparse_prefix_is_rejected_before_creation) ... ok
+test_owned_cache_beneath_search_only_parent_is_supported (tests.test_model_cache.TestModelCache.test_owned_cache_beneath_search_only_parent_is_supported) ... ok
+test_parent_traversal_cannot_hide_unsafe_components (tests.test_model_cache.TestModelCache.test_parent_traversal_cannot_hide_unsafe_components) ... ok
+test_private_permissions_do_not_depend_on_umask (tests.test_model_cache.TestModelCache.test_private_permissions_do_not_depend_on_umask) ... ok
+test_repeated_setup_preserves_cache_contents (tests.test_model_cache.TestModelCache.test_repeated_setup_preserves_cache_contents) ... ok
+test_security_configuration_is_preserved (tests.test_model_cache.TestModelCache.test_security_configuration_is_preserved) ... ok
+test_symlink_ancestor_is_rejected (tests.test_model_cache.TestModelCache.test_symlink_ancestor_is_rejected) ... ok
+test_symlink_cache_is_rejected_without_changing_target (tests.test_model_cache.TestModelCache.test_symlink_cache_is_rejected_without_changing_target) ... ok
+test_xdg_cache_home_is_supported (tests.test_model_cache.TestModelCache.test_xdg_cache_home_is_supported) ... ok
+test_xdg_override_does_not_resolve_user_home (tests.test_model_cache.TestModelCache.test_xdg_override_does_not_resolve_user_home) ... ok
+test_import_orders_and_repeat_startup_preserve_owned_and_shared_data (tests.test_model_cache.TestModelCacheIntegration.test_import_orders_and_repeat_startup_preserve_owned_and_shared_data) ... ok
+test_real_model_loaders_receive_selected_cache_and_preserve_verification (tests.test_model_cache.TestModelCacheIntegration.test_real_model_loaders_receive_selected_cache_and_preserve_verification) ... ok
+test_spacy_available_transitive_import_preserves_configured_caches (tests.test_model_cache.TestModelCacheIntegration.test_spacy_available_transitive_import_preserves_configured_caches) ... ok
+
+----------------------------------------------------------------------
+Ran 27 tests in 1.117s
+
+OK

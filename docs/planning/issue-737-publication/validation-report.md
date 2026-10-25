@@ -1,8 +1,8 @@
 # #737 publication tooling validation
 
-**Tooling is under review; authenticated board publication remains unverified.**
+**Tooling #812 is merged; authenticated board publication remains unverified.**
 D033 authorizes execution, not an unseen board delta or gate738 approval. The
-frozen owner-facing ZIP is generated only after the tooling PR merges.
+owner-facing ZIP is frozen against merged main `dc9fcc023b4ee37b3efd579195caaab80993c64a`.
 
 ## Current development baseline and results
 
@@ -64,3 +64,20 @@ The candidate archive extracts and validates outside Git; all89 tests pass there
 Altered preview, missing manifest and corrupted fresh core archive each reject.
 This is portability/tooling validation only: the authenticated publication ZIP is
 not frozen until after merge. Native Windows remains unexecuted.
+
+## Post-merge freeze
+
+#812 merged at `dc9fcc023b4ee37b3efd579195caaab80993c64a` after all eight hosted checks passed at the
+reviewed head `a2008800429ba708917b87b44e6e3114c10d3a8e`. Full Git tree hashes
+are identical; this includes all reviewed tooling and runtime files. Merge and
+comparison receipts are retained. Fresh source inputs include the publication
+handoff comments while737/806/738 remain open. The ZIP is an artifact-only commit
+on the publication branch; it is not another source merge between prepare/apply.
+The current plan/source digest and exact snapshot interval are in generated files.
+No actual local live plan or inspection receipt has been received, and no board
+writes or issue closure are claimed. Runtime gaps and Pending738 remain intact.
+
+Post-merge frozen-source preparation again passes repository guards and reaches
+Project FORBIDDEN (exit1), with no live plan or mutation. All89 focused tests pass
+against the refreshed source dataset. Merged-main core/dev/visual/required checks
+also pass; the exact hosted check snapshot is retained with its observed states.

@@ -1,0 +1,5 @@
+live-plan*.json
+local-checkpoint*.json
+*.lock
+*.tmp
+__pycache__/
