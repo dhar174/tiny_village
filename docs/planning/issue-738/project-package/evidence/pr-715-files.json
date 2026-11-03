@@ -1,0 +1,14 @@
+[
+  {
+    "sha": "54a4059dd76c598071f02f1717972c4f7458fcb1",
+    "filename": "test_graph_analytics.py",
+    "status": "modified",
+    "additions": 37,
+    "deletions": 0,
+    "changes": 37,
+    "blob_url": "https://github.com/dhar174/tiny_village/blob/6f10f11a0deea7451608643e5d8a731ead9c45ba/test_graph_analytics.py",
+    "raw_url": "https://github.com/dhar174/tiny_village/raw/6f10f11a0deea7451608643e5d8a731ead9c45ba/test_graph_analytics.py",
+    "contents_url": "https://api.github.com/repos/dhar174/tiny_village/contents/test_graph_analytics.py?ref=6f10f11a0deea7451608643e5d8a731ead9c45ba",
+    "patch": "@@ -268,6 +268,18 @@ def test_error_handling(self):\n         neighbors = self.graph_analytics.get_neighbors_by_type(\"nonexistent\")\n         self.assertEqual(neighbors, [])\n \n+        nodes_nearby = self.graph_analytics.find_nodes_within_distance(\"nonexistent\", 1)\n+        self.assertEqual(nodes_nearby, {})\n+\n+    @patch('graph_analytics.nx.single_source_shortest_path_length')\n+    def test_find_nodes_within_distance_exception(self, mock_nx):\n+        \"\"\"Test exception handling in find_nodes_within_distance.\"\"\"\n+        mock_nx.side_effect = Exception(\"Test exception\")\n+\n+        # This should be caught by the try-except block\n+        result = self.graph_analytics.find_nodes_within_distance(self.char1, 1)\n+        self.assertEqual(result, {})\n+\n \n class TestGraphAnalyticsWithMockedNetworkX(unittest.TestCase):\n     \"\"\"Test GraphAnalytics behavior when NetworkX is not available.\"\"\"\n@@ -359,6 +371,31 @@ def test_fallback_calculate_centrality(self):\n         self.assertEqual(centrality[char1], 1.0)\n         self.assertEqual(centrality[char2], 1.0)\n \n+    @patch('graph_analytics.NETWORKX_AVAILABLE', False)\n+    def test_fallback_find_nodes_within_distance(self):\n+        \"\"\"Test fallback for finding nodes within distance when NetworkX is unavailable.\"\"\"\n+        graph_analytics = GraphAnalytics(self.world_state)\n+\n+        # Add test nodes and edges\n+        char1 = Mock()\n+        char1.name = \"Alice\"\n+        char2 = Mock()\n+        char2.name = \"Bob\"\n+\n+        self.world_state.add_character_node(char1)\n+        self.world_state.add_character_node(char2)\n+        self.world_state.add_edge(char1, char2, \"friendship\")\n+\n+        # Should use fallback (direct neighbors only)\n+        # Distance 0: source node\n+        # Distance 1: neighbors\n+        nearby_nodes = graph_analytics.find_nodes_within_distance(char1, 1)\n+\n+        self.assertIn(char1, nearby_nodes)\n+        self.assertEqual(nearby_nodes[char1], 0)\n+        self.assertIn(char2, nearby_nodes)\n+        self.assertEqual(nearby_nodes[char2], 1)\n+\n \n if __name__ == '__main__':\n     # Set up logging for tests"
+  }
+]

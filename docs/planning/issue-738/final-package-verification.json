@@ -1,0 +1,12 @@
+{
+  "source_matches": true,
+  "main": "16528f2130fc4b890558a1fccd590ad29e9bae7a",
+  "source_guard_issues": 333,
+  "candidate_prs": 24,
+  "desired_digest": "2e5dc89810b956a41310486148a32a2611f825a137386f9a2ee66a94a9f672a9",
+  "publisher_python_byte_parity": true,
+  "prior_final_receipt_verified": true,
+  "historical_packages_unchanged": true,
+  "board_publication": "pending_owner_local_plan_review_and_independent_inspection",
+  "github_mutations_performed": 0
+}

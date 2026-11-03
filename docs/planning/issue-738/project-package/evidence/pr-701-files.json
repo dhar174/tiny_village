@@ -1,0 +1,26 @@
+[
+  {
+    "sha": "44ad088b91796ac662c15092233b6d41dfd18a7f",
+    "filename": "repro_check.py",
+    "status": "added",
+    "additions": 36,
+    "deletions": 0,
+    "changes": 36,
+    "blob_url": "https://github.com/dhar174/tiny_village/blob/8c19e2bcf6f8d517999e4456e72df269ee87a620/repro_check.py",
+    "raw_url": "https://github.com/dhar174/tiny_village/raw/8c19e2bcf6f8d517999e4456e72df269ee87a620/repro_check.py",
+    "contents_url": "https://api.github.com/repos/dhar174/tiny_village/contents/repro_check.py?ref=8c19e2bcf6f8d517999e4456e72df269ee87a620",
+    "patch": "@@ -0,0 +1,36 @@\n+import os\n+import tempfile\n+import stat\n+import shutil\n+\n+cache_dir = os.path.join(tempfile.gettempdir(), \"hf_test_cache\")\n+\n+# Clean up if exists to ensure fresh run\n+if os.path.exists(cache_dir):\n+    shutil.rmtree(cache_dir)\n+\n+print(f\"Executing relevant part of tiny_memories.py...\")\n+\n+# Extracting the vulnerable code snippet\n+with open(\"tiny_memories.py\", \"r\") as f:\n+    lines = f.readlines()\n+    # Lines 338 to 343 (0-indexed: 337 to 343)\n+    vulnerable_code = \"\".join(lines[337:343])\n+\n+print(\"Code to execute:\")\n+print(vulnerable_code)\n+\n+exec(vulnerable_code)\n+\n+if os.path.exists(cache_dir):\n+    mode = os.stat(cache_dir).st_mode\n+    permissions = stat.S_IMODE(mode)\n+    print(f\"Directory {cache_dir} permissions: {oct(permissions)}\")\n+    if permissions == 0o777:\n+        print(\"VULNERABILITY CONFIRMED: Directory is world-writable (0o777)\")\n+    elif permissions == 0o700:\n+        print(\"FIX VERIFIED: Directory is owner-only (0o700)\")\n+    else:\n+        print(f\"Directory permissions are {oct(permissions)}\")\n+else:\n+    print(f\"Directory {cache_dir} was not created.\")"
+  },
+  {
+    "sha": "46fddeda5cbe3871010f45deef698ded17e610e0",
+    "filename": "tiny_memories.py",
+    "status": "modified",
+    "additions": 3,
+    "deletions": 3,
+    "changes": 6,
+    "blob_url": "https://github.com/dhar174/tiny_village/blob/8c19e2bcf6f8d517999e4456e72df269ee87a620/tiny_memories.py",
+    "raw_url": "https://github.com/dhar174/tiny_village/raw/8c19e2bcf6f8d517999e4456e72df269ee87a620/tiny_memories.py",
+    "contents_url": "https://api.github.com/repos/dhar174/tiny_village/contents/tiny_memories.py?ref=8c19e2bcf6f8d517999e4456e72df269ee87a620",
+    "patch": "@@ -337,10 +337,10 @@ def stem(self, word):\n # Set up cache directory\n cache_dir = os.path.join(tempfile.gettempdir(), \"hf_test_cache\")\n \n-# Create a temporary cache directory with full permissions\n+# Create a temporary cache directory with owner-only permissions\n if not os.path.exists(cache_dir):\n-    os.makedirs(cache_dir, exist_ok=True)\n-os.chmod(cache_dir, 0o777)\n+    os.makedirs(cache_dir, mode=0o700, exist_ok=True)\n+os.chmod(cache_dir, 0o700)\n \n print(f\"Temporary cache directory created at: {cache_dir}\")\n "
+  }
+]

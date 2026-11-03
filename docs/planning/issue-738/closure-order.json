@@ -1,0 +1,29 @@
+{
+  "gate": "2026-11-03T00:08:03Z",
+  "phase": "2026-11-03T00:08:10Z",
+  "gate_before_or_equal_parent": true,
+  "phase_children": [
+    {
+      "number": 734,
+      "state": "CLOSED"
+    },
+    {
+      "number": 735,
+      "state": "CLOSED"
+    },
+    {
+      "number": 736,
+      "state": "CLOSED"
+    },
+    {
+      "number": 737,
+      "state": "CLOSED"
+    },
+    {
+      "number": 738,
+      "state": "CLOSED"
+    }
+  ],
+  "project_synchronization": "pending_after_FORBIDDEN",
+  "github_issue_mutations_performed": 2
+}

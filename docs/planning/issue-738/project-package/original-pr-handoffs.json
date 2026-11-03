@@ -1,0 +1,792 @@
+[
+  {
+    "number": 363,
+    "url": "https://github.com/dhar174/tiny_village/pull/363",
+    "title": "Add memory summaries to decision prompts",
+    "head_sha": "645ee6472492d49de2ba0f4cc385c919c2ab15cb",
+    "base": "main",
+    "draft": false,
+    "actual_assignees": [],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 155,
+    "closing_issue_references": [],
+    "files": [
+      "test_decision_prompt_memories.py",
+      "test_enhanced_decision_prompt.py",
+      "tiny_prompt_builder.py",
+      "tiny_strategy_manager.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 391,
+    "url": "https://github.com/dhar174/tiny_village/pull/391",
+    "title": "Fix happiness calculation test to use flexible threshold instead of hardcoded exact match",
+    "head_sha": "311d65fedc38dbe4f19a9faf03d123419b85fd3d",
+    "base": "main",
+    "draft": false,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 736,
+    "closing_issue_references": [
+      390
+    ],
+    "files": [
+      "tests/test_completed_implementations.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 393,
+    "url": "https://github.com/dhar174/tiny_village/pull/393",
+    "title": "Fix GOAPPlanner tests using mock GraphManager instead of None",
+    "head_sha": "e720cc6e45fe9788e2915c0bd33cf2cc1c25829b",
+    "base": "main",
+    "draft": false,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 736,
+    "closing_issue_references": [
+      392
+    ],
+    "files": [
+      "GOAP_TEST_IMPROVEMENTS.md",
+      "tests/mock_graph_manager.py",
+      "tests/test_action_definitions_resolution.py",
+      "tests/test_basic_integration.py",
+      "tests/test_cost_integration.py",
+      "tests/test_goap_implementations.py",
+      "tests/test_planner_integration.py",
+      "tests/test_unified_goap.py",
+      "tiny_goap_system.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 395,
+    "url": "https://github.com/dhar174/tiny_village/pull/395",
+    "title": "Fix test_goap_implementations to test actual functionality instead of just method existence",
+    "head_sha": "d73a20465eba0e643583e87430a3154c71a46c75",
+    "base": "main",
+    "draft": false,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 736,
+    "closing_issue_references": [
+      394
+    ],
+    "files": [
+      "tests/test_completed_implementations.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 397,
+    "url": "https://github.com/dhar174/tiny_village/pull/397",
+    "title": "Fix test counting logic to properly count individual unittest methods instead of treating TestCase classes as single units",
+    "head_sha": "ec76a141e89d33b516d2df38d2418ba50ed937d3",
+    "base": "main",
+    "draft": false,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 736,
+    "closing_issue_references": [
+      396
+    ],
+    "files": [
+      "TEST_COUNTING_FIX.md",
+      "tests/test_completed_implementations.py",
+      "tests/test_counting_demo.py",
+      "tests/test_fix_validation.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 404,
+    "url": "https://github.com/dhar174/tiny_village/pull/404",
+    "title": "Fix undefined format_traceback function causing NameError in test failures",
+    "head_sha": "22f5b3b63f1d960321cb116fc5a04eece8cbc352",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 736,
+    "closing_issue_references": [
+      403
+    ],
+    "files": [
+      "tests/test_completed_implementations.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 406,
+    "url": "https://github.com/dhar174/tiny_village/pull/406",
+    "title": "Fix hardcoded assertTrue(True) test patterns that always pass",
+    "head_sha": "38b909b07d338f6acc3b82cd2b237cd77d720aa4",
+    "base": "main",
+    "draft": false,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 736,
+    "closing_issue_references": [],
+    "files": [
+      "logs/copilot/session.log",
+      "tests/test_fix_validation.py",
+      "tests/test_tiny_memories.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 408,
+    "url": "https://github.com/dhar174/tiny_village/pull/408",
+    "title": "Replace artificial test failures with genuine functional tests in test_fix_validation.py",
+    "head_sha": "72fc125ae0cdf4b68472c8646296e264b4af80d5",
+    "base": "main",
+    "draft": false,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 736,
+    "closing_issue_references": [
+      407
+    ],
+    "files": [
+      "tests/demo_artificial_vs_real_tests.py",
+      "tests/test_fix_validation.py",
+      "tests/verify_genuine_failures.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 417,
+    "url": "https://github.com/dhar174/tiny_village/pull/417",
+    "title": "Enhance test_pass method with complex scenarios that can genuinely reveal bugs",
+    "head_sha": "4d0571405de40cef6bab8826b669cf8c89a5fd9b",
+    "base": "main",
+    "draft": false,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 736,
+    "closing_issue_references": [],
+    "files": [
+      "tests/demo_artificial_vs_real_tests.py",
+      "tests/test_fix_validation.py",
+      "tests/test_issue_425_fix.py",
+      "tests/verify_genuine_failures.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 420,
+    "url": "https://github.com/dhar174/tiny_village/pull/420",
+    "title": "Replace artificial module import tests with genuine functionality validation",
+    "head_sha": "264d07e660bb985abb15cc6daad3140959158063",
+    "base": "main",
+    "draft": false,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 736,
+    "closing_issue_references": [],
+    "files": [
+      "tests/verify_genuine_failures.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 592,
+    "url": "https://github.com/dhar174/tiny_village/pull/592",
+    "title": "Add AI Algorithm Mentor workflow",
+    "head_sha": "a2bda6ace451ab0b774553067c820d581c85fc83",
+    "base": "main",
+    "draft": false,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 770,
+    "closing_issue_references": [],
+    "files": [
+      ".github/workflows/ai-algorithm-mentor.yml"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 687,
+    "url": "https://github.com/dhar174/tiny_village/pull/687",
+    "title": "Align documentation with current demo, testing, and integration behavior",
+    "head_sha": "532bf14edaba95a06ded13227e7be0ea43bafb94",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 656,
+    "closing_issue_references": [
+      681
+    ],
+    "files": [
+      "BUILDING_SYSTEM_DOCUMENTATION.md",
+      "CUSTOM_BUILDINGS_GUIDE.md",
+      "CUSTOM_BUILDINGS_IMPLEMENTATION.md",
+      "docs/README.md",
+      "docs/archived/MISSING_FUNCTIONALITY_OVERVIEW.md",
+      "docs/archived/missing_demo_elements.md",
+      "docs/archived/missing_demo_requirements.md",
+      "docs/reference/CHECKPOINT_SYSTEM_DOCUMENTATION.md",
+      "docs/reference/MINIMUM_DEMO_STATUS.md",
+      "docs/reference/SYSTEM_INTEGRATION_COMPLETE.md",
+      "logs/copilot/governance/audit.log",
+      "logs/copilot/session.log"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 688,
+    "url": "https://github.com/dhar174/tiny_village/pull/688",
+    "title": "Add current repository context map and refresh folder structure blueprint",
+    "head_sha": "b33d741a9b7bd874416231e540fe7f2e13f7c07b",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 633,
+    "closing_issue_references": [
+      633
+    ],
+    "files": [
+      "design_docs/project_folder_blueprint.md",
+      "docs/README.md",
+      "docs/reference/PROJECT_CONTEXT_MAP.md",
+      "memory-bank/tasks/TASK002-context-mapping-and-file-system-exploration.md",
+      "memory-bank/tasks/_index.md"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 689,
+    "url": "https://github.com/dhar174/tiny_village/pull/689",
+    "title": "Align StrategyManager with real GOAP multi-step planning",
+    "head_sha": "93c069420f18a8ad3e64cd3cd89eadc04332329b",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 218,
+    "closing_issue_references": [
+      218
+    ],
+    "files": [
+      "tests/test_goap_planner_resilience.py",
+      "tests/test_strategy_manager_event_planning.py",
+      "tiny_goap_system.py",
+      "tiny_strategy_manager.py",
+      "tiny_utility_functions.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 690,
+    "url": "https://github.com/dhar174/tiny_village/pull/690",
+    "title": "Route EventHandler-driven strategy updates through character-aware execution",
+    "head_sha": "40d344d6cd317485dec8ff63cb0214c960efc356",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 219,
+    "closing_issue_references": [
+      219
+    ],
+    "files": [
+      "critical_analysis/IMPLEMENTATION_PLAN.md",
+      "tests/test_event_handler_loop_integration.py",
+      "tiny_gameplay_controller.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 691,
+    "url": "https://github.com/dhar174/tiny_village/pull/691",
+    "title": "Implement owner-based building access and income effects",
+    "head_sha": "2b0f5a1087d916f0086ad2e42dc617e035fd0884",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 174,
+    "closing_issue_references": [
+      174
+    ],
+    "files": [
+      "tests/test_building_ownership.py",
+      "tiny_buildings.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 692,
+    "url": "https://github.com/dhar174/tiny_village/pull/692",
+    "title": "Expand default item interactions for tools, clothing, and crafting resources",
+    "head_sha": "e0803c13d5cf5429689288c9d90bc171a3fa174f",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 196,
+    "closing_issue_references": [
+      196
+    ],
+    "files": [
+      "tests/test_tiny_items_interactions.py",
+      "tiny_items.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 693,
+    "url": "https://github.com/dhar174/tiny_village/pull/693",
+    "title": "Surface AI-facing inventory state and trade/drop options in prompt context",
+    "head_sha": "6c40b629ef1bab26d1a060695ac05b9893a18081",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 750,
+    "closing_issue_references": [
+      197
+    ],
+    "files": [
+      "tests/test_context_manager.py",
+      "tests/test_inventory_management.py",
+      "tests/test_inventory_prompt_context.py",
+      "tiny_items.py",
+      "tiny_prompt_builder.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 694,
+    "url": "https://github.com/dhar174/tiny_village/pull/694",
+    "title": "Integrate jobs, item needs, and trading into economic simulation",
+    "head_sha": "d51a7eb5f6f307e92d8e77cfbe013cfd24d210d0",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 198,
+    "closing_issue_references": [
+      198
+    ],
+    "files": [
+      "tests/test_economic_simulation.py",
+      "tiny_economic_simulation.py",
+      "tiny_gameplay_controller.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 695,
+    "url": "https://github.com/dhar174/tiny_village/pull/695",
+    "title": "Expand item modeling with concrete item types and inventory category support",
+    "head_sha": "b1b889c0bab6a8d902372790c1ba1058a90275cf",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 195,
+    "closing_issue_references": [
+      195
+    ],
+    "files": [
+      "tests/test_item_types.py",
+      "tiny_items.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 696,
+    "url": "https://github.com/dhar174/tiny_village/pull/696",
+    "title": "Align action defaults with GraphManager state semantics",
+    "head_sha": "8016a3f467719afa4b795207c14f40502b161410",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 220,
+    "closing_issue_references": [
+      184
+    ],
+    "files": [
+      "actions.py",
+      "tests/test_action_catalog_graph_integration.py",
+      "tiny_graph_manager.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 697,
+    "url": "https://github.com/dhar174/tiny_village/pull/697",
+    "title": "Implement job assignment, work outcomes, and career progression in `tiny_jobs.py`",
+    "head_sha": "a3beb371fabdc6433734f05dceb16651cb4beb4d",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [
+      "dhar174",
+      "Copilot"
+    ],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 199,
+    "closing_issue_references": [
+      199
+    ],
+    "files": [
+      "tests/test_tiny_jobs.py",
+      "tiny_jobs.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 700,
+    "url": "https://github.com/dhar174/tiny_village/pull/700",
+    "title": "Remove implemented mini-map TODO from tiny_gameplay_controller.py",
+    "head_sha": "537e6244d4324fd60c3d6a893515dd46172508a8",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 770,
+    "closing_issue_references": [],
+    "files": [
+      "tiny_gameplay_controller.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 701,
+    "url": "https://github.com/dhar174/tiny_village/pull/701",
+    "title": "🔒 [security fix] Fix world-writable cache directory",
+    "head_sha": "8c19e2bcf6f8d517999e4456e72df269ee87a620",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 737,
+    "closing_issue_references": [],
+    "files": [
+      "repro_check.py",
+      "tiny_memories.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 702,
+    "url": "https://github.com/dhar174/tiny_village/pull/702",
+    "title": "⚡ Replace hardcoded sleep delays with configurable environment variable",
+    "head_sha": "fb7625547502bbf46d5416eafd45342572348977",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 770,
+    "closing_issue_references": [],
+    "files": [
+      "tiny_memories_alpha.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 703,
+    "url": "https://github.com/dhar174/tiny_village/pull/703",
+    "title": "🧪 [testing improvement] Add tests for is_numeric and utilities in tiny_util_funcs.py",
+    "head_sha": "c1528b5bf668774a0fd63cab4f81cca3b8ee2ace",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 735,
+    "closing_issue_references": [],
+    "files": [
+      "tests/test_tiny_util_funcs.py",
+      "tiny_util_funcs.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 704,
+    "url": "https://github.com/dhar174/tiny_village/pull/704",
+    "title": "🧹 Remove unused faiss dependency check in main.py",
+    "head_sha": "56361679188f19df228291c306c3827becb916b3",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 737,
+    "closing_issue_references": [],
+    "files": [
+      "main.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 705,
+    "url": "https://github.com/dhar174/tiny_village/pull/705",
+    "title": "Configure supervisor routing decision using LLM",
+    "head_sha": "ba414d9964dd72384dd024bf062865ee8ef49f4a",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 770,
+    "closing_issue_references": [],
+    "files": [
+      ".github/skills/langgraph-agent-patterns/scripts/generate_supervisor_graph.py",
+      "tests/test_generate_supervisor_graph.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 707,
+    "url": "https://github.com/dhar174/tiny_village/pull/707",
+    "title": "Implement LLM mocking in test case generation scripts",
+    "head_sha": "7e580e1a168205c63a5e1944d767048bc98a0b8d",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 770,
+    "closing_issue_references": [],
+    "files": [
+      ".github/skills/langgraph-testing-evaluation/scripts/generate_test_cases.js",
+      ".github/skills/langgraph-testing-evaluation/scripts/generate_test_cases.py",
+      "dummy_graph.py",
+      "generated_tests/test_graph_pytest.py",
+      "generated_tests/test_graph_unittest.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 708,
+    "url": "https://github.com/dhar174/tiny_village/pull/708",
+    "title": "Implement functional test boilerplate for invalid input handling in LangGraph generator",
+    "head_sha": "25798624e457c15202b162ebcc529119715fddb6",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 770,
+    "closing_issue_references": [],
+    "files": [
+      ".github/skills/langgraph-testing-evaluation/scripts/generate_test_cases.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 709,
+    "url": "https://github.com/dhar174/tiny_village/pull/709",
+    "title": "🧪 Add tests for llm_character_utils.py",
+    "head_sha": "200dfc2d2e968539d2740394f2619e7010798d1e",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 737,
+    "closing_issue_references": [],
+    "files": [
+      "tests/test_llm_character_utils.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 710,
+    "url": "https://github.com/dhar174/tiny_village/pull/710",
+    "title": "Implement Map Rendering Fallback",
+    "head_sha": "732010b4172dee5b4a7f349292f42dcd8cc8d56b",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 761,
+    "closing_issue_references": [],
+    "files": [
+      "tiny_gameplay_controller.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 711,
+    "url": "https://github.com/dhar174/tiny_village/pull/711",
+    "title": "🔒 [security fix] replace silenced exceptions with logging in tiny_prompt_builder.py",
+    "head_sha": "3e2c0c6156f03cc14227ff6ac644f65c410da555",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 737,
+    "closing_issue_references": [],
+    "files": [
+      "tiny_prompt_builder.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 712,
+    "url": "https://github.com/dhar174/tiny_village/pull/712",
+    "title": "⚡ Optimize A* Pathfinding Membership Checks",
+    "head_sha": "0ece3315a40ea80a2d2053166ac16d334de72021",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 177,
+    "closing_issue_references": [],
+    "files": [
+      "tiny_map_controller.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 713,
+    "url": "https://github.com/dhar174/tiny_village/pull/713",
+    "title": "Add anti-aliasing options",
+    "head_sha": "1761d9bd7fd2b120aea0766e61e7728716154f63",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 115,
+    "closing_issue_references": [],
+    "files": [
+      "tests/test_anti_aliasing.py",
+      "tiny_gameplay_controller.py",
+      "tiny_map_controller.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 714,
+    "url": "https://github.com/dhar174/tiny_village/pull/714",
+    "title": "🧪 [testing improvement] Add tests for tweener and is_numeric",
+    "head_sha": "f99d49f9d3073719d28069de7751e7a3311242a9",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 735,
+    "closing_issue_references": [],
+    "files": [
+      "tests/test_tiny_util_funcs.py",
+      "tiny_util_funcs.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  },
+  {
+    "number": 715,
+    "url": "https://github.com/dhar174/tiny_village/pull/715",
+    "title": "🧪 Improve testing for find_nodes_within_distance in graph_analytics.py",
+    "head_sha": "6f10f11a0deea7451608643e5d8a731ead9c45ba",
+    "base": "main",
+    "draft": true,
+    "actual_assignees": [],
+    "accountable_ledger_owner": "dhar174",
+    "handoff_issue": 737,
+    "closing_issue_references": [],
+    "files": [
+      "test_graph_analytics.py"
+    ],
+    "disposition": "inventory only; handoff is not merge approval",
+    "review_and_ci": "snapshot head/mergeability/reviews retained; current CI/ownership/rebase judgment reserved for #735–#737 or the linked implementation task"
+  }
+]

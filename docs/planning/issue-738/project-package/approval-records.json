@@ -1,0 +1,51 @@
+{
+  "decision_source": "docs/decisions.md",
+  "source_commit": "6890cde019ba93f748454ddfb4709b3fd8440e35",
+  "approved": {
+    "721": {
+      "decision": "Approved",
+      "record": "D011",
+      "reviewer": "dhar174"
+    },
+    "722": {
+      "decision": "Approved",
+      "record": "D012",
+      "reviewer": "dhar174"
+    },
+    "727": {
+      "decision": "Approved",
+      "record": "D023",
+      "reviewer": "dhar174"
+    },
+    "728": {
+      "decision": "Approved",
+      "record": "D023",
+      "reviewer": "dhar174"
+    },
+    "729": {
+      "decision": "Approved",
+      "record": "D023",
+      "reviewer": "dhar174"
+    },
+    "730": {
+      "decision": "Approved",
+      "record": "D023",
+      "reviewer": "dhar174"
+    },
+    "731": {
+      "decision": "Approved",
+      "record": "D024",
+      "reviewer": "dhar174"
+    },
+    "732": {
+      "decision": "Approved",
+      "record": "D025",
+      "reviewer": "dhar174"
+    },
+    "738": {
+      "decision": "Approved",
+      "record": "D034",
+      "reviewer": "dhar174"
+    }
+  }
+}

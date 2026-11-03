@@ -1,0 +1,81 @@
+[
+  {
+    "key": "R737-ACCESS",
+    "title": "Restore verified access to Project 10 for #737 synchronization",
+    "parent": 737,
+    "phase": 3,
+    "blocked_by": [
+      732
+    ],
+    "blocks": [
+      737
+    ],
+    "workstream": "Planning",
+    "scope": "MVP",
+    "priority": "P1",
+    "body": "The configured GH_PROJECT_TOKEN binding reports ready, but both normal GitHub authentication and the configured Project credential return FORBIDDEN / Resource not accessible by integration for Project 10. Read-only evidence: docs/planning/issue-737/evidence/project-access.json at main 4821378. Repository issue/PR access works; credential readiness does not establish Project authorization.\n\n- [ ] Restore an authenticated read of Project 10, all managed fields/items and saved-view configuration, either through corrected credential routing or the portable local package under the owner account.\n- [ ] Review the concrete live before/after plan and retain its digest before any Project writes.\n- [ ] Apply the approved delta and independently read back fields, item membership and view filters/grouping/sorting.\n- [ ] Retain exact commands and non-secret receipts; do not post credentials or treat offline tests as publication evidence.\n\nThis is a Phase 3 publication prerequisite, not a runtime failure. #737 stays open until authenticated publication is verified. No new token is requested by this issue, and no phase gate is approved.",
+    "number": 806,
+    "node_id": "I_kwDOMEkjkc8AAAABZJ7clQ",
+    "url": "https://github.com/dhar174/tiny_village/issues/806"
+  },
+  {
+    "key": "R737-709",
+    "title": "Retain useful LLM character-helper contracts from PR #709 with real objects",
+    "parent": 585,
+    "phase": 9,
+    "blocked_by": [
+      584,
+      768
+    ],
+    "blocks": [
+      585
+    ],
+    "workstream": "Testing",
+    "scope": "Post-MVP",
+    "priority": "P2",
+    "body": "#737 inspected PR #709 at 200dfc2d2e968539d2740394f2619e7010798d1e. It proposes 12 helper tests, mostly MockCharacter/MagicMock composition; checking non-None mocked services does not prove actual initialization or failure behavior. The current real StrategyManager uses lazy LLM initialization and capability reporting, so these older assertions need mapping to the current contract.\n\n- [ ] Map each proposed assertion to existing maintained coverage; retain only distinct useful contracts.\n- [ ] Verify all/selective enablement, filtering/empty/missing-attribute handling and multiple-character independence using complete real basic-memory Characters and their real shared graph.\n- [ ] Exercise the real StrategyManager for requested-versus-ready LLM state, idempotent configuration and unavailable-service failures; use controlled doubles only at external provider initialization boundaries.\n- [ ] Avoid model downloads in offline checks; retain live inference validation separately under #585.\n- [ ] Propose the disposition of #709 only after evidence and human review; no closure or rebase is authorized by creating this issue.\n\nPhase 9 retains its existing activation gates. D015 requires AI in the final product; this scheduling does not reduce that requirement or claim live AI readiness.",
+    "number": 807,
+    "node_id": "I_kwDOMEkjkc8AAAABZJ7mtg",
+    "url": "https://github.com/dhar174/tiny_village/issues/807"
+  },
+  {
+    "key": "R737-711",
+    "title": "Define visible prompt goal-context failures and retain PR #711 logging intent",
+    "parent": 137,
+    "phase": 5,
+    "blocked_by": [
+      743,
+      746
+    ],
+    "blocks": [
+      137
+    ],
+    "workstream": "Runtime",
+    "scope": "MVP",
+    "priority": "P1",
+    "body": "#737 inspected PR #711 at 3e2c0c6156f03cc14227ff6ac644f65c410da555. ContextManager.gather_goal_context still catches exceptions from goal evaluation and needs-priority calculation with bare pass at main 4821378. The patch logs both using the same generic message; logging alone neither establishes safe fallback behavior nor distinguishes a valid empty context from a failed computation. The security label does not establish a demonstrated vulnerability.\n\n- [ ] Define the caller-visible contract for valid empty goal/needs context versus failed computation, preserving prompt/interpreter/action alignment.\n- [ ] Retain the original cause and distinguish the failing operation in diagnostics; do not expose full sensitive prompt/memory contents by default.\n- [ ] Verify a real Character's supported success path and controlled failure of each calculation; prove the documented caller behavior rather than merely asserting a logger call.\n- [ ] Coordinate with #137 failure-appropriate recovery and #802/#803 underlying goal/motive failures; do not silently swallow or certify those runtime gaps as repaired.\n- [ ] Keep broader LLM prompt expansion under #158/#583. Human review of the retained #711 patch/disposition precedes any rewrite or closure.\n\nThis is Phase 5 work after its existing gate and execution contract, not a Phase 3 runtime change.",
+    "number": 808,
+    "node_id": "I_kwDOMEkjkc8AAAABZJ7vTA",
+    "url": "https://github.com/dhar174/tiny_village/issues/808"
+  },
+  {
+    "key": "R737-715",
+    "title": "Retain graph distance-query behavior coverage from PR #715",
+    "parent": 222,
+    "phase": 4,
+    "blocked_by": [
+      738,
+      799
+    ],
+    "blocks": [
+      222
+    ],
+    "workstream": "Testing",
+    "scope": "MVP",
+    "priority": "P2",
+    "body": "#737 inspected PR #715 at 6f10f11a0deea7451608643e5d8a731ead9c45ba. Its added cases cover an absent source, an injected NetworkX failure and a direct-neighbor fallback, while its fixture uses Mock entities and does not establish authoritative graph ownership, multi-hop cutoff correctness or parity beyond direct neighbors.\n\n- [ ] Map the useful added assertions to maintained coverage and state the currently supported GraphAnalytics/WorldState ownership boundary. The existing WorldState exception must not grow into a second authoritative simulation.\n- [ ] Verify real production graph objects/entities for absent source, source distance zero, one/multiple-hop cutoffs and stable identity after relevant mutations, coordinating #799.\n- [ ] Test controlled external-library failure separately from ordinary empty results; retain explicit fallback limits and do not claim unsupported NetworkX-free production execution.\n- [ ] Prove query operations leave the graph unchanged and retain any actual contract failures under separately scoped issues.\n- [ ] Present #715's final keep/split/supersede disposition for human review before rewriting or closing it.\n\nPhase 4 follows #738 and stable identity work; no graph correctness is inferred from the existing mock fixture.",
+    "number": 809,
+    "node_id": "I_kwDOMEkjkc8AAAABZJ74Qw",
+    "url": "https://github.com/dhar174/tiny_village/issues/809"
+  }
+]
