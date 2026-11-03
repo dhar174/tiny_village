@@ -1,0 +1,361 @@
+{
+  "status": "exact_live_plan_reviewed",
+  "plan_bytes": 409207,
+  "plan_sha256": "456b762963088d807ab27434981a2605dbf175a022ba8565b37e417f1f3de66c",
+  "approval_digest": "b62c5ef9e4da53e4bde6b40b83445dff93d16914eef1d2634b9d83d5a8f032a0",
+  "desired_digest": "6fbcb9150b20af1adbf9a5a56ccae92d2e970e18b1aa4fc9753341d745fadc25",
+  "project_id": "PVT_kwHOAE_6m84Bm2UC",
+  "operations": [
+    {
+      "issue": 738,
+      "changes": {
+        "Readiness": {
+          "before": "Human review",
+          "after": "Tracking"
+        },
+        "Decision": {
+          "before": "Pending",
+          "after": "Approved"
+        }
+      }
+    },
+    {
+      "issue": 56,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 143,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 166,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 167,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 182,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 184,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 185,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 186,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 187,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 245,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 354,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 356,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 358,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 522,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 609,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 773,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 774,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 799,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 800,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 801,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 802,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 803,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    }
+  ],
+  "baseline_changes_since_prior_receipt": {
+    "added_items": [
+      {
+        "id": "PVTI_lAHOAE_6m84Bm2UCzhFi17Y",
+        "number": null,
+        "node_id": "PVTI_lAHOAE_6m84Bm2UCzhFi17Y",
+        "repository": null,
+        "archived": false,
+        "values": {
+          "Title": "Record approved Phase 3 gate and prepare Project decision synchronization",
+          "Status": "Done"
+        }
+      }
+    ],
+    "removed_items": [],
+    "changed_items": [
+      {
+        "before": {
+          "id": "PVTI_lAHOAE_6m84Bm2UCzhAcbL4",
+          "number": 738,
+          "node_id": "I_kwDOMEkjkc8AAAABW0dlhQ",
+          "repository": "dhar174/tiny_village",
+          "archived": false,
+          "values": {
+            "Title": "[H3] Human decision gate 3: Consolidate backlog and pull requests",
+            "Status": "Todo",
+            "Phase": "03 Consolidate backlog and pull requests",
+            "Sequence": 3900.0,
+            "Priority": "P1",
+            "Kind": "Phase gate",
+            "Workstream": "Review",
+            "Scope": "MVP",
+            "Readiness": "Human review",
+            "Decision": "Pending",
+            "Depends on": "Native prerequisites:\nhttps://github.com/dhar174/tiny_village/issues/737\nPlanned activation (not added native edges):\nhttps://github.com/dhar174/tiny_village/issues/732\nhttps://github.com/dhar174/tiny_village/issues/734\nhttps://github.com/dhar174/tiny_village/issues/735\nhttps://github.com/dhar174/tiny_village/issues/736",
+            "Review owner": "dhar174",
+            "Task key": "H3"
+          }
+        },
+        "after": {
+          "id": "PVTI_lAHOAE_6m84Bm2UCzhAcbL4",
+          "number": 738,
+          "node_id": "I_kwDOMEkjkc8AAAABW0dlhQ",
+          "repository": "dhar174/tiny_village",
+          "archived": false,
+          "values": {
+            "Title": "[H3] Human decision gate 3: Consolidate backlog and pull requests",
+            "Status": "Done",
+            "Phase": "03 Consolidate backlog and pull requests",
+            "Sequence": 3900.0,
+            "Priority": "P1",
+            "Kind": "Phase gate",
+            "Workstream": "Review",
+            "Scope": "MVP",
+            "Readiness": "Human review",
+            "Decision": "Pending",
+            "Depends on": "Native prerequisites:\nhttps://github.com/dhar174/tiny_village/issues/737\nPlanned activation (not added native edges):\nhttps://github.com/dhar174/tiny_village/issues/732\nhttps://github.com/dhar174/tiny_village/issues/734\nhttps://github.com/dhar174/tiny_village/issues/735\nhttps://github.com/dhar174/tiny_village/issues/736",
+            "Review owner": "dhar174",
+            "Task key": "H3"
+          }
+        }
+      },
+      {
+        "before": {
+          "id": "PVTI_lAHOAE_6m84Bm2UCzhDJGWI",
+          "number": null,
+          "node_id": "PVTI_lAHOAE_6m84Bm2UCzhDJGWI",
+          "repository": null,
+          "archived": false,
+          "values": {
+            "Title": "Retain verified Project 10 readback and prepare final readiness after #737",
+            "Status": "Todo"
+          }
+        },
+        "after": {
+          "id": "PVTI_lAHOAE_6m84Bm2UCzhDJGWI",
+          "number": null,
+          "node_id": "PVTI_lAHOAE_6m84Bm2UCzhDJGWI",
+          "repository": null,
+          "archived": false,
+          "values": {
+            "Title": "Verify final Project 10 readiness and prepare the Phase 3 human gate",
+            "Status": "Done"
+          }
+        }
+      },
+      {
+        "before": {
+          "id": "PVTI_lAHOAE_6m84Bm2UCzhAcbKo",
+          "number": 733,
+          "node_id": "I_kwDOMEkjkc8AAAABW0deYg",
+          "repository": "dhar174/tiny_village",
+          "archived": false,
+          "values": {
+            "Title": "[E3] Phase 3: Consolidate backlog and pull requests",
+            "Status": "Todo",
+            "Phase": "03 Consolidate backlog and pull requests",
+            "Sequence": 3000.0,
+            "Priority": "P1",
+            "Kind": "Phase",
+            "Workstream": "Planning",
+            "Scope": "MVP",
+            "Readiness": "Tracking",
+            "Decision": "Not applicable",
+            "Task key": "E3",
+            "Review owner": "dhar174"
+          }
+        },
+        "after": {
+          "id": "PVTI_lAHOAE_6m84Bm2UCzhAcbKo",
+          "number": 733,
+          "node_id": "I_kwDOMEkjkc8AAAABW0deYg",
+          "repository": "dhar174/tiny_village",
+          "archived": false,
+          "values": {
+            "Title": "[E3] Phase 3: Consolidate backlog and pull requests",
+            "Status": "Done",
+            "Phase": "03 Consolidate backlog and pull requests",
+            "Sequence": 3000.0,
+            "Priority": "P1",
+            "Kind": "Phase",
+            "Workstream": "Planning",
+            "Scope": "MVP",
+            "Readiness": "Tracking",
+            "Decision": "Not applicable",
+            "Task key": "E3",
+            "Review owner": "dhar174"
+          }
+        }
+      }
+    ],
+    "fields_changed": false,
+    "views_changed": false
+  },
+  "source_guard_matches_desired": true,
+  "github_mutations_performed": 0,
+  "fresh_source_matches": true,
+  "reviewed_at": "2026-11-03T03:54:30.524060+00:00",
+  "main": "c6f06c4001b581da54e945510948b3669d7fcc7e",
+  "application": "not_performed_by_coordinator; owner-local apply/independent inspection pending"
+}
