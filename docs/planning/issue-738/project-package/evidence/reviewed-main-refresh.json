@@ -1,0 +1,19 @@
+{
+  "observed_at": "2026-11-03T00:20:12.275825+00:00",
+  "reason": "PR814 merged after the original package was frozen. Read-only prepare safely stopped before writes.",
+  "previous_main": "16528f2130fc4b890558a1fccd590ad29e9bae7a",
+  "current_main": "c6f06c4001b581da54e945510948b3669d7fcc7e",
+  "source_diff": {
+    "main": {
+      "expected": "16528f2130fc4b890558a1fccd590ad29e9bae7a",
+      "actual": "c6f06c4001b581da54e945510948b3669d7fcc7e"
+    },
+    "issues": {},
+    "prs": {}
+  },
+  "rows_fields_views_unchanged": true,
+  "snapshot_provenance": "The raw484-issue snapshot and its original capture timestamps/main are retained unchanged. Fresh independent source reads confirm all333 guarded issue signatures and24 PR heads/states unchanged; only desired.source_guard.main is refreshed.",
+  "previous_desired_digest": "2e5dc89810b956a41310486148a32a2611f825a137386f9a2ee66a94a9f672a9",
+  "desired_digest": "6fbcb9150b20af1adbf9a5a56ccae92d2e970e18b1aa4fc9753341d745fadc25",
+  "github_mutations_performed": 0
+}

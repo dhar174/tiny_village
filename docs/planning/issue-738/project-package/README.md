@@ -2,7 +2,7 @@
 
 Dhar174 explicitly approved #738 under [D034](https://github.com/dhar174/tiny_village/blob/6890cde019ba93f748454ddfb4709b3fd8440e35/docs/decisions.md#d034--approve-phase-3-gate-738-with-retained-issue-backed-follow-ups). #738 and parent #733 are CLOSED/completed in that order, after native prerequisite checks. The13 originalPhase3 tickets and runtime requirements remain OPEN with their acceptance/relationships intact. This bundle synchronizes the recorded decision and readiness; it performs no runtime implementation.
 
-Main is pinned to `16528f2130fc4b890558a1fccd590ad29e9bae7a` (merged813). Source inputs freshly cover484 issues,332 managed rows,333 source guards and24 unchanged candidate heads/states. All12 custom fields and six delivery views retain their schema. The known Project10 node ID is `PVT_kwHOAE_6m84Bm2UC`.
+Main is pinned to `c6f06c4001b581da54e945510948b3669d7fcc7e` (merged814). The raw484-issue snapshot retains its original capture revision16528f2. Fresh source checks after the merge confirm all333 guarded issue signatures and24 candidate heads/states unchanged; the desired source guard alone is refreshed to c6f06c4. All332 rows, fields, views and23 prospective changes are unchanged. See `evidence/reviewed-main-refresh.json`. All12 custom fields and six delivery views retain their schema. The known Project10 node ID is `PVT_kwHOAE_6m84Bm2UC`.
 
 ## Fresh read-only plan
 
@@ -34,4 +34,4 @@ The two publisher/receipt Python files and capture helper are unchanged copies o
 
 `validation.json` proves artifact/scope/preservation consistency, not live publication. The prior full receipt/plan/desired are retained under evidence, with exact original/reproduced provenance from the737 final record. Current cloud Project read still returns FORBIDDEN. A read-only capture initially hit upstream503; that failed attempt is retained, and one successful read-only retry supplied the snapshot. No publication failure was relabelled success.
 
-Keep main unchanged while preparing/applying this package. The approval/closure evidence is in PR814; do not merge it during the local cycle. A later source merge requires new source comparison and, for a claim of current-main board verification, fresh authenticated readback. Historical receipts retain their original revisions.
+Keep mainc6f06c4 unchanged while preparing/applying this refreshed package. Approval/closure evidence PR814 is already merged. This refresh is published as an artifact-only branch commit; there is no new open publication PR to merge during this local cycle. A later source merge requires new source comparison and, for a claim of current-main board verification, fresh authenticated readback. Historical receipts retain their original revisions.

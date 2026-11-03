@@ -8,10 +8,10 @@
   "source_issues": 484,
   "source_guard_issues": 333,
   "candidate_prs": 24,
-  "main": "16528f2130fc4b890558a1fccd590ad29e9bae7a",
+  "main": "c6f06c4001b581da54e945510948b3669d7fcc7e",
   "cycles": 0,
   "ordering_conflicts": [],
-  "desired_digest": "2e5dc89810b956a41310486148a32a2611f825a137386f9a2ee66a94a9f672a9",
+  "desired_digest": "6fbcb9150b20af1adbf9a5a56ccae92d2e970e18b1aa4fc9753341d745fadc25",
   "changed_source_issues": [
     {
       "issue": 220,
@@ -297,5 +297,7 @@
     }
   ],
   "project_synchronization": "pending_owner_authenticated_plan_review_apply_inspection",
-  "github_mutations_performed_by_transformation": 0
+  "github_mutations_performed_by_transformation": 0,
+  "original_snapshot_main": "16528f2130fc4b890558a1fccd590ad29e9bae7a",
+  "main_refresh": "evidence/reviewed-main-refresh.json"
 }

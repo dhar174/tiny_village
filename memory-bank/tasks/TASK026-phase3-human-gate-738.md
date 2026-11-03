@@ -19,7 +19,7 @@ D033's accepted plan includes a separate human walkthrough after #737 publicatio
 The human decision and ordered issue closeout are complete. The remaining step is
 owner-authenticated Project synchronization: prepare the phase3-plan from the new
 frozen package, review the exact live delta/digest, apply in a quiet edit window,
-and verify a fresh inspection receipt. Keep main16528f2 unchanged during this
+and verify a fresh inspection receipt. Keep mainc6f06c4 unchanged during this
 local cycle. No further phase approval is needed and no runtime implementation
 is performed by this metadata handoff.
 
@@ -39,3 +39,6 @@ is performed by this metadata handoff.
 - Current Project read stillFORBIDDEN; only the dependent board update awaits owner-local plan/review/apply/readback. No token request or native runtime work. PR814 created/attached on codex/phase3-gate-738; preserve main16528f2 while preparing the local publication.
 - Fresh full484/332/24 capture retained the initial read-only503failure and successful single retry. A separately retained D034 data transformation keeps the historical737 builder guard intact; allothermanagedvalues exceptReadiness/Decision738 remain unchanged. Prospective23items:738Approved/Tracking plus22Phase4Ready. Actual live plan/digest remains unreviewed until returned.
 - Packaged sync/publication/capture Python files equal merged reviewed source bytes. Fresh333 issue/24PR/main guards match; historical737 packages and prior receipt validate unchanged. Separate read-only final review reports no blockers and its command/raw-artifact limits. ZIP545978bytes/SHA2560929e5a6ed270bb6d16de9e1bc569a86bc911c417185ab1c558d6b1a43b52ba6 extracts with complete manifest and prior receipt verification. Source main16528f2; do not merge814 during owner-local prepare/apply.
+
+- Owner-local prepare stopped stale-source before any writes after814 mergedc6f06c4. Fresh comparison: only main differs from frozen16528f2;333 issue signatures/24 candidate heads/states unchanged. Original484 raw snapshot retained; desired main guard and digest refreshed with explicit provenance.332rows/fields/views/23prospectivechanges identical. Publish refresh as artifact-only branch commit with no new PR during local prepare/apply; no bypass of source checks.
+- RefreshedZIP546999bytes/SHA2564b67f6cb1c9af813527b6553c2ee9a6faf15baa1ba7f46526864c87b3d430e4f; desired6fbcb9150b20af1adbf9a5a56ccae92d2e970e18b1aa4fc9753341d745fadc25. Exact ZIP/extracted manifest/prior receipt verify; fresh333issue/24PR/main guardsc6f06c4 match. No source/API-write change or proposed board-value change; no new PR during localcycle. Original portable-verification remains labelled old4cc ZIP; post-merge-refresh-verification.json records current package.

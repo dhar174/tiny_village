@@ -1,0 +1,15 @@
+{
+  "status": "refreshed_package_verified",
+  "main": "c6f06c4001b581da54e945510948b3669d7fcc7e",
+  "desired_digest": "6fbcb9150b20af1adbf9a5a56ccae92d2e970e18b1aa4fc9753341d745fadc25",
+  "fresh_source_matches": true,
+  "row_field_view_values_unchanged": true,
+  "prospective_operations": 23,
+  "python_unchanged": true,
+  "snapshot_bytes_preserved": true,
+  "extracted_manifest_and_prior_receipt_verified": true,
+  "zip_sha256": "4b67f6cb1c9af813527b6553c2ee9a6faf15baa1ba7f46526864c87b3d430e4f",
+  "zip_bytes": 546999,
+  "github_mutations_performed": 0,
+  "actual_live_plan": "still_pending_owner_local_prepare"
+}

@@ -1,5 +1,5 @@
 {
-  "README.md": "03eb56025f155e99ba2822636027299f1c3e8fd66e3a6e8f81ed1f621da52028",
+  "README.md": "ba8eba9875f0914c026cc3ef6278c567ac7cd56bcf9224205c0028bc1f2997db",
   "approval-records.json": "a6929680f91317b1e34fcde302887d94a2deabb1559422dc06930a1925847a14",
   "capture_snapshot.py": "21770bb140ce4dad78898e090e0fcf8246dc05a07029b1c00a88561114e96e02",
   "evidence/capture-first-failed.txt": "6246aa7a64b7d14e9c290895329fefc64c331db73074a667832673fa2fb6b35b",
@@ -15,18 +15,19 @@
   "evidence/prior-final-inspect.json": "7f8b413845b242a223521b0c49c88803bf8fcbeb04402566ca8e711161542e82",
   "evidence/prior-final-plan.reproduced.json": "b05839ac94e67157e02120227267a1917ec664c70998562d3bc0c6698d6b645b",
   "evidence/project-access.json": "f59330282bc2eeab74b88c1600c00a03aae22360f0359dc30231809b53afbf80",
+  "evidence/reviewed-main-refresh.json": "ed8994da816256cf3cc5c0ca7dc194037d62aa92591bdd7cfa96d32e4e31a628",
   "evidence/rulesets.json": "8526d0d086c1257aff887e29a83c414a1ae084afccda92c8128021e6fa439ca7",
   "evidence/source-and-access-preflight.json": "4f5b8b70cb6552b8d0b119a4a05f45ebdb802e65fb9b12cbde8282fdba10232b",
   "issue-matrix.json": "2584c9a87f694c222465b5652c4e43ff9c4e5d6cb4bb02daa54e8642dc6fee47",
   "original-pr-handoffs.json": "24877b637756bc6f3deaec14f24d286e10404815e5ce942ca2e98fcbb104981b",
   "original-roadmap.json": "4f21050237d3e74ee37f70764ca0f685a212c28ae28acef784e6fe33a2e97b3c",
   "pr-matrix.json": "5417355220f95574444f7314d9e5e381192749a63f83f455d8a97065fc7cd04b",
-  "project-preview.json": "0f215acc05d02cb7203bb514a184f9d2429e5ad1fae6a3ccb1fa643bed85d02f",
+  "project-preview.json": "37eb4c12b617190a9a77da15e98579b7753495165a3f23f8659dc6d680662809",
   "publication_evidence.py": "93849e2f5c5bc9c11a53818ac74ab215a0b19015b5057b00597cd4ecebc6398b",
   "remediations.json": "59392e0ceb7ffa2df0fd358177b2d490c31c96a1033ab22b004d0a38a197ece6",
   "review-scope.json": "3c644d88d5fc49ce9333a6b0111067c6636107932ecb1b259d19f35285607892",
   "snapshot.json.gz": "588f670faad4f411f9f9b169ff4e7de3a8ce56cf490e98030f2fabaea365654d",
   "sync_project.py": "bb7c1ec9e0f07eb303208ef0a523ac19a9fce43ee9a9deee49399beabeb1b295",
   "triage-input.json.gz": "7be11080f503ec273dc69a73f364194a473ba78479eb74cf616cbc19edf83c6d",
-  "validation.json": "b84201a189b5cbc001e317b76c900ecc514da077c82f50c7197d03a64af1286c"
+  "validation.json": "f3a78cf643a7b2234a3a2fdf33e07efc97a488fa14cd801415e43476f5ab8fdf"
 }
