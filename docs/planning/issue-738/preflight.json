@@ -1,0 +1,751 @@
+{
+  "defaultBranchRef": {
+    "target": {
+      "oid": "16528f2130fc4b890558a1fccd590ad29e9bae7a"
+    }
+  },
+  "i732": {
+    "number": 732,
+    "id": "I_kwDOMEkjkc8AAAABW0ddLw",
+    "url": "https://github.com/dhar174/tiny_village/issues/732",
+    "title": "[H2] Human decision gate 2: Freeze MVP, dependencies, and design foundations",
+    "body": "<!-- d025-phase2-approval:start -->\n## Phase 2 complete \u2014 explicit human gate approval\n\n**Approved by dhar174 on 2026-10-21 (America/New_York)** under [D025, single decision record](https://github.com/dhar174/tiny_village/blob/651f13ad49a6129abaedb6723a790e3053d800ef/docs/decisions.md#d025--approve-phase-2-gate-732-and-complete-parent-723). The user explicitly answered \u201cYes, approve\u201d to the separate Phase 2 gate #732 request after D023 design and D024 engineering approvals. PR #795 has merged as `a7dea4c`; the reviewed planning/foundation artifacts and retained evidence limitations remain authoritative.\n\nAll nine Phase 2 work/review issues #724/#725/#654/#726/#727/#728/#729/#730/#731 are closed as completed, and previous gate #722 is closed. No new required phase remediation was identified. This completes #732 and parent #723 for the agreed foundation/planning scope and unblocks Phase 3 #733, starting with #734 backlog triage.\n\nThis supplies no implemented UI/native font-fit/usability/performance, economic-turn/episode proof, complete persistence, live inference or other-platform/GPU readiness. D014's expansive product and D015's final-product AI remain required. Later tasks and gate #738 retain their own acceptance and human decisions.\n\nProject 10 synchronization still returns HTTP 403; no Decision/Status/readiness field update is claimed. Native issue states and this decision record are authoritative. The unchecked Project step is the disclosed administrative limitation, not missing human approval.\n<!-- d025-phase2-approval:end -->\n\n<!-- tiny-village-roadmap:v1:H2:start -->\n## Ordered delivery task H2\n\nA human maintainer decides whether the phase satisfies its acceptance criteria and may unlock the next phase.\n\n- Phase: 2 - Freeze MVP, dependencies, and design foundations\n- Sequence: 2900\n- Priority: P0\n- Scope: MVP\n- Workstream: Review\n- Kind: Phase gate\n- Parent phase: [E2](https://github.com/dhar174/tiny_village/issues/723)\n\n### Prerequisites\n\n- [P2-01](https://github.com/dhar174/tiny_village/issues/724)\n- [P2-02](https://github.com/dhar174/tiny_village/issues/725)\n- [P2-03](https://github.com/dhar174/tiny_village/issues/654)\n- [P2-04](https://github.com/dhar174/tiny_village/issues/726)\n- [P2-05](https://github.com/dhar174/tiny_village/issues/727)\n- [P2-06](https://github.com/dhar174/tiny_village/issues/728)\n- [P2-07](https://github.com/dhar174/tiny_village/issues/729)\n- [P2-08](https://github.com/dhar174/tiny_village/issues/730)\n- [P2-09](https://github.com/dhar174/tiny_village/issues/731)\n- [H1](https://github.com/dhar174/tiny_village/issues/722)\n\nThe preceding phase gate must be human-approved. Dependency closure alone does not supply a human decision.\n\n### Acceptance criteria\n\n- [x] Review every required task, current PR head, commands/results, and the phase-specific evidence.\n- [x] Walk through the supported behavior, failure cases, and applicable design/engineering artifacts.\n- [x] Choose exactly Approved, Changes requested, or Deferred; record reviewer, date, rationale, evidence, and issue-backed remediation.\n- [x] Only close this gate after a human records Approved; keep rework/deferred gates open and downstream work blocked.\n- [x] Do not auto-approve based on a passing suite, a bot action, elapsed time, or a completed checklist.\n\n### Human decision step-through\n\n- [x] Human reviewer: dhar174, or a maintainer explicitly delegated in the Project.\n- [x] Check prerequisite issues and the previous phase's recorded decision.\n- [x] Review artifacts, current commit/PR heads, executed checks, known failures, and proposed scope.\n- [x] Walk through the phase's success/failure scenarios and relevant design/engineering evidence.\n- [x] Record reviewer, date, evidence links, rationale, and exactly one decision: Approved / Changes requested / Deferred.\n- [x] Create a separate issue for each required remediation and add it as a blocker.\n- [ ] Set Project Decision to the human's recorded decision. Close this issue only after Approved.\n\nAutomation must not set Approved, infer approval from silence, or advance a downstream phase on elapsed time.\n\n### Evidence to retain\n\nCurrent commit/PR SHA; exact commands and executed result counts; relevant state traces/screens; review artifacts; limitations; linked follow-up issues.\n\n<!-- tiny-village-roadmap:v1:H2:end -->\n",
+    "state": "CLOSED",
+    "stateReason": "COMPLETED",
+    "updatedAt": "2026-10-21T20:48:16Z",
+    "closedAt": "2026-10-21T20:48:16Z",
+    "assignees": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "parent": {
+      "number": 723
+    },
+    "subIssues": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "blockedBy": {
+      "nodes": [
+        {
+          "number": 731,
+          "state": "CLOSED"
+        },
+        {
+          "number": 730,
+          "state": "CLOSED"
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "i733": {
+    "number": 733,
+    "id": "I_kwDOMEkjkc8AAAABW0deYg",
+    "url": "https://github.com/dhar174/tiny_village/issues/733",
+    "title": "[E3] Phase 3: Consolidate backlog and pull requests",
+    "body": "<!-- issue-734-triage:v1:start -->\n## Reviewed backlog triage \u2014 #734\n\n- Disposition: **implement**. Retain the contributor tooling and experiments acceptance as ordered implementation/integration work in Phase 3; source presence alone does not prove its acceptance.\n- Accountable ledger owner: **dhar174**; existing assignees preserved.\n- Canonical topic: #14 (Contributor tooling and experiments); existing native parent preserved.\n- Order: Phase 3; native prerequisites none in snapshot. Proposed execution prerequisites #732; handoff #733 (coordination, not an additional blocker).\n- Acceptance/reproduction: All phase work is tracked as individual issues.; Phase gate H3 records the human decision and evidence.; Optional/deferred work is explicitly documented and does not silently become a release prerequisite.\n- Evidence: #734's reviewed ledger and retained snapshot at `13b8e374d07e7e7ea6f8f562ea6a290fcab967f7`; outcome `existing_roadmap_or_remediation_acceptance_preserved`. Unexecuted behavior is not verified.\n- Closure and gate boundary: No later human gate or broader product readiness is inferred.\n\n- Publication approved under [D027](https://github.com/dhar174/tiny_village/blob/eb3f1e2/docs/decisions.md#d027--approve-and-publish-the-734-backlog-triage-package); preserved source evidence remains scoped as above.\n\n<!-- issue-734-triage:v1:end -->\n\n<!-- d025-phase3-handoff:start -->\n## Phase 3 unblocked by human-approved H2\n\n[D025](https://github.com/dhar174/tiny_village/blob/651f13ad49a6129abaedb6723a790e3053d800ef/docs/decisions.md#d025--approve-phase-2-gate-732-and-complete-parent-723) records dhar174's explicit approval of Phase 2 gate #732. #732 and parent #723 are closed as completed; prior planning/design/engineering evidence and scope limits remain intact. Next ordered work is #734's evidence-based triage of the original backlog under Phase 3 parent #733.\n\nThis is readiness, not completion: #733/#734 and the other Phase 3 tasks remain open. No original-backlog disposition, duplicate closure, PR merge or later gate approval is inferred. Preserve useful history and #734's blocked-regression condition for #602. Phase 3 gate #738 requires its own human decision. Project fields remain unsynchronized after HTTP 403.\n<!-- d025-phase3-handoff:end -->\n\n<!-- tiny-village-roadmap:v1:E3:start -->\n## Ordered delivery task E3\n\nEvery original backlog item has an evidence-based disposition, and the selected PR queue has current owners and prerequisites.\n\n- Phase: 3 - Consolidate backlog and pull requests\n- Sequence: 3000\n- Priority: P1\n- Scope: MVP\n- Workstream: Planning\n- Kind: Phase\n- Parent phase: [PROGRAM](https://github.com/dhar174/tiny_village/issues/716)\n\n- GitHub Project: https://github.com/users/dhar174/projects/10\n\n### Prerequisites\n\n- No work prerequisites.\n\n### Acceptance criteria\n\n- [ ] All phase work is tracked as individual issues.\n- [ ] Phase gate H3 records the human decision and evidence.\n- [ ] Optional/deferred work is explicitly documented and does not silently become a release prerequisite.\n\n### Phase completion\n\nThe phase is represented by sub-issues. Its human gate is [H3](https://github.com/dhar174/tiny_village/issues/738).\n\n### Evidence to retain\n\nCurrent commit/PR SHA; exact commands and executed result counts; relevant state traces/screens; review artifacts; limitations; linked follow-up issues.\n\n\n### Phase work and decisions\n\n- [P3-01](https://github.com/dhar174/tiny_village/issues/734)\n- [P3-02](https://github.com/dhar174/tiny_village/issues/735)\n- [P3-03](https://github.com/dhar174/tiny_village/issues/736)\n- [P3-04](https://github.com/dhar174/tiny_village/issues/737)\n- [H3](https://github.com/dhar174/tiny_village/issues/738)\n\n<!-- tiny-village-roadmap:v1:E3:end -->\n",
+    "state": "OPEN",
+    "stateReason": null,
+    "updatedAt": "2026-10-21T23:20:21Z",
+    "closedAt": null,
+    "assignees": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "parent": {
+      "number": 716
+    },
+    "subIssues": {
+      "nodes": [
+        {
+          "number": 734,
+          "state": "CLOSED"
+        },
+        {
+          "number": 735,
+          "state": "CLOSED"
+        },
+        {
+          "number": 736,
+          "state": "CLOSED"
+        },
+        {
+          "number": 737,
+          "state": "CLOSED"
+        },
+        {
+          "number": 738,
+          "state": "OPEN"
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "blockedBy": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "i734": {
+    "number": 734,
+    "id": "I_kwDOMEkjkc8AAAABW0dfyQ",
+    "url": "https://github.com/dhar174/tiny_village/issues/734",
+    "title": "[P3-01] Triage the original issue backlog into canonical subsystem epics",
+    "body": "<!-- issue-734-triage:v1:start -->\n## Reviewed backlog triage \u2014 #734\n\n- Disposition: **implement**. Retain the contributor tooling and experiments acceptance as ordered implementation/integration work in Phase 3; source presence alone does not prove its acceptance.\n- Accountable ledger owner: **dhar174**; existing assignees preserved.\n- Canonical topic: #14 (Contributor tooling and experiments); existing native parent preserved.\n- Order: Phase 3; native prerequisites #732. Proposed execution prerequisites none in snapshot; handoff #734 (coordination, not an additional blocker).\n- Acceptance/reproduction: Give each original item an owner, reproduction/acceptance criteria, parent topic, prerequisite, and implement/verify/duplicate/defer disposition.; Recheck apparently implemented #482/#355/#602/#596/#597/#609; do not close #602 while its regression checks are blocked.; Preserve useful historical context and require human-approved evidence before duplicate closures.\n- Evidence: #734's reviewed ledger and retained snapshot at `13b8e374d07e7e7ea6f8f562ea6a290fcab967f7`; outcome `existing_roadmap_or_remediation_acceptance_preserved`. Unexecuted behavior is not verified.\n- Closure and gate boundary: No later human gate or broader product readiness is inferred.\n\n- Publication approved under [D027](https://github.com/dhar174/tiny_village/blob/eb3f1e2/docs/decisions.md#d027--approve-and-publish-the-734-backlog-triage-package); preserved source evidence remains scoped as above.\n\n<!-- issue-734-triage:v1:end -->\n\n<!-- d025-phase3-handoff:start -->\n## Phase 3 unblocked by human-approved H2\n\n[D025](https://github.com/dhar174/tiny_village/blob/651f13ad49a6129abaedb6723a790e3053d800ef/docs/decisions.md#d025--approve-phase-2-gate-732-and-complete-parent-723) records dhar174's explicit approval of Phase 2 gate #732. #732 and parent #723 are closed as completed; prior planning/design/engineering evidence and scope limits remain intact. Next ordered work is #734's evidence-based triage of the original backlog under Phase 3 parent #733.\n\nThis is readiness, not completion: #733/#734 and the other Phase 3 tasks remain open. No original-backlog disposition, duplicate closure, PR merge or later gate approval is inferred. Preserve useful history and #734's blocked-regression condition for #602. Phase 3 gate #738 requires its own human decision. Project fields remain unsynchronized after HTTP 403.\n<!-- d025-phase3-handoff:end -->\n\n<!-- tiny-village-roadmap:v1:P3-01:start -->\n## Ordered delivery task P3-01\n\nReview the original 261 issue summaries and current live backlog against code and reproduction evidence.\n\n- Phase: 3 - Consolidate backlog and pull requests\n- Sequence: 3001\n- Priority: P1\n- Scope: MVP\n- Workstream: Planning\n- Kind: Task\n- Parent phase: [E3](https://github.com/dhar174/tiny_village/issues/733)\n\n### Prerequisites\n\n- [H2](https://github.com/dhar174/tiny_village/issues/732)\n\nThe preceding phase gate must be human-approved. Dependency closure alone does not supply a human decision.\n\n### Acceptance criteria\n\n- [ ] Give each original item an owner, reproduction/acceptance criteria, parent topic, prerequisite, and implement/verify/duplicate/defer disposition.\n- [ ] Recheck apparently implemented #482/#355/#602/#596/#597/#609; do not close #602 while its regression checks are blocked.\n- [ ] Preserve useful historical context and require human-approved evidence before duplicate closures.\n\n### Related existing issues\n\n[#681](https://github.com/dhar174/tiny_village/issues/681), [#658](https://github.com/dhar174/tiny_village/issues/658), [#222](https://github.com/dhar174/tiny_village/issues/222), [#609](https://github.com/dhar174/tiny_village/issues/609)\n\n### Evidence to retain\n\nCurrent commit/PR SHA; exact commands and executed result counts; relevant state traces/screens; review artifacts; limitations; linked follow-up issues.\n\n<!-- tiny-village-roadmap:v1:P3-01:end -->\n",
+    "state": "CLOSED",
+    "stateReason": "COMPLETED",
+    "updatedAt": "2026-10-21T23:29:08Z",
+    "closedAt": "2026-10-21T23:29:06Z",
+    "assignees": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "parent": {
+      "number": 733
+    },
+    "subIssues": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "blockedBy": {
+      "nodes": [
+        {
+          "number": 732,
+          "state": "CLOSED"
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "i735": {
+    "number": 735,
+    "id": "I_kwDOMEkjkc8AAAABW0dhLA",
+    "url": "https://github.com/dhar174/tiny_village/issues/735",
+    "title": "[P3-02] Consolidate duplicate utility changes in PRs #703 and #714",
+    "body": "<!-- issue-734-triage:v1:start -->\n## Reviewed backlog triage \u2014 #734\n\n- Disposition: **implement**. Retain the contributor tooling and experiments acceptance as ordered implementation/integration work in Phase 3; source presence alone does not prove its acceptance.\n- Accountable ledger owner: **dhar174**; existing assignees preserved.\n- Canonical topic: #14 (Contributor tooling and experiments); existing native parent preserved.\n- Order: Phase 3; native prerequisites #734. Proposed execution prerequisites #732; handoff #735 (coordination, not an additional blocker).\n- Acceptance/reproduction: Avoid creating two competing tests/test_tiny_util_funcs.py files.; Confirm tweener, numeric conversion, and clamping expectations reflect documented semantics.; Rebase the selected change and close/supersede the duplicate only after a maintainer decision.\n- Evidence: #734's reviewed ledger and retained snapshot at `13b8e374d07e7e7ea6f8f562ea6a290fcab967f7`; outcome `existing_roadmap_or_remediation_acceptance_preserved`. Unexecuted behavior is not verified.\n- Closure and gate boundary: No later human gate or broader product readiness is inferred.\n\n- Publication approved under [D027](https://github.com/dhar174/tiny_village/blob/eb3f1e2/docs/decisions.md#d027--approve-and-publish-the-734-backlog-triage-package); preserved source evidence remains scoped as above.\n\n<!-- issue-734-triage:v1:end -->\n\n<!-- tiny-village-roadmap:v1:P3-02:start -->\n## Ordered delivery task P3-02\n\nSelect one implementation of the shared is_numeric TypeError fix and combine only useful, behavior-oriented tests.\n\n- Phase: 3 - Consolidate backlog and pull requests\n- Sequence: 3002\n- Priority: P1\n- Scope: MVP\n- Workstream: Testing\n- Kind: Task\n- Parent phase: [E3](https://github.com/dhar174/tiny_village/issues/733)\n\n### Prerequisites\n\n- [P3-01](https://github.com/dhar174/tiny_village/issues/734)\n- [H2](https://github.com/dhar174/tiny_village/issues/732)\n\nThe preceding phase gate must be human-approved. Dependency closure alone does not supply a human decision.\n\n### Acceptance criteria\n\n- [ ] Avoid creating two competing tests/test_tiny_util_funcs.py files.\n- [ ] Confirm tweener, numeric conversion, and clamping expectations reflect documented semantics.\n- [ ] Rebase the selected change and close/supersede the duplicate only after a maintainer decision.\n\n### Candidate PRs\n\n[#703](https://github.com/dhar174/tiny_village/pull/703), [#714](https://github.com/dhar174/tiny_village/pull/714)\n\nThese are review/rebase candidates, not approvals. Verify current head, CI, mergeability, scope, and prerequisites before merging.\n\n### Evidence to retain\n\nCurrent commit/PR SHA; exact commands and executed result counts; relevant state traces/screens; review artifacts; limitations; linked follow-up issues.\n\n<!-- tiny-village-roadmap:v1:P3-02:end -->\n",
+    "state": "CLOSED",
+    "stateReason": "COMPLETED",
+    "updatedAt": "2026-10-22T00:31:47Z",
+    "closedAt": "2026-10-22T00:31:47Z",
+    "assignees": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "parent": {
+      "number": 733
+    },
+    "subIssues": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "blockedBy": {
+      "nodes": [
+        {
+          "number": 734,
+          "state": "CLOSED"
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "i736": {
+    "number": 736,
+    "id": "I_kwDOMEkjkc8AAAABW0dimQ",
+    "url": "https://github.com/dhar174/tiny_village/issues/736",
+    "title": "[P3-03] Reconcile older functional-test PRs with current test locations",
+    "body": "<!-- issue-734-triage:v1:start -->\n## Reviewed backlog triage \u2014 #734\n\n- Disposition: **implement**. Retain the contributor tooling and experiments acceptance as ordered implementation/integration work in Phase 3; source presence alone does not prove its acceptance.\n- Accountable ledger owner: **dhar174**; existing assignees preserved.\n- Canonical topic: #14 (Contributor tooling and experiments); existing native parent preserved.\n- Order: Phase 3; native prerequisites #734. Proposed execution prerequisites #732; handoff #736 (coordination, not an additional blocker).\n- Acceptance/reproduction: Review #420/#417/#408/#406 and #404/#397/#395/#391 plus #393 against current main and merged #349.; Salvage tests that validate real behavior, actual goal completion, and graph contracts; avoid copied production logic in mocks.; Document each PR's keep/rebase/split/supersede decision and targeted validation evidence.\n- Evidence: #734's reviewed ledger and retained snapshot at `13b8e374d07e7e7ea6f8f562ea6a290fcab967f7`; outcome `existing_roadmap_or_remediation_acceptance_preserved`. Unexecuted behavior is not verified.\n- Closure and gate boundary: No later human gate or broader product readiness is inferred.\n\n- Publication approved under [D027](https://github.com/dhar174/tiny_village/blob/eb3f1e2/docs/decisions.md#d027--approve-and-publish-the-734-backlog-triage-package); preserved source evidence remains scoped as above.\n\n<!-- issue-734-triage:v1:end -->\n\n<!-- tiny-village-roadmap:v1:P3-03:start -->\n## Ordered delivery task P3-03\n\nConsolidate overlapping test rewrites instead of merging stale branches that restore obsolete file layouts or weaken assertions.\n\n- Phase: 3 - Consolidate backlog and pull requests\n- Sequence: 3003\n- Priority: P1\n- Scope: MVP\n- Workstream: Testing\n- Kind: Task\n- Parent phase: [E3](https://github.com/dhar174/tiny_village/issues/733)\n\n### Prerequisites\n\n- [P3-01](https://github.com/dhar174/tiny_village/issues/734)\n- [H2](https://github.com/dhar174/tiny_village/issues/732)\n\nThe preceding phase gate must be human-approved. Dependency closure alone does not supply a human decision.\n\n### Acceptance criteria\n\n- [ ] Review #420/#417/#408/#406 and #404/#397/#395/#391 plus #393 against current main and merged #349.\n- [ ] Salvage tests that validate real behavior, actual goal completion, and graph contracts; avoid copied production logic in mocks.\n- [ ] Document each PR's keep/rebase/split/supersede decision and targeted validation evidence.\n\n### Candidate PRs\n\n[#420](https://github.com/dhar174/tiny_village/pull/420), [#417](https://github.com/dhar174/tiny_village/pull/417), [#408](https://github.com/dhar174/tiny_village/pull/408), [#406](https://github.com/dhar174/tiny_village/pull/406), [#404](https://github.com/dhar174/tiny_village/pull/404), [#397](https://github.com/dhar174/tiny_village/pull/397), [#395](https://github.com/dhar174/tiny_village/pull/395), [#391](https://github.com/dhar174/tiny_village/pull/391), [#393](https://github.com/dhar174/tiny_village/pull/393)\n\nThese are review/rebase candidates, not approvals. Verify current head, CI, mergeability, scope, and prerequisites before merging.\n\n### Related existing issues\n\n[#351](https://github.com/dhar174/tiny_village/issues/351), [#352](https://github.com/dhar174/tiny_village/issues/352), [#353](https://github.com/dhar174/tiny_village/issues/353), [#683](https://github.com/dhar174/tiny_village/issues/683)\n\n### Evidence to retain\n\nCurrent commit/PR SHA; exact commands and executed result counts; relevant state traces/screens; review artifacts; limitations; linked follow-up issues.\n\n<!-- tiny-village-roadmap:v1:P3-03:end -->\n\n\n<!-- issue736-carry-forward:D030:start -->\n## Required runtime carry-forward \u2014 #736 / D030\n\nScoped reconciliation was accepted by dhar174 under [D030](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/decisions.md#d030--accept-736-reconciliation-and-retain-runtime-requirements) (Option1), conditional on preserving the runtime requirements in their owning issues. [PR #804](https://github.com/dhar174/tiny_village/pull/804) retains the [validation report](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/testing/issue-736-functional-test-consolidation.md) and original failed captures. This carry-forward does not establish a runtime fix or approve gate #738. Original requirements/checklists and assignees remain intact.\n\n**Scoped reconciliation accepted; merge/verification pending.** The user selected Option1: accept the test consolidation and carry failed runtime requirements into their owning issues while preserving roadmap order.\n\n| Gap | Required owner |\n| --- | --- |\n| Full Goal completion/planning/evaluation/feasibility | #802 under #218 |\n| Missing motive-satisfaction contribution | #803 under #139 |\n| Graph identity, state/action provenance and object/graph synchronization | #799 |\n| Replanning result/alternative-action behavior | #741 |\n| Existing utility Goal/fixture and falsy-ID test debt | #774 |\n\n#802/#803 remain after #738, with required child relationships to their owners. Their unresolved runtime requirements are carried forward explicitly, not marked as passed. Keep #736 and old candidate PRs open until #804 merges and its merged result is verified; then apply the reviewed scoped dispositions. No #738 approval or runtime issue closure is supplied by Option1.\n<!-- issue736-carry-forward:D030:end -->\n\n\n<!-- issue736-completion:D030:804 -->\n## Scoped reconciliation complete \u2014 D030\n\nPR #804 merged at `6cc576edcb465c154ba7f56a508116ec1b247975`. [Bounded post-merge verification](https://github.com/dhar174/tiny_village/blob/3dd587f/docs/testing/issue-736-post-merge-verification.md) on the clean merged revision passes72 tests+3 CLI probes (core) and20 tests (dev), no test failures/errors/skips/timeouts. All15 validated source hashes match, and all9 old candidate heads remained unchanged before their approved superseding closures. Their closure comments link the merged replacement and exact assertion map.\n\nCompletion is for the [human-accepted D030 reconciliation scope](https://github.com/dhar174/tiny_village/blob/6cc576edcb465c154ba7f56a508116ec1b247975/docs/decisions.md#d030--accept-736-reconciliation-and-retain-runtime-requirements). Full Goal/planner requirements remain #802 under #218; motive satisfaction #803 under #139; graph/world identity/provenance/synchronization #799; replanning/alternative behavior #741; utility test debt #774. Failed evidence and original requirements remain intact; no failed runtime path is marked as passing here.\n\nThe original checklist is preserved as the original requirement text; D030 explicitly accepts carrying the unmet runtime behavior into its owner issues. All runtime issues and human gate #738 remain open. Next ordered task is #737, with its own ownership/order/Project synchronization acceptance. No phase approval is supplied by closing this scoped task.\n",
+    "state": "CLOSED",
+    "stateReason": "COMPLETED",
+    "updatedAt": "2026-10-22T07:57:33Z",
+    "closedAt": "2026-10-22T07:57:33Z",
+    "assignees": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "parent": {
+      "number": 733
+    },
+    "subIssues": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "blockedBy": {
+      "nodes": [
+        {
+          "number": 734,
+          "state": "CLOSED"
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "i737": {
+    "number": 737,
+    "id": "I_kwDOMEkjkc8AAAABW0dj9A",
+    "url": "https://github.com/dhar174/tiny_village/issues/737",
+    "title": "[P3-04] Reconcile PR ownership, merge sequence, and dependency configuration",
+    "body": "<!-- issue-734-triage:v1:start -->\n## Reviewed backlog triage \u2014 #734\n\n- Disposition: **implement**. Retain the contributor tooling and experiments acceptance as ordered implementation/integration work in Phase 3; source presence alone does not prove its acceptance.\n- Accountable ledger owner: **dhar174**; existing assignees preserved.\n- Canonical topic: #14 (Contributor tooling and experiments); existing native parent preserved.\n- Order: Phase 3; native prerequisites #736, #735. Proposed execution prerequisites #732; handoff #737 (coordination, not an additional blocker).\n- Acceptance/reproduction: Assign a reviewer and owner to each selected implementation PR and verify current CI/mergeability.; Rebase each dependent PR after its prerequisite lands; retain existing native parents and dependency links.; Update Phase/Sequence/Readiness/Depends on and create a distinct issue for every newly discovered remediation.\n- Evidence: #734's reviewed ledger and retained snapshot at `13b8e374d07e7e7ea6f8f562ea6a290fcab967f7`; outcome `existing_roadmap_or_remediation_acceptance_preserved`. Unexecuted behavior is not verified.\n- Closure and gate boundary: No later human gate or broader product readiness is inferred.\n\n- Publication approved under [D027](https://github.com/dhar174/tiny_village/blob/eb3f1e2/docs/decisions.md#d027--approve-and-publish-the-734-backlog-triage-package); preserved source evidence remains scoped as above.\n\n<!-- issue-734-triage:v1:end -->\n\n<!-- tiny-village-roadmap:v1:P3-04:start -->\n## Ordered delivery task P3-04\n\nMaintain the issue-backed Project as the live execution plan after backlog triage.\n\n- Phase: 3 - Consolidate backlog and pull requests\n- Sequence: 3004\n- Priority: P1\n- Scope: MVP\n- Workstream: Planning\n- Kind: Task\n- Parent phase: [E3](https://github.com/dhar174/tiny_village/issues/733)\n\n### Prerequisites\n\n- [P3-01](https://github.com/dhar174/tiny_village/issues/734)\n- [P3-02](https://github.com/dhar174/tiny_village/issues/735)\n- [P3-03](https://github.com/dhar174/tiny_village/issues/736)\n- [H2](https://github.com/dhar174/tiny_village/issues/732)\n\nThe preceding phase gate must be human-approved. Dependency closure alone does not supply a human decision.\n\n### Acceptance criteria\n\n- [x] Assign a reviewer and owner to each selected implementation PR and verify current CI/mergeability.\n- [x] Rebase each dependent PR after its prerequisite lands; retain existing native parents and dependency links.\n- [x] Update Phase/Sequence/Readiness/Depends on and create a distinct issue for every newly discovered remediation.\n\n### Evidence to retain\n\nCurrent commit/PR SHA; exact commands and executed result counts; relevant state traces/screens; review artifacts; limitations; linked follow-up issues.\n\n<!-- tiny-village-roadmap:v1:P3-04:end -->\n\n\n<!-- issue-737-authenticated-closeout:D033:v1 -->\n## Scoped coordination acceptance completed\n\n[Authenticated initial Project10 evidence and exact original files](https://github.com/dhar174/tiny_village/blob/c7a070ba0a882bf45205a2dd3ff37e7e749d17ee/docs/planning/issue-737-publication-readback/README.md) independently verify the frozen332-issue/24-candidate configuration at merged main `dc9fcc023b4ee37b3efd579195caaab80993c64a`. The concrete plan has zero operations, fresh readback has zero differences, and unrelated-state preservation passes. No apply command was necessary. #806 was completed first after this receipt.\n\nAcceptance reconciliation under D031\u2013D033:\n- The merged ownership matrix assigns dhar174 as accountable owner/human acceptance and Codex as technical reviewer, preserving actual assignments/review requests. Current captured heads, CI and mergeability are disclosed; absent checks/UNKNOWN mergeability do not establish integration readiness.\n- The dependency-order/rebase criterion is satisfied for this coordination scope by the recorded activation and refresh policy: retained future-phase PRs rebase/retest only when their owning issue activates and prerequisites land. D032 explicitly excludes future-phase rebases now. No future implementation PR is claimed merged or accepted.\n- All332 managed rows and six delivery views are verified. New remediations #806\u2013#809 are issue-backed, with native owners/blockers preserved. #701/#704 are superseded; #709/#711/#715 remain open pending reviewed replacements under #807/#808/#809.\n- #799\u2013#803, #741, #773/#774 and other runtime requirements remain OPEN with their existing parents/dependencies. This closes ownership/order/publication acceptance, not those requirements.\n\nClose #737 as completed under D032/D033. Final readiness is being regenerated from the actual closures for separate concrete review and owner-local inspection; it is not yet claimed published. #738 remains OPEN/Pending, #733 remains OPEN, and Phase4 remains blocked until the separate human decision.",
+    "state": "CLOSED",
+    "stateReason": "COMPLETED",
+    "updatedAt": "2026-10-24T02:50:33Z",
+    "closedAt": "2026-10-24T02:50:33Z",
+    "assignees": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "parent": {
+      "number": 733
+    },
+    "subIssues": {
+      "nodes": [
+        {
+          "number": 806,
+          "state": "CLOSED"
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "blockedBy": {
+      "nodes": [
+        {
+          "number": 806,
+          "state": "CLOSED"
+        },
+        {
+          "number": 736,
+          "state": "CLOSED"
+        },
+        {
+          "number": 735,
+          "state": "CLOSED"
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "i738": {
+    "number": 738,
+    "id": "I_kwDOMEkjkc8AAAABW0dlhQ",
+    "url": "https://github.com/dhar174/tiny_village/issues/738",
+    "title": "[H3] Human decision gate 3: Consolidate backlog and pull requests",
+    "body": "<!-- issue-734-triage:v1:start -->\n## Reviewed backlog triage \u2014 #734\n\n- Disposition: **verify**. Reconcile the historical claim against current contributor tooling and experiments code and evidence before proposing completion; unexecuted behavior remains unverified.\n- Accountable ledger owner: **dhar174**; existing assignees preserved.\n- Canonical topic: #14 (Contributor tooling and experiments); existing native parent preserved.\n- Order: Phase 3; native prerequisites #737. Proposed execution prerequisites #732; handoff #738 (coordination, not an additional blocker).\n- Acceptance/reproduction: Review every required task, current PR head, commands/results, and the phase-specific evidence.; Walk through the supported behavior, failure cases, and applicable design/engineering artifacts.; Choose exactly Approved, Changes requested, or Deferred; record reviewer, date, rationale, evidence, and issue-backed remediation.; Only close this gate after a human records Approved; keep rework/deferred gates open and downstream work blocked.; Do not auto-approve based on a passing suite, a bot action, elapsed time, or a completed checklist.; Human reviewer: dhar174, or a maintainer explicitly delegated in the Project.; Check prerequisite issues and the previous phase's recorded decision.; Review artifacts, current commit/PR heads, executed checks, known failures, and proposed scope.; Walk through the phase's success/failure scenarios and relevant design/engineering evidence.; Record reviewer, date, evidence links, rationale, and exactly one decision: Approved / Changes requested / Deferred.; Create a separate issue for each required remediation and add it as a blocker.; Set Project Decision to the human's recorded decision. Close this issue only after Approved.\n- Evidence: #734's reviewed ledger and retained snapshot at `13b8e374d07e7e7ea6f8f562ea6a290fcab967f7`; outcome `existing_roadmap_or_remediation_acceptance_preserved`. Unexecuted behavior is not verified.\n- Closure and gate boundary: No later human gate or broader product readiness is inferred.\n\n- Publication approved under [D027](https://github.com/dhar174/tiny_village/blob/eb3f1e2/docs/decisions.md#d027--approve-and-publish-the-734-backlog-triage-package); preserved source evidence remains scoped as above.\n\n<!-- issue-734-triage:v1:end -->\n\n<!-- tiny-village-roadmap:v1:H3:start -->\n## Ordered delivery task H3\n\nA human maintainer decides whether the phase satisfies its acceptance criteria and may unlock the next phase.\n\n- Phase: 3 - Consolidate backlog and pull requests\n- Sequence: 3900\n- Priority: P1\n- Scope: MVP\n- Workstream: Review\n- Kind: Phase gate\n- Parent phase: [E3](https://github.com/dhar174/tiny_village/issues/733)\n\n### Prerequisites\n\n- [P3-01](https://github.com/dhar174/tiny_village/issues/734)\n- [P3-02](https://github.com/dhar174/tiny_village/issues/735)\n- [P3-03](https://github.com/dhar174/tiny_village/issues/736)\n- [P3-04](https://github.com/dhar174/tiny_village/issues/737)\n- [H2](https://github.com/dhar174/tiny_village/issues/732)\n\nThe preceding phase gate must be human-approved. Dependency closure alone does not supply a human decision.\n\n### Acceptance criteria\n\n- [ ] Review every required task, current PR head, commands/results, and the phase-specific evidence.\n- [ ] Walk through the supported behavior, failure cases, and applicable design/engineering artifacts.\n- [ ] Choose exactly Approved, Changes requested, or Deferred; record reviewer, date, rationale, evidence, and issue-backed remediation.\n- [ ] Only close this gate after a human records Approved; keep rework/deferred gates open and downstream work blocked.\n- [ ] Do not auto-approve based on a passing suite, a bot action, elapsed time, or a completed checklist.\n\n### Human decision step-through\n\n- [ ] Human reviewer: dhar174, or a maintainer explicitly delegated in the Project.\n- [ ] Check prerequisite issues and the previous phase's recorded decision.\n- [ ] Review artifacts, current commit/PR heads, executed checks, known failures, and proposed scope.\n- [ ] Walk through the phase's success/failure scenarios and relevant design/engineering evidence.\n- [ ] Record reviewer, date, evidence links, rationale, and exactly one decision: Approved / Changes requested / Deferred.\n- [ ] Create a separate issue for each required remediation and add it as a blocker.\n- [ ] Set Project Decision to the human's recorded decision. Close this issue only after Approved.\n\nAutomation must not set Approved, infer approval from silence, or advance a downstream phase on elapsed time.\n\n### Evidence to retain\n\nCurrent commit/PR SHA; exact commands and executed result counts; relevant state traces/screens; review artifacts; limitations; linked follow-up issues.\n\n<!-- tiny-village-roadmap:v1:H3:end -->\n",
+    "state": "OPEN",
+    "stateReason": null,
+    "updatedAt": "2026-10-22T08:00:49Z",
+    "closedAt": null,
+    "assignees": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "parent": {
+      "number": 733
+    },
+    "subIssues": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "blockedBy": {
+      "nodes": [
+        {
+          "number": 737,
+          "state": "CLOSED"
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "i806": {
+    "number": 806,
+    "id": "I_kwDOMEkjkc8AAAABZJ7clQ",
+    "url": "https://github.com/dhar174/tiny_village/issues/806",
+    "title": "Restore verified access to Project 10 for #737 synchronization",
+    "body": "<!-- issue-737-remediation:R737-ACCESS:v1 -->\n\nThe configured GH_PROJECT_TOKEN binding reports ready, but both normal GitHub authentication and the configured Project credential return FORBIDDEN / Resource not accessible by integration for Project 10. Read-only evidence: docs/planning/issue-737/evidence/project-access.json at main 4821378. Repository issue/PR access works; credential readiness does not establish Project authorization.\n\n- [x] Restore an authenticated read of Project 10, all managed fields/items and saved-view configuration, either through corrected credential routing or the portable local package under the owner account.\n- [x] Review the concrete live before/after plan and retain its digest before any Project writes.\n- [x] Apply the approved delta and independently read back fields, item membership and view filters/grouping/sorting.\n- [x] Retain exact commands and non-secret receipts; do not post credentials or treat offline tests as publication evidence.\n\nThis is a Phase 3 publication prerequisite, not a runtime failure. #737 stays open until authenticated publication is verified. No new token is requested by this issue, and no phase gate is approved.\n\nAccountable owner: dhar174. Technical review: Codex. Human acceptance: dhar174. Coordination: #737 under D031. Existing parent/dependency requirements remain intact. Phase: 3.\n\n\n<!-- issue-737-authenticated-readback:D033:v1 -->\n## Verified publication prerequisite completed\n\nThe owner-authenticated initial Project 10 inspection passed at 2026-10-24T02:43:39.646747+00:00. Both complete uploaded files match the owner's byte counts/SHA-256 hashes and independently pass the merged publisher's receipt verifier. All332 managed rows,12 fields and six delivery views match;333 issue guards,24 candidate heads/states and merged main match both source reads and the coordinator's fresh source recheck. Full unrelated-state preservation is verified.\n\n[Immutable original files, command, hashes and independent verification](https://github.com/dhar174/tiny_village/blob/c7a070ba0a882bf45205a2dd3ff37e7e749d17ee/docs/planning/issue-737-publication-readback/README.md). Plan approval digest: `10db84806f23ad0e8d52a5f7fc723aae9835108873c2f64f4971f3a9381db1d3`.\n\nThe reviewed plan contains zero operations; the board already matches the desired publication. Therefore no apply command/checkpoint was needed or run. Fresh inspection exited0 with zero remaining differences and zero GitHub mutations. The third checklist item is satisfied by this verified existing state, not by an unexecuted write.\n\nClose #806 as completed under the conditional D032/D033 authorization. #737 acceptance reconciliation follows; the resulting final readiness still needs a fresh reviewed plan and independent owner-local readback. #738 remains OPEN/Pending and no runtime requirement or phase gate is approved.",
+    "state": "CLOSED",
+    "stateReason": "COMPLETED",
+    "updatedAt": "2026-10-24T02:50:29Z",
+    "closedAt": "2026-10-24T02:50:29Z",
+    "assignees": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "parent": {
+      "number": 737
+    },
+    "subIssues": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "blockedBy": {
+      "nodes": [
+        {
+          "number": 732,
+          "state": "CLOSED"
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "i741": {
+    "number": 741,
+    "id": "I_kwDOMEkjkc8AAAABW0dtLQ",
+    "url": "https://github.com/dhar174/tiny_village/issues/741",
+    "title": "[P4-04] Execute active plans across simulation ticks and replan on failure",
+    "body": "<!-- issue-734-triage:v1:start -->\n## Reviewed backlog triage \u2014 #734\n\n- Disposition: **defer**. Retain this broader actions and goap contracts requirement for Phase 4; activate only after its stated prerequisites and scoped acceptance are reviewed. Deferral is not completion or removal.\n- Accountable ledger owner: **dhar174**; existing assignees preserved.\n- Canonical topic: #182 (Actions and GOAP contracts); existing native parent preserved.\n- Order: Phase 4; native prerequisites #218. Proposed execution prerequisites #738; handoff #741 (coordination, not an additional blocker).\n- Acceptance/reproduction: Track a per-character active plan/cursor and execute the intended next step at each tick.; Invalidate or replan when preconditions/world state change and hand failures back to StrategyManager.; Assert end-to-end actor identity, plan progress, goal achievement, and consistent graph state.\n- Evidence: #734's reviewed ledger and retained snapshot at `13b8e374d07e7e7ea6f8f562ea6a290fcab967f7`; outcome `existing_roadmap_or_remediation_acceptance_preserved`. Unexecuted behavior is not verified.\n- Closure and gate boundary: No later human gate or broader product readiness is inferred.\n\n- Publication approved under [D027](https://github.com/dhar174/tiny_village/blob/eb3f1e2/docs/decisions.md#d027--approve-and-publish-the-734-backlog-triage-package); preserved source evidence remains scoped as above.\n\n<!-- issue-734-triage:v1:end -->\n\n<!-- tiny-village-roadmap:v1:P4-04:start -->\n## Ordered delivery task P4-04\n\nWire planner output into the actual daily character execution loop, which currently chooses the first available action.\n\n- Phase: 4 - Align actions, world state, and GOAP\n- Sequence: 4004\n- Priority: P1\n- Scope: MVP\n- Workstream: Runtime\n- Kind: Task\n- Parent phase: [E4](https://github.com/dhar174/tiny_village/issues/739)\n\n### Prerequisites\n\n- [P4-03](https://github.com/dhar174/tiny_village/issues/218)\n- [H3](https://github.com/dhar174/tiny_village/issues/738)\n\nThe preceding phase gate must be human-approved. Dependency closure alone does not supply a human decision.\n\n### Acceptance criteria\n\n- [ ] Track a per-character active plan/cursor and execute the intended next step at each tick.\n- [ ] Invalidate or replan when preconditions/world state change and hand failures back to StrategyManager.\n- [ ] Assert end-to-end actor identity, plan progress, goal achievement, and consistent graph state.\n\n### Related existing issues\n\n[#166](https://github.com/dhar174/tiny_village/issues/166), [#218](https://github.com/dhar174/tiny_village/issues/218)\n\n### Evidence to retain\n\nCurrent commit/PR SHA; exact commands and executed result counts; relevant state traces/screens; review artifacts; limitations; linked follow-up issues.\n\n<!-- tiny-village-roadmap:v1:P4-04:end -->\n\n\n<!-- issue736-carry-forward:D030:start -->\n## Required runtime carry-forward \u2014 #736 / D030\n\nScoped reconciliation was accepted by dhar174 under [D030](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/decisions.md#d030--accept-736-reconciliation-and-retain-runtime-requirements) (Option1), conditional on preserving the runtime requirements in their owning issues. [PR #804](https://github.com/dhar174/tiny_village/pull/804) retains the [validation report](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/testing/issue-736-functional-test-consolidation.md) and original failed captures. This carry-forward does not establish a runtime fix or approve gate #738. Original requirements/checklists and assignees remain intact.\n\nOwner remains **#741**, after #218/#738, within the original active-plan execution/replanning acceptance.\n\n- [ ] Review and implement a clear replanning result/failure contract: [retained reproduction](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/planning/issue-736/execution/blocked/planner_replan_boolean.py.txt) observes None while retaining the action queue.\n- [ ] Verify actual alternative-action applicability, effects and achieved goal outcomes when replacement is possible, plus explicit no-alternative behavior.\n\n#395's conditional None-or-dict/action/name shape check was excluded because always returning None could pass it; real replacement behavior remains unverified. Full Goal blockers are #802, graph identity/synchronization is #799. None of those runtime outcomes is completed by #804's passing primitive tests.\n<!-- issue736-carry-forward:D030:end -->\n",
+    "state": "OPEN",
+    "stateReason": null,
+    "updatedAt": "2026-10-22T05:07:16Z",
+    "closedAt": null,
+    "assignees": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "parent": {
+      "number": 739
+    },
+    "subIssues": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "blockedBy": {
+      "nodes": [
+        {
+          "number": 218,
+          "state": "OPEN"
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "i773": {
+    "number": 773,
+    "id": "I_kwDOMEkjkc8AAAABXEWPsg",
+    "url": "https://github.com/dhar174/tiny_village/issues/773",
+    "title": "Repair minimal integration test fixtures and verify fallback action behavior",
+    "body": "<!-- issue-734-triage:v1:start -->\n## Reviewed backlog triage \u2014 #734\n\n- Disposition: **defer**. Retain this broader behavioral test quality requirement for Phase 4; activate only after its stated prerequisites and scoped acceptance are reviewed. Deferral is not completion or removal.\n- Accountable ledger owner: **dhar174**; existing assignees preserved.\n- Canonical topic: #683 (Behavioral test quality); existing native parent preserved.\n- Order: Phase 4; native prerequisites #718. Proposed execution prerequisites #738; handoff #773 (coordination, not an additional blocker).\n- Acceptance/reproduction: - Reproduce both failures with a bounded fresh process.\n- Replace permissive fixture responses with realistic state/inventory data and retain meaningful behavioral assertions.\n- Determine and fix any runtime defect that remains with those fixtures; do not catch/assert away failures.\n- Complete all 11 integration tests, reporting executed, failed, errored, and skipped counts.\n\nScheduling: follow-up to #718; triage with #734 and coordinate runtime changes with #218. This issue does not approve or advance the human review in #721.\n- Evidence: #734's reviewed ledger and retained snapshot at `13b8e374d07e7e7ea6f8f562ea6a290fcab967f7`; outcome `existing_roadmap_or_remediation_acceptance_preserved`. Unexecuted behavior is not verified.\n- Closure and gate boundary: No later human gate or broader product readiness is inferred.\n\n- Publication approved under [D027](https://github.com/dhar174/tiny_village/blob/eb3f1e2/docs/decisions.md#d027--approve-and-publish-the-734-backlog-triage-package); preserved source evidence remains scoped as above.\n\n<!-- issue-734-triage:v1:end -->\n\n<!-- phase-1-human-decisions:2026-10-15:start -->\n## Recorded review decisions and current status \u2014 2026-10-15\n\n**Scope decision D002: keep this issue open in its existing roadmap phase.** Its integration fixtures and fallback behavior acceptance criteria, parent and existing prerequisites remain intact. This work is deferred from the current Phase 1 startup review; deferral is not completion and does not establish feature readiness. No additional Phase 1 prerequisite is introduced here. Follow the existing gates, including #722 where already required.\n\n[Single human decision record](https://github.com/dhar174/tiny_village/blob/cce26ac9a2aad64c3534fce2a5e7a11f5fb1ccf0/docs/decisions.md) \u00b7 [Investigation evidence](https://github.com/dhar174/tiny_village/issues/779#issuecomment-6199183299) \u00b7 [Documentation PR #780](https://github.com/dhar174/tiny_village/pull/780)\n\nThe decision record is available on the published documentation branch; #780 is a draft and closes no issues. These notes synchronize confirmed decisions; they do not supply a new human approval.\n<!-- phase-1-human-decisions:2026-10-15:end -->\n\nValidation of #718 / PR #706 against main `de134632bd4832087dac49f5819a75d2e0aa0747` plus the fallback repair completes `main.py --mode test --no-llm --headless` with 9 passes, 1 failure, 1 error, and 0 skips (11 executed). This is separate from the fixed import-time `NameError`.\n\n- `TestFullTurnCycle.test_turn_cycle_with_strategy_manager`: `tiny_strategy_manager.py:874` slices `food_items[:2]`, but the fixture returns an unconfigured `Mock`: `TypeError: 'Mock' object is not subscriptable`.\n- `TestFailureModes.test_fallback_action_execution`: `_execute_fallback_character_action` returns False; logs report `'Mock' object is not subscriptable`. Character/state fixtures must model the actual fallback inputs before judging runtime behavior.\n\nAcceptance:\n- Reproduce both failures with a bounded fresh process.\n- Replace permissive fixture responses with realistic state/inventory data and retain meaningful behavioral assertions.\n- Determine and fix any runtime defect that remains with those fixtures; do not catch/assert away failures.\n- Complete all 11 integration tests, reporting executed, failed, errored, and skipped counts.\n\nScheduling: follow-up to #718; triage with #734 and coordinate runtime changes with #218. This issue does not approve or advance the human review in #721.\n",
+    "state": "OPEN",
+    "stateReason": null,
+    "updatedAt": "2026-10-21T23:21:16Z",
+    "closedAt": null,
+    "assignees": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "parent": null,
+    "subIssues": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "blockedBy": {
+      "nodes": [
+        {
+          "number": 718,
+          "state": "CLOSED"
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "i774": {
+    "number": 774,
+    "id": "I_kwDOMEkjkc8AAAABXEWQqw",
+    "url": "https://github.com/dhar174/tiny_village/issues/774",
+    "title": "Reconcile utility test Goal contracts and preserve falsy action IDs",
+    "body": "<!-- issue-734-triage:v1:start -->\n## Reviewed backlog triage \u2014 #734\n\n- Disposition: **defer**. Retain this broader behavioral test quality requirement for Phase 4; activate only after its stated prerequisites and scoped acceptance are reviewed. Deferral is not completion or removal.\n- Accountable ledger owner: **dhar174**; existing assignees preserved.\n- Canonical topic: #683 (Behavioral test quality); existing native parent preserved.\n- Order: Phase 4; native prerequisites #718. Proposed execution prerequisites #738; handoff #774 (coordination, not an additional blocker).\n- Acceptance/reproduction: - Document and reconcile the supported Goal interface used by utility evaluation and its fixtures.\n- Exercise real production objects where feasible; keep explicitly targeted fallback coverage and avoid silently masking real-Goal incompatibilities.\n- Preserve explicit falsy action IDs in the fixture.\n- Run all 26 utility tests in a fresh bounded subprocess and report actual counts; distinguish import-order and constructor compatibility from the #718 handler fix.\n\nScheduling: follow-up to #718; triage with #734 and coordinate goal/utility contracts with #740 and #218. Preserve the existing phase gates and review requirements.\n- Evidence: #734's reviewed ledger and retained snapshot at `13b8e374d07e7e7ea6f8f562ea6a290fcab967f7`; outcome `existing_roadmap_or_remediation_acceptance_preserved`. Unexecuted behavior is not verified.\n- Closure and gate boundary: No later human gate or broader product readiness is inferred.\n\n- Publication approved under [D027](https://github.com/dhar174/tiny_village/blob/eb3f1e2/docs/decisions.md#d027--approve-and-publish-the-734-backlog-triage-package); preserved source evidence remains scoped as above.\n\n<!-- issue-734-triage:v1:end -->\n\n<!-- phase-1-human-decisions:2026-10-15:start -->\n## Recorded review decisions and current status \u2014 2026-10-15\n\n**Scope decision D002: keep this issue open in its existing roadmap phase.** Its Goal contracts and explicit falsy IDs acceptance criteria, parent and existing prerequisites remain intact. This work is deferred from the current Phase 1 startup review; deferral is not completion and does not establish feature readiness. No additional Phase 1 prerequisite is introduced here. Follow the existing gates, including #722 where already required.\n\n[Single human decision record](https://github.com/dhar174/tiny_village/blob/cce26ac9a2aad64c3534fce2a5e7a11f5fb1ccf0/docs/decisions.md) \u00b7 [Investigation evidence](https://github.com/dhar174/tiny_village/issues/779#issuecomment-6199183299) \u00b7 [Documentation PR #780](https://github.com/dhar174/tiny_village/pull/780)\n\nThe decision record is available on the published documentation branch; #780 is a draft and closes no issues. These notes synchronize confirmed decisions; they do not supply a new human approval.\n<!-- phase-1-human-decisions:2026-10-15:end -->\n\nValidation of #718 / PR #706 reveals that `tests/test_tiny_utility_functions.py` completes 26 tests with 16 passes, 1 failure, 9 errors, and 0 skips. The import-time `NameError` is repaired; these errors concern fixture/API contracts in unchanged code.\n\n- Nine errors: test fixtures select the real `tiny_characters.Goal` after imports settle, but call its constructor with the simplified fallback interface (`priority=...`). The real constructor requires a different argument set. Example: `test_utility_evaluator_with_urgent_goal` raises `TypeError: Goal.__init__() got an unexpected keyword argument 'priority'`.\n- `test_mock_action_preserves_explicit_falsy_action_ids` fails because `MockAction` substitutes `id(self)` for explicit `action_id=0`.\n- A character-first import can leave utility bound to the fallback class established during a circular import. Reloading utility after the real character module is available selects the real Goal. Do not assume fallback and real constructors are interchangeable.\n\nAcceptance:\n- Document and reconcile the supported Goal interface used by utility evaluation and its fixtures.\n- Exercise real production objects where feasible; keep explicitly targeted fallback coverage and avoid silently masking real-Goal incompatibilities.\n- Preserve explicit falsy action IDs in the fixture.\n- Run all 26 utility tests in a fresh bounded subprocess and report actual counts; distinguish import-order and constructor compatibility from the #718 handler fix.\n\nScheduling: follow-up to #718; triage with #734 and coordinate goal/utility contracts with #740 and #218. Preserve the existing phase gates and review requirements.\n\n\n<!-- issue736-carry-forward:D030:start -->\n## Required runtime carry-forward \u2014 #736 / D030\n\nScoped reconciliation was accepted by dhar174 under [D030](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/decisions.md#d030--accept-736-reconciliation-and-retain-runtime-requirements) (Option1), conditional on preserving the runtime requirements in their owning issues. [PR #804](https://github.com/dhar174/tiny_village/pull/804) retains the [validation report](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/testing/issue-736-functional-test-consolidation.md) and original failed captures. This carry-forward does not establish a runtime fix or approve gate #738. Original requirements/checklists and assignees remain intact.\n\nOwner remains **#774** for the existing utility Goal/fixture interface and explicit falsy action-ID debt. Preserve the Phase4 scheduling and #740/#218 coordination already documented here; full production Goal completion is separately #802.\n\n- [ ] Resolve all nine existing Goal-constructor errors against the reviewed supported interface, without import-order/fallback masking.\n- [ ] Preserve explicit zero/falsy action IDs in the targeted fixture and pass its regression.\n- [ ] Run all26 maintained utility tests with honest counts; retain the original16 pass/1 failure/9 errors baseline.\n\nThe affected40-method selection in #804 reports30 pass/1 failure/9 errors identically on the working branch and exact main11b6e935. New lightweight utility-contract passes do not complete this test debt or certify full Goal runtime readiness.\n<!-- issue736-carry-forward:D030:end -->\n",
+    "state": "OPEN",
+    "stateReason": null,
+    "updatedAt": "2026-10-22T05:07:19Z",
+    "closedAt": null,
+    "assignees": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "parent": null,
+    "subIssues": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "blockedBy": {
+      "nodes": [
+        {
+          "number": 718,
+          "state": "CLOSED"
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "i799": {
+    "number": 799,
+    "id": "I_kwDOMEkjkc8AAAABY9mBAw",
+    "url": "https://github.com/dhar174/tiny_village/issues/799",
+    "title": "Stabilize Character/Location graph identity and action target resolution",
+    "body": "<!-- issue-734-followup:R734-01 -->\n## Evidence\n\nAt main `13b8e374d07e7e7ea6f8f562ea6a290fcab967f7`, #734's corrected `named_target` probe constructs two real basic-memory Characters and applies a real named-target Action. The action passes the target UUID to `GraphManager.update_node_attribute`, while graph nodes are Character objects: the log reports that the UUID node does not exist. Adding the actual co-located visitors then makes the node lookup raise `AttributeError: Location has no attribute dict_or_obj` inside Location hashing. Character hashing also includes mutable state/location.\n\n## Acceptance\n\n- Agree on and document stable supported Character/Location identity, equality and graph lookup contracts before implementation.\n- Preserve graph lookup/removal across visitor, location and Character-state changes, including repeated visitors, without recursive/mutable-hash corruption.\n- Resolve supported action identifiers to the actual graph entity consistently; update Character state and authoritative graph together.\n- Verify co-located, requested, missing and duplicate-visitor named targets with real production objects; retain existing failed evidence and legacy regression coverage.\n- Coordinate with #220/#602 and preserve their remaining action/plan requirements. Do not claim #602 complete from fixture-only passes.\n\nProposed ordering: after human gate #738, before #220/#602 acceptance. This is a proposal for review, not an issue already created or an approved identity design.\n\nPublication approved under [D027](https://github.com/dhar174/tiny_village/blob/eb3f1e2/docs/decisions.md#d027--approve-and-publish-the-734-backlog-triage-package). The ordering above is now approved for scheduling; the identity/interface design and implementation remain separate work. Gate #738 remains pending.\n\n\n<!-- issue736-carry-forward:D030:start -->\n## Required runtime carry-forward \u2014 #736 / D030\n\nScoped reconciliation was accepted by dhar174 under [D030](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/decisions.md#d030--accept-736-reconciliation-and-retain-runtime-requirements) (Option1), conditional on preserving the runtime requirements in their owning issues. [PR #804](https://github.com/dhar174/tiny_village/pull/804) retains the [validation report](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/testing/issue-736-functional-test-consolidation.md) and original failed captures. This carry-forward does not establish a runtime fix or approve gate #738. Original requirements/checklists and assignees remain intact.\n\nOwner remains **#799**, under #222, after #738 and before #220/#602 acceptance. Existing native relationships and all original Location/visitor/action-target acceptance remain.\n\n- [ ] Preserve graph lookup across real Character-state mutation: [identity reproduction](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/planning/issue-736/execution/blocked/graph_character_identity.py.txt).\n- [ ] Retrieve authoritative graph state and actual graph-derived actions without character-only/Rest/Idle fallback masking: [state](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/planning/issue-736/execution/blocked/graph_state_provenance.py.txt), [actions](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/planning/issue-736/execution/blocked/graph_action_provenance.py.txt).\n- [ ] Require synchronized object/graph updates before successful-world-execution acceptance: [execution](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/planning/issue-736/execution/blocked/graph_executed_world.py.txt) currently reports success and Character20\u219230 while graph remains20.\n\nThe reproduction sources extend evidence for this existing issue; they do not replace its broader identity and Location requirements.\n<!-- issue736-carry-forward:D030:end -->\n",
+    "state": "OPEN",
+    "stateReason": null,
+    "updatedAt": "2026-10-22T05:07:13Z",
+    "closedAt": null,
+    "assignees": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "parent": {
+      "number": 222
+    },
+    "subIssues": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "blockedBy": {
+      "nodes": [
+        {
+          "number": 738,
+          "state": "OPEN"
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "i800": {
+    "number": 800,
+    "id": "I_kwDOMEkjkc8AAAABY9meOQ",
+    "url": "https://github.com/dhar174/tiny_village/issues/800",
+    "title": "Preserve a valid MapController location manager through initialization and recovery",
+    "body": "<!-- issue-734-followup:R734-02 -->\n## Evidence\n\n#734's real SDL-dummy visual frame at main `13b8e374d07e7e7ea6f8f562ea6a290fcab967f7` logs `Error updating map controller: NoneType has no attribute locations` and the same failure during rendering. `MapController.__init__` constructs `LocationManager()` and subsequently sets `self.location_manager = None`; `_update_location_visitors` unconditionally reads its locations. The isolated `visual_interfaces` probe confirms this invalid field after full controller construction with two real Characters. This is not evidence of a new global GraphManager initialization deadlock.\n\n## Acceptance\n\n- Define and retain the supported location-manager ownership/lifecycle in normal visual initialization and renderer recovery.\n- Update/render the actual controller without a None location-manager failure; retain actual shared-world location/visitor ownership rather than adding a competing world model.\n- Cover an empty valid location set, registered locations/visitors, recovery and repeated cleanup using real Pygame/domain objects.\n- Keep headless construction renderer-free and retain the original failed capture.\n\nProposed ordering: after #738 and before the canonical visual scenario in #658. No renderer or gameplay readiness is inferred from fixing this one interface.\n\nPublication approved under [D027](https://github.com/dhar174/tiny_village/blob/eb3f1e2/docs/decisions.md#d027--approve-and-publish-the-734-backlog-triage-package). The ordering above is now approved for scheduling; the identity/interface design and implementation remain separate work. Gate #738 remains pending.\n",
+    "state": "OPEN",
+    "stateReason": null,
+    "updatedAt": "2026-10-21T23:27:22Z",
+    "closedAt": null,
+    "assignees": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "parent": {
+      "number": 56
+    },
+    "subIssues": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "blockedBy": {
+      "nodes": [
+        {
+          "number": 738,
+          "state": "OPEN"
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "i801": {
+    "number": 801,
+    "id": "I_kwDOMEkjkc8AAAABY9myJQ",
+    "url": "https://github.com/dhar174/tiny_village/issues/801",
+    "title": "Reconcile GameplayController animation updates with AnimationSystem lifecycle",
+    "body": "<!-- issue-734-followup:R734-03 -->\n## Evidence\n\n#734's real visual frame on main `13b8e374d07e7e7ea6f8f562ea6a290fcab967f7` logs `AnimationSystem object has no attribute update`. The controller calls `self.animation_system.update(dt)`, while the composed production provider exposes `update_all(delta_time)`. The isolated two-real-Character visual probe confirms the mismatch.\n\n## Acceptance\n\n- Reconcile the controller/provider update contract without hiding the exception or substituting a fake animation provider.\n- Verify actual registered animation controllers advance as intended, paused behavior remains explicit, and repeated cleanup/recovery does not duplicate or leak controllers.\n- Keep the headless path independent of Pygame and asset initialization.\n- Retain captured failure and distinguish working lifecycle calls from delivery of the approved pixel-art animation set, which remains later #761 work.\n\nProposed ordering: after #738, before #761 acceptance. This proposal supplies no new animation scope or phase approval.\n\nPublication approved under [D027](https://github.com/dhar174/tiny_village/blob/eb3f1e2/docs/decisions.md#d027--approve-and-publish-the-734-backlog-triage-package). The ordering above is now approved for scheduling; the identity/interface design and implementation remain separate work. Gate #738 remains pending.\n",
+    "state": "OPEN",
+    "stateReason": null,
+    "updatedAt": "2026-10-21T23:27:53Z",
+    "closedAt": null,
+    "assignees": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "parent": {
+      "number": 56
+    },
+    "subIssues": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "blockedBy": {
+      "nodes": [
+        {
+          "number": 738,
+          "state": "OPEN"
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "i802": {
+    "number": 802,
+    "id": "I_kwDOMEkjkc8AAAABZAVnaQ",
+    "url": "https://github.com/dhar174/tiny_village/issues/802",
+    "title": "Reconcile production Goal completion with planner state evaluation",
+    "body": "<!-- issue736-runtime:goal-contract:v1 -->\nThe approved #736 test consolidation reproduces production Goal contract failures using complete real Characters, real Conditions, and the actual GraphManager. Runtime files remain unchanged from main `11b6e935`.\n\n## Evidence\n\n- `Goal(..., completion_conditions={False: [Condition(...)]}, ...)` constructs, but `Goal.check_completion()` calls `.check_condition()` on the list.\n- `GOAPPlanner._goal_satisfied(goal, state)` calls `goal.check_completion(state)` although the full Goal method accepts no state argument; it catches the mismatch and reports False.\n- Strict already-satisfied/reachable/cost-selection cases return None. Negative unreachable/blocked cases do return None, but a positive completion control fails; that is not evidence that the negative no-plan path itself is broken.\n- Plan evaluation and real-Goal feasibility failures are retained separately, so constructor/signature errors cannot be counted as successful bug detection.\n\nDirectly rerunnable sources are under `docs/planning/issue-736/execution/blocked/planner_*.py.txt`; #736's consolidation PR will retain the exact commands, 20/25-second captures and validation report. Neither test doubles nor an import-forced lightweight Goal establishes this full-domain contract.\n\n## Scoped acceptance for later implementation\n\n- Review and document one supported completion-condition container and state-evaluation interface across Goal, Condition, Plan and GOAPPlanner before implementation.\n- Preserve current public construction compatibility deliberately; do not silently invent alternate goal types or swallow required completion errors.\n- Use complete real objects to prove initially satisfied, reachable, unreachable and blocked-precondition cases, including an independent final state predicate and a valid positive completion control.\n- Verify real-Goal Plan evaluation and feasibility; retain the original failing captures and related graph limitations.\n\nRelated: #736, #167, #218, #220, #602 and existing utility fixture mismatch #774. Proposed runtime scheduling is after separate human gate #738, coordinated with Phase 4 contracts. This issue records a blocker; it approves no runtime design, repair, gate or #736 closure. No reverse dependency on #736 is added.\n\n\n<!-- issue736-carry-forward:D030:start -->\n## Required runtime carry-forward \u2014 #736 / D030\n\nScoped reconciliation was accepted by dhar174 under [D030](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/decisions.md#d030--accept-736-reconciliation-and-retain-runtime-requirements) (Option1), conditional on preserving the runtime requirements in their owning issues. [PR #804](https://github.com/dhar174/tiny_village/pull/804) retains the [validation report](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/testing/issue-736-functional-test-consolidation.md) and original failed captures. This carry-forward does not establish a runtime fix or approve gate #738. Original requirements/checklists and assignees remain intact.\n\nOwner: **#802**, native child of #218 (Phase4 Goal/planner contracts), after #738. #218 completion depends on this issue. Coordinate with #740 state units and #774 utility fixtures.\n\n- [ ] Reconcile the full Goal condition container and completion state interface; validate Plan evaluation and real-Goal feasibility.\n- [ ] Prove already-satisfied, reachable, unreachable and blocked-precondition outcomes using real Goal/Character/GraphManager objects, valid positive controls and independent final-state predicates.\n\nExact failed evidence: [container](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/planning/issue-736/execution/blocked/planner_goal_container.py.txt), [signature](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/planning/issue-736/execution/blocked/planner_goal_signature.py.txt), [reachable goal](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/planning/issue-736/execution/blocked/planner_reachable.py.txt), [Plan evaluation](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/planning/issue-736/execution/blocked/planner_plan_evaluate.py.txt), [feasibility](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/planning/issue-736/execution/blocked/planner_goal_feasibility.py.txt). Negative no-plan results themselves were correct; their positive completion controls failed. No lightweight Goal adapter can satisfy this full-domain requirement.\n<!-- issue736-carry-forward:D030:end -->\n",
+    "state": "OPEN",
+    "stateReason": null,
+    "updatedAt": "2026-10-22T05:07:06Z",
+    "closedAt": null,
+    "assignees": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "parent": {
+      "number": 218
+    },
+    "subIssues": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "blockedBy": {
+      "nodes": [
+        {
+          "number": 738,
+          "state": "OPEN"
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "i803": {
+    "number": 803,
+    "id": "I_kwDOMEkjkc8AAAABZAVpTw",
+    "url": "https://github.com/dhar174/tiny_village/issues/803",
+    "title": "Restore required motive-satisfaction contribution using real PersonalMotives",
+    "body": "<!-- issue736-runtime:motive-contribution:v1 -->\nThe approved #736 consolidation uses a complete real basic-memory Character and fixed non-saturated inputs. Changing hunger/shelter/stability/social_wellbeing motive scores together from 2 to 8 leaves `calculate_happiness()` unchanged at `0.3610225808639045`.\n\n## Evidence\n\n`calculate_happiness()` calls get_food_motive/get_safety_motive/get_social_motive, which are absent on real PersonalMotives; its bare exception handler suppresses the contribution. Actual API names include hunger, stability and social_wellbeing. Separate supported motive caps and social/romantic/family cases pass; those passes do not satisfy this missing contribution.\n\nReproduction: `PYTHONPATH=. python docs/planning/issue-736/execution/blocked/happiness-motive-satisfaction.py.txt` from the repository root using the locked core interpreter. It retains the standard 20-second diagnostic / 25-second parent deadline, fails as a requirement, and is deliberately outside ordinary test discovery. #736's consolidation PR will retain its original child source, output, timestamp and hashes. The existing root happiness scan remains intact pending a reviewed blocker disposition.\n\n## Scoped acceptance for later implementation\n\n- Review which actual PersonalMotives represent the required basic motive-satisfaction contribution; do not add fake getters just to satisfy a test fixture.\n- Prove scores 2 versus 8 change the expected contribution with other Character inputs fixed, using real Motive/PersonalMotives/Character objects.\n- Keep legitimate empty/no-partner/no-family behavior and existing supported motive/social/romantic/family contributions working.\n- Make invalid required motive evaluation visible rather than silently successful; retain original failed evidence and test the chosen error policy.\n\nRelated: #736, #139 and #391. Proposed scheduling is after separate human gate #738 within Character completion work; precise implementation order/design awaits review. This records a required gap and approves no runtime repair, phase gate, weakened #391 acceptance or #736 closure.\n\n\n<!-- issue736-carry-forward:D030:start -->\n## Required runtime carry-forward \u2014 #736 / D030\n\nScoped reconciliation was accepted by dhar174 under [D030](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/decisions.md#d030--accept-736-reconciliation-and-retain-runtime-requirements) (Option1), conditional on preserving the runtime requirements in their owning issues. [PR #804](https://github.com/dhar174/tiny_village/pull/804) retains the [validation report](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/testing/issue-736-functional-test-consolidation.md) and original failed captures. This carry-forward does not establish a runtime fix or approve gate #738. Original requirements/checklists and assignees remain intact.\n\nOwner: **#803**, native child of #139 (Phase4 Character completion), after #738. #139 completion depends on this issue.\n\n- [ ] Restore the required basic motive-satisfaction contribution using the reviewed actual PersonalMotives interface; score changes2\u21928 must affect the intended result with other inputs fixed.\n- [ ] Keep empty/no-partner/no-family inputs and existing supported social/romantic/family contributions working, and make invalid required evaluation visible.\n\nThe [strict reproduction](https://github.com/dhar174/tiny_village/blob/87d90c8/docs/planning/issue-736/execution/blocked/happiness-motive-satisfaction.py.txt) yields the same happiness `0.3610225808639045` for both score settings; nonexistent getters are silently swallowed. These are unfulfilled runtime requirements; the passing relationship tests and retained root keyword scan do not complete them.\n<!-- issue736-carry-forward:D030:end -->\n",
+    "state": "OPEN",
+    "stateReason": null,
+    "updatedAt": "2026-10-22T05:07:10Z",
+    "closedAt": null,
+    "assignees": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "parent": {
+      "number": 139
+    },
+    "subIssues": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "blockedBy": {
+      "nodes": [
+        {
+          "number": 738,
+          "state": "OPEN"
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "i807": {
+    "number": 807,
+    "id": "I_kwDOMEkjkc8AAAABZJ7mtg",
+    "url": "https://github.com/dhar174/tiny_village/issues/807",
+    "title": "Retain useful LLM character-helper contracts from PR #709 with real objects",
+    "body": "<!-- issue-737-remediation:R737-709:v1 -->\n\n#737 inspected PR #709 at 200dfc2d2e968539d2740394f2619e7010798d1e. It proposes 12 helper tests, mostly MockCharacter/MagicMock composition; checking non-None mocked services does not prove actual initialization or failure behavior. The current real StrategyManager uses lazy LLM initialization and capability reporting, so these older assertions need mapping to the current contract.\n\n- [ ] Map each proposed assertion to existing maintained coverage; retain only distinct useful contracts.\n- [ ] Verify all/selective enablement, filtering/empty/missing-attribute handling and multiple-character independence using complete real basic-memory Characters and their real shared graph.\n- [ ] Exercise the real StrategyManager for requested-versus-ready LLM state, idempotent configuration and unavailable-service failures; use controlled doubles only at external provider initialization boundaries.\n- [ ] Avoid model downloads in offline checks; retain live inference validation separately under #585.\n- [ ] Propose the disposition of #709 only after evidence and human review; no closure or rebase is authorized by creating this issue.\n\nPhase 9 retains its existing activation gates. D015 requires AI in the final product; this scheduling does not reduce that requirement or claim live AI readiness.\n\nAccountable owner: dhar174. Technical review: Codex. Human acceptance: dhar174. Coordination: #737 under D031. Existing parent/dependency requirements remain intact. Phase: 9.\n",
+    "state": "OPEN",
+    "stateReason": null,
+    "updatedAt": "2026-10-23T06:15:05Z",
+    "closedAt": null,
+    "assignees": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "parent": {
+      "number": 585
+    },
+    "subIssues": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "blockedBy": {
+      "nodes": [
+        {
+          "number": 768,
+          "state": "OPEN"
+        },
+        {
+          "number": 584,
+          "state": "OPEN"
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "i808": {
+    "number": 808,
+    "id": "I_kwDOMEkjkc8AAAABZJ7vTA",
+    "url": "https://github.com/dhar174/tiny_village/issues/808",
+    "title": "Define visible prompt goal-context failures and retain PR #711 logging intent",
+    "body": "<!-- issue-737-remediation:R737-711:v1 -->\n\n#737 inspected PR #711 at 3e2c0c6156f03cc14227ff6ac644f65c410da555. ContextManager.gather_goal_context still catches exceptions from goal evaluation and needs-priority calculation with bare pass at main 4821378. The patch logs both using the same generic message; logging alone neither establishes safe fallback behavior nor distinguishes a valid empty context from a failed computation. The security label does not establish a demonstrated vulnerability.\n\n- [ ] Define the caller-visible contract for valid empty goal/needs context versus failed computation, preserving prompt/interpreter/action alignment.\n- [ ] Retain the original cause and distinguish the failing operation in diagnostics; do not expose full sensitive prompt/memory contents by default.\n- [ ] Verify a real Character's supported success path and controlled failure of each calculation; prove the documented caller behavior rather than merely asserting a logger call.\n- [ ] Coordinate with #137 failure-appropriate recovery and #802/#803 underlying goal/motive failures; do not silently swallow or certify those runtime gaps as repaired.\n- [ ] Keep broader LLM prompt expansion under #158/#583. Human review of the retained #711 patch/disposition precedes any rewrite or closure.\n\nThis is Phase 5 work after its existing gate and execution contract, not a Phase 3 runtime change.\n\nAccountable owner: dhar174. Technical review: Codex. Human acceptance: dhar174. Coordination: #737 under D031. Existing parent/dependency requirements remain intact. Phase: 5.\n",
+    "state": "OPEN",
+    "stateReason": null,
+    "updatedAt": "2026-10-23T06:15:07Z",
+    "closedAt": null,
+    "assignees": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "parent": {
+      "number": 137
+    },
+    "subIssues": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "blockedBy": {
+      "nodes": [
+        {
+          "number": 746,
+          "state": "OPEN"
+        },
+        {
+          "number": 743,
+          "state": "OPEN"
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "i809": {
+    "number": 809,
+    "id": "I_kwDOMEkjkc8AAAABZJ74Qw",
+    "url": "https://github.com/dhar174/tiny_village/issues/809",
+    "title": "Retain graph distance-query behavior coverage from PR #715",
+    "body": "<!-- issue-737-remediation:R737-715:v1 -->\n\n#737 inspected PR #715 at 6f10f11a0deea7451608643e5d8a731ead9c45ba. Its added cases cover an absent source, an injected NetworkX failure and a direct-neighbor fallback, while its fixture uses Mock entities and does not establish authoritative graph ownership, multi-hop cutoff correctness or parity beyond direct neighbors.\n\n- [ ] Map the useful added assertions to maintained coverage and state the currently supported GraphAnalytics/WorldState ownership boundary. The existing WorldState exception must not grow into a second authoritative simulation.\n- [ ] Verify real production graph objects/entities for absent source, source distance zero, one/multiple-hop cutoffs and stable identity after relevant mutations, coordinating #799.\n- [ ] Test controlled external-library failure separately from ordinary empty results; retain explicit fallback limits and do not claim unsupported NetworkX-free production execution.\n- [ ] Prove query operations leave the graph unchanged and retain any actual contract failures under separately scoped issues.\n- [ ] Present #715's final keep/split/supersede disposition for human review before rewriting or closing it.\n\nPhase 4 follows #738 and stable identity work; no graph correctness is inferred from the existing mock fixture.\n\nAccountable owner: dhar174. Technical review: Codex. Human acceptance: dhar174. Coordination: #737 under D031. Existing parent/dependency requirements remain intact. Phase: 4.\n",
+    "state": "OPEN",
+    "stateReason": null,
+    "updatedAt": "2026-10-23T06:15:10Z",
+    "closedAt": null,
+    "assignees": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "parent": {
+      "number": 222
+    },
+    "subIssues": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    },
+    "blockedBy": {
+      "nodes": [
+        {
+          "number": 799,
+          "state": "OPEN"
+        },
+        {
+          "number": 738,
+          "state": "OPEN"
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  }
+}

@@ -917,3 +917,42 @@ Project Decision synchronization remains outstanding as described above.
 - **Boundaries:** plan approval does not approve an unseen board delta or #738.
   No runtime changes, dependency changes, future-phase rebases or automatic phase
   approvals. Record subsequent human decisions only in this file.
+
+### D034 — Approve Phase 3 gate #738 with retained issue-backed follow-ups
+
+- **Date:** 2026-11-02 America/New_York.
+- **Decision-maker / human reviewer:** dhar174.
+- **Decision:** Approved.
+- **Confirmation:** “I approve.” in direct response to the separate #738 question
+  asking approval of the reviewed scoped Phase 3 work with retained follow-ups.
+- **Accepted scope:** #734 backlog triage, #735 utility consolidation, #736 scoped
+  functional-test reconciliation, and #737 PR ownership/order and authenticated
+  Project10 publication. The walkthrough is
+  [Phase3 gate evidence](testing/phase-3-gate-walkthrough.md); original final
+  receipt/checkpoint evidence is retained in
+  [the final Project readback](planning/issue-737-final-readback/README.md).
+  PR #813 merged at `16528f2130fc4b890558a1fccd590ad29e9bae7a`.
+- **Rationale and evidence:** canonical tasks #734–#737 are completed; the previous
+  gate #732 is approved under D025. The independent final receipt verifies all332
+  managed rows,12 custom fields,six delivery views and exactly three final
+  Readiness changes, with no pending write or remaining difference. The human
+  accepted that reviewed scope and its stated limits. A fresh repository-source
+  comparison after #813 confirms all333 issue signatures and24 candidate
+  heads/states unchanged; only main advanced from dc9fcc0 to16528f2. This does
+  not relabel the historical Project receipt as a readback of the newer main.
+- **Retained acceptance:** original Phase3-tagged tickets #350/#352/#353/#357/#359/
+  #501/#502/#503/#504/#643/#647/#651/#683 remain open, as do runtime requirements
+  #799–#803/#741/#773/#774 and #807–#809. Their original bodies, parents,
+  assignments and dependency edges remain intact. #709/#711/#715 remain open
+  pending reviewed replacements. No failed requirement or deferred work is
+  silently completed or waived. D013/D014 preserve both presentations and the
+  full product vision; D015 still requires AI in the final product.
+- **Closeout:** record this explicit decision on #738 and complete that gate;
+  complete parent #733 only after all five native phase children are completed.
+  Synchronize Project Decision/Readiness and resulting execution readiness through
+  the existing reviewed publication safeguards, retaining actual readbacks and
+  preserving human/unrelated state. A credential failure blocks only the dependent
+  Project synchronization and must remain disclosed.
+- **Boundary:** this approval unlocks ordered Phase4 work; it does not implement
+  runtime repairs, accept future PR integrations, approve later phase gates, or
+  establish gameplay, live-inference, UI/aesthetic or final-product readiness.
