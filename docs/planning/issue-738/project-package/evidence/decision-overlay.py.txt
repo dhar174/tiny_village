@@ -1,0 +1,63 @@
+"""Coordinator evidence transformation, not a change to the historical737 builder."""
+import copy,json,sys,shutil,hashlib,datetime,subprocess
+from pathlib import Path
+base=Path.cwd();pkg=base/'docs/planning/issue-738/project-package';old=base/'docs/planning/issue-737-completed'
+sys.path.insert(0,str(old));import build_preview
+from sync_project import load,digest,prepare,canonical
+from publication_evidence import verify_receipt
+snapshot=load(pkg/'snapshot.json');roadmap=load(pkg/'original-roadmap.json');ledger=load(pkg/'triage-input.json');remediations=load(pkg/'remediations.json');handoffs=load(pkg/'original-pr-handoffs.json')
+approvals=load(pkg/'approval-records.json');pending_approvals=copy.deepcopy(approvals);pending_approvals['approved'].pop('738')
+# Keep the historical #737 generator's explicit scope guard intact. This newD034
+# evidence transformation computes readiness only after the explicit human record.
+result=build_preview.assemble(snapshot,roadmap,ledger,remediations,pending_approvals,handoffs)
+rows=result['rows_by_number'];issues={i['number']:i for i in snapshot['issues']};human={i['number'] for i in roadmap['items'] if i['kind'] in ('Phase gate','Human review')}
+assert approvals['approved']['738']=={'decision':'Approved','record':'D034','reviewer':'dhar174'}
+assert len(rows)==332 and len(snapshot['pull_requests'])==24 and snapshot['main_sha']=='16528f2130fc4b890558a1fccd590ad29e9bae7a'
+for n,row in rows.items():
+ if n==738:row['decision']='Approved'
+ deps=set(row['native_prerequisites'])|set(row['planned_activation'])
+ blocked=sorted(d for d in deps if issues[d]['state']!='CLOSED' or (d in human and approvals['approved'].get(str(d),{}).get('decision')!='Approved'))
+ if row['kind'] in ('Program','Phase') or (issues[n]['state']=='CLOSED' and (n not in human or row['decision']=='Approved')):readiness='Tracking'
+ elif row['scope'] in ('Optional','Post-MVP'):readiness='Deferred'
+ elif blocked:readiness='Blocked'
+ elif n in human:readiness='Human review'
+ else:readiness='Ready'
+ row.update(readiness=readiness,blocking_issues=blocked)
+ for previewrow in result['preview']['rows']:
+  if previewrow['number']==n:previewrow['values'].update(Readiness=readiness,Decision=row['decision'])
+original=load(old/'snapshot.json');before={i['number']:i for i in original['issues']};assert set(before)==set(issues)
+changed=[]
+for n,issue in issues.items():
+ for k in ('parent','assignees','labels'):assert issue[k]==before[n][k],(n,k)
+ assert sorted(i['number'] for i in issue['blockedBy']['nodes'])==sorted(i['number'] for i in before[n]['blockedBy']['nodes']),(n,'native edge change')
+ if n not in (733,738):assert issue['body']==before[n]['body'] and issue['state']==before[n]['state'],(n,'unexpected issue edit')
+ if issue!=before[n]:changed.append({'issue':n,'fields':[k for k in issue if issue[k]!=before[n][k]]})
+for n in (733,738):assert issues[n]['state']=='CLOSED' and issues[n]['stateReason']=='COMPLETED'
+for n in (350,352,353,357,359,501,502,503,504,643,647,651,683,741,773,774,799,800,801,802,803,807,808,809):assert issues[n]['state']=='OPEN',n
+assert {str(p['number']):p['headRefOid'] for p in snapshot['pull_requests']}==load(old/'review-scope.json')['candidate_heads']
+previous=load(pkg/'evidence/prior-final-desired.json');previous_rows={r['number']:r for r in previous['rows']}
+for row in result['preview']['rows']:
+ for key,value in row['values'].items():
+  if key=='Readiness' or (row['number']==738 and key=='Decision'):continue
+  assert value==previous_rows[row['number']]['values'][key],(row['number'],key)
+assert result['preview']['fields']==previous['fields'] and result['preview']['views']==previous['views']
+verify_receipt(load(pkg/'evidence/prior-final-inspect.json'),previous,load(pkg/'evidence/prior-final-plan.reproduced.json'))
+plan=prepare(result['preview'],load(pkg/'evidence/prior-final-inspect.json')['project'])
+changes=[]
+for op in plan['operations']:
+ assert op['kind']=='item'
+ a,b=op['before']['values'],op['after']['values'];diff={k:{'before':a.get(k),'after':b.get(k)} for k in set(a)|set(b) if a.get(k)!=b.get(k)}
+ assert set(diff)<=({'Decision','Readiness'} if op['number']==738 else {'Readiness'}),diff
+ changes.append({'issue':op['number'],'changes':diff})
+for n in (738,733):assert rows[n]['readiness']=='Tracking'
+assert rows[738]['decision']=='Approved'
+for n,row in rows.items():
+ if row['readiness']=='Ready':assert not row['blocking_issues'] and issues[n]['state']=='OPEN'
+preview=result['preview'];(pkg/'project-preview.json').write_text(json.dumps(preview,indent=2)+'\n');(pkg/'issue-matrix.json').write_text(json.dumps(list(rows.values()),indent=2)+'\n')
+(pkg/'pr-matrix.json').write_text(json.dumps(result['matrix'],indent=2)+'\n')
+report={'status':'approval_preview_verified_not_published','decision_record':'D034','approval_source_commit':approvals['source_commit'],'managed_issues':332,'fields':len(preview['fields']),'views':len(preview['views']),'source_issues':len(issues),'source_guard_issues':len(preview['source_guard']['issues']),'candidate_prs':24,'main':snapshot['main_sha'],'cycles':result['report']['cycles'],'ordering_conflicts':result['report']['ordering_conflicts'],'desired_digest':digest(preview),'changed_source_issues':changed,'all_original_issue_parents_assignees_labels_native_edges_preserved':True,'other_issue_bodies_and_states_preserved':True,'candidate_heads_unchanged':True,'only_preview_decision_or_readiness_changes':True,'prior_receipt_verified':True,'prospective_delta_basis':'Prior authenticated board, not a fresh live plan. Live drift must be reviewed before apply.','prospective_item_operations':len(changes),'prospective_changes':changes,'project_synchronization':'pending_owner_authenticated_plan_review_apply_inspection','github_mutations_performed_by_transformation':0}
+(pkg/'validation.json').write_text(json.dumps(report,indent=2)+'\n')
+shutil.copyfile('/tmp/issue738-capture-retry.txt',pkg/'evidence/capture-retry.txt')
+# Retain the actual transformation as evidence text, outside executable tooling.
+shutil.copyfile('/tmp/issue738-build-overlay.py',pkg/'evidence/decision-overlay.py.txt')
+print(json.dumps({'desired_digest':digest(preview),'prospective_operations':len(changes),'changes':changes},indent=2))

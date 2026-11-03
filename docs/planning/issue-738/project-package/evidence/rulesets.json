@@ -1,0 +1,178 @@
+[
+  {
+    "id": 5735164,
+    "name": "tiny_ruleset",
+    "target": "branch",
+    "source_type": "Repository",
+    "source": "dhar174/tiny_village",
+    "enforcement": "active",
+    "conditions": {
+      "ref_name": {
+        "exclude": [],
+        "include": [
+          "~DEFAULT_BRANCH"
+        ]
+      }
+    },
+    "rules": [
+      {
+        "type": "deletion"
+      },
+      {
+        "type": "non_fast_forward"
+      },
+      {
+        "type": "required_linear_history"
+      },
+      {
+        "type": "pull_request",
+        "parameters": {
+          "required_approving_review_count": 0,
+          "dismiss_stale_reviews_on_push": false,
+          "required_reviewers": [],
+          "require_code_owner_review": false,
+          "require_last_push_approval": false,
+          "required_review_thread_resolution": false,
+          "require_extra_approval_for_unattributed_changes": true,
+          "allowed_merge_methods": [
+            "merge",
+            "squash",
+            "rebase"
+          ]
+        }
+      },
+      {
+        "type": "required_status_checks",
+        "parameters": {
+          "strict_required_status_checks_policy": true,
+          "do_not_enforce_on_create": false,
+          "required_status_checks": [
+            {
+              "context": "Python CI required",
+              "integration_id": 15368
+            }
+          ]
+        }
+      }
+    ],
+    "node_id": "RRS_lACqUmVwb3NpdG9yec4wSSORzgBXgvw",
+    "created_at": "2025-05-28T23:53:48.344Z",
+    "updated_at": "2026-10-21T00:20:15.581Z",
+    "bypass_actors": [
+      {
+        "actor_id": null,
+        "actor_type": "DeployKey",
+        "bypass_mode": "always"
+      },
+      {
+        "actor_id": 2,
+        "actor_type": "RepositoryRole",
+        "bypass_mode": "always"
+      },
+      {
+        "actor_id": 5,
+        "actor_type": "RepositoryRole",
+        "bypass_mode": "always"
+      }
+    ],
+    "current_user_can_bypass": "always",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/dhar174/tiny_village/rulesets/5735164"
+      },
+      "html": {
+        "href": "https://github.com/dhar174/tiny_village/rules/5735164"
+      }
+    }
+  },
+  {
+    "id": 5759918,
+    "name": "tiny_village_protect",
+    "target": "branch",
+    "source_type": "Repository",
+    "source": "dhar174/tiny_village",
+    "enforcement": "active",
+    "conditions": {
+      "ref_name": {
+        "exclude": [],
+        "include": [
+          "~DEFAULT_BRANCH"
+        ]
+      }
+    },
+    "rules": [
+      {
+        "type": "deletion"
+      },
+      {
+        "type": "non_fast_forward"
+      },
+      {
+        "type": "pull_request",
+        "parameters": {
+          "required_approving_review_count": 0,
+          "dismiss_stale_reviews_on_push": false,
+          "required_reviewers": [],
+          "require_code_owner_review": false,
+          "require_last_push_approval": false,
+          "required_review_thread_resolution": false,
+          "require_extra_approval_for_unattributed_changes": true,
+          "allowed_merge_methods": [
+            "merge",
+            "squash",
+            "rebase"
+          ]
+        }
+      },
+      {
+        "type": "code_scanning",
+        "parameters": {
+          "code_scanning_tools": [
+            {
+              "tool": "CodeQL",
+              "security_alerts_threshold": "high_or_higher",
+              "alerts_threshold": "errors"
+            }
+          ]
+        }
+      },
+      {
+        "type": "required_status_checks",
+        "parameters": {
+          "strict_required_status_checks_policy": true,
+          "do_not_enforce_on_create": false,
+          "required_status_checks": [
+            {
+              "context": "CodeQL",
+              "integration_id": 57789
+            }
+          ]
+        }
+      }
+    ],
+    "node_id": "RRS_lACqUmVwb3NpdG9yec4wSSORzgBX464",
+    "created_at": "2025-05-29T20:51:35.753Z",
+    "updated_at": "2026-10-21T00:48:09.675Z",
+    "bypass_actors": [
+      {
+        "actor_id": 5,
+        "actor_type": "RepositoryRole",
+        "bypass_mode": "always"
+      },
+      {
+        "actor_id": 842251,
+        "actor_type": "Integration",
+        "bypass_mode": "always"
+      }
+    ],
+    "current_user_can_bypass": "always",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/dhar174/tiny_village/rulesets/5759918"
+      },
+      "html": {
+        "href": "https://github.com/dhar174/tiny_village/rules/5759918"
+      }
+    }
+  }
+]

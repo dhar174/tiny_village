@@ -1,0 +1,16 @@
+issues 50 / 484
+issues 100 / 484
+issues 150 / 484
+issues 200 / 484
+Traceback (most recent call last):
+  File "/workspace/tiny_village-738/docs/planning/issue-738/project-package/capture_snapshot.py", line 119, in <module>
+    main()
+  File "/workspace/tiny_village-738/docs/planning/issue-738/project-package/capture_snapshot.py", line 56, in main
+    all_issues = collect_connection("issues", issue_fields)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/tiny_village-738/docs/planning/issue-738/project-package/capture_snapshot.py", line 40, in collect_connection
+    data = request("graphql", query)["data"]["repository"][field]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/tiny_village-738/docs/planning/issue-738/project-package/capture_snapshot.py", line 26, in request
+    raise RuntimeError((result.stderr.strip() + " " + result.stdout.strip())[:1600])
+RuntimeError: gh: HTTP 503 upstream connect error or disconnect/reset before headers. reset reason: remote refused stream reset

@@ -1,0 +1,301 @@
+{
+  "status": "approval_preview_verified_not_published",
+  "decision_record": "D034",
+  "approval_source_commit": "6890cde019ba93f748454ddfb4709b3fd8440e35",
+  "managed_issues": 332,
+  "fields": 12,
+  "views": 6,
+  "source_issues": 484,
+  "source_guard_issues": 333,
+  "candidate_prs": 24,
+  "main": "16528f2130fc4b890558a1fccd590ad29e9bae7a",
+  "cycles": 0,
+  "ordering_conflicts": [],
+  "desired_digest": "2e5dc89810b956a41310486148a32a2611f825a137386f9a2ee66a94a9f672a9",
+  "changed_source_issues": [
+    {
+      "issue": 220,
+      "fields": [
+        "blockedBy"
+      ]
+    },
+    {
+      "issue": 733,
+      "fields": [
+        "body",
+        "state",
+        "stateReason",
+        "updatedAt",
+        "closedAt"
+      ]
+    },
+    {
+      "issue": 738,
+      "fields": [
+        "body",
+        "state",
+        "stateReason",
+        "updatedAt",
+        "closedAt"
+      ]
+    },
+    {
+      "issue": 799,
+      "fields": [
+        "blockedBy"
+      ]
+    },
+    {
+      "issue": 800,
+      "fields": [
+        "blockedBy"
+      ]
+    },
+    {
+      "issue": 801,
+      "fields": [
+        "blockedBy"
+      ]
+    },
+    {
+      "issue": 802,
+      "fields": [
+        "blockedBy"
+      ]
+    },
+    {
+      "issue": 803,
+      "fields": [
+        "blockedBy"
+      ]
+    },
+    {
+      "issue": 809,
+      "fields": [
+        "blockedBy"
+      ]
+    }
+  ],
+  "all_original_issue_parents_assignees_labels_native_edges_preserved": true,
+  "other_issue_bodies_and_states_preserved": true,
+  "candidate_heads_unchanged": true,
+  "only_preview_decision_or_readiness_changes": true,
+  "prior_receipt_verified": true,
+  "prospective_delta_basis": "Prior authenticated board, not a fresh live plan. Live drift must be reviewed before apply.",
+  "prospective_item_operations": 23,
+  "prospective_changes": [
+    {
+      "issue": 738,
+      "changes": {
+        "Decision": {
+          "before": "Pending",
+          "after": "Approved"
+        },
+        "Readiness": {
+          "before": "Human review",
+          "after": "Tracking"
+        }
+      }
+    },
+    {
+      "issue": 56,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 143,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 166,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 167,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 182,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 184,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 185,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 186,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 187,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 245,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 354,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 356,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 358,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 522,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 609,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 773,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 774,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 799,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 800,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 801,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 802,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    },
+    {
+      "issue": 803,
+      "changes": {
+        "Readiness": {
+          "before": "Blocked",
+          "after": "Ready"
+        }
+      }
+    }
+  ],
+  "project_synchronization": "pending_owner_authenticated_plan_review_apply_inspection",
+  "github_mutations_performed_by_transformation": 0
+}

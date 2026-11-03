@@ -1,0 +1,14 @@
+[
+  {
+    "sha": "68e7909988ea413c86abadaa7a851d35c3aeead3",
+    "filename": "main.py",
+    "status": "modified",
+    "additions": 1,
+    "deletions": 6,
+    "changes": 7,
+    "blob_url": "https://github.com/dhar174/tiny_village/blob/56361679188f19df228291c306c3827becb916b3/main.py",
+    "raw_url": "https://github.com/dhar174/tiny_village/raw/56361679188f19df228291c306c3827becb916b3/main.py",
+    "contents_url": "https://api.github.com/repos/dhar174/tiny_village/contents/main.py?ref=56361679188f19df228291c306c3827becb916b3",
+    "patch": "@@ -64,11 +64,6 @@ def check_dependencies() -> Tuple[bool, List[str]]:\n     except ImportError:\n         missing.append(\"pydantic\")\n     \n-    try:\n-        import faiss\n-    except ImportError:\n-        missing.append(\"faiss-cpu\")\n-    \n     return len(missing) == 0, missing\n \n def print_banner():\n@@ -113,7 +108,7 @@ def run_visual_demo(config: dict, logger):\n         \n     except ImportError as e:\n         logger.error(f\"Missing dependency: {e}\")\n-        logger.error(\"Install dependencies with: pip install pygame networkx numpy pydantic faiss-cpu\")\n+        logger.error(\"Install dependencies with: pip install pygame networkx numpy pydantic\")\n         return 1\n     except Exception as e:\n         logger.error(f\"Error running visual demo: {e}\")"
+  }
+]
