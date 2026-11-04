@@ -107,6 +107,13 @@ function generateVitestTests(structure, graphModule, graphAttr) {
 import { describe, it, expect } from "vitest";
 import { ${graphAttr} } from "${graphModule}";
 
+// TODO: Use vi.mock to swap real LLM with mock
+// vi.mock("./your-llm-module", () => ({
+//   yourLlmInstance: {
+//     invoke: vi.fn().mockResolvedValue({ role: "assistant", content: "Mocked response" })
+//   }
+// }));
+
 describe("Graph Structure", () => {
   it("should compile without errors", () => {
     expect(${graphAttr}).toBeDefined();
@@ -168,9 +175,18 @@ describe("Graph Structure", () => {
   });
 
   it("should execute with mocked LLM", async () => {
-    // TODO: Mock LLM responses
+    // TODO: Configure mock LLM behavior (if not using hoisted vi.mock)
+    // const mockInvoke = vi.fn().mockResolvedValue({
+    //   role: "assistant",
+    //   content: "Mocked response",
+    // });
+
     // TODO: Execute graph
+    // const testInput = { messages: [] };
+    // const result = await ${graphAttr}.invoke(testInput);
+
     // TODO: Verify the graph flow is correct
+    // expect(result).toBeDefined();
   });
 });
 
@@ -184,8 +200,11 @@ describe("Error Handling", () => {
   });
 
   it("should handle LLM errors gracefully", async () => {
-    // TODO: Mock LLM to throw errors
+    // TODO: Configure mock LLM to throw an error
+    // const mockInvoke = vi.fn().mockRejectedValue(new Error("LLM connection error"));
+
     // TODO: Verify graceful error handling
+    // await expect(${graphAttr}.invoke({ messages: [] })).rejects.toThrow();
   });
 });
 `;
@@ -208,6 +227,13 @@ function generateJestTests(structure, graphModule, graphAttr) {
 
 import { ${graphAttr} } from "${graphModule}";
 
+// TODO: Use jest.mock to swap real LLM with mock
+// jest.mock("./your-llm-module", () => ({
+//   yourLlmInstance: {
+//     invoke: jest.fn().mockResolvedValue({ role: "assistant", content: "Mocked response" })
+//   }
+// }));
+
 describe("Graph Structure", () => {
   it("should compile without errors", () => {
     expect(${graphAttr}).toBeDefined();
@@ -269,9 +295,18 @@ describe("Graph Structure", () => {
   });
 
   it("should execute with mocked LLM", async () => {
-    // TODO: Mock LLM responses
+    // TODO: Configure mock LLM behavior (if not using hoisted jest.mock)
+    // const mockInvoke = jest.fn().mockResolvedValue({
+    //   role: "assistant",
+    //   content: "Mocked response",
+    // });
+
     // TODO: Execute graph
+    // const testInput = { messages: [] };
+    // const result = await ${graphAttr}.invoke(testInput);
+
     // TODO: Verify the graph flow is correct
+    // expect(result).toBeDefined();
   });
 });
 
@@ -285,8 +320,11 @@ describe("Error Handling", () => {
   });
 
   it("should handle LLM errors gracefully", async () => {
-    // TODO: Mock LLM to throw errors
+    // TODO: Configure mock LLM to throw an error
+    // const mockInvoke = jest.fn().mockRejectedValue(new Error("LLM connection error"));
+
     // TODO: Verify graceful error handling
+    // await expect(${graphAttr}.invoke({ messages: [] })).rejects.toThrow();
   });
 });
 `;
