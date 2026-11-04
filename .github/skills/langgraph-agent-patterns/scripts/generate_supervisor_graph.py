@@ -43,6 +43,7 @@ class {graph_name.title().replace('-', '')}State(TypedDict):
 def generate_python_supervisor(graph_name: str, subagents: List[str]) -> str:
     """Generate Python supervisor node implementation."""
     subagent_list = ', '.join(f'"{agent}"' for agent in subagents)
+    subagent_names = ', '.join(subagents)
     subagent_desc = '\n        '.join(f'- {agent}: TODO: Describe {agent} capabilities' for agent in subagents)
 
     return f'''"""Supervisor node for {graph_name} graph."""
@@ -51,11 +52,11 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from typing import Literal
 
 # TODO: Import your LLM
-# from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI
 # from langchain_anthropic import ChatAnthropic
 
 # TODO: Initialize your LLM
-# model = ChatOpenAI(model="gpt-4")
+model = ChatOpenAI(model="gpt-4")
 # model = ChatAnthropic(model="claude-3-5-sonnet-20241022")
 
 
@@ -91,16 +92,18 @@ def supervisor_node(state: dict) -> dict:
     prompt = ChatPromptTemplate.from_messages([
         ("system", SUPERVISOR_PROMPT),
         MessagesPlaceholder(variable_name="messages"),
-        ("system", "Who should act next? Respond with one of: {subagent_list}, FINISH")
+        ("system", "Who should act next? Respond with one of: {subagent_names}, FINISH")
     ])
 
-    # TODO: Get routing decision from LLM
-    # chain = prompt | model
-    # response = chain.invoke({{"messages": messages}})
-    # next_agent = response.content.strip()
+    # Get routing decision from LLM
+    chain = prompt | model
+    response = chain.invoke({{"messages": messages}})
+    next_agent = response.content.strip()
 
-    # Placeholder routing logic
-    next_agent = "{subagents[0]}"  # TODO: Replace with LLM-based routing
+    # Validate routing decision
+    valid_options = [{subagent_list}, "FINISH"]
+    if next_agent not in valid_options:
+        next_agent = "FINISH"
 
     return {{
         "next": next_agent,
@@ -254,11 +257,11 @@ import {{ HumanMessage }} from "@langchain/core/messages";
 import {{ ChatPromptTemplate, MessagesPlaceholder }} from "@langchain/core/prompts";
 
 // TODO: Import your LLM
-// import {{ ChatOpenAI }} from "@langchain/openai";
+import {{ ChatOpenAI }} from "@langchain/openai";
 // import {{ ChatAnthropic }} from "@langchain/anthropic";
 
 // TODO: Initialize your LLM
-// const model = new ChatOpenAI({{ model: "gpt-4" }});
+const model = new ChatOpenAI({{ model: "gpt-4" }});
 // const model = new ChatAnthropic({{ model: "claude-3-5-sonnet-20241022" }});
 
 const SUPERVISOR_PROMPT = `You are a supervisor managing a team of agents.
@@ -290,13 +293,16 @@ export async function supervisorNode(state: any): Promise<Partial<any>> {{
     ["system", "Who should act next? Respond with one of: {', '.join(subagents)}, FINISH"]
   ]);
 
-  // TODO: Get routing decision from LLM
-  // const chain = prompt.pipe(model);
-  // const response = await chain.invoke({{ messages }});
-  // const nextAgent = response.content.trim();
+  // Get routing decision from LLM
+  const chain = prompt.pipe(model);
+  const response = await chain.invoke({{ messages }});
+  let nextAgent = response.content.trim();
 
-  // Placeholder routing logic
-  const nextAgent = "{subagents[0]}"; // TODO: Replace with LLM-based routing
+  // Validate routing decision
+  const validOptions = [{', '.join([f'"{a}"' for a in subagents])}, "FINISH"];
+  if (!validOptions.includes(nextAgent)) {{
+    nextAgent = "FINISH";
+  }}
 
   return {{
     next: nextAgent,
