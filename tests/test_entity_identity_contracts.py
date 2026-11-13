@@ -66,7 +66,13 @@ assert character not in graph.G
 planner = GOAPPlanner(graph)
 graph.G.nodes[character]['energy'] = 77
 assert character.energy == 20
-assert planner.get_current_world_state(character)['energy'] == 77
+state = planner.get_current_world_state(character)
+assert state['energy'] == 77
+for field in ('job_performance', 'personality_traits', 'stability', 'luxury',
+              'hope', 'success', 'control', 'current_mood', 'stamina',
+              'current_satisfaction'):
+    assert state[field] == getattr(character, field), field
+assert state['satisfaction'] == character.current_satisfaction
 assert planner.get_available_actions(character) == []
 try:
     planner.get_available_actions('missing-character')

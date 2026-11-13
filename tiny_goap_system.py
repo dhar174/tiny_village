@@ -7,24 +7,24 @@ Planning Algorithm:
 The planner takes the current state of the world (including the character's state) and a goal, and it generates a plan that outlines the sequence of actions needed to achieve that goal.
 This involves searching through the space of possible actions to find a sequence that transitions the character from their current state to the goal state with minimal cost.
 Integrating Graph Analysis
-The graph analysis provides a dynamic view of the characterâ€™s world, including relationships, interests, and historical interactions, which are crucial for setting realistic goals and conditions for actions.
+The graph analysis provides a dynamic view of the character’s world, including relationships, interests, and historical interactions, which are crucial for setting realistic goals and conditions for actions.
 
 Example Steps for Integration:
 Graph-Based Condition Setting:
 Use the output from the graph analysis to set conditions for actions. For example, if the goal is to improve a relationship, the condition might be that the relationship strength is below a certain threshold.
 Graph-Based Effect Prediction:
-Predict the potential effects of actions on the characterâ€™s network by simulating changes in the graph. For instance, attending social events might strengthen certain relationships.
+Predict the potential effects of actions on the character’s network by simulating changes in the graph. For instance, attending social events might strengthen certain relationships.
 Feedback Loop:
 Post-action, update the graph based on the outcomes, which then informs future GOAP planning.
 
 Further Development
-Action Definitions: Further detail actions with specific conditions and effects based on the characterâ€™s attributes and the graph analysis.
+Action Definitions: Further detail actions with specific conditions and effects based on the character’s attributes and the graph analysis.
 Cost Functions: Integrate a cost function to select the optimal path among several possibilities.
 Real-Time Adjustments: Allow the GOAP system to adjust plans in real-time based on new information or changes in the game state, using continuous feedback from the graph analysis.
 
 3. GOAP System and Graph Analysis
 Where it happens: goap_system.py and graph_manager.py
-What happens: The GOAP planner uses the graph to analyze relationships and preferences, and formulates a plan consisting of a sequence of actions that maximize the characterâ€™s utility for the day.
+What happens: The GOAP planner uses the graph to analyze relationships and preferences, and formulates a plan consisting of a sequence of actions that maximize the character’s utility for the day.
 """
 
 from tiny_types import Goal, Character, GraphManager

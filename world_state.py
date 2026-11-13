@@ -87,6 +87,17 @@ class WorldState:
             'shelter': getattr(character, 'shelter', None),
             'has_investment': getattr(character, 'has_investment', None),
         }
+        # Seed the graph snapshot with fields used by planner goals and conditions.
+        planning_fields = (
+            'job_performance', 'personality_traits', 'stability', 'luxury',
+            'hope', 'success', 'control', 'current_mood', 'stamina',
+            'current_satisfaction',
+        )
+        for field in planning_fields:
+            if hasattr(character, field):
+                attrs[field] = getattr(character, field)
+        if 'current_satisfaction' in attrs:
+            attrs['satisfaction'] = attrs['current_satisfaction']
         attrs.update(additional_attrs)
         self.add_node(character, "character", **attrs)
     
