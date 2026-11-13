@@ -47,6 +47,9 @@ _NUMERIC_ATTRIBUTES = {
     "energy", "health_status", "hunger_level", "wealth_money",
     "job_performance", "happiness", "social_wellbeing",
 }
+# Core needs use native 0-100 units (#740); scalar effects on them are clamped
+# so deltas, `add:`, and numeric `set:` cannot push them outside the scale.
+_NEEDS_SCALAR_CLAMP_ATTRIBUTES = {"energy", "hunger_level", "health_status"}
 _EFFECT_TARGETS = {"initiator", "target", "target_character_in_location"}
 _MISSING = object()
 
@@ -55,6 +58,35 @@ def _canonical_attribute(attribute):
     if not isinstance(attribute, str) or not attribute.strip():
         raise ValueError(f"Invalid action attribute: {attribute!r}")
     return _ATTRIBUTE_ALIASES.get(attribute, attribute)
+
+
+def fixture_units_to_native(value):
+    """Convert a village-economy-v1 fixture need unit to native runtime units.
+
+    The versioned fixture (docs/superpowers/specs/2026-10-20-issue-724-mvp-contract.md,
+    section 3) specifies 0-10 energy/hunger values, thresholds, and deltas.
+    Runtime needs are native 0-100 (#740). This is a documented boundary:
+    ordinary runtime inputs are native at every magnitude and must never pass
+    through this conversion.
+    """
+    return float(value) * 10.0
+
+
+def native_units_to_fixture(value):
+    """Convert a native 0-100 need value to village-economy-v1 fixture units for reporting."""
+    return float(value) / 10.0
+
+
+def clamp_need_value(attribute, value):
+    """Clamp a finite core-need result to the native 0-100 scale (#740)."""
+    if (
+        attribute in _NEEDS_SCALAR_CLAMP_ATTRIBUTES
+        and isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(value)
+    ):
+        return max(0.0, min(100.0, value))
+    return value
 
 
 def _resolve_action_entity(manager, identifier, node_type=None):
@@ -181,6 +213,7 @@ class _AttributeEffect:
             value = current + self.change
         else:
             value = self.change
+        value = clamp_need_value(self.attribute, value)
         return self._validate_value(value)
 
     def _validate_value(self, value):

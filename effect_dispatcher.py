@@ -10,6 +10,7 @@ import logging
 
 from effect_schema import EffectV2, EffectType, OperatorType
 from character_attribute_mapper import AttributeMapper
+from actions import apply_attribute_change, clamp_need_value
 
 
 class EffectDispatcher:
@@ -321,7 +322,41 @@ class EffectDispatcher:
                     f"Modifying {entity} attribute '{attribute}' (mapped to '{actual_attr}'): "
                     f"current={current_value}, change={change_value}, operator={operator.value}"
                 )
-            
+
+            # Core needs (#740): route energy/hunger_level/health_status through the
+            # synchronized updater shared with action execution — graph-first read,
+            # synchronized object+graph write, per-attribute rollback, and the
+            # shared 0-100 clamp. Mapper bounds stay the safety net for other fields.
+            # Note: this gate is graph-manager presence, not entity registration;
+            # an unregistered entity raises inside _resolve_action_entity and is
+            # reported as not-applied (False) instead of a bounded object write.
+            if actual_attr in {"energy", "hunger_level", "health_status"} and self.graph_manager is not None:
+                def calculate(current):
+                    if operator == OperatorType.ADD:
+                        return clamp_need_value(actual_attr, current + change_value)
+                    if operator == OperatorType.SUBTRACT:
+                        return clamp_need_value(actual_attr, current - change_value)
+                    if operator == OperatorType.MULTIPLY:
+                        return clamp_need_value(actual_attr, current * change_value)
+                    if operator == OperatorType.SET:
+                        return clamp_need_value(actual_attr, change_value)
+                    if operator == OperatorType.MIN:
+                        return clamp_need_value(actual_attr, min(current, change_value))
+                    if operator == OperatorType.MAX:
+                        return clamp_need_value(actual_attr, max(current, change_value))
+                    logging.warning(f"Unknown operator {operator}, using ADD")
+                    return clamp_need_value(actual_attr, current + change_value)
+
+                success = apply_attribute_change(entity, self.graph_manager, actual_attr, calculate)
+                if success is None:
+                    # calculate returned None (e.g., write returned None); treat as not applied
+                    return False
+                if success is not None:
+                    logging.info(
+                        f"Modified {entity} {actual_attr} via synchronized updater "
+                        f"(operator: {operator.value}, graph-first)"
+                    )
+                return True
             # Apply operator
             if operator == OperatorType.ADD:
                 new_value = current_value + change_value

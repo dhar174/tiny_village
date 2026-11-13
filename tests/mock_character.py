@@ -275,8 +275,8 @@ class MockCharacter:
     """
     
     def __init__(self, name="TestCharacter", age=25, pronouns="they/them", 
-                 job="unemployed", health_status=8.0, hunger_level=3.0,
-                 wealth_money=100.0, mental_health=7.0, social_wellbeing=6.0,
+                 job="unemployed", health_status=80.0, hunger_level=30.0,  # native 0-100 (#740)
+                 wealth_money=100.0, mental_health=70.0, social_wellbeing=60.0,  # native 0-100 (#740)
                  job_performance=50.0, community=50.0, **kwargs):
         
         # Core identity attributes
@@ -295,7 +295,7 @@ class MockCharacter:
         self.health_status = health_status
         self.hunger_level = hunger_level
         self.mental_health = mental_health
-        self.energy = kwargs.get('energy', 8.0)
+        self.energy = kwargs.get('energy', 80.0)  # native 0-100 (#740)
         
         # Economic attributes
         self.wealth_money = wealth_money

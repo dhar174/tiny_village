@@ -55,12 +55,13 @@ class MockCharacter:
         self.name = name
         self.uuid = f"test_{name}"
         
-        # Set default state values (0-10 scale to match get_character_state_dict expectations)
-        self.energy = kwargs.get('energy', 8.0)  # Healthy default (8/10 = 0.8 normalized)
-        self.health = kwargs.get('health', 8.5)  # Healthy default (8.5/10 = 0.85 normalized)
-        self.mental_health = kwargs.get('mental_health', 7.5)  # Healthy default (7.5/10 = 0.75 normalized)
-        self.hunger_level = kwargs.get('hunger_level', 3.0)  # Normal hunger (3/10 = 0.3 normalized)
-        self.social_wellbeing = kwargs.get('social_wellbeing', 6.0)  # Normal (6/10 = 0.6 normalized)
+        # Set default state values (native 0-100 scale to match get_character_state_dict expectations, #740)
+        self.energy = kwargs.get('energy', 80.0)  # Healthy default (80 -> 0.8 normalized, #740)
+        self.health = kwargs.get('health', 80.0)  # Healthy default (80 -> 0.8 normalized, #740)
+        self.health_status = self.health  # snapshot reads health_status (#740 mock-contract alignment)
+        self.mental_health = kwargs.get('mental_health', 75.0)  # Healthy default (75 -> 0.75 normalized, #740)
+        self.hunger_level = kwargs.get('hunger_level', 30.0)  # Normal hunger (30 -> 0.3 normalized, #740)
+        self.social_wellbeing = kwargs.get('social_wellbeing', 60.0)  # Normal (60 -> 0.6 normalized, #740)
         self.wealth_money = kwargs.get('wealth_money', 50)  # Decent wealth
         
         # For optional methods
@@ -119,11 +120,11 @@ class TestStrategicLLMCriteria(unittest.TestCase):
     def test_crisis_detection_low_health(self):
         """Test crisis detection when health is critically low."""
         # Create character with low health (below CRISIS_THRESHOLD)
-        # CRISIS_THRESHOLD is 0.3, which means 3.0 on 0-10 scale
+        # CRISIS_THRESHOLD is 0.3, which means 30 on the native 0-100 scale (#740)
         character = MockCharacter(
-            health=(CRISIS_THRESHOLD * 10) - 1.0,  # Just below threshold on 0-10 scale
-            energy=8.0,
-            mental_health=7.0
+            health=(CRISIS_THRESHOLD * 100) - 10.0,  # Just below threshold on native 0-100 scale (#740)
+            energy=80.0,
+            mental_health=70.0
         )
         
         result = self.strategy_manager_with_llm.should_use_llm_for_decision(character)
@@ -135,9 +136,9 @@ class TestStrategicLLMCriteria(unittest.TestCase):
         """Test crisis detection when energy is critically low."""
         # CRISIS_THRESHOLD is 0.3, which means 3.0 on 0-10 scale
         character = MockCharacter(
-            health=8.0,
-            energy=(CRISIS_THRESHOLD * 10) - 0.5,  # Below threshold on 0-10 scale
-            mental_health=7.0
+            health=80.0,
+            energy=(CRISIS_THRESHOLD * 100) - 5.0,  # Below threshold on native 0-100 scale (#740)
+            mental_health=70.0
         )
         
         result = self.strategy_manager_with_llm.should_use_llm_for_decision(character)
@@ -149,9 +150,9 @@ class TestStrategicLLMCriteria(unittest.TestCase):
         """Test crisis detection when mental health is critically low."""
         # CRISIS_THRESHOLD is 0.3, which means 3.0 on 0-10 scale
         character = MockCharacter(
-            health=8.0,
-            energy=7.0,
-            mental_health=(CRISIS_THRESHOLD * 10) - 0.2  # Below threshold on 0-10 scale
+            health=80.0,
+            energy=70.0,
+            mental_health=(CRISIS_THRESHOLD * 100) - 2.0  # Below threshold on native 0-100 scale (#740)
         )
         
         result = self.strategy_manager_with_llm.should_use_llm_for_decision(character)
@@ -180,9 +181,9 @@ class TestStrategicLLMCriteria(unittest.TestCase):
         """Test that normal social situations use utility-based planning."""
         # Healthy character so crisis doesn't trigger (use 0-10 scale)
         character = MockCharacter(
-            health=8.0,
-            energy=7.5,
-            mental_health=8.0
+            health=80.0,
+            energy=75.0,
+            mental_health=80.0
         )
         context = {
             'social_complexity': SOCIAL_COMPLEXITY_THRESHOLD - 0.1  # Below threshold
@@ -202,9 +203,9 @@ class TestStrategicLLMCriteria(unittest.TestCase):
         """Test LLM invocation for novel situations."""
         # Healthy character so crisis doesn't trigger first (use 0-10 scale)
         character = MockCharacter(
-            health=8.0,
-            energy=7.5,
-            mental_health=8.0
+            health=80.0,
+            energy=75.0,
+            mental_health=80.0
         )
         context = {
             'novelty_score': NOVELTY_THRESHOLD + 0.15  # Above threshold
@@ -231,9 +232,9 @@ class TestStrategicLLMCriteria(unittest.TestCase):
         # Use 0-10 scale
         character = MockCharacter(
             current_goal=complex_goal,
-            health=8.0,
-            energy=7.5,
-            mental_health=8.0
+            health=80.0,
+            energy=75.0,
+            mental_health=80.0
         )
         
         result = self.strategy_manager_with_llm.should_use_llm_for_decision(character)
@@ -248,9 +249,9 @@ class TestStrategicLLMCriteria(unittest.TestCase):
         """Test that variety/emergent behavior criterion triggers LLM correctly."""
         # Healthy character with no special context (use 0-10 scale)
         character = MockCharacter(
-            health=8.0,
-            energy=7.5,
-            mental_health=8.0
+            health=80.0,
+            energy=75.0,
+            mental_health=80.0
         )
         
         # Mock random to return value below VARIETY_PROBABILITY (0.2)
@@ -272,9 +273,9 @@ class TestStrategicLLMCriteria(unittest.TestCase):
         """Test that routine situations default to utility-based planning."""
         # Healthy character, no special context (use 0-10 scale)
         character = MockCharacter(
-            health=8.0,
-            energy=7.0,
-            mental_health=7.5
+            health=80.0,
+            energy=70.0,
+            mental_health=75.0
         )
         
         # No special context - routine situation
@@ -321,9 +322,9 @@ class TestDecisionInstrumentation(unittest.TestCase):
         """Test decision analytics generation."""
         # Use 0-10 scale for character stats
         character = MockCharacter(
-            health=8.0,
-            energy=7.5,
-            mental_health=8.0
+            health=80.0,
+            energy=75.0,
+            mental_health=80.0
         )
         
         # Make several decisions with different outcomes
@@ -390,7 +391,7 @@ class TestLLMIntegrationPipeline(unittest.TestCase):
         # CRISIS_THRESHOLD is 0.3, so 3.0 on 0-10 scale
         character = MockCharacter(
             health=(CRISIS_THRESHOLD * 10) - 1.0,
-            energy=3.0
+            energy=30.0
         )
         
         # Call enhanced_daily_actions
@@ -473,8 +474,8 @@ class TestComplexGoalScenario(unittest.TestCase):
         # Create character with complex goal - use 0-10 scale
         character = MockCharacter(
             name="Merchant",
-            health=6.0,  # Moderate health (0.6 normalized)
-            energy=5.0,  # Moderate energy (0.5 normalized)
+            health=60.0,  # Moderate health (0.6 normalized, #740)
+            energy=50.0,  # Moderate energy (0.5 normalized, #740)
             current_goal=complex_goal
         )
         

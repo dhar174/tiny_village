@@ -266,27 +266,27 @@ class FewShotExampleManager:
         self._populate_default_examples()
         
     def _populate_default_examples(self):
-        """Add some default few-shot examples."""
+        """Add some default few-shot examples (native 0-100 need scale, #740)."""
         default_examples = [
             FewShotExample(
-                situation_context="Character was very hungry (8/10) with low money",
-                character_state={"hunger": 8, "money": 2, "energy": 6},
+                situation_context="Character was very hungry (80/100) with low money",
+                character_state={"hunger": 80, "money": 2, "energy": 60},
                 decision_made="buy_food",
-                outcome="Successfully bought bread, hunger reduced to 4/10",
+                outcome="Successfully bought bread, hunger reduced to 40/100",
                 success_rating=0.9
             ),
             FewShotExample(
-                situation_context="Character had low energy (2/10) but good health",
-                character_state={"energy": 2, "health": 8, "hunger": 4},
+                situation_context="Character had low energy (20/100) but good health",
+                character_state={"energy": 20, "health": 80, "hunger": 40},
                 decision_made="sleep",
-                outcome="Energy restored to 9/10, felt much better",
+                outcome="Energy restored to 90/100, felt much better",
                 success_rating=0.95
             ),
             FewShotExample(
                 situation_context="Character needed social interaction, low social wellbeing",
-                character_state={"social_wellbeing": 3, "energy": 7, "mental_health": 5},
+                character_state={"social_wellbeing": 30, "energy": 70, "mental_health": 50},
                 decision_made="social_visit",
-                outcome="Visited friend, social wellbeing increased to 7/10",
+                outcome="Visited friend, social wellbeing increased to 70/100",
                 success_rating=0.85
             )
         ]
@@ -490,8 +490,10 @@ class NeedsPriorities:
         character needs medical attention."""
 
         health_status = character.get_health_status()
+        # #740: needs are native 0-100; the priority formula reads them directly
+        # instead of assuming a 0-10 scale.
         health_priority = (
-            100 - (health_status * 10)
+            100 - health_status
         ) + character.get_motives().get_health_motive().get_score()
         return health_priority
 
@@ -500,7 +502,7 @@ class NeedsPriorities:
 
         hunger_level = character.get_hunger_level()
         hunger_priority = (
-            hunger_level * 10 + character.get_motives().get_hunger_motive().get_score()
+            hunger_level + character.get_motives().get_hunger_motive().get_score()
         )
         return hunger_priority
 
@@ -710,34 +712,36 @@ class ActionOptions:
         # char_dict = character.to_dict()
         # inv_dict = character.inventory.to_dict()
 
-        # Sample criteria for prioritizing actions
+        # Sample criteria for prioritizing actions. Need thresholds use native
+        # 0-100 units (#740); happiness follows its 0-1 fraction scale; credits
+        # (wealth_money) thresholds are unscaled credits with labels.
         needs_goals = {
-            "buy_food": character.get_hunger_level() > 7
+            "buy_food": character.get_hunger_level() > 70
             and character.get_wealth_money() > 1
             and (
                 character.get_inventory().count_food_items_total() < 5
                 or character.get_inventory().count_food_calories_total()
                 < character.get_hunger_level()
             ),
-            "eat_food": character.get_hunger_level() > 5
+            "eat_food": character.get_hunger_level() > 50
             and character.get_inventory().count_food_items_total() > 0,
-            "visit_doctor": character.get_health_status() < 3
-            or character.get_mental_health() < 4,
-            "take_medicine": character.get_health_status() < 5,
-            "improve_shelter": character.get_shelter() < 4,
-            "attend_event": character.get_social_wellbeing() < 5
-            or character.get_community() < 5,
-            "pursue_hobby": character.get_happiness() < 5 or character.get_beauty() < 5,
-            "self_care": character.get_mental_health() < 5,
+            "visit_doctor": character.get_health_status() < 30
+            or character.get_mental_health() < 40,
+            "take_medicine": character.get_health_status() < 50,
+            "improve_shelter": character.get_shelter() < 40,
+            "attend_event": character.get_social_wellbeing() < 50
+            or character.get_community() < 50,
+            "pursue_hobby": character.get_happiness() < 0.5 or character.get_beauty() < 50,
+            "self_care": character.get_mental_health() < 50,
             "social_visit": character.get_friendship_grid() < 5,
-            "volunteer_time": character.get_community() < 5,
-            "improve_job_performance": character.get_job_performance() < 5,
+            "volunteer_time": character.get_community() < 50,
+            "improve_job_performance": character.get_job_performance() < 50,
             "get_educated": character.get_long_term_goal() == "career_advancement",
-            "set_goal": character.get_hope() < 5,
+            "set_goal": character.get_hope() < 50,
             "start_business": character.get_long_term_goal() == "entrepreneurship",
-            "trade_goods": character.get_wealth_money() > 5
-            or character.get_material_goods() > 5,
-            "invest_wealth": character.get_wealth_money() > 8,
+            "trade_goods": character.get_wealth_money() > 50
+            or character.get_material_goods() > 50,
+            "invest_wealth": character.get_wealth_money() > 80,
             # ... additional mappings ...
         }
 
@@ -2204,10 +2208,11 @@ class PromptBuilder:
     NEEDS_PRIORITY_CRITICAL_THRESHOLD = 80.0
     NEEDS_PRIORITY_HIGH_THRESHOLD = 60.0
 
-    def __init__(self, character, memory_manager=None) -> None:
+    def __init__(self, character, memory_manager=None, graph_manager=None) -> None:
         """Initialize the builder for ``character``."""
 
         self.character = character
+        self.graph_manager = graph_manager
         self.action_options = ActionOptions()
         self.needs_priorities_func = NeedsPriorities()
         
@@ -2460,17 +2465,41 @@ class PromptBuilder:
 
         return f"{character.name} has failed to {DescriptorMatrices.get_action_descriptors(action)} {action}."
 
+    def _graph_value(self, attribute, default=None):
+        """Graph-first need read for the registered character (#740).
+
+        Returns the node value when the character is registered and the node
+        carries the attribute; otherwise the object value (standalone path).
+        """
+        graph_manager = getattr(self, "graph_manager", None)
+        if graph_manager is None or self.character is None:
+            return default
+        identifier = getattr(self.character, "name", None)
+        if not identifier:
+            return default
+        try:
+            node_state = graph_manager.get_character_state(identifier)
+        except Exception:
+            return default
+        if not isinstance(node_state, dict):
+            return default
+        return node_state.get(attribute, default)
+
     def _get_character_state_dict(self) -> Dict[str, float]:
-        """Return a simplified state dictionary for utility calculations."""
+        """Return a simplified state dictionary for utility calculations.
+
+        Needs normalize by 100 (native 0-100 scale, #740); money stays raw
+        credits; reads are graph-first with the object fallback (#740).
+        """
 
         state = {
-            "hunger": getattr(self.character, "hunger_level", 5.0) / 10.0,
-            "energy": getattr(self.character, "energy", 5.0) / 10.0,
-            "health": getattr(self.character, "health_status", 5.0) / 10.0,
-            "mental_health": getattr(self.character, "mental_health", 5.0) / 10.0,
-            "social_wellbeing": getattr(self.character, "social_wellbeing", 5.0)
-            / 10.0,
-            "money": float(getattr(self.character, "wealth_money", 0.0)),
+            "hunger": self._graph_value("hunger_level", getattr(self.character, "hunger_level", 50.0)) / 100.0,
+            "energy": self._graph_value("energy", getattr(self.character, "energy", 50.0)) / 100.0,
+            "health": self._graph_value("health_status", getattr(self.character, "health_status", 50.0)) / 100.0,
+            "mental_health": self._graph_value("mental_health", getattr(self.character, "mental_health", 50.0)) / 100.0,
+            "social_wellbeing": self._graph_value("social_wellbeing", getattr(self.character, "social_wellbeing", 50.0))
+            / 100.0,
+            "money": float(self._graph_value("wealth_money", getattr(self.character, "wealth_money", 0.0))),
         }
         return state
 
@@ -2729,13 +2758,13 @@ class PromptBuilder:
         prompt += f"\n<|user|>"
         prompt += f"{self.character.name}, it's {time}, and {descriptors.get_weather_description(weather)}. "
 
-        # Enhanced status description
+        # Enhanced status description (native 0-100 need scale, graph-first reads, #740)
         prompt += f"Current state: "
-        prompt += f"Health {self.character.health_status}/10, "
-        prompt += f"Hunger {self.character.hunger_level}/10, "
-        prompt += f"Energy {getattr(self.character, 'energy', 5):.1f}/10, "
-        prompt += f"Mental Health {self.character.mental_health}/10, "
-        prompt += f"Social Wellbeing {self.character.social_wellbeing}/10. "
+        prompt += f"Health {self._graph_value('health_status', self.character.health_status)}/100, "
+        prompt += f"Hunger {self._graph_value('hunger_level', self.character.hunger_level)}/100, "
+        prompt += f"Energy {float(self._graph_value('energy', getattr(self.character, 'energy', 50))):.1f}/100, "
+        prompt += f"Mental Health {self._graph_value('mental_health', self.character.mental_health)}/100, "
+        prompt += f"Social Wellbeing {self._graph_value('social_wellbeing', self.character.social_wellbeing)}/100. "
 
         # Financial and life context
         prompt += f"{descriptors.get_event_recent(self.character.recent_event)}, and {descriptors.get_financial_situation(self.character.wealth_money)}. "
@@ -2752,12 +2781,28 @@ class PromptBuilder:
                 desc = getattr(mem, "description", str(mem))
                 prompt += f"- {desc}\n"
 
-        # Include any additional character state provided
+        # Include any additional character state provided. The strategy snapshot
+        # carries normalized 0-1 needs plus raw credits, so render native-scale
+        # /100 labels and a credits unit (#740).
         if isinstance(character_state_dict, dict):
             prompt += "\nAdditional state:\n"
             for key, value in character_state_dict.items():
                 formatted_key = key.replace("_", " ").title()
-                prompt += f"- {formatted_key}: {value}\n"
+                if key == "money":
+                    try:
+                        prompt += f"- {formatted_key}: {float(value):.0f} credits\n"
+                    except (TypeError, ValueError):
+                        prompt += f"- {formatted_key}: {value} credits\n"
+                elif key in {
+                    "hunger", "energy", "health", "social_wellbeing",
+                    "mental_health", "satisfaction", "job_performance",
+                }:
+                    try:
+                        prompt += f"- {formatted_key}: {float(value) * 100:.0f}/100\n"
+                    except (TypeError, ValueError):
+                        prompt += f"- {formatted_key}: {value}\n"
+                else:
+                    prompt += f"- {formatted_key}: {value}\n"
         elif character_state_dict is not None:
             raise TypeError("character_state_dict must be a dictionary.")
  
@@ -2842,9 +2887,9 @@ class PromptBuilder:
         prompt += "<|user|>"
         prompt += scenario
         prompt += (
-            f" Current state: Health {self.character.health_status}/10,"
-            f" Hunger {self.character.hunger_level}/10,"
-            f" Energy {getattr(self.character, 'energy', 5):.1f}/10."
+            f" Current state: Health {self._graph_value('health_status', self.character.health_status)}/100,"
+            f" Hunger {self._graph_value('hunger_level', self.character.hunger_level)}/100,"
+            f" Energy {float(self._graph_value('energy', getattr(self.character, 'energy', 50))):.1f}/100."
         )
         prompt += "\nAvailable actions:\n"
         for action in actions:

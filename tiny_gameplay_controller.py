@@ -4107,8 +4107,8 @@ class GameplayController:
             if hasattr(character, 'energy') and character.energy < 50:
                 actions.append({"name": "Rest", "cost": 0, "energy_gain": 10})
             
-            if hasattr(character, 'hunger_level') and character.hunger_level > 7:
-                actions.append({"name": "Eat", "cost": 0, "hunger_reduction": 3})
+            if hasattr(character, 'hunger_level') and character.hunger_level > 70:
+                actions.append({"name": "Eat", "cost": 0, "hunger_reduction": 30})
             
             # Always add a basic action as final fallback
             actions.append({"name": "Idle", "cost": 0, "energy_cost": 1})

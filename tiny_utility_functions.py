@@ -50,6 +50,126 @@ except ImportError:
     logger.warning("Using fallback Goal implementation in tiny_utility_functions")
 
 
+# === #740 UNITS BOUNDARY ===
+# Need attributes whose native 0-100 values and deltas divide by 100 at the
+# normalized utility boundary (#740). Happiness fractions and money (credits)
+# pass through directly.
+_NATIVELY_SCALED_NEED_ATTRIBUTES = {
+    "hunger", "hunger_level", "energy", "health", "health_status",
+    "social_wellbeing", "mental_health", "satisfaction", "job_performance",
+}
+
+
+def normalize_effect_delta(attribute, change_value):
+    """Convert a native 0-100 need delta to the normalized 0-1 utility scale (#740).
+
+    Happiness fractions and money (credits) pass through directly. Ordinary
+    runtime inputs are native at every magnitude; this conversion exists only
+    for calls into the normalized utility scoring.
+    """
+    if (
+        attribute in _NATIVELY_SCALED_NEED_ATTRIBUTES
+        and isinstance(change_value, (int, float))
+        and not isinstance(change_value, bool)
+    ):
+        return float(change_value) / 100.0
+    return change_value
+
+
+class _UtilityActionView:
+    """Read-only view of an action with need deltas normalized for utility scoring (#740)."""
+
+    def __init__(self, action):
+        self.action = action
+        self.name = getattr(action, "name", None)
+        self.cost = getattr(action, "cost", 0.0)
+        self.effects = [
+            {
+                "attribute": effect.get("attribute"),
+                "change_value": normalize_effect_delta(
+                    effect.get("attribute"), effect.get("change_value")
+                ),
+            }
+            for effect in getattr(action, "effects", None) or []
+            if isinstance(effect, dict)
+        ]
+
+
+def build_utility_action_view(action):
+    """Return the normalized-utility view of an action, or the action itself when trivial."""
+    effects = getattr(action, "effects", None)
+    if not effects or not any(isinstance(effect, dict) for effect in effects):
+        return action
+    return _UtilityActionView(action)
+
+
+def normalize_state_for_utility(state_dict):
+    """Divide native 0-100 need values by 100 for the normalized utility boundary (#740).
+
+    Happiness fractions and money (credits) pass through directly. Canonical
+    hunger_level/health_status keys are also emitted under the "hunger"/"health"
+    alias keys that the normalized utility scoring reads. Non-dict inputs pass
+    through untouched.
+    """
+    if not isinstance(state_dict, dict):
+        return state_dict
+    normalized = dict(state_dict)
+    for key, value in state_dict.items():
+        if (
+            key in _NATIVELY_SCALED_NEED_ATTRIBUTES
+            and isinstance(value, (int, float))
+            and not isinstance(value, bool)
+        ):
+            normalized[key] = float(value) / 100.0
+    for canonical, alias in (("hunger_level", "hunger"), ("health_status", "health")):
+        if alias not in normalized and canonical in normalized:
+            normalized[alias] = normalized[canonical]
+    return normalized
+
+
+class _SignedRemainingGoalView:
+    """Read-only goal view carrying normalized signed remaining changes (#740)."""
+
+    def __init__(self, goal, remaining):
+        self.goal = goal
+        self.name = getattr(goal, "name", None)
+        self.target_effects = remaining
+        self.priority = getattr(goal, "priority", 0.5)
+        self.urgency = getattr(goal, "urgency", self.priority)
+
+
+def build_signed_remaining_goal(goal, normalized_state):
+    """Re-express an absolute-target goal as normalized signed remaining changes (#740).
+
+    Positive targets are minimums: the remaining change is positive until the
+    target is met, so over-satisfying effects stop accruing the goal bonus.
+    Negative targets are maximums (hunger <= |target|): the remaining change
+    stays negative, so hunger-reducing effects keep the bonus even when already
+    satisfied — matching the pre-change delta-style goal semantics.
+    Non-numeric (delta-style) targets pass through untouched.
+    """
+    targets = getattr(goal, "target_effects", None)
+    if (
+        not isinstance(targets, dict)
+        or not targets
+        or not isinstance(normalized_state, dict)
+        or not normalized_state
+    ):
+        return goal
+    remaining = {}
+    numeric_state = False
+    for attribute, target in targets.items():
+        current = normalized_state.get(attribute, 0.0)
+        if isinstance(target, (int, float)) and not isinstance(target, bool):
+            remaining[attribute] = normalize_effect_delta(attribute, target) - current
+            numeric_state = True
+        else:
+            remaining[attribute] = target
+    if not numeric_state:
+        return goal
+    return _SignedRemainingGoalView(goal, remaining)
+
+
 # === CONSTANTS ===
 # Utility calculation scalers - adjust these to balance different factors
 HUNGER_SCALER = 20.0  # Weight for hunger need fulfillment
@@ -519,7 +639,13 @@ def is_goal_achieved(goal, character_state: State):
     if hasattr(goal, "target_effects") and isinstance(goal.target_effects, dict):
 
         for effect, target_value in goal.target_effects.items():
-            if character_state.get(effect, 0) < target_value:
+            # #740: absolute targets; sign determines direction — positive target
+            # = minimum (at least), negative target = maximum (at most).
+            current_value = character_state.get(effect, 0)
+            if isinstance(target_value, (int, float)) and target_value < 0:
+                if current_value > abs(target_value):
+                    return False
+            elif current_value < target_value:
                 return False
         return True
     return False  # Default if goal has no target_effects to check

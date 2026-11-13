@@ -17,9 +17,11 @@ This module integrates the GOAP system and the graph manager to formulate compre
 from tiny_goap_system import GOAPPlanner, ActionWrapper, action_from_graph_record
 from tiny_utility_functions import (
     calculate_action_utility,
+    build_utility_action_view,
+    build_signed_remaining_goal,
     Goal,
 )  # evaluate_utility seems to be for plans
-from actions import Action, State  # Use the modified Action from actions.py
+from actions import Action, State, Condition  # Use the modified Action from actions.py
 import logging
 import time
 import random
@@ -29,11 +31,12 @@ PromptBuilder = TinyBrainIO = OutputInterpreter = None
 
 logger = logging.getLogger(__name__)
 
-# Constants for goal targets (normalized 0-1 scale)
-SATISFACTION_TARGET = 0.8  # 80% satisfaction
-ENERGY_TARGET = 0.65  # 65% energy
+# Constants for goal targets (native 0-100 need scale, #740)
+SATISFACTION_TARGET = 80  # 80 points of satisfaction
+ENERGY_TARGET = 65  # 65 points of energy
 
-# LLM decision thresholds
+# LLM decision thresholds (compared against the normalized consumer snapshot,
+# where 0-1 values come from dividing native 0-100 needs by 100)
 CRISIS_THRESHOLD = 0.3  # Below 30% on critical stats
 VARIETY_PROBABILITY = 0.2  # 20% chance for variety
 
@@ -72,9 +75,13 @@ class SleepAction(Action):
 
 
 class WorkAction(Action):
-    def __init__(self, name="Work", cost=0.3, effects=None, graph_manager=None):
+    def __init__(self, name="Work", cost=0.3, effects=None, preconditions=None, graph_manager=None):
         super().__init__(
-            name=name, preconditions={}, effects=effects if effects else [], cost=cost, graph_manager=graph_manager
+            name=name,
+            preconditions=preconditions if preconditions is not None else {},
+            effects=effects if effects else [],
+            cost=cost,
+            graph_manager=graph_manager,
         )
 
 
@@ -726,40 +733,58 @@ class StrategyManager:
                     return default
 
             try:
+                # #740: graph-first reads — registered node values win over the
+                # object attributes for every need the node carries.
+                graph_values = self._graph_values_for_character(character)
                 state["hunger"] = _normalize(
-                    getattr(character, "hunger_level", None), 10.0
-                )  # Assuming hunger 0-10
+                    graph_values.get("hunger_level", getattr(character, "hunger_level", None)), 100.0
+                )  # Native 0-100 need (#740)
                 state["energy"] = _normalize(
-                    getattr(character, "energy", None), 10.0
-                )  # Assuming energy 0-10
+                    graph_values.get("energy", getattr(character, "energy", None)), 100.0
+                )  # Native 0-100 need (#740)
                 try:
-                    state["money"] = float(getattr(character, "wealth_money", 0.0))
+                    state["money"] = float(
+                        graph_values.get("wealth_money", getattr(character, "wealth_money", 0.0))
+                    )
                 except (TypeError, ValueError):
                     state["money"] = 0.0
 
-                # Add other relevant states if needed by utility function's need fulfillment logic
+                # Other 0-100 needs also normalize by 100 (#740); happiness is a
+                # 0-1 fraction and passes through, and satisfaction is derived
+                # from current_satisfaction for the consumer snapshot.
                 state["social_wellbeing"] = _normalize(
-                    getattr(character, "social_wellbeing", None), 10.0
+                    graph_values.get("social_wellbeing", getattr(character, "social_wellbeing", None)), 100.0
                 )
                 state["mental_health"] = _normalize(
-                    getattr(character, "mental_health", None), 10.0
+                    graph_values.get("mental_health", getattr(character, "mental_health", None)), 100.0
                 )
                 state["health"] = _normalize(
-                    getattr(character, "health_status", None), 100.0
+                    graph_values.get("health_status", getattr(character, "health_status", None)), 100.0
                 )
-                # satisfaction and happiness are independent attributes; happiness falls back
-                # to the computed satisfaction value only when the character truly lacks it.
                 state["satisfaction"] = _normalize(
-                    getattr(character, "satisfaction", None), 100.0
+                    graph_values.get(
+                        "current_satisfaction",
+                        getattr(
+                            character,
+                            "current_satisfaction",
+                            getattr(character, "satisfaction", None),
+                        ),
+                    ),
+                    100.0,
                 )
                 if hasattr(character, "happiness"):
-                    state["happiness"] = _normalize(
-                        getattr(character, "happiness", None), 100.0
-                    )
+                    try:
+                        state["happiness"] = float(
+                            graph_values.get("happiness", getattr(character, "happiness", 0.0))
+                        )
+                    except (TypeError, ValueError):
+                        # Unusable happiness falls back to the 0.5 default rather
+                        # than the satisfaction value (pinned contract).
+                        state["happiness"] = 0.5
                 else:
                     state["happiness"] = state["satisfaction"]
                 state["job_performance"] = _normalize(
-                    getattr(character, "job_performance", None), 100.0
+                    graph_values.get("job_performance", getattr(character, "job_performance", None)), 100.0
                 )
             except (AttributeError, TypeError, ValueError) as e:
                 logger.warning(f"Error extracting character state: {e}, using defaults")
@@ -793,6 +818,55 @@ class StrategyManager:
 
         return state
 
+    def _graph_values_for_character(self, character):
+        """Return the registered character node's values (graph-first reads, #740)."""
+        graph_manager = getattr(self, "graph_manager", None)
+        if graph_manager is None or isinstance(character, (str, dict)):
+            return {}
+        identifier = getattr(character, "name", None)
+        if not identifier:
+            return {}
+        try:
+            node_state = graph_manager.get_character_state(identifier)
+        except Exception:
+            return {}
+        return node_state if isinstance(node_state, dict) else {}
+
+    def get_character_planning_state(self, character) -> dict:
+        """Native-scale planning state for GOAP search and gates (#740).
+
+        Graph-first when the character is registered with a graph manager and
+        its node resolves, with the standalone Character-attribute fallback for
+        graph-free callers. Canonical need keys let GOAP conditions and goal
+        targets evaluate against the same snapshot.
+        """
+        state = self._standalone_planning_state(character)
+        state.update(self._graph_values_for_character(character))
+        return state
+
+    def _standalone_planning_state(self, character) -> dict:
+        """Standalone native planning state from Character attributes (graph-free path)."""
+        def _to_float(value, default):
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return default
+
+        if isinstance(character, dict):
+            return dict(character)
+        return {
+            "energy": _to_float(getattr(character, "energy", 50.0), 50.0),
+            "hunger_level": _to_float(getattr(character, "hunger_level", 30.0), 30.0),
+            "health_status": _to_float(getattr(character, "health_status", 100.0), 100.0),
+            "mental_health": _to_float(getattr(character, "mental_health", 50.0), 50.0),
+            "social_wellbeing": _to_float(getattr(character, "social_wellbeing", 50.0), 50.0),
+            "job_performance": _to_float(getattr(character, "job_performance", 20.0), 20.0),
+            "satisfaction": _to_float(getattr(character, "current_satisfaction", 0.0), 0.0),
+            "happiness": _to_float(getattr(character, "happiness", 0.0), 0.0),
+            "wealth_money": _to_float(getattr(character, "wealth_money", 0.0), 0.0),
+            "money": _to_float(getattr(character, "wealth_money", 0.0), 0.0),
+        }
+
     def get_daily_actions(
         self, character, current_goal=None
     ) -> list[Action]:
@@ -810,19 +884,19 @@ class StrategyManager:
         # 1. Generic Actions
         potential_actions.append(NoOpAction(graph_manager=self.graph_manager))
         potential_actions.append(
-            WanderAction(effects=[{"attribute": "energy", "change_value": -0.05}], graph_manager=self.graph_manager)
-        )  # Wandering costs a little energy
+            WanderAction(effects=[{"targets": ["initiator"], "attribute": "energy", "change_value": -5}], graph_manager=self.graph_manager)
+        )  # Wandering costs a little energy (native 0-100 scale, #740)
 
         # 2. Contextual Actions
         # Handle different character input types
-        char_energy_normalized = 0.5  # Default value
+        char_energy = 50  # Default value (native 0-100 scale, #740)
         char_location_name = "Unknown"  # Default value
         char_job = "unemployed"  # Default value
         
         if hasattr(character, 'energy'):
-            char_energy_normalized = getattr(character, "energy", 5.0) / 10.0
+            char_energy = float(getattr(character, "energy", 50.0))
         elif isinstance(character, dict):
-            char_energy_normalized = character.get("energy", 5.0) / 10.0
+            char_energy = float(character.get("energy", 50.0))
             
         if hasattr(character, 'location'):
             char_location_name = getattr(character.location, "name", "Unknown") if character.location else "Unknown"
@@ -834,16 +908,16 @@ class StrategyManager:
         elif isinstance(character, dict):
             char_job = character.get("job", "unemployed")
 
-        LOW_ENERGY_THRESHOLD = 0.3  # Assuming energy is normalized 0-1 for this check
-        HIGH_HUNGER_THRESHOLD = 0.6  # Assuming hunger is normalized 0-1 for this check
+        LOW_ENERGY_THRESHOLD = 30  # Native 0-100 energy (0-1 constants × 100, #740)
+        HIGH_HUNGER_THRESHOLD = 60  # Native 0-100 hunger (0-1 constants × 100, #740)
 
-        # Add actions that can improve satisfaction and energy to match common goals (0-1 scale)
+        # Add actions that can improve satisfaction and energy to match common goals (native 0-100, #740)
         rest_action = Action(
             name="Rest",
             preconditions=[],
             effects=[
-                {"targets": ["initiator"], "attribute": "energy", "change_value": 0.15},
-                {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 0.08}
+                {"targets": ["initiator"], "attribute": "energy", "change_value": 15},
+                {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 8}
             ],
             cost=0.1,
             graph_manager=self.graph_manager,
@@ -855,7 +929,7 @@ class StrategyManager:
             name="Leisure Activity", 
             preconditions=[],
             effects=[
-                {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 0.12},
+                {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 12},
                 {"targets": ["initiator"], "attribute": "happiness", "change_value": 0.08}
             ],
             cost=0.2,
@@ -868,8 +942,8 @@ class StrategyManager:
             name="Exercise",
             preconditions=[],
             effects=[
-                {"targets": ["initiator"], "attribute": "energy", "change_value": 0.10},
-                {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 0.06}
+                {"targets": ["initiator"], "attribute": "energy", "change_value": 10},
+                {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 6}
             ],
             cost=0.3,
             graph_manager=self.graph_manager,
@@ -884,9 +958,9 @@ class StrategyManager:
                 for food_item in food_items[:2]:  # Limit to checking first 2 food items
                     hunger_reduction_effect = -(
                         getattr(food_item, "calories", 20) * 0.1
-                    )  # Scale calories to hunger effect
+                    )  # calories × 0.1 hunger points (native 0-100 hunger, #740)
                     eat_effects = [
-                        {"attribute": "hunger", "change_value": hunger_reduction_effect}
+                        {"targets": ["initiator"], "attribute": "hunger", "change_value": hunger_reduction_effect}
                     ]
                     potential_actions.append(
                         EatAction(
@@ -896,10 +970,10 @@ class StrategyManager:
                     )
 
         # Sleep Action
-        if (char_energy_normalized < LOW_ENERGY_THRESHOLD and char_location_name == "Home"):
+        if (char_energy < LOW_ENERGY_THRESHOLD and char_location_name == "Home"):
             sleep_effects = [
-                {"attribute": "energy", "change_value": 0.7}
-            ]  # Restore 70% energy
+                {"targets": ["initiator"], "attribute": "energy", "change_value": 70}
+            ]  # Restore 70 points of energy (native, #740)
             potential_actions.append(
                 SleepAction(effects=sleep_effects, cost=0, graph_manager=self.graph_manager)
             )  # Sleep itself has no direct cost other than time
@@ -913,12 +987,19 @@ class StrategyManager:
                 job_name = str(char_job)
                 
             work_effects = [
-                {"attribute": "money", "change_value": 20.0},  # Example money gain
-                {"attribute": "energy", "change_value": -0.3},  # Example energy cost
+                {"targets": ["initiator"], "attribute": "money", "change_value": 20.0},  # Credits are unscaled (#740)
+                {"targets": ["initiator"], "attribute": "energy", "change_value": -30},  # 0-1 fraction × 100 (#740)
             ]
             potential_actions.append(
-                WorkAction(name=f"Work as {job_name}", effects=work_effects, cost=0.2, graph_manager=self.graph_manager)
-            )  # Base cost for work action
+                WorkAction(
+                    name=f"Work as {job_name}",
+                    preconditions=[Condition("HasEnergyToWork", "energy", None, LOW_ENERGY_THRESHOLD)],
+                    effects=work_effects,
+                    cost=0.2,
+                    graph_manager=self.graph_manager,
+                )
+            )  # Requires native energy >= 30 (#740); cost unchanged
+
 
         # --- Utility Calculation & Sorting ---
         action_utilities = []
@@ -930,8 +1011,13 @@ class StrategyManager:
             )  # Sort by name as fallback
 
         for action in potential_actions:
+            # #740 boundary: need deltas divide by 100 and absolute targets are
+            # supplied as normalized signed remaining changes to the normalized
+            # utility scoring; happiness and credits pass through.
             utility = calculate_action_utility(
-                character_state_dict, action, current_goal
+                character_state_dict,
+                build_utility_action_view(action),
+                build_signed_remaining_goal(current_goal, character_state_dict),
             )
             action_utilities.append((action, utility))
 
@@ -971,7 +1057,7 @@ class StrategyManager:
                 logger.warning("PromptBuilder not available, falling back to utility-based actions")
                 return potential_actions[:1] if potential_actions else []
                 
-            prompt_builder = PromptBuilder(character)
+            prompt_builder = PromptBuilder(character, graph_manager=self.graph_manager)
 
             # Step 3: Generate action choices with utility scores from potential actions
             action_choices = []
@@ -1144,7 +1230,7 @@ class StrategyManager:
                 )
                 ranked_goals = self._rank_goals(character_obj, goal_candidates)
                 goal = ranked_goals[0] if ranked_goals else self._goal_for_event_type(
-                    event_type, self.get_character_state_dict(character_obj)
+                    event_type, self.get_character_planning_state(character_obj)
                 )
 
                 plan = None
@@ -1280,11 +1366,8 @@ class StrategyManager:
         return hasattr(self, "_characters_using_llm") and char_id in self._characters_using_llm
 
     def _get_current_state_for_character(self, character):
-        if self.graph_manager is not None:
-            identifier = character.get("name") if isinstance(character, dict) else getattr(character, "name", character)
-            state = self.graph_manager.get_character_state(identifier)
-            return state if isinstance(state, State) else State(state)
-        return State(self.get_character_state_dict(character))
+        # #740: native planning state for GOAP (graph-first, standalone fallback)
+        return State(self.get_character_planning_state(character))
 
     def _get_actions_for_character(self, character):
         if self.graph_manager is not None:
@@ -1339,7 +1422,12 @@ class StrategyManager:
 
         def _score(action):
             try:
-                return calculate_action_utility(character_state, action, current_goal)
+                # #740 boundary: normalized deltas + signed remaining goal (see get_daily_actions)
+                return calculate_action_utility(
+                    character_state,
+                    build_utility_action_view(action),
+                    build_signed_remaining_goal(current_goal, character_state),
+                )
             except (AttributeError, TypeError, ValueError):
                 utility = getattr(action, "utility", None)
                 return utility if isinstance(utility, (int, float)) else float("-inf")
@@ -1349,17 +1437,17 @@ class StrategyManager:
     def _goal_for_event_type(self, event_type, character_state=None):
         character_state = character_state or {}
         current_money = self._get_money_value(character_state)
-        current_social = character_state.get("social_wellbeing", 0.5)
-        current_satisfaction = character_state.get("satisfaction", 0.5)
-        current_energy = character_state.get("energy", 0.5)
-        current_happiness = character_state.get("happiness", current_satisfaction)
-        current_job = character_state.get("job_performance", 0.5)
+        current_social = character_state.get("social_wellbeing", 50)
+        current_satisfaction = character_state.get("satisfaction", 50)
+        current_energy = character_state.get("energy", 50)
+        current_happiness = character_state.get("happiness", 0.5)
+        current_job = character_state.get("job_performance", 50)
 
         if event_type in ["social", "celebration", "festival"]:
             return Goal(
                 name="social_engagement",
                 target_effects={
-                    "social_wellbeing": min(1.0, current_social + 0.2),
+                    "social_wellbeing": min(100, current_social + 20),
                     "happiness": min(1.0, current_happiness + 0.2),
                 },
                 priority=0.8,
@@ -1369,7 +1457,7 @@ class StrategyManager:
                 name="economic_opportunity",
                 target_effects={
                     "money": current_money + 20.0,
-                    "satisfaction": min(1.0, current_satisfaction + 0.15),
+                    "satisfaction": min(100, current_satisfaction + 15),
                 },
                 priority=0.9,
             )
@@ -1377,8 +1465,8 @@ class StrategyManager:
             return Goal(
                 name="crisis_response",
                 target_effects={
-                    "safety": 0.9,
-                    "energy": max(current_energy, 0.6),
+                    "safety": 90,
+                    "energy": max(current_energy, 60),
                 },
                 priority=1.0,
             )
@@ -1386,8 +1474,8 @@ class StrategyManager:
             return Goal(
                 name="work_productivity",
                 target_effects={
-                    "job_performance": min(1.0, current_job + 0.15),
-                    "satisfaction": min(1.0, current_satisfaction + 0.1),
+                    "job_performance": min(100, current_job + 15),
+                    "satisfaction": min(100, current_satisfaction + 10),
                 },
                 priority=0.7,
             )
@@ -1395,16 +1483,16 @@ class StrategyManager:
             return Goal(
                 name="weather_adaptation",
                 target_effects={
-                    "safety": 0.8,
-                    "energy": max(current_energy, 0.7),
+                    "safety": 80,
+                    "energy": max(current_energy, 70),
                 },
                 priority=0.8,
             )
         return Goal(
             name="balanced_response",
             target_effects={
-                "satisfaction": max(current_satisfaction, 0.7),
-                "energy": max(current_energy, 0.65),
+                "satisfaction": max(current_satisfaction, 70),
+                "energy": max(current_energy, 65),
             },
             priority=0.6,
         )
@@ -1419,7 +1507,7 @@ class StrategyManager:
                 # Fallback: use the object's __dict__ if it carries state as attributes
                 character_state = dict_or_obj.__dict__
         if not character_state:
-            character_state = self.get_character_state_dict(character)
+            character_state = self.get_character_planning_state(character)
 
         goals = [self._goal_for_event_type(event_type, character_state)]
         if event_type != "new_day":
@@ -1427,8 +1515,8 @@ class StrategyManager:
                 Goal(
                     name="daily_wellbeing",
                     target_effects={
-                        "satisfaction": max(character_state.get("satisfaction", 0.5), SATISFACTION_TARGET),
-                        "energy": max(character_state.get("energy", 0.5), ENERGY_TARGET),
+                        "satisfaction": max(character_state.get("satisfaction", 50), SATISFACTION_TARGET),
+                        "energy": max(character_state.get("energy", 50), ENERGY_TARGET),
                     },
                     priority=0.6,
                 )
@@ -1625,8 +1713,8 @@ class StrategyManager:
             
             goal = Goal(
                 name="crisis_response",
-                target_effects={"safety": 0.9, "energy": 0.6},
-                priority=1.0  # Highest priority
+                target_effects={"safety": target_safety, "energy": target_energy},
+                priority=1.0  # Highest priority; native 0-100 targets (#740)
             )
             
             # In crisis, prioritize safety and basic needs
@@ -1816,7 +1904,7 @@ class StrategyManager:
         try:
             # Get character state
             if isinstance(character, str):
-                current_state = State({"satisfaction": 50, "energy": 50, "happiness": 50})
+                current_state = State({"satisfaction": 50, "energy": 50, "happiness": 0.5})
             else:
                 current_state = self._get_current_state_for_character(character)
             
@@ -1879,12 +1967,11 @@ class StrategyManager:
 
         # Create current state - handle both Character objects and string names
         if isinstance(character, str):
-            # If character is a string, create a simple state
-            current_state = State({"satisfaction": 0.5, "energy": 0.5, "hunger": 0.5})
+            # If character is a string, create a simple native-scale state (#740)
+            current_state = State({"satisfaction": 50, "energy": 50, "hunger_level": 50})
         else:
-            # If character is a Character object, get its state
-            character_state_dict = self.get_character_state_dict(character)
-            current_state = State(character_state_dict)
+            # If character is a Character object, get its native planning state (#740)
+            current_state = State(self.get_character_planning_state(character))
 
         # Plan using GOAP with correct interface
         try:

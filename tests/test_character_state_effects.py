@@ -31,15 +31,15 @@ class TestAttributeMapper(unittest.TestCase):
         actual, min_val, max_val, default = AttributeMapper.map_attribute("health")
         self.assertEqual(actual, "health_status")
         self.assertEqual(min_val, 0)
-        self.assertEqual(max_val, 10)
-        self.assertEqual(default, 5)
+        self.assertEqual(max_val, 100)  # native 0-100 (#740)
+        self.assertEqual(default, 50)
     
     def test_map_happiness_to_social_wellbeing(self):
         """Test mapping 'happiness' to 'social_wellbeing'."""
         actual, min_val, max_val, default = AttributeMapper.map_attribute("happiness")
         self.assertEqual(actual, "social_wellbeing")
         self.assertEqual(min_val, 0)
-        self.assertEqual(max_val, 10)
+        self.assertEqual(max_val, 100)  # native 0-100 (#740)
     
     def test_map_wealth_attribute(self):
         """Test mapping 'wealth' to 'wealth_money'."""
@@ -53,14 +53,14 @@ class TestAttributeMapper(unittest.TestCase):
         actual, min_val, max_val, default = AttributeMapper.map_attribute("energy")
         self.assertEqual(actual, "energy")
         self.assertEqual(min_val, 0)
-        self.assertEqual(max_val, 10)
+        self.assertEqual(max_val, 100)  # native 0-100 (#740)
     
     def test_map_hunger_attribute(self):
         """Test mapping 'hunger' to 'hunger_level'."""
         actual, min_val, max_val, default = AttributeMapper.map_attribute("hunger")
         self.assertEqual(actual, "hunger_level")
         self.assertEqual(min_val, 0)
-        self.assertEqual(max_val, 10)
+        self.assertEqual(max_val, 100)  # native 0-100 (#740)
     
     def test_map_job_performance_attribute(self):
         """Test mapping 'job_performance' and aliases."""
@@ -118,7 +118,7 @@ class TestAttributeMapperWithEntities(unittest.TestCase):
         entity = TestEntity()
         
         health = AttributeMapper.get_attribute_value(entity, "health")
-        self.assertEqual(health, 5)  # Default for health
+        self.assertEqual(health, 50)  # Native default for health (#740)
     
     def test_set_attribute_value(self):
         """Test setting attribute value through mapper."""
@@ -133,8 +133,8 @@ class TestAttributeMapperWithEntities(unittest.TestCase):
         entity = TestEntity(health_status=5)
         
         # Try to set above max
-        AttributeMapper.set_attribute_value(entity, "health", 15, apply_bounds=True)
-        self.assertEqual(entity.health_status, 10)  # Clamped to max
+        AttributeMapper.set_attribute_value(entity, "health", 150, apply_bounds=True)
+        self.assertEqual(entity.health_status, 100)  # Clamped to native max (#740)
         
         # Try to set below min
         AttributeMapper.set_attribute_value(entity, "health", -5, apply_bounds=True)
@@ -208,8 +208,8 @@ class TestCharacterHealthEffects(unittest.TestCase):
         self.assertEqual(character.health_status, 0)  # Clamped at min
     
     def test_health_clamped_at_maximum(self):
-        """Test that health is clamped at 10."""
-        character = TestEntity(health_status=8)
+        """Test that health is clamped at the native 100 (#740)."""
+        character = TestEntity(health_status=95)
         self.mock_event.participants = [character]
         
         effect = EffectV2(
@@ -221,7 +221,7 @@ class TestCharacterHealthEffects(unittest.TestCase):
         
         result = self.dispatcher.apply_effect(effect, self.mock_event)
         self.assertTrue(result)
-        self.assertEqual(character.health_status, 10)  # Clamped at max
+        self.assertEqual(character.health_status, 100)  # Clamped at native max
 
 
 class TestCharacterEnergyEffects(unittest.TestCase):
@@ -267,8 +267,8 @@ class TestCharacterEnergyEffects(unittest.TestCase):
         self.assertEqual(character.energy, 3)
     
     def test_energy_bounds(self):
-        """Test energy bounds enforcement."""
-        character = TestEntity(energy=9)
+        """Test energy bounds enforcement (native 0-100, #740)."""
+        character = TestEntity(energy=95)
         self.mock_event.participants = [character]
         
         # Test upper bound
@@ -279,14 +279,14 @@ class TestCharacterEnergyEffects(unittest.TestCase):
             change_value=5
         )
         self.dispatcher.apply_effect(effect, self.mock_event)
-        self.assertEqual(character.energy, 10)  # Clamped at max
+        self.assertEqual(character.energy, 100)  # Clamped at native max
         
-        # Test lower bound
+        # Test lower bound (100 - 150 -> clamped at native min, #740)
         effect2 = EffectV2(
             type=EffectType.ATTRIBUTE_CHANGE,
             targets=["participants"],
             attribute="energy",
-            change_value=-15
+            change_value=-150
         )
         self.dispatcher.apply_effect(effect2, self.mock_event)
         self.assertEqual(character.energy, 0)  # Clamped at min
@@ -410,8 +410,8 @@ class TestCharacterHungerEffects(unittest.TestCase):
         self.assertEqual(character.hunger_level, 4)
     
     def test_hunger_bounds(self):
-        """Test hunger level bounds."""
-        character = TestEntity(hunger_level=8)
+        """Test hunger level bounds (native 0-100, #740)."""
+        character = TestEntity(hunger_level=95)
         self.mock_event.participants = [character]
         
         # Test upper bound
@@ -422,14 +422,14 @@ class TestCharacterHungerEffects(unittest.TestCase):
             change_value=5
         )
         self.dispatcher.apply_effect(effect, self.mock_event)
-        self.assertEqual(character.hunger_level, 10)
+        self.assertEqual(character.hunger_level, 100)
         
-        # Test lower bound
+        # Test lower bound (100 - 150 -> clamped at native min, #740)
         effect2 = EffectV2(
             type=EffectType.ATTRIBUTE_CHANGE,
             targets=["participants"],
             attribute="hunger",
-            change_value=-15
+            change_value=-150
         )
         self.dispatcher.apply_effect(effect2, self.mock_event)
         self.assertEqual(character.hunger_level, 0)
@@ -478,8 +478,8 @@ class TestCharacterMentalHealthEffects(unittest.TestCase):
         self.assertEqual(character.mental_health, 8)
     
     def test_mental_health_bounds(self):
-        """Test mental health bounds."""
-        character = TestEntity(mental_health=9)
+        """Test mental health bounds (native 0-100, #740)."""
+        character = TestEntity(mental_health=95)
         self.mock_event.participants = [character]
         
         effect = EffectV2(
@@ -490,7 +490,7 @@ class TestCharacterMentalHealthEffects(unittest.TestCase):
         )
         
         self.dispatcher.apply_effect(effect, self.mock_event)
-        self.assertEqual(character.mental_health, 10)  # Clamped at max
+        self.assertEqual(character.mental_health, 100)  # Clamped at native max
 
 
 class TestCharacterJobPerformanceEffects(unittest.TestCase):
@@ -575,9 +575,9 @@ class TestMissingAttributeHandling(unittest.TestCase):
         
         result = self.dispatcher.apply_effect(effect, self.mock_event)
         self.assertTrue(result)
-        # Should create attribute with default (5) + change (3) = 8
+        # Should create attribute with native default (50) + change (3) = 53 (#740)
         self.assertTrue(hasattr(character, "health_status"))
-        self.assertEqual(character.health_status, 8)
+        self.assertEqual(character.health_status, 53)
     
     def test_effect_fails_gracefully_on_error(self):
         """Test that effect application doesn't crash on errors."""
