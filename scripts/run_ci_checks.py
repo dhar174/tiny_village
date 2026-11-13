@@ -27,7 +27,7 @@ LIGHTWEIGHT_EXTRAS = {'pygame', 'faiss-cpu', 'spacy', 'nltk', 'torch', 'transfor
 PROFILES = {
     'core': [('components', 'unittest', ['tests.test_tiny_util_funcs', 'tests.test_actions', 'tests.test_action_named_target_resolution',
               'tests.test_action_contracts', 'tests.test_utility_contracts', 'tests.test_goap_graph_contracts',
-              'tests.test_entity_identity_contracts',
+              'tests.test_entity_identity_contracts', 'tests.test_action_execution_integration',
               'tests.test_goap_error_handling', 'tests.test_event_handler_payloads']),
              ('runtime', 'unittest', ['tests.test_memory_runtime', 'tests.test_lightweight_runtime.TestHeadlessRuntime',
               'tests.test_character_happiness_contracts',
