@@ -26,8 +26,7 @@ negative = maximum). Prompts render /100 labels and credits units with translate
 
 Independent review (tiny-village-reviewer): no blocking findings; six non-blocking findings,
 five addressed in the diff (docstring, alias-key emission at the cost boundary, mock
-mental default, dispatcher-gate documentation, receipt precision); the satisfaction reader
-asymmetry is recorded for the #816 alias audit.
+mental default, dispatcher-gate documentation, receipt precision); satisfaction reader asymmetry is recorded for the #816 alias audit; the #818-review satisfaction read/write preference trade-off (building-manager current_satisfaction producers masked after any satisfaction-effect write) joins it there.
 
 Verification receipts: `.test-artifacts/windows-local/20261113-740/` and
 `.test-artifacts/740-review/` (gitignored). Windows-local runs are non-canonical
