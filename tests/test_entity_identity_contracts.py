@@ -131,6 +131,14 @@ assert character.energy == graph.G.nodes[character]['energy'] == 60
 ''')
 
 
+    def test_named_target_synchronizes_real_characters_once(self):
+        self.run_python('''
+import runpy
+
+probe = runpy.run_path('docs/planning/issue-734/evidence/audit_probes.py')
+probe['named_target']()
+''')
+
     def test_named_targets_use_location_identity_and_reject_ambiguity(self):
         self.run_world('''
 from actions import ActionSystem

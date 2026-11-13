@@ -971,5 +971,11 @@ Project Decision synchronization remains outstanding as described above.
   the failed attribute, including its previous absence. Earlier synchronized
   effects remain applied. Arbitrary callback side effects and whole-action
   transactions remain outside this contract.
+- **Known limitation:** Attribute effects calculate from the graph value when
+  it exists. Gameplay writes that update the Character alone can leave the
+  graph value stale. For example, if weather drains a Character's energy from
+  20 to 15 without updating the graph, a subsequent +10 effect writes 30 to
+  both stores. Track reconciliation of direct gameplay writes as follow-up
+  work and carry this behavior into the #220 rollback design.
 - **Scope:** Local implementation and evidence for #799. D034 and the existing
   #220, #602, #741 and #802 acceptance boundaries remain in force.
