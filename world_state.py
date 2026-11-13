@@ -10,9 +10,15 @@ The WorldState class is responsible for:
 - Maintaining the graph data structure without business logic
 """
 
+from uuid import UUID
+
 import networkx as nx
 import logging
 from typing import Dict, Any, Optional, List
+
+
+class UnknownNodeError(ValueError):
+    """The requested graph node is absent."""
 
 
 class WorldState:
@@ -188,6 +194,35 @@ class WorldState:
 
     # ===== Node CRUD Operations =====
     
+    def resolve_node(self, identifier: Any, node_type: Optional[str] = None) -> Any:
+        """Resolve an object, UUID or registered name to one existing graph key."""
+        entity_id = getattr(identifier, 'uuid', None)
+        token = str(identifier) if isinstance(identifier, (str, UUID)) else None
+        matches = []
+        for node, data in self.graph.nodes(data=True):
+            if node_type is not None and data.get('type') != node_type:
+                continue
+            if node is identifier and token is None:
+                return node
+            node_id = getattr(node, 'uuid', None)
+            if token is not None:
+                key_match = isinstance(node, (str, UUID)) and str(node) == token
+                uuid_match = node_id is not None and str(node_id) == token
+                name_match = isinstance(identifier, str) and data.get('name') == token
+                matched = key_match or uuid_match or name_match
+            elif entity_id is not None:
+                matched = (type(node) is type(identifier) and entity_id == node_id
+                           or isinstance(node, (str, UUID)) and str(node) == str(entity_id))
+            else:
+                matched = node == identifier
+            if matched:
+                matches.append(node)
+        if len(matches) == 1:
+            return matches[0]
+        if matches:
+            raise ValueError(f"Ambiguous graph node identifier: {identifier!r}")
+        raise UnknownNodeError(f"Node does not exist in the graph: {identifier!r}")
+
     def add_node(self, node_obj: Any, node_type: str, **attributes) -> None:
         """
         Add a node to the graph with specified attributes.
@@ -205,76 +240,55 @@ class WorldState:
         else:
             name = str(node_obj)
             
-        if node_type in self.type_to_dict_map:
-            self.type_to_dict_map[node_type][name] = node_obj
-        
-        # Add the node to the graph with type and other attributes
+        registry = self.type_to_dict_map.get(node_type)
+        if node_type in ('character', 'location'):
+            entity_id = getattr(node_obj, 'uuid', None)
+            for registered, data in self.graph.nodes(data=True):
+                if registered is node_obj:
+                    if data.get('type') != node_type:
+                        raise ValueError("Node is already registered under a different type")
+                    return
+                if ((entity_id is not None and getattr(registered, 'uuid', None) == entity_id)
+                        or (data.get('type') == node_type and data.get('name') == name)):
+                    raise ValueError(f"Duplicate {node_type} identity or name: {name!r}")
+
         self.graph.add_node(node_obj, type=node_type, name=name, **attributes)
-        
-        logging.debug(f"Added {node_type} node: {name}")
-    
+        if registry is not None:
+            registry[name] = node_obj
+        logging.debug("Added %s node: %s", node_type, name)
+
     def remove_node(self, node_obj: Any) -> None:
-        """
-        Remove a node from the graph.
-        
-        Args:
-            node_obj: The node object to remove
-        """
-        if self.graph.has_node(node_obj):
-            # Remove from type-specific dictionary
-            node_data = self.graph.nodes[node_obj]
-            node_type = node_data.get('type')
-            name = node_data.get('name')
-            
-            if node_type in self.type_to_dict_map and name in self.type_to_dict_map[node_type]:
-                del self.type_to_dict_map[node_type][name]
-            
-            self.graph.remove_node(node_obj)
-            logging.debug(f"Removed node: {name}")
-        else:
-            logging.warning(f"Attempted to remove non-existent node: {node_obj}")
-    
+        """Remove the resolved graph key and its matching registry entry."""
+        try:
+            node = self.resolve_node(node_obj)
+        except UnknownNodeError:
+            logging.warning("Attempted to remove non-existent node: %r", node_obj)
+            return
+        data = self.graph.nodes[node]
+        registry = self.type_to_dict_map.get(data.get('type'), {})
+        name = data.get('name')
+        self.graph.remove_node(node)
+        if name in registry and registry[name] is node:
+            del registry[name]
+
     def has_node(self, node_obj: Any) -> bool:
-        """
-        Check if a node exists in the graph.
-        
-        Args:
-            node_obj: The node object to check
-            
-        Returns:
-            bool: True if the node exists, False otherwise
-        """
-        return self.graph.has_node(node_obj)
-    
+        try:
+            self.resolve_node(node_obj)
+        except UnknownNodeError:
+            return False
+        return True
+
     def get_node_attributes(self, node_obj: Any) -> Dict[str, Any]:
-        """
-        Get all attributes for a node.
-        
-        Args:
-            node_obj: The node object
-            
-        Returns:
-            Dict[str, Any]: Dictionary of node attributes
-        """
-        if self.graph.has_node(node_obj):
-            return dict(self.graph.nodes[node_obj])
-        return {}
-    
+        try:
+            return dict(self.graph.nodes[self.resolve_node(node_obj)])
+        except UnknownNodeError:
+            return {}
+
     def update_node_attribute(self, node_obj: Any, attribute: str, value: Any) -> None:
-        """
-        Update a single attribute of a node.
-        
-        Args:
-            node_obj: The node object
-            attribute: The attribute name to update
-            value: The new value for the attribute
-        """
-        if self.graph.has_node(node_obj):
-            self.graph.nodes[node_obj][attribute] = value
-            logging.debug(f"Updated node attribute: {attribute} = {value}")
-        else:
-            raise ValueError(f"Node does not exist in the graph: {node_obj}")
-    
+        node = self.resolve_node(node_obj)
+        self.graph.nodes[node][attribute] = value
+        logging.debug("Updated node attribute: %s = %r", attribute, value)
+
     # ===== Edge CRUD Operations =====
     
     def add_edge(self, source: Any, target: Any, edge_type: str = None, **attributes) -> None:

@@ -50,18 +50,12 @@ class TestGOAPErrorHandling(unittest.TestCase):
 
         self.planner.graph_manager = mock_graph_manager
 
-        # Call the method under test
-        with self.assertLogs(level='WARNING') as cm:
-            result_state = self.planner.get_current_world_state(mock_character)
+        with self.assertRaisesRegex(Exception, "Graph manager error"):
+            self.planner.get_current_world_state(mock_character)
+        mock_character.get_state.assert_not_called()
 
-        # Verify result is the character's original state
-        self.assertIsInstance(result_state, State)
-        self.assertEqual(result_state.dict_or_obj, char_state_dict)
-        # Verify logging
-        self.assertTrue(any("Could not get world context from graph manager: Graph manager error" in output for output in cm.output))
-
-    def test_get_current_world_state_success_merge(self):
-        """Test Scenario 3: Normal State Enrichment in get_current_world_state"""
+    def test_get_current_world_state_uses_graph_snapshot(self):
+        """Configured graph state is returned without character fields"""
         # Mock character
         mock_character = MagicMock()
         char_state_dict = {"energy": 50}
@@ -78,11 +72,8 @@ class TestGOAPErrorHandling(unittest.TestCase):
         # Call the method under test
         result_state = self.planner.get_current_world_state(mock_character)
 
-        # Verify result is a merged state
-        self.assertIsInstance(result_state, State)
-        expected_combined = char_state_dict.copy()
-        expected_combined.update(world_context)
-        self.assertEqual(result_state.dict_or_obj, expected_combined)
+        self.assertEqual(result_state.dict_or_obj, world_context)
+        mock_character.get_state.assert_not_called()
 
     def test_get_current_world_state_no_get_state_attr(self):
         """Test when character doesn't have get_state method"""
@@ -112,11 +103,8 @@ class TestGOAPErrorHandling(unittest.TestCase):
         # Call the method under test
         result_state = self.planner.get_current_world_state(mock_character)
 
-        # Verify result is a merged state
-        self.assertIsInstance(result_state, State)
-        # It should put the object into 'character' key
-        self.assertEqual(result_state.dict_or_obj['character'], char_obj)
-        self.assertEqual(result_state.dict_or_obj['weather'], "sunny")
+        self.assertEqual(result_state.dict_or_obj, world_context)
+        mock_character.get_state.assert_not_called()
 
 if __name__ == "__main__":
     unittest.main()

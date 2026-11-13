@@ -7,24 +7,24 @@ Planning Algorithm:
 The planner takes the current state of the world (including the character's state) and a goal, and it generates a plan that outlines the sequence of actions needed to achieve that goal.
 This involves searching through the space of possible actions to find a sequence that transitions the character from their current state to the goal state with minimal cost.
 Integrating Graph Analysis
-The graph analysis provides a dynamic view of the character’s world, including relationships, interests, and historical interactions, which are crucial for setting realistic goals and conditions for actions.
+The graph analysis provides a dynamic view of the characterâ€™s world, including relationships, interests, and historical interactions, which are crucial for setting realistic goals and conditions for actions.
 
 Example Steps for Integration:
 Graph-Based Condition Setting:
 Use the output from the graph analysis to set conditions for actions. For example, if the goal is to improve a relationship, the condition might be that the relationship strength is below a certain threshold.
 Graph-Based Effect Prediction:
-Predict the potential effects of actions on the character’s network by simulating changes in the graph. For instance, attending social events might strengthen certain relationships.
+Predict the potential effects of actions on the characterâ€™s network by simulating changes in the graph. For instance, attending social events might strengthen certain relationships.
 Feedback Loop:
 Post-action, update the graph based on the outcomes, which then informs future GOAP planning.
 
 Further Development
-Action Definitions: Further detail actions with specific conditions and effects based on the character’s attributes and the graph analysis.
+Action Definitions: Further detail actions with specific conditions and effects based on the characterâ€™s attributes and the graph analysis.
 Cost Functions: Integrate a cost function to select the optimal path among several possibilities.
 Real-Time Adjustments: Allow the GOAP system to adjust plans in real-time based on new information or changes in the game state, using continuous feedback from the graph analysis.
 
 3. GOAP System and Graph Analysis
 Where it happens: goap_system.py and graph_manager.py
-What happens: The GOAP planner uses the graph to analyze relationships and preferences, and formulates a plan consisting of a sequence of actions that maximize the character’s utility for the day.
+What happens: The GOAP planner uses the graph to analyze relationships and preferences, and formulates a plan consisting of a sequence of actions that maximize the characterâ€™s utility for the day.
 """
 
 from tiny_types import Goal, Character, GraphManager
@@ -63,6 +63,19 @@ class ActionWrapper:
     def execute(self, target=None, initiator=None):
         """Simple execution - returns True for basic compatibility."""
         return True
+
+
+def action_from_graph_record(record):
+    """Keep executable actions; adapt explicitly supplied legacy descriptors."""
+    if not isinstance(record, dict):
+        return record
+    if "action" in record:
+        return record["action"]
+    return ActionWrapper(
+        name=record.get("name", "Unknown"), cost=record.get("cost", 1.0),
+        effects=record.get("effects", []), preconditions=record.get("preconditions", {}),
+        utility=record.get("utility", 0.0),
+    )
 
 
 class Plan:
@@ -596,121 +609,27 @@ class GOAPPlanner:
         self.plans = {}
 
     def get_current_world_state(self, character):
-        """
-        Dynamically retrieves the current world state for a character.
-        
-        Args:
-            character: The character object to get state for
-            
-        Returns:
-            State: Current world state including character state and environment
-        """
+        """Read the configured graph, or the character in graph-free use."""
+        if self.graph_manager is not None:
+            state = self.graph_manager.get_character_state(getattr(character, "name", character))
+            return state if isinstance(state, State) else State(state)
         try:
-            # Get the character's current state
-            character_state = character.get_state() if hasattr(character, 'get_state') else State({})
-            
-            # If we have a graph manager, enrich the state with world information
-            if self.graph_manager:
-                try:
-                    # Get additional world context from graph manager
-                    world_context = self.graph_manager.get_character_state(character.name)
-                    
-                    # Merge character state with world context
-                    if hasattr(character_state, 'dict_or_obj'):
-                        if isinstance(character_state.dict_or_obj, dict):
-                            combined_state = character_state.dict_or_obj.copy()
-                        else:
-                            combined_state = {'character': character_state.dict_or_obj}
-                    else:
-                        combined_state = {'character': character}
-                    
-                    # Add world context
-                    if isinstance(world_context, dict):
-                        combined_state.update(world_context)
-                    
-                    return State(combined_state)
-                except Exception as e:
-                    logging.warning(f"Could not get world context from graph manager: {e}")
-                    
-            return character_state
-            
-        except Exception as e:
-            logging.warning(f"Error getting current world state: {e}")
-            # Return a minimal state as fallback
-            return State({'character': character})
+            return character.get_state() if hasattr(character, "get_state") else State({})
+        except Exception as error:
+            logging.warning("Error getting current world state: %s", error)
+            return State({"character": character})
 
     def get_available_actions(self, character):
-        """
-        Dynamically retrieves available actions for a character based on current state.
-        
-        Args:
-            character: The character object to get actions for
-            
-        Returns:
-            list: List of Action objects available to the character
-        """
-        available_actions = []
-        
-        try:
-            # Try to get actions from graph manager first (most comprehensive)
-            if self.graph_manager and hasattr(self.graph_manager, 'get_possible_actions'):
-                try:
-                    graph_actions = self.graph_manager.get_possible_actions(character.name)
-                    # Convert graph manager action format to Action objects if needed
-                    for action_data in graph_actions:
-                        if isinstance(action_data, dict):
-                            # Convert dict format to action-like object
-                            action_obj = ActionWrapper(
-                                name=action_data.get('name', 'Unknown'),
-                                cost=action_data.get('cost', 1),
-                                effects=action_data.get('effects', []),
-                                preconditions=action_data.get('preconditions', {}),
-                                utility=action_data.get('utility', 0)
-                            )
-                            available_actions.append(action_obj)
-                        else:
-                            available_actions.append(action_data)
-                except Exception as e:
-                    logging.warning(f"Could not get actions from graph manager: {e}")
-            
-            # Try to get actions from strategy manager if available via graph manager
-            try:
-                # Strategy manager should be accessed externally, not directly from GOAP planner
-                # For now, skip strategy manager actions since GOAP planner should be independent
-                pass
-            except Exception as e:
-                logging.warning(f"Could not get actions from strategy manager: {e}")
-            
-            # Add basic fallback actions if no actions were found
-            if not available_actions:
-                # Import Action class for fallback actions
-                try:
-                    Action = importlib.import_module("actions").Action
-                    
-                    # Create basic actions that any character can perform
-                    rest_action = Action(
-                        name="Rest",
-                        preconditions={},
-                        effects=[{"attribute": "energy", "change_value": 10}],
-                        cost=0
-                    )
-                    available_actions.append(rest_action)
-                    
-                    idle_action = Action(
-                        name="Idle", 
-                        preconditions={},
-                        effects=[],
-                        cost=1
-                    )
-                    available_actions.append(idle_action)
-                    
-                except Exception as e:
-                    logging.warning(f"Could not create fallback actions: {e}")
-                    
-        except Exception as e:
-            logging.error(f"Error getting available actions: {e}")
-            
-        return available_actions
+        if self.graph_manager is not None:
+            records = self.graph_manager.get_possible_actions(getattr(character, "name", character))
+            return [action_from_graph_record(record) for record in records]
+
+        Action = importlib.import_module("actions").Action
+        return [
+            Action(name="Rest", preconditions={},
+                   effects=[{"attribute": "energy", "change_value": 10}], cost=0),
+            Action(name="Idle", preconditions={}, effects=[], cost=1),
+        ]
 
     def plan_actions(self, character, goal, current_state=None, actions=None):
         """
