@@ -2,7 +2,7 @@
 
 **Updated** 2026-11-13
 
-**Status** Local implementation and verification on `codex/220-action-execution`.
+**Status** [Draft PR #817](https://github.com/dhar174/tiny_village/pull/817) with Zcode review follow-up on `codex/220-action-execution`.
 
 The approved scope selectively ports draft [#696](https://github.com/dhar174/tiny_village/pull/696)
 at `8016a3f467719afa4b795207c14f40502b161410` onto
@@ -23,3 +23,8 @@ The #816 weather case checks exact values of 20, 15 and 25 and two writes.
 The wider #816 direct-writer audit and the #740/#802 planner changes remain
 separate follow-ups. #741 retains the replanning work and #602 retains the
 integrated gameplay acceptance gate.
+
+The Zcode review follow-up restores the warning for an empty daily action list
+and records a failed attempt when a selected action cannot execute. GitHub
+confirmed the pinned #696 source commit above. Plan execution still stops
+on failure. The retained recovery methods belong to the #741 replanning work.

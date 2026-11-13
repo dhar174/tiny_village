@@ -1,8 +1,7 @@
 ## Tasks Index
 
 ## In Progress
-- [TASK028](TASK028-action-execution-220.md) Graph-backed action execution (#220) - Local implementation and verification (Updated: 2026-11-13)
-- [TASK027](TASK027-stable-entity-identity-799.md) Stable graph entity identity (#799) - PR #815 open; independent review complete (Updated: 2026-11-13)
+- [TASK028](TASK028-action-execution-220.md) Graph-backed action execution (#220) - Draft PR #817, Zcode review follow-up (Updated: 2026-11-13)
 - [TASK026](TASK026-phase3-human-gate-738.md) Phase3 human gate (#738) - Approved under D034;738/733 closed in order, retained acceptance open; Project synchronization pending owner-local evidence (Updated: 2026-11-02 America/New_York)
 - [TASK023](TASK023-zcode-specialist-team.md) Zcode specialist team - nine read-only specialist definitions + canonical coordination policy created, entry points wired, installed to ~/.zcode/agents; static checks + independent review pass, fixes applied; runtime invocation re-verification pending fresh session (Updated: 2026-10-22)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
@@ -11,6 +10,7 @@
 - No additional pending task files.
 
 ## Completed
+- [TASK027](TASK027-stable-entity-identity-799.md) Stable graph entity identity (#799) - PR #815 merged at 67a8abd and #799 closed (Updated: 2026-11-13)
 - [TASK025](TASK025-pr-ownership-project-737.md) PR ownership and Project configuration (#737) - both authenticated receipts verified,806 then737 completed,3 final Readiness updates confirmed; evidence PR813,738 remains Pending (Updated: 2026-10-23 America/New_York)
 - [TASK024](TASK024-functional-test-review-736.md) Functional-test consolidation (#736) - #804 merged at6cc576e; core72+3 probes/dev20 pass; #736 and9 superseded PRs closed under D030; runtime gaps open, next #737; #805 walkthrough review corrected (Updated: 2026-10-22 America/New_York)
 - [TASK022](TASK022-utility-consolidation-735.md) Utility consolidation (#735) - #703 merged at 323dad6; #735 closed, merged-main required check passes (Updated: 2026-10-21 America/New_York)

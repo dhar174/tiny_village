@@ -3744,6 +3744,7 @@ class GameplayController:
             fallback = self.action_resolver.get_fallback_action(character)
             return self._run_selected_action(fallback, character, feedback=True)
         if not actions:
+            logger.warning("No actions available for %s", character.name)
             return False
         return self._run_selected_action(actions[0], character, feedback=True)
 
@@ -3762,19 +3763,20 @@ class GameplayController:
 
     def _run_selected_action(self, action, character=None, *, feedback=False):
         """Invoke once, then record the result independently of execution."""
-        if not action or not hasattr(action, "execute"):
-            return False
         if character is None:
             character = getattr(action, "initiator", None)
-        try:
-            success = bool(self._invoke_action_execute(action, character))
-            if isinstance(action, Action):
-                character = action.initiator
-        except Exception as error:
-            logger.warning("Error executing %s: %s", getattr(action, "name", action), error)
-            success = False
-
         action_name = getattr(action, "name", str(action))
+        success = False
+        try:
+            if callable(getattr(action, "execute", None)):
+                success = bool(self._invoke_action_execute(action, character))
+                if isinstance(action, Action):
+                    character = action.initiator
+            else:
+                logger.warning("Action %s has no callable execute method", action_name)
+        except Exception as error:
+            logger.warning("Error executing %s: %s", action_name, error)
+
         counter = "actions_executed" if success else "actions_failed"
         self._record_action_result(self._increment_action_counter, counter)
         if self.action_resolver:

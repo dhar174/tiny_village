@@ -188,6 +188,40 @@ assert len(history) == 5 and history[-1]['success'] is False
 assert quest['progress'] == 15 and controller.game_statistics['actions_executed'] == 3
 """)
 
+    def test_daily_selection_reports_invalid_actions_and_warns_when_empty(self):
+        self.run_world("""
+from types import SimpleNamespace
+from unittest.mock import patch
+
+invalid = SimpleNamespace(name='Invalid action')
+history = controller.action_resolver.execution_history
+initial_failures = controller.game_statistics['actions_failed']
+initial_successes = controller.game_statistics['actions_executed']
+with patch.object(controller.strategy_manager, 'get_daily_actions', return_value=[invalid]), (
+    patch.object(controller, 'provide_action_feedback')
+) as feedback, patch.object(controller, '_invoke_action_execute') as invoke, (
+    patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute)
+) as writes:
+    assert controller._execute_character_actions(character) is False
+    invoke.assert_not_called()
+    writes.assert_not_called()
+    feedback.assert_called_once_with('Invalid action', False, character.name)
+assert controller.game_statistics['actions_failed'] == initial_failures + 1
+assert controller.game_statistics['actions_executed'] == initial_successes
+assert [(entry['action_name'], entry['success']) for entry in history] == [
+    ('Invalid action', False)
+]
+
+with patch.object(controller.strategy_manager, 'get_daily_actions', return_value=[]), (
+    patch('tiny_gameplay_controller.logger.warning')
+) as warning, patch.object(controller, 'provide_action_feedback') as feedback:
+    assert controller._execute_character_actions(character) is False
+    warning.assert_called_once_with('No actions available for %s', character.name)
+    feedback.assert_not_called()
+assert controller.game_statistics['actions_failed'] == initial_failures + 1
+assert len(history) == 1
+""")
+
     def test_plan_neither_replays_partial_writes_nor_retries_type_error(self):
         self.run_world("""
 from types import SimpleNamespace
