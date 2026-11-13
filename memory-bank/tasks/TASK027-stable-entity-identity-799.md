@@ -2,7 +2,7 @@
 
 **Updated:** 2026-11-13
 
-**Status:** PR #815 open. Independent review completed on 14ac7c3.
+**Status:** PR #815 merged at `67a8abd20d497397cd3c48006a85287d5f082ee2`. Issue #799 closed as completed.
 
 Approved scope: [D035](../../docs/decisions.md#d035--preserve-object-graph-nodes-with-immutable-entity-uuids-799).
 Worktree branch: `codex/799-stable-graph-identity`, based on

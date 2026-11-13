@@ -28,7 +28,7 @@ assert updated['energy'] == 7, updated['energy']
 print({'initial_energy': 5, 'final_energy': updated['energy']})
 ''')
 
-    def test_condition_preconditions_follow_complete_character_energy(self):
+    def test_live_action_preconditions_follow_graph_and_condition_can_read_object(self):
         self.run_python('''
 from tiny_gameplay_controller import GameplayController
 from tiny_graph_manager import GraphManager
@@ -46,10 +46,13 @@ try:
                     effects=[{'attribute': 'energy', 'change_value': 1}], cost=1)
     for energy, expected in ((12, True), (5, False)):
         character.energy = energy
+        graph_energy = 5 if expected else 12
+        controller.graph_manager.update_node_attribute(character, 'energy', graph_energy)
         assert character.get_state()['energy'] == energy
         assert condition.check_condition() is expected, (energy, expected)
-        assert action.preconditions_met() is expected, (energy, expected)
-        print({'energy': energy, 'condition_and_preconditions': expected})
+        assert action.preconditions_met() is (not expected), (graph_energy, not expected)
+        print({'object_energy': energy, 'graph_energy': graph_energy,
+               'direct_condition': expected, 'action_preconditions': not expected})
 finally:
     controller.close()
 ''')

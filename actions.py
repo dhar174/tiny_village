@@ -10,6 +10,9 @@ For instance, if a new technology is discovered in the game, related actions (li
 """
 
 import importlib
+import inspect
+import math
+from collections.abc import Mapping
 
 import json
 from uuid import UUID
@@ -34,6 +37,181 @@ from tiny_util_funcs import is_numeric
 logger = logging.getLogger(__name__)
 
 
+_ATTRIBUTE_ALIASES = {
+    "health": "health_status",
+    "hunger": "hunger_level",
+    "money": "wealth_money",
+    "wealth": "wealth_money",
+}
+_NUMERIC_ATTRIBUTES = {
+    "energy", "health_status", "hunger_level", "wealth_money",
+    "job_performance", "happiness", "social_wellbeing",
+}
+_EFFECT_TARGETS = {"initiator", "target", "target_character_in_location"}
+_MISSING = object()
+
+
+def _canonical_attribute(attribute):
+    if not isinstance(attribute, str) or not attribute.strip():
+        raise ValueError(f"Invalid action attribute: {attribute!r}")
+    return _ATTRIBUTE_ALIASES.get(attribute, attribute)
+
+
+def _resolve_action_entity(manager, identifier, node_type=None):
+    # Legacy adapters only provide update_node_attribute.
+    resolve = getattr(type(manager), "resolve_node", None)
+    node = resolve(manager, identifier, node_type) if resolve is not None else None
+    entity = manager.get_node_entity(node) if node is not None else identifier
+    if entity is None or isinstance(entity, (str, UUID)):
+        raise ValueError(f"No entity for action identifier {identifier!r}")
+    return entity, node
+
+
+def _read_effect_value(target, node, manager, attribute):
+    if node is not None and attribute in manager.G.nodes[node]:
+        return manager.G.nodes[node][attribute]
+    return getattr(target, attribute, 0)
+
+
+def _write_synchronized_attribute(target, node, manager, attribute, calculate):
+    """Commit one attribute, restoring its prior presence and values on failure."""
+    graph_data = manager.G.nodes[node] if node is not None else None
+    old_graph = graph_data.get(attribute, _MISSING) if graph_data is not None else _MISSING
+    old_object = getattr(target, attribute, _MISSING)
+    try:
+        value = calculate(_read_effect_value(target, node, manager, attribute))
+        if value is None:
+            return None
+        setattr(target, attribute, value)
+        identifier = node if node is not None else (
+            getattr(target, "uuid", None) or getattr(target, "name", None)
+        )
+        if manager is not None and identifier is not None:
+            manager.update_node_attribute(identifier, attribute, value)
+    except Exception:
+        if graph_data is not None:
+            if old_graph is _MISSING:
+                graph_data.pop(attribute, None)
+            else:
+                graph_data[attribute] = old_graph
+        current_object = getattr(target, attribute, _MISSING)
+        if current_object is not old_object:
+            if old_object is _MISSING:
+                delattr(target, attribute)
+            else:
+                setattr(target, attribute, old_object)
+        raise
+    return value
+
+
+def apply_attribute_change(target, graph_manager, attribute, calculate):
+    """Apply an internal non-action update through the synchronized write."""
+    target, node = _resolve_action_entity(graph_manager, target, "character")
+    return _write_synchronized_attribute(target, node, graph_manager, attribute, calculate)
+
+
+def invoke_action(action, character=None, graph_manager=None, *, legacy_target=None):
+    """Select the execution signature before calling the action exactly once."""
+    execute = action.execute
+    if character is None:
+        character = getattr(action, "initiator", None)
+    try:
+        parameters = inspect.signature(execute).parameters
+    except (TypeError, ValueError):
+        parameters = {}
+    if isinstance(action, Action) and character is not None:
+        manager = action.graph_manager if graph_manager is None else graph_manager
+        character, _ = _resolve_action_entity(manager, character, "character")
+    keyword_parameters = {
+        name for name, p in parameters.items()
+        if p.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)
+    }
+    modern = {"character": character, "graph_manager": graph_manager}
+    legacy = {"initiator": character, "target": legacy_target}
+    has_kwargs = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in parameters.values())
+    if keyword_parameters.intersection(modern) or (
+        has_kwargs and not keyword_parameters.intersection(legacy)
+    ):
+        arguments = modern
+    else:
+        arguments = legacy
+    return execute(**{name: value for name, value in arguments.items()
+                      if has_kwargs or name in keyword_parameters})
+
+
+class _AttributeEffect:
+    """A validated declared effect. Legacy callbacks execute only at write time."""
+
+    def __init__(self, descriptor):
+        if not isinstance(descriptor, Mapping):
+            raise ValueError(f"Expected an effect descriptor, got {descriptor!r}")
+        self.targets = descriptor.get("targets", ())
+        if not isinstance(self.targets, (list, tuple)) or any(
+            token not in _EFFECT_TARGETS for token in self.targets
+        ):
+            raise ValueError(f"Invalid effect targets: {self.targets!r}")
+        self.attribute = _canonical_attribute(descriptor["attribute"])
+        if self.attribute in {"name", "uuid"} or self.attribute.startswith("_"):
+            raise ValueError(f"Cannot write protected field {self.attribute!r}")
+        self.change = descriptor["change_value"]
+        self.operation = "set"
+        if isinstance(self.change, (int, float)) and not isinstance(self.change, bool):
+            self.operation = "add"
+        elif isinstance(self.change, str):
+            if self.change.startswith("add:"):
+                self.operation = "add"
+                self.change = float(self.change[4:])
+            elif self.change.startswith("set:"):
+                value = self.change[4:]
+                self.change = float(value) if is_numeric(value) else value
+            else:
+                self.operation = "legacy-string"
+        if isinstance(self.change, float) and not math.isfinite(self.change):
+            raise ValueError(f"Non-finite effect for {self.attribute!r}")
+
+    def is_dynamic(self, target):
+        return callable(self.change) or (
+            self.operation == "legacy-string" and callable(getattr(target, self.change, None))
+        )
+
+    def scalar_result(self, current):
+        if self.operation == "add":
+            if not isinstance(current, (int, float)):
+                raise ValueError(f"Cannot add to non-numeric {self.attribute!r}")
+            value = current + self.change
+        else:
+            value = self.change
+        return self._validate_value(value)
+
+    def _validate_value(self, value):
+        if value is None:
+            return None
+        if self.attribute in _NUMERIC_ATTRIBUTES and (
+            isinstance(value, bool) or not isinstance(value, (int, float))
+            or isinstance(value, float) and not math.isfinite(value)
+        ):
+            raise ValueError(f"Expected a finite numeric value for {self.attribute!r}")
+        if self.attribute in {"location", "inventory"} and isinstance(value, (str, int, float)):
+            raise ValueError(f"Expected a domain object for {self.attribute!r}")
+        return value
+
+    def apply(self, target, node, manager):
+        def calculate(current):
+            if callable(self.change):
+                return self._validate_value(self.change(current))
+            if self.is_dynamic(target):
+                # Legacy methods read the object directly. Seed only their
+                # declared field, inside its existing rollback scope.
+                if node is not None and self.attribute in manager.G.nodes[node]:
+                    if getattr(target, self.attribute, _MISSING) != current:
+                        setattr(target, self.attribute, current)
+                getattr(target, self.change)()
+                return self._validate_value(getattr(target, self.attribute, current))
+            return self.scalar_result(current)
+
+        _write_synchronized_attribute(target, node, manager, self.attribute, calculate)
+
+
 class State:
     """State class to represent the current state of the character/object/etc. It stores attributes and their values. All game objects have a state, and actions can change these states."""
 
@@ -56,9 +234,10 @@ class State:
             "!=": "ne",
         }
 
-    def __getitem__(
-        self, key
-    ):  # if wanting to call a function, use key as a string with arguments in parentheses like: self['foo(["arg1", "arg2"])']
+    def __getitem__(self, key):
+        return self._read(key, default=0)
+
+    def _read(self, key, *, default):
         if "(" in key and key.endswith(")"):
             key, arg_str = key[:-1].split("(", 1)
             args = json.loads(arg_str)
@@ -68,10 +247,12 @@ class State:
         keys = key.split(".")
         val = self.dict_or_obj  # Start with the underlying data, not the State object itself
         for k in keys:
-            if isinstance(val, dict):
-                val = val.get(k, 0)
+            if isinstance(val, Mapping):
+                val = val.get(k, _MISSING)
             else:
-                val = getattr(val, k, 0)
+                val = getattr(val, k, _MISSING)
+            if val is _MISSING:
+                return default
 
         if callable(val):
             return val(*args)
@@ -135,15 +316,14 @@ class State:
         elif isinstance(self.dict_or_obj, tuple):
             return ", ".join([str(item) for item in self.dict_or_obj])
 
-    def compare_to_condition(self, condition):
-
-        if condition.operator not in self.ops:
-            return self.ops[self.symb_map[condition.operator]](
-                self[condition.attribute], condition.satisfy_value
-            )
-        return self.ops[condition.operator](
-            self[condition.attribute], condition.satisfy_value
-        )
+    def compare_to_condition(self, condition, *, attribute=None):
+        # Live action conditions supply the canonical field and require it to exist.
+        value = (self[condition.attribute] if attribute is None
+                 else self._read(attribute, default=_MISSING))
+        if value is _MISSING:
+            raise ValueError(f"Missing condition attribute {attribute!r}")
+        op = self.symb_map.get(condition.operator, condition.operator)
+        return self.ops[op](value, condition.satisfy_value)
 
     def __eq__(self, other):
         if not isinstance(other, State):
@@ -263,10 +443,12 @@ class Condition:
     def __str__(self):
         return f"{self.name}: {self.attribute} {self.operator} {self.satisfy_value}"
 
-    def check_condition(self, state: State = None):
+    def check_condition(self, state: State = None, *, attribute=None):
         if state is None:
             state = self.target.get_state()
-        return state.compare_to_condition(self)
+        if attribute is None:
+            return state.compare_to_condition(self)
+        return state.compare_to_condition(self, attribute=attribute)
 
     def __call__(self, state: State = None):
         if state is None:
@@ -345,11 +527,9 @@ class Action:
         self.initiator = initiator  # Initiator of the action, if applicable
         # self.change_value = change_value
         self.default_target_is_initiator = default_target_is_initiator
-        self.target = None
-        if default_target_is_initiator and target is None and initiator is not None:
+        self._implicit_target = default_target_is_initiator and target is None
+        if self._implicit_target:
             self.target = initiator
-        elif target is not None:
-            self.target = target
         self.change_value = 0
         self.target_id = target.uuid if hasattr(target, "uuid") else id(target)
         if graph_manager is not None:
@@ -372,23 +552,41 @@ class Action:
             "cost": self.cost,
         }
 
-    def preconditions_met(self):
+    def preconditions_met(self, state=None):
+        """Evaluate concrete conditions, optionally against a supplied simulation state."""
+        conditions = self.preconditions
+        if isinstance(conditions, Mapping):
+            conditions = conditions.values()
+        elif not isinstance(conditions, (list, tuple)):
+            logger.warning("Invalid preconditions for %s: %r", self.name, conditions)
+            return False
 
-        if not self.preconditions:
-            return True
-        # This assumes preconditions is a list of Condition objects
-        # If it's a dict from old ActionSystem.create_precondition, this will fail.
-        # For new actions, ensure preconditions are Condition objects or adapt this.
+        manager = self.graph_manager
         try:
-            return all(
-                precondition.check_condition()
-                for precondition in self.preconditions  # Assuming list of Condition objects
-            )
-        except AttributeError:  # If precondition is not a Condition object
-            print(
-                f"Warning: Precondition for action {self.name} is not a Condition object or check_condition failed."
-            )
-            return False  # Or handle differently
+            for condition in conditions:
+                if not isinstance(condition, Condition):
+                    raise ValueError(f"Expected a Condition, got {condition!r}")
+                attribute = _canonical_attribute(condition.attribute)
+                if state is None:
+                    target = condition.target
+                    if target is None or target == "initiator":
+                        target = self.initiator
+                    elif target == "target":
+                        target = self.target
+                    target, node = _resolve_action_entity(manager, target)
+                    condition_state = (
+                        State(manager.G.nodes[node]) if node is not None else target.get_state()
+                    )
+                else:
+                    condition_state = state
+                if not isinstance(condition_state, State):
+                    condition_state = State(condition_state)
+                if not condition.check_condition(condition_state, attribute=attribute):
+                    return False
+        except (AttributeError, KeyError, TypeError, ValueError) as error:
+            logger.warning("Cannot evaluate preconditions for %s: %s", self.name, error)
+            return False
+        return True
 
     def apply_single_effect(self, effect, state: State, change_value=None):
         if change_value is None:
@@ -709,101 +907,71 @@ class Action:
         return [target]
 
     def execute(self, character=None, graph_manager=None):
-        """Apply declared attribute effects and synchronize resolved graph nodes."""
-        if character is not None:
-            self.initiator = character
+        """Validate then apply declared attribute effects to the object and graph."""
+        actor = self.initiator if character is None else character
         if graph_manager is not None:
             self.graph_manager = graph_manager
+        try:
+            if actor is not None:
+                actor, actor_node = _resolve_action_entity(self.graph_manager, actor, "character")
+            else:
+                actor_node = None
+            if self._implicit_target and self.target is self.initiator:
+                self.target = actor
+            self.initiator = actor
+            prepared = self._prepare_attribute_effects(actor, actor_node)
+        except (AttributeError, KeyError, TypeError, ValueError) as error:
+            logger.warning("Cannot prepare action %s: %s", self.name, error)
+            return False
+
         if not self.preconditions_met():
             return False
-
-        manager = self.graph_manager
-        # Legacy graph adapters implement only update_node_attribute.
-        resolve = getattr(type(manager), "resolve_node", None)
-        prepared = []
-        try:
-            for effect in self.effects:
-                tokens = effect.get("targets", [])
-                targets = []
-                if "initiator" in tokens and self.initiator is not None:
-                    targets.append(self.initiator)
-                if "target" in tokens:
-                    target = self.target
-                    if target is None and self.default_target_is_initiator:
-                        target = self.initiator
-                    if target is not None:
-                        targets.append(target)
-                targets.extend(self._resolve_named_targets(effect))
-                seen = set()
-                for target in targets:
-                    node = resolve(manager, target) if resolve is not None else None
-                    obj = manager.get_node_entity(node) if resolve is not None else target
-                    if isinstance(obj, (str, UUID)):
-                        raise ValueError(f"No entity for action target {target!r}")
-                    key = (type(obj), getattr(obj, "uuid", None) or id(obj))
-                    if key not in seen:
-                        seen.add(key)
-                        prepared.append((effect, obj, node))
-        except ValueError as error:
-            logger.warning("Cannot resolve targets for %s: %s", self.name, error)
-            return False
-
         for effect, target, node in prepared:
-            if not self._apply_attribute_effect(effect, target, node):
+            try:
+                effect.apply(target, node, self.graph_manager)
+            except Exception as error:
+                logger.warning("Action %s could not synchronize %s: %s",
+                               self.name, effect.attribute, error)
                 return False
         return True
 
-    def _apply_attribute_effect(self, effect, target, node):
-        attribute = effect["attribute"]
-        change = effect["change_value"]
-        missing = object()
-        old_object = getattr(target, attribute, missing)
-        graph_data = self.graph_manager.G.nodes[node] if node is not None else None
-        old_graph = graph_data.get(attribute, missing) if graph_data is not None else missing
-        current = old_graph if old_graph is not missing else (
-            old_object if old_object is not missing else 0
-        )
-
-        try:
-            if isinstance(change, (int, float)):
-                value = current + change
-            elif callable(change):
-                value = change(current)
-            elif isinstance(change, str):
-                if change.startswith("add:") and is_numeric(change[4:]):
-                    value = current + float(change[4:])
-                elif change.startswith("set:"):
-                    value = float(change[4:]) if is_numeric(change[4:]) else change[4:]
-                elif callable(getattr(target, change, None)):
-                    getattr(target, change)()
-                    value = getattr(target, attribute, current)
-                else:
-                    value = change
-            else:
-                value = change
-
-            if value is None:
-                return True
-            setattr(target, attribute, value)
-            identifier = node if node is not None else (
-                getattr(target, "uuid", None) or getattr(target, "name", None)
+    def _prepare_attribute_effects(self, actor, actor_node):
+        prepared = []
+        projected = {}
+        for descriptor in self.effects:
+            effect = _AttributeEffect(descriptor)
+            targets = []
+            if "initiator" in effect.targets:
+                if actor is None:
+                    raise ValueError("Missing required action initiator")
+                targets.append((actor, actor_node))
+            if "target" in effect.targets:
+                target = self.target
+                if target is None and self.default_target_is_initiator:
+                    target = actor
+                if target is None:
+                    raise ValueError("Missing required action target")
+                targets.append((actor, actor_node) if target is actor else
+                               _resolve_action_entity(self.graph_manager, target))
+            targets.extend(
+                _resolve_action_entity(self.graph_manager, target)
+                for target in self._resolve_named_targets(descriptor)
             )
-            if self.graph_manager is not None and identifier is not None:
-                self.graph_manager.update_node_attribute(identifier, attribute, value)
-        except Exception as error:
-            if graph_data is not None:
-                if old_graph is missing:
-                    graph_data.pop(attribute, None)
-                else:
-                    graph_data[attribute] = old_graph
-            if old_object is missing:
-                if hasattr(target, attribute):
-                    delattr(target, attribute)
-            elif getattr(target, attribute, missing) is not old_object:
-                setattr(target, attribute, old_object)
-            logger.warning("Action %s could not synchronize %s: %s", self.name, attribute, error)
-            return False
-        return True
+            seen = set()
+            for target, node in targets:
+                key = (type(target), getattr(target, "uuid", None) or id(target))
+                if key in seen:
+                    continue
+                seen.add(key)
+                field = (key, effect.attribute)
+                if not effect.is_dynamic(target):
+                    current = projected[field] if field in projected else _read_effect_value(
+                        target, node, self.graph_manager, effect.attribute
+                    )
+                    result = effect.scalar_result(current)
+                    projected[field] = current if result is None else result
+                prepared.append((effect, target, node))
+        return prepared
 
     def __str__(self):
         preconditions_str = (
@@ -1374,6 +1542,7 @@ class EatAction(Action):
             "completed_at",
             "priority",
             "related_goal",
+            "graph_manager",
         }
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
 
@@ -1382,11 +1551,14 @@ class EatAction(Action):
             initiator=initiator_id,
             target=item_name,
             cost=kwargs.get("cost", 0.1),
-            preconditions=kwargs.get("preconditions", []),
+            preconditions=kwargs.get("preconditions", [
+                Condition("NeedsFood", "hunger_level", None, 1),
+                Condition("HasEnergyToEat", "energy", None, 1),
+            ]),
             effects=kwargs.get(
                 "effects",
                 [
-                    {"targets": ["initiator"], "attribute": "hunger", "change_value": -2},
+                    {"targets": ["initiator"], "attribute": "hunger_level", "change_value": -2},
                     {"targets": ["initiator"], "attribute": "energy", "change_value": 1},
                 ],
             ),
@@ -1521,6 +1693,7 @@ class WorkAction(Action):
             "completed_at",
             "priority",
             "related_goal",
+            "graph_manager",
         }
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
 
@@ -1529,11 +1702,11 @@ class WorkAction(Action):
             initiator=initiator_id,
             target=job_type,
             cost=kwargs.get("cost", 0.4),
-            preconditions=kwargs.get("preconditions", []),
+            preconditions=kwargs.get("preconditions", [Condition("HasEnergyToWork", "energy", None, 2)]),
             effects=kwargs.get(
                 "effects",
                 [
-                    {"targets": ["initiator"], "attribute": "money", "change_value": 20},
+                    {"targets": ["initiator"], "attribute": "wealth_money", "change_value": 20},
                     {"targets": ["initiator"], "attribute": "energy", "change_value": -2},
                     {
                         "targets": ["initiator"],
@@ -1563,6 +1736,7 @@ class SleepAction(Action):
             "completed_at",
             "priority",
             "related_goal",
+            "graph_manager",
         }
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
 
@@ -1575,7 +1749,7 @@ class SleepAction(Action):
                 "effects",
                 [
                     {"targets": ["initiator"], "attribute": "energy", "change_value": 5},
-                    {"targets": ["initiator"], "attribute": "health", "change_value": 1},
+                    {"targets": ["initiator"], "attribute": "health_status", "change_value": 1},
                 ],
             ),
             **filtered_kwargs,
@@ -1734,6 +1908,7 @@ class VisitDoctorAction(Action):
             "completed_at",
             "priority",
             "related_goal",
+            "graph_manager",
         }
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in base_action_params}
 
@@ -1741,12 +1916,12 @@ class VisitDoctorAction(Action):
             name="VisitDoctor",
             initiator=initiator_id,
             cost=kwargs.get("cost", 0.6),
-            preconditions=kwargs.get("preconditions", []),
+            preconditions=kwargs.get("preconditions", [Condition("CanAffordDoctor", "wealth_money", None, 10)]),
             effects=kwargs.get(
                 "effects",
                 [
-                    {"targets": ["initiator"], "attribute": "health", "change_value": 3},
-                    {"targets": ["initiator"], "attribute": "money", "change_value": -10},
+                    {"targets": ["initiator"], "attribute": "health_status", "change_value": 3},
+                    {"targets": ["initiator"], "attribute": "wealth_money", "change_value": -10},
                 ],
             ),
             **filtered_kwargs,

@@ -28,7 +28,7 @@ What happens: The GOAP planner uses the graph to analyze relationships and prefe
 """
 
 from tiny_types import Goal, Character, GraphManager
-from actions import Action, State
+from actions import Action, State, invoke_action
 
 # from tiny_graph_manager import GraphManager
 
@@ -280,10 +280,8 @@ class Plan:
 
     def execute(self):
         """
-        Execute the plan with enhanced robustness and retry mechanisms.
+        Execute each selected action once, stopping on an execution failure.
         """
-        plan_start_time = getattr(self, '_start_time', 0)
-        max_execution_time = 300  # 5 minutes max
         
         while self.current_goal_index < len(self.goals):
             current_goal = self.goals[self.current_goal_index]
@@ -292,17 +290,12 @@ class Plan:
                 while self.action_queue:
                     priority, action_id, current_action, dependencies = heappop(self.action_queue)
                     if all(dep in self.completed_actions for dep in dependencies):
-                        if current_action.preconditions_met():
-                            success = current_action.execute(
-                                target=current_action.target,
-                                initiator=current_action.initiator,
-                            )
-                            if success:
-                                self.completed_actions.add(current_action.name)
-                                break
-                            else:
-                                self.handle_failure(current_action)
-                                return False
+                        if not self._action_ready(current_action):
+                            continue
+                        if not self._execute_action(current_action, current_goal):
+                            return False
+                        self.completed_actions.add(current_action.name)
+                        break
 
             
             # Check if goal is already completed
@@ -334,12 +327,10 @@ class Plan:
                     continue
                 
                 # Check preconditions
-                if not current_action.preconditions_met():
+                if not self._action_ready(current_action):
                     print(f"Action {current_action.name} preconditions not met")
                     continue
-                
-                # Execute the action with retry logic
-                success = self._execute_action_with_retry(current_action)
+                success = self._execute_action(current_action, current_goal)
                 
                 if success:
                     self.completed_actions.add(current_action.name)
@@ -351,10 +342,7 @@ class Plan:
                         print(f"Goal achieved after completing action {current_action.name}")
                         break
                 else:
-                    # Handle action failure
-                    if not self._handle_action_failure(current_action):
-                        print(f"Failed to handle failure of action {current_action.name}")
-                        return False
+                    return False
             
             if goal_achieved or current_goal.check_completion():
                 self.current_goal_index += 1
@@ -366,50 +354,25 @@ class Plan:
         self.handle_success()
         return True
         
-    def _execute_action_with_retry(self, action):
-        """
-        Execute an action with retry logic and exponential backoff.
-        """
-        max_retries = 3
-        base_delay = 0.1  # Base delay in seconds
-        
-        for attempt in range(max_retries + 1):
-            try:
-                print(f"Executing action {action.name} (attempt {attempt + 1})")
-                # Try different execute method signatures
-                try:
-                    success = action.execute()
-                except TypeError:
-                    # Fallback to execute with parameters
-                    success = action.execute(
-                        target=getattr(action, 'target', None),
-                        initiator=getattr(action, 'initiator', None),
-                    )
-                
-                if success:
-                    # Reset failure count on success
-                    if action.name in self._failure_count:
-                        del self._failure_count[action.name]
-                    return True
-                else:
-                    print(f"Action {action.name} returned failure")
-                    
-            except Exception as e:
-                print(f"Action {action.name} raised exception: {e}")
-            
-            # Track failure
-            self._failure_count[action.name] = self._failure_count.get(action.name, 0) + 1
-            
-            # If not the last attempt, wait before retrying
-            if attempt < max_retries:
-                import time
-                delay = base_delay * (2 ** attempt)  # Exponential backoff
-                print(f"Retrying action {action.name} in {delay:.2f} seconds...")
-                time.sleep(delay)
-        
-        print(f"Action {action.name} failed after {max_retries + 1} attempts")
+    @staticmethod
+    def _action_ready(action):
+        # A live Action validates against its resolved actor inside execute().
+        return isinstance(action, Action) or action.preconditions_met()
+
+    def _execute_action(self, action, goal):
+        actor = getattr(action, "initiator", None)
+        if actor is None:
+            actor = getattr(goal, "character", None)
+        try:
+            if invoke_action(action, actor, self.graph_manager,
+                             legacy_target=getattr(action, "target", None)):
+                self._failure_count.pop(action.name, None)
+                return True
+        except Exception as error:
+            logging.getLogger(__name__).warning("Action %s raised: %s", action.name, error)
+        self._failure_count[action.name] = self._failure_count.get(action.name, 0) + 1
         return False
-        
+
     def _handle_action_failure(self, action):
         """
         Handle action failure with intelligent recovery strategies.

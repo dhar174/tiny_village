@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import datetime  # Added for time-based achievement
 from copy import deepcopy
-import inspect
 import logging
 import json
 import os
@@ -13,6 +12,8 @@ import tempfile
 import traceback
 from collections import deque
 from datetime import timedelta
+
+from actions import Action, apply_attribute_change, invoke_action
 
 # Rendering providers are bound only by an explicit visual initialization.
 pygame = None
@@ -1093,7 +1094,11 @@ class ActionResolver:
     ) -> Optional[Any]:
         """Convert action data to executable action object with validation and caching."""
         try:
-            # Create cache key for performance
+            # Action owns live validation. Preserve the supplied instance, even
+            # when another action has the same name.
+            if isinstance(action_data, Action):
+                return action_data
+
             cache_key = self._generate_cache_key(action_data, character)
             if cache_key in self.action_cache:
                 logger.debug(f"Using cached action for {cache_key}")
@@ -1210,8 +1215,6 @@ class ActionResolver:
     def _dict_to_action(self, action_dict: Dict, character=None):
         """Convert dictionary action to Action object."""
         try:
-            from actions import Action
-
             # Extract action information
             name = action_dict.get("name", "Unknown Action")
             energy_cost = action_dict.get("energy_cost", 0)
@@ -3692,10 +3695,12 @@ class GameplayController:
                 current_weather = weather.get('current_weather')
                 energy_decrease = WEATHER_ENERGY_EFFECTS.get(current_weather, 0) * dt
                 if energy_decrease and hasattr(character, 'energy'):
-                    original_energy = character.energy
-                    character.energy = max(0, character.energy - energy_decrease)
-                    if original_energy > character.energy:
-                        logger.debug(f"{current_weather.title()} weather decreased {character.name}'s energy by {energy_decrease:.2f} to {character.energy:.2f}.")
+                    energy = apply_attribute_change(
+                        character, self.graph_manager, "energy",
+                        lambda current: max(0, current - energy_decrease),
+                    )
+                    logger.debug("%s weather left %s with %.2f energy",
+                                 current_weather.title(), character.name, energy)
 
             # Character update is successful if at least one component works
             return memory_success or goals_success or actions_success
@@ -3727,184 +3732,83 @@ class GameplayController:
         return False
 
     def _execute_character_actions(self, character) -> bool:
-        """Execute character actions with error handling and optional LLM decision-making."""
+        """Select the daily action and execute it once."""
+        if not self.strategy_manager:
+            return False
+        if getattr(character, "use_llm_decisions", False):
+            return self.process_character_turn(character)
         try:
-            if not self.strategy_manager:
-                return False
-
-            # Check if character should use LLM decision-making
-            use_llm_decisions = getattr(character, 'use_llm_decisions', False)
-            
-            if use_llm_decisions:
-                # Use comprehensive LLM-based decision making via process_character_turn
-                return self.process_character_turn(character)
-            else:
-                # Use traditional strategy manager approach
-                try:
-                    actions = self.strategy_manager.get_daily_actions(character)
-                    if actions:
-                        # Execute first action (simplified approach)
-                        action = actions[0]
-                        
-                        if hasattr(action, 'execute'):
-                            result = action.execute(character=character, graph_manager=self.graph_manager)
-                            if result:
-                                # Update character state after successful action
-                                self._update_character_state_after_action(character, action)
-
-                                # Track successful execution
-                                self.action_resolver.track_action_execution(
-                                    action, character, True
-                                )
-
-                                # Update quest progress if applicable
-                                self._update_quest_progress(character, action)
-                                
-                                # Provide feedback for successful action
-                                action_name = getattr(action, 'name', str(action))
-                                character_name = getattr(character, 'name', 'Character')
-                                self.provide_action_feedback(action_name, True, character_name)
-
-                                return True
-                            else:
-                                logger.warning(f"Action {action.name} execution returned False")
-                                self.action_resolver.track_action_execution(
-                                    action, character, False
-                                )
-                                
-                                # Provide feedback for failed action
-                                action_name = getattr(action, 'name', str(action))
-                                character_name = getattr(character, 'name', 'Character')
-                                self.provide_action_feedback(action_name, False, character_name)
-                                return False
-                        else:
-                            logger.warning(f"Action {action} has no execute method")
-                            self.action_resolver.track_action_execution(action, character, False)
-                            return False
-                    else:
-                        logger.warning(f"No actions available for {character.name}")
-                        return False
-                except Exception as e:
-                    logger.error(f"Error executing action: {e}")
-                    # Try fallback action
-                    fallback_success = self._execute_fallback_action(character)
-                    if hasattr(locals(), 'action'):
-                        self.action_resolver.track_action_execution(
-                            action, character, fallback_success
-                        )
-                    return fallback_success
-
-        except Exception as e:
-            logger.error(f"Critical error executing character actions: {e}")
-            fallback_success = self._execute_fallback_action(character)
-            return fallback_success
+            actions = self.strategy_manager.get_daily_actions(character)
+        except Exception as error:
+            logger.error("Could not select an action for %s: %s", character.name, error)
+            fallback = self.action_resolver.get_fallback_action(character)
+            return self._run_selected_action(fallback, character, feedback=True)
+        if not actions:
+            logger.warning("No actions available for %s", character.name)
+            return False
+        return self._run_selected_action(actions[0], character, feedback=True)
 
     def _execute_single_action(self, character, action_data) -> bool:
-        """Resolve and execute a single action using the current action pipeline."""
+        """Resolve and execute one action through the controller pipeline."""
         try:
-            action = action_data
-            if self.action_resolver:
-                action = self.action_resolver.resolve_action(action_data, character)
-
-            if not action or not hasattr(action, "execute"):
-                logger.warning(f"Unable to execute unresolved action: {action_data}")
-                return False
-
-            success = self._invoke_action_execute(action, character)
-
-            if success:
-                self._update_character_state_after_action(character, action)
-
-            return bool(success)
-
-        except Exception as e:
-            logger.warning(
-                f"Error executing single action for {getattr(character, 'name', 'Unknown')}: {e}"
-            )
+            action = (self.action_resolver.resolve_action(action_data, character)
+                      if self.action_resolver else action_data)
+        except Exception as error:
+            logger.warning("Could not resolve action for %s: %s", character.name, error)
             return False
+        return self._run_selected_action(action, character)
 
     def _invoke_action_execute(self, action, character):
-        """Call ``action.execute`` using the signature it actually exposes."""
-        execute = action.execute
+        return invoke_action(action, character, self.graph_manager, legacy_target=character)
 
+    def _run_selected_action(self, action, character=None, *, feedback=False):
+        """Invoke once, then record the result independently of execution."""
+        if character is None:
+            character = getattr(action, "initiator", None)
+        action_name = getattr(action, "name", str(action))
+        success = False
         try:
-            parameters = inspect.signature(execute).parameters
-        except (TypeError, ValueError):
-            parameters = {}
+            if callable(getattr(action, "execute", None)):
+                success = bool(self._invoke_action_execute(action, character))
+                if isinstance(action, Action):
+                    character = action.initiator
+            else:
+                logger.warning("Action %s has no callable execute method", action_name)
+        except Exception as error:
+            logger.warning("Error executing %s: %s", action_name, error)
 
-        accepts_kwargs = any(
-            parameter.kind == inspect.Parameter.VAR_KEYWORD
-            for parameter in parameters.values()
-        )
-        parameter_names = set(parameters)
+        counter = "actions_executed" if success else "actions_failed"
+        self._record_action_result(self._increment_action_counter, counter)
+        if self.action_resolver:
+            self._record_action_result(self.action_resolver.track_action_execution,
+                                       action, character, success)
+        if success and character is not None:
+            self._record_action_result(self._update_character_state_after_action, character, action)
+            self._record_action_result(self._update_quest_progress, character, action)
+        if feedback:
+            self._record_action_result(self.provide_action_feedback, action_name, success,
+                                       getattr(character, "name", "Character"))
+        return success
 
-        if accepts_kwargs or ({"character", "graph_manager"} & parameter_names):
-            execute_kwargs = {}
-            if accepts_kwargs or "character" in parameter_names:
-                execute_kwargs["character"] = character
-            if accepts_kwargs or "graph_manager" in parameter_names:
-                execute_kwargs["graph_manager"] = self.graph_manager
-            return execute(**execute_kwargs)
+    def _increment_action_counter(self, counter):
+        self.game_statistics[counter] = self.game_statistics.get(counter, 0) + 1
 
-        if accepts_kwargs or ({"target", "initiator"} & parameter_names):
-            legacy_kwargs = {}
-            if accepts_kwargs or "target" in parameter_names:
-                legacy_kwargs["target"] = character
-            if accepts_kwargs or "initiator" in parameter_names:
-                legacy_kwargs["initiator"] = character
-            return execute(**legacy_kwargs)
-
-        return execute()
-
-    def _execute_fallback_action(self, character) -> bool:
-        """Execute a safe fallback action when normal actions fail."""
+    @staticmethod
+    def _record_action_result(record, *args):
         try:
-            fallback_action = self.action_resolver.get_fallback_action(character)
-            if fallback_action and hasattr(fallback_action, "execute"):
-                result = fallback_action.execute(character=character, graph_manager=self.graph_manager)
-                if result:
-                    logger.info(f"Fallback action executed for {character.name}")
-                    return True
-
-            # If even fallback fails, just update character energy minimally
-            if hasattr(character, "energy"):
-                character.energy = max(
-                    0, character.energy - 1
-                )  # Minimal energy cost for existing
-            return True
-
-        except Exception as e:
-            logger.error(f"Even fallback action failed for {character.name}: {e}")
-            return False
+            record(*args)
+        except Exception as error:
+            logger.warning("Could not record action result: %s", error)
 
     def _update_character_state_after_action(self, character, action):
-        """Update character state and related systems after action execution with comprehensive tracking."""
+        """Record one memory for a successfully executed action."""
         try:
-            # Track state before updates for comparison (if needed for future features)
-            # initial_state = self._capture_character_state(character)
-
-            # The following direct call to graph_manager.update_character_state is removed.
-            # Action.execute() is now responsible for updating the GraphManager based on action effects.
-            # The method update_character_state was also found to not exist in GraphManager.
-
-            # Update memory system - record the action as a memory
-            # This is controller-level logic, managing how actions translate to memories.
             if hasattr(character, "add_memory"):
-                try:
-                    memory_text = (
-                        f"Performed action: {getattr(action, 'name', str(action))}"
-                    )
-                    character.add_memory(memory_text)
-                    return True
-                except Exception as e:
-                    logger.warning(f"Error adding memory for {character.name}: {e}")
-                    return False
-            
-            return True  # Success if no memory system available
-                    
-        except Exception as e:
-            logger.warning(f"Error updating character state after action for {character.name}: {e}")
+                character.add_memory(f"Performed action: {getattr(action, 'name', action)}")
+        except Exception as error:
+            logger.warning("Error adding action memory for %s: %s", character.name, error)
             return False
+        return True
 
     def _update_quest_progress(self, character, action):
         """Update quest progress based on action execution."""
@@ -4179,7 +4083,7 @@ class GameplayController:
                 if actions and len(actions) > 0:
                     action = actions[0]
                     if hasattr(action, 'execute'):
-                        return action.execute()
+                        return self._run_selected_action(action, character)
             
             # Simple energy restoration as ultimate fallback
             if hasattr(character, 'energy'):
@@ -4440,29 +4344,9 @@ class GameplayController:
                         continue
             
             elif hasattr(strategy_result, 'execute'):
-                # Single action - execute it directly
-                try:
-                    success = strategy_result.execute()
-                    if success:
-                        logger.debug(f"Successfully executed strategy action: {strategy_result.name}")
-                        self.game_statistics["actions_executed"] += 1
-                    else:
-                        logger.warning(f"Strategy action execution failed: {strategy_result.name}")
-                        self.game_statistics["actions_failed"] += 1
-                        update_errors.append("Strategy action execution failed")
-                        
-                    # Track action execution for analytics
-                    try:
-                        if self.action_resolver:
-                            self.action_resolver.track_action_execution(strategy_result, None, success)
-                    except AttributeError:
-                        # track_action_execution method doesn't exist, skip
-                        pass
-                        
-                except Exception as e:
-                    logger.error(f"Error executing strategy action: {e}")
-                    update_errors.append("Strategy action execution error")
-            
+                if not self._run_selected_action(strategy_result):
+                    update_errors.append("Strategy action execution failed")
+
             elif isinstance(strategy_result, dict):
                 try:
                     if "type" in strategy_result:
@@ -4480,24 +4364,11 @@ class GameplayController:
                             if isinstance(decision, list):
                                 for item in decision:
                                     if hasattr(item, "execute"):
-                                        try:
-                                            success = item.execute()
-                                            if success:
-                                                self.game_statistics["actions_executed"] += 1
-                                            else:
-                                                self.game_statistics["actions_failed"] += 1
-                                        except Exception as action_error:
-                                            logger.warning(
-                                                f"Error executing action for {char_id}: {action_error}"
-                                            )
+                                        self._run_selected_action(item, self.characters.get(char_id))
                                     elif isinstance(item, dict) and "type" in item:
                                         self.apply_decision(item, None)
                             elif hasattr(decision, "execute"):
-                                success = decision.execute()
-                                if success:
-                                    self.game_statistics["actions_executed"] += 1
-                                else:
-                                    self.game_statistics["actions_failed"] += 1
+                                self._run_selected_action(decision, self.characters.get(char_id))
                             else:
                                 logger.debug(
                                     f"Unhandled strategy mapping entry for {char_id}: {type(decision)}"
@@ -4714,17 +4585,7 @@ class GameplayController:
                 
                 if character_id in self.characters and action:
                     character = self.characters[character_id]
-                    resolved_action = self.action_resolver.resolve_action(action, character)
-                    
-                    if resolved_action and hasattr(resolved_action, 'execute'):
-                        success = resolved_action.execute()
-                        if success:
-                            self.game_statistics["actions_executed"] += 1
-                        else:
-                            self.game_statistics["actions_failed"] += 1
-                        
-                        # Track the action execution for analytics
-                        self.action_resolver.track_action_execution(resolved_action, character, success)
+                    self._execute_single_action(character, action)
                         
             elif decision_type == "event_response":
                 # Handle event-based decisions
