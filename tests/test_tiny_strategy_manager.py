@@ -100,7 +100,9 @@ class TestStrategyManager(unittest.TestCase):
         # outranks Eat (calories x 0.1 hunger points), while Work's credit gain
         # and NoOp's zero cost follow. Ordering verified against the native
         # utility semantics.
-        expected_order = ["Sleep", "Work as Gardener", "NoOp", "Eat Pear", "Wander"]
+        # #818 review: Work at energy 20 fails the native >=30 gate and is
+        # excluded from daily selection; ordering continues without it.
+        expected_order = ["Sleep", "NoOp", "Eat Pear", "Wander"]
         # Allow for other generic actions if any, but these should be in this relative order
 
         # Check that the top actions appear in the expected order based on utility
@@ -113,8 +115,7 @@ class TestStrategyManager(unittest.TestCase):
             except StopIteration:
                 self.fail(f"Action containing '{name}' not found in results: {action_names_sorted}")
 
-        self.assertTrue(indices["Sleep"] < indices["Work as Gardener"])
-        self.assertTrue(indices["Work as Gardener"] < indices["NoOp"])
+        self.assertTrue(indices["Sleep"] < indices["NoOp"])
         self.assertTrue(indices["NoOp"] < indices["Eat Pear"])
         self.assertTrue(indices["Eat Pear"] < indices["Wander"])
 

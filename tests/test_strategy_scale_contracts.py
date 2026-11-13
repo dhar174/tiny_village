@@ -39,10 +39,8 @@ print({"sleep_gate": [29, 30]})
     def test_work_requires_native_30_energy_and_raw_credits(self):
         self.run_world("""
 from unittest.mock import patch
-from tiny_goap_system import GOAPPlanner
 from tiny_strategy_manager import StrategyManager
 strategy = StrategyManager(graph_manager=graph)
-planner_free = GOAPPlanner(graph)
 node = graph.G.nodes[character]
 class _Home:
     name = "Home"
@@ -50,10 +48,9 @@ character.location = _Home()
 character.job = "Baker"
 node.update(energy=29)
 character.energy = 29
-work_low = next(a for a in strategy.get_daily_actions(character) if a.name.startswith("Work as"))
-assert not work_low.preconditions_met()
-from actions import State as _State
-assert not planner_free._action_applicable(work_low, _State({"energy": 29}))
+# #818 review: blocked Work is excluded from daily selection entirely
+names_low = [a.name for a in strategy.get_daily_actions(character)]
+assert not any(n.startswith("Work as") for n in names_low), names_low
 node.update(energy=30)
 character.energy = 30
 work = next(a for a in strategy.get_daily_actions(character) if a.name.startswith("Work as"))
@@ -194,3 +191,111 @@ class TestFixtureUnitConversion(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestReviewContractRows(FreshPythonTestCase):
+    """Regression rows for the PR #818 review fixes (#818 review dispositions)."""
+
+    def run_world(self, source):
+        self.run_python(
+            WORLD_SETUP
+            + "\ntry:\n    character = next(iter(controller.characters.values()))\n"
+            + textwrap.indent(textwrap.dedent(source), "    ")
+            + "\nfinally:\n    controller.close()\n"
+        )
+
+    def test_non_numeric_event_value_rejected_before_synchronized_write(self):
+        self.run_world("""
+from effect_dispatcher import EffectDispatcher
+from effect_schema import OperatorType
+dispatcher = EffectDispatcher(graph_manager=graph)
+node = graph.G.nodes[character]
+node.update(energy=20)
+character.energy = 20
+from unittest.mock import patch
+with patch.object(graph, "update_node_attribute", wraps=graph.update_node_attribute) as writes:
+    applied = dispatcher._modify_entity_attribute(character, "energy", "corrupt", OperatorType.SET)
+assert applied is False
+assert node["energy"] == character.energy == 20
+assert writes.call_count == 0
+print({"non_numeric_set": "rejected"})
+""")
+
+    def test_bound_target_condition_resolves_live_under_supplied_state(self):
+        self.run_world("""
+from actions import State, Action, Condition
+from tiny_time_manager import GameTimeManager
+node = graph.G.nodes[character]
+node.update(energy=20)
+character.energy = 20
+other = Character(name="OtherActor", age=30, energy=90,
+                  personality_traits={"extraversion": 50, "openness": 80, "conscientiousness": 70, "agreeableness": 40, "neuroticism": 20},
+                  gametime_manager=GameTimeManager)
+action = Action("MixedTargets", [Condition("PartnerFresh", "energy", other, 10, ">=")], [
+    {"targets": ["initiator"], "attribute": "energy", "change_value": 5}], graph_manager=graph)
+supplied = State({"energy": 1})
+assert action.preconditions_met(supplied) is True
+assert action.preconditions_met() is True
+tired_partner = Character(name="TiredActor", age=30, energy=5,
+                          personality_traits={"extraversion": 50, "openness": 80, "conscientiousness": 70, "agreeableness": 40, "neuroticism": 20},
+                          gametime_manager=GameTimeManager)
+action_tired = Action("MixedTargetsTired", [Condition("PartnerFresh", "energy", tired_partner, 10, ">=")], [
+    {"targets": ["initiator"], "attribute": "energy", "change_value": 5}], graph_manager=graph)
+assert action_tired.preconditions_met(supplied) is False
+print({"bound_target_live_resolution": True})
+""")
+
+    def test_effective_delta_clamps_near_cap(self):
+        from actions import Action as _Action
+        from tiny_utility_functions import Goal, build_utility_action_view, build_signed_remaining_goal
+        Action = _Action
+
+        rest = Action("Rest", [], [{"targets": ["initiator"], "attribute": "energy", "change_value": 15}], graph_manager=None)
+        view = build_utility_action_view(rest, native_state={"energy": 95})
+        assert view.effects[0]["change_value"] == 0.05
+        default_view = build_utility_action_view(rest)
+        assert default_view.effects[0]["change_value"] == 0.15
+        money_view = build_utility_action_view(
+            Action("Work", [], [{"targets": ["initiator"], "attribute": "money", "change_value": 20.0}], graph_manager=None),
+            native_state={"wealth_money": 100.0},
+        )
+        assert money_view.effects[0]["change_value"] == 20.0
+        goal_view = build_signed_remaining_goal(
+            Goal(name="g", target_effects={"energy": 65}, priority=0.8), {"energy": 0.7}
+        )
+        assert goal_view.target_effects["energy"] == 0.0
+        print({"effective_delta": [0.05, 0.15, 20.0], "satisfied_minimum_clamped": 0.0})
+
+    def test_money_alias_projection_satisfies_money_goals(self):
+        self.run_world("""
+from actions import State
+from tiny_goap_system import GOAPPlanner
+planner = GOAPPlanner(graph)
+node = graph.G.nodes[character]
+node.update(wealth_money=10)
+character.wealth_money = 10
+work = Action("Work", [], [{"targets": ["initiator"], "attribute": "money", "change_value": 20.0}], graph_manager=graph)
+simulated = planner._apply_action_effects(work, State({"wealth_money": 10}))
+assert simulated["wealth_money"] == 30
+assert simulated["money"] == 30
+print({"alias_projection": [30, 30]})
+""")
+
+    def test_sleep_gate_uses_authoritative_energy_snapshot(self):
+        self.run_world("""
+from tiny_strategy_manager import StrategyManager
+strategy = StrategyManager(graph_manager=graph)
+node = graph.G.nodes[character]
+class _Home:
+    name = "Home"
+character.location = _Home()
+node.update(energy=20)
+character.energy = 90
+names = [a.name for a in strategy.get_daily_actions(character)]
+assert "Sleep" in names
+node.update(energy=90)
+character.energy = 20
+names = [a.name for a in strategy.get_daily_actions(character)]
+assert "Sleep" not in names
+print({"sleep_gate_snapshot": True})
+""")

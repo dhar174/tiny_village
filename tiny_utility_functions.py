@@ -26,6 +26,8 @@ from collections import defaultdict
 from actions import (
     Action,
     State,
+    clamp_need_value,
+    _canonical_attribute,
 )  # Assuming Action class is available and has cost & effects
 
 logger = logging.getLogger(__name__)
@@ -77,30 +79,60 @@ def normalize_effect_delta(attribute, change_value):
 
 
 class _UtilityActionView:
-    """Read-only view of an action with need deltas normalized for utility scoring (#740)."""
+    """Read-only view of an action with need deltas normalized for utility scoring (#740).
 
-    def __init__(self, action):
+    When a native-scale state is supplied (#818 review), deltas clamp to what
+    execution would realize: effective = clamp(current + Δ) − current, then
+    normalized. Happiness fractions and money (credits) pass through.
+    """
+
+    def __init__(self, action, native_state=None):
         self.action = action
         self.name = getattr(action, "name", None)
         self.cost = getattr(action, "cost", 0.0)
-        self.effects = [
-            {
-                "attribute": effect.get("attribute"),
-                "change_value": normalize_effect_delta(
-                    effect.get("attribute"), effect.get("change_value")
-                ),
-            }
-            for effect in getattr(action, "effects", None) or []
-            if isinstance(effect, dict)
-        ]
+        self.effects = []
+        for effect in getattr(action, "effects", None) or []:
+            if not isinstance(effect, dict):
+                continue
+            declared = effect.get("attribute")
+            change = effect.get("change_value")
+            self.effects.append(
+                {
+                    "attribute": declared,
+                    "change_value": self._effective_delta(declared, change, native_state),
+                }
+            )
+
+    @staticmethod
+    def _effective_delta(declared, change, native_state):
+        if native_state is None:
+            return normalize_effect_delta(declared, change)
+        try:
+            canonical = _canonical_attribute(declared)
+        except ValueError:
+            return normalize_effect_delta(declared, change)
+        current = native_state.get(canonical, native_state.get(declared, 0.0))
+        if (
+            isinstance(change, (int, float))
+            and not isinstance(change, bool)
+            and isinstance(current, (int, float))
+            and not isinstance(current, bool)
+        ):
+            projected = clamp_need_value(canonical, current + change)
+            return normalize_effect_delta(canonical, projected - current)
+        return normalize_effect_delta(declared, change)
 
 
-def build_utility_action_view(action):
-    """Return the normalized-utility view of an action, or the action itself when trivial."""
+def build_utility_action_view(action, native_state=None):
+    """Return the normalized-utility view of an action, or the action itself when trivial.
+
+    With a native-scale state, each need delta becomes the realizable change:
+    clamp(current + Δ) − current, normalized (#818 review item #15).
+    """
     effects = getattr(action, "effects", None)
     if not effects or not any(isinstance(effect, dict) for effect in effects):
         return action
-    return _UtilityActionView(action)
+    return _UtilityActionView(action, native_state)
 
 
 def normalize_state_for_utility(state_dict):
@@ -161,7 +193,15 @@ def build_signed_remaining_goal(goal, normalized_state):
     for attribute, target in targets.items():
         current = normalized_state.get(attribute, 0.0)
         if isinstance(target, (int, float)) and not isinstance(target, bool):
-            remaining[attribute] = normalize_effect_delta(attribute, target) - current
+            target_normalized = normalize_effect_delta(attribute, target)
+            if target_normalized >= 0:
+                # Minimum target: satisfied targets clamp to zero so no goal
+                # bonus accrues to actions that move away from it (#818 review).
+                remaining[attribute] = max(0.0, target_normalized - current)
+            else:
+                # Maximum target: keep the signed negative remainder (hunger-
+                # reducing effects keep the bonus, matching delta-style goals).
+                remaining[attribute] = target_normalized - current
             numeric_state = True
         else:
             remaining[attribute] = target

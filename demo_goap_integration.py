@@ -101,7 +101,7 @@ def demonstrate_goap_integration():
         print(f"   Target: {goal.target_effects}")
         
         # Get current state
-        current_state = State(strategy_manager.get_character_state_dict(alice))
+        current_state = State(strategy_manager.get_character_planning_state(alice))
         actions = strategy_manager.get_daily_actions(alice)
         
         # Plan using GOAP

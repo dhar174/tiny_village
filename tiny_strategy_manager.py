@@ -761,13 +761,18 @@ class StrategyManager:
                 state["health"] = _normalize(
                     graph_values.get("health_status", getattr(character, "health_status", None)), 100.0
                 )
+                # Reads follow writes (#818 review): producers write
+                # `satisfaction`, so prefer it over the current_satisfaction field.
                 state["satisfaction"] = _normalize(
                     graph_values.get(
-                        "current_satisfaction",
-                        getattr(
-                            character,
+                        "satisfaction",
+                        graph_values.get(
                             "current_satisfaction",
-                            getattr(character, "satisfaction", None),
+                            getattr(
+                                character,
+                                "satisfaction",
+                                getattr(character, "current_satisfaction", None),
+                            ),
                         ),
                     ),
                     100.0,
@@ -861,7 +866,9 @@ class StrategyManager:
             "mental_health": _to_float(getattr(character, "mental_health", 50.0), 50.0),
             "social_wellbeing": _to_float(getattr(character, "social_wellbeing", 50.0), 50.0),
             "job_performance": _to_float(getattr(character, "job_performance", 20.0), 20.0),
-            "satisfaction": _to_float(getattr(character, "current_satisfaction", 0.0), 0.0),
+            "satisfaction": _to_float(
+                getattr(character, "satisfaction", getattr(character, "current_satisfaction", 0.0)), 0.0
+            ),  # reads follow writes (#818 review)
             "happiness": _to_float(getattr(character, "happiness", 0.0), 0.0),
             "wealth_money": _to_float(getattr(character, "wealth_money", 0.0), 0.0),
             "money": _to_float(getattr(character, "wealth_money", 0.0), 0.0),
@@ -892,11 +899,15 @@ class StrategyManager:
         char_energy = 50  # Default value (native 0-100 scale, #740)
         char_location_name = "Unknown"  # Default value
         char_job = "unemployed"  # Default value
-        
-        if hasattr(character, 'energy'):
-            char_energy = float(getattr(character, "energy", 50.0))
-        elif isinstance(character, dict):
-            char_energy = float(character.get("energy", 50.0))
+
+        # Gate on the authoritative planning snapshot (#818 review): graph-first
+        # energy with the standalone attribute fallback for graph-free callers.
+        try:
+            char_energy = float(
+                self.get_character_planning_state(character).get("energy", 50.0)
+            )
+        except (TypeError, ValueError):
+            char_energy = 50.0
             
         if hasattr(character, 'location'):
             char_location_name = getattr(character.location, "name", "Unknown") if character.location else "Unknown"
@@ -1010,13 +1021,21 @@ class StrategyManager:
                 potential_actions, key=lambda x: x.name
             )  # Sort by name as fallback
 
+        # #818 review: blocked actions are excluded from daily selection using
+        # the same native planning snapshot GOAP search evaluates, so the
+        # controller's first-action pick cannot select an impossible Work.
+        native_planning_state = self.get_character_planning_state(character)
+        planning_snapshot = State(native_planning_state)
         for action in potential_actions:
+            if not action.preconditions_met(planning_snapshot):
+                continue
             # #740 boundary: need deltas divide by 100 and absolute targets are
             # supplied as normalized signed remaining changes to the normalized
-            # utility scoring; happiness and credits pass through.
+            # utility scoring; happiness and credits pass through. Deltas clamp
+            # to the realizable change against the native snapshot (#818 review).
             utility = calculate_action_utility(
                 character_state_dict,
-                build_utility_action_view(action),
+                build_utility_action_view(action, native_planning_state),
                 build_signed_remaining_goal(current_goal, character_state_dict),
             )
             action_utilities.append((action, utility))
@@ -1425,7 +1444,7 @@ class StrategyManager:
                 # #740 boundary: normalized deltas + signed remaining goal (see get_daily_actions)
                 return calculate_action_utility(
                     character_state,
-                    build_utility_action_view(action),
+                    build_utility_action_view(action, self.get_character_planning_state(character)),
                     build_signed_remaining_goal(current_goal, character_state),
                 )
             except (AttributeError, TypeError, ValueError):

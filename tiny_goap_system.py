@@ -38,6 +38,7 @@ import tiny_utility_functions as util_funcs
 
 import logging
 import importlib
+import inspect
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -45,6 +46,24 @@ logging.basicConfig(level=logging.DEBUG)
 UTILITY_SCALING_FACTOR = 0.1
 UTILITY_INFLUENCE_FACTOR = 0.05
 HEURISTIC_SCALING_FACTOR = 0.1
+
+
+def _preconditions_met_accepts_state(func):
+    """Whether a preconditions_met callable accepts a `state` argument (#818 review).
+
+    Zero-arg wrappers (e.g. ActionWrapper) keep their own precondition contract
+    and are never handed the simulated state.
+    """
+    if func is None:
+        return False
+    try:
+        parameters = inspect.signature(func).parameters.values()
+    except (TypeError, ValueError):
+        return False
+    return any(
+        parameter.name == "state" or parameter.kind is parameter.VAR_KEYWORD
+        for parameter in parameters
+    )
 
 
 class ActionWrapper:
@@ -725,7 +744,15 @@ class GOAPPlanner:
                 # #740 planner parity: evaluate concrete actor conditions against
                 # the simulated state; live graph/Character resolution stays for
                 # state=None callers (execution keeps its existing behavior).
-                return action.preconditions_met(state=state)
+                # #818 review: only callables that accept `state` receive it —
+                # zero-arg wrappers (e.g. ActionWrapper) keep their own contract.
+                accepts_state = _preconditions_met_accepts_state(
+                    getattr(type(action), 'preconditions_met', None)
+                    or action.preconditions_met
+                )
+                if accepts_state:
+                    return action.preconditions_met(state=state)
+                return bool(action.preconditions_met())
             elif hasattr(action, 'preconditions'):
                 # Handle different precondition formats
                 preconditions = action.preconditions
@@ -758,7 +785,15 @@ class GOAPPlanner:
                             parsed = _AttributeEffect(dict(effect))
                             canonical = parsed.attribute
                             current_value = new_state.get(canonical, 0)
-                            new_state[canonical] = parsed.scalar_result(current_value)
+                            projected = parsed.scalar_result(current_value)
+                            new_state[canonical] = projected
+                            # #818 review: mirror the declared attribute name so
+                            # goals keyed on aliases (e.g. "money") can be
+                            # satisfied in search. Projection still equals
+                            # execution; the alias mirrors, never double-applies.
+                            declared = effect.get("attribute")
+                            if isinstance(declared, str) and declared != canonical:
+                                new_state[declared] = projected
                         except (ValueError, TypeError):
                             # Descriptor-only compatibility: non-numeric descriptors
                             # (legacy-string/callable) do not project into simulation.
@@ -814,7 +849,7 @@ class GOAPPlanner:
             # changes; happiness and credits pass through.
             utility = util_funcs.calculate_action_utility(
                 util_funcs.normalize_state_for_utility(state_dict),
-                util_funcs.build_utility_action_view(action),
+                util_funcs.build_utility_action_view(action, state_dict),
                 util_funcs.build_signed_remaining_goal(goal_obj, util_funcs.normalize_state_for_utility(state_dict)),
             )
             

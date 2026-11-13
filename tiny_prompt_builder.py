@@ -728,7 +728,7 @@ class ActionOptions:
             "visit_doctor": character.get_health_status() < 30
             or character.get_mental_health() < 40,
             "take_medicine": character.get_health_status() < 50,
-            "improve_shelter": character.get_shelter() < 40,
+            "improve_shelter": character.get_shelter() < 4,  # shelter is not a 0-100 need (#818 review)
             "attend_event": character.get_social_wellbeing() < 50
             or character.get_community() < 50,
             "pursue_hobby": character.get_happiness() < 0.5 or character.get_beauty() < 50,
@@ -2414,7 +2414,11 @@ class PromptBuilder:
 
         try:
             from tiny_strategy_manager import StrategyManager
-            from tiny_utility_functions import calculate_action_utility
+            from tiny_utility_functions import (
+                calculate_action_utility,
+                build_utility_action_view,
+                build_signed_remaining_goal,
+            )
         except ImportError:  # pragma: no cover - gracefully handle missing deps
             self.prioritized_actions = []
             self.action_choices = []
@@ -2434,7 +2438,13 @@ class PromptBuilder:
 
         for i, action in enumerate(actions[:5]):
             try:
-                util = calculate_action_utility(char_state, action, current_goal)
+                # #818 review: the normalized utility boundary applies here too —
+                # deltas normalize, targets become signed remaining changes.
+                util = calculate_action_utility(
+                    char_state,
+                    build_utility_action_view(action),
+                    build_signed_remaining_goal(current_goal, char_state),
+                )
             except (ValueError, TypeError) as e:
                 util = 0.0
                 logger.warning(f"Error calculating utility for action {action}: {e}")
@@ -2505,7 +2515,12 @@ class PromptBuilder:
 
     def calculate_action_utility(self, current_goal: Optional[object] = None) -> Dict[str, float]:
         """Calculate and return utility values for the prioritized actions."""
-        from tiny_utility_functions import UtilityEvaluator, calculate_action_utility
+        from tiny_utility_functions import (
+            UtilityEvaluator,
+            calculate_action_utility,
+            build_utility_action_view,
+            build_signed_remaining_goal,
+        )
         from tiny_output_interpreter import OutputInterpreter
 
         self.action_utilities = {}
@@ -2525,16 +2540,21 @@ class PromptBuilder:
                 print(f"Warning: Unknown action {action_name}")
                 continue
 
+            # #818 review: normalize deltas and goal targets at the boundary so
+            # prompt-path scores match the strategy scoring contract.
+            action_view = build_utility_action_view(action_obj)
+            goal_view = build_signed_remaining_goal(current_goal, char_state)
+
             try:
                 utility = evaluator.evaluate_action_utility(
                     self.character.name,
                     char_state,
-                    action_obj,
-                    current_goal,
+                    action_view,
+                    goal_view,
                 )
             except Exception:
                 try:
-                    utility = calculate_action_utility(char_state, action_obj, current_goal)
+                    utility = calculate_action_utility(char_state, action_view, goal_view)
                 except Exception as e:
                     print(f"Failed to evaluate utility for {action_name}: {e}")
                     continue

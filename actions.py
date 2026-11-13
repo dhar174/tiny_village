@@ -600,7 +600,10 @@ class Action:
                 if not isinstance(condition, Condition):
                     raise ValueError(f"Expected a Condition, got {condition!r}")
                 attribute = _canonical_attribute(condition.attribute)
-                if state is None:
+                # A supplied simulation state models the actor only (#818 review):
+                # conditions bound to another entity keep their live resolution.
+                actor_local = condition.target is None or condition.target == "initiator"
+                if state is None or not actor_local:
                     target = condition.target
                     if target is None or target == "initiator":
                         target = self.initiator

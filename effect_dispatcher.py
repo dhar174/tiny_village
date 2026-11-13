@@ -7,6 +7,7 @@ handling all effect types consistently and safely.
 
 from typing import Any, Dict, List, Optional
 import logging
+import math
 
 from effect_schema import EffectV2, EffectType, OperatorType
 from character_attribute_mapper import AttributeMapper
@@ -333,19 +334,33 @@ class EffectDispatcher:
             if actual_attr in {"energy", "hunger_level", "health_status"} and self.graph_manager is not None:
                 def calculate(current):
                     if operator == OperatorType.ADD:
-                        return clamp_need_value(actual_attr, current + change_value)
-                    if operator == OperatorType.SUBTRACT:
-                        return clamp_need_value(actual_attr, current - change_value)
-                    if operator == OperatorType.MULTIPLY:
-                        return clamp_need_value(actual_attr, current * change_value)
-                    if operator == OperatorType.SET:
-                        return clamp_need_value(actual_attr, change_value)
-                    if operator == OperatorType.MIN:
-                        return clamp_need_value(actual_attr, min(current, change_value))
-                    if operator == OperatorType.MAX:
-                        return clamp_need_value(actual_attr, max(current, change_value))
-                    logging.warning(f"Unknown operator {operator}, using ADD")
-                    return clamp_need_value(actual_attr, current + change_value)
+                        result = current + change_value
+                    elif operator == OperatorType.SUBTRACT:
+                        result = current - change_value
+                    elif operator == OperatorType.MULTIPLY:
+                        result = current * change_value
+                    elif operator == OperatorType.SET:
+                        result = change_value
+                    elif operator == OperatorType.MIN:
+                        result = min(current, change_value)
+                    elif operator == OperatorType.MAX:
+                        result = max(current, change_value)
+                    else:
+                        logging.warning(f"Unknown operator {operator}, using ADD")
+                        result = current + change_value
+                    # #818 review: validate before the synchronized write — a
+                    # non-finite or non-numeric result raises here, so the
+                    # synchronized updater rolls back both stores and the
+                    # dispatcher reports not-applied (base-path behavior).
+                    if (
+                        not isinstance(result, (int, float))
+                        or isinstance(result, bool)
+                        or not math.isfinite(result)
+                    ):
+                        raise ValueError(
+                            f"Non-finite numeric result for {actual_attr!r}: {result!r}"
+                        )
+                    return clamp_need_value(actual_attr, result)
 
                 success = apply_attribute_change(entity, self.graph_manager, actual_attr, calculate)
                 if success is None:

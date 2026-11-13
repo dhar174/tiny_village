@@ -27,12 +27,12 @@ class TestActionExecution(unittest.TestCase):
         result = action.execute(character=self.alice)
 
         self.assertTrue(result)
-        self.assertEqual(self.alice.energy, 8.0)
+        self.assertEqual(self.alice.energy, 98.0)  # native 0-100 default energy (#740)
         self.assertEqual(self.bob.status, "active")
         self.graph_manager.update_node_attribute.assert_any_call(
             self.alice.uuid,
             "energy",
-            8.0,
+            98.0,
         )
         self.graph_manager.update_node_attribute.assert_any_call(
             self.bob.uuid,
@@ -42,7 +42,7 @@ class TestActionExecution(unittest.TestCase):
         self.assertEqual(self.graph_manager.update_node_attribute.call_count, 2)
 
     def test_action_execute_honors_real_condition_preconditions(self):
-        condition = Condition("HasEnergy", "energy", self.alice, 20, ">=")
+        condition = Condition("HasEnergy", "energy", self.alice, 200, ">=")  # native scale: reject above max (#740)
         action = Action(
             name="RequiresEnergy",
             preconditions=[condition],
@@ -56,7 +56,7 @@ class TestActionExecution(unittest.TestCase):
         result = action.execute(character=self.alice)
 
         self.assertFalse(result)
-        self.assertEqual(self.alice.energy, 10.0)
+        self.assertEqual(self.alice.energy, 100.0)  # native unchanged (#740)
         self.graph_manager.update_node_attribute.assert_not_called()
 
     def test_action_template_passes_graph_manager_into_instantiated_action(self):
