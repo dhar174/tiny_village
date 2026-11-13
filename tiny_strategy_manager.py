@@ -1087,11 +1087,14 @@ class StrategyManager:
                 # Calculate utility for this action to show reasoning
                 utility_score = calculate_action_utility(
                     character_state_dict,
-                    action,
-                    (
-                        character.get_current_goal()
-                        if hasattr(character, "get_current_goal")
-                        else None
+                    build_utility_action_view(action, self.get_character_planning_state(character)),
+                    build_signed_remaining_goal(
+                        (
+                            character.get_current_goal()
+                            if hasattr(character, "get_current_goal")
+                            else None
+                        ),
+                        character_state_dict,
                     ),
                 )
 

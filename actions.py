@@ -601,8 +601,13 @@ class Action:
                     raise ValueError(f"Expected a Condition, got {condition!r}")
                 attribute = _canonical_attribute(condition.attribute)
                 # A supplied simulation state models the actor only (#818 review):
-                # conditions bound to another entity keep their live resolution.
-                actor_local = condition.target is None or condition.target == "initiator"
+                # conditions bound to the actor object itself are actor-local too
+                # (identity resolution); genuine partners keep live resolution.
+                actor_local = (
+                    condition.target is None
+                    or condition.target == "initiator"
+                    or (self.initiator is not None and condition.target is self.initiator)
+                )
                 if state is None or not actor_local:
                     target = condition.target
                     if target is None or target == "initiator":

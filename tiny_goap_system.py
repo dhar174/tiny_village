@@ -28,7 +28,7 @@ What happens: The GOAP planner uses the graph to analyze relationships and prefe
 """
 
 from tiny_types import Goal, Character, GraphManager
-from actions import Action, State, invoke_action
+from actions import Action, State, invoke_action, _ATTRIBUTE_ALIASES
 
 # from tiny_graph_manager import GraphManager
 
@@ -787,13 +787,16 @@ class GOAPPlanner:
                             current_value = new_state.get(canonical, 0)
                             projected = parsed.scalar_result(current_value)
                             new_state[canonical] = projected
-                            # #818 review: mirror the declared attribute name so
-                            # goals keyed on aliases (e.g. "money") can be
-                            # satisfied in search. Projection still equals
-                            # execution; the alias mirrors, never double-applies.
-                            declared = effect.get("attribute")
-                            if isinstance(declared, str) and declared != canonical:
-                                new_state[declared] = projected
+                            # #818 re-review: synchronize every alias of the
+                            # canonical field on every projection, including
+                            # canonically declared effects, so goal lookups on
+                            # any alias see the same projected value and later
+                            # canonical writes cannot leave an alias stale.
+                            # Projection still equals execution; aliases mirror,
+                            # never double-apply.
+                            for alias, alias_target in _ATTRIBUTE_ALIASES.items():
+                                if alias_target == canonical:
+                                    new_state[alias] = projected
                         except (ValueError, TypeError):
                             # Descriptor-only compatibility: non-numeric descriptors
                             # (legacy-string/callable) do not project into simulation.

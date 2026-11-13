@@ -2442,7 +2442,7 @@ class PromptBuilder:
                 # deltas normalize, targets become signed remaining changes.
                 util = calculate_action_utility(
                     char_state,
-                    build_utility_action_view(action),
+                    build_utility_action_view(action, self._get_native_needs_state()),
                     build_signed_remaining_goal(current_goal, char_state),
                 )
             except (ValueError, TypeError) as e:
@@ -2474,6 +2474,16 @@ class PromptBuilder:
         """Return a short message describing failure to perform ``action``."""
 
         return f"{character.name} has failed to {DescriptorMatrices.get_action_descriptors(action)} {action}."
+
+    def _get_native_needs_state(self) -> Dict[str, float]:
+        """Return native-scale need values (graph-first, no division) for the
+        realizable-delta utility view (#818 review). Canonical need keys only.
+        """
+        return {
+            "energy": self._graph_value("energy", getattr(self.character, "energy", 50.0)),
+            "hunger_level": self._graph_value("hunger_level", getattr(self.character, "hunger_level", 30.0)),
+            "health_status": self._graph_value("health_status", getattr(self.character, "health_status", 50.0)),
+        }
 
     def _graph_value(self, attribute, default=None):
         """Graph-first need read for the registered character (#740).
@@ -2542,7 +2552,7 @@ class PromptBuilder:
 
             # #818 review: normalize deltas and goal targets at the boundary so
             # prompt-path scores match the strategy scoring contract.
-            action_view = build_utility_action_view(action_obj)
+            action_view = build_utility_action_view(action_obj, self._get_native_needs_state())
             goal_view = build_signed_remaining_goal(current_goal, char_state)
 
             try:

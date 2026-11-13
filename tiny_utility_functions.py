@@ -26,7 +26,7 @@ from collections import defaultdict
 from actions import (
     Action,
     State,
-    clamp_need_value,
+    _AttributeEffect,
     _canonical_attribute,
 )  # Assuming Action class is available and has cost & effects
 
@@ -81,9 +81,11 @@ def normalize_effect_delta(attribute, change_value):
 class _UtilityActionView:
     """Read-only view of an action with need deltas normalized for utility scoring (#740).
 
-    When a native-scale state is supplied (#818 review), deltas clamp to what
-    execution would realize: effective = clamp(current + Δ) − current, then
-    normalized. Happiness fractions and money (credits) pass through.
+    When a native-scale state is supplied (#818 review), effects project
+    sequentially through the shared scalar descriptor calculation against a
+    private copied state — later effects see earlier writes and clamp against
+    realizable capacity, mirroring execution and GOAP projection. Happiness
+    fractions and money (credits) pass through.
     """
 
     def __init__(self, action, native_state=None):
@@ -91,36 +93,43 @@ class _UtilityActionView:
         self.name = getattr(action, "name", None)
         self.cost = getattr(action, "cost", 0.0)
         self.effects = []
+        projected = dict(native_state) if native_state is not None else None
         for effect in getattr(action, "effects", None) or []:
             if not isinstance(effect, dict):
                 continue
             declared = effect.get("attribute")
             change = effect.get("change_value")
-            self.effects.append(
-                {
-                    "attribute": declared,
-                    "change_value": self._effective_delta(declared, change, native_state),
-                }
-            )
+            if projected is None:
+                self.effects.append(
+                    {
+                        "attribute": declared,
+                        "change_value": normalize_effect_delta(declared, change),
+                    }
+                )
+                continue
+            normalized, projected = self._effective_delta(declared, change, projected)
+            self.effects.append({"attribute": declared, "change_value": normalized})
 
     @staticmethod
-    def _effective_delta(declared, change, native_state):
-        if native_state is None:
-            return normalize_effect_delta(declared, change)
+    def _effective_delta(declared, change, projected):
         try:
             canonical = _canonical_attribute(declared)
         except ValueError:
-            return normalize_effect_delta(declared, change)
-        current = native_state.get(canonical, native_state.get(declared, 0.0))
-        if (
-            isinstance(change, (int, float))
-            and not isinstance(change, bool)
-            and isinstance(current, (int, float))
-            and not isinstance(current, bool)
-        ):
-            projected = clamp_need_value(canonical, current + change)
-            return normalize_effect_delta(canonical, projected - current)
-        return normalize_effect_delta(declared, change)
+            return normalize_effect_delta(declared, change), projected
+        current = projected.get(canonical, projected.get(declared, 0.0))
+        try:
+            parsed = _AttributeEffect({"attribute": declared, "change_value": change})
+            absolute = parsed.scalar_result(current)
+        except (ValueError, TypeError):
+            # Descriptor-only compatibility: non-numeric descriptors do not
+            # project into the view, matching GOAP projection behavior.
+            return normalize_effect_delta(declared, change), projected
+        if not isinstance(absolute, (int, float)) or isinstance(absolute, bool):
+            return normalize_effect_delta(declared, change), projected
+        projected[canonical] = absolute
+        if declared != canonical:
+            projected[declared] = absolute
+        return normalize_effect_delta(canonical, absolute - current), projected
 
 
 def build_utility_action_view(action, native_state=None):

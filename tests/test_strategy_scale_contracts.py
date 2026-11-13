@@ -299,3 +299,64 @@ names = [a.name for a in strategy.get_daily_actions(character)]
 assert "Sleep" not in names
 print({"sleep_gate_snapshot": True})
 """)
+
+    def test_actor_bound_condition_uses_simulated_successor(self):
+        self.run_world("""
+from tiny_time_manager import GameTimeManager
+from tiny_utility_functions import Goal
+node = graph.G.nodes[character]
+node.update(energy=20)
+character.energy = 20
+rest = Action("Rest", [], [{"targets": ["initiator"], "attribute": "energy", "change_value": 30}], graph_manager=graph)
+work = Action("Work", [Condition("Ready", "energy", character, 45)], [
+    {"targets": ["initiator"], "attribute": "wealth_money", "change_value": 20.0}],
+    initiator=character, graph_manager=graph)
+assert work.preconditions_met(State({"energy": 50})) is True
+assert work.preconditions_met(State({"energy": 40})) is False
+planner = GOAPPlanner(graph)
+plan = planner.plan_actions(character, Goal(name="earn", target_effects={"wealth_money": 25}, priority=1.0),
+    State({"energy": 20, "wealth_money": 5}), [rest, work])
+assert plan is not None, plan
+assert [a.name for a in plan] == ["Rest", "Work"], plan
+print({"actor_bound_successor_plan": ["Rest", "Work"]})
+""")
+
+    def test_view_effects_project_sequentially_with_descriptors(self):
+        from actions import Action as _Action
+        from tiny_utility_functions import build_utility_action_view
+        Action = _Action
+        boost = Action("Boost", [], [
+            {"targets": ["initiator"], "attribute": "energy", "change_value": 10},
+            {"targets": ["initiator"], "attribute": "energy", "change_value": 10}], graph_manager=None)
+        view = build_utility_action_view(boost, native_state={"energy": 95})
+        assert [e["change_value"] for e in view.effects] == [0.05, 0.0]
+        descriptor = Action("Mixed", [], [
+            {"targets": ["initiator"], "attribute": "energy", "change_value": "add:15"},
+            {"targets": ["initiator"], "attribute": "energy", "change_value": "set:100"}], graph_manager=None)
+        view = build_utility_action_view(descriptor, native_state={"energy": 95})
+        assert [e["change_value"] for e in view.effects] == [0.05, 0.0]  # add:15 reaches the cap; set:100 is then a no-op
+        money = Action("Pay", [], [
+            {"targets": ["initiator"], "attribute": "money", "change_value": 20.0}], graph_manager=None)
+        view = build_utility_action_view(money, native_state={"wealth_money": 100.0})
+        assert [e["change_value"] for e in view.effects] == [20.0]
+        print({"sequential": [0.05, 0.0], "descriptors": [0.05, 0.0], "money_passthrough": 20.0})
+
+    def test_alias_sync_keeps_all_keys_current(self):
+        self.run_world("""
+from actions import State
+from tiny_goap_system import GOAPPlanner
+from tiny_utility_functions import Goal
+planner = GOAPPlanner(graph)
+node = graph.G.nodes[character]
+node.update(wealth_money=10)
+character.wealth_money = 10
+mixed = Action("MixedMoney", [], [
+    {"targets": ["initiator"], "attribute": "money", "change_value": 20.0},
+    {"targets": ["initiator"], "attribute": "wealth_money", "change_value": -20.0}], graph_manager=graph)
+simulated = planner._apply_action_effects(mixed, State({"wealth_money": 10}))
+assert simulated["wealth_money"] == 10
+assert simulated["money"] == 10
+goal = Goal(name="earn", target_effects={"money": 30}, priority=1.0)
+assert not planner._goal_satisfied(goal, simulated)
+print({"alias_sync": [10, 10], "money_goal_not_satisfied": True})
+""")
