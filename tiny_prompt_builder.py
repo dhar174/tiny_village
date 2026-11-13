@@ -36,6 +36,68 @@ class ContextManager:
         """
         self.character = character
         self.memory_manager = memory_manager
+
+    @staticmethod
+    def _empty_inventory_context():
+        return {
+            "summary": {
+                "total_items": 0,
+                "total_stacks": 0,
+                "total_value": 0,
+                "total_weight": 0,
+                "counts_by_type": {},
+            },
+            "items_by_type": {},
+            "all_items": [],
+            "surplus_items": [],
+            "trade_candidates": [],
+            "drop_candidates": [],
+        }
+
+    def _gather_inventory_context(self):
+        inventory = getattr(self.character, "inventory", None)
+        if inventory is None and hasattr(self.character, "get_inventory"):
+            try:
+                inventory = self.character.get_inventory()
+            except Exception:
+                logger.exception(
+                    "Failed to retrieve inventory for character %s",
+                    getattr(self.character, "name", "unknown"),
+                )
+                inventory = None
+
+        if inventory is None:
+            return self._empty_inventory_context()
+
+        if hasattr(inventory, "to_prompt_context") and callable(inventory.to_prompt_context):
+            try:
+                return inventory.to_prompt_context()
+            except Exception:
+                logger.exception(
+                    "Failed to build prompt context from inventory type %s for character %s",
+                    type(inventory).__name__,
+                    getattr(self.character, "name", "unknown"),
+                )
+
+        total_items = (
+            inventory.count_total_items()
+            if hasattr(inventory, "count_total_items")
+            else 0
+        )
+        return {
+            "summary": {
+                "total_items": total_items,
+                "total_stacks": total_items,
+                "total_value": 0,
+                "total_weight": 0,
+                "counts_by_type": {},
+            },
+            "items_by_type": {},
+            "all_items": [],
+            "surplus_items": [],
+            "trade_candidates": [],
+            "drop_candidates": [],
+        }
         
     def gather_character_context(self):
         """Gather comprehensive character context information.
@@ -61,9 +123,7 @@ class ContextManager:
                 'long_term_goal': getattr(self.character, 'long_term_goal', None),
                 'recent_event': getattr(self.character, 'recent_event', 'default'),
             },
-            'inventory': {
-                'food_items': getattr(self.character, 'inventory', {})
-            }
+            'inventory': self._gather_inventory_context(),
         }
         
         # Add motives if available
@@ -2474,6 +2534,55 @@ class PromptBuilder:
         }
         return state
 
+    @staticmethod
+    def _format_inventory_candidates(items: List[Dict[str, Any]], max_items: int = 3) -> str:
+        if not items:
+            return "none"
+
+        formatted = [
+            f"{item.get('name', 'unknown item')} x{item.get('quantity', 0)}"
+            for item in items[:max_items]
+        ]
+        remaining = len(items) - max_items
+        if remaining > 0:
+            formatted.append(f"+{remaining} more")
+        return ", ".join(formatted)
+
+    def _format_inventory_context_for_prompt(self, inventory_context: Dict[str, Any]) -> str:
+        if not inventory_context:
+            return "Your inventory is currently empty."
+
+        summary = inventory_context.get("summary", {})
+        total_items = summary.get("total_items", 0)
+        total_stacks = summary.get("total_stacks", 0)
+        if total_items <= 0:
+            return "Your inventory is currently empty."
+
+        counts_by_type = summary.get("counts_by_type", {})
+        type_parts = [
+            f"{item_type}: {count}"
+            for item_type, count in counts_by_type.items()
+            if count
+        ]
+        inventory_text = (
+            f"Inventory overview: {total_items} total items across {total_stacks} stacks"
+        )
+        if type_parts:
+            inventory_text += f" ({', '.join(type_parts)})"
+        inventory_text += (
+            f", total value {summary.get('total_value', 0)}, total weight {summary.get('total_weight', 0)}."
+        )
+
+        trade_candidates = inventory_context.get("trade_candidates", [])
+        drop_candidates = inventory_context.get("drop_candidates", [])
+        inventory_text += (
+            f" Potential trade items: {self._format_inventory_candidates(trade_candidates)}."
+        )
+        inventory_text += (
+            f" Potential drop candidates: {self._format_inventory_candidates(drop_candidates)}."
+        )
+        return inventory_text
+
     def calculate_action_utility(self, current_goal: Optional[object] = None) -> Dict[str, float]:
         """Calculate and return utility values for the prioritized actions."""
         from tiny_utility_functions import UtilityEvaluator, calculate_action_utility
@@ -2590,6 +2699,7 @@ class PromptBuilder:
         prompt += f"<|user|>"
         prompt += f"{self.character.name}, it's {time}, and {descriptors.get_weather_description(weather)}. You're feeling {descriptors.get_feeling_health(self.character.health_status)}, and {descriptors.get_feeling_hunger(self.character.hunger_level)}. "
         prompt += f"{descriptors.get_event_recent(self.character.recent_event)}, and {descriptors.get_financial_situation(self.character.wealth_money)}. {descriptors.get_motivation()} {getattr(self.character, 'long_term_goal', 'personal growth')}. {descriptors.get_routine_question_framing()}"
+        prompt += f" {self._format_inventory_context_for_prompt(char_info.get('inventory', {}))}"
         
         # Generate action choices
         prompt += "Options:\n"
@@ -2739,6 +2849,7 @@ class PromptBuilder:
 
         # Financial and life context
         prompt += f"{descriptors.get_event_recent(self.character.recent_event)}, and {descriptors.get_financial_situation(self.character.wealth_money)}. "
+        prompt += f"{self._format_inventory_context_for_prompt(char_info.get('inventory', {}))} "
 
         # Long-term aspiration context
         if hasattr(self.character, "long_term_goal") and self.character.long_term_goal:
