@@ -1,10 +1,12 @@
 # `.zcode/` — Zcode workspace configuration for Tiny Village
 
-This directory holds repository-owned Zcode configuration. Two things live
+This directory holds repository-owned Zcode configuration. Three things live
 here:
 
 - `agents/` — **source templates** for the nine `tiny-village-*` specialist
   subagents. Repository-owned, reviewed, and versioned with the code.
+- `skills/team-coordination/SKILL.md` — project-specific routing and handoff
+  guidance, read alongside the user-level coordination skill at session start.
 - `plans/` — per-session plan files written by the Zcode plan-mode UI (not part
   of the deliverable; safe to ignore or delete).
 
