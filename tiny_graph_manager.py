@@ -98,7 +98,8 @@ from social_model import SocialModel
 from goap_evaluator import GoapEvaluator, WorldState
 
 # Import the new WorldState class
-from world_state import WorldState
+from uuid import UUID
+from world_state import UnknownNodeError, WorldState
 
 # Import the new GraphAnalytics class
 from graph_analytics import GraphAnalytics
@@ -3555,19 +3556,9 @@ class GraphManager(metaclass=_GraphManagerSingleton):
                 graph.edges[character, target]["strength"] += 0.1
 
     def get_character_state(self, character_name):
-        """
-        Fetches the current state of the character from the graph.
-
-        Args:
-            character_name (str): The name of the character.
-
-        Returns:
-            dict: The state of the character.
-        """
-        if character_name in self.G.nodes:
-            return self.characters[self.G.nodes[character_name].get("name")].to_dict()
-        else:
-            raise ValueError(f"No character named {character_name} in the graph.")
+        """Return a shallow snapshot of the authoritative character node."""
+        node = self.resolve_node(character_name, 'character')
+        return dict(self.G.nodes[node])
 
     def calculate_utility(self, action, character_state):
         """
@@ -3591,110 +3582,23 @@ class GraphManager(metaclass=_GraphManagerSingleton):
         return utility
 
     def get_possible_actions(self, character_name):
-        """
-        Analyzes the graph to determine possible actions for the character.
-
-        Args:
-            character_name (str): The name of the character.
-
-        Returns:
-            list: A list of possible actions and their utilities.
-        """
-        if character_name not in self.G.nodes:
-            raise ValueError(f"No character named {character_name} in the graph.")
-
+        """Return interactions offered by adjacent entities, preserving the Action."""
+        character = self.resolve_node(character_name, 'character')
         possible_actions = []
-        character_state = self.get_character_state(character_name)
-
-        for neighbor in self.G.neighbors(character_name):
-            neighbor_data = self.G.nodes[neighbor]
-            neighbor_type = neighbor_data.get("type")
-
-            if neighbor_type == "Character":
-                character_actions = [
-                    action
-                    for action in self.characters[
-                        neighbor.get("name")
-                    ].get_possible_interactions()
-                ]
-                for action in character_actions:
-                    # does the approaching character meet the preconditions for the action
-                    if all(
-                        precondition(character_state)
-                        for precondition in action.preconditions
-                    ):
-                        possible_actions.append(
-                            {
-                                "name": action.name,
-                                "utility": self.calculate_utility(
-                                    action, character_state
-                                ),
-                            }
-                        )
-
-            elif neighbor_type == "Location":
-                location_actions = [
-                    action
-                    for action in self.locations[
-                        neighbor.get("name")
-                    ].get_possible_interactions()
-                ]
-                for action in location_actions:
-                    if all(
-                        precondition(character_state)
-                        for precondition in action.preconditions
-                    ):
-                        possible_actions.append(
-                            {
-                                "name": action.name,
-                                "utility": self.calculate_utility(
-                                    action, character_state
-                                ),
-                            }
-                        )
-
-            elif neighbor_type == "Item":
-                item_actions = [
-                    action
-                    for action in self.items[
-                        neighbor.get("name")
-                    ].get_possible_interactions()
-                ]
-                for action in item_actions:
-                    if all(
-                        precondition(character_state)
-                        for precondition in action.preconditions
-                    ):
-                        possible_actions.append(
-                            {
-                                "name": action.name,
-                                "utility": self.calculate_utility(
-                                    action, character_state
-                                ),
-                            }
-                        )
-
-            elif neighbor_type == "Event":
-                event_actions = [
-                    action
-                    for action in self.events[
-                        neighbor.get("name")
-                    ].get_possible_interactions()
-                ]
-                for action in event_actions:
-                    if all(
-                        precondition(character_state)
-                        for precondition in action.preconditions
-                    ):
-                        possible_actions.append(
-                            {
-                                "name": action.name,
-                                "utility": self.calculate_utility(
-                                    action, character_state
-                                ),
-                            }
-                        )
-
+        for neighbor in self.G.neighbors(character):
+            node_type = self.G.nodes[neighbor].get("type")
+            if node_type not in {"character", "location", "object", "item", "event"}:
+                continue
+            interactions = getattr(neighbor, "get_possible_interactions", None)
+            if interactions is None:
+                continue
+            actions = interactions(character) if node_type == "location" else interactions()
+            for action in actions:
+                possible_actions.append({
+                    "action": action, "name": action.name, "cost": action.cost,
+                    "effects": action.effects, "preconditions": action.preconditions,
+                    "utility": getattr(action, "utility", 0.0),
+                })
         return possible_actions
 
     def get_strongest_relationships(graph, character):
@@ -3795,31 +3699,22 @@ class GraphManager(metaclass=_GraphManagerSingleton):
         return career_benefit, past_experience_benefit
 
     def get_character(self, character_str):
-        """
-        Retrieve a character object from the graph based on the character's name.
+        return self._get_registered_entity(character_str, 'character')
 
-        Parameters:
-            character_str (str): The name of the character to retrieve.
-
-        Returns:
-            Character: The character object if found, or None if the character does not exist.
-        """
+    def _get_registered_entity(self, identifier, node_type):
         try:
-            for node, data in self.G.nodes(data="name"):
-                if node == character_str:
-                    logging.info(
-                        f"Exact character object found: '{character_str}' with data: {data}"
-                    )
-                    return node
-                elif data == character_str:
-                    logging.info(
-                        f"Character found with name '{character_str}' with data: {data}"
-                    )
-                    return self.characters[character_str]
-        except Exception as e:
-            logging.error(f"Error retrieving character {character_str}: {e}")
-        logging.warning(f"No character found with name '{character_str}'.")
-        return None
+            node = self.resolve_node(identifier, node_type)
+        except UnknownNodeError:
+            return None
+        return self.get_node_entity(node)
+
+    def get_node_entity(self, node):
+        """Read the domain object associated with a resolved graph key."""
+        if not isinstance(node, (str, UUID)):
+            return node
+        data = self.G.nodes[node]
+        registry = self.world_state.type_to_dict_map.get(data.get("type"), {})
+        return registry.get(node, registry.get(str(node), registry.get(data.get("name"), node)))
 
     def get_average_attribute_value(self, attribute):
         """
@@ -3880,19 +3775,7 @@ class GraphManager(metaclass=_GraphManagerSingleton):
         return None
 
     def get_location(self, location_str):
-        """
-        Retrieve a location object from the graph based on the location's name.
-
-        Parameters:
-            location_str (str): The name of the location to retrieve.
-
-        Returns:
-            Location: The location object if found, or None if the location does not exist.
-        """
-        for node, data in self.G.nodes(data=True):
-            if node == location_str or data.get("name") == location_str:
-                return self.locations[location_str]
-        return None
+        return self._get_registered_entity(location_str, 'location')
 
     def get_event(self, event_str):
         """
@@ -3939,25 +3822,15 @@ class GraphManager(metaclass=_GraphManagerSingleton):
                 return self.jobs[job_str]
         return None
 
+    def resolve_node(self, identifier, node_type=None):
+        return self.world_state.resolve_node(identifier, node_type)
+
     def get_node(self, node_id):
-        """
-        Retrieve a node from the graph based on node_id, which can be a string, a character object, an item object, etc. If node_id is a dict with a string key, it will be treated as a node data dictionary.
-
-        Parameters:
-            node_id: The identifier of the node to retrieve. This can be a string, a character object, an item object, or a dictionary.
-
-        Returns:
-            dict: The node data if found, or an empty dictionary if the node does not exist.
-        """
-        if isinstance(node_id, str):
-            for node, data in self.G.nodes(data=True):
-                if node.name == node_id or data.get("name") == node_id:
-                    return data
-        elif isinstance(node_id, dict):
-            for node, data in self.G.nodes(data=True):
-                if data == node_id or data.get("name") == node_id.get("name"):
-                    return data
-        return {}
+        if isinstance(node_id, dict):
+            node_id = node_id.get("name")
+            if node_id is None:
+                return {}
+        return self.world_state.get_node_attributes(node_id)
 
     def get_filtered_nodes(self, **kwargs):
         """

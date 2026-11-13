@@ -106,24 +106,14 @@ class Location:
         self.activities_available = []
         self.accessible = True
         self.current_visitors = []
-        self.uuid = uuid.uuid4()
+        self._uuid = uuid.uuid4()
         self.visit_count = 0
 
     def add_activity(self, activity):
         self.activities_available.append(activity)
 
     def get_possible_interactions(self, requester):
-        self.effect_dict["Enter Location Boundary"].append(
-            {
-                "targets": ["initiator"],
-                "method": "walk_to",
-                "method_args": [
-                    self.point_of_edge_nearest_to_point(
-                        *requester.location.coordinates_location
-                    )
-                ],
-            }
-        )
+        # Reading offers must not accumulate requester-specific effects on the location.
         return self.possible_interactions
 
     def get_coordinates(self):
@@ -273,26 +263,15 @@ class Location:
     def distance_to_location_from_center(self, other: "Location"):
         return self.distance_to_point_from_center(*other.center())
 
+    @property
+    def uuid(self):
+        """Identity assigned at construction and exposed read-only."""
+        return self._uuid
+
     def __eq__(self, other):
-        if not isinstance(other, Location):
-            if isinstance(other, tuple):
-                return self.x == other[0] and self.y == other[1]
-            return False
-        return (
-            self.x == other.x
-            and self.y == other.y
-            and self.width == other.width
-            and self.height == other.height
-            and self.coordinates_location == other.coordinates_location
-            and self.security == other.security
-            and self.threat_level == other.threat_level
-            and self.popularity == other.popularity
-            and self.activities_available == other.activities_available
-            and self.accessible == other.accessible
-            and self.current_visitors == other.current_visitors
-            and self.effect_dict == other.effect_dict
-            and self.name == other.name
-        )
+        if type(other) is not type(self):
+            return NotImplemented
+        return self.uuid == other.uuid
 
     def hash_nested_list(self, obj):
         try:
@@ -332,48 +311,7 @@ class Location:
             return None
 
     def __hash__(self):
-        def make_hashable(obj):
-            if isinstance(obj, dict):
-                return tuple(sorted((k, make_hashable(v)) for k, v in obj.items()))
-            elif isinstance(obj, list):
-                return tuple(make_hashable(e) for e in obj)
-            elif isinstance(obj, set):
-                return frozenset(make_hashable(e) for e in obj)
-            elif isinstance(obj, tuple):
-                return tuple(make_hashable(e) for e in obj)
-            elif type(self.dict_or_obj).__name__ == "Character":
-                Character = importlib.import_module("tiny_characters").Character
-
-                return tuple(
-                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
-                )
-            elif type(self.dict_or_obj).__name__ == "Location":
-                Location = importlib.import_module("tiny_locations").Location
-
-                return tuple(
-                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
-                )
-
-            return obj
-
-        return hash(
-            tuple(
-                [
-                    self.x,
-                    self.y,
-                    self.width,
-                    self.height,
-                    self.coordinates_location,
-                    self.security,
-                    self.threat_level,
-                    self.popularity,
-                    make_hashable(self.activities_available),
-                    self.accessible,
-                    make_hashable(self.current_visitors),
-                    self.name,
-                ]
-            )
-        )
+        return hash((type(self), self.uuid))
 
     def __lt__(self, other):
         return self.x < other.x and self.y < other.y

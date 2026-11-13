@@ -2310,7 +2310,7 @@ class Character:
         self.skills = CharacterSkills([])
         self.career_goals = career_goals
         self.short_term_goals = []
-        self.uuid = uuid.uuid4()
+        self._uuid = uuid.uuid4()
         # Check that character has a unique id
 
         if gametime_manager:
@@ -2789,48 +2789,15 @@ class Character:
         else:
             return None
 
+    @property
+    def uuid(self):
+        """Identity assigned at construction and exposed read-only."""
+        return self._uuid
+
     def __eq__(self, other):
-        if not isinstance(other, Character):
-            return False
-        return (
-            self.name == other.name
-            and self.age == other.age
-            and self.pronouns == other.pronouns
-            and self.job == other.job
-            and self.health_status == other.health_status
-            and self.hunger_level == other.hunger_level
-            and self.wealth_money == other.wealth_money
-            and self.mental_health == other.mental_health
-            and self.social_wellbeing == other.social_wellbeing
-            and self.job_performance == other.job_performance
-            and self.community == other.community
-            and self.recent_event == other.recent_event
-            and self.long_term_goal == other.long_term_goal
-            and self.home == other.home
-            and self.inventory == other.inventory
-            and self.motives == other.motives
-            and self.personality_traits == other.personality_traits
-            and self.skills == other.skills
-            and self.career_goals == other.career_goals
-            and self.possible_interactions == other.possible_interactions
-            and self.move_speed == other.move_speed
-            and self.location == other.location
-            and self.energy == other.energy
-            and self.romanceable == other.romanceable
-            and self.romantic_relationships == other.romantic_relationships
-            and self.exclusive_relationship == other.exclusive_relationship
-            and self.base_libido == other.base_libido
-            and self.monogamy == other.monogamy
-            and self.investment_portfolio == other.investment_portfolio
-            and self.needed_items == other.needed_items
-            and self.stamina == other.stamina
-            and self.current_satisfaction == other.current_satisfaction
-            and self.current_mood == other.current_mood
-            and self.current_activity == other.current_activity
-            and self.speed == other.speed
-            and self.path == other.path
-            and self.destination == other.destination
-        )
+        if type(other) is not type(self):
+            return NotImplemented
+        return self.uuid == other.uuid
 
     def get_possible_interactions(self):
         return self.possible_interactions
@@ -3792,73 +3759,7 @@ class Character:
         return len(self.investment_portfolio.get_stocks()) > 0
 
     def __hash__(self):
-        def make_hashable(obj):
-            if isinstance(obj, dict):
-                return tuple(sorted((k, make_hashable(v)) for k, v in obj.items()))
-            elif isinstance(obj, list):
-                return tuple(make_hashable(e) for e in obj)
-            elif isinstance(obj, set):
-                return frozenset(make_hashable(e) for e in obj)
-            elif isinstance(obj, tuple):
-                return tuple(make_hashable(e) for e in obj)
-            elif type(obj).__name__ == "Character":
-                Character = importlib.import_module("tiny_characters").Character
-
-                return tuple(
-                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
-                )
-            elif type(obj).__name__ == "Location":
-                Location = importlib.import_module("tiny_locations").Location
-
-                return tuple(
-                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
-                )
-
-            return obj
-
-        return hash(
-            tuple(
-                [
-                    self.name,
-                    self.job,
-                    self.health_status,
-                    self.hunger_level,
-                    self.wealth_money,
-                    self.long_term_goal,
-                    self.recent_event,
-                    make_hashable(self.personality_traits.to_dict()),
-                    self.motives,
-                    self.inventory,
-                    self.home,
-                    self.community,
-                    self.beauty,
-                    self.control,
-                    self.success,
-                    self.hope,
-                    self.stability,
-                    self.luxury,
-                    self.romanceable,
-                    self.base_libido,
-                    self.monogamy,
-                    make_hashable(self.romantic_relationships),
-                    self.exclusive_relationship,
-                    self.skills,
-                    make_hashable(self.career_goals),
-                    make_hashable(self.short_term_goals),
-                    self.uuid,
-                    self.location,
-                    tuple(self.coordinates_location),
-                    make_hashable(self.goals),
-                    self.speed,
-                    self.energy,
-                    make_hashable(self.pronouns),
-                    self.age,
-                    self.destination,
-                    make_hashable(self.path),
-                    self.job_performance,
-                ]
-            )
-        )
+        return hash((type(self), self.uuid))
 
     def update_character(
         self,

@@ -956,3 +956,26 @@ Project Decision synchronization remains outstanding as described above.
 - **Boundary:** this approval unlocks ordered Phase4 work; it does not implement
   runtime repairs, accept future PR integrations, approve later phase gates, or
   establish gameplay, live-inference, UI/aesthetic or final-product readiness.
+
+
+### D035 — Preserve object graph nodes with immutable entity UUIDs (#799)
+
+- **Approved:** 2026-11-13, in the #799 implementation request.
+- **Contract:** Character and Location equality and hashing use their concrete
+  entity type and immutable UUID. Geometry uses coordinates explicitly.
+  WorldState resolves registered objects, UUIDs, and unique names for
+  GraphManager. Ambiguous references and duplicate registrations of different
+  objects fail explicitly.
+- **Runtime boundary:** The graph supplies state and original Actions.
+  Ordinary attribute effects synchronize the graph and object. Rollback covers
+  the failed attribute, including its previous absence. Earlier synchronized
+  effects remain applied. Arbitrary callback side effects and whole-action
+  transactions remain outside this contract.
+- **Known limitation:** Attribute effects calculate from the graph value when
+  it exists. Gameplay writes that update the Character alone can leave the
+  graph value stale. For example, if weather drains a Character's energy from
+  20 to 15 without updating the graph, a subsequent +10 effect writes 30 to
+  both stores. Track reconciliation of direct gameplay writes as follow-up
+  work and carry this behavior into the #220 rollback design.
+- **Scope:** Local implementation and evidence for #799. D034 and the existing
+  #220, #602, #741 and #802 acceptance boundaries remain in force.

@@ -65,6 +65,19 @@ class ActionWrapper:
         return True
 
 
+def action_from_graph_record(record):
+    """Keep executable actions; adapt explicitly supplied legacy descriptors."""
+    if not isinstance(record, dict):
+        return record
+    if "action" in record:
+        return record["action"]
+    return ActionWrapper(
+        name=record.get("name", "Unknown"), cost=record.get("cost", 1.0),
+        effects=record.get("effects", []), preconditions=record.get("preconditions", {}),
+        utility=record.get("utility", 0.0),
+    )
+
+
 class Plan:
     """
     Represents a plan for a character in the game.
@@ -596,121 +609,27 @@ class GOAPPlanner:
         self.plans = {}
 
     def get_current_world_state(self, character):
-        """
-        Dynamically retrieves the current world state for a character.
-        
-        Args:
-            character: The character object to get state for
-            
-        Returns:
-            State: Current world state including character state and environment
-        """
+        """Read the configured graph, or the character in graph-free use."""
+        if self.graph_manager is not None:
+            state = self.graph_manager.get_character_state(getattr(character, "name", character))
+            return state if isinstance(state, State) else State(state)
         try:
-            # Get the character's current state
-            character_state = character.get_state() if hasattr(character, 'get_state') else State({})
-            
-            # If we have a graph manager, enrich the state with world information
-            if self.graph_manager:
-                try:
-                    # Get additional world context from graph manager
-                    world_context = self.graph_manager.get_character_state(character.name)
-                    
-                    # Merge character state with world context
-                    if hasattr(character_state, 'dict_or_obj'):
-                        if isinstance(character_state.dict_or_obj, dict):
-                            combined_state = character_state.dict_or_obj.copy()
-                        else:
-                            combined_state = {'character': character_state.dict_or_obj}
-                    else:
-                        combined_state = {'character': character}
-                    
-                    # Add world context
-                    if isinstance(world_context, dict):
-                        combined_state.update(world_context)
-                    
-                    return State(combined_state)
-                except Exception as e:
-                    logging.warning(f"Could not get world context from graph manager: {e}")
-                    
-            return character_state
-            
-        except Exception as e:
-            logging.warning(f"Error getting current world state: {e}")
-            # Return a minimal state as fallback
-            return State({'character': character})
+            return character.get_state() if hasattr(character, "get_state") else State({})
+        except Exception as error:
+            logging.warning("Error getting current world state: %s", error)
+            return State({"character": character})
 
     def get_available_actions(self, character):
-        """
-        Dynamically retrieves available actions for a character based on current state.
-        
-        Args:
-            character: The character object to get actions for
-            
-        Returns:
-            list: List of Action objects available to the character
-        """
-        available_actions = []
-        
-        try:
-            # Try to get actions from graph manager first (most comprehensive)
-            if self.graph_manager and hasattr(self.graph_manager, 'get_possible_actions'):
-                try:
-                    graph_actions = self.graph_manager.get_possible_actions(character.name)
-                    # Convert graph manager action format to Action objects if needed
-                    for action_data in graph_actions:
-                        if isinstance(action_data, dict):
-                            # Convert dict format to action-like object
-                            action_obj = ActionWrapper(
-                                name=action_data.get('name', 'Unknown'),
-                                cost=action_data.get('cost', 1),
-                                effects=action_data.get('effects', []),
-                                preconditions=action_data.get('preconditions', {}),
-                                utility=action_data.get('utility', 0)
-                            )
-                            available_actions.append(action_obj)
-                        else:
-                            available_actions.append(action_data)
-                except Exception as e:
-                    logging.warning(f"Could not get actions from graph manager: {e}")
-            
-            # Try to get actions from strategy manager if available via graph manager
-            try:
-                # Strategy manager should be accessed externally, not directly from GOAP planner
-                # For now, skip strategy manager actions since GOAP planner should be independent
-                pass
-            except Exception as e:
-                logging.warning(f"Could not get actions from strategy manager: {e}")
-            
-            # Add basic fallback actions if no actions were found
-            if not available_actions:
-                # Import Action class for fallback actions
-                try:
-                    Action = importlib.import_module("actions").Action
-                    
-                    # Create basic actions that any character can perform
-                    rest_action = Action(
-                        name="Rest",
-                        preconditions={},
-                        effects=[{"attribute": "energy", "change_value": 10}],
-                        cost=0
-                    )
-                    available_actions.append(rest_action)
-                    
-                    idle_action = Action(
-                        name="Idle", 
-                        preconditions={},
-                        effects=[],
-                        cost=1
-                    )
-                    available_actions.append(idle_action)
-                    
-                except Exception as e:
-                    logging.warning(f"Could not create fallback actions: {e}")
-                    
-        except Exception as e:
-            logging.error(f"Error getting available actions: {e}")
-            
-        return available_actions
+        if self.graph_manager is not None:
+            records = self.graph_manager.get_possible_actions(getattr(character, "name", character))
+            return [action_from_graph_record(record) for record in records]
+
+        Action = importlib.import_module("actions").Action
+        return [
+            Action(name="Rest", preconditions={},
+                   effects=[{"attribute": "energy", "change_value": 10}], cost=0),
+            Action(name="Idle", preconditions={}, effects=[], cost=1),
+        ]
 
     def plan_actions(self, character, goal, current_state=None, actions=None):
         """

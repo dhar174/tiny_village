@@ -12,6 +12,7 @@ For instance, if a new technology is discovered in the game, related actions (li
 import importlib
 
 import json
+from uuid import UUID
 import logging
 import operator
 
@@ -642,42 +643,23 @@ class Action:
     def _same_location(self, left, right):
         if left is None or right is None:
             return False
-        if left is right:
-            return True
-
-        for attribute in ("uuid", "name"):
-            left_value = getattr(left, attribute, None)
-            right_value = getattr(right, attribute, None)
-            if left_value is not None and left_value == right_value:
-                return True
-
-        left_coordinates = getattr(left, "coordinates_location", None)
-        right_coordinates = getattr(right, "coordinates_location", None)
-        return (
-            left_coordinates is not None
-            and right_coordinates is not None
-            and left_coordinates == right_coordinates
+        return left is right or (
+            type(left) is type(right)
+            and getattr(left, "uuid", None) is not None
+            and left.uuid == getattr(right, "uuid", None)
         )
 
     def _matches_requested_target(self, candidate):
-        if candidate is None:
-            return False
-        if self.target is None:
+        requested = self.target
+        if requested is None or candidate is requested:
             return True
-        if candidate is self.target:
-            return True
-        if isinstance(self.target, str):
-            return self.target in {
-                getattr(candidate, "name", None),
-                getattr(candidate, "uuid", None),
-            }
-
-        for attribute in ("uuid", "name"):
-            target_value = getattr(self.target, attribute, None)
-            candidate_value = getattr(candidate, attribute, None)
-            if target_value is not None and target_value == candidate_value:
-                return True
-        return False
+        candidate_id = getattr(candidate, "uuid", None)
+        if isinstance(requested, str):
+            return requested == getattr(candidate, "name", None) or (
+                candidate_id is not None and requested == str(candidate_id)
+            )
+        requested_id = getattr(requested, "uuid", requested)
+        return candidate_id is not None and candidate_id == requested_id
 
     def _iter_characters_in_initiator_location(self):
         initiator_location = getattr(self.initiator, "location", None)
@@ -713,164 +695,115 @@ class Action:
             yield candidate
 
     def _resolve_named_targets(self, effect):
-        resolved_targets = []
-        for target_name in effect.get("targets", []):
-            if target_name != "target_character_in_location":
-                continue
-
-            resolved_target = next(
-                (
-                    candidate
-                    for candidate in self._iter_characters_in_initiator_location()
-                    if self._matches_requested_target(candidate)
-                ),
-                None,
-            )
-            if resolved_target is not None:
-                resolved_targets.append(resolved_target)
-            else:
-                logger.debug(
-                    "Action '%s' could not resolve named target '%s'.",
-                    self.name,
-                    target_name,
-                )
-
-        return resolved_targets
+        if "target_character_in_location" not in effect.get("targets", []):
+            return []
+        matches = (
+            candidate for candidate in self._iter_characters_in_initiator_location()
+            if self._matches_requested_target(candidate)
+        )
+        target = next(matches, None)
+        if target is None:
+            return []
+        if self.target is not None and next(matches, None) is not None:
+            raise ValueError(f"Ambiguous nearby target: {self.target!r}")
+        return [target]
 
     def execute(self, character=None, graph_manager=None):
-        """
-        Executes the action, applying its effects to the involved entities
-        and updating the GraphManager.
+        """Apply declared attribute effects and synchronize resolved graph nodes."""
+        if character is not None:
+            self.initiator = character
+        if graph_manager is not None:
+            self.graph_manager = graph_manager
+        if not self.preconditions_met():
+            return False
 
-        Args:
-            character (Character, optional): The character initiating the action.
-                                            Defaults to self.initiator.
-            graph_manager (GraphManager, optional): The graph manager instance.
-                                                 Defaults to self.graph_manager.
-
-        Returns:
-            bool: True if preconditions are met and effects applied, False otherwise.
-        """
-        if character:
-            self.initiator = character # Ensure self.initiator is set if character is provided
-
-        if graph_manager:
-            self.graph_manager = graph_manager # Prefer graph_manager argument if provided
-
-        if not self.graph_manager:
-            try:
-                from tiny_globals import get_global_graph_manager
-                self.graph_manager = get_global_graph_manager()
-            except ImportError:
-                # Graph manager is optional for core Action functionality
-                self.graph_manager = None
-            # print("Warning: Action.execute called without graph_manager, using fallback.")
-
-
-        if self.preconditions_met():
+        manager = self.graph_manager
+        # Legacy graph adapters implement only update_node_attribute.
+        resolve = getattr(type(manager), "resolve_node", None)
+        prepared = []
+        try:
             for effect in self.effects:
-                targets_to_update = []
+                tokens = effect.get("targets", [])
+                targets = []
+                if "initiator" in tokens and self.initiator is not None:
+                    targets.append(self.initiator)
+                if "target" in tokens:
+                    target = self.target
+                    if target is None and self.default_target_is_initiator:
+                        target = self.initiator
+                    if target is not None:
+                        targets.append(target)
+                targets.extend(self._resolve_named_targets(effect))
+                seen = set()
+                for target in targets:
+                    node = resolve(manager, target) if resolve is not None else None
+                    obj = manager.get_node_entity(node) if resolve is not None else target
+                    if isinstance(obj, (str, UUID)):
+                        raise ValueError(f"No entity for action target {target!r}")
+                    key = (type(obj), getattr(obj, "uuid", None) or id(obj))
+                    if key not in seen:
+                        seen.add(key)
+                        prepared.append((effect, obj, node))
+        except ValueError as error:
+            logger.warning("Cannot resolve targets for %s: %s", self.name, error)
+            return False
 
-                # Resolve targets
-                if "initiator" in effect.get("targets", []):
-                    if self.initiator:
-                        targets_to_update.append(self.initiator)
-                    else:
-                        print(f"Warning: Effect for action '{self.name}' specifies 'initiator' but action has no initiator.")
+        for effect, target, node in prepared:
+            if not self._apply_attribute_effect(effect, target, node):
+                return False
+        return True
 
-                if "target" in effect.get("targets", []):
-                    if self.target:
-                        targets_to_update.append(self.target)
-                    else:
-                        # If default_target_is_initiator is true and target is None, set target to initiator
-                        if self.default_target_is_initiator and self.initiator:
-                            self.target = self.initiator
-                            targets_to_update.append(self.target)
-                        # else:
-                            # print(f"Warning: Effect for action '{self.name}' specifies 'target' but action has no target and default_target_is_initiator is false or initiator is None.")
+    def _apply_attribute_effect(self, effect, target, node):
+        attribute = effect["attribute"]
+        change = effect["change_value"]
+        missing = object()
+        old_object = getattr(target, attribute, missing)
+        graph_data = self.graph_manager.G.nodes[node] if node is not None else None
+        old_graph = graph_data.get(attribute, missing) if graph_data is not None else missing
+        current = old_graph if old_graph is not missing else (
+            old_object if old_object is not missing else 0
+        )
 
-                targets_to_update.extend(self._resolve_named_targets(effect))
+        try:
+            if isinstance(change, (int, float)):
+                value = current + change
+            elif callable(change):
+                value = change(current)
+            elif isinstance(change, str):
+                if change.startswith("add:") and is_numeric(change[4:]):
+                    value = current + float(change[4:])
+                elif change.startswith("set:"):
+                    value = float(change[4:]) if is_numeric(change[4:]) else change[4:]
+                elif callable(getattr(target, change, None)):
+                    getattr(target, change)()
+                    value = getattr(target, attribute, current)
+                else:
+                    value = change
+            else:
+                value = change
 
-                deduplicated_targets = []
-                seen_target_keys = set()
-                for target_obj in targets_to_update:
-                    target_key = getattr(target_obj, "uuid", None) or id(target_obj)
-                    if target_key in seen_target_keys:
-                        continue
-                    seen_target_keys.add(target_key)
-                    deduplicated_targets.append(target_obj)
-
-                for target_obj in deduplicated_targets:
-                    if not target_obj: # Skip if a target resolved to None
-                        continue
-
-                    attribute_name = effect['attribute']
-                    change_value = effect['change_value']
-
-                    # 1. Apply effect to Python object
-                    current_value = getattr(target_obj, attribute_name, 0)
-                    new_value = None
-
-                    if isinstance(change_value, (int, float)):
-                        new_value = current_value + change_value
-                    elif isinstance(change_value, str):
-                        if change_value.startswith("add:") and is_numeric(change_value[4:]): # e.g. "add:5"
-                             new_value = current_value + float(change_value[4:])
-                        elif change_value.startswith("set:"): # e.g. "set:new_value_string" or "set:50"
-                            set_val_str = change_value[4:]
-                            if is_numeric(set_val_str):
-                                new_value = float(set_val_str)
-                            else:
-                                new_value = set_val_str # Direct assignment for strings
-                        elif hasattr(target_obj, change_value) and callable(getattr(target_obj, change_value)):
-                            # If change_value is a method name of the target_obj
-                            method_to_call = getattr(target_obj, change_value)
-                            # This assumes methods for effects don't require arguments or handle them internally
-                            # Or, we might need a way to specify arguments in the effect definition
-                            method_to_call()
-                            # After method call, re-fetch the attribute value if it's supposed to change it
-                            new_value = getattr(target_obj, attribute_name, current_value)
-                        else: # Direct assignment if not a special string command
-                            new_value = change_value
-                    elif callable(change_value): # If change_value is a function
-                        new_value = change_value(current_value)
-                    else: # Default to direct assignment if type is not recognized for operation
-                        new_value = change_value
-
-                    if new_value is not None:
-                        setattr(target_obj, attribute_name, new_value)
-
-                    # 2. Propagate to GraphManager
-                    if self.graph_manager:
-                        # Assuming target_obj.uuid or target_obj.name is the graph node ID
-                        # Prefer uuid if available
-                        graph_node_id = getattr(target_obj, 'uuid', None)
-                        if not graph_node_id: # Fallback to name if uuid is not present
-                            graph_node_id = getattr(target_obj, 'name', None)
-
-                        if graph_node_id:
-                            try:
-                                # Ensure the node exists in the graph before updating
-                                # This might be implicitly handled by graph_manager or require a check
-                                # For now, assume update_node_attribute handles non-existent nodes gracefully or node exists
-                                self.graph_manager.update_node_attribute(graph_node_id, attribute_name, new_value)
-                                # print(f"GraphManager: Updated '{attribute_name}' for node '{graph_node_id}' to '{new_value}'")
-
-                                # Example for relationship updates (conceptual, adjust based on actual effect structure)
-                                if attribute_name.startswith("relationship_"): # e.g. "relationship_strength_with_Alice"
-                                    related_char_name = attribute_name.split("_with_")[-1] # Extracts "Alice"
-                                    # We need the ID of the related character. Assume it can be fetched or is known.
-                                    # This part is highly dependent on how relationships are structured and identified.
-                                    # For simplicity, let's assume related_char_name is a valid ID for now.
-                                    # In a real scenario, you'd need to resolve related_char_name to its graph ID.
-                                    # self.graph_manager.update_edge_attribute(graph_node_id, related_char_name, 'strength', new_value)
-
-                            except Exception as e:
-                                print(f"Error updating graph for node '{graph_node_id}', attribute '{attribute_name}': {e}")
-                        # else:
-                            # print(f"Could not determine graph node ID for target object: {target_obj}")
-            return True
-        return False
+            if value is None:
+                return True
+            setattr(target, attribute, value)
+            identifier = node if node is not None else (
+                getattr(target, "uuid", None) or getattr(target, "name", None)
+            )
+            if self.graph_manager is not None and identifier is not None:
+                self.graph_manager.update_node_attribute(identifier, attribute, value)
+        except Exception as error:
+            if graph_data is not None:
+                if old_graph is missing:
+                    graph_data.pop(attribute, None)
+                else:
+                    graph_data[attribute] = old_graph
+            if old_object is missing:
+                if hasattr(target, attribute):
+                    delattr(target, attribute)
+            elif getattr(target, attribute, missing) is not old_object:
+                setattr(target, attribute, old_object)
+            logger.warning("Action %s could not synchronize %s: %s", self.name, attribute, error)
+            return False
+        return True
 
     def __str__(self):
         preconditions_str = (

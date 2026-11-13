@@ -14,7 +14,7 @@ This function should dynamically weigh these factors according to the current pl
 This module integrates the GOAP system and the graph manager to formulate comprehensive strategies based on events.
 """
 
-from tiny_goap_system import GOAPPlanner, ActionWrapper
+from tiny_goap_system import GOAPPlanner, ActionWrapper, action_from_graph_record
 from tiny_utility_functions import (
     calculate_action_utility,
     Goal,
@@ -1280,37 +1280,17 @@ class StrategyManager:
         return hasattr(self, "_characters_using_llm") and char_id in self._characters_using_llm
 
     def _get_current_state_for_character(self, character):
-        char_id = self._get_character_identifier(character)
-        if self.graph_manager and hasattr(self.graph_manager, "get_character_state"):
-            try:
-                state = self.graph_manager.get_character_state(char_id)
-                if isinstance(state, State):
-                    return state
-                if isinstance(state, dict):
-                    return State(state)
-            except Exception as e:
-                logger.warning(f"Failed to fetch state for {char_id} from graph: {e}")
-
-        try:
-            return State(self.get_character_state_dict(character))
-        except Exception as e:
-            logger.debug(f"Using empty state for {char_id}: {e}")
-            return State({})
+        if self.graph_manager is not None:
+            identifier = character.get("name") if isinstance(character, dict) else getattr(character, "name", character)
+            state = self.graph_manager.get_character_state(identifier)
+            return state if isinstance(state, State) else State(state)
+        return State(self.get_character_state_dict(character))
 
     def _get_actions_for_character(self, character):
-        char_id = self._get_character_identifier(character)
-        actions = []
-        if self.graph_manager and hasattr(self.graph_manager, "get_possible_actions"):
-            try:
-                possible_actions = self.graph_manager.get_possible_actions(char_id)
-                actions = self._convert_actions_to_objects(possible_actions)
-            except Exception as e:
-                logger.warning(f"Failed to fetch actions for {char_id} from graph: {e}")
-
-        if not actions:
-            actions = self.get_daily_actions(character)
-
-        return actions or []
+        if self.graph_manager is not None:
+            identifier = character.get("name") if isinstance(character, dict) else getattr(character, "name", character)
+            return self._convert_actions_to_objects(self.graph_manager.get_possible_actions(identifier))
+        return self.get_daily_actions(character) or []
 
     def _convert_actions_to_objects(self, possible_actions):
         converted = []
@@ -1318,15 +1298,7 @@ class StrategyManager:
             if isinstance(action, Action):
                 converted.append(action)
             elif isinstance(action, dict):
-                converted.append(
-                    ActionWrapper(
-                        name=action.get("name", "Unknown"),
-                        cost=action.get("cost", 1.0),
-                        effects=action.get("effects", []),
-                        preconditions=action.get("preconditions", {}),
-                        utility=action.get("utility", 0.0),
-                    )
-                )
+                converted.append(action_from_graph_record(action))
             else:
                 converted.append(
                     ActionWrapper(
