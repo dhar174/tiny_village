@@ -739,9 +739,9 @@ class ActionOptions:
             "get_educated": character.get_long_term_goal() == "career_advancement",
             "set_goal": character.get_hope() < 50,
             "start_business": character.get_long_term_goal() == "entrepreneurship",
-            "trade_goods": character.get_wealth_money() > 50
+            "trade_goods": character.get_wealth_money() > 5  # credits stay unscaled (#818 review)
             or character.get_material_goods() > 50,
-            "invest_wealth": character.get_wealth_money() > 80,
+            "invest_wealth": character.get_wealth_money() > 8,  # credits stay unscaled (#818 review)
             # ... additional mappings ...
         }
 
