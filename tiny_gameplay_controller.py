@@ -2317,8 +2317,10 @@ class GameplayController:
             # Initialize building management system
             try:
                 from tiny_building_manager import BuildingManager
+                from tiny_economic_simulation import EconomicSimulation
                 
                 self.building_manager = BuildingManager()
+                self.economic_simulation = EconomicSimulation(self.building_manager)
                 logger.info("Building management system initialized")
                 
                 # Register existing buildings with the manager
@@ -2351,6 +2353,7 @@ class GameplayController:
             except Exception as e:
                 logger.warning(f"Building management system initialization failed: {e}")
                 self.building_manager = None
+                self.economic_simulation = None
                 # Not adding to errors as building system enhancements are optional
 
             # Create characters with improved error handling
@@ -3566,6 +3569,13 @@ class GameplayController:
                                 getattr(building, "type", "building"),
                             )
                         self.building_manager.process_production(building_id, building_type, current_tick)
+
+                if hasattr(self, "economic_simulation") and self.economic_simulation:
+                    self.economic_simulation.process_economy(
+                        self.characters.values(),
+                        current_tick=current_tick,
+                        building_manager=self.building_manager,
+                    )
             except Exception as e:
                 logger.warning(f"Error updating building manager: {e}")
                 # Building management errors are not critical
@@ -5332,7 +5342,7 @@ class GameplayController:
             "quest_system": "STUB_IMPLEMENTED",
             "skill_progression": "BASIC_IMPLEMENTED",
             "reputation_system": "BASIC_IMPLEMENTED",
-            "economic_simulation": "STUB_IMPLEMENTED",
+            "economic_simulation": "BASIC_IMPLEMENTED",
             "event_driven_storytelling": "BASIC_IMPLEMENTED",
             "character_status_display": "FULLY_IMPLEMENTED",  # NEW: Enhanced character needs tracking
             "village_overview": "FULLY_IMPLEMENTED",  # NEW: Village-wide information panel
