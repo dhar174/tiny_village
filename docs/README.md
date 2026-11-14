@@ -23,6 +23,8 @@ User-facing documentation for getting started and using the system.
 ### 📖 `/reference/` - Technical Reference
 Current technical documentation and API references for the system's components.
 
+- **[runtime-units.md](reference/runtime-units.md)** - Canonical need/resource units, aliases and utility boundaries (#740)
+
 - **AGENTS.md** - Supplemental developer-agent architecture background (see root `/AGENTS.md` for the canonical guide)
 - **SYSTEM_INTEGRATION_COMPLETE.md** - Complete system integration documentation
 - **MINIMUM_DEMO_STATUS.md** - Current implementation status and demo capabilities
@@ -41,6 +43,8 @@ Current technical documentation and API references for the system's components.
 
 ### 🧪 `/testing/` - Testing Documentation
 Guidelines and best practices for testing.
+
+- **[issue-740-closeout.md](testing/issue-740-closeout.md)** - Runtime-unit investigation, exact state traces and conditional closure evidence
 
 - **MEMORY_TESTING_BEST_PRACTICES.md** - Best practices for memory testing
 - **MEMORY_TESTING_GUIDELINES.md** - Guidelines for memory system tests
