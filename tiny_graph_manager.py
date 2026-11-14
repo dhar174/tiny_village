@@ -1231,8 +1231,8 @@ class GraphManager(metaclass=_GraphManagerSingleton):
             return distance * 1.0
         return (
             distance
-            * (1 - char1.energy)
-            * (1 - char2.energy)
+            * (1 - self.G.nodes[char1].get('energy', char1.energy) / 100.0)
+            * (1 - self.G.nodes[char2].get('energy', char2.energy) / 100.0)
             * (1 - self.G[char1][char2]["strength"])
             * (1 - self.G[char1][char2]["trust"])
             * (1 - self.G[char1][char2]["emotional"])

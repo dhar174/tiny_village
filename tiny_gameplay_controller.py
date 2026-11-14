@@ -325,6 +325,8 @@ class SelectedCharacterPanel(UIPanel):
             and controller.map_controller.selected_character):
             
             char = controller.map_controller.selected_character
+            from tiny_utility_functions import native_character_state
+            needs = native_character_state(char, controller.graph_manager)
             
             # Character basic info
             name_text = small_font.render(f"Selected: {char.name}", True, (255, 255, 0))
@@ -342,21 +344,21 @@ class SelectedCharacterPanel(UIPanel):
             current_y += needs_header.get_height() + 2
             
             # Energy with color coding
-            energy = getattr(char, 'energy', 0)
+            energy = needs.get('energy', 0)
             energy_color = (0, 255, 0) if energy > 60 else (255, 255, 0) if energy > 30 else (255, 100, 100)
             energy_text = tiny_font.render(f"  Energy: {energy}/100", True, energy_color)
             screen.blit(energy_text, (x, current_y))
             current_y += energy_text.get_height() + 1
             
-            # Hunger (simulated based on energy for now)
-            hunger = max(0, 100 - energy - HUNGER_OFFSET)  # Simple hunger simulation
+            # Display the same native state used by planning and execution.
+            hunger = needs.get('hunger_level', 0)
             hunger_color = (0, 255, 0) if hunger < 30 else (255, 255, 0) if hunger < 60 else (255, 100, 100)
             hunger_text = tiny_font.render(f"  Hunger: {hunger}/100", True, hunger_color)
             screen.blit(hunger_text, (x, current_y))
             current_y += hunger_text.get_height() + 1
             
             # Health with color coding
-            health = getattr(char, 'health_status', 0)
+            health = needs.get('health_status', 0)
             health_color = (0, 255, 0) if health > 70 else (255, 255, 0) if health > 40 else (255, 100, 100)
             health_text = tiny_font.render(f"  Health: {health}/100", True, health_color)
             screen.blit(health_text, (x, current_y))

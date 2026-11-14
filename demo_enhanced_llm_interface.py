@@ -58,19 +58,19 @@ def create_test_character(name="Alex", crisis_mode=False):
     if crisis_mode:
         base_kwargs.update(
             {
-                "health_status": 2,
-                "energy": 1,
-                "mental_health": 3,
-                "hunger_level": 8,
+                "health_status": 20,
+                "energy": 10,
+                "mental_health": 30,
+                "hunger_level": 80,
             }
         )
     else:
         base_kwargs.update(
-            {"health_status": 7, "energy": 6, "mental_health": 6, "hunger_level": 4}
+            {"health_status": 70, "energy": 60, "mental_health": 60, "hunger_level": 40}
         )
 
     character = create_demo_character(name, **base_kwargs)
-    character.social_wellbeing = 5
+    character.social_wellbeing = 50
     character.inventory = ItemInventory()
     character.motives = build_motives()
     return character
@@ -103,7 +103,7 @@ def demo_strategic_invocation():
     
     should_use_llm_crisis = sm.should_use_llm_for_decision(crisis_character, crisis_context)
     print(f"\n🚨 Crisis Scenario:")
-    print(f"   Character: {crisis_character.name} (health: {crisis_character.health_status}/10, energy: {crisis_character.energy}/10)")
+    print(f"   Character: {crisis_character.name} (health: {crisis_character.health_status}/100, energy: {crisis_character.energy}/100)")
     print(f"   Context: Character in distress")
     print(f"   Strategic Decision: {'LLM' if should_use_llm_crisis else 'Utility-based'}")
     
@@ -138,7 +138,7 @@ def demo_prompt_generation():
     
     print(f"✅ PromptBuilder initialized for {character.name}")
     print(f"   Job: {character.job}")
-    print(f"   Health: {character.health_status}/10, Hunger: {character.hunger_level}/10")
+    print(f"   Health: {character.health_status}/100, Hunger: {character.hunger_level}/100")
     
     # Generate a daily routine prompt
     prompt = prompt_builder.generate_daily_routine_prompt(

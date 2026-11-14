@@ -201,7 +201,7 @@ class OutputInterpreter:
                             {
                                 "attribute": "satisfaction",
                                 "change_value": 1,
-                                "target": "initiator",
+                                "targets": ["initiator"],
                             }
                         ],
                     ),

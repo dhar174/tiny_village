@@ -38,11 +38,11 @@ def print_character_state(character, title="Character State"):
     print(f"\n{'=' * 60}")
     print(f"{title}: {character.name}")
     print(f"{'=' * 60}")
-    print(f"  Health:         {character.health_status}/10")
-    print(f"  Energy:         {character.energy}/10")
-    print(f"  Hunger:         {character.hunger_level}/10")
-    print(f"  Mental Health:  {character.mental_health}/10")
-    print(f"  Social:         {character.social_wellbeing}/10")
+    print(f"  Health:         {character.health_status}/100")
+    print(f"  Energy:         {character.energy}/100")
+    print(f"  Hunger:         {character.hunger_level}/100")
+    print(f"  Mental Health:  {character.mental_health}/100")
+    print(f"  Social:         {character.social_wellbeing}/100")
     print(f"  Wealth:         ${character.wealth_money}")
     print(f"  Job Perf:       {character.job_performance}/100")
     print(f"{'=' * 60}\n")
@@ -55,7 +55,7 @@ def demo_health_effects():
     print("=" * 60)
     
     # Create character
-    alice = create_demo_character("Alice", health_status=7, age=30, job="healer")
+    alice = create_demo_character("Alice", health_status=70, age=30, job="healer")
     print_character_state(alice, "Initial State")
     
     # Create effect dispatcher
@@ -75,7 +75,7 @@ def demo_health_effects():
                 "type": "attribute_change",
                 "targets": ["participants"],
                 "attribute": "health",
-                "change_value": -2
+                "change_value": -20
             }
         ]
     )
@@ -100,7 +100,7 @@ def demo_health_effects():
                 "type": "attribute_change",
                 "targets": ["participants"],
                 "attribute": "health",
-                "change_value": 4
+                "change_value": 40
             }
         ]
     )
@@ -125,7 +125,7 @@ def demo_health_effects():
                 "type": "attribute_change",
                 "targets": ["participants"],
                 "attribute": "health",
-                "change_value": -15  # Should clamp at 0
+                "change_value": -150  # Should clamp at 0
             }
         ]
     )
@@ -143,7 +143,7 @@ def demo_energy_and_work():
     print("DEMO 2: Energy & Job Performance Effects")
     print("=" * 60)
     
-    bob = create_demo_character("Bob", energy=8, job_performance=50, job="blacksmith")
+    bob = create_demo_character("Bob", energy=80, job_performance=50, job="blacksmith")
     print_character_state(bob, "Initial State")
     
     dispatcher = EffectDispatcher(None)
@@ -162,7 +162,7 @@ def demo_energy_and_work():
                 "type": "attribute_change",
                 "targets": ["participants"],
                 "attribute": "energy",
-                "change_value": -3
+                "change_value": -30
             },
             {
                 "type": "attribute_change",
@@ -216,7 +216,7 @@ def demo_wealth_and_hunger():
     print("DEMO 3: Wealth & Hunger Management")
     print("=" * 60)
     
-    carol = create_demo_character("Carol", wealth_money=100, hunger_level=6, job="merchant")
+    carol = create_demo_character("Carol", wealth_money=100, hunger_level=60, job="merchant")
     print_character_state(carol, "Initial State")
     
     dispatcher = EffectDispatcher(None)
@@ -241,7 +241,7 @@ def demo_wealth_and_hunger():
                 "type": "attribute_change",
                 "targets": ["participants"],
                 "attribute": "happiness",
-                "change_value": 2
+                "change_value": 20
             }
         ]
     )
@@ -272,7 +272,7 @@ def demo_wealth_and_hunger():
                 "type": "attribute_change",
                 "targets": ["participants"],
                 "attribute": "hunger",
-                "change_value": -4
+                "change_value": -40
             }
         ]
     )
@@ -317,8 +317,8 @@ def demo_mental_health_and_social():
     
     david = create_demo_character(
         "David",
-        mental_health=5,
-        social_wellbeing=4,
+        mental_health=50,
+        social_wellbeing=40,
         job="farmer"
     )
     print_character_state(david, "Initial State")
@@ -339,13 +339,13 @@ def demo_mental_health_and_social():
                 "type": "attribute_change",
                 "targets": ["participants"],
                 "attribute": "happiness",  # Maps to social_wellbeing
-                "change_value": -2
+                "change_value": -20
             },
             {
                 "type": "attribute_change",
                 "targets": ["participants"],
                 "attribute": "morale",  # Maps to mental_health
-                "change_value": -1
+                "change_value": -10
             }
         ]
     )
@@ -370,19 +370,19 @@ def demo_mental_health_and_social():
                 "type": "attribute_change",
                 "targets": ["participants"],
                 "attribute": "happiness",
-                "change_value": 5
+                "change_value": 50
             },
             {
                 "type": "attribute_change",
                 "targets": ["participants"],
                 "attribute": "morale",
-                "change_value": 3
+                "change_value": 30
             },
             {
                 "type": "attribute_change",
                 "targets": ["participants"],
                 "attribute": "energy",
-                "change_value": 2
+                "change_value": 20
             }
         ]
     )
@@ -401,9 +401,9 @@ def demo_multiple_characters():
     print("=" * 60)
     
     # Create a group
-    emma = create_demo_character("Emma", health_status=8, wealth_money=80, job="teacher")
-    frank = create_demo_character("Frank", health_status=6, wealth_money=50, job="guard")
-    grace = create_demo_character("Grace", health_status=9, wealth_money=120, job="merchant")
+    emma = create_demo_character("Emma", health_status=80, wealth_money=80, job="teacher")
+    frank = create_demo_character("Frank", health_status=60, wealth_money=50, job="guard")
+    grace = create_demo_character("Grace", health_status=90, wealth_money=120, job="merchant")
     
     characters = [emma, frank, grace]
     
@@ -427,13 +427,13 @@ def demo_multiple_characters():
                 "type": "attribute_change",
                 "targets": ["participants"],
                 "attribute": "energy",
-                "change_value": -3
+                "change_value": -30
             },
             {
                 "type": "attribute_change",
                 "targets": ["participants"],
                 "attribute": "happiness",
-                "change_value": 4
+                "change_value": 40
             },
             {
                 "type": "attribute_change",

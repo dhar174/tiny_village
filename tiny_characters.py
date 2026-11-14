@@ -3238,6 +3238,15 @@ class Character:
         self.social_wellbeing = social_wellbeing
         return self.social_wellbeing
 
+    @property
+    def satisfaction(self):
+        """Compatibility spelling of the native current_satisfaction field."""
+        return self.current_satisfaction
+
+    @satisfaction.setter
+    def satisfaction(self, value):
+        self.current_satisfaction = value
+
     def get_happiness(self):
         return self.happiness
 

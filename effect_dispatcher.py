@@ -11,7 +11,7 @@ import math
 
 from effect_schema import EffectV2, EffectType, OperatorType
 from character_attribute_mapper import AttributeMapper
-from actions import apply_attribute_change, clamp_need_value
+from actions import apply_attribute_change, clamp_need_value, _NEEDS_SCALAR_CLAMP_ATTRIBUTES
 
 
 class EffectDispatcher:
@@ -324,14 +324,14 @@ class EffectDispatcher:
                     f"current={current_value}, change={change_value}, operator={operator.value}"
                 )
 
-            # Core needs (#740): route energy/hunger_level/health_status through the
+            # Native needs (#740): route bounded numeric fields through the
             # synchronized updater shared with action execution — graph-first read,
             # synchronized object+graph write, per-attribute rollback, and the
             # shared 0-100 clamp. Mapper bounds stay the safety net for other fields.
             # Note: this gate is graph-manager presence, not entity registration;
             # an unregistered entity raises inside _resolve_action_entity and is
             # reported as not-applied (False) instead of a bounded object write.
-            if actual_attr in {"energy", "hunger_level", "health_status"} and self.graph_manager is not None:
+            if actual_attr in _NEEDS_SCALAR_CLAMP_ATTRIBUTES | {"happiness"} and self.graph_manager is not None:
                 def calculate(current):
                     if operator == OperatorType.ADD:
                         result = current + change_value
