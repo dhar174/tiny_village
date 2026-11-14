@@ -1,9 +1,9 @@
 {
-  "source_revision": "b29552ca9b6aad6a61319ee01f83cf52b484c854",
+  "source_revision": "675301460354bc341f5c526673c729eeaebecee2",
   "baseline_revision": "c8f0f17ac2d0851ad667b0088f81df4c57b6eb43",
   "profiles": {
     "core": {
-      "revision": "b29552ca9b6aad6a61319ee01f83cf52b484c854",
+      "revision": "675301460354bc341f5c526673c729eeaebecee2",
       "status": "PASS",
       "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
       "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
@@ -32,10 +32,10 @@
         "unexpected_successes": 0
       },
       "probes_run": 3,
-      "command": "python -B scripts/run_ci_checks.py --profile core --artifacts /workspace/scratch/740-verified-core"
+      "command": "python -B scripts/run_ci_checks.py --profile core --artifacts /workspace/scratch/740-review-verified-core"
     },
     "dev": {
-      "revision": "b29552ca9b6aad6a61319ee01f83cf52b484c854",
+      "revision": "675301460354bc341f5c526673c729eeaebecee2",
       "status": "PASS",
       "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
       "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
@@ -70,10 +70,10 @@
         "unexpected_successes": 0
       },
       "probes_run": 0,
-      "command": "python -B scripts/run_ci_checks.py --profile dev --artifacts /workspace/scratch/740-verified-dev"
+      "command": "python -B scripts/run_ci_checks.py --profile dev --artifacts /workspace/scratch/740-review-verified-dev"
     },
     "visual": {
-      "revision": "b29552ca9b6aad6a61319ee01f83cf52b484c854",
+      "revision": "675301460354bc341f5c526673c729eeaebecee2",
       "status": "PASS",
       "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
       "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
@@ -110,7 +110,7 @@
         "unexpected_successes": 0
       },
       "probes_run": 0,
-      "command": "python -B scripts/run_ci_checks.py --profile visual --artifacts /workspace/scratch/740-verified-visual"
+      "command": "python -B scripts/run_ci_checks.py --profile visual --artifacts /workspace/scratch/740-review-verified-visual"
     }
   },
   "python_source_sha256": {
@@ -125,7 +125,7 @@
     "scripts/run_ci_checks.py": "1542e31ec2c80c9b89d5d0be44cb428a938e7be371ec832d21a35530f2013dff",
     "simple_character_for_testing.py": "ec7ddfa25df5ac853a03dfbb4e0c8b09f1738c2d6b25f44e2211b7986605e3fd",
     "tests/test_action_execution_integration.py": "047af0f70ac8a4828e901238ad6c98920d0c31e0eab2d7925a4086b25aaa5fb2",
-    "tests/test_runtime_units.py": "e6d1324e6fab4371741769700d12cc6f9ed06958800f54e3fe0bbd2aa201b943",
+    "tests/test_runtime_units.py": "9b857818cd696233f575f02e3eff536fc1ab687caf715981cce7e606272d8728",
     "tiny_characters.py": "9190cbc8ec28d8b71736c126bd020654b970dfe53596d6be8fab94493982918e",
     "tiny_gameplay_controller.py": "637058f48bef4711ded929ad79a64c1ffda789df514c7b055c9a5ab3e87d464a",
     "tiny_goap_system.py": "0190339ee4b7b293a9df951d52fdbae8723314e826091a713b7459e4a2f435a6",
@@ -133,7 +133,7 @@
     "tiny_output_interpreter.py": "8e80ea244f705e33b0e43dd0e7b7835dcc964d16282c9f0f4d431e64b371fb8a",
     "tiny_prompt_builder.py": "20fe227d18e2a2b9b94c42428f846c661449a45f77a5bc445fcc679f3451f088",
     "tiny_strategy_manager.py": "22af28c1ee68c28c290f9eb3aca0f4aa2ea28b0f1074decd01d46b66d7e05db1",
-    "tiny_utility_functions.py": "523e5ac0feb7c2a2aa10c80b299955aa061e28eb0869869c0e6c1fab393fa9e7"
+    "tiny_utility_functions.py": "d3a549767d7a15da714e59fc1c3fac2719e1907b42ef66d64b328d0b509f3ef2"
   },
   "baseline_falsifier_counts": {
     "kind": "unittest",
@@ -146,5 +146,17 @@
       "expected_failures": 0,
       "unexpected_successes": 0
     }
+  },
+  "review_regression": {
+    "reviewed_revision": "0ba397c9cb73bcf6bf2990fe69fa334d3731427e",
+    "comment": "https://github.com/dhar174/tiny_village/pull/819#discussion_r4574015561",
+    "before_fix": {
+      "tests_run": 1,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    },
+    "fixed_source_revision": "675301460354bc341f5c526673c729eeaebecee2",
+    "coverage": "Canonical and alias state/effect keys yield action utility 2.2 and two-action utility 3.6 without input mutation."
   }
 }

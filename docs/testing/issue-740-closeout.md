@@ -14,7 +14,7 @@ not cover the additional runtime unit paths described below. The user authorized
 the closure investigation and narrowly scoped repairs, with re-verification.
 
 The verified repair source checkpoint is
-`b29552ca9b6aad6a61319ee01f83cf52b484c854`. The issue must remain open until the final repair is merged
+`675301460354bc341f5c526673c729eeaebecee2`. The issue must remain open until the final repair is merged
 and merged-source verification passes. This report is an engineering assessment,
 not a new human phase-gate approval or a claim that Phase 4 is complete.
 
@@ -40,7 +40,7 @@ its constants. Related #184 and #187 remain open.
 | Strategy then building-style Action effects | Rest wrote `satisfaction=8`; a +5 current_satisfaction effect wrote 5; consumer still saw .08 | Generic +1 → Rest +8 → service descriptor +5 yields 14 in both canonical/compatibility views and .14 in utility |
 | Catalog hobby | Happiness .5 became 2.5 | Fractional +.2 yields .7; scalar bounds cap fractions at 1 and point needs at 100 |
 | Native event fields beyond core three | Object-only mapper path could leave registered graph values stale | Graph 70/object 10 +10 yields 80 in both, then +200 caps both at 100 |
-| Canonical need effect scoring | Canonical field names could miss consumer alias scoring | Hunger 80, Eat −20, cost .1 scores 2.2; two projected meals score 3.6 without changing input |
+| Canonical need effect scoring | Canonical field names could miss consumer alias scoring | Hunger 80, Eat −20, cost .1 scores 2.2; two projected meals score 3.6 for canonical and alias state/effect keys, without changing input |
 | Prompt effect snapshot | Stale seeded satisfaction alias could mask native current_satisfaction | Graph current_satisfaction 80 beats alias 10/object 20; set:25 yields −.55 utility delta |
 | Few-shot matching | Native examples were compared directly with fractional consumer input | {.7 energy, .3 social wellbeing, .5 mental health} selects SocialVisit instead of the baseline Sleep mismatch |
 | Selected-character UI | Actual visual render raised NameError for undefined HUNGER_OFFSET | Real dummy-display render shows graph Energy 77, Hunger 60, Health 90, each /100, despite stale object values |
@@ -52,6 +52,14 @@ failed before reaching that line and is not counted as the product reproduction.
 All new checks use the real world harness. The visual check records text while
 delegating to real Pygame fonts and a real surface; no mock Character or graph
 establishes acceptance. Pure scalar assertions supplement those world scenarios.
+
+PR #819's automated review found a further projection gap at `0ba397c`:
+alias-only initial snapshots were not canonicalized before plan effects were
+simulated. The expanded existing core case failed before the correction (one
+failure, no errors/skips). Both native scoring entry points now canonicalize
+their copied input before projecting; all four canonical/alias state-and-effect
+combinations assert identical one-action and two-action scores, with unchanged
+input dictionaries. This correction is included in the source checkpoint above.
 
 Existing maintained traces also cover Rest 20→35 and 95→100; hunger 2→0;
 registered health 80−20→60; Sleep/Work at 29/30; add/set projection parity;
@@ -109,10 +117,13 @@ manager modules passed 11 tests (one existing `uu` deprecation warning).
 The compact [local receipt](evidence/issue-740-local-results.json) retains the
 actual report counts, source revision, platform, package/lock evidence and hashes
 of changed Python sources. Detailed local artifacts are
-`/workspace/scratch/740-verified-{core,dev,visual}`. Hosted artifacts and their
+`/workspace/scratch/740-review-verified-{core,dev,visual}`. Hosted artifacts and their
 immutable run links must also be published on the PR/issue; the local paths
 alone are not sufficient publication evidence. Hosted and merged-source status
-remain pending until the repair is published and merged.
+remain pending for the final repair head until verified and merged. All eight
+checks passed on the earlier `0ba397c` head ([Python CI](https://github.com/dhar174/tiny_village/actions/runs/43605917099),
+[CodeQL](https://github.com/dhar174/tiny_village/actions/runs/43605914118)); those
+receipts do not verify the subsequent alias projection correction.
 
 One intermediate core run had 113 tests, one failure, and three passing probes:
 it exposed legacy no-effects `Action.satisfaction` utility-rating compatibility.
