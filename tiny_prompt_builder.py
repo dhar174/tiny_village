@@ -2442,7 +2442,7 @@ class PromptBuilder:
                 # deltas normalize, targets become signed remaining changes.
                 util = calculate_action_utility(
                     char_state,
-                    build_utility_action_view(action, self._get_native_needs_state()),
+                    build_utility_action_view(action, self._get_native_effect_state()),
                     build_signed_remaining_goal(current_goal, char_state),
                 )
             except (ValueError, TypeError) as e:
@@ -2475,14 +2475,31 @@ class PromptBuilder:
 
         return f"{character.name} has failed to {DescriptorMatrices.get_action_descriptors(action)} {action}."
 
-    def _get_native_needs_state(self) -> Dict[str, float]:
-        """Return native-scale need values (graph-first, no division) for the
-        realizable-delta utility view (#818 review). Canonical need keys only.
+    def _get_native_effect_state(self) -> Dict[str, float]:
+        """Return native-scale starting values for every projected effect
+        attribute (graph-first, no division) for the realizable-delta utility
+        view (#818 review). Covers resources and fractions as well as needs:
+        the effective-delta projection reads each effect's canonical starting
+        value from this snapshot, so omitted fields would silently project
+        from zero.
         """
         return {
             "energy": self._graph_value("energy", getattr(self.character, "energy", 50.0)),
             "hunger_level": self._graph_value("hunger_level", getattr(self.character, "hunger_level", 30.0)),
             "health_status": self._graph_value("health_status", getattr(self.character, "health_status", 50.0)),
+            "mental_health": self._graph_value("mental_health", getattr(self.character, "mental_health", 50.0)),
+            "social_wellbeing": self._graph_value("social_wellbeing", getattr(self.character, "social_wellbeing", 50.0)),
+            "job_performance": self._graph_value("job_performance", getattr(self.character, "job_performance", 50.0)),
+            "current_satisfaction": self._graph_value(
+                "current_satisfaction", getattr(self.character, "current_satisfaction", 0.0)
+            ),
+            "satisfaction": self._graph_value(
+                "satisfaction",
+                getattr(self.character, "satisfaction", getattr(self.character, "current_satisfaction", 0.0)),
+            ),
+            "happiness": self._graph_value("happiness", getattr(self.character, "happiness", 0.0)),
+            "wealth_money": self._graph_value("wealth_money", getattr(self.character, "wealth_money", 0.0)),
+            "money": self._graph_value("wealth_money", getattr(self.character, "wealth_money", 0.0)),
         }
 
     def _graph_value(self, attribute, default=None):
@@ -2552,7 +2569,7 @@ class PromptBuilder:
 
             # #818 review: normalize deltas and goal targets at the boundary so
             # prompt-path scores match the strategy scoring contract.
-            action_view = build_utility_action_view(action_obj, self._get_native_needs_state())
+            action_view = build_utility_action_view(action_obj, self._get_native_effect_state())
             goal_view = build_signed_remaining_goal(current_goal, char_state)
 
             try:

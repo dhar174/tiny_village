@@ -360,3 +360,24 @@ goal = Goal(name="earn", target_effects={"money": 30}, priority=1.0)
 assert not planner._goal_satisfied(goal, simulated)
 print({"alias_sync": [10, 10], "money_goal_not_satisfied": True})
 """)
+
+    def test_prompt_effect_state_carries_resource_starting_values(self):
+        from actions import Action as _Action
+        from tiny_characters import Character as _Character
+        from tiny_time_manager import GameTimeManager as _GameTimeManager
+        from tiny_utility_functions import build_utility_action_view
+        from tiny_prompt_builder import PromptBuilder
+        Action = _Action
+        Character = _Character
+        GameTimeManager = _GameTimeManager
+        probe = Character(name="PromptMoneyProbe", age=30, wealth_money=100, energy=20,
+                          personality_traits={"extraversion": 50, "openness": 80, "conscientiousness": 70, "agreeableness": 40, "neuroticism": 20},
+                          gametime_manager=GameTimeManager)
+        builder = PromptBuilder(probe)
+        snapshot = builder._get_native_effect_state()
+        assert snapshot["money"] == snapshot["wealth_money"] == 100
+        cut = Action("CutPrice", [], [
+            {"targets": ["initiator"], "attribute": "money", "change_value": "set:25"}], graph_manager=None)
+        view = build_utility_action_view(cut, native_state=snapshot)
+        assert view.effects[0]["change_value"] == -75.0  # was +25 before the complete snapshot (#818 round 3)
+        print({"prompt_set25_at_100": -75.0})
