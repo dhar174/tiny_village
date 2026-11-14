@@ -124,7 +124,7 @@ class TestStrategyManagerEventPlanning(unittest.TestCase):
             hunger_level=5,
             energy=5,
             wealth_money=10,
-            social_wellbeing=5,
+            social_wellbeing=50,  # native 0-100 (#740)
             mental_health=5,
             health_status=100,
             satisfaction=80,
@@ -144,7 +144,7 @@ class TestStrategyManagerEventPlanning(unittest.TestCase):
             hunger_level=5,
             energy=5,
             wealth_money=10,
-            social_wellbeing=5,
+            social_wellbeing=50,  # native 0-100 (#740)
             mental_health=5,
             health_status=100,
             satisfaction=80,

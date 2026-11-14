@@ -9,7 +9,7 @@ class CharacterWithState(MockCharacter):
         return State(self)
 
 
-def build_character(name, default_energy=10.0, **overrides):
+def build_character(name, default_energy=100.0, **overrides):  # native 0-100 (#740)
     defaults = {
         "name": name,
         "energy": default_energy,

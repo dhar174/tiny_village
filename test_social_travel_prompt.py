@@ -30,9 +30,9 @@ def build_character(mock_character_class):
         job="Carpenter",
         recent_event="market day",
         wealth_money=5,
-        health_status=8,
-        hunger_level=4,
-        energy=6,
+        health_status=80,  # native 0-100 (#740)
+        hunger_level=40,  # native 0-100 (#740)
+        energy=60,  # native 0-100 (#740)
         mental_health=7,
         social_wellbeing=6,
     )
@@ -76,7 +76,7 @@ class ScenarioPromptTests(unittest.TestCase):
             "You are Tom, a Carpenter."
             "<|user|>"
             "You are about to interact with another villager."
-            " Current state: Health 8/10, Hunger 4/10, Energy 6.0/10."
+            " Current state: Health 80/100, Hunger 40/100, Energy 60.0/100."
             "\nAvailable actions:\n"
             "greet villager\n"
             "share meal\n"
@@ -98,7 +98,7 @@ class ScenarioPromptTests(unittest.TestCase):
             "You are Tom, a Carpenter."
             "<|user|>"
             "You are considering travelling to Riverside."
-            " Current state: Health 8/10, Hunger 4/10, Energy 6.0/10."
+            " Current state: Health 80/100, Hunger 40/100, Energy 60.0/100."
             "\nAvailable actions:\n"
             "pack supplies\n"
             "set off\n"

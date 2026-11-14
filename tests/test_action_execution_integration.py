@@ -335,3 +335,81 @@ with patch.object(controller.strategy_manager, 'get_daily_actions', return_value
     writes.assert_not_called()
 assert character not in graph.G and character.energy == 25
 """)
+
+    def test_strategy_rest_uses_native_energy_and_clamps(self):
+        self.run_world("""
+from unittest.mock import patch
+from tiny_strategy_manager import StrategyManager
+strategy = StrategyManager(graph_manager=graph)
+node = graph.G.nodes[character]
+node.update(energy=20)
+character.energy = 20
+rest = next(a for a in strategy.get_daily_actions(character) if a.name == "Rest")
+assert [(e.get("attribute"), e.get("change_value")) for e in rest.effects if isinstance(e, dict)] == [
+    ("energy", 15), ("satisfaction", 8)]
+with patch.object(graph, "update_node_attribute", wraps=graph.update_node_attribute) as writes:
+    assert rest.execute(str(character.uuid))
+assert node["energy"] == character.energy == 35
+assert node["satisfaction"] == character.satisfaction == 8
+node.update(energy=95)
+character.energy = 95
+with patch.object(graph, "update_node_attribute", wraps=graph.update_node_attribute) as writes2:
+    assert rest.execute(str(character.uuid))
+assert node["energy"] == character.energy == 100
+print({"rest": [20, 35], "capped": [95, 100]})
+""")
+
+    def test_strategy_eat_hunger_reduction_uses_native_points(self):
+        self.run_world("""
+node = graph.G.nodes[character]
+node.update(hunger_level=2)
+character.hunger_level = 2
+eat = Action("Eat Apple", [], [
+    {"targets": ["initiator"], "attribute": "hunger", "change_value": -(20 * 0.1)}], graph_manager=graph)
+assert eat.execute(str(character.uuid))
+assert node["hunger_level"] == character.hunger_level == 0
+print({"eat_hunger": [2, 0]})
+""")
+
+    def test_registered_health_event_reaches_both_stores(self):
+        self.run_world("""
+from effect_dispatcher import EffectDispatcher
+from effect_schema import OperatorType
+dispatcher = EffectDispatcher(graph_manager=graph)
+node = graph.G.nodes[character]
+node.update(health_status=80)
+character.health_status = 80
+assert dispatcher._modify_entity_attribute(character, "health", 20, OperatorType.SUBTRACT)
+assert node["health_status"] == character.health_status == 60
+print({"health_event": [80, 60]})
+""")
+
+    def test_graph_first_snapshot_feeds_utility_and_prompt(self):
+        self.run_world("""
+from tiny_strategy_manager import StrategyManager
+from tiny_prompt_builder import PromptBuilder
+strategy = StrategyManager(graph_manager=graph)
+node = graph.G.nodes[character]
+node.update(energy=77)
+character.energy = 20
+snapshot = strategy.get_character_state_dict(character)
+assert snapshot["energy"] == 0.77, snapshot["energy"]
+prompt = PromptBuilder(character, graph_manager=graph).generate_social_interaction_prompt(["greet villager"])
+assert "Energy 77.0/100" in prompt, prompt[-300:]
+assert "/10," not in prompt and "/10." not in prompt
+print({"snapshot_energy": 0.77, "prompt_energy": "77.0/100"})
+""")
+
+    def test_native_delta_rollback_restores_both_stores(self):
+        self.run_world("""
+from unittest.mock import patch
+node = graph.G.nodes[character]
+node.update(energy=20)
+character.energy = 20
+rest = Action("Rest", [], [
+    {"targets": ["initiator"], "attribute": "energy", "change_value": 15}], graph_manager=graph)
+with patch.object(graph, "update_node_attribute", side_effect=RuntimeError("write failed")):
+    assert not rest.execute(str(character.uuid))
+assert node["energy"] == character.energy == 20
+print({"rollback_restored": 20})
+""")

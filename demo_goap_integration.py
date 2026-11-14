@@ -17,11 +17,11 @@ class DemoCharacter:
     """Demo character with various attributes for testing GOAP."""
     def __init__(self, name):
         self.name = name
-        self.hunger_level = 3.0   # 0-10 scale
-        self.energy = 4.0         # 0-10 scale  
+        self.hunger_level = 30.0   # Native 0-100 scale (#740)
+        self.energy = 40.0         # Native 0-100 scale (#740)
         self.wealth_money = 100.0
-        self.social_wellbeing = 5.0  # 0-10 scale
-        self.mental_health = 6.0     # 0-10 scale
+        self.social_wellbeing = 50.0  # Native 0-100 scale (#740)
+        self.mental_health = 60.0     # Native 0-100 scale (#740)
         self.location = None
         self.job = "developer"
 
@@ -42,9 +42,9 @@ def demonstrate_goap_integration():
         DemoCharacter("Charlie")   # Will have different social needs
     ]
     
-    # Adjust character states for variety
-    characters[1].energy = 2.0        # Bob has low energy
-    characters[2].social_wellbeing = 3.0  # Charlie has low social wellbeing
+    # Adjust character states for variety (native 0-100, #740)
+    characters[1].energy = 20.0        # Bob has low energy
+    characters[2].social_wellbeing = 30.0  # Charlie has low social wellbeing
     
     print(f"✅ Created {len(characters)} demo characters with varying needs")
     
@@ -89,11 +89,11 @@ def demonstrate_goap_integration():
     
     alice = characters[0]
     
-    # Test different types of goals
+    # Test different types of goals (native 0-100 absolute targets, #740)
     goals = [
-        Goal(name="boost_energy", target_effects={"energy": 0.9}, priority=0.8),
-        Goal(name="improve_mood", target_effects={"satisfaction": 0.85}, priority=0.7),
-        Goal(name="balanced_wellbeing", target_effects={"satisfaction": 0.75, "energy": 0.75}, priority=0.9)
+        Goal(name="boost_energy", target_effects={"energy": 90}, priority=0.8),
+        Goal(name="improve_mood", target_effects={"satisfaction": 85}, priority=0.7),
+        Goal(name="balanced_wellbeing", target_effects={"satisfaction": 75, "energy": 75}, priority=0.9)
     ]
     
     for goal in goals:
@@ -101,7 +101,7 @@ def demonstrate_goap_integration():
         print(f"   Target: {goal.target_effects}")
         
         # Get current state
-        current_state = State(strategy_manager.get_character_state_dict(alice))
+        current_state = State(strategy_manager.get_character_planning_state(alice))
         actions = strategy_manager.get_daily_actions(alice)
         
         # Plan using GOAP

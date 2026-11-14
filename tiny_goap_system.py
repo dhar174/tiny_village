@@ -28,7 +28,7 @@ What happens: The GOAP planner uses the graph to analyze relationships and prefe
 """
 
 from tiny_types import Goal, Character, GraphManager
-from actions import Action, State, invoke_action
+from actions import Action, State, invoke_action, _ATTRIBUTE_ALIASES
 
 # from tiny_graph_manager import GraphManager
 
@@ -38,6 +38,7 @@ import tiny_utility_functions as util_funcs
 
 import logging
 import importlib
+import inspect
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -45,6 +46,24 @@ logging.basicConfig(level=logging.DEBUG)
 UTILITY_SCALING_FACTOR = 0.1
 UTILITY_INFLUENCE_FACTOR = 0.05
 HEURISTIC_SCALING_FACTOR = 0.1
+
+
+def _preconditions_met_accepts_state(func):
+    """Whether a preconditions_met callable accepts a `state` argument (#818 review).
+
+    Zero-arg wrappers (e.g. ActionWrapper) keep their own precondition contract
+    and are never handed the simulated state.
+    """
+    if func is None:
+        return False
+    try:
+        parameters = inspect.signature(func).parameters.values()
+    except (TypeError, ValueError):
+        return False
+    return any(
+        parameter.name == "state" or parameter.kind is parameter.VAR_KEYWORD
+        for parameter in parameters
+    )
 
 
 class ActionWrapper:
@@ -697,14 +716,20 @@ class GOAPPlanner:
             elif hasattr(goal, 'target_effects'):
  
                 # Handle target_effects format - goal is satisfied when state reaches target values
+                # #740: targets are absolute native-scale values; sign determines direction.
+                # Positive target = minimum (at least); negative target = maximum (at most).
                 target_effects = goal.target_effects
                 if isinstance(target_effects, dict):
                     for attribute, target_value in target_effects.items():
                         current_value = state.get(attribute, 0)
-                        # Check if current value has reached or exceeded the target
-                        # Goals are satisfied when we reach at least the target value
-                        if current_value < target_value - 0.1:  # Allow small tolerance for floating point
-                            return False
+                        if isinstance(target_value, (int, float)) and target_value < 0:
+                            # Maximum: satisfied at or below |target| (with floating-point tolerance)
+                            if current_value > abs(target_value) + 0.1:
+                                return False
+                        else:
+                            # Minimum: satisfied at or above the target (with floating-point tolerance)
+                            if current_value < target_value - 0.1:
+                                return False
                     return True
 
             return False
@@ -716,7 +741,18 @@ class GOAPPlanner:
         """Check if an action's preconditions are met in the given state."""
         try:
             if hasattr(action, 'preconditions_met'):
-                return action.preconditions_met()
+                # #740 planner parity: evaluate concrete actor conditions against
+                # the simulated state; live graph/Character resolution stays for
+                # state=None callers (execution keeps its existing behavior).
+                # #818 review: only callables that accept `state` receive it —
+                # zero-arg wrappers (e.g. ActionWrapper) keep their own contract.
+                accepts_state = _preconditions_met_accepts_state(
+                    getattr(type(action), 'preconditions_met', None)
+                    or action.preconditions_met
+                )
+                if accepts_state:
+                    return action.preconditions_met(state=state)
+                return bool(action.preconditions_met())
             elif hasattr(action, 'preconditions'):
                 # Handle different precondition formats
                 preconditions = action.preconditions
@@ -739,23 +775,32 @@ class GOAPPlanner:
             new_state = State(state.dict_or_obj.copy() if hasattr(state, 'dict_or_obj') else state.copy())
             
             if hasattr(action, 'effects'):
+                from actions import _AttributeEffect
                 for effect in action.effects:
                     if isinstance(effect, dict):
-                        attribute = effect.get('attribute')
-                        change_value = effect.get('change_value', 0)
-                        targets = effect.get('targets', [])
-                        
-                        # Apply all effects to the current state during planning
-                        # The "targets" field is ignored during planning and is handled during actual execution
-                        # This ensures that all potential effects are considered for state transitions
-                        if attribute:
-                            current_value = new_state.get(attribute, 0)
-                            if isinstance(change_value, (int, float)):
-                                new_state[attribute] = current_value + change_value
-                            elif isinstance(change_value, str) and change_value.startswith('set:'):
-                                new_state[attribute] = change_value[4:]  # Remove 'set:' prefix
-                            else:
-                                new_state[attribute] = change_value
+                        # #740 planner parity: project descriptors through the shared
+                        # scalar calculation (actions._AttributeEffect) so simulated
+                        # deltas equal execution deltas, including the 0-100 clamp.
+                        try:
+                            parsed = _AttributeEffect(dict(effect))
+                            canonical = parsed.attribute
+                            current_value = new_state.get(canonical, 0)
+                            projected = parsed.scalar_result(current_value)
+                            new_state[canonical] = projected
+                            # #818 re-review: synchronize every alias of the
+                            # canonical field on every projection, including
+                            # canonically declared effects, so goal lookups on
+                            # any alias see the same projected value and later
+                            # canonical writes cannot leave an alias stale.
+                            # Projection still equals execution; aliases mirror,
+                            # never double-apply.
+                            for alias, alias_target in _ATTRIBUTE_ALIASES.items():
+                                if alias_target == canonical:
+                                    new_state[alias] = projected
+                        except (ValueError, TypeError):
+                            # Descriptor-only compatibility: non-numeric descriptors
+                            # (legacy-string/callable) do not project into simulation.
+                            pass
             
             return new_state
         except Exception as e:
@@ -801,8 +846,15 @@ class GOAPPlanner:
                         priority=getattr(goal, 'priority', 0.5)
                     )
             
-            # Calculate utility using existing function
-            utility = util_funcs.calculate_action_utility(state_dict, action, goal_obj)
+            # Calculate utility using existing function.
+            # #740 boundary: native state needs divide by 100, action deltas
+            # normalize, and absolute targets become normalized signed remaining
+            # changes; happiness and credits pass through.
+            utility = util_funcs.calculate_action_utility(
+                util_funcs.normalize_state_for_utility(state_dict),
+                util_funcs.build_utility_action_view(action, state_dict),
+                util_funcs.build_signed_remaining_goal(goal_obj, util_funcs.normalize_state_for_utility(state_dict)),
+            )
             
             # Convert utility to cost (inverse relationship)
             # Add base cost to prevent negative costs
@@ -839,18 +891,23 @@ class GOAPPlanner:
             else:
                 state_dict = {}
             
-            # Calculate distance to goal based on target effects
+            # Calculate remaining distance in the satisfying direction (#740):
+            # positive target = minimum (distance = target − current); negative
+            # target = maximum (distance = current − |target|).
             total_distance = 0.0
             for attribute, target_value in goal.target_effects.items():
                 current_value = state_dict.get(attribute, 0.0)
-                distance = abs(target_value - current_value)
+                if isinstance(target_value, (int, float)) and target_value < 0:
+                    distance = max(0.0, current_value - abs(target_value))
+                else:
+                    distance = max(0.0, float(target_value) - current_value)
                 total_distance += distance
                 
             # Simple heuristic: assume average action cost * rough number of actions needed
-            if total_distance <= 0.1:  # Very close to goal
+            if total_distance <= 10:  # Very close to goal (native tolerance, #740)
                 return 0.0
                 
-            estimated_actions = max(1.0, total_distance / 0.5)  # Assume actions change ~0.5 per attribute
+            estimated_actions = max(1.0, total_distance / 10)  # Assume actions change ~10 points per attribute (native, #740)
             average_action_cost = 1.0  # Conservative estimate
             
             return estimated_actions * average_action_cost

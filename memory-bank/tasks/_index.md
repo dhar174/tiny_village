@@ -55,3 +55,4 @@
   - `TASK010-mvp-contract-724.md`
   - `TASK011-dependency-profiles-725.md`
 - Task-level Memory Bank tracking has started for this repository.
+| TASK029 | Reconcile need and resource units (#740) | memory-bank/tasks/TASK029-issue-740.md |

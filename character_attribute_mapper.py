@@ -19,21 +19,24 @@ class AttributeMapper:
     """
     
     # Attribute mapping with bounds (min, max) and default values
+    # Need attributes use native 0-100 units (#740): bounds are 0-100 and
+    # defaults are the /10-scale defaults × 10. Credits (wealth_money) are
+    # unscaled and job_performance was already a 0-100 attribute.
     ATTRIBUTE_MAP = {
         # Template name -> (actual_attribute, min, max, default)
         
         # Health-related
-        "health": ("health_status", 0, 10, 5),
-        "health_status": ("health_status", 0, 10, 5),
+        "health": ("health_status", 0, 100, 50),
+        "health_status": ("health_status", 0, 100, 50),
         
         # Energy-related
-        "energy": ("energy", 0, 10, 8),
+        "energy": ("energy", 0, 100, 80),
         
         # Mental/Social wellbeing
-        "happiness": ("social_wellbeing", 0, 10, 5),
-        "social_wellbeing": ("social_wellbeing", 0, 10, 5),
-        "mental_health": ("mental_health", 0, 10, 7),
-        "morale": ("mental_health", 0, 10, 7),
+        "happiness": ("social_wellbeing", 0, 100, 50),
+        "social_wellbeing": ("social_wellbeing", 0, 100, 50),
+        "mental_health": ("mental_health", 0, 100, 70),
+        "morale": ("mental_health", 0, 100, 70),
         
         # Resources
         "wealth": ("wealth_money", 0, None, 50),
@@ -41,8 +44,8 @@ class AttributeMapper:
         "money": ("wealth_money", 0, None, 50),
         
         # Hunger
-        "hunger": ("hunger_level", 0, 10, 3),
-        "hunger_level": ("hunger_level", 0, 10, 3),
+        "hunger": ("hunger_level", 0, 100, 30),
+        "hunger_level": ("hunger_level", 0, 100, 30),
         
         # Job/Work
         # Note: The default of 20 for job_performance here is an effect/mapper default
@@ -54,26 +57,26 @@ class AttributeMapper:
         "productivity": ("job_performance", 0, 100, 20),
         
         # Community/Social
-        "community": ("community", 0, 10, 5),
-        "community_standing": ("community", 0, 10, 5),
+        "community": ("community", 0, 100, 50),
+        "community_standing": ("community", 0, 100, 50),
         
         # Additional common aliases
-        "satisfaction": ("social_wellbeing", 0, 10, 5),
-        "social_satisfaction": ("social_wellbeing", 0, 10, 5),
-        "safety": ("health_status", 0, 10, 5),
-        "curiosity": ("mental_health", 0, 10, 7),
-        "helpfulness": ("community", 0, 10, 5),
-        "competitive_spirit": ("mental_health", 0, 10, 7),
-        "confidence": ("mental_health", 0, 10, 7),
-        "knowledge": ("mental_health", 0, 10, 7),
+        "satisfaction": ("social_wellbeing", 0, 100, 50),
+        "social_satisfaction": ("social_wellbeing", 0, 100, 50),
+        "safety": ("health_status", 0, 100, 50),
+        "curiosity": ("mental_health", 0, 100, 70),
+        "helpfulness": ("community", 0, 100, 50),
+        "competitive_spirit": ("mental_health", 0, 100, 70),
+        "confidence": ("mental_health", 0, 100, 70),
+        "knowledge": ("mental_health", 0, 100, 70),
         "expertise": ("job_performance", 0, 100, 20),
         "skill_improvement": ("job_performance", 0, 100, 20),
         "career_prospects": ("job_performance", 0, 100, 20),
         "skill_level": ("job_performance", 0, 100, 20),
-        "community_pride": ("community", 0, 10, 5),
-        "reputation": ("community", 0, 10, 5),
-        "mutual_support": ("social_wellbeing", 0, 10, 5),
-        "adventure_opportunity": ("mental_health", 0, 10, 7),
+        "community_pride": ("community", 0, 100, 50),
+        "reputation": ("community", 0, 100, 50),
+        "mutual_support": ("social_wellbeing", 0, 100, 50),
+        "adventure_opportunity": ("mental_health", 0, 100, 70),
     }
     
     @classmethod
