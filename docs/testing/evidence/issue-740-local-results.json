@@ -1,0 +1,162 @@
+{
+  "source_revision": "675301460354bc341f5c526673c729eeaebecee2",
+  "baseline_revision": "c8f0f17ac2d0851ad667b0088f81df4c57b6eb43",
+  "profiles": {
+    "core": {
+      "revision": "675301460354bc341f5c526673c729eeaebecee2",
+      "status": "PASS",
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+      "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+      "machine": "x86_64",
+      "locks": {
+        "requirements/locks/core-py312-linux-x86_64.txt": "2a037e6923b1f4e0f19d14109adc4217a5e4b7e0583a780639dd476a1451c908"
+      },
+      "packages": {
+        "attrs": "23.2.0",
+        "pydantic-core": "2.50.1",
+        "typing-inspection": "0.4.4",
+        "pydantic": "2.14.1",
+        "pip": "25.0.1",
+        "numpy": "1.26.4",
+        "networkx": "3.1",
+        "typing-extensions": "4.16.0",
+        "annotated-types": "0.8.0",
+        "pyparsing": "3.1.2"
+      },
+      "counts": {
+        "tests_run": 116,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 3,
+      "command": "python -B scripts/run_ci_checks.py --profile core --artifacts /workspace/scratch/740-review-verified-core"
+    },
+    "dev": {
+      "revision": "675301460354bc341f5c526673c729eeaebecee2",
+      "status": "PASS",
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+      "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+      "machine": "x86_64",
+      "locks": {
+        "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5"
+      },
+      "packages": {
+        "attrs": "23.2.0",
+        "pydantic-core": "2.50.1",
+        "pygments": "2.21.0",
+        "typing-inspection": "0.4.4",
+        "pydantic": "2.14.1",
+        "pip": "25.0.1",
+        "pytest": "9.1.1",
+        "numpy": "1.26.4",
+        "uv": "0.12.23",
+        "iniconfig": "2.3.1",
+        "packaging": "26.3",
+        "networkx": "3.1",
+        "typing-extensions": "4.16.0",
+        "pluggy": "1.7.0",
+        "annotated-types": "0.8.0",
+        "pyparsing": "3.1.2"
+      },
+      "counts": {
+        "tests_run": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 0,
+      "command": "python -B scripts/run_ci_checks.py --profile dev --artifacts /workspace/scratch/740-review-verified-dev"
+    },
+    "visual": {
+      "revision": "675301460354bc341f5c526673c729eeaebecee2",
+      "status": "PASS",
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+      "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+      "machine": "x86_64",
+      "locks": {
+        "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5",
+        "requirements/locks/visual-py312-linux-x86_64.txt": "a6db9f00d612e0b715961e9f1565c90066eb0872f165ad3984d3fcb414eaed73"
+      },
+      "packages": {
+        "attrs": "23.2.0",
+        "pydantic-core": "2.50.1",
+        "pygments": "2.21.0",
+        "typing-inspection": "0.4.4",
+        "pydantic": "2.14.1",
+        "pip": "25.0.1",
+        "pytest": "9.1.1",
+        "numpy": "1.26.4",
+        "uv": "0.12.23",
+        "iniconfig": "2.3.1",
+        "packaging": "26.3",
+        "networkx": "3.1",
+        "typing-extensions": "4.16.0",
+        "pluggy": "1.7.0",
+        "annotated-types": "0.8.0",
+        "pygame": "2.6.1",
+        "pyparsing": "3.1.2"
+      },
+      "counts": {
+        "tests_run": 69,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 0,
+      "command": "python -B scripts/run_ci_checks.py --profile visual --artifacts /workspace/scratch/740-review-verified-visual"
+    }
+  },
+  "python_source_sha256": {
+    "actions.py": "5b889628b2fe6231de48525ba2ba106999e87b60c1583384ad56aa3f56168093",
+    "demo_building_functionality.py": "75f797a4a147e5a0be00f76be0c686eee8ca738296cde99a6ddb176a825e2840",
+    "demo_character_factory.py": "ee4225e76e294579720fd2efeb1429ced82f293d0ee343ce82a0b9626c2865c4",
+    "demo_character_state_effects.py": "a2febae84755106ff957a05900e6780130f854f2f2d7959de754f29436825e5c",
+    "demo_enhanced_llm_interface.py": "3a9770096ce3cc8aa5f91209614ac60ce5cb32346aea1602884a6dcdb70c0e37",
+    "demo_llm_integration.py": "0e10c7cc1cd74afa3690da26ae5eda044151e1b785dc9d8c2adcf116701abbda",
+    "demo_location_integration.py": "e6dd4496b5a1e019ed8404e22106232ec3417eff0f473438c0d5f90f815e7d57",
+    "effect_dispatcher.py": "1c79e2afe90b28136d015f945b23997deefa5ea45d763a1df7796d6ffc9c9a22",
+    "scripts/run_ci_checks.py": "1542e31ec2c80c9b89d5d0be44cb428a938e7be371ec832d21a35530f2013dff",
+    "simple_character_for_testing.py": "ec7ddfa25df5ac853a03dfbb4e0c8b09f1738c2d6b25f44e2211b7986605e3fd",
+    "tests/test_action_execution_integration.py": "047af0f70ac8a4828e901238ad6c98920d0c31e0eab2d7925a4086b25aaa5fb2",
+    "tests/test_runtime_units.py": "9b857818cd696233f575f02e3eff536fc1ab687caf715981cce7e606272d8728",
+    "tiny_characters.py": "9190cbc8ec28d8b71736c126bd020654b970dfe53596d6be8fab94493982918e",
+    "tiny_gameplay_controller.py": "637058f48bef4711ded929ad79a64c1ffda789df514c7b055c9a5ab3e87d464a",
+    "tiny_goap_system.py": "0190339ee4b7b293a9df951d52fdbae8723314e826091a713b7459e4a2f435a6",
+    "tiny_graph_manager.py": "51a757fb8085801016912b8c04cbf7091dbda285a6293083da4d0a420bb63291",
+    "tiny_output_interpreter.py": "8e80ea244f705e33b0e43dd0e7b7835dcc964d16282c9f0f4d431e64b371fb8a",
+    "tiny_prompt_builder.py": "20fe227d18e2a2b9b94c42428f846c661449a45f77a5bc445fcc679f3451f088",
+    "tiny_strategy_manager.py": "22af28c1ee68c28c290f9eb3aca0f4aa2ea28b0f1074decd01d46b66d7e05db1",
+    "tiny_utility_functions.py": "d3a549767d7a15da714e59fc1c3fac2719e1907b42ef66d64b328d0b509f3ef2"
+  },
+  "baseline_falsifier_counts": {
+    "kind": "unittest",
+    "status": "FAIL",
+    "counts": {
+      "tests_run": 4,
+      "failures": 4,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0
+    }
+  },
+  "review_regression": {
+    "reviewed_revision": "0ba397c9cb73bcf6bf2990fe69fa334d3731427e",
+    "comment": "https://github.com/dhar174/tiny_village/pull/819#discussion_r4574015561",
+    "before_fix": {
+      "tests_run": 1,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    },
+    "fixed_source_revision": "675301460354bc341f5c526673c729eeaebecee2",
+    "coverage": "Canonical and alias state/effect keys yield action utility 2.2 and two-action utility 3.6 without input mutation."
+  }
+}

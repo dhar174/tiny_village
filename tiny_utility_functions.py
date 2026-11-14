@@ -28,6 +28,7 @@ from actions import (
     State,
     _AttributeEffect,
     _canonical_attribute,
+    _ATTRIBUTE_ALIASES,
 )  # Assuming Action class is available and has cost & effects
 
 logger = logging.getLogger(__name__)
@@ -58,8 +59,45 @@ except ImportError:
 # pass through directly.
 _NATIVELY_SCALED_NEED_ATTRIBUTES = {
     "hunger", "hunger_level", "energy", "health", "health_status",
-    "social_wellbeing", "mental_health", "satisfaction", "job_performance",
+    "social_wellbeing", "mental_health", "satisfaction", "current_satisfaction", "job_performance",
 }
+
+
+def native_character_state(character, graph_manager=None):
+    """Copy a native runtime snapshot, preferring registered graph values.
+
+    Accept Character, State, dictionary and registered name inputs. Canonicalize
+    each source before overlaying it so graph aliases also beat stale objects.
+    """
+    def canonicalize(values):
+        result = dict(values)
+        for alias, canonical in _ATTRIBUTE_ALIASES.items():
+            if canonical not in result and alias in result:
+                result[canonical] = result[alias]
+        return result
+
+    if isinstance(character, State):
+        character = character.dict_or_obj
+    state = canonicalize(character if isinstance(character, dict) else vars(character)
+                         if hasattr(character, '__dict__') else {})
+    if graph_manager is not None:
+        identifier = state.get('name', character if isinstance(character, str) else None)
+        if identifier is not None:
+            try:
+                registered = graph_manager.get_character_state(identifier)
+            except (KeyError, ValueError, TypeError, AttributeError):
+                registered = None
+            if isinstance(registered, dict):
+                state.update(canonicalize(registered))
+    for alias, canonical in _ATTRIBUTE_ALIASES.items():
+        if canonical in state:
+            state[alias] = state[canonical]
+    return state
+
+
+def _utility_attribute(attribute):
+    return {'hunger_level': 'hunger', 'health_status': 'health',
+            'wealth_money': 'money', 'current_satisfaction': 'satisfaction'}.get(attribute, attribute)
 
 
 def normalize_effect_delta(attribute, change_value):
@@ -108,7 +146,8 @@ class _UtilityActionView:
                 )
                 continue
             normalized, projected = self._effective_delta(declared, change, projected)
-            self.effects.append({"attribute": declared, "change_value": normalized})
+            self.effects.append({"attribute": _utility_attribute(_canonical_attribute(declared)),
+                                 "change_value": normalized})
 
     @staticmethod
     def _effective_delta(declared, change, projected):
@@ -154,6 +193,7 @@ def normalize_state_for_utility(state_dict):
     """
     if not isinstance(state_dict, dict):
         return state_dict
+    state_dict = native_character_state(state_dict)
     normalized = dict(state_dict)
     for key, value in state_dict.items():
         if (
@@ -200,23 +240,52 @@ def build_signed_remaining_goal(goal, normalized_state):
     remaining = {}
     numeric_state = False
     for attribute, target in targets.items():
-        current = normalized_state.get(attribute, 0.0)
+        key = _utility_attribute(_canonical_attribute(attribute))
+        current = normalized_state.get(key, normalized_state.get(attribute, 0.0))
         if isinstance(target, (int, float)) and not isinstance(target, bool):
             target_normalized = normalize_effect_delta(attribute, target)
             if target_normalized >= 0:
                 # Minimum target: satisfied targets clamp to zero so no goal
                 # bonus accrues to actions that move away from it (#818 review).
-                remaining[attribute] = max(0.0, target_normalized - current)
+                remaining[key] = max(0.0, target_normalized - current)
             else:
                 # Maximum target: keep the signed negative remainder (hunger-
                 # reducing effects keep the bonus, matching delta-style goals).
-                remaining[attribute] = target_normalized - current
+                remaining[key] = target_normalized - current
             numeric_state = True
         else:
-            remaining[attribute] = target
+            remaining[key] = target
     if not numeric_state:
         return goal
     return _SignedRemainingGoalView(goal, remaining)
+
+
+def calculate_native_action_utility(native_state, action, current_goal=None):
+    """Bridge a native world snapshot to the normalized, delta-based scorer."""
+    native_state = native_character_state(native_state)
+    normalized = normalize_state_for_utility(native_state)
+    return calculate_action_utility(
+        normalized, build_utility_action_view(action, native_state),
+        build_signed_remaining_goal(current_goal, normalized),
+    )
+
+
+def calculate_native_plan_utility(native_state, plan, current_goal=None):
+    """Score native actions sequentially without mutating the supplied state."""
+    simulated = native_character_state(native_state)
+    total = 0.0
+    for action in plan:
+        total += calculate_native_action_utility(simulated, action, current_goal)
+        for effect in getattr(action, 'effects', None) or ():
+            if not isinstance(effect, dict):
+                continue
+            try:
+                parsed = _AttributeEffect(effect)
+                simulated[parsed.attribute] = parsed.scalar_result(simulated.get(parsed.attribute, 0))
+            except (TypeError, ValueError):
+                continue
+        simulated = native_character_state(simulated)
+    return total
 
 
 # === CONSTANTS ===
@@ -690,7 +759,7 @@ def is_goal_achieved(goal, character_state: State):
         for effect, target_value in goal.target_effects.items():
             # #740: absolute targets; sign determines direction — positive target
             # = minimum (at least), negative target = maximum (at most).
-            current_value = character_state.get(effect, 0)
+            current_value = character_state.get(_canonical_attribute(effect), character_state.get(effect, 0))
             if isinstance(target_value, (int, float)) and target_value < 0:
                 if current_value > abs(target_value):
                     return False

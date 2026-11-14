@@ -18,7 +18,7 @@ class SimpleCharacter:
     This demonstrates what the real Character class should have for location-based AI.
     """
     
-    def __init__(self, name, age=25, energy=10, social_wellbeing=8):
+    def __init__(self, name, age=25, energy=100, social_wellbeing=80):
         self.name = name
         self.age = age
         self.energy = energy
@@ -60,12 +60,12 @@ class SimpleCharacter:
         activities = location.activities_available
         
         # Rest activities are valuable when energy is low
-        if self.energy < 5:
+        if self.energy < 50:
             if any('rest' in activity or 'sleep' in activity for activity in activities):
                 score += 20
                 
         # Social activities are valuable for social wellbeing
-        if hasattr(self, 'social_wellbeing') and self.social_wellbeing < 5:
+        if hasattr(self, 'social_wellbeing') and self.social_wellbeing < 50:
             if any('visit' in activity or 'social' in activity for activity in activities):
                 score += 15
                 
@@ -90,9 +90,9 @@ class SimpleCharacter:
             return None, "No locations available"
             
         # Determine primary motivation
-        if self.energy < 3:
+        if self.energy < 30:
             motivation = 'rest'
-        elif self.social_wellbeing < 4:
+        elif self.social_wellbeing < 40:
             motivation = 'social'
         else:
             motivation = 'general'

@@ -14,7 +14,7 @@ node = graph.G.nodes[character]
 character.energy = 0
 character.social_wellbeing = 7
 node.update(energy=20, health_status=80, hunger_level=30, wealth_money=15,
-            job_performance=10, happiness=4, social_wellbeing=7)
+            job_performance=10, happiness=.4, social_wellbeing=7)
 action = Action('Aliases', {'energy': Condition('Ready', 'energy', None, 20),
     'health': Condition('Healthy', 'health', None, 80)}, [
     {'targets': ['initiator'], 'attribute': 'health', 'change_value': 2},
@@ -22,14 +22,14 @@ action = Action('Aliases', {'energy': Condition('Ready', 'energy', None, 20),
     {'targets': ['initiator'], 'attribute': 'money', 'change_value': 'set:25'},
     {'targets': ['initiator'], 'attribute': 'wealth', 'change_value': 5},
     {'targets': ['initiator'], 'attribute': 'job_performance', 'change_value': 1},
-    {'targets': ['initiator'], 'attribute': 'happiness', 'change_value': 2},
+    {'targets': ['initiator'], 'attribute': 'happiness', 'change_value': .2},
 ], graph_manager=graph)
 with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
     assert action.execute(str(character.uuid))
     assert writes.call_count == 6
 for field, value in dict(health_status=82, hunger_level=27, wealth_money=30,
-                         job_performance=11, happiness=6, social_wellbeing=7).items():
-    assert getattr(character, field) == node[field] == value, (field, node[field])
+                         job_performance=11, happiness=.6, social_wellbeing=7).items():
+    assert math.isclose(getattr(character, field), value) and math.isclose(node[field], value), (field, node[field])
 assert not {'health', 'hunger', 'money', 'wealth'}.intersection(node)
 print({'health_status': node['health_status'], 'hunger_level': node['hunger_level'],
        'wealth_money': node['wealth_money'], 'job_performance': node['job_performance'],

@@ -19,6 +19,8 @@ from tiny_utility_functions import (
     calculate_action_utility,
     build_utility_action_view,
     build_signed_remaining_goal,
+    normalize_state_for_utility,
+    native_character_state,
     Goal,
 )  # evaluate_utility seems to be for plans
 from actions import Action, State, Condition  # Use the modified Action from actions.py
@@ -714,7 +716,7 @@ class StrategyManager:
         # Handle different character input types
         if isinstance(character, dict):
             # Preserve existing values while aliasing wealth_money for GOAP/actions that use money.
-            state = character.copy()
+            state = normalize_state_for_utility(character)
             if "money" not in state and "wealth_money" in state:
                 try:
                     state["money"] = float(state.get("wealth_money", 0.0))
@@ -835,7 +837,7 @@ class StrategyManager:
             node_state = graph_manager.get_character_state(identifier)
         except Exception:
             return {}
-        return node_state if isinstance(node_state, dict) else {}
+        return native_character_state(node_state) if isinstance(node_state, dict) else {}
 
     def get_character_planning_state(self, character) -> dict:
         """Native-scale planning state for GOAP search and gates (#740).
@@ -846,7 +848,7 @@ class StrategyManager:
         targets evaluate against the same snapshot.
         """
         state = self._standalone_planning_state(character)
-        state.update(self._graph_values_for_character(character))
+        state.update(native_character_state(character, self.graph_manager))
         return state
 
     def _standalone_planning_state(self, character) -> dict:

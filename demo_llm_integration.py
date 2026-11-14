@@ -67,9 +67,9 @@ def demo_decision_pipeline():
     print("\n4. Decision-Making Pipeline Demo (Real Character behavior):")
 
     # Demo characters with different states using real Character instances
-    alice = create_demo_character("Alice", hunger_level=8, energy=6, job="farmer", use_llm_decisions=True)
-    bob = create_demo_character("Bob", hunger_level=3, energy=2, job="baker", use_llm_decisions=True)  
-    charlie = create_demo_character("Charlie", hunger_level=4, energy=7, job="blacksmith", use_llm_decisions=False)
+    alice = create_demo_character("Alice", hunger_level=80, energy=60, job="farmer", use_llm_decisions=True)
+    bob = create_demo_character("Bob", hunger_level=30, energy=20, job="baker", use_llm_decisions=True)
+    charlie = create_demo_character("Charlie", hunger_level=40, energy=70, job="blacksmith", use_llm_decisions=False)
     strategy_manager = StrategyManager(use_llm=True)
 
     characters = [alice, bob, charlie]
@@ -81,7 +81,7 @@ def demo_decision_pipeline():
 
     for char in characters:
         state = char.get_state_summary()
-        print(f"   {state['name']} (Hunger: {state['hunger']}/10, Energy: {state['energy']}/10):")
+        print(f"   {state['name']} (Hunger: {state['hunger']}/100, Energy: {state['energy']}/100):")
 
         if state['use_llm']:
             print("     🧠 Using LLM Decision-Making:")

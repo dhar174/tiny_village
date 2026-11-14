@@ -46,8 +46,8 @@ try:
         """
         
         def __init__(self, name, age=25, job="unemployed", pronouns="they/them",
-                     health_status=8, hunger_level=3, wealth_money=50,
-                     mental_health=7, social_wellbeing=7, energy=8,
+                     health_status=80, hunger_level=30, wealth_money=50,
+                     mental_health=70, social_wellbeing=70, energy=80,
                      use_llm_decisions=False, **kwargs):
             """Initialize with real Character interface parameters."""
             self.name = name
@@ -181,12 +181,12 @@ def create_demo_characters(names: list, enable_llm_for: list = None) -> list:
             name=name,
             age=25 + (i * 5),  # Different ages
             job=job_options[i % len(job_options)],  # Cycle through jobs
-            hunger_level=3 + (i % 4),  # Varying hunger (3-6)
-            energy=6 + (i % 5),  # Varying energy (6-10)
+            hunger_level=(3 + (i % 4)) * 10,  # Varying hunger (3-6)
+            energy=(6 + (i % 5)) * 10,  # Varying energy (6-10)
             wealth_money=40 + (i * 20),  # Different wealth levels
-            health_status=7 + (i % 4),  # Varying health (7-10)
-            mental_health=6 + (i % 5),  # Varying mental health (6-10)
-            social_wellbeing=5 + (i % 6),  # Varying social wellbeing (5-10)
+            health_status=(7 + (i % 4)) * 10,  # Varying health (7-10)
+            mental_health=(6 + (i % 5)) * 10,  # Varying mental health (6-10)
+            social_wellbeing=(5 + (i % 6)) * 10,  # Varying social wellbeing (5-10)
             use_llm_decisions=(name in enable_llm_for)
         )
         characters.append(character)

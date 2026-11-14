@@ -42,14 +42,19 @@ _ATTRIBUTE_ALIASES = {
     "hunger": "hunger_level",
     "money": "wealth_money",
     "wealth": "wealth_money",
+    "satisfaction": "current_satisfaction",
 }
 _NUMERIC_ATTRIBUTES = {
     "energy", "health_status", "hunger_level", "wealth_money",
-    "job_performance", "happiness", "social_wellbeing",
+    "job_performance", "happiness", "social_wellbeing", "mental_health",
+    "current_satisfaction",
 }
 # Core needs use native 0-100 units (#740); scalar effects on them are clamped
 # so deltas, `add:`, and numeric `set:` cannot push them outside the scale.
-_NEEDS_SCALAR_CLAMP_ATTRIBUTES = {"energy", "hunger_level", "health_status"}
+_NEEDS_SCALAR_CLAMP_ATTRIBUTES = {
+    "energy", "hunger_level", "health_status", "mental_health",
+    "social_wellbeing", "job_performance", "current_satisfaction",
+}
 _EFFECT_TARGETS = {"initiator", "target", "target_character_in_location"}
 _MISSING = object()
 
@@ -78,14 +83,14 @@ def native_units_to_fixture(value):
 
 
 def clamp_need_value(attribute, value):
-    """Clamp a finite core-need result to the native 0-100 scale (#740)."""
+    """Bound a finite need result: 0-100 points, or 0-1 happiness (#740)."""
     if (
-        attribute in _NEEDS_SCALAR_CLAMP_ATTRIBUTES
+        (attribute in _NEEDS_SCALAR_CLAMP_ATTRIBUTES or attribute == "happiness")
         and isinstance(value, (int, float))
         and not isinstance(value, bool)
         and math.isfinite(value)
     ):
-        return max(0.0, min(100.0, value))
+        return max(0.0, min(1.0 if attribute == "happiness" else 100.0, value))
     return value
 
 
@@ -109,6 +114,8 @@ def _write_synchronized_attribute(target, node, manager, attribute, calculate):
     """Commit one attribute, restoring its prior presence and values on failure."""
     graph_data = manager.G.nodes[node] if node is not None else None
     old_graph = graph_data.get(attribute, _MISSING) if graph_data is not None else _MISSING
+    old_aliases = {alias: graph_data[alias] for alias, canonical in _ATTRIBUTE_ALIASES.items()
+                   if canonical == attribute and graph_data is not None and alias in graph_data}
     old_object = getattr(target, attribute, _MISSING)
     try:
         value = calculate(_read_effect_value(target, node, manager, attribute))
@@ -120,8 +127,11 @@ def _write_synchronized_attribute(target, node, manager, attribute, calculate):
         )
         if manager is not None and identifier is not None:
             manager.update_node_attribute(identifier, attribute, value)
+            for alias in old_aliases:
+                graph_data[alias] = value
     except Exception:
         if graph_data is not None:
+            graph_data.update(old_aliases)
             if old_graph is _MISSING:
                 graph_data.pop(attribute, None)
             else:
@@ -226,7 +236,7 @@ class _AttributeEffect:
             raise ValueError(f"Expected a finite numeric value for {self.attribute!r}")
         if self.attribute in {"location", "inventory"} and isinstance(value, (str, int, float)):
             raise ValueError(f"Expected a domain object for {self.attribute!r}")
-        return value
+        return clamp_need_value(self.attribute, value)
 
     def apply(self, target, node, manager):
         def calculate(current):
@@ -1834,7 +1844,7 @@ class SocialVisitAction(Action):
                     {
                         "targets": ["initiator"],
                         "attribute": "happiness",
-                        "change_value": 1,
+                        "change_value": 0.1,
                     },
                     {
                         "targets": ["target"], # self.target will be target_person object
@@ -1919,7 +1929,7 @@ class PursueHobbyAction(Action):
                     {
                         "targets": ["initiator"],
                         "attribute": "happiness",
-                        "change_value": 2,
+                        "change_value": 0.2,
                     },
                     {
                         "targets": ["initiator"],

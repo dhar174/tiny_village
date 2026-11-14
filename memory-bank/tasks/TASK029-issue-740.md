@@ -1,6 +1,32 @@
 # TASK029 — Reconcile need and resource units (#740)
 
-**Updated** 2026-11-13
+**Updated** 2026-11-14
+
+**Current status:** PR #818 merged at `c8f0f17`; closure investigation found
+additional in-scope defects. Repairs are on `codex/740-closeout`, source
+checkpoint `6753014`. #740 stays OPEN pending [PR #819](https://github.com/dhar174/tiny_village/pull/819) and merged-source
+verification. Local canonical core116+3 CLI probes, dev20, visual69 pass with
+zero failures/errors/skips. These results do not establish full Goal completion.
+
+The user requested evidence-based closure and explicitly selected fixing and
+re-verifying narrow #740 gaps. The investigation covers every original acceptance
+criterion, producer/consumer units, real state traces and the deferred-path audit.
+See [unit reference](../../docs/reference/runtime-units.md) and
+[closeout report](../../docs/testing/issue-740-closeout.md).
+
+2026-11-14 progress: repaired dictionary snapshots, native GOAP utility scoring,
+interpreter target descriptors, canonical satisfaction/seeded-alias rollback,
+fractional/bounded happiness, shared event bounds, normalized few-shot matching,
+and actual graph-backed needs display. Corrected explicit legacy demo fixtures
+and the distance-energy normalization expression. Seven new core checks and one
+real visual check are in the supported profiles. Retained #802's full Goal
+signature failure and the independent weighted relationship metadata failure;
+neither is labeled passing coverage or a completed adjacent task.
+Automated review of #819 also exposed alias-only initial plan projection; the
+existing real-world utility case now checks canonical/alias state/effect parity,
+and both native scoring entry points canonicalize before projection.
+
+## Historical initial implementation record
 
 **Status** Implemented on `codex/740-runtime-units` at `fc5286e` (parent `56d36c2` = main);
 worktree `C:\Users\darf3\Documents\tiny_village-740`. Issue #740 remains open/Todo/Ready.

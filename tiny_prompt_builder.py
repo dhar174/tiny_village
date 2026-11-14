@@ -304,7 +304,9 @@ class FewShotExampleManager:
         # Simple relevance scoring based on state similarity
         scored_examples = []
         for example in self.examples:
-            score = self._calculate_relevance_score(character_state, example.character_state)
+            from tiny_utility_functions import normalize_state_for_utility
+            score = self._calculate_relevance_score(
+                character_state, normalize_state_for_utility(example.character_state))
             scored_examples.append((score, example))
             
         # Sort by relevance and success rating
@@ -2483,7 +2485,7 @@ class PromptBuilder:
         value from this snapshot, so omitted fields would silently project
         from zero.
         """
-        return {
+        state = {
             "energy": self._graph_value("energy", getattr(self.character, "energy", 50.0)),
             "hunger_level": self._graph_value("hunger_level", getattr(self.character, "hunger_level", 30.0)),
             "health_status": self._graph_value("health_status", getattr(self.character, "health_status", 50.0)),
@@ -2501,6 +2503,9 @@ class PromptBuilder:
             "wealth_money": self._graph_value("wealth_money", getattr(self.character, "wealth_money", 0.0)),
             "money": self._graph_value("wealth_money", getattr(self.character, "wealth_money", 0.0)),
         }
+        from tiny_utility_functions import native_character_state
+        state.update(native_character_state(self.character, self.graph_manager))
+        return native_character_state(state)
 
     def _graph_value(self, attribute, default=None):
         """Graph-first need read for the registered character (#740).

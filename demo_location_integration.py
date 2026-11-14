@@ -84,9 +84,9 @@ def demo_character_location_decisions():
     
     # Create test characters with different traits
     characters = [
-        SimpleCharacter("Alice (High Energy, Social)", energy=9, social_wellbeing=8),
-        SimpleCharacter("Bob (Low Energy, Tired)", energy=2, social_wellbeing=8),
-        SimpleCharacter("Carol (Socially Isolated)", energy=8, social_wellbeing=2),
+        SimpleCharacter("Alice (High Energy, Social)", energy=90, social_wellbeing=80),
+        SimpleCharacter("Bob (Low Energy, Tired)", energy=20, social_wellbeing=80),
+        SimpleCharacter("Carol (Socially Isolated)", energy=80, social_wellbeing=20),
     ]
     characters[0].personality_traits = SimplePersonalityTraits(neuroticism=60, extraversion=70)
     characters[1].personality_traits = SimplePersonalityTraits(neuroticism=60, extraversion=45)
@@ -103,8 +103,8 @@ def demo_character_location_decisions():
     
     for character in characters:
         print(f"\n{character.name}:")
-        print(f"  Energy: {character.energy}/10")
-        print(f"  Social Wellbeing: {character.social_wellbeing}/10")
+        print(f"  Energy: {character.energy}/100")
+        print(f"  Social Wellbeing: {character.social_wellbeing}/100")
         print(f"  Personality: Neuroticism={character.personality_traits.neuroticism}, " +
               f"Extraversion={character.personality_traits.extraversion}")
         

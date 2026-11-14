@@ -1,6 +1,7 @@
 ## Tasks Index
 
 ## In Progress
+- [TASK029](TASK029-issue-740.md) Runtime units (#740) - #818 merged; closeout investigation repairs atb29552c, core116+3 probes/dev20/visual69 pass; issue remains OPEN pending repair merge and final verification (Updated: 2026-11-14)
 - [TASK028](TASK028-action-execution-220.md) Graph-backed action execution (#220) - Draft PR #817, Zcode review follow-up (Updated: 2026-11-13)
 - [TASK026](TASK026-phase3-human-gate-738.md) Phase3 human gate (#738) - Approved under D034;738/733 closed in order, retained acceptance open; Project synchronization pending owner-local evidence (Updated: 2026-11-02 America/New_York)
 - [TASK023](TASK023-zcode-specialist-team.md) Zcode specialist team - nine read-only specialist definitions + canonical coordination policy created, entry points wired, installed to ~/.zcode/agents; static checks + independent review pass, fixes applied; runtime invocation re-verification pending fresh session (Updated: 2026-10-22)

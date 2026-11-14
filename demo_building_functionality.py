@@ -22,7 +22,7 @@ class MockCharacter:
     def __init__(self, name, wealth_money=100, **attributes):
         self.name = name
         self.wealth_money = wealth_money
-        self.hunger_level = attributes.get('hunger', 5)
+        self.hunger_level = attributes.get('hunger', 50)
         self.thirst = attributes.get('thirst', 50)
         self.energy = attributes.get('energy', 50)
         self.social_wellbeing = attributes.get('social_wellbeing', 50)
@@ -57,7 +57,7 @@ def print_character_status(character):
     """Print character status."""
     print(f"  {character.name}:")
     print(f"    Wealth: ${character.wealth_money}")
-    print(f"    Hunger: {character.hunger_level}/10, Thirst: {character.thirst}/100")
+    print(f"    Hunger: {character.hunger_level}/100, Thirst: {character.thirst}/100")
     print(f"    Energy: {character.energy}/100, Satisfaction: {character.current_satisfaction}/100")
 
 
@@ -119,10 +119,10 @@ def main():
     # Create villagers
     print_header("Creating Villagers")
     
-    farmer = MockCharacter("Farmer Bob", wealth_money=75, hunger=7)
+    farmer = MockCharacter("Farmer Bob", wealth_money=75, hunger=70)
     print(f"  ✓ Created {farmer.name}")
     
-    merchant = MockCharacter("Merchant Alice", wealth_money=150, hunger=4)
+    merchant = MockCharacter("Merchant Alice", wealth_money=150, hunger=40)
     print(f"  ✓ Created {merchant.name}")
     
     student = MockCharacter("Student Eve", wealth_money=50, intelligence=40)

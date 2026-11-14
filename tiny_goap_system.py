@@ -28,7 +28,7 @@ What happens: The GOAP planner uses the graph to analyze relationships and prefe
 """
 
 from tiny_types import Goal, Character, GraphManager
-from actions import Action, State, invoke_action, _ATTRIBUTE_ALIASES
+from actions import Action, State, invoke_action, _ATTRIBUTE_ALIASES, _canonical_attribute
 
 # from tiny_graph_manager import GraphManager
 
@@ -721,7 +721,7 @@ class GOAPPlanner:
                 target_effects = goal.target_effects
                 if isinstance(target_effects, dict):
                     for attribute, target_value in target_effects.items():
-                        current_value = state.get(attribute, 0)
+                        current_value = state.get(_canonical_attribute(attribute), state.get(attribute, 0))
                         if isinstance(target_value, (int, float)) and target_value < 0:
                             # Maximum: satisfied at or below |target| (with floating-point tolerance)
                             if current_value > abs(target_value) + 0.1:
@@ -896,7 +896,7 @@ class GOAPPlanner:
             # target = maximum (distance = current − |target|).
             total_distance = 0.0
             for attribute, target_value in goal.target_effects.items():
-                current_value = state_dict.get(attribute, 0.0)
+                current_value = state_dict.get(_canonical_attribute(attribute), state_dict.get(attribute, 0.0))
                 if isinstance(target_value, (int, float)) and target_value < 0:
                     distance = max(0.0, current_value - abs(target_value))
                 else:
@@ -1231,24 +1231,15 @@ class GOAPPlanner:
             # Import utility functions
             import tiny_utility_functions as util_funcs
             
-            # Get character state
-            character_state = {}
-            if hasattr(character, "get_state"):
-                char_state_obj = character.get_state()
-                if hasattr(char_state_obj, 'dict_or_obj'):
-                    character_state = char_state_obj.dict_or_obj if isinstance(char_state_obj.dict_or_obj, dict) else {}
-                elif hasattr(char_state_obj, '__dict__'):
-                    character_state = char_state_obj.__dict__
-            elif hasattr(character, '__dict__'):
-                character_state = character.__dict__
+            character_state = util_funcs.native_character_state(character, self.graph_manager)
             
             # Get current goal if available - GOAPPlanner doesn't manage goals directly
             current_goal = None
             # Goals should be passed in as parameters, not stored in planner
                 
             # Use the comprehensive utility calculation
-            if character_state:
-                utility = util_funcs.calculate_action_utility(character_state, action, current_goal)
+            if character_state and not (hasattr(action, 'satisfaction') and not getattr(action, 'effects', None)):
+                utility = util_funcs.calculate_native_action_utility(character_state, action, current_goal)
                 return utility
             
         except Exception as e:
@@ -1337,16 +1328,7 @@ class GOAPPlanner:
             # Import utility functions
             import tiny_utility_functions as util_funcs
             
-            # Get character state
-            character_state = {}
-            if hasattr(character, "get_state"):
-                char_state_obj = character.get_state()
-                if hasattr(char_state_obj, 'dict_or_obj'):
-                    character_state = char_state_obj.dict_or_obj if isinstance(char_state_obj.dict_or_obj, dict) else {}
-                elif hasattr(char_state_obj, '__dict__'):
-                    character_state = char_state_obj.__dict__
-            elif hasattr(character, '__dict__'):
-                character_state = character.__dict__
+            character_state = util_funcs.native_character_state(character, self.graph_manager)
                 
             # Get current goal if available - should be passed as parameter
             current_goal = None
@@ -1354,16 +1336,14 @@ class GOAPPlanner:
             
             # Use comprehensive plan utility calculation if we have character state
             if character_state:
-                plan_utility = util_funcs.calculate_plan_utility(
-                    character_state, plan, current_goal, simulate_effects=True
-                )
+                plan_utility = util_funcs.calculate_native_plan_utility(character_state, plan, current_goal)
                 
                 # Return the action with highest individual utility within the plan
                 best_action = None
                 best_utility = float('-inf')
                 
                 for action in plan:
-                    action_utility = util_funcs.calculate_action_utility(character_state, action, current_goal)
+                    action_utility = self.calculate_utility(action, character)
                     if action_utility > best_utility:
                         best_utility = action_utility
                         best_action = action
