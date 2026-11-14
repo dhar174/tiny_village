@@ -262,6 +262,7 @@ def build_signed_remaining_goal(goal, normalized_state):
 
 def calculate_native_action_utility(native_state, action, current_goal=None):
     """Bridge a native world snapshot to the normalized, delta-based scorer."""
+    native_state = native_character_state(native_state)
     normalized = normalize_state_for_utility(native_state)
     return calculate_action_utility(
         normalized, build_utility_action_view(action, native_state),
@@ -271,7 +272,7 @@ def calculate_native_action_utility(native_state, action, current_goal=None):
 
 def calculate_native_plan_utility(native_state, plan, current_goal=None):
     """Score native actions sequentially without mutating the supplied state."""
-    simulated = dict(native_state)
+    simulated = native_character_state(native_state)
     total = 0.0
     for action in plan:
         total += calculate_native_action_utility(simulated, action, current_goal)

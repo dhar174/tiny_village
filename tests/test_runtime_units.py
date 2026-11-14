@@ -90,6 +90,16 @@ score = calculate_native_action_utility(native, eat)
 assert math.isclose(score, 2.2), score
 plan_score = calculate_native_plan_utility(native, [eat, eat])
 assert math.isclose(plan_score, 3.6), plan_score
+aliased = {'hunger': 80, 'energy': 20, 'satisfaction': 20, 'money': 100}
+aliased_before = aliased.copy()
+alias_eat = Action('EatAlias', [], [{'attribute': 'hunger', 'change_value': -20}],
+                   cost=.1, graph_manager=graph)
+for initial in (native, aliased):
+    for meal in (eat, alias_eat):
+        assert math.isclose(calculate_native_action_utility(initial, meal), score)
+        actual = calculate_native_plan_utility(initial, [meal, meal])
+        assert math.isclose(actual, plan_score), (initial, meal.effects, actual)
+assert aliased == aliased_before
 empty = Action('NoEffects', [], None, graph_manager=graph)
 assert calculate_native_plan_utility(native, [empty]) == 0
 assert native == before
