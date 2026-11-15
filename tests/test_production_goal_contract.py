@@ -67,6 +67,7 @@ for actions in ([], [blocked]):
     assert planner.plan_actions(character, goal, state, actions) is None
     assert planner.evaluate_feasibility_of_goal(goal, state, actions=actions) is False
 assert planner.evaluate_feasibility_of_goal(goal, state, actions=[cheap]) is True
+assert planner.evaluate_feasibility_of_goal(goal, {'energy': 20}, actions=[cheap]) is True
 assert planner.evaluate_feasibility_of_goal(goal, State({'energy': 30}), actions=[]) is True
 assert planner.plan_actions(character, goal, state, [cheap]) == [cheap]  # positive control after negatives
 assert state.dict_or_obj == {'energy': 20}
