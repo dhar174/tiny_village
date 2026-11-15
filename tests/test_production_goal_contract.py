@@ -144,3 +144,15 @@ for expression in ("inventory.check_has_item_by_type(['food'])", 'inventory.chec
     def test_import_orders_use_full_goal(self):
         for modules in ('tiny_characters, tiny_goap_system, tiny_utility_functions', 'tiny_utility_functions, tiny_goap_system, tiny_characters'):
             self.run_python('import ' + modules + '\nfrom tiny_characters import Goal\nassert hasattr(Goal, "iter_completion_conditions")\nassert "character" in __import__("inspect").signature(Goal).parameters\n')
+
+    def test_registered_location_uses_its_graph_state(self):
+        self.world('''
+from tiny_locations import Location
+place = Location('GoalRoom', 0, 0, 10, 10, controller.action_system)
+graph.add_location_node(place)
+place.open = False
+graph.G.nodes[place]['open'] = True
+goal = make_goal({False: [Condition('open room', 'open', place, True, '==')]})
+assert goal.check_completion({'open': False}) is True
+assert place.open is False
+''')

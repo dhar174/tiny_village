@@ -528,9 +528,14 @@ class Goal:
                     target = self.character
                 elif isinstance(target, str) and target == 'target':
                     target = self.target
-                target, _ = _resolve_action_entity(self.environment, target)
-                current = state if state is not None and target is self.character else State(
-                    native_character_state(target, self.environment))
+                target, node = _resolve_action_entity(self.environment, target)
+                if state is not None and target is self.character:
+                    current = state
+                else:
+                    snapshot = native_character_state(target)
+                    if node is not None:
+                        snapshot.update(native_character_state(dict(self.environment.G.nodes[node])))
+                    current = State(native_character_state(snapshot))
                 results.append(bool(condition.check_condition(
                     current, attribute=_canonical_attribute(condition.attribute))))
             except (AttributeError, KeyError, TypeError, ValueError) as error:
