@@ -36,3 +36,8 @@ Plan evaluation and bounded real-Goal feasibility. See the approved plan at
 Local verification and independent review complete; final hosted CI/review and merge remain pending.
 #802 remains open pending merge and merged-source verification. No broader Goal
 catalog, graph path scoring, full Plan execution/replanning, or readiness claim.
+
+- Final test-only strengthening executes the actual selected recovery Action using
+  supported initiator descriptors and verifies graph/object energy30 plus live completion.
+  Nine acceptance methods pass; runtime unchanged since2eb3598. Exact receipt retains
+  per-profile revisions. Hosted CI/review must match final branch head.

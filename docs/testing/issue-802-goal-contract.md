@@ -45,7 +45,7 @@ They construct complete real Characters and the actual MultiDiGraph-backed world
 | --- | --- |
 | Singular/tuple buckets, multiple requirements | Copied lists; both buckets reevaluated; threshold 29.95 fails, 30 passes; hunger 11 fails maximum10 |
 | Graph20/object90 actor | Live completion/Plan/graph achievement false; explicit energy30 true without changing live state |
-| Actual recovery Action | Graph20 and stale object90 become30 together; Goal, Plan and graph achievement become true |
+| Actual planner-selected recovery Action | Graph20 and stale object90 become30 together; Goal, Plan and graph achievement become true |
 | Already complete / reachable | Already-complete state returns []; recovery from20 returns usable action, independent final energy30 |
 | Unreachable / blocked | Empty actions and energy21 precondition at20 yield None/False; repeated reachable positive control still succeeds |
 | Equivalent effects / different costs | Cost1 action selected ahead of cost5 in both input orders |
@@ -79,7 +79,9 @@ role parsing error logs also appear in that old reproduction, as before.
 Local core at `2eb3598`: **125 tests + 3 CLI probes**, zero failures/errors/skips.
 Dev at `7b22725`: **20 tests**; visual at `7b22725`: **69 tests**, zero failures/errors/skips.
 Those dev/visual runs precede the diagnostic-only malformed-literal correction;
-core and the nine final acceptance cases cover that correction. The
+core and the nine final acceptance cases cover that correction. A later test-only
+strengthening executes the actual planner-selected recovery action; its nine-case
+run also passes, with no runtime changes. The
 [local receipt](evidence/issue-802-local-results.json) retains exact revisions.
 
 
