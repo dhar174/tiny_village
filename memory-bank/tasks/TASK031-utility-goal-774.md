@@ -39,12 +39,16 @@ Worktree /workspace/scratch/issue774-utility; branchcodex/774-utility-goal; base
   fixture logging (two NameError subcases) and attributes=None mismatch (one failure).
   Both repairs pass individual regressions; combined original26+contracts4+validation8+
   fullGoal13 passes51. Empty-name default preserved/documented; supplied empty mapping
-  identity preserved. New core selection should be167, subject to actual runner result.
+  identity preserved. Final source9f36cfb core167+3/dev20/visual69 passes, all process exits0, zero failures/errors/skips.
 - Pre-existing target-unit and completion/evaluator concerns remain #218/#821. ASTs at
   base46461b0 equal current methods; no wider runtime fix or coverage claim is inferred.
 
 ## Remaining
-Final profiles/evidence, signed replies, independent final review, exact-head hosted CI
-and automated review, then authorized SHA-guarded merge. Leave774 open
+Exact-head hosted CI and automated review, then authorized SHA-guarded merge. Leave774 open
 until repair merge and main verification. #218/#741/#821 remain separate; no broader
 readiness or full live-loop Goal migration claim. No mem0ry4ai tools available.
+
+- Independent final delta review d703e71→9f36cfb found no remaining defects; reviewer
+  ran no commands. All6 GLM items replied, inline thread resolved and read back.
+  #218/#821 carry-forward comments and signatures read back. Original26 IDs retained;
+  bounded26 and focused51 pass. Durable receipt retains historical and final revisions.

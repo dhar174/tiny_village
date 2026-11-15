@@ -110,3 +110,9 @@ The reviewer also noted pre-existing event-target units and legacy completion/ev
 policy/arity concerns. These remain with #218/#821; source checks and a signed PR reply
 record their disposition. The alias consumer suites/demos listed by the reviewer are
 not all in canonical CI; no blanket coverage or full live-loop readiness is claimed.
+
+Final GLM-fix source `9f36cfb607d4cfa25e13b3c61c9e431445a0cf70` passes core167 tests plus3 CLI probes,
+dev20 and visual69 (all actual exits0; zero failures/errors/skips). The bounded
+original26 and focused51 selections pass. Final independent delta review reports
+no remaining defects; the reviewer ran no commands. See PR #822 for exact-head
+hosted results and subsequent merge verification.
