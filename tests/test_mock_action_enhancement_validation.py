@@ -33,6 +33,22 @@ class TestMockActionEnhancementValidation(unittest.TestCase):
 
         self.assertFalse(blocked_action.preconditions_met())
 
+    def test_precondition_exceptions_block_and_log(self):
+        from types import SimpleNamespace
+
+        def broken_precondition(state):
+            raise ValueError("broken precondition")
+
+        for precondition in (
+            broken_precondition,
+            SimpleNamespace(check_condition=broken_precondition),
+        ):
+            with self.subTest(precondition=precondition):
+                action = MockAction("Blocked", cost=0.1, preconditions=[precondition])
+                with self.assertLogs(level="WARNING") as captured:
+                    self.assertFalse(action.preconditions_met({"energy": 20}))
+                self.assertIn("broken precondition", "\n".join(captured.output))
+
     def test_invalid_effects_are_rejected(self):
         with self.assertRaisesRegex(ValueError, "must have 'attribute' key"):
             MockAction(

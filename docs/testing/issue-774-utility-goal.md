@@ -12,11 +12,12 @@ reload; compatibility means the same role/interface/results, not identity with s
 references held by other modules.
 
 Constructor: `UtilityGoal(name=None, target_effects=None, priority=0.5, score=None,
-**kwargs)`. Name defaults to UnnamedGoal; score defaults to priority only when None;
+**kwargs)`. A missing or empty name defaults to UnnamedGoal; score defaults to priority only when None;
 urgency defaults to priority when omitted/None. Explicit priority/score0 and urgency0
 remain explicit values. Optional deadline defaults to None, description to
-`Goal: <name>`, attributes to a fresh dictionary. Existing metadata kwargs remain
-accepted. No new completion API, graph ownership or invented successful completion
+`Goal: <name>`. Omitted or explicit `attributes=None` creates a fresh dictionary;
+a supplied mapping is retained, including an empty dictionary. Existing metadata kwargs
+remain accepted. No new completion API, graph ownership or invented successful completion
 predicate is supplied by metadata.
 
 `tiny_characters.Goal` remains the full domain Goal with its unchanged constructor,
@@ -88,3 +89,24 @@ this resolves the utility metadata boundary, not its wider inventory/catalog or 
 live-loop integration requirements. Next is #218 planning integration (candidate689
 requires selective review/rework), then #741 active-plan execution/replanning. Neither
 those issues nor later phase gates close through these utility tests.
+
+## GLM review reconciliation
+
+GLM-5.3-Flash reviewed head d703e71 after main9505076 (agent configuration) was merged
+into the branch; the nine source hashes matched the original local evidence revision.
+The review used four read-only tiny-village specialists and reported no blockers.
+
+Two P3 concerns were reproduced before repair: the Action fixture raised NameError
+while logging exceptions from callable and check_condition preconditions; explicit
+attributes=None stored None. The fixture now imports logging and returns False with
+warnings, and metadata uses an explicit None default without discarding a supplied
+empty mapping. A new validation method exercises both raising precondition forms;
+the existing metadata method covers independent None defaults, supplied empty mapping
+identity, explicit zero urgency and the preserved empty-name default. Original26 method
+identities and numeric assertions remain intact. Retained red output is recorded in
+the evidence receipt; the earlier166/20/69 result above remains historical.
+
+The reviewer also noted pre-existing event-target units and legacy completion/evaluator
+policy/arity concerns. These remain with #218/#821; source checks and a signed PR reply
+record their disposition. The alias consumer suites/demos listed by the reviewer are
+not all in canonical CI; no blanket coverage or full live-loop readiness is claimed.

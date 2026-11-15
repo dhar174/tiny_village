@@ -1,3 +1,4 @@
+import logging
 import unittest
 
 from tiny_utility_functions import (

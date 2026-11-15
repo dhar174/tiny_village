@@ -15,6 +15,14 @@ assert first.name == 'UnnamedGoal' and first.priority == first.score == first.ur
 assert first.deadline is None and first.description == 'Goal: UnnamedGoal'
 assert first.target_effects is not second.target_effects
 assert first.attributes is not second.attributes
+none_first = utility.UtilityGoal(attributes=None)
+none_second = utility.UtilityGoal(attributes=None)
+assert none_first.attributes == none_second.attributes == {}
+assert none_first.attributes is not none_second.attributes
+provided = {}
+assert utility.UtilityGoal(attributes=provided).attributes is provided
+assert utility.UtilityGoal(name='').name == 'UnnamedGoal'  # preserved compatibility default
+assert utility.UtilityGoal(urgency=0).urgency == 0
 explicit = utility.UtilityGoal('Urgent', {'energy': .5}, 0, score=0,
     urgency=.9, deadline=7, description='Urgent metadata', attributes={'energy': 1})
 assert explicit.priority == explicit.score == 0 and explicit.urgency == .9

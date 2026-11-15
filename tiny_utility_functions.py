@@ -50,7 +50,8 @@ class UtilityGoal:
         self.urgency = priority if urgency is None else urgency
         self.deadline = kwargs.get('deadline')
         self.description = kwargs.get('description') or f"Goal: {self.name}"
-        self.attributes = kwargs.get('attributes', {})
+        attributes = kwargs.get('attributes')
+        self.attributes = {} if attributes is None else attributes
 
 
 # Compatibility import for existing utility/strategy callers; independent of

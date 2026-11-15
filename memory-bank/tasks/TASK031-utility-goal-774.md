@@ -33,7 +33,18 @@ Worktree /workspace/scratch/issue774-utility; branchcodex/774-utility-goal; base
   final delta review resolved the sole finding with no remaining findings; it did
   not execute commands. Durable receipt: docs/testing/evidence/issue-774-local-results.json.
 
+## GLM follow-up — 2026-11-15 America/New_York
+- User now explicitly authorizes fixes, final pre-merge review and merge when ready.
+- GLM review at d703e71 used four project specialists; no blockers. Reproduced missing
+  fixture logging (two NameError subcases) and attributes=None mismatch (one failure).
+  Both repairs pass individual regressions; combined original26+contracts4+validation8+
+  fullGoal13 passes51. Empty-name default preserved/documented; supplied empty mapping
+  identity preserved. New core selection should be167, subject to actual runner result.
+- Pre-existing target-unit and completion/evaluator concerns remain #218/#821. ASTs at
+  base46461b0 equal current methods; no wider runtime fix or coverage claim is inferred.
+
 ## Remaining
-Exact-head hosted CI and automated review; leave PR unmerged for user handoff. Leave774 open
+Final profiles/evidence, signed replies, independent final review, exact-head hosted CI
+and automated review, then authorized SHA-guarded merge. Leave774 open
 until repair merge and main verification. #218/#741/#821 remain separate; no broader
 readiness or full live-loop Goal migration claim. No mem0ry4ai tools available.
