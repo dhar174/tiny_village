@@ -1371,9 +1371,15 @@ class GOAPPlanner:
         existing predicate behavior. This operation never executes actions.
         """
         if callable(getattr(goal, "iter_completion_conditions", None)):
+            from actions import _resolve_action_entity
+            try:
+                actor, _ = _resolve_action_entity(
+                    self.graph_manager or goal.environment, goal.character, 'character')
+            except (AttributeError, KeyError, TypeError, ValueError) as error:
+                raise ValueError(f"Goal {goal.name!r}, actor: {error}") from error
             if goal.check_completion(state):
                 return True
-            return self.plan_actions(goal.character, goal, state, actions) is not None
+            return self.plan_actions(actor, goal, state, actions) is not None
         if not goal or not state:
             return False
 

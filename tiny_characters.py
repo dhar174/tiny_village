@@ -335,7 +335,7 @@ class Goal:
                         f"Goal {self.name!r}, condition {condition.name!r}: invalid literal arguments"
                     ) from error
                 if not isinstance(arguments, (list, tuple)) or not arguments:
-                    raise ValueError("Inventory condition requires literal arguments")
+                    raise ValueError(f"Goal {self.name!r}, condition {condition.name!r}: inventory condition requires nonempty literal arguments")
                 key = "item_type" if field == "type" else field
                 requirement = ({key: arguments[0]}, condition.satisfy_value)
                 existing = [item[0] if isinstance(item, tuple) else item for item in required_items]
@@ -488,20 +488,20 @@ class Goal:
             "goal_type": self.goal_type,
         }
 
-    @staticmethod
-    def _normalize_completion_conditions(conditions):
+    def _normalize_completion_conditions(self, conditions):
         if not isinstance(conditions, dict):
-            raise TypeError("Goal completion_conditions must be a boolean-keyed dictionary")
+            raise TypeError(f"Goal {self.name!r}, completion_conditions: expected a boolean-keyed dictionary")
         result = {}
         for status, values in conditions.items():
             if type(status) is not bool:
-                raise TypeError("Goal condition bucket keys must be bool")
+                raise TypeError(f"Goal {self.name!r}, completion_conditions[{status!r}]: bucket keys must be bool")
             if isinstance(values, Condition):
                 values = [values]
-            if not isinstance(values, (list, tuple)) or any(
-                not isinstance(value, Condition) for value in values
-            ):
-                raise TypeError("Goal condition buckets must contain Conditions")
+            if not isinstance(values, (list, tuple)):
+                raise TypeError(f"Goal {self.name!r}, completion_conditions[{status!r}]: expected Conditions")
+            for index, value in enumerate(values):
+                if not isinstance(value, Condition):
+                    raise TypeError(f"Goal {self.name!r}, completion_conditions[{status!r}][{index}]: expected Condition")
             result[status] = list(values)
         return result
 
@@ -523,10 +523,17 @@ class Goal:
 
         if state is not None:
             if not isinstance(state, (State, Mapping)):
-                raise TypeError("Goal completion state must be a State or mapping")
+                raise TypeError(f"Goal {self.name!r}, state: expected a State or mapping")
             state = State(native_character_state(dict(state) if isinstance(state, Mapping) else state))
         results = []
-        for condition in self.iter_completion_conditions():
+        conditions = self.iter_completion_conditions()
+        actor = self.character
+        if state is not None:
+            try:
+                actor, _ = _resolve_action_entity(self.environment, actor, 'character')
+            except (AttributeError, KeyError, TypeError, ValueError) as error:
+                raise ValueError(f"Goal {self.name!r}, actor: {error}") from error
+        for condition in conditions:
             try:
                 target = condition.target
                 if target is None or (isinstance(target, str) and target == 'initiator'):
@@ -534,7 +541,7 @@ class Goal:
                 elif isinstance(target, str) and target == 'target':
                     target = self.target
                 target, node = _resolve_action_entity(self.environment, target)
-                if state is not None and target is self.character:
+                if state is not None and target is actor:
                     current = state
                 else:
                     snapshot = native_character_state(target)

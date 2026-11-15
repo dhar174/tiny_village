@@ -91,7 +91,7 @@ assert goal.check_completion() is True
 for invalid in ({False: [object()]}, {'energy': 30}, [Condition('energy', 'energy', character, 30)]):
     try:
         make_goal(invalid)
-    except (TypeError, ValueError):
+    except TypeError:
         pass
     else:
         raise AssertionError('Malformed Goal accepted')
@@ -106,7 +106,7 @@ for evaluate in (lambda: goal.check_completion({}), lambda: planner._goal_satisf
 goal.completion_conditions[False].append(None)
 try:
     goal.check_completion({'energy': 30})
-except (TypeError, ValueError):
+except TypeError:
     pass
 else:
     raise AssertionError('Post-construction invalid condition ignored')
@@ -124,6 +124,12 @@ assert goal.check_completion({'energy': 100}) is False
 graph.G.nodes[partner]['energy'] = 30
 assert goal.check_completion({'energy': 0}) is True
 assert partner.energy == 90
+try:
+    graph.is_goal_achieved(partner, goal)
+except ValueError as error:
+    assert 'actor' in str(error)
+else:
+    raise AssertionError('Achievement accepted mismatched actor')
 actor_by_name = make_goal({False: [Condition('named actor', 'energy', character.name, 30)]})
 assert actor_by_name.check_completion({'energy': 30}) is True
 unresolved = make_goal({False: [Condition('missing actor', 'energy', 'NotRegistered', 30)]})
@@ -173,4 +179,70 @@ for attribute in ('inventory.check_has_item_by_type([)', 'inventory.unknown([)')
         assert 'recover' in str(error) and 'bad predicate' in str(error), str(error)
     else:
         raise AssertionError('Malformed predicate did not raise contextual ValueError')
+''')
+
+    def test_glm_context_errors_preserve_exception_types(self):
+        self.world('''
+for argument in ('[]', "'food'"):
+    try:
+        make_goal({False: [Condition('inventory argument', 'inventory.check_has_item_by_type(' + argument + ')', character, True, '==')]})
+    except ValueError as error:
+        assert 'recover' in str(error) and 'inventory argument' in str(error), str(error)
+    else:
+        raise AssertionError('Invalid inventory arguments accepted')
+goal = make_goal()
+try:
+    goal.check_completion(42)
+except TypeError as error:
+    assert 'recover' in str(error) and 'state' in str(error), str(error)
+else:
+    raise AssertionError('Invalid state type accepted')
+goal.completion_conditions[False].append(None)
+try:
+    goal.check_completion({'energy': 30})
+except TypeError as error:
+    assert 'recover' in str(error) and 'False' in str(error) and '1' in str(error), str(error)
+else:
+    raise AssertionError('Corrupt bucket accepted')
+''')
+
+    def test_glm_feasibility_resolves_actor_identifiers(self):
+        self.world('''
+goal = make_goal()
+goal.character = character.name
+assert goal.check_completion({'energy': 30}) is True
+recovery = Action('Recovery', [], [{'targets': ['initiator'], 'attribute': 'energy', 'change_value': 10}], initiator=character, graph_manager=graph)
+assert planner.evaluate_feasibility_of_goal(goal, State({'energy': 20}), actions=[recovery]) is True
+assert goal.character == character.name
+assert graph.is_goal_achieved(character, goal) is False
+for invalid_actor in (None, 'MissingActor'):
+    goal.character = invalid_actor
+    try:
+        planner.evaluate_feasibility_of_goal(goal, State({'energy': 30}), actions=[])
+    except ValueError as error:
+        assert 'recover' in str(error) and 'actor' in str(error), str(error)
+    else:
+        raise AssertionError('Unresolved actor accepted')
+''')
+
+    def test_glm_scalar_predicate_arguments_are_rejected(self):
+        self.world('''
+try:
+    State({'inventory': character.inventory})['inventory.check_has_item_by_type("food")']
+except ValueError as error:
+    assert 'literal list or tuple' in str(error)
+else:
+    raise AssertionError('Scalar call arguments accepted')
+''')
+
+    def test_glm_utility_fallback_identity_is_explicit(self):
+        for first in ('tiny_characters', 'tiny_utility_functions'):
+            self.run_python('import ' + first + '''
+import tiny_characters as characters
+import tiny_utility_functions as utility
+assert utility.Goal is not characters.Goal
+assert not hasattr(utility.Goal, 'iter_completion_conditions')
+legacy = utility.Goal(name='legacy', target_effects={'energy': 30}, priority=.5)
+assert legacy.priority == .5 and legacy.target_effects == {'energy': 30}
+assert hasattr(characters.Goal, 'iter_completion_conditions')
 ''')

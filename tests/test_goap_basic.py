@@ -38,7 +38,7 @@ def test_basic_implementations():
             "def find_alternative_action(self, failed_action):",
             "def calculate_utility(self, action, character):",
             "def evaluate_utility(self, plan, character):",
-            "def evaluate_feasibility_of_goal(self, goal, state):",
+            "def evaluate_feasibility_of_goal(",
         ]
 
         for impl in implementations:
@@ -94,7 +94,7 @@ def test_basic_implementations():
                 calc_util_start = i
             elif "def evaluate_utility(self, plan, character):" in line:
                 eval_util_start = i
-            elif "def evaluate_feasibility_of_goal(self, goal, state):" in line:
+            elif "def evaluate_feasibility_of_goal(" in line:
                 eval_feas_start = i
 
         method_starts = [
