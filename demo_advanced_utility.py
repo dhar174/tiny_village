@@ -10,7 +10,8 @@ from tiny_utility_functions import (
     get_utility_system_info,
     safe_calculate_action_utility,
 )
-from test_tiny_utility_functions import MockAction, MockGoal
+from tests.test_tiny_utility_functions import MockAction
+from tiny_utility_functions import UtilityGoal
 
 
 def main():
@@ -51,7 +52,7 @@ def main():
     )
 
     # Goal
-    goal = MockGoal(
+    goal = UtilityGoal(
         "GetHealthy",
         target_effects={"hunger": -0.5, "energy": 0.6, "social_needs": -0.3},
         priority=0.9,

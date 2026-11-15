@@ -17,10 +17,11 @@ try:
 
     print("✓ Successfully imported utility functions")
 
-    # Test MockAction and MockGoal from test file
-    from test_tiny_utility_functions import MockAction, MockGoal
+    # Test the Action fixture and production UtilityGoal
+    from tests.test_tiny_utility_functions import MockAction
+    from tiny_utility_functions import UtilityGoal
 
-    print("✓ Successfully imported mock classes")
+    print("✓ Successfully imported Action fixture and production UtilityGoal")
 
     # Test basic functionality
     print("\n=== Testing Basic Functionality ===")
@@ -37,7 +38,7 @@ try:
     print("✓ Basic utility calculation works correctly")
 
     # Test 2: Utility with goal
-    goal = MockGoal("SatisfyHunger", target_effects={"hunger": -0.8}, priority=0.8)
+    goal = UtilityGoal("SatisfyHunger", target_effects={"hunger": -0.8}, priority=0.8)
     utility_with_goal = calculate_action_utility(char_state, action, current_goal=goal)
     expected_with_goal = 12.6 + (0.8 * 25.0) - 1.0  # 12.6 + 20.0 - 1.0 = 31.6
     print(

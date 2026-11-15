@@ -565,7 +565,7 @@ class TestTinyUtilityFunctions(unittest.TestCase):
         self.assertTrue(action.preconditions_met())
 
     def test_enhanced_mock_goal_with_urgency(self):
-        """Test enhanced MockGoal with urgency attribute."""
+        """Test production UtilityGoal with urgency metadata."""
         # Test goal with urgency
         urgent_goal = Goal("UrgentTask", target_effects={"energy": 0.5}, 
                           priority=0.7, urgency=0.9)
@@ -614,7 +614,7 @@ class TestTinyUtilityFunctions(unittest.TestCase):
         self.assertGreater(utility_with_urgent, utility_with_normal)
 
     def test_realistic_action_scenario_with_enhanced_mocks(self):
-        """Test a realistic scenario using enhanced MockAction and MockGoal."""
+        """Test a realistic scenario using MockAction and production UtilityGoal."""
         # Character in critical state
         char_state = {"hunger": 0.9, "energy": 0.1, "health": 0.7, "money": 5}
         

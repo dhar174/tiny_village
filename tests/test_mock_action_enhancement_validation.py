@@ -2,14 +2,15 @@ import unittest
 
 from tiny_utility_functions import (
     UtilityEvaluator,
+    UtilityGoal,
     safe_calculate_action_utility,
     validate_action,
 )
 
 try:
-    from test_tiny_utility_functions import MockAction, MockGoal
+    from test_tiny_utility_functions import MockAction
 except ImportError:
-    from tests.test_tiny_utility_functions import MockAction, MockGoal
+    from tests.test_tiny_utility_functions import MockAction
 
 
 class OldStyleMockAction:
@@ -70,7 +71,7 @@ class TestMockActionEnhancementValidation(unittest.TestCase):
         evaluator = UtilityEvaluator()
         char_state = {"hunger": 0.9, "energy": 0.5, "health": 0.8}
 
-        urgent_goal = MockGoal(
+        urgent_goal = UtilityGoal(
             "UrgentSurvival",
             target_effects={"hunger": -0.8},
             priority=1.0,
@@ -83,7 +84,7 @@ class TestMockActionEnhancementValidation(unittest.TestCase):
             priority=0.9,
             related_goal=urgent_goal,
         )
-        normal_goal = MockGoal(
+        normal_goal = UtilityGoal(
             "NormalEat",
             target_effects={"hunger": -0.8},
             priority=1.0,

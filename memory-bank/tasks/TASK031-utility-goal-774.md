@@ -12,13 +12,23 @@ Worktree /workspace/scratch/issue774-utility; branchcodex/774-utility-goal; base
   0errors. The full native-Goal bridge already passed and characterizes preserved
   behavior; the other3 methods expose missing UtilityGoal.
 - Implemented explicit UtilityGoal plus Goal alias, metadata defaults and no Character
-  import guessing. Full Goal class untouched. Removed unused Goal doubles; fixture
+  import guessing. Full Goal class untouched. Removed fixture Goal doubles; fixture
   action IDs now distinguish None from explicit falsy values. Registered both modules.
 -26/26 tests PASS; new4+existing13 full-Goal methods PASS17/17. Reviewed exactdiff.
 - Ruling: use this canonical Memory Bank task as the execution ledger; cloud skill
   scripts have no installed local path. No design deviation from approved plan.
 
+- Canonical source a99310f passed core159+3 CLI probes/dev20/visual69, no failures,
+  errors or skips. Supplementary planner/strategy selection passed11 tests.
+- Independent read-only source review found one regression:3 consumers imported the
+  removed MockGoal. Reproduced the validation-suite ImportError, then migrated those
+  consumers to production UtilityGoal and registered its7 validation methods in core.
+  Focused26+4+7 methods PASS37/37; existing simple utility script and advanced demo
+  both exit0. No other blocking finding was reported. These consumer migrations are
+  required compatibility repairs within the approved Goal-fixture reconciliation.
+- Draft PR #822: https://github.com/dhar174/tiny_village/pull/822 (attached).
+
 ## Remaining
-Canonical profiles, independent review, hosted checks and focused PR. Leave774 open
+Final canonical profiles after review fix, durable receipt and exact-head hosted checks. Leave774 open
 until repair merge and main verification. #218/#741/#821 remain separate; no broader
 readiness or full live-loop Goal migration claim. No mem0ry4ai tools available.
