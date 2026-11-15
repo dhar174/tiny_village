@@ -1,7 +1,6 @@
 """Real-Action utility contracts from PR #417, including inherited golden coverage.
 
-Goal here is the utility module's production export, including its lightweight
-fallback. These cases do not claim the full tiny_characters.Goal contract.
+Goal here is the explicit UtilityGoal metadata export (Goal compatibility alias). These cases do not claim the full tiny_characters.Goal contract.
 """
 
 from tests.test_graph_initialization import FreshPythonTestCase

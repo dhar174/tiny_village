@@ -235,12 +235,12 @@ else:
     raise AssertionError('Scalar call arguments accepted')
 ''')
 
-    def test_glm_utility_fallback_identity_is_explicit(self):
+    def test_utility_metadata_identity_is_explicit(self):
         for first in ('tiny_characters', 'tiny_utility_functions'):
             self.run_python('import ' + first + '''
 import tiny_characters as characters
 import tiny_utility_functions as utility
-assert utility.Goal is not characters.Goal
+assert utility.Goal is utility.UtilityGoal and utility.Goal is not characters.Goal
 assert not hasattr(utility.Goal, 'iter_completion_conditions')
 legacy = utility.Goal(name='legacy', target_effects={'energy': 30}, priority=.5)
 assert legacy.priority == .5 and legacy.target_effects == {'energy': 30}

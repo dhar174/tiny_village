@@ -5,93 +5,9 @@ from tiny_utility_functions import (
     calculate_plan_utility,
 )
 
-try:
-    from tiny_characters import Goal as RealGoal
-except Exception:
-    RealGoal = None
-
-
-# We need mock classes for testing since the real classes have complex dependencies
-class SimplifiedRealGoal:
-    """
-    Simplified Goal implementation that keeps the interface expected by utility tests.
-    """
-
-    def __init__(
-        self,
-        name,
-        target_effects=None,
-        priority=0.5,
-        urgency=None,
-        deadline=None,
-        description=None,
-        **kwargs,
-    ):
-        self.name = name
-        self.target_effects = target_effects if target_effects else {}
-        self.priority = priority
-        self.score = priority  # alias for compatibility
-
-        self.urgency = urgency if urgency is not None else priority
-        self.deadline = deadline
-        self.description = description or f"Goal: {name}"
-        self.completed = kwargs.get("completed", False)
-        self.attributes = kwargs.get("attributes", {})
-        self.character = kwargs.get("character")
-        self.target = kwargs.get("target")
-        self.completion_conditions = kwargs.get("completion_conditions", {})
-        self.criteria = kwargs.get("criteria", [])
-        self.required_items = kwargs.get("required_items", [])
-        self.goal_type = kwargs.get("goal_type", "basic")
-
-    def check_completion(self, state=None):
-        return self.completed
-
-    def get_name(self):
-        return self.name
-
-    def get_score(self):
-        return self.score
-
-    def to_dict(self):
-        return {
-            "name": self.name,
-            "description": self.description,
-            "score": self.score,
-            "target_effects": self.target_effects,
-            "priority": self.priority,
-        }
-
-
-class MockGoal(SimplifiedRealGoal):
-    """
-    Enhanced mock goal used by tests that need a lightweight but realistic goal object.
-    """
-
-    def __init__(
-        self,
-        name,
-        target_effects=None,
-        priority=0.5,
-        urgency=None,
-        deadline=None,
-        description=None,
-        **kwargs,
-    ):
-        kwargs.setdefault("goal_type", "test")
-        super().__init__(
-            name=name,
-            target_effects=target_effects,
-            priority=priority,
-            urgency=urgency,
-            deadline=deadline,
-            description=description or f"Test goal: {name}",
-            **kwargs,
-        )
-
-
-# Alias for test compatibility
-Goal = RealGoal if RealGoal is not None else SimplifiedRealGoal
+# Explicit production metadata; full Character Goal coverage lives in
+# test_utility_goal_contract and test_production_goal_contract.
+from tiny_utility_functions import UtilityGoal as Goal
 
 # We need a mock or placeholder for the Action class.
 # If actions.py is too complex to import, we define a simple one here for testing utility.
@@ -141,7 +57,7 @@ class MockAction:
             self.DEFAULT_PRIORITY if priority is None else priority
         )
         self.related_goal = related_goal
-        self.action_id = action_id if action_id else id(self)
+        self.action_id = action_id if action_id is not None else id(self)
         self.default_target_is_initiator = default_target_is_initiator
 
         if default_target_is_initiator and target is None and initiator is not None:
@@ -767,6 +683,10 @@ class TestTinyUtilityFunctions(unittest.TestCase):
 
         self.assertEqual(zero_id_action.action_id, 0)
         self.assertEqual(empty_id_action.action_id, "")
+        false_id_action = MockAction("FalseIdAction", cost=0.1, action_id=False)
+        self.assertIs(false_id_action.action_id, False)
+        generated = MockAction("GeneratedIdAction", cost=0.1, action_id=None)
+        self.assertEqual(generated.action_id, id(generated))
 
     def test_action_priority_in_goal_contexts(self):
         """Test how action priority interacts with goal-based utility."""

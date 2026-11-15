@@ -1,6 +1,7 @@
 ## Tasks Index
 
 ## In Progress
+- [TASK031](TASK031-utility-goal-774.md) Explicit UtilityGoal and #774 test debt — implementation and focused tests pass; profiles/review pending.
 - [TASK030](TASK030-production-goal-802.md) Production Goal contract (#802) — PR #820; GLM review fixes, 13 acceptance checks; #821 retains pre-existing findings; local core129+3/dev20/visual69 pass; independent review/hosted verification pending.
 - [TASK029](TASK029-issue-740.md) Runtime units (#740) - #818 merged; closeout investigation repairs atb29552c, core116+3 probes/dev20/visual69 pass; issue remains OPEN pending repair merge and final verification (Updated: 2026-11-14)
 - [TASK028](TASK028-action-execution-220.md) Graph-backed action execution (#220) - Draft PR #817, Zcode review follow-up (Updated: 2026-11-13)
