@@ -20,7 +20,8 @@ Keep exact Condition comparisons and #740 units.
 - [x] Delegate production completion in planner, Plan evaluation and graph achievement.
 - [x] Add bounded production feasibility (optional actions keyword): an empty successful
   plan is feasible; None is not. Preserve 1000 iterations / ten-action search bounds.
-- [ ] Run core/dev/visual canonical checks and independent review; fix genuine defects.
+- [x] Independent review completed; both findings have red→green regressions.
+- [ ] Complete final canonical core verification and hosted checks.
 - [ ] Publish a focused PR and evidence signed Codex GPT-6.1 Sol.
 
 ## Verification and delivery

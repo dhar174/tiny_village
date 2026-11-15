@@ -1,0 +1,86 @@
+{
+  "baseline_revision": "a3e39f3edd14c96cb43295aa4599e744623adc14",
+  "source_revision": "2eb359854db62dbed88cab74bd2886ad59f8fa8c",
+  "baseline_cases": {
+    "tests_run": 7,
+    "failures": 7,
+    "errors": 0
+  },
+  "integration_regressions": {
+    "non_character_graph_authority": "FAIL before; PASS after",
+    "malformed_literal_context": "FAIL before; PASS after"
+  },
+  "profiles": {
+    "core": {
+      "revision": "2eb359854db62dbed88cab74bd2886ad59f8fa8c",
+      "status": "PASS",
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+      "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+      "machine": "x86_64",
+      "locks": {
+        "requirements/locks/core-py312-linux-x86_64.txt": "2a037e6923b1f4e0f19d14109adc4217a5e4b7e0583a780639dd476a1451c908"
+      },
+      "counts": {
+        "tests_run": 125,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 3,
+      "command": "python -B scripts/run_ci_checks.py --profile core --artifacts /workspace/scratch/802-reviewed-core"
+    },
+    "dev": {
+      "revision": "7b22725b54620e5162fe0242095e53c9718a556a",
+      "status": "PASS",
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+      "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+      "machine": "x86_64",
+      "locks": {
+        "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5"
+      },
+      "counts": {
+        "tests_run": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 0,
+      "command": "python -B scripts/run_ci_checks.py --profile dev --artifacts /workspace/scratch/802-release-dev"
+    },
+    "visual": {
+      "revision": "7b22725b54620e5162fe0242095e53c9718a556a",
+      "status": "PASS",
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+      "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+      "machine": "x86_64",
+      "locks": {
+        "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5",
+        "requirements/locks/visual-py312-linux-x86_64.txt": "a6db9f00d612e0b715961e9f1565c90066eb0872f165ad3984d3fcb414eaed73"
+      },
+      "counts": {
+        "tests_run": 69,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 0,
+      "command": "python -B scripts/run_ci_checks.py --profile visual --artifacts /workspace/scratch/802-release-visual"
+    }
+  },
+  "source_sha256": {
+    "actions.py": "e58a45715a8fed8fc72c842b9841d2ccf1076bb781d6efa17878151104fb7040",
+    "scripts/run_ci_checks.py": "ef101b083bd610336b83c58a7f4c3ec81b53a723bddbb726d4e7e545c1a27bda",
+    "tests/test_production_goal_contract.py": "077bd7ee1a08d2e8123b2ab39b740ae8adedc0f6f67a1fc09e9ad8d2779a299d",
+    "tiny_characters.py": "053c5b6e8f01be8a0d99ad46c08de7378c8c7353ec6c68ce00263ac3386a1f17",
+    "tiny_goap_system.py": "e29d4e73d79eec5204a6c04e7bd37d5b06f430ec41b495a050bd1917e44aa6cd",
+    "tiny_graph_manager.py": "47a6640d7d83c0f5cb1c6da76aeb5195f65387bfe66ee0d233104052ad7343ed",
+    "tiny_items.py": "72e45de10ceeec1fadb1f157dd63f54bc86edfbe059bab808276f4782d7ea729"
+  },
+  "note": "Dev/visual ran at7b22725 before diagnostic-only malformed-literal correction; core ran at2eb3598 after it. Hosted CI must verify all profiles at final PR head."
+}
