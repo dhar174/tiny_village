@@ -53,7 +53,7 @@ assert goal.check_completion() is plan.evaluate() is graph.is_goal_achieved(char
         self.world('''
 goal = make_goal()
 state = State({'energy': 20})
-cheap = Action('Cheap', [], [{'attribute': 'energy', 'change_value': 10}], cost=1, initiator=character, graph_manager=graph)
+cheap = Action('Cheap', [], [{'targets': ['initiator'], 'attribute': 'energy', 'change_value': 10}], cost=1, initiator=character, graph_manager=graph)
 expensive = Action('Expensive', [], cheap.effects, cost=5, initiator=character, graph_manager=graph)
 blocked = Action('Blocked', [Condition('unavailable', 'energy', character, 21)], cheap.effects, initiator=character, graph_manager=graph)
 for actions in ([expensive, cheap], [cheap, expensive]):
@@ -78,6 +78,12 @@ assert planner.evaluate_feasibility_of_goal(goal, state, actions=[half]) is Fals
 planner.MAX_PLAN_LENGTH = 2
 assert planner.evaluate_feasibility_of_goal(goal, state, actions=[half]) is True
 assert planner.evaluate_feasibility_of_goal(goal, state) == (planner.plan_actions(character, goal, state) is not None)
+selected = planner.plan_actions(character, goal, state, [expensive, cheap])
+assert selected == [cheap]
+for action in selected:
+    assert action.execute(character=character)
+assert character.energy == graph.G.nodes[character]['energy'] == 30
+assert goal.check_completion() is True
 ''')
 
     def test_invalid_contracts_propagate(self):
