@@ -4,11 +4,26 @@
   "baseline_cases": {
     "tests_run": 7,
     "failures": 7,
-    "errors": 0
+    "errors": 0,
+    "case_ids": [
+      "test_container_and_repeated_evaluation",
+      "test_import_orders_use_full_goal",
+      "test_invalid_contracts_propagate",
+      "test_inventory_literals",
+      "test_live_state_plan_and_graph_share_authority",
+      "test_partner_conditions_do_not_use_actor_snapshot",
+      "test_planner_outcomes_feasibility_and_cost"
+    ]
   },
   "integration_regressions": {
-    "non_character_graph_authority": "FAIL before; PASS after",
-    "malformed_literal_context": "FAIL before; PASS after"
+    "non_character_graph_authority": {
+      "method": "test_registered_location_uses_its_graph_state",
+      "result": "FAIL before; PASS after"
+    },
+    "malformed_literal_context": {
+      "method": "test_malformed_predicates_have_goal_and_condition_context",
+      "result": "FAIL before; PASS after"
+    }
   },
   "profiles": {
     "core": {
@@ -82,7 +97,7 @@
     "tiny_graph_manager.py": "47a6640d7d83c0f5cb1c6da76aeb5195f65387bfe66ee0d233104052ad7343ed",
     "tiny_items.py": "72e45de10ceeec1fadb1f157dd63f54bc86edfbe059bab808276f4782d7ea729"
   },
-  "note": "Dev/visual ran at7b22725 before diagnostic-only malformed-literal correction; core ran at2eb3598 after it. Hosted CI must verify all profiles at final PR head.",
+  "note": "Historical layering: parser syntax expansion landed in4a8661e and was already present in dev/visual-tested7b22725. Only later exception-context wrapping and its regression test landed in2eb3598. Subsequent GLM verification is retained separately.",
   "acceptance": {
     "revision": "04b597697ff2bf5062ece45a6e4c5800f94389d8",
     "tests_run": 9,
@@ -91,5 +106,10 @@
     "skipped": 0,
     "command": "python -B -m unittest tests.test_production_goal_contract",
     "note": "Also executes the actual planner-selected action with supported initiator target descriptors; production runtime is unchanged since2eb3598."
-  }
+  },
+  "post_baseline_methods": [
+    "test_registered_location_uses_its_graph_state",
+    "test_malformed_predicates_have_goal_and_condition_context"
+  ],
+  "nine_case_base_rerun": "issue-802-nine-case-baseline.json"
 }

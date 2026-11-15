@@ -21,8 +21,10 @@ use their own registered node, including non-character entities. Standalone enti
 attributes remain the fallback when not registered. Existing field/entity aliases
 are resolved; exact Condition comparisons apply, without utility scaling or 0.1 slack.
 
-Missing attributes, malformed literals and unresolved entities raise errors with
-Goal/Condition context. Malformed containers raise TypeError. Errors propagate through
+Missing attributes, malformed literals and unresolved entities raise ValueError with
+Goal/Condition context. Invalid state argument types raise TypeError with Goal/state
+context; malformed containers, including post-construction corruption, raise TypeError
+with Goal/bucket/index context. There is no Condition name for a non-Condition entry. Errors propagate through
 production planner and graph checks rather than being counted as ordinary False/None.
 Legacy lightweight-goal branches keep their prior behavior; they do not establish
 production acceptance. No goal buckets, snapshots, Characters or graph values change
@@ -38,7 +40,7 @@ not global impossibility. No action is executed by feasibility.
 
 ## Real-object acceptance
 
-Nine maintained methods in `tests/test_production_goal_contract.py` enter core CI.
+Thirteen maintained methods in `tests/test_production_goal_contract.py` enter core CI.
 They construct complete real Characters and the actual MultiDiGraph-backed world.
 
 | Scenario | Asserted outcome |
@@ -76,9 +78,9 @@ role parsing error logs also appear in that old reproduction, as before.
 
 ## Verification and closure
 
-Local core at `2eb3598`: **125 tests + 3 CLI probes**, zero failures/errors/skips.
+Historical local core at `2eb3598`: **125 tests + 3 CLI probes**, zero failures/errors/skips.
 Dev at `7b22725`: **20 tests**; visual at `7b22725`: **69 tests**, zero failures/errors/skips.
-Those dev/visual runs precede the diagnostic-only malformed-literal correction;
+Those dev/visual runs precede the exception-context wrapping;
 core and the nine final acceptance cases cover that correction. A later test-only
 strengthening executes the actual planner-selected recovery action; its nine-case
 run also passes, with no runtime changes. The
@@ -98,3 +100,46 @@ then update both original criteria and read the issue back. #218 broader integra
 #816 other writers, specialized graph path/cost evaluators and later catalog/economic
 work remain separate. Passing these cases does not establish global plan optimality,
 complete motive catalogs, gameplay episodes, live AI inference or platform readiness.
+
+## GLM-5.3-Flash review follow-up (2026-11-15)
+
+- P3-1/P3-6: inventory argument validation now names the Goal/Condition. State and
+  malformed-container TypeErrors keep their type and identify the Goal/state or
+  Goal/bucket/index. Tests catch exact exceptions rather than TypeError-or-ValueError.
+- P3-2: parser syntax expansion is a product change in4a8661e. It was already present
+  in dev/visual-tested7b22725. `git diff 7b22725..2eb3598` changes only tiny_characters
+  error wrapping and its tests, not actions.py parsing. The earlier “diagnostic-only”
+  wording referred to that later wrapping; the chronology is now explicit.
+- P3-3: added assertions for graph actor mismatch, scalar predicate arguments, bad
+  state types and corrupt buckets. Registered actor names now resolve for completion,
+  bounded feasibility and graph achievement without changing goal.character; None or
+  unregistered actors raise contextual ValueError before search. Fresh runtime probes
+  and a maintained two-import-order test confirm utility.Goal is the existing lightweight
+  fallback, distinct from the full Character Goal; this PR does not migrate that API.
+- P3-4: dormant tests/test_goap_basic.py recognizes the feasibility method independent
+  of optional keyword parameters. Its legacy checker was explicitly run with an assertion
+  on its boolean result. This is static smoke evidence, not real-world acceptance.
+- P3-5: original seven-case receipt now names all methods, names both later integration
+  methods, and links a fresh exact-ee18daa nine-case run against basea3e39f3. That run
+  observed nine failures, zero errors: no inference from static analysis.
+- P3-7: retained the existing order-independent cost comparison and actual selected-action
+  execution; no defect or algorithm change was warranted.
+
+The broader pre-existing findings are tracked concretely in #821. Real domain probes
+observed TypeError in all five sibling inventory categories, False equality for otherwise
+identical distinct Goals, and the unseeded has_job predicate error. The actual inventory
+attribute predicate additionally raises AttributeError because FoodItem has no
+get_attribute_value; its first-item early return is also statically confirmed. An AST
+check confirms Cook's duplicate False keys. Cross-type naming, Plan dunder evaluation,
+StrategyManager error coalescing, custom-predicate exception policy and full Goal/live-loop
+integration remain separate policies, not silently changed in this repair. These are
+retained failures/risks, not passing product acceptance.
+
+
+GLM follow-up verification at `6a7772d`: core **129 tests + 3 CLI probes**,
+dev **20**, visual **69**, zero failures/errors/skips. All three profile processes
+exited0 and their actual summaries were inspected. Thirteen focused methods also
+pass; the legacy static smoke checker returns True (with an existing advisory about
+an unrelated pattern). [GLM profile receipts](evidence/issue-802-glm-results.json)
+and [named nine-case baseline](evidence/issue-802-nine-case-baseline.json) retain the
+exact commands/revisions/results. Hosted checks for the updated PR remain pending.
