@@ -1096,7 +1096,7 @@ class ItemInventory:
         if item_type == "food":
             return bool(
                 True
-                if self.ops[oper](sum(self.count_food_items_total()), amount)
+                if self.ops[oper](self.count_food_items_total(), amount)
                 else False
             )
         elif item_type == "clothing":

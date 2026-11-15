@@ -294,7 +294,7 @@ class Goal:
         target_effects,# list of desired results (as dicts of dicts representing State attributes) when the goal is completed
     ):
         self.name = name
-        self.completion_conditions = completion_conditions
+        self.completion_conditions = self._normalize_completion_conditions(completion_conditions)
         self.description = description
         self.score = score
         self.character = character
@@ -316,76 +316,26 @@ class Goal:
         # self.desired_results = desired_results
 
     def extract_required_items(self):
-        ##TODO: We will need multiple paths to adding items to the required items list, including with the agents decisions and with the completion conditions. Some of this will require the agent to remember which items fulfill goals
-        required_items = (
-            []
-        )  # list of tuples, each tuple is (dict of item requirements, quantity needed).
-        # The dict of item requirements is composed of various keys like item_type, value, usability, sentimental_value, trade_value, scarcity, coordinates_location, name,
+        """Retain criterion requirements and extract literal inventory predicates."""
+        import ast
+        required_items = []
         for criterion in self.criteria:
-            if "node_attributes" in criterion:
-                if (
-                    "item_type" in criterion["node_attributes"]
-                    or criterion["node_attributes"]["type"] == "item"
-                ):
-                    required_items.append(criterion["node_attributes"])
-        # logging.debug(f"self.completion_conditions: {self.completion_conditions}")
-        for condition_list in self.completion_conditions.values():
-            for condition in condition_list:
-                # logging.debug(
-                #     f"Condition: {condition.attribute} of type {type(condition.attribute)}"
-                # )
-                # Skip processing if condition.attribute is not a string (e.g., during testing with Mock objects)
-                if not isinstance(condition.attribute, str):
+            attributes = criterion.get("node_attributes", {})
+            if "item_type" in attributes or attributes.get("type") == "item":
+                required_items.append(attributes)
+        for condition in self.iter_completion_conditions():
+            for field in ("type", "name", "value", "usability", "sentimental_value", "trade_value"):
+                prefix = f"inventory.check_has_item_by_{field}("
+                if not isinstance(condition.attribute, str) or not condition.attribute.startswith(prefix):
                     continue
-
-                if "inventory.check_has_item_by_type" in condition.attribute:
-                    args = re.search(r"\[.*\]", condition.attribute).group().strip("[]")
-                    args = [arg.strip("'") for arg in args.split(",")]
-                    if args[0] not in [item["item_type"] for item in required_items]:
-                        required_items.append(
-                            ({"item_type": args[0]}, condition.satisfy_value)
-                        )
-                elif "inventory.check_has_item_by_name" in condition.attribute:
-                    args = re.search(r"\[.*\]", condition.attribute).group().strip("[]")
-                    args = [arg.strip("'") for arg in args.split(",")]
-                    if args[0] not in [item["name"] for item in required_items]:
-                        required_items.append(
-                            ({"name": args[0]}, condition.satisfy_value)
-                        )
-                elif "inventory.check_has_item_by_value" in condition.attribute:
-                    args = re.search(r"\[.*\]", condition.attribute).group().strip("[]")
-                    args = [arg.strip("'") for arg in args.split(",")]
-                    if args[0] not in [item["value"] for item in required_items]:
-                        required_items.append(
-                            ({"value": args[0]}, condition.satisfy_value)
-                        )
-                elif "inventory.check_has_item_by_usability" in condition.attribute:
-                    args = re.search(r"\[.*\]", condition.attribute).group().strip("[]")
-                    args = [arg.strip("'") for arg in args.split(",")]
-                    if args[0] not in [item["usability"] for item in required_items]:
-                        required_items.append(
-                            ({"usability": args[0]}, condition.satisfy_value)
-                        )
-                elif (
-                    "inventory.check_has_item_by_sentimental_value"
-                    in condition.attribute
-                ):
-                    args = re.search(r"\[.*\]", condition.attribute).group().strip("[]")
-                    args = [arg.strip("'") for arg in args.split(",")]
-                    if args[0] not in [
-                        item["sentimental_value"] for item in required_items
-                    ]:
-                        required_items.append(
-                            ({"sentimental_value": args[0]}, condition.satisfy_value)
-                        )
-                elif "inventory.check_has_item_by_trade_value" in condition.attribute:
-                    args = re.search(r"\[.*\]", condition.attribute).group().strip("[]")
-                    args = [arg.strip("'") for arg in args.split(",")]
-                    if args[0] not in [item["trade_value"] for item in required_items]:
-                        required_items.append(
-                            ({"trade_value": args[0]}, condition.satisfy_value)
-                        )
-
+                arguments = ast.literal_eval(condition.attribute[len(prefix):-1])
+                if not isinstance(arguments, (list, tuple)) or not arguments:
+                    raise ValueError("Inventory condition requires literal arguments")
+                key = "item_type" if field == "type" else field
+                requirement = ({key: arguments[0]}, condition.satisfy_value)
+                existing = [item[0] if isinstance(item, tuple) else item for item in required_items]
+                if requirement[0] not in existing:
+                    required_items.append(requirement)
         return required_items
 
     def __repr__(self):
@@ -533,13 +483,61 @@ class Goal:
             "goal_type": self.goal_type,
         }
 
-    def check_completion(self):
-        return all(
-            [
-                condition.check_condition()
-                for condition in self.completion_conditions.values()
-            ]
-        )
+    @staticmethod
+    def _normalize_completion_conditions(conditions):
+        if not isinstance(conditions, dict):
+            raise TypeError("Goal completion_conditions must be a boolean-keyed dictionary")
+        result = {}
+        for status, values in conditions.items():
+            if type(status) is not bool:
+                raise TypeError("Goal condition bucket keys must be bool")
+            if isinstance(values, Condition):
+                values = [values]
+            if not isinstance(values, (list, tuple)) or any(
+                not isinstance(value, Condition) for value in values
+            ):
+                raise TypeError("Goal condition buckets must contain Conditions")
+            result[status] = list(values)
+        return result
+
+    def iter_completion_conditions(self):
+        """Iterate all requirements; bucket labels are legacy status metadata."""
+        conditions = self._normalize_completion_conditions(self.completion_conditions)
+        return iter(condition for values in conditions.values() for condition in values)
+
+    def check_completion(self, state=None):
+        """Evaluate native conditions without changing the goal or world.
+
+        A supplied State/mapping models this goal's actor only. Other entities
+        retain their own graph-first state; target_effects do not override these
+        requirements. Both legacy buckets are always reevaluated.
+        """
+        from collections.abc import Mapping
+        from actions import _canonical_attribute, _resolve_action_entity
+        from tiny_utility_functions import native_character_state
+
+        if state is not None:
+            if not isinstance(state, (State, Mapping)):
+                raise TypeError("Goal completion state must be a State or mapping")
+            state = State(native_character_state(dict(state) if isinstance(state, Mapping) else state))
+        results = []
+        for condition in self.iter_completion_conditions():
+            try:
+                target = condition.target
+                if target is None or (isinstance(target, str) and target == 'initiator'):
+                    target = self.character
+                elif isinstance(target, str) and target == 'target':
+                    target = self.target
+                target, _ = _resolve_action_entity(self.environment, target)
+                current = state if state is not None and target is self.character else State(
+                    native_character_state(target, self.environment))
+                results.append(bool(condition.check_condition(
+                    current, attribute=_canonical_attribute(condition.attribute))))
+            except (AttributeError, KeyError, TypeError, ValueError) as error:
+                raise ValueError(
+                    f"Goal {self.name!r}, condition {condition.name!r}: {error}"
+                ) from error
+        return all(results)
 
     def evaluate_utility_function(self):
         return self.evaluate_utility_function(

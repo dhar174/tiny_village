@@ -4131,6 +4131,12 @@ class GraphManager(metaclass=_GraphManagerSingleton):
         Returns:
             bool: True if goal is achieved, False otherwise
         """
+        if callable(getattr(goal, "iter_completion_conditions", None)):
+            from actions import State
+            from tiny_utility_functions import native_character_state
+            if goal.character is not character:
+                raise ValueError("Goal actor differs from achievement actor")
+            return goal.check_completion(State(native_character_state(character, self)))
         try:
             Character = importlib.import_module("tiny_characters").Character
             Goal = importlib.import_module("tiny_characters").Goal

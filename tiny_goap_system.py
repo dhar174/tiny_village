@@ -703,6 +703,8 @@ class GOAPPlanner:
 
     def _goal_satisfied(self, goal, state):
         """Check if the goal is satisfied in the given state."""
+        if callable(getattr(goal, "iter_completion_conditions", None)):
+            return goal.check_completion(state)
         try:
             if hasattr(goal, 'check_completion'):
                 return goal.check_completion(state)
@@ -1361,8 +1363,17 @@ class GOAPPlanner:
             print(f"Error evaluating plan utility: {e}")
             return plan[0] if plan else None
 
-    def evaluate_feasibility_of_goal(self, goal, state):
-        """Evaluate if a goal is feasible given the current state"""
+    def evaluate_feasibility_of_goal(self, goal, state, *, actions=None):
+        """Production Goals are feasible when reachable within existing search bounds.
+
+        False means no plan was found within 1000 iterations / MAX_PLAN_LENGTH,
+        not a proof of global impossibility. Legacy goal formats retain their
+        existing predicate behavior. This operation never executes actions.
+        """
+        if callable(getattr(goal, "iter_completion_conditions", None)):
+            if goal.check_completion(state):
+                return True
+            return self.plan_actions(goal.character, goal, state, actions) is not None
         if not goal or not state:
             return False
 
