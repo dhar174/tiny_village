@@ -156,3 +156,15 @@ goal = make_goal({False: [Condition('open room', 'open', place, True, '==')]})
 assert goal.check_completion({'open': False}) is True
 assert place.open is False
 ''')
+
+    def test_malformed_predicates_have_goal_and_condition_context(self):
+        self.world('''
+for attribute in ('inventory.check_has_item_by_type([)', 'inventory.unknown([)'):
+    try:
+        goal = make_goal({False: [Condition('bad predicate', attribute, character, True, '==')]})
+        goal.check_completion()
+    except ValueError as error:
+        assert 'recover' in str(error) and 'bad predicate' in str(error), str(error)
+    else:
+        raise AssertionError('Malformed predicate did not raise contextual ValueError')
+''')

@@ -328,7 +328,12 @@ class Goal:
                 prefix = f"inventory.check_has_item_by_{field}("
                 if not isinstance(condition.attribute, str) or not condition.attribute.startswith(prefix):
                     continue
-                arguments = ast.literal_eval(condition.attribute[len(prefix):-1])
+                try:
+                    arguments = ast.literal_eval(condition.attribute[len(prefix):-1])
+                except (SyntaxError, ValueError) as error:
+                    raise ValueError(
+                        f"Goal {self.name!r}, condition {condition.name!r}: invalid literal arguments"
+                    ) from error
                 if not isinstance(arguments, (list, tuple)) or not arguments:
                     raise ValueError("Inventory condition requires literal arguments")
                 key = "item_type" if field == "type" else field
@@ -538,7 +543,7 @@ class Goal:
                     current = State(native_character_state(snapshot))
                 results.append(bool(condition.check_condition(
                     current, attribute=_canonical_attribute(condition.attribute))))
-            except (AttributeError, KeyError, TypeError, ValueError) as error:
+            except (AttributeError, KeyError, TypeError, ValueError, SyntaxError) as error:
                 raise ValueError(
                     f"Goal {self.name!r}, condition {condition.name!r}: {error}"
                 ) from error
