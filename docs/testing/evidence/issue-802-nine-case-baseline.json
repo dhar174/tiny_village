@@ -1,0 +1,28 @@
+{
+  "revision": "a3e39f3edd14c96cb43295aa4599e744623adc14",
+  "test_source_revision": "ee18daa710dd02fc2a4699d2fd1ea385f4940bc3",
+  "case_ids": [
+    "test_container_and_repeated_evaluation",
+    "test_import_orders_use_full_goal",
+    "test_invalid_contracts_propagate",
+    "test_inventory_literals",
+    "test_live_state_plan_and_graph_share_authority",
+    "test_malformed_predicates_have_goal_and_condition_context",
+    "test_partner_conditions_do_not_use_actor_snapshot",
+    "test_planner_outcomes_feasibility_and_cost",
+    "test_registered_location_uses_its_graph_state"
+  ],
+  "tests_run": 9,
+  "failures": [
+    "test_container_and_repeated_evaluation",
+    "test_import_orders_use_full_goal",
+    "test_invalid_contracts_propagate",
+    "test_inventory_literals",
+    "test_live_state_plan_and_graph_share_authority",
+    "test_malformed_predicates_have_goal_and_condition_context",
+    "test_partner_conditions_do_not_use_actor_snapshot",
+    "test_planner_outcomes_feasibility_and_cost",
+    "test_registered_location_uses_its_graph_state"
+  ],
+  "errors": []
+}

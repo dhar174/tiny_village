@@ -169,3 +169,5 @@ When adding new documentation:
 - **Historical/completed work** → `/archived/`
 - **Deep architecture** → `/design_docs/`
 - **Analysis reports** → `/critical_analysis/`
+
+- [Production Goal contract (#802)](testing/issue-802-goal-contract.md) — completion interface, real-world acceptance and retained limitations.

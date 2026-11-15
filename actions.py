@@ -9,6 +9,7 @@ For instance, if a new technology is discovered in the game, related actions (li
 
 """
 
+import ast
 import importlib
 import inspect
 import math
@@ -283,7 +284,12 @@ class State:
     def _read(self, key, *, default):
         if "(" in key and key.endswith(")"):
             key, arg_str = key[:-1].split("(", 1)
-            args = json.loads(arg_str)
+            try:
+                args = json.loads(arg_str)
+            except json.JSONDecodeError:
+                args = ast.literal_eval(arg_str)
+            if not isinstance(args, (list, tuple)):
+                raise ValueError("Condition call arguments must be a literal list or tuple")
         else:
             args = []
 
