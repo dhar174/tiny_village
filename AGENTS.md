@@ -8,7 +8,7 @@ Dependency optionality and basic memory support lightweight testing; they do not
 reduce product scope or establish AI/gameplay readiness.
 
 ## 2. Folder Structure
-- `.agents`: Antigravity rule entry points (`rules/team-coordination.mdc`) that load the same coordination policy as the Zcode entry points.
+- `.agents`: Antigravity rule entry points (`rules/team-coordination.mdc`) that load the same coordination policy as the Zcode entry points. Installed AAS catalog skills live in `<skill-name>/SKILL.md` folders copied byte-exact from the verified agentic-awesome-skills catalog.
 - `.github`: repository automation and GitHub-specific metadata.
     - `agents`: GitHub Copilot contributor-agent definitions in `.agent.md` format; use these for narrowly scoped task agents.
     - `instructions`: repository-specific Copilot instructions, memory-bank rules, and file-pattern guidance.
@@ -30,7 +30,7 @@ reduce product scope or establish AI/gameplay readiness.
 - `requirements`: dependency-profile system with one `.in` file per profile (`core`, `dev`, `visual`, plus offline ML profiles `nlp`, `llm-cpu`, `llm-gpu`, `retrieval`, `analytics` and shared `llm-common`) and hash-locked outputs under `locks/`. The root `requirements.txt` is a pointer file installed with `pip install --require-hashes --only-binary=:all: -r requirements.txt`; regenerate locks with `scripts/compile_requirements.py`.
 - `scripts`: repository tooling, notably `run_ci_checks.py` (the bounded check runner CI invokes per profile) and `compile_requirements.py` (dependency lock compilation).
 - `tests`: organized test suite, migration helpers, fixtures, and focused regression coverage.
-- `.zcode`: Zcode workspace configuration. `agents/` holds repository-owned source templates for the `tiny-village-*` specialist subagents (current Zcode versions discover them from the workspace; the documented user-level location is `~/.zcode/agents/` — see `.zcode/README.md`), and `plans/` holds per-session plan files.
+- `.zcode`: Zcode workspace configuration. `agents/` holds repository-owned source templates for the `tiny-village-*` specialist subagents (current Zcode versions discover them from the workspace; the documented user-level location is `~/.zcode/agents/` — see `.zcode/README.md`), `skills/` holds Zcode-format skills including the 16 AAS catalog skills converted from `.agents/` (flat `name`/`description`/`when_to_use` frontmatter, byte-exact bodies), and `plans/` holds per-session plan files.
 - Repo root Python modules: the main runtime and many project entry points live at the repository root.
     - `main.py`: top-level entry point, logging setup, and demo-mode selection.
     - `actions.py`: action, state, and condition types plus the action catalog used by planning and execution.
@@ -91,7 +91,7 @@ Both examples are illustrative only; verify the current helper signatures and ag
 - **File Naming**: Core runtime modules stay at the repository root and usually use the `tiny_` prefix. Use `demo_*` for demos, `test_*` for tests, and `validate_*` or `verify_*` for ad hoc verification scripts.
 - **Module Boundaries**: Keep decision orchestration, prompt generation, output parsing, action execution, graph state, and memory in their existing modules. Extend nearby code before introducing a new cross-cutting file.
 - **Comments and Docstrings**: Use comments and docstrings for architectural context, behavioral constraints, or subtle implementation details, not for obvious line-by-line narration. If a path, subsystem name, or workflow changes, update the prose immediately rather than leaving stale guidance behind.
-- **Agent Config Placement**: Put new GitHub Copilot contributor-agent definitions in `.github/agents/*.agent.md`. Put Zcode specialist-team definitions in `.zcode/agents/*.md` (discovered from the workspace by current Zcode versions, and installable to `~/.zcode/agents/` per `.zcode/README.md`), and keep the routing table in `docs/agents/team-coordination.md` in sync with the definitions. Keep the root `AGENTS.md` as the canonical contributor guide instead of duplicating that content across new markdown files.
+- **Agent Config Placement**: Put new GitHub Copilot contributor-agent definitions in `.github/agents/*.agent.md`. Put Zcode specialist-team definitions in `.zcode/agents/*.md` (discovered from the workspace by current Zcode versions, and installable to `~/.zcode/agents/` per `.zcode/README.md`), and keep the routing table in `docs/agents/team-coordination.md` in sync with the definitions. Keep the root `AGENTS.md` as the canonical contributor guide instead of duplicating that content across new markdown files. Installed AAS catalog skills are copied byte-exact into `.agents/<skill-name>/` (each folder carries a `SKILL.md`), not re-authored.
 - **Examples Must Match Reality**: Use the present root-level layout in examples and docs. Do not invent alternate directory trees or placeholder package structures that the repository does not actually contain.
 
 ## 5. Working Agreements
