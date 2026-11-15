@@ -2,14 +2,15 @@ import unittest
 
 from tiny_utility_functions import (
     UtilityEvaluator,
+    UtilityGoal,
     safe_calculate_action_utility,
     validate_action,
 )
 
 try:
-    from test_tiny_utility_functions import MockAction, MockGoal
+    from test_tiny_utility_functions import MockAction
 except ImportError:
-    from tests.test_tiny_utility_functions import MockAction, MockGoal
+    from tests.test_tiny_utility_functions import MockAction
 
 
 class OldStyleMockAction:
@@ -31,6 +32,22 @@ class TestMockActionEnhancementValidation(unittest.TestCase):
         )
 
         self.assertFalse(blocked_action.preconditions_met())
+
+    def test_precondition_exceptions_block_and_log(self):
+        from types import SimpleNamespace
+
+        def broken_precondition(state):
+            raise ValueError("broken precondition")
+
+        for precondition in (
+            broken_precondition,
+            SimpleNamespace(check_condition=broken_precondition),
+        ):
+            with self.subTest(precondition=precondition):
+                action = MockAction("Blocked", cost=0.1, preconditions=[precondition])
+                with self.assertLogs(level="WARNING") as captured:
+                    self.assertFalse(action.preconditions_met({"energy": 20}))
+                self.assertIn("broken precondition", "\n".join(captured.output))
 
     def test_invalid_effects_are_rejected(self):
         with self.assertRaisesRegex(ValueError, "must have 'attribute' key"):
@@ -70,7 +87,7 @@ class TestMockActionEnhancementValidation(unittest.TestCase):
         evaluator = UtilityEvaluator()
         char_state = {"hunger": 0.9, "energy": 0.5, "health": 0.8}
 
-        urgent_goal = MockGoal(
+        urgent_goal = UtilityGoal(
             "UrgentSurvival",
             target_effects={"hunger": -0.8},
             priority=1.0,
@@ -83,7 +100,7 @@ class TestMockActionEnhancementValidation(unittest.TestCase):
             priority=0.9,
             related_goal=urgent_goal,
         )
-        normal_goal = MockGoal(
+        normal_goal = UtilityGoal(
             "NormalEat",
             target_effects={"hunger": -0.8},
             priority=1.0,

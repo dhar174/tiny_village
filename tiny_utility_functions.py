@@ -33,24 +33,30 @@ from actions import (
 
 logger = logging.getLogger(__name__)
 
-# Try to import the real Goal class first, fall back to simple implementation
-try:
-    from tiny_characters import Goal
-except ImportError:
-    # Fallback Goal class for compatibility when real Goal is not available
-    class Goal:
-        """Simple Goal class for utility calculations - fallback implementation."""
+class UtilityGoal:
+    """Data-only goal metadata for utility scoring and legacy target specs.
 
-        def __init__(self, name=None, target_effects=None, priority=0.5, score=None, **kwargs):
-            self.name = name or "UnnamedGoal"
-            self.target_effects = target_effects if target_effects else {}
-            self.priority = priority
-            self.score = score if score is not None else priority
-            # Additional attributes that may be expected by utility functions
-            self.urgency = kwargs.get('urgency', priority)
-            self.attributes = kwargs.get('attributes', {})
-    
-    logger.warning("Using fallback Goal implementation in tiny_utility_functions")
+    This type never substitutes for tiny_characters.Goal completion. Numeric
+    targets follow the contract of the consuming boundary: raw utility uses
+    normalized deltas; native planner inputs use absolute native targets.
+    """
+
+    def __init__(self, name=None, target_effects=None, priority=0.5, score=None, **kwargs):
+        self.name = name or "UnnamedGoal"
+        self.target_effects = target_effects if target_effects else {}
+        self.priority = priority
+        self.score = score if score is not None else priority
+        urgency = kwargs.get('urgency')
+        self.urgency = priority if urgency is None else urgency
+        self.deadline = kwargs.get('deadline')
+        self.description = kwargs.get('description') or f"Goal: {self.name}"
+        attributes = kwargs.get('attributes')
+        self.attributes = {} if attributes is None else attributes
+
+
+# Compatibility import for existing utility/strategy callers; independent of
+# import order and availability of the full Character Goal.
+Goal = UtilityGoal
 
 
 # === #740 UNITS BOUNDARY ===

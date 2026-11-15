@@ -1,0 +1,334 @@
+{
+  "schema_version": 1,
+  "issue": 774,
+  "pull_request": 822,
+  "baseline_revision": "46461b0ab631dc4255b784b7b204cea0fb16737e",
+  "source_revision": "fb55befcaf0c7186e2aebfa7229e927eb4d04d6c",
+  "baseline": {
+    "command": "python -B scripts/run_ci_checks.py --worker unittest --report /workspace/scratch/774-baseline.json tests.test_tiny_utility_functions",
+    "exit_code": 1,
+    "counts": {
+      "tests_run": 26,
+      "failures": 1,
+      "errors": 9,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0
+    },
+    "passes": 16,
+    "failure_ids": [
+      "test_mock_action_preserves_explicit_falsy_action_ids"
+    ],
+    "error_ids": [
+      "test_action_priority_in_goal_contexts",
+      "test_calculate_action_utility_goal_effect_opposite_direction",
+      "test_calculate_action_utility_with_goal_match",
+      "test_calculate_action_utility_with_goal_no_match_effect",
+      "test_enhanced_mock_action_utility_calculation_compatibility",
+      "test_enhanced_mock_goal_with_urgency",
+      "test_plan_utility_with_goal",
+      "test_realistic_action_scenario_with_enhanced_mocks",
+      "test_utility_evaluator_with_urgent_goal"
+    ],
+    "constructor_error": "TypeError: Goal.__init__() got an unexpected keyword argument 'priority'",
+    "report_sha256": "cc172622f9bccb49d26ee195dafc62f3cfa53a8b0c4b2325dca9ebf2a35a74c0",
+    "log_sha256": "d8efdff2f1161a2d5820bad63879d72122dd0e64b0a26f80557ba7f8d797ea78"
+  },
+  "original_26_method_ids_unchanged": [
+    "test_calculate_action_utility_satisfy_high_hunger",
+    "test_calculate_action_utility_satisfy_low_hunger",
+    "test_calculate_action_utility_increase_low_energy",
+    "test_calculate_action_utility_increase_high_energy_low_benefit",
+    "test_calculate_action_utility_get_money",
+    "test_calculate_action_utility_high_cost",
+    "test_calculate_action_utility_with_goal_match",
+    "test_calculate_action_utility_with_goal_no_match_effect",
+    "test_calculate_action_utility_goal_effect_opposite_direction",
+    "test_calculate_plan_utility_single_action",
+    "test_calculate_plan_utility_multiple_actions_no_simulation",
+    "test_calculate_plan_utility_multiple_actions_with_simulation",
+    "test_calculate_plan_utility_simulation_affects_utility",
+    "test_plan_utility_with_goal",
+    "test_mock_action_enhanced_attributes",
+    "test_mock_action_default_target_is_initiator",
+    "test_mock_action_preconditions_met",
+    "test_mock_action_effects_validation",
+    "test_mock_action_add_methods",
+    "test_mock_action_priority_defaults",
+    "test_enhanced_mock_action_utility_calculation_compatibility",
+    "test_enhanced_mock_goal_with_urgency",
+    "test_utility_evaluator_with_urgent_goal",
+    "test_realistic_action_scenario_with_enhanced_mocks",
+    "test_mock_action_preserves_explicit_falsy_action_ids",
+    "test_action_priority_in_goal_contexts"
+  ],
+  "final_bounded_26": {
+    "revision": "fb55befcaf0c7186e2aebfa7229e927eb4d04d6c",
+    "command": "timeout 60s python -B scripts/run_ci_checks.py --worker unittest --report /workspace/scratch/774-final-26.json tests.test_tiny_utility_functions",
+    "exit_code": 0,
+    "status": "PASS",
+    "counts": {
+      "tests_run": 26,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0
+    },
+    "report_sha256": "8f049069fc6f374d7d4e97f4547a6f9d49ab7a5608eacab45210fd780533a393",
+    "log_sha256": "e91d622779d588e93c0d1edbfdcb1a90a25d00a30b35686923ed7178f9a3dc9c"
+  },
+  "new_contract_red": {
+    "methods": 4,
+    "failing_methods": 3,
+    "failure_records": 5,
+    "errors": 0,
+    "preserved_behavior_control": "full native Goal scoring/execution already passed",
+    "log_sha256": "444c4a3f7e87e066ada6bd33619060cf04017b746c841b474f44c228f817ad79"
+  },
+  "profiles": {
+    "core": {
+      "revision": "fb55befcaf0c7186e2aebfa7229e927eb4d04d6c",
+      "status": "PASS",
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+      "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+      "machine": "x86_64",
+      "locks": {
+        "requirements/locks/core-py312-linux-x86_64.txt": "2a037e6923b1f4e0f19d14109adc4217a5e4b7e0583a780639dd476a1451c908"
+      },
+      "counts": {
+        "tests_run": 166,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 3,
+      "exit_code": 0,
+      "command": "python -B scripts/run_ci_checks.py --profile core --artifacts /workspace/scratch/774-final-core",
+      "summary_sha256": "f0def7dd19d2a27ca1fcd6342f803bca7468a240361743fae174257f6f4afd31",
+      "log_sha256": "94959d36e2e56d954fcceebe1b79a3fd2f461238e694e1e5cc93d8d436c55d11"
+    },
+    "dev": {
+      "revision": "fb55befcaf0c7186e2aebfa7229e927eb4d04d6c",
+      "status": "PASS",
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+      "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+      "machine": "x86_64",
+      "locks": {
+        "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5"
+      },
+      "counts": {
+        "tests_run": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 0,
+      "exit_code": 0,
+      "command": "python -B scripts/run_ci_checks.py --profile dev --artifacts /workspace/scratch/774-final-dev",
+      "summary_sha256": "ddd32d551f8794afab91761894c3a5dac54538dcfd6b62857b0f6e941837e0cf",
+      "log_sha256": "5371223c71d85a8c23f39fb5ba58e9f5a3545c45905e595bd91d139007e5ff6a"
+    },
+    "visual": {
+      "revision": "fb55befcaf0c7186e2aebfa7229e927eb4d04d6c",
+      "status": "PASS",
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+      "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+      "machine": "x86_64",
+      "locks": {
+        "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5",
+        "requirements/locks/visual-py312-linux-x86_64.txt": "a6db9f00d612e0b715961e9f1565c90066eb0872f165ad3984d3fcb414eaed73"
+      },
+      "counts": {
+        "tests_run": 69,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 0,
+      "exit_code": 0,
+      "command": "python -B scripts/run_ci_checks.py --profile visual --artifacts /workspace/scratch/774-final-visual",
+      "summary_sha256": "8f0a6107fd16a307756dc20b9426102adce8a11b67397e1ca4189405e3d11cde",
+      "log_sha256": "a6532cf7ced54c6f879bbda9374ba14fb36d36fa938322f04ace2a7ca981f2ab"
+    }
+  },
+  "source_file_sha256": {
+    "demo_advanced_utility.py": "5c14eab78d90ba2a7cfddcf68bc702ad775be00278b89fd51e5d39183ec67db2",
+    "scripts/run_ci_checks.py": "2b228c3550d338f10bb80053f721aa571e85364663484de8c0f3305038cc8ab0",
+    "tests/test_mock_action_enhancement_validation.py": "ff8184a67351e4108f07a11aae6466fca42964c3429f6beb5479b2c8fabe3ac1",
+    "tests/test_production_goal_contract.py": "a12b733e97a6d6a6c85dcd98b85aa76ef587abc70b8758284d755309ee1f5c5f",
+    "tests/test_tiny_utility_functions.py": "3f71561c80bbb217a28f3bcc864d417ba78023bb1256a5633bff1299139ae43c",
+    "tests/test_utility_contracts.py": "89c607a007fc1c8cad42c6c55a1e61b24600f6d05d31d4bb32621114f944eecb",
+    "tests/test_utility_goal_contract.py": "33f3b99962cb092ab25328449bc581e530d16634eb533304946524ea10ed1c67",
+    "tests/test_utility_simple.py": "67335f52fc51e56a8d8bd3a11d50bafb5abf44a713c42fa1a16c085ce9536e46",
+    "tiny_utility_functions.py": "e4f3d13c80c6986f9d450bbf4392777ac084bde1e093c4773cd64ebf47117e19"
+  },
+  "supplementary": {
+    "revision": "a99310fb4d29645901a70c5db1c570e8125f431e",
+    "command": "python -B -m pytest -q tests/test_goap_planner_integration_real.py tests/test_tiny_strategy_manager.py",
+    "tests_passed": 11,
+    "exit_code": 0,
+    "warning": "Existing uu deprecation warning",
+    "log_sha256": "889f735501d3c950d6fbd1d06d4c5a507d8689c47e473bc35c8fe12b4431063a"
+  },
+  "independent_review": {
+    "initial_revision": "a99310fb4d29645901a70c5db1c570e8125f431e",
+    "finding": "P2: three consumers imported removed MockGoal",
+    "reproduction": "tests.test_mock_action_enhancement_validation ImportError",
+    "red_log_sha256": "3b7d37bd4428bdde4f348832b37fdab9aa7be7082d8c5ab54060d9c583b43f98",
+    "fix_revision": "fb55befcaf0c7186e2aebfa7229e927eb4d04d6c",
+    "final_delta_result": "Resolved; no remaining findings identified",
+    "limitations": "Read-only source review; reviewer did not execute commands"
+  },
+  "review_fix_validation": {
+    "command": "python -B -m unittest tests.test_tiny_utility_functions tests.test_utility_goal_contract tests.test_mock_action_enhancement_validation",
+    "tests_passed": 37,
+    "exit_code": 0,
+    "log_sha256": "7fe301ff1a3819e3d099f630fb9adc33849552dd7fba037cf325764ee13a54ea",
+    "existing_scripts": {
+      "python -B -m tests.test_utility_simple": 0,
+      "python -B demo_advanced_utility.py": 0
+    },
+    "note": "37-method focused run precedes docstring-only correction; final canonical profiles include the same methods at source_revision"
+  },
+  "closure": "Issue remains open until merge and merged-source/check verification. #218/#741/#821 and phase gates remain separate.",
+  "glm_followup": {
+    "reviewed_head": "d703e71bd4a70c69e8b229cb1f7b6905295a2c41",
+    "source_revision": "9f36cfb607d4cfa25e13b3c61c9e431445a0cf70",
+    "review_summary_url": "https://github.com/dhar174/tiny_village/pull/822#issuecomment-6900938366",
+    "red": {
+      "command": "python -B -m unittest tests.test_mock_action_enhancement_validation.TestMockActionEnhancementValidation.test_precondition_exceptions_block_and_log tests.test_utility_goal_contract.TestUtilityGoalContract.test_metadata_fields_defaults_and_explicit_zero",
+      "methods": 2,
+      "failures": 1,
+      "error_subcase_records": 2,
+      "exit_code": 1,
+      "log_sha256": "f5666b1500a7e7499b1c63bcc61722415d95382e76173ace7865be86c69aaeb7"
+    },
+    "focused": {
+      "command": "python -B -m unittest tests.test_tiny_utility_functions tests.test_utility_goal_contract tests.test_mock_action_enhancement_validation tests.test_production_goal_contract",
+      "tests_passed": 51,
+      "exit_code": 0,
+      "log_sha256": "8eb112616f279e1f528fe9a0f26b4b791c472c81d7c06fc0474603a7a4642db4"
+    },
+    "bounded_original26": {
+      "command": "timeout 60s python -B scripts/run_ci_checks.py --worker unittest --report /workspace/scratch/774-glm-26.json tests.test_tiny_utility_functions",
+      "exit_code": 0,
+      "counts": {
+        "tests_run": 26,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "report_sha256": "8f049069fc6f374d7d4e97f4547a6f9d49ab7a5608eacab45210fd780533a393",
+      "log_sha256": "e99f001e3630a7c16493bdf3d3f4fa20e101ce22c9713e26a437ac6a10b1d4bf"
+    },
+    "profiles": {
+      "core": {
+        "revision": "9f36cfb607d4cfa25e13b3c61c9e431445a0cf70",
+        "status": "PASS",
+        "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+        "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+        "machine": "x86_64",
+        "locks": {
+          "requirements/locks/core-py312-linux-x86_64.txt": "2a037e6923b1f4e0f19d14109adc4217a5e4b7e0583a780639dd476a1451c908"
+        },
+        "counts": {
+          "tests_run": 167,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "expected_failures": 0,
+          "unexpected_successes": 0
+        },
+        "probes_run": 3,
+        "exit_code": 0,
+        "command": "python -B scripts/run_ci_checks.py --profile core --artifacts /workspace/scratch/774-glm-core",
+        "summary_sha256": "1888b165af6af2f9d3d2ec575164318f7ba014d39b8ba1740fe9b9840142f289",
+        "log_sha256": "870453ae0ab6038eae78556404939708efd920e2d1ac7da8e92f41c3b6aa603c"
+      },
+      "dev": {
+        "revision": "9f36cfb607d4cfa25e13b3c61c9e431445a0cf70",
+        "status": "PASS",
+        "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+        "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+        "machine": "x86_64",
+        "locks": {
+          "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5"
+        },
+        "counts": {
+          "tests_run": 20,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "expected_failures": 0,
+          "unexpected_successes": 0
+        },
+        "probes_run": 0,
+        "exit_code": 0,
+        "command": "python -B scripts/run_ci_checks.py --profile dev --artifacts /workspace/scratch/774-glm-dev",
+        "summary_sha256": "a7655dd67979d943e98adfbf2c75798aa3614ab61c314b911b6d1a7eac920d87",
+        "log_sha256": "5371223c71d85a8c23f39fb5ba58e9f5a3545c45905e595bd91d139007e5ff6a"
+      },
+      "visual": {
+        "revision": "9f36cfb607d4cfa25e13b3c61c9e431445a0cf70",
+        "status": "PASS",
+        "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+        "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+        "machine": "x86_64",
+        "locks": {
+          "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5",
+          "requirements/locks/visual-py312-linux-x86_64.txt": "a6db9f00d612e0b715961e9f1565c90066eb0872f165ad3984d3fcb414eaed73"
+        },
+        "counts": {
+          "tests_run": 69,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "expected_failures": 0,
+          "unexpected_successes": 0
+        },
+        "probes_run": 0,
+        "exit_code": 0,
+        "command": "python -B scripts/run_ci_checks.py --profile visual --artifacts /workspace/scratch/774-glm-visual",
+        "summary_sha256": "7909fa9bfc67bfe539c1f632594f92312c5c37a5e4a170ac116201bb62d5b02c",
+        "log_sha256": "a6532cf7ced54c6f879bbda9374ba14fb36d36fa938322f04ace2a7ca981f2ab"
+      }
+    },
+    "source_file_sha256": {
+      "demo_advanced_utility.py": "5c14eab78d90ba2a7cfddcf68bc702ad775be00278b89fd51e5d39183ec67db2",
+      "scripts/run_ci_checks.py": "2b228c3550d338f10bb80053f721aa571e85364663484de8c0f3305038cc8ab0",
+      "tests/test_mock_action_enhancement_validation.py": "a1c66177e603e1ea9099fc49d206fae43ec349ce0c862e238ad0e1695b8722ef",
+      "tests/test_production_goal_contract.py": "a12b733e97a6d6a6c85dcd98b85aa76ef587abc70b8758284d755309ee1f5c5f",
+      "tests/test_tiny_utility_functions.py": "805a256c66746d8f383b0b530ac49bd5fe4d9c58dbf079a82cb769a68808e9fb",
+      "tests/test_utility_contracts.py": "89c607a007fc1c8cad42c6c55a1e61b24600f6d05d31d4bb32621114f944eecb",
+      "tests/test_utility_goal_contract.py": "d9ac278b094802008d82016285a403e613a3fe188f02e1dadf992d7e6df51bbf",
+      "tests/test_utility_simple.py": "67335f52fc51e56a8d8bd3a11d50bafb5abf44a713c42fa1a16c085ce9536e46",
+      "tiny_utility_functions.py": "9d4a89931ca06bc061c98511681011d6ef02c9670d13221406a69128e3ed26ec"
+    },
+    "independent_final_delta_review": {
+      "range": "d703e71...9f36cfb607d4cfa25e13b3c61c9e431445a0cf70",
+      "result": "No remaining defects identified in this delta",
+      "commands_run_by_reviewer": false,
+      "limits": "Coordinator verifies canonical/hosted results and issue dispositions separately"
+    },
+    "replies": {
+      "inline": "https://github.com/dhar174/tiny_village/pull/822#discussion_r4580307126",
+      "six_item_reconciliation": "https://github.com/dhar174/tiny_village/pull/822#issuecomment-6901622792",
+      "thread_resolved": true
+    },
+    "preexisting_followups": {
+      "native_event_target_units": "https://github.com/dhar174/tiny_village/issues/218#issuecomment-6901612569",
+      "legacy_completion_and_evaluator_contracts": "https://github.com/dhar174/tiny_village/issues/821#issuecomment-6901612784",
+      "verification": "Relevant method ASTs unchanged from base46461b0; production probes show remaining0.0 for target0.65 vs0.15 for target65 at native energy50, and empty metadata achievedTrue; graphpriority/evaluatorcall risks remain static"
+    },
+    "unchanged_limits": "No blanket legacy alias-consumer coverage, live-loop, model/GPU/Windows or phase-gate readiness claim."
+  }
+}
