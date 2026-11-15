@@ -13,10 +13,10 @@ search bounds and timeouts. This does not complete #218/#741 or #821's catalog w
 - [x] Add explicit UtilityGoal(name=None,target_effects=None,priority=.5,score=None,**kwargs),
   independent of Character imports. Keep priority/score/urgency/deadline/description/
   attributes metadata; score defaults to priority, urgency defaults to priority if None.
-- [x] Replace fixture Goal import guessing and unused Goal substitutes with explicit
+- [x] Replace fixture Goal import guessing and fixture Goal substitutes with explicit
   production metadata. Preserve0/empty-string/False Action IDs; only None generates one.
 - [x] Register all26 cases plus new role/real-world bridge coverage in core CI.
-- [ ] Run core/dev/visual, independent review, publish focused PR and exact receipts.
+- [x] Run core/dev/visual, independent review, publish focused PR #822 and exact local receipts.
 - [ ] Verify hosted checks; close774 only after merge+merged-source verification.
 
 ## Verification

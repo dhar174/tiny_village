@@ -171,3 +171,5 @@ When adding new documentation:
 - **Analysis reports** → `/critical_analysis/`
 
 - [Production Goal contract (#802)](testing/issue-802-goal-contract.md) — completion interface, real-world acceptance and retained limitations.
+
+- [Utility Goal contract (#774)](testing/issue-774-utility-goal.md) — explicit metadata, full Goal bridge and retained test evidence.

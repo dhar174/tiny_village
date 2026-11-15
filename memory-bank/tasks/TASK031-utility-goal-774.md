@@ -28,7 +28,12 @@ Worktree /workspace/scratch/issue774-utility; branchcodex/774-utility-goal; base
   required compatibility repairs within the approved Goal-fixture reconciliation.
 - Draft PR #822: https://github.com/dhar174/tiny_village/pull/822 (attached).
 
+- Final source fb55bef passes core166+3 CLI probes/dev20/visual69, zero failures,
+  errors or skips, actual exits0. Fresh60s bounded original26 PASS26/26. Independent
+  final delta review resolved the sole finding with no remaining findings; it did
+  not execute commands. Durable receipt: docs/testing/evidence/issue-774-local-results.json.
+
 ## Remaining
-Final canonical profiles after review fix, durable receipt and exact-head hosted checks. Leave774 open
+Exact-head hosted CI and automated review; leave PR unmerged for user handoff. Leave774 open
 until repair merge and main verification. #218/#741/#821 remain separate; no broader
 readiness or full live-loop Goal migration claim. No mem0ry4ai tools available.
