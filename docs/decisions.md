@@ -997,3 +997,24 @@ Project Decision synchronization remains outstanding as described above.
 - **Limits:** implementation authorization does not approve merge, issue closure,
   later human gates or broader runtime/model/platform readiness. Verification
   reports record actual evidence and limitations separately.
+
+### D037 — Approve #741 live plan execution and merge its prerequisite
+
+- **Date:** 2026-11-16 UTC.
+- **Decision-maker:** dhar174.
+- **Confirmation:** "Please implement the plan", then the explicit selection
+  "Merge #823, then implement #741".
+- **Approved behavior:** configurable fixed simulation interval, default one
+  second; coalesce late intervals without execution bursts. Higher-priority work
+  interrupts between steps; preserve the interrupted goal and resume with fresh
+  planning. Equal/lower-priority work waits. Actual graph-backed predicates and
+  effects establish progress/completion; failures use bounded fresh-state recovery.
+- **Delivery:** latest main after merging #823; repository-defined read-only
+  specialists, coordinator as sole writer, real live-loop acceptance and core/dev/
+  visual verification. Retain D030's explicit legacy replanning and real alternative
+  execution requirements. Existing AI/product/phase boundaries remain intact.
+- **Plan:** [implementation contract](superpowers/plans/2026-11-16-issue-741-live-plan-ticks.md).
+- **Verified prerequisite:** #823 merged as `437c6898eaed4c1728be7ac1dc3951190e0208fd`;
+  fetched origin/main matched before creating the isolated #741 worktree.
+- **Limits:** this authorization does not approve merging #741, closing later
+  gates, or broader gameplay, live-model, platform or product readiness.

@@ -1,57 +1,11 @@
-import importlib
-import sys
-import types
 import unittest
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from tiny_gameplay_controller import GameplayController
+from tests.test_graph_initialization import FreshPythonTestCase
+from tests.test_goap_graph_contracts import WORLD_SETUP
 
 
-_ORIGINAL_MODULE_SNAPSHOTS = {}
-GameplayController = None
-
-
-def setUpModule():
-    global GameplayController
-
-    stub_modules = {
-        "pygame": types.ModuleType("pygame"),
-        "tiny_strategy_manager": types.ModuleType("tiny_strategy_manager"),
-        "tiny_event_handler": types.ModuleType("tiny_event_handler"),
-        "tiny_types": types.ModuleType("tiny_types"),
-        "tiny_map_controller": types.ModuleType("tiny_map_controller"),
-    }
-
-    stub_modules["pygame"].Surface = type("Surface", (), {})
-    stub_modules["pygame"].font = types.SimpleNamespace(Font=type("Font", (), {}))
-    stub_modules["pygame"].math = types.SimpleNamespace(Vector2=type("Vector2", (), {}))
-    stub_modules["pygame"].Rect = type("Rect", (), {})
-    stub_modules["pygame"].SRCALPHA = 0
-    stub_modules["tiny_strategy_manager"].StrategyManager = type("StrategyManager", (), {})
-    stub_modules["tiny_event_handler"].EventHandler = type("EventHandler", (), {})
-    stub_modules["tiny_event_handler"].Event = type("Event", (), {})
-    stub_modules["tiny_types"].GraphManager = type("GraphManager", (), {})
-    stub_modules["tiny_map_controller"].MapController = type("MapController", (), {})
-
-    _ORIGINAL_MODULE_SNAPSHOTS["tiny_gameplay_controller"] = sys.modules.get(
-        "tiny_gameplay_controller"
-    )
-    for module_name, module in stub_modules.items():
-        _ORIGINAL_MODULE_SNAPSHOTS[module_name] = sys.modules.get(module_name)
-        sys.modules[module_name] = module
-    sys.modules.pop("tiny_gameplay_controller", None)
-
-    GameplayController = importlib.import_module("tiny_gameplay_controller").GameplayController
-
-
-def tearDownModule():
-    for module_name, original_module in _ORIGINAL_MODULE_SNAPSHOTS.items():
-        if original_module is None:
-            sys.modules.pop(module_name, None)
-        else:
-            sys.modules[module_name] = original_module
-
-
-class TestGameplayControllerEventProcessing(unittest.TestCase):
+class TestGameplayControllerEventProcessing(FreshPythonTestCase):
     def setUp(self):
         self.controller = SimpleNamespace(
             game_statistics={
@@ -197,63 +151,25 @@ class TestGameplayControllerEventProcessing(unittest.TestCase):
         self.assertEqual(self.controller.game_statistics["events_festival"], 1)
         self.assertNotIn("festival", self.controller.game_state)
 
-    def test_process_events_and_drive_strategy_passes_highest_priority_last(self):
-        update_errors = []
-        high_priority_event = {
-            "name": "Market Crash",
-            "type": " Economic ",
-            "importance": 9,
-            "impact": -8,
-        }
-        low_priority_event = {
-            "name": "Town Gossip",
-            "type": "social",
-            "importance": 2,
-            "impact": 1,
-        }
-        strategy_manager = SimpleNamespace(update_strategy=MagicMock(return_value=None))
-        event_handler = SimpleNamespace(
-            check_events=MagicMock(return_value=[low_priority_event, high_priority_event]),
-            process_events=MagicMock(
-                return_value={
-                    "processed_events": ["Market Crash", "Town Gossip"],
-                    "failed_events": [],
-                }
-            ),
-        )
-        apply_strategy_result = MagicMock()
-        handle_cascading_events = MagicMock()
-        controller = SimpleNamespace(
-            event_handler=event_handler,
-            events=[],
-            strategy_manager=strategy_manager,
-            game_statistics={
-                "actions_executed": 0,
-                "actions_failed": 0,
-                "characters_created": 0,
-                "errors_recovered": 0,
-            },
-            game_state={},
-            _process_basic_events_fallback=MagicMock(),
-            _normalize_and_prioritize_events=lambda events, errors: GameplayController._normalize_and_prioritize_events(
-                controller, events, errors
-            ),
-            _apply_event_consequences=lambda events, event_results, errors: GameplayController._apply_event_consequences(
-                controller, events, event_results, errors
-            ),
-            _apply_strategy_result=apply_strategy_result,
-            _handle_cascading_and_dynamic_events=handle_cascading_events,
-        )
-
-        GameplayController._process_events_and_drive_strategy(controller, update_errors)
-
-        strategy_events = strategy_manager.update_strategy.call_args.args[0]
-        self.assertEqual(
-            [event["name"] for event in strategy_events],
-            ["Town Gossip", "Market Crash"],
-        )
-        apply_strategy_result.assert_called_once_with(None, update_errors)
-        handle_cascading_events.assert_called_once_with(
-            strategy_manager.update_strategy.call_args.args[0][::-1],
-            update_errors,
-        )
+    def test_live_events_stage_requests_without_eager_planning(self):
+        self.run_python(WORLD_SETUP + """
+try:
+ from unittest.mock import patch
+ actor = next(iter(controller.characters.values()))
+ strategy = controller.strategy_manager
+ controller.events.append({'name':'Tick day','type':'new_day','importance':5,'participants':[actor]})
+ with patch.object(strategy,'plan_request',wraps=strategy.plan_request) as planning:
+  controller.update_game_state(.5)
+  assert planning.call_count == 0
+  assert controller.game_statistics['actions_executed'] == 0
+  controller.update_game_state(.5)
+  assert planning.call_count == 1
+  assert controller.game_statistics['actions_executed'] == 1
+  status = controller.get_plan_execution_state(actor)
+  assert status['source'] == 'event:new_day' and status['cursor'] == 1
+  controller.update_game_state(.25)
+  assert planning.call_count == 1
+  assert controller.get_plan_execution_state(actor)['cursor'] == 1
+finally:
+ controller.close()
+""")

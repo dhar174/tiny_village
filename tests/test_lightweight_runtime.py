@@ -20,8 +20,8 @@ try:
     character = next(iter(controller.characters.values()))
     cause = OSError('Controlled missing model assets')
     with patch.object(TinyBrainIO, 'load_model', side_effect=cause) as loader:
-        controller._execute_character_actions(character)
-        controller._execute_character_actions(character)
+        controller.update_game_state(1.0)
+        controller.update_game_state(1.0)
     assert loader.call_count == 1, loader.call_count
     assert strategy.use_llm
     assert strategy.llm_status == 'unavailable'
@@ -45,10 +45,12 @@ def loaded(provider, model_name):
 try:
     strategy = controller.strategy_manager
     character = next(iter(controller.characters.values()))
-    with patch.object(TinyBrainIO, 'load_model', autospec=True, side_effect=loaded) as loader:
-        controller._execute_character_actions(character)
+    with patch.object(TinyBrainIO, 'load_model', autospec=True, side_effect=loaded) as loader, (
+        patch.object(TinyBrainIO, 'input_to_model', return_value='1')
+    ):
+        controller.update_game_state(1.0)
         provider = strategy.brain_io
-        controller._execute_character_actions(character)
+        controller.update_game_state(1.0)
     assert loader.call_count == 1, loader.call_count
     assert isinstance(provider, TinyBrainIO)
     assert strategy.brain_io is provider
