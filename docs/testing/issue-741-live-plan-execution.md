@@ -107,3 +107,12 @@ Offline provider-boundary tests establish cached availability, routing and reuse
 they do not establish live inference. Existing catalog/inventory/callback limits,
 full save restoration, native Windows/GPU and later product/phase acceptance remain
 separate. This change does not approve merging #741 or any later human gate.
+
+## Publication
+
+Implementation commit `9d308b5f937ca17b0895d998312b6532e570cae3` matches all eight
+tested source hashes. The pushed branch SHA was read back from origin.
+[PR #824](https://github.com/dhar174/tiny_village/pull/824) is OPEN, not draft,
+and targets main; base/head/readiness were verified and it is attached to the chat.
+Hosted Python CI and CodeQL were in progress at publication. No hosted success
+or #741 merge/closure is inferred from local results.

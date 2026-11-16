@@ -1,6 +1,6 @@
 # TASK033 — live simulation plan execution (#741)
 
-Status: implementation verified; publication/review handoff in progress. Updated: 2026-11-16 UTC.
+Status: PR #824 published; local verification complete, hosted checks pending. Updated: 2026-11-16 UTC.
 Approval: D037. Original request: implement the approved detailed #741 plan with
 repo-defined subagents, latest main, fixed simulation cadence and goal-reaching
 execution. User explicitly authorized merging prerequisite #823 first.
@@ -58,3 +58,11 @@ Known job-parser ERROR stderr persists; no clean-stderr or live-inference claim.
 - Evidence/report: docs/testing/issue-741-live-plan-execution.md and
   docs/testing/evidence/issue-741-local-results.json. Reviewisagainstsuppliedsource;
   reviewers ran no commands. No latergate/model/productreadiness claimed.
+
+## Publication — 2026-11-16 UTC
+
+Implementation commit9d308b5f937ca17b0895d998312b6532e570cae3; all8testedsource
+blobs matched retainedhashes. PushedbranchSHAreadbackmatches. ReadyPR824targets
+main: https://github.com/dhar174/tiny_village/pull/824 (OPEN/notdraft); attached
+tochat. HostedPythonCI/CodeQLinprogress atpublication; nohostedsuccess/mergeclaim.
+Worktreepreservedforreview. Publicationfollowsuser'searliercommit/push/PRrequest.
