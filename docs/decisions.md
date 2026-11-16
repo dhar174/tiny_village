@@ -1018,3 +1018,17 @@ Project Decision synchronization remains outstanding as described above.
   fetched origin/main matched before creating the isolated #741 worktree.
 - **Limits:** this authorization does not approve merging #741, closing later
   gates, or broader gameplay, live-model, platform or product readiness.
+
+### D038 — Authorize alternate independent review and conditional #824 merge
+
+- **Date:** 2026-11-16 America/New_York.
+- **Decision-maker:** dhar174.
+- **Existing objective:** obtain independent review, fix concerns, re-review as
+  needed, then merge #824 when it is ready.
+- **Confirmation:** "Use another independent reviewer" in response to the
+  question explaining that actual Zcode access was unavailable in this executor.
+- **Scope:** a fresh read-only Codex reviewer may substitute for Zcode for #824.
+  The coordinator fixes confirmed findings and verifies the final source and
+  required checks before a head-SHA-guarded merge. Do not label that review as
+  Zcode execution. This does not authorize bypassing checks or later phase gates.
+- **Evidence:** [pre-merge review receipt](testing/evidence/issue-741-pre-merge-review.json).

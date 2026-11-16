@@ -1253,7 +1253,7 @@ class StrategyManager:
                 value = read(key)
                 if value is not None and not (isinstance(value, (list, tuple, set, frozenset)) and not value):
                     explicit = True
-                    subjects.extend(value if isinstance(value, (list, tuple, set)) else (value,))
+                    subjects.extend(value if isinstance(value, (list, tuple, set, frozenset)) else (value,))
             if not explicit:
                 subjects = list(default_subjects)
             seen = set()

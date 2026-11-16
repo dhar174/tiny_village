@@ -116,3 +116,22 @@ tested source hashes. The pushed branch SHA was read back from origin.
 and targets main; base/head/readiness were verified and it is attached to the chat.
 Hosted Python CI and CodeQL were in progress at publication. No hosted success
 or #741 merge/closure is inferred from local results.
+
+## Pre-merge independent review — 2026-11-16 America/New_York
+
+After Zcode proved unavailable, the user explicitly authorized another independent
+reviewer and retained the existing review/fix/conditional-merge objective (D038).
+A fresh Codex reviewer inspected supplied actual source under the repository's
+read-only contract. It established no critical/important issue and found one P3:
+nonempty frozenset event participants were not flattened. The coordinator added a
+real native Event/dictionary regression, observed its failure, fixed the one-line
+collection handling, and observed its pass. The reviewer then approved the delta
+conditional on final source identity and required checks; it established no
+remaining concern. It ran no commands or tests. No Zcode invocation is claimed.
+
+Latest local profiles after this fix: **core225 +3 CLI probes / dev20 / visual70**,
+all batches exit0 and zero test failures/errors/skips. The earlier224-count receipt
+above remains historical publication evidence. The
+[new receipt](evidence/issue-741-pre-merge-review.json) identifies the updated eight
+source hashes and exact commands. Updated-head hosted checks and guarded merge
+are separate final gates; their actual result is recorded on PR #824.

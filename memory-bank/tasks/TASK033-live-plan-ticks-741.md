@@ -1,6 +1,6 @@
 # TASK033 — live simulation plan execution (#741)
 
-Status: PR #824 published; local verification complete, hosted checks pending. Updated: 2026-11-16 UTC.
+Status: independent review concerns resolved; local core225+3/dev20/visual70 verified. Final authorized integration is tracked on PR #824. Updated: 2026-11-16 America/New_York.
 Approval: D037. Original request: implement the approved detailed #741 plan with
 repo-defined subagents, latest main, fixed simulation cadence and goal-reaching
 execution. User explicitly authorized merging prerequisite #823 first.
@@ -66,3 +66,15 @@ blobs matched retainedhashes. PushedbranchSHAreadbackmatches. ReadyPR824targets
 main: https://github.com/dhar174/tiny_village/pull/824 (OPEN/notdraft); attached
 tochat. HostedPythonCI/CodeQLinprogress atpublication; nohostedsuccess/mergeclaim.
 Worktreepreservedforreview. Publicationfollowsuser'searliercommit/push/PRrequest.
+
+## Independent review and integration authorization
+
+User approved alternate review after Zcode was unavailable; D038 preserves the
+existing conditional merge objective. Fresh pr824_independent_review inspected
+actual supplied source, no commands/edits, and found one P3 frozenset event target
+flattening defect. Native Event and dictionary/UUID regression observed RED then
+GREEN1; one-line fix followed by core225+3/dev20/visual70 with everybatch exit0 and
+zero failures/errors/skips. Delta review established no remaining concerns, ready
+conditional on tested source and final hosted checks. New evidence:
+docs/testing/evidence/issue-741-pre-merge-review.json. No Zcode execution claimed.
+Final integration receipt/actual merge SHA belongs to PR824; no bypass authorized.

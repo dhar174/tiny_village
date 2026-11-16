@@ -615,6 +615,27 @@ assert character.wealth_money == 25
 ''')
 
 
+    def test_frozenset_event_participants_resolve_and_execute(self):
+        self.run_world('''
+from datetime import datetime
+from tiny_event_handler import Event
+native = Event('Frozen participants', datetime.now(), 'new_day', 5, 0,
+    participants=frozenset({character}), action_system=controller.action_system)
+payload = {'type': 'new_day', 'participants': frozenset({str(character.uuid)})}
+for event in (native, payload):
+    requests = strategy.create_event_requests([event])
+    assert len(requests) == 1 and requests[0].actor_uuid == character.uuid
+    controller.queue_plan_request(requests[0])
+assert controller.game_statistics['actions_executed'] == 0
+controller.update_game_state(.5)
+assert controller.game_statistics['actions_executed'] == 0
+controller.update_game_state(.5)
+assert controller.game_statistics['actions_executed'] == 1
+assert character.energy == graph.G.nodes[character]['energy'] == 35
+assert controller.get_plan_execution_state(character)['source'] == 'event:new_day'
+''')
+
+
 class TestVisualPlanExecution(FreshPythonTestCase):
     def test_dummy_sdl_uses_same_interval_and_single_speed_scaling(self):
         self.run_python(WORLD_SETUP.replace("'headless': True", "'headless': False") + '''
