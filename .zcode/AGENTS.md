@@ -2,7 +2,7 @@
 
 ## Start every Zcode session
 
-Read the user-level `~/.zcode/AGENTS.md` and `~/.zcode/skills/team-coordination/SKILL.md`, then this root guide and the project [`.zcode/skills/team-coordination/SKILL.md`](.zcode/skills/team-coordination/SKILL.md). Read skills by file path because user and project copies may share the name `team-coordination`.
+Read the user-level `~/.zcode/AGENTS.md` and `~/.zcode/skills/team-coordination/SKILL.md`, then the canonical root `/AGENTS.md` and the project [`.zcode/skills/team-coordination/SKILL.md`](.zcode/skills/team-coordination/SKILL.md). Read skills by file path because user and project copies may share the name `team-coordination`.
 
 [`docs/agents/team-coordination.md`](docs/agents/team-coordination.md) is the canonical contributor-team policy. The local skill adapts it to Zcode with the roster and handoff packets. The primary session is the coordinator and **only repository writer and command executor**. Project specialists investigate/review with Read/Grep/Glob, return proposals and evidence, and never dispatch agents. A delegated specialist retains that role even when these instructions are injected.
 
@@ -26,7 +26,7 @@ AI capabilities are required in the final product under D015. Both headless and 
 | Contributor resumption | `memory-bank/` and its task registry; distinct from runtime memory and external retrieval |
 | Checks and dependency profiles | `scripts/run_ci_checks.py`, `requirements/`, `tests/`, root `test_*.py`, `.github/workflows/` |
 
-Use `docs/README.md` to find current documentation, `design_docs/` for architecture, `docs/testing/` and `docs/guides/DEPENDENCY_PROFILES.md` for checks. `docs/archived/` is historical. `docs/reference/AGENTS.md` and `.github/copilot-instructions.md` are supplemental; this root file is the canonical contributor guide.
+Use `docs/README.md` to find current documentation, `design_docs/` for architecture, `docs/testing/` and `docs/guides/DEPENDENCY_PROFILES.md` for checks. `docs/archived/` is historical. `docs/reference/AGENTS.md` and `.github/copilot-instructions.md` are supplemental; root `/AGENTS.md` is the canonical contributor guide.
 
 ## Recover context without competing stores
 
@@ -61,6 +61,6 @@ Python 3.12 is pinned by `.python-version`. Dependencies use profile inputs unde
 
 The canonical bounded check runner is `python -B scripts/run_ci_checks.py --profile core` (choose `dev` or `visual` for the corresponding scope). CI also covers selected offline ML profiles through `.github/workflows/python-ml-profiles.yml`. The runner gates CPython 3.12 on Linux x86-64: this Windows checkout cannot establish that gate by a native run. Use the appropriate supported environment when authorized, and report unavailable checks honestly. There is no root lint/format/type-check configuration to invent.
 
-For ad-hoc requests, do not add tests or lint/format/type-check tooling unless requested; follow a contributor-agent mission's explicit test requirements when applicable. Select existing checks proportionate to code changes. Documentation-only coordination changes need definition/link/discovery checks, not gameplay or model execution. Inspect actual exit codes, stdout/stderr, file readback, and diffs before reporting success. Keep local checks, hosted CI, inference, gameplay, and platform evidence separate.
+For an authorized code or behavior change, independently select and run existing checks proportionate to the affected behavior and add focused regression tests where needed. Do not introduce new lint, formatting, type-check, test infrastructure, or broad cleanup outside the task merely because it is available. Keep documentation-only verification proportional. Respect explicit owner test limits, resource limits, and offline/live boundaries. Select existing checks proportionate to code changes. Documentation-only coordination changes need definition/link/discovery checks, not gameplay or model execution. Inspect actual exit codes, stdout/stderr, file readback, and diffs before reporting success. Keep local checks, hosted CI, inference, gameplay, and platform evidence separate.
 
 Use the canonical policy's proportionate lifecycle and independent review for substantive changes. Specialists propose commands; the coordinator executes them. State when independent review or a verification layer was unavailable. Respond in the user's preferred language, keep code and technical identifiers intact, and report concrete outcomes, limitations, and remaining authorized work.
