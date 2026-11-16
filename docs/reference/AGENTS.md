@@ -411,7 +411,7 @@ prompt = SYSTEM_PROMPT_NPC.format(
 ### Adding New Features
 
 1. **Adding a New Character Behavior:**
-   - Add new behavior class in `src/systems/ai/behaviors/`
+   - Extend the owning root-level runtime module identified by the canonical root `AGENTS.md` and current source. This repository does not use `src/systems/ai/behaviors/`; do not create that hierarchy from this historical example.
    - Implement required methods:
      ```python
      class GatherResourceBehavior:
@@ -520,10 +520,7 @@ Closes #[issue number]
 
 Before submitting any changes:
 
-1. Run unit tests:
-   ```bash
-   python -m unittest discover tests
-   ```
+1. Use the canonical bounded profile runner documented in root `AGENTS.md` and current workflows. Select checks for the affected behavior and report the actual environment, exit status, failures, and unavailable coverage. Historical examples do not override current validation commands.
 
 2. Verify code follows architecture patterns:
    - Actions properly defined with preconditions/effects
