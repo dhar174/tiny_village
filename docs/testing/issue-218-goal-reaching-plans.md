@@ -3,8 +3,9 @@
 Local implementation authorized by [D036](../decisions.md#d036--approve-218-executable-planning-implementation),
 2026-11-15 America/New_York. Branch `codex/issue-218-goal-reaching-plans` starts at
 latest `origin/main` `570cd89280b68491e90bb866ae93fd6b5428f07e`. A final fetch
-confirmed main unchanged. These results identify the **uncommitted working patch**
-by exact Python source hashes, not a merged implementation.
+confirmed main unchanged. These results were collected on the **uncommitted working patch**
+and subsequently matched to committed source by all eight Python hashes.
+See the publication record below; no merged implementation is claimed.
 
 ## Result and interface
 
@@ -141,5 +142,15 @@ expected failure logs.
 invalidation and live replacement scheduling. #821 retains remaining inventory/
 Goal-catalog repairs. The legacy job-offer selection API is not part of the new
 validated planning guarantee. Live inference, native Windows/GPU behavior, phase
-approval and broader gameplay readiness remain unverified. No merge, PR publication
-or issue closure occurred in this implementation.
+approval and broader gameplay readiness remain unverified. The original verification preceded publication; no merge or issue closure
+has been performed.
+
+## Publication
+
+The user subsequently authorized commit/push/PR publication. Implementation commit
+`52e39cb5b4095966e6cd667872e8670d15b38862` preserves every tested Python source hash.
+Ready-for-review [PR #823](https://github.com/dhar174/tiny_village/pull/823) targets `main` from
+`codex/issue-218-goal-reaching-plans`; remote branch SHA and PR metadata were read
+back and the PR attached to the chat. This follow-up updates documentation only.
+Hosted checks were in progress at initial readback; their success is not inferred
+from local verification. #741 and all recorded limitations remain separate.

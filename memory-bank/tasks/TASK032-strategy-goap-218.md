@@ -1,6 +1,6 @@
 # TASK032 — executable StrategyManager plans (#218)
 
-Status: Local implementation verified; unmerged handoff. Updated: 2026-11-15 America/New_York.
+Status: PR #823 published; hosted checks/review pending. Updated: 2026-11-15 America/New_York.
 Approval: D036; docs/superpowers/plans/2026-11-15-issue-218-goal-reaching-plans.md.
 Original request: complete #218 with meaningful multi-step StrategyManager plans
 whose execution reaches the goal; use repository-defined subagents, latest main,
@@ -61,3 +61,17 @@ search, terminal replay validation and fresh failure handoff. No plan-result cac
   docs/testing/issue-218-goal-reaching-plans.md.
 - Known job-parser ERROR stderr remains explicitly unresolved. #741/#821,
   merge/issue closure and broader gameplay/model readiness remain separate.
+
+## Publication — 2026-11-15 America/New_York
+
+- User explicitly authorized commit, push and opening a PR against main, then
+  requested implementation of the publication plan after execution mode resumed.
+- Implementation commit `52e39cb5b4095966e6cd667872e8670d15b38862`; all eight tested Python source hashes
+  verified against its committed blobs. Branch pushed and remote SHA read back.
+- Ready-for-review PR #823: https://github.com/dhar174/tiny_village/pull/823
+  Base main; head codex/issue-218-goal-reaching-plans. PR OPEN and not draft,
+  head verified against the implementation commit; attached to the Codex chat.
+- Original receipts remain historical working-patch verification with matching
+  source hashes. This publication follow-up changes documentation only.
+- Hosted Python CI and CodeQL were in progress at initial PR readback. No hosted
+  success, merge, #218 closure, #741 completion or later phase approval is claimed.
