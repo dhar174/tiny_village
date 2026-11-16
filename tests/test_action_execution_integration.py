@@ -139,13 +139,14 @@ node = graph.G.nodes[character]
 action = Action('Work', [], [{'targets': ['initiator'], 'attribute': 'money',
     'change_value': 20}], initiator=character, graph_manager=graph)
 node['wealth_money'] = 30
-quest = {'name': 'Practice', 'type': 'skill', 'progress': 0}
+from tiny_gameplay_controller import _ticks_ms
+quest = {'name': 'Practice', 'type': 'skill', 'progress': 0, 'assigned_time': _ticks_ms()}
 controller.quest_system = {'active_quests': {character.uuid: [quest]}}
-with patch.object(controller.strategy_manager, 'get_daily_actions', return_value=[action]), (
-    patch.object(action, 'execute', wraps=action.execute)
-) as execute, patch.object(controller, '_update_character_state_after_action',
+with patch.object(action, 'execute', wraps=action.execute) as execute, patch.object(controller, '_update_character_state_after_action',
                             side_effect=RuntimeError('bookkeeping failure')) as memory:
-    assert controller._execute_character_actions(character)
+    assert controller._apply_strategy_to_character(character, [action])
+    execute.assert_not_called()
+    controller.update_game_state(1)
     execute.assert_called_once_with(character=character, graph_manager=graph)
     memory.assert_called_once_with(character, action)
 assert node['wealth_money'] == character.wealth_money == 50
@@ -162,6 +163,8 @@ decision = {'type': 'character_action', 'character_id': next(iter(controller.cha
             'action': action}
 with patch.object(action, 'execute', wraps=action.execute) as execute:
     controller.apply_decision(decision, None)
+    execute.assert_not_called()
+    controller.update_game_state(1)
     execute.assert_called_once_with(character=character, graph_manager=graph)
 assert node['wealth_money'] == character.wealth_money == 90
 assert quest['progress'] == 15
@@ -178,17 +181,17 @@ class BrokenAction(Action):
         raise TypeError('action body failed')
 
 broken = BrokenAction('Broken', [], [])
-with patch.object(controller.strategy_manager, 'get_daily_actions', return_value=[broken]), (
-    patch.object(broken, 'execute', wraps=broken.execute)
-) as execute, patch.object(controller.action_resolver, 'get_fallback_action') as fallback:
-    assert controller._execute_character_actions(character) is False
+with patch.object(broken, 'execute', wraps=broken.execute) as execute, patch.object(controller.action_resolver, 'get_fallback_action') as fallback:
+    assert controller._apply_strategy_to_character(character, [broken])
+    execute.assert_not_called()
+    controller.update_game_state(1)
     execute.assert_called_once()
     fallback.assert_not_called()
 assert len(history) == 5 and history[-1]['success'] is False
 assert quest['progress'] == 15 and controller.game_statistics['actions_executed'] == 3
 """)
 
-    def test_daily_selection_reports_invalid_actions_and_warns_when_empty(self):
+    def test_invalid_action_and_empty_fallback_report_truthfully(self):
         self.run_world("""
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -202,7 +205,7 @@ with patch.object(controller.strategy_manager, 'get_daily_actions', return_value
 ) as feedback, patch.object(controller, '_invoke_action_execute') as invoke, (
     patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute)
 ) as writes:
-    assert controller._execute_character_actions(character) is False
+    assert controller._run_selected_action(invalid, character, feedback=True) is False
     invoke.assert_not_called()
     writes.assert_not_called()
     feedback.assert_called_once_with('Invalid action', False, character.name)
@@ -215,7 +218,7 @@ assert [(entry['action_name'], entry['success']) for entry in history] == [
 with patch.object(controller.strategy_manager, 'get_daily_actions', return_value=[]), (
     patch('tiny_gameplay_controller.logger.warning')
 ) as warning, patch.object(controller, 'provide_action_feedback') as feedback:
-    assert controller._execute_character_actions(character) is False
+    assert controller._execute_fallback_character_action(character) is False
     warning.assert_called_once_with('No actions available for %s', character.name)
     feedback.assert_not_called()
 assert controller.game_statistics['actions_failed'] == initial_failures + 1
@@ -306,6 +309,11 @@ node = graph.G.nodes[character]
 character.energy = 40
 node['energy'] = 20
 controller.weather_system = {'current_weather': 'rainy'}
+from tiny_strategy_manager import PlanRequest
+impossible = Goal('Unreachable', character, character, 1, 'unreachable',
+    {False:[Condition('beyond clamp','energy',character,101)]},
+    None,None,None,None,None,None,[],graph,'Basic Needs',{'energy':101})
+controller.queue_plan_request(PlanRequest(character.uuid,impossible))
 action = Action('Recovery', [], [{'targets': ['initiator'], 'attribute': 'energy',
     'change_value': 10}], initiator=character, graph_manager=graph)
 with patch.object(controller.strategy_manager, 'get_daily_actions', return_value=[]), (

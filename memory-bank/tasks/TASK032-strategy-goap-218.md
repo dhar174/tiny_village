@@ -1,6 +1,6 @@
 # TASK032 — executable StrategyManager plans (#218)
 
-Status: PR #823 published; hosted checks/review pending. Updated: 2026-11-15 America/New_York.
+Status: PR #823 merged at437c689; eight hosted checks passed. Updated: 2026-11-16 UTC.
 Approval: D036; docs/superpowers/plans/2026-11-15-issue-218-goal-reaching-plans.md.
 Original request: complete #218 with meaningful multi-step StrategyManager plans
 whose execution reaches the goal; use repository-defined subagents, latest main,
@@ -75,3 +75,9 @@ search, terminal replay validation and fresh failure handoff. No plan-result cac
   source hashes. This publication follow-up changes documentation only.
 - Hosted Python CI and CodeQL were in progress at initial PR readback. No hosted
   success, merge, #218 closure, #741 completion or later phase approval is claimed.
+
+## Prerequisite integration — 2026-11-16 UTC
+
+User explicitly selected "Merge #823, then implement #741". Exact-head merge
+verified at437c6898eaed4c1728be7ac1dc3951190e0208fd, freshly fetched origin/main
+matched; isolated #741 branch begins there. #741 work/evidence lives in TASK033.

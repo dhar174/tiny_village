@@ -14,7 +14,8 @@ This function should dynamically weigh these factors according to the current pl
 This module integrates the GOAP system and the graph manager to formulate comprehensive strategies based on events.
 """
 
-from tiny_goap_system import GOAPPlanner
+from tiny_goap_system import (GOAPPlanner, UnsupportedPlanningAction,
+                              _copy_planning_value, _freeze_planning_value)
 from tiny_utility_functions import (
     calculate_action_utility,
     build_utility_action_view,
@@ -28,6 +29,10 @@ import logging
 import time
 import random
 import math
+from copy import copy
+from dataclasses import dataclass, field
+from uuid import UUID, uuid4
+from actions import _canonical_attribute
 
 # AI providers are imported only when an enabled decision requests them.
 PromptBuilder = TinyBrainIO = OutputInterpreter = None
@@ -54,6 +59,48 @@ VARIETY_PROBABILITY = 0.2       # 20% chance to use LLM for emergent behavior
 
 # Define placeholder/simplified Action classes for use within StrategyManager if not using complex ones from actions.py
 # These are structured to be compatible with calculate_action_utility
+
+
+def _copy_request_condition(condition):
+    frozen = copy(condition)
+    frozen.satisfy_value = _copy_planning_value(condition.satisfy_value)
+    return frozen
+
+
+@dataclass(frozen=True, eq=False)
+class PlanRequest:
+    """A fixed goal contract; entities and Actions retain their registered identity."""
+    actor_uuid: UUID
+    goal: object
+    source: str = 'explicit'
+    priority: tuple = (1, 0)
+    extra_actions: tuple = ()
+    request_id: str = field(default_factory=lambda: str(uuid4()))
+
+    def __post_init__(self):
+        if not isinstance(self.actor_uuid, UUID):
+            object.__setattr__(self, 'actor_uuid', UUID(self.actor_uuid))
+        goal = copy(self.goal)
+        if hasattr(goal, 'target_effects'):
+            goal.target_effects = _copy_planning_value(goal.target_effects)
+        if hasattr(goal, 'completion_conditions'):
+            goal.completion_conditions = {
+                bucket: tuple(_copy_request_condition(condition) for condition in conditions)
+                for bucket, conditions in goal.completion_conditions.items()}
+        object.__setattr__(self, 'goal', goal)
+        object.__setattr__(self, 'extra_actions', tuple(self.extra_actions))
+        priority = tuple(self.priority)
+        if len(priority) != 2 or any(type(v) not in (int, float) or not math.isfinite(v) for v in priority):
+            raise ValueError('Request priority must contain two finite numbers')
+        object.__setattr__(self, 'priority', priority)
+
+
+@dataclass(frozen=True, eq=False)
+class PlanProposal:
+    request: PlanRequest
+    outcome: str
+    actions: tuple = ()
+    reason: str = ''
 
 
 class EatAction(Action):
@@ -1173,6 +1220,184 @@ class StrategyManager:
             return self.get_daily_actions(character)[:1]
 
     # --- Other methods from the original file (potentially needing updates) ---
+    def resolve_actor(self, identifier):
+        """Resolve UUID/exact name first; accept a casefold alias only if unique."""
+        try:
+            actor, _ = _resolve_action_entity(self.graph_manager, identifier, 'character')
+        except (KeyError, ValueError):
+            if not isinstance(identifier, str):
+                raise
+            matches = [actor for actor in self.graph_manager.characters.values()
+                       if actor.name.strip().casefold() == identifier.strip().casefold()]
+            if len(matches) != 1:
+                raise ValueError(f'Unknown or ambiguous actor: {identifier!r}')
+            actor = matches[0]
+        if hasattr(identifier, 'uuid') and actor is not identifier:
+            raise ValueError('Actor object has been replaced')
+        return actor
+
+    def create_daily_request(self, character):
+        actor = self.resolve_actor(character)
+        return PlanRequest(actor.uuid, self._goal_for_event_type('new_day'),
+                           source='daily', priority=(0, 0))
+
+    def create_event_requests(self, events, *, default_subjects=()):
+        requests = []
+        for event in events:
+            read = event.get if isinstance(event, dict) else lambda key, default=None: getattr(event, key, default)
+            event_type = str(read('_normalized_event_type', read('type', 'generic'))).strip().lower()
+            context = self._build_event_context(event, event_type)
+            subjects = []
+            explicit = False
+            for key in ('participants', 'characters', 'targets', 'character', 'subject'):
+                value = read(key)
+                if value is not None and not (isinstance(value, (list, tuple, set, frozenset)) and not value):
+                    explicit = True
+                    subjects.extend(value if isinstance(value, (list, tuple, set, frozenset)) else (value,))
+            if not explicit:
+                subjects = list(default_subjects)
+            seen = set()
+            for subject in subjects:
+                actor = self.resolve_actor(subject)
+                if actor.uuid in seen:
+                    continue
+                seen.add(actor.uuid)
+                importance = max(0, int(read('_normalized_importance', read('importance', 5))))
+                impact = abs(int(read('_normalized_impact', read('impact', 0))))
+                goal = self._goal_for_event_type(event_type, situation_context=context)
+                extras = self._event_planning_actions(event_type, goal)
+                requests.append(PlanRequest(actor.uuid, goal, source=f'event:{event_type}',
+                                            priority=(importance, impact), extra_actions=extras))
+        return requests
+
+    def _event_planning_actions(self, event_type, goal):
+        if event_type in ('crisis', 'disaster', 'emergency'):
+            return (Action('Seek Safety', [], [
+                {'targets':['initiator'], 'attribute':'safety', 'change_value':20},
+                {'targets':['initiator'], 'attribute':'energy', 'change_value':-10}],
+                cost=.2, graph_manager=self.graph_manager),
+                Action('Help Others', [], [
+                    {'targets':['initiator'], 'attribute':'social_wellbeing', 'change_value':15},
+                    {'targets':['initiator'], 'attribute':'satisfaction', 'change_value':10}],
+                    cost=.3, graph_manager=self.graph_manager))
+        if event_type in ('work', 'task', 'project'):
+            return (WorkAction(name='Contribute to Project', effects=[
+                {'targets':['initiator'], 'attribute':'job_performance', 'change_value':10},
+                {'targets':['initiator'], 'attribute':'energy', 'change_value':-15}],
+                graph_manager=self.graph_manager),)
+        if event_type in ('weather', 'environmental'):
+            negative = goal.name == 'weather_adaptation'
+            action_type = SleepAction if negative else WanderAction
+            return (action_type(name='Take Shelter' if negative else 'Enjoy Outdoors', effects=[
+                {'targets':['initiator'], 'attribute':'safety' if negative else 'happiness',
+                 'change_value':15 if negative else .10},
+                {'targets':['initiator'], 'attribute':'energy', 'change_value':10 if negative else 5}],
+                graph_manager=self.graph_manager),)
+        return ()
+
+    def action_key(self, action, character):
+        actor, node = _resolve_action_entity(self.graph_manager, character, 'character')
+        conditions, effects = self.goap_planner._model_action(action, actor, node)
+        # _model_action admits actor-local contracts only and normalizes binding.
+        return (type(action).__module__, type(action).__qualname__, action.name, str(actor.uuid),
+                tuple((attribute, condition.operator, _freeze_planning_value(condition.satisfy_value))
+                      for condition, attribute in conditions),
+                tuple((effect.attribute, effect.operation, effect.change) for effect in effects))
+
+    def goal_key(self, request):
+        goal = request.goal
+        if callable(getattr(goal, 'iter_completion_conditions', None)):
+            conditions = []
+            for condition in goal.iter_completion_conditions():
+                target = condition.target
+                if target is None or (isinstance(target, str) and target == 'initiator'):
+                    target = request.actor_uuid
+                elif isinstance(target, str) and target == 'target':
+                    target = goal.target
+                entity, _ = _resolve_action_entity(self.graph_manager, target)
+                conditions.append((str(entity.uuid), _canonical_attribute(condition.attribute),
+                                   condition.operator, _freeze_planning_value(condition.satisfy_value)))
+            return ('conditions', tuple(conditions))
+        return ('targets', _freeze_planning_value(goal.target_effects))
+
+    def request_key(self, request):
+        return (request.actor_uuid, request.source, self.goal_key(request),
+                tuple(self.action_key(action, request.actor_uuid) for action in request.extra_actions))
+
+    def request_candidates(self, request):
+        return self._get_planning_actions(self.resolve_actor(request.actor_uuid), request.extra_actions)
+
+    def candidate_keys(self, request):
+        keys = set()
+        for action in self.request_candidates(request):
+            try:
+                keys.add(self.action_key(action, request.actor_uuid))
+            except (UnsupportedPlanningAction, KeyError, TypeError, ValueError):
+                continue
+        return keys
+
+    def request_fingerprint(self, request):
+        actor = self.resolve_actor(request.actor_uuid)
+        planner = self.goap_planner
+        state = planner._planning_snapshot(self._get_current_state_for_character(actor))
+        reads = {_canonical_attribute(key) for key in getattr(request.goal, 'target_effects', {})}
+        partners = []
+        if callable(getattr(request.goal, 'iter_completion_conditions', None)):
+            for condition in request.goal.iter_completion_conditions():
+                target = condition.target
+                if target is None or (isinstance(target, str) and target == 'initiator'):
+                    target = actor
+                elif isinstance(target, str) and target == 'target':
+                    target = request.goal.target
+                target, node = _resolve_action_entity(self.graph_manager, target)
+                if target is actor:
+                    reads.add(_canonical_attribute(condition.attribute))
+                else:
+                    values = native_character_state(target)
+                    if node is not None:
+                        values.update(native_character_state(dict(self.graph_manager.G.nodes[node])))
+                    attribute = _canonical_attribute(condition.attribute)
+                    partners.append((str(target.uuid), attribute,
+                                     ('value', _freeze_planning_value(values[attribute]))
+                                     if attribute in values else ('missing',)))
+        catalog = []
+        for action in self.request_candidates(request):
+            try:
+                key = self.action_key(action, actor)
+                if type(action.cost) not in (int, float) or not math.isfinite(action.cost):
+                    raise ValueError('Candidate cost must be finite')
+                conditions, effects = planner._model_action(action, actor, actor)
+                reads.update(attribute for _, attribute in conditions)
+                reads.update(effect.attribute for effect in effects)
+                catalog.append((key, action.cost))
+            except (UnsupportedPlanningAction, KeyError, TypeError, ValueError):
+                continue
+        dependency_state = tuple((key, ('value', _freeze_planning_value(state.get(key)))
+                                       if key in state.dict_or_obj else ('missing',))
+                                 for key in sorted(reads))
+        return (self.goal_key(request), dependency_state, tuple(partners),
+                frozenset(catalog), planner.MAX_PLAN_LENGTH, planner.MAX_PLANNING_EXPANSIONS)
+
+    def plan_request(self, request, *, excluded_action_keys=(), failed_action=None):
+        try:
+            actor = self.resolve_actor(request.actor_uuid)
+            candidates = []
+            for action in self.request_candidates(request):
+                try:
+                    key = self.action_key(action, actor)
+                except (UnsupportedPlanningAction, KeyError, TypeError, ValueError):
+                    continue
+                if key not in excluded_action_keys:
+                    candidates.append(action)
+            result = (self.handle_plan_execution_failure(actor, request.goal, failed_action, actions=candidates)
+                      if failed_action is not None else self.plan_for_goal(actor, request.goal, actions=candidates))
+            if result is None:
+                return PlanProposal(request, 'NO_PLAN', reason='No sequence within planner bounds')
+            return PlanProposal(request, 'PLAN' if result else 'SATISFIED', tuple(result))
+        except Exception as error:
+            logger.warning('Planning request %s failed: %s', request.request_id, error)
+            return PlanProposal(request, 'ERROR', reason=f'{type(error).__name__}: {error}')
+
     def update_strategy(self, events, subject="Emma"):
         """
         Updates strategy based on events using GOAP planning with optional LLM integration.

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import datetime  # Added for time-based achievement
 from copy import deepcopy
 import logging
@@ -13,7 +14,7 @@ import traceback
 from collections import deque
 from datetime import timedelta
 
-from actions import Action, apply_attribute_change, invoke_action
+from actions import Action, apply_attribute_change, invoke_action, _ATTRIBUTE_ALIASES
 
 # Rendering providers are bound only by an explicit visual initialization.
 pygame = None
@@ -71,7 +72,7 @@ EVENT_CONSEQUENCE_DISPATCH = {
 }
 
 from typing import Dict, List, Any, Union, Optional
-from tiny_strategy_manager import StrategyManager
+from tiny_strategy_manager import StrategyManager, PlanRequest, PlanProposal
 from tiny_event_handler import EventHandler, Event
 from tiny_types import GraphManager
 
@@ -422,6 +423,9 @@ class SelectedCharacterPanel(UIPanel):
     def _get_character_goal(self, char, controller: "GameplayController"):
         """Get character's current primary goal."""
         try:
+            status = controller.get_plan_execution_state(char)
+            if status['goal'] is not None:
+                return status['goal'].name
             # Try to get goal from various sources
             if hasattr(char, 'current_goal'):
                 return str(char.current_goal)
@@ -447,6 +451,10 @@ class SelectedCharacterPanel(UIPanel):
     def _get_character_action(self, char, controller: "GameplayController"):
         """Get character's current action."""
         try:
+            status = controller.get_plan_execution_state(char)
+            if status['phase'] != 'IDLE':
+                action = status['next_action']
+                return f"{status['phase']}: {action.name if action else status['reason'] or 'goal satisfied'}"
             # Try to get current action from various sources
             if hasattr(char, 'current_action'):
                 return str(char.current_action)
@@ -1751,6 +1759,23 @@ class GameplayController:
     ):
         """Initialize the gameplay controller with improved error handling and configuration."""
         self.config = deepcopy(config or {})
+        planning = self.config.get('planning', {})
+        for key, default in (('action_interval_seconds', 1.), ('retry_cooldown_seconds', 5.)):
+            value = planning.get(key, default)
+            if type(value) not in (int, float) or not math.isfinite(value) or value <= 0:
+                raise ValueError(f'planning.{key} must be positive and finite')
+        self._action_interval = planning.get('action_interval_seconds', 1.)
+        self._retry_cooldown = planning.get('retry_cooldown_seconds', 5.)
+        for key in ('max_recovery_attempts', 'max_pending_requests'):
+            if type(planning.get(key, 3 if key == 'max_recovery_attempts' else 16)) is not int or planning.get(key, 3 if key == 'max_recovery_attempts' else 16) <= 0:
+                raise ValueError(f'planning.{key} must be a positive integer')
+        self._max_recovery_attempts = planning.get('max_recovery_attempts', 3)
+        self._max_pending_requests = planning.get('max_pending_requests', 16)
+        self._plan_records = {}
+        self._execution_bindings = None
+        self._planning_time = 0.
+        self._request_counter = 0
+        self.plan_request_receipts = deque(maxlen=100)
         self.headless = bool(self.config.get("headless", False))
         self._owns_display = self._owns_font = False
         self._owns_display_surface = False
@@ -1975,6 +2000,7 @@ class GameplayController:
     def close(self):
         """Release owned resources; safe for headless, failed and repeated cleanup."""
         self.running = False
+        self._clear_plan_execution()
         if pygame is not None:
             if self._owns_display:
                 pygame.display.quit()
@@ -3407,6 +3433,8 @@ class GameplayController:
         try:
             logger.info("Starting character reset...")
 
+            self._clear_plan_execution()
+
             # Clear existing characters safely
             if self.map_controller and hasattr(self.map_controller, "characters"):
                 self.map_controller.characters.clear()
@@ -3493,6 +3521,10 @@ class GameplayController:
         if getattr(self, "paused", False):
             return  # Skip all updates when paused
 
+        if type(dt) not in (int, float) or not math.isfinite(dt) or dt < 0:
+            raise ValueError('Simulation dt must be finite and nonnegative')
+        self._sync_execution_bindings()
+        self._planning_time += dt
         update_errors = []
         systems_to_recover = []
 
@@ -3689,7 +3721,6 @@ class GameplayController:
             # Update character's memory and decision making
             memory_success = self._update_character_memory(character)
             goals_success = self._update_character_goals(character)
-            actions_success = self._execute_character_actions(character)
 
             # Apply weather effects
             weather = getattr(self, "weather_system", None)
@@ -3703,6 +3734,8 @@ class GameplayController:
                     )
                     logger.debug("%s weather left %s with %.2f energy",
                                  current_weather.title(), character.name, energy)
+
+            actions_success = self._advance_character_plan(character, dt)
 
             # Character update is successful if at least one component works
             return memory_success or goals_success or actions_success
@@ -3733,22 +3766,268 @@ class GameplayController:
             logger.warning(f"Error evaluating goals for {character.name}: {e}")
         return False
 
-    def _execute_character_actions(self, character) -> bool:
-        """Select the daily action and execute it once."""
-        if not self.strategy_manager:
+    def _clear_plan_execution(self):
+        self._plan_records.clear()
+        self._execution_bindings = None
+
+    def _sync_execution_bindings(self):
+        bindings = (self.graph_manager, self.strategy_manager)
+        if self._execution_bindings is not None and any(
+                old is not new for old, new in zip(self._execution_bindings, bindings)):
+            self._clear_plan_execution()
+        self._execution_bindings = bindings
+        current = {actor.uuid: actor for actor in self.characters.values()}
+        for identity, record in list(self._plan_records.items()):
+            try:
+                registered = (self.strategy_manager.graph_manager is self.graph_manager and
+                              self.strategy_manager.resolve_actor(identity) is record['actor'])
+            except (AttributeError, KeyError, TypeError, ValueError):
+                registered = False
+            if current.get(identity) is not record['actor'] or not registered:
+                del self._plan_records[identity]
+
+    def _actor_execution_record(self, identifier):
+        self._sync_execution_bindings()
+        if self.strategy_manager.graph_manager is not self.graph_manager:
+            raise ValueError('Strategy and controller refer to different worlds')
+        actor = self.strategy_manager.resolve_actor(identifier)
+        if getattr(actor, 'graph_manager', None) is not self.graph_manager:
+            raise ValueError('Actor refers to an obsolete world')
+        if not any(registered is actor for registered in self.characters.values()):
+            raise ValueError('Execution actor is not registered with this controller')
+        if actor.uuid not in self._plan_records:
+            self._plan_records[actor.uuid] = {'actor': actor, 'accumulator': 0.,
+                                             'active': None, 'pending': []}
+        return self._plan_records[actor.uuid]
+
+    def _new_execution(self, request=None, *, actions=(), source='sequence'):
+        self._request_counter += 1
+        return {'request': request, 'actions': tuple(actions), 'cursor': 0,
+                'phase': 'READY', 'reason': '', 'arrival': self._request_counter,
+                'priority': request.priority if request else (1, 0),
+                'source': request.source if request else source, 'excluded': set(),
+                'recoveries': 0, 'failed_action': None, 'blocked_at': 0.,
+                'fingerprint': None}
+
+    def _admit_execution(self, record, execution):
+        request = execution['request']
+        if request is not None:
+            key = self.strategy_manager.request_key(request)
+            for old in [record['active'], *record['pending']]:
+                if old is not None and old['request'] is not None and self.strategy_manager.request_key(old['request']) == key:
+                    # Repeated notifications do not reset failures or grow queues.
+                    old['priority'] = max(old['priority'], execution['priority'])
+                    return False
+        pending = record['pending']
+        if len(pending) >= self._max_pending_requests:
+            lowest = min(item['priority'] for item in pending)
+            if execution['priority'] <= lowest:
+                rejected = execution
+            else:
+                rejected = max((item for item in pending if item['priority'] == lowest),
+                               key=lambda item: item['arrival'])
+                pending.remove(rejected)
+            self.plan_request_receipts.append({'request_id': getattr(rejected['request'], 'request_id', None),
+                                              'phase': 'REJECTED_CAPACITY', 'source': rejected['source']})
+            if rejected is execution:
+                return False
+        pending.append(execution)
+        return True
+
+    def queue_plan_request(self, request):
+        if not isinstance(request, PlanRequest):
+            raise TypeError('Expected a goal-bearing PlanRequest')
+        record = self._actor_execution_record(request.actor_uuid)
+        return self._admit_execution(record, self._new_execution(request))
+
+    def _stage_action_sequence(self, character, actions):
+        record = self._actor_execution_record(character)
+        resolved = []
+        for action in actions:
+            if not isinstance(action, Action):
+                action = self.action_resolver.resolve_action(action, record['actor'])
+            if action is None:
+                raise ValueError('Cannot stage an unresolved action')
+            resolved.append(action)
+        if not resolved:
             return False
-        if getattr(character, "use_llm_decisions", False):
-            return self.process_character_turn(character)
+        return self._admit_execution(record, self._new_execution(actions=resolved))
+
+    def get_plan_execution_state(self, character):
+        """Return inspection metadata; never expose mutable scheduler containers."""
+        record = self._actor_execution_record(character)
+        active = record['active']
+        return {'actor_uuid': record['actor'].uuid, 'accumulator': record['accumulator'],
+                'phase': active['phase'] if active else 'IDLE',
+                'goal': active['request'].goal if active and active['request'] else None,
+                'source': active['source'] if active else None,
+                'cursor': active['cursor'] if active else 0,
+                'actions': active['actions'] if active else (),
+                'next_action': (active['actions'][active['cursor']]
+                                if active and active['cursor'] < len(active['actions']) else None),
+                'reason': active['reason'] if active else '',
+                'pending': tuple(item['source'] for item in record['pending'])}
+
+    def _goal_is_satisfied(self, execution, actor):
+        planner = self.strategy_manager.goap_planner
+        return planner._goal_satisfied(execution['request'].goal,
+            planner._planning_snapshot(self.strategy_manager._get_current_state_for_character(actor)))
+
+    def _install_proposal(self, execution):
+        proposal = self.strategy_manager.plan_request(execution['request'],
+            excluded_action_keys=execution['excluded'], failed_action=execution['failed_action'])
+        execution['failed_action'] = None
+        execution['reason'] = proposal.reason
+        if proposal.outcome == 'PLAN':
+            execution.update(actions=proposal.actions, cursor=0, phase='RUNNING')
+        elif proposal.outcome == 'SATISFIED':
+            execution.update(actions=(), cursor=0, phase='COMPLETE')
+        elif proposal.outcome == 'NO_PLAN':
+            self._block_execution(execution)
+        else:
+            execution['phase'] = 'ERROR'
+
+    def _block_execution(self, execution):
+        execution['phase'] = 'BLOCKED'
+        execution['blocked_at'] = self._planning_time
+        execution['fingerprint'] = self.strategy_manager.request_fingerprint(execution['request'])
+
+    def _recover_execution(self, execution, *, failed_action=None, failed_key=None, can_search=True):
+        execution['phase'] = 'RECOVERING'
+        execution['recoveries'] += 1
+        if failed_key is not None:
+            execution['excluded'].add(failed_key)
+        execution['failed_action'] = failed_action
+        if execution['recoveries'] >= self._max_recovery_attempts:
+            execution['reason'] = 'Recovery limit reached without verified progress'
+            self._block_execution(execution)
+        elif can_search:
+            self._install_proposal(execution)
+
+    def _advance_character_plan(self, character, dt):
+        record = self._actor_execution_record(character)
+        record['accumulator'] += dt
+        interval = self._action_interval
+        if record['accumulator'] < interval and not math.isclose(
+                record['accumulator'], interval, rel_tol=1e-9, abs_tol=0.):
+            return True
+        remainder = record['accumulator'] % interval
+        record['accumulator'] = 0. if math.isclose(remainder, interval, rel_tol=1e-9, abs_tol=0.) else remainder
+        active = record['active']
+        pending = record['pending']
+        if pending:
+            candidate = min(pending, key=lambda item: (tuple(-v for v in item['priority']), item['arrival']))
+            if active is None or active['phase'] in ('COMPLETE', 'ERROR') or candidate['priority'] > active['priority']:
+                pending.remove(candidate)
+                if active is not None and active['phase'] not in ('COMPLETE', 'ERROR'):
+                    # Preserve the goal request and failure epoch, not its stale tail.
+                    if active['request'] is not None:
+                        active.update(actions=(), cursor=0)
+                        if active['phase'] not in ('BLOCKED', 'RECOVERING'):
+                            active['phase'] = 'READY'
+                        pending.append(active)
+                    else:
+                        self.plan_request_receipts.append({
+                            'phase': 'CANCELLED_PREEMPTED', 'source': active['source'],
+                            'actor_uuid': str(character.uuid), 'cursor': active['cursor'],
+                            'remaining_actions': tuple(action.name for action in active['actions'][active['cursor']:])})
+                active = record['active'] = candidate
+        if (active is not None and active['phase'] == 'COMPLETE' and
+                (active['source'] != 'daily' or getattr(character, 'use_llm_decisions', False))):
+            active = record['active'] = None
+        if active is None:
+            if getattr(character, 'use_llm_decisions', False):
+                choices = self.strategy_manager.decide_action_with_llm(character)
+                if choices:
+                    return self._run_selected_action(choices[0], character)
+                return True
+            active = record['active'] = self._new_execution(self.strategy_manager.create_daily_request(character))
         try:
-            actions = self.strategy_manager.get_daily_actions(character)
+            request = active['request']
+            searched = False
+            if request is not None:
+                if self._goal_is_satisfied(active, character):
+                    active['phase'] = 'COMPLETE'
+                    return True
+                if active['phase'] == 'ERROR':
+                    return True
+                if active['phase'] == 'BLOCKED':
+                    if (self._planning_time - active['blocked_at'] < self._retry_cooldown or
+                            self.strategy_manager.request_fingerprint(request) == active['fingerprint']):
+                        return True
+                    active.update(excluded=set(), recoveries=0, phase='RECOVERING', failed_action=None)
+                if active['phase'] == 'COMPLETE':
+                    active.update(actions=(), cursor=0, phase='READY', excluded=set(), recoveries=0)
+                recovering = active['phase'] == 'RECOVERING'
+                if active['phase'] in ('READY', 'RECOVERING'):
+                    self._install_proposal(active)
+                    searched = True
+                    if recovering or active['phase'] != 'RUNNING':
+                        return True
+                keys = self.strategy_manager.candidate_keys(request)
+                tail = active['actions'][active['cursor']:]
+                if (any(self.strategy_manager.action_key(action, character) not in keys for action in tail) or
+                        not self.strategy_manager.goap_planner.validate_plan(character, request.goal, tail)):
+                    self._recover_execution(active, can_search=not searched)
+                    return True
+            if active['phase'] in ('COMPLETE', 'ERROR'):
+                return True
+            if active['cursor'] >= len(active['actions']):
+                if request is None:
+                    active['phase'] = 'COMPLETE'
+                else:
+                    self._recover_execution(active, can_search=not searched)
+                return True
+            action = active['actions'][active['cursor']]
+            verify = None
+            failed_key = None
+            if request is not None:
+                strategy = self.strategy_manager
+                planner = strategy.goap_planner
+                failed_key = strategy.action_key(action, character)
+                state = planner._planning_snapshot(strategy._get_current_state_for_character(character))
+                expected = planner._apply_action_effects(action, state, character)
+                _, effects = planner._model_action(action, character, character)
+                attributes = {effect.attribute for effect in effects}
+                def verify():
+                    current_actor = strategy.resolve_actor(character)
+                    actual = planner._planning_snapshot(strategy._get_current_state_for_character(current_actor))
+                    values = self.graph_manager.G.nodes[current_actor]
+                    def matches(value, key):
+                        return type(value) in (int, float) and math.isclose(
+                            value, expected.get(key), rel_tol=1e-9, abs_tol=1e-9)
+                    return all(matches(actual.get(key), key) and matches(getattr(current_actor, key), key)
+                               and all(matches(values[alias], key) for alias, canonical in _ATTRIBUTE_ALIASES.items()
+                                       if canonical == key and alias in values)
+                               for key in attributes)
+            success = self._run_selected_action(action, character, verify_result=verify)
+            if not success:
+                if request is None:
+                    active.update(phase='ERROR', reason='Sequence action failed')
+                elif self._last_action_result['verification_error']:
+                    active.update(phase='ERROR', reason=self._last_action_result['verification_error'])
+                else:
+                    self._recover_execution(active, failed_action=action, failed_key=failed_key,
+                                            can_search=not searched)
+                return False
+            active['cursor'] += 1
+            active['recoveries'] = 0
+            if request is not None:
+                if self._goal_is_satisfied(active, character):
+                    active['phase'] = 'COMPLETE'
+            else:
+                active['phase'] = 'COMPLETE' if active['cursor'] == len(active['actions']) else 'RUNNING'
+            return True
         except Exception as error:
-            logger.error("Could not select an action for %s: %s", character.name, error)
-            fallback = self.action_resolver.get_fallback_action(character)
-            return self._run_selected_action(fallback, character, feedback=True)
-        if not actions:
-            logger.warning("No actions available for %s", character.name)
+            active.update(phase='ERROR', reason=f'{type(error).__name__}: {error}')
+            logger.warning('Execution request failed for %s: %s', character.name, error)
             return False
-        return self._run_selected_action(actions[0], character, feedback=True)
+
+    def _execute_character_actions(self, character) -> bool:
+        """Compatibility staging hook; simulation time alone dispatches actions."""
+        if self.strategy_manager is None:
+            return False
+        return self.queue_plan_request(self.strategy_manager.create_daily_request(character))
 
     def _execute_single_action(self, character, action_data) -> bool:
         """Resolve and execute one action through the controller pipeline."""
@@ -3763,21 +4042,34 @@ class GameplayController:
     def _invoke_action_execute(self, action, character):
         return invoke_action(action, character, self.graph_manager, legacy_target=character)
 
-    def _run_selected_action(self, action, character=None, *, feedback=False):
+    def _run_selected_action(self, action, character=None, *, feedback=False, verify_result=None):
         """Invoke once, then record the result independently of execution."""
         if character is None:
             character = getattr(action, "initiator", None)
         action_name = getattr(action, "name", str(action))
         success = False
+        raw_success = False
+        verification_error = ''
         try:
             if callable(getattr(action, "execute", None)):
-                success = bool(self._invoke_action_execute(action, character))
+                success = raw_success = bool(self._invoke_action_execute(action, character))
                 if isinstance(action, Action):
                     character = action.initiator
+                if success and verify_result is not None:
+                    try:
+                        success = bool(verify_result())
+                    except Exception as error:
+                        verification_error = f'{type(error).__name__}: {error}'
+                        raise
+                    if not success:
+                        logger.warning('Action %s returned True without its modeled effects', action_name)
             else:
                 logger.warning("Action %s has no callable execute method", action_name)
         except Exception as error:
+            success = False
             logger.warning("Error executing %s: %s", action_name, error)
+        self._last_action_result = {'returned_success': raw_success, 'verified_success': success,
+                                    'verification_error': verification_error}
 
         counter = "actions_executed" if success else "actions_failed"
         self._record_action_result(self._increment_action_counter, counter)
@@ -3849,60 +4141,9 @@ class GameplayController:
             logger.warning(f"Error updating quest progress for {character.name}: {e}")
 
     def process_character_turn(self, character) -> bool:
-        """
-        Process a character's turn using LLM-driven decision making.
-        
-        This method integrates:
-        1. PromptBuilder to create contextual decision prompts
-        2. GOAP system for intelligent action planning  
-        3. LLM communication via TinyBrainIO
-        4. OutputInterpreter to parse LLM responses
-        5. Action execution and tracking
-        
-        Args:
-            character: Character object to process turn for
-            
-        Returns:
-            bool: True if turn processed successfully, False otherwise
-        """
-        try:
-            logger.info(f"Processing LLM-driven turn for {character.name}")
-            # Share the configured provider and its availability state across
-            # characters/turns; failed loads must not be retried every turn.
-            if self.strategy_manager is None or not self.strategy_manager._ensure_llm():
-                logger.warning("Configured LLM provider unavailable; using basic actions")
-                return self._execute_fallback_character_action(character)
-            goap_planner = self.strategy_manager.goap_planner
-
-            # Step 2: Get available actions from strategy manager and GOAP
-            potential_actions = []
-            try:
-                if self.strategy_manager:
-                    # Get actions from strategy manager
-                    strategy_actions = self.strategy_manager.get_daily_actions(character)
-                    potential_actions.extend(strategy_actions or [])
-                    
-                # Get additional actions from GOAP planner if available
-                if goap_planner:
-                    goap_actions = goap_planner.get_available_actions(character)
-                    potential_actions.extend(goap_actions or [])
-                    
-                # Ensure we have at least some basic actions
-                if not potential_actions:
-                    potential_actions = self._get_basic_fallback_actions(character)
-                    
-            except Exception as e:
-                logger.warning(f"Error getting potential actions: {e}")
-                potential_actions = self._get_basic_fallback_actions(character)
-
-            # For now, use fallback action since full LLM integration is complex
-            # This can be expanded later with full LLM processing logic
-            return self._execute_fallback_character_action(character)
-                
-        except Exception as e:
-            logger.error(f"Critical error in process_character_turn for {getattr(character, 'name', 'Unknown')}: {e}")
-            # Final fallback to basic action
-            return self._execute_fallback_character_action(character)
+        """Compatibility entry point: observe/stage; never bypass simulation cadence."""
+        self._actor_execution_record(character)
+        return True
 
     def _update_social_networks_from_event(self, event_name):
         """Update social networks based on social events using GraphManager."""
@@ -3948,28 +4189,29 @@ class GameplayController:
             logger.warning(f"Error updating economic state from event: {e}")
 
     def _apply_strategy_to_character(self, character, strategy):
-        """Apply a strategy decision to a character."""
-        try:
-            # If strategy is a single action, execute it
-            if hasattr(strategy, 'execute'):
-                success = self._execute_single_action(character, strategy)
-                logger.debug(f"Applied strategy action {strategy.name} to {character.name}: {'success' if success else 'failed'}")
-                
-            # If strategy is a list of actions, execute them
-            elif isinstance(strategy, list):
-                for action in strategy:
-                    if hasattr(action, 'execute'):
-                        success = self._execute_single_action(character, action)
-                        logger.debug(f"Applied strategy action {action.name} to {character.name}: {'success' if success else 'failed'}")
-                        
-            # If strategy is a decision object with actions
-            elif hasattr(strategy, 'actions'):
-                for action in strategy.actions:
-                    success = self._execute_single_action(character, action)
-                    logger.debug(f"Applied strategy action from decision to {character.name}: {'success' if success else 'failed'}")
-                    
-        except Exception as e:
-            logger.warning(f"Error applying strategy to character {character.name}: {e}")
+        """Stage legacy sequences while preserving typed decision dispatch/order."""
+        if isinstance(strategy, PlanRequest):
+            return self.queue_plan_request(strategy)
+        if isinstance(strategy, PlanProposal):
+            return self.queue_plan_request(strategy.request)
+        if isinstance(strategy, dict) and 'type' in strategy:
+            decision = dict(strategy)
+            decision.setdefault('character_id', character)
+            return self.apply_decision(decision, None)
+        actions = strategy if isinstance(strategy, (list, tuple)) else getattr(strategy, 'actions', (strategy,))
+        chunk = []
+        admitted = False
+        for action in actions:
+            if isinstance(action, (PlanRequest, PlanProposal)) or (isinstance(action, dict) and 'type' in action):
+                if chunk:
+                    admitted = self._stage_action_sequence(character, chunk) or admitted
+                    chunk = []
+                admitted = self._apply_strategy_to_character(character, action) or admitted
+            else:
+                chunk.append(action)
+        if chunk:
+            admitted = self._stage_action_sequence(character, chunk) or admitted
+        return admitted
 
     def _render_ui(self):
         """Render user interface elements using the modular panel system."""
@@ -4077,28 +4319,13 @@ class GameplayController:
             logger.error(f"Even minimal UI rendering failed: {e}")
 
     def _execute_fallback_character_action(self, character) -> bool:
-        """Execute a simple fallback action when LLM decision making fails."""
-        try:
-            # Try to get actions from strategy manager
-            if self.strategy_manager:
-                actions = self.strategy_manager.get_daily_actions(character)
-                if actions and len(actions) > 0:
-                    action = actions[0]
-                    if hasattr(action, 'execute'):
-                        return self._run_selected_action(action, character)
-            
-            # Simple energy restoration as ultimate fallback
-            if hasattr(character, 'energy'):
-                character.energy = min(100, character.energy + 5)
-                logger.debug(f"Applied basic rest to {character.name}")
-                return True
-            
-            return True  # Success by default
-            
-        except Exception as e:
-            logger.warning(f"Even fallback action failed for {character.name}: {e}")
+        """Stage a real fallback choice; never mutate energy or fabricate success."""
+        actions = self.strategy_manager.get_daily_actions(character) if self.strategy_manager else ()
+        if not actions:
+            logger.warning('No actions available for %s', character.name)
             return False
-    
+        return self._stage_action_sequence(character, actions[:1])
+
     def _get_basic_fallback_actions(self, character):
         """Get basic fallback actions when no other actions are available."""
         try:
@@ -4186,22 +4413,17 @@ class GameplayController:
                     logger.warning(f"Error processing events: {e}")
                     update_errors.append("Event processing failed")
 
-            # Step 3: Update strategy based on events (whether processed or not)
-            strategy_result = None
-            if self.strategy_manager:
-                try:
-                    # StrategyManager overwrites per-character plans while iterating,
-                    # so lower-priority events are applied first and highest-priority
-                    # events win when they target the same character.
-                    strategy_result = self.strategy_manager.update_strategy(list(reversed(events)))
-                    logger.debug(f"StrategyManager generated strategy result: {type(strategy_result)}")
-                except Exception as e:
-                    logger.warning(f"Error updating strategy based on events: {e}")
-                    update_errors.append("Strategy update failed")
+            # Stage goal requests only; searches and execution wait for cadence.
+            if events and self.strategy_manager:
+                for event in events:
+                    try:
+                        requests = self.strategy_manager.create_event_requests(
+                            [event], default_subjects=tuple(self.characters.values()))
+                        self._apply_strategy_result(requests, update_errors)
+                    except Exception as error:
+                        logger.warning('Event request rejected: %s', error)
+                        update_errors.append('Strategy request failed')
 
-            # Step 4: Apply strategic result to game state
-            self._apply_strategy_result(strategy_result, update_errors)
-            
             # Step 5: Handle cascading events and dynamic event generation
             self._handle_cascading_and_dynamic_events(events, update_errors)
             
@@ -4325,67 +4547,35 @@ class GameplayController:
             update_errors.append("Event consequence application failed")
 
     def _apply_strategy_result(self, strategy_result, update_errors):
-        """Apply strategy result from the strategy manager, handling different return types."""
+        """Stage strategies, preserving goal metadata whenever it is supplied."""
         if strategy_result is None:
             return
-            
         try:
-            # Handle different types of strategy results
-            if isinstance(strategy_result, list):
-                # List of decisions - apply each one
-                for i, decision in enumerate(strategy_result):
-                    try:
-                        if decision:
-                            self.apply_decision(decision, None)
-                            logger.debug(f"Applied strategic decision {i+1}/{len(strategy_result)}")
-                        else:
-                            logger.warning(f"Received empty decision at index {i}")
-                    except Exception as e:
-                        logger.error(f"Error applying strategic decision {i}: {e}")
-                        update_errors.append(f"Decision application failed (decision {i})")
-                        continue
-            
-            elif hasattr(strategy_result, 'execute'):
-                if not self._run_selected_action(strategy_result):
-                    update_errors.append("Strategy action execution failed")
-
+            if isinstance(strategy_result, PlanRequest):
+                self.queue_plan_request(strategy_result)
+            elif isinstance(strategy_result, PlanProposal):
+                self.queue_plan_request(strategy_result.request)
+            elif isinstance(strategy_result, (list, tuple)):
+                if strategy_result and all(isinstance(item, Action) for item in strategy_result):
+                    actor = strategy_result[0].initiator
+                    self._stage_action_sequence(actor, strategy_result)
+                else:
+                    for item in strategy_result:
+                        self._apply_strategy_result(item, update_errors)
             elif isinstance(strategy_result, dict):
-                try:
-                    if "type" in strategy_result:
-                        # Single decision payload
-                        self.apply_decision(strategy_result, None)
-                        logger.debug("Applied dictionary-based strategic decision")
-                    else:
-                        # Treat as mapping of character -> plan/actions/decision
-                        for char_id, decision in strategy_result.items():
-                            if decision is None:
-                                continue
-                            if isinstance(decision, dict) and "type" in decision:
-                                self.apply_decision(decision, None)
-                                continue
-                            if isinstance(decision, list):
-                                for item in decision:
-                                    if hasattr(item, "execute"):
-                                        self._run_selected_action(item, self.characters.get(char_id))
-                                    elif isinstance(item, dict) and "type" in item:
-                                        self.apply_decision(item, None)
-                            elif hasattr(decision, "execute"):
-                                self._run_selected_action(decision, self.characters.get(char_id))
-                            else:
-                                logger.debug(
-                                    f"Unhandled strategy mapping entry for {char_id}: {type(decision)}"
-                                )
-                except Exception as e:
-                    logger.error(f"Error applying dictionary decision: {e}")
-                    update_errors.append("Dictionary decision application failed")
-            
+                if 'type' in strategy_result:
+                    self.apply_decision(strategy_result, None)
+                else:
+                    for actor, value in strategy_result.items():
+                        if value is not None:
+                            self._apply_strategy_to_character(actor, value)
+            elif isinstance(strategy_result, Action):
+                self._stage_action_sequence(strategy_result.initiator, (strategy_result,))
             else:
-                # Unknown type - log warning but don't fail
-                logger.warning(f"Unknown strategy result type: {type(strategy_result)}. Skipping application.")
-                
-        except Exception as e:
-            logger.error(f"Critical error applying strategy result: {e}")
-            update_errors.append(f"Strategy result application failure: {str(e)}")
+                raise TypeError('Unsupported strategy result')
+        except Exception as error:
+            logger.warning('Strategy request rejected: %s', error)
+            update_errors.append(f'Strategy request failed: {error}')
 
     def _apply_strategic_decisions(self, decisions, update_errors):
         """
@@ -4490,7 +4680,8 @@ class GameplayController:
                                 'name': getattr(event, 'name', str(event)),
                                 'importance': getattr(event, 'importance', 5)
                             }
-                            strategy_result = self.strategy_manager.update_strategy([event_for_strategy])
+                            strategy_result = self.strategy_manager.create_event_requests(
+                                [event_for_strategy], default_subjects=tuple(self.characters.values()))
                             self._apply_strategy_result(strategy_result, update_errors)
                         except Exception as e:
                             logger.warning(f"Error applying strategy for basic event: {e}")
@@ -4585,9 +4776,8 @@ class GameplayController:
                 character_id = decision.get("character_id")
                 action = decision.get("action")
                 
-                if character_id in self.characters and action:
-                    character = self.characters[character_id]
-                    self._execute_single_action(character, action)
+                if action:
+                    return self._stage_action_sequence(character_id, (action,))
                         
             elif decision_type == "event_response":
                 # Handle event-based decisions
@@ -4964,6 +5154,7 @@ class GameplayController:
             # Note: Character restoration is more complex and would require
             # full character recreation, which is beyond basic save/load
             
+            self._clear_plan_execution()
             logger.info(f"Game state loaded from {filepath}")
             return True
             

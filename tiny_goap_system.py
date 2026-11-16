@@ -161,6 +161,10 @@ class Plan:
         self._max_retries = 3
         self._replan_count = 0
         self._max_replans = 5
+        self._retained_actions = []
+        self._retained_dependencies = {}
+        self._completed_occurrences = {}
+        self._excluded_action_keys = set()
 
         if actions is not None:
             for action in actions:
@@ -175,6 +179,9 @@ class Plan:
         if dependencies is None:
             dependencies = []
 
+        if not any(candidate is action for candidate in self._retained_actions):
+            self._retained_actions.append(action)
+        self._retained_dependencies.setdefault(id(action), []).append(tuple(dependencies))
         # Add counter to ensure unique ordering when priorities are equal
         counter = getattr(self, '_action_counter', 0)
         self._action_counter = counter + 1
@@ -190,83 +197,71 @@ class Plan:
                 return False
         return True
 
+    def _replacement_actions(self, failed_action=None):
+        """Plan from real state; retained manual Actions remain available candidates."""
+        from tiny_strategy_manager import StrategyManager
+        for index, goal in enumerate(self.goals):
+            if not goal.check_completion():
+                self.current_goal_index = index
+                break
+        else:
+            self.current_goal_index = len(self.goals)
+            return []
+        environment = getattr(goal, 'environment', None)
+        graph = self.graph_manager if self.graph_manager is not None else environment
+        if graph is None or getattr(goal, 'character', None) is None:
+            return None
+        if environment is not None and environment is not graph:
+            raise ValueError('Plan graph differs from Goal environment')
+        strategy = StrategyManager(graph_manager=graph)
+        actor = strategy.resolve_actor(goal.character)
+        if failed_action is not None:
+            self._excluded_action_keys.add(strategy.action_key(failed_action, actor))
+        candidates = strategy._get_planning_actions(actor, self._retained_actions)
+        eligible = []
+        for action in candidates:
+            try:
+                key = strategy.action_key(action, actor)
+            except (UnsupportedPlanningAction, KeyError, TypeError, ValueError):
+                continue
+            if key not in self._excluded_action_keys:
+                eligible.append(action)
+        return (strategy.handle_plan_execution_failure(actor, goal, failed_action, actions=eligible)
+                if failed_action is not None else strategy.plan_for_goal(actor, goal, actions=eligible))
+
+    def _install_replacement(self, actions):
+        self.action_queue.clear()
+        self._action_counter = 0
+        if actions is None:
+            return False
+        completed = set(self.completed_actions)
+        entries = []
+        occurrences = dict(self._completed_occurrences)
+        for index, action in enumerate(actions):
+            contracts = self._retained_dependencies.get(id(action), [()])
+            occurrence = occurrences.get(id(action), 0)
+            dependencies = contracts[min(occurrence, len(contracts) - 1)]
+            occurrences[id(action)] = occurrence + 1
+            if not all(dependency in completed for dependency in dependencies):
+                return False
+            entries.append((index, action, dependencies))
+            completed.add(action.name)
+        for index, action, dependencies in entries:
+            heappush(self.action_queue, (index, self._action_counter, action, list(dependencies)))
+            self._action_counter += 1
+        return True
+
     def replan(self):
-        """
-
-        Replans the sequence of actions based on the current game state with cost-aware prioritization.
-
-        Replans the sequence of actions based on the current game state.
-        Now generates alternative action sequences instead of just re-sorting.
- 
-        """
+        """Install a complete validated replacement; report satisfaction/no-plan explicitly."""
         self._replan_count += 1
         if self._replan_count > self._max_replans:
-            print(f"Maximum replanning attempts ({self._max_replans}) reached for plan {self.name}")
+            self.action_queue.clear()
             return False
-            
-        print(f"Replanning based on new game state... (attempt {self._replan_count})")
-
-        # Clear current action queue to rebuild with updated priorities
-        old_queue = list(self.action_queue)
-        self.action_queue = []
-        self._action_counter = 0
-
-        # If we have a graph manager and goals, try to generate new action sequences
-        if self.graph_manager and self.goals:
-            try:
-                current_goal = self.goals[self.current_goal_index] if self.current_goal_index < len(self.goals) else None
-                if current_goal and hasattr(self.graph_manager, 'plan_actions'):
-                    # Try to get new action plan from GOAP planner
-                    from actions import State
-                    # Construct a meaningful current state based on game data
-                    current_state_data = {
-                        "character_health": self.graph_manager.character.health,
-                        "character_energy": self.graph_manager.character.energy,
-                        "environment_conditions": self.graph_manager.get_environment_conditions(),
-                        "goal_progress": {goal.name: goal.progress for goal in self.goals}
-                    }
-                    current_state = State(current_state_data)
-                    available_actions = [action for _, _, action, _ in old_queue if action.name not in self.completed_actions]
-                    
-                    new_plan = self.graph_manager.plan_actions(None, current_goal, current_state, available_actions)
-                    if new_plan:
-                        print("Generated new action sequence from GOAP planner")
-                        for i, action in enumerate(new_plan):
-                            # Higher priority (lower number) for earlier actions in plan
-                            self.add_action(action, priority=i+1)
-                        return True
-            except Exception as e:
-                print(f"Failed to generate new action sequence: {e}")
-
-
-        # Fallback: Re-evaluate and re-prioritize existing actions
-        failed_actions = set()
-        for priority, counter, action, dependencies in old_queue:
- 
-            # Skip actions that are already completed
-            if action.name in self.completed_actions:
-                continue
-                
-            # Track failed actions to deprioritize them
-            failure_count = self._failure_count.get(action.name, 0)
-            if failure_count >= self._max_retries:
-                failed_actions.add(action.name)
-                continue
-
- 
-            # Calculate new priority using utility functions
-            new_priority = self._calculate_action_priority(action, priority)
-
-            # Re-calculate priority based on current state
-           # new_priority = priority
-            
-            # Penalize actions that have failed before
-            if failure_count > 0:
-                new_priority += failure_count * 2  # Increase priority number (lower priority)
- 
-
-            # Re-add action with updated priority
-            heappush(self.action_queue, (new_priority, id(action), action, dependencies))
+        try:
+            return self._install_replacement(self._replacement_actions())
+        except Exception:
+            self.action_queue.clear()
+            raise
 
     def _calculate_action_priority(self, action, old_priority):
         """
@@ -321,17 +316,6 @@ class Plan:
             else:
                 return old_priority
 
-                new_priority = (action.cost / max(action.urgency, 0.1)) + (failure_count * 2)
-
-            # Re-add action with updated priority
-            self.add_action(action, new_priority, dependencies)
-            
-        if failed_actions:
-            print(f"Skipped permanently failed actions: {failed_actions}")
-            
-        return True
- 
-
     def execute(self):
         """
         Execute each selected action once, stopping on an execution failure.
@@ -360,7 +344,7 @@ class Plan:
                 continue
             
             # Only replan if we have no actions or after failures
-            if not self.action_queue or self._replan_count == 0:
+            if not self.action_queue:
                 replan_success = self.replan()
                 if not replan_success:
                     print(f"Failed to replan for goal {current_goal.name if hasattr(current_goal, 'name') else 'unnamed'}")
@@ -421,6 +405,7 @@ class Plan:
             if invoke_action(action, actor, self.graph_manager,
                              legacy_target=getattr(action, "target", None)):
                 self._failure_count.pop(action.name, None)
+                self._completed_occurrences[id(action)] = self._completed_occurrences.get(id(action), 0) + 1
                 return True
         except Exception as error:
             logging.getLogger(__name__).warning("Action %s raised: %s", action.name, error)
@@ -428,34 +413,16 @@ class Plan:
         return False
 
     def _handle_action_failure(self, action):
-        """
-        Handle action failure with intelligent recovery strategies.
-        """
-        failure_count = self._failure_count.get(action.name, 0)
-        print(f"Handling failure of action {action.name} (failure count: {failure_count})")
-        
-        # If action has failed too many times, try to find alternative
-        if failure_count >= self._max_retries:
-            print(f"Action {action.name} has exceeded maximum retries, seeking alternative")
-            alternative = self.find_alternative_action(action)
-            if alternative:
-                print(f"Found alternative action: {alternative['action'].name}")
-                self.add_action(
-                    alternative["action"],
-                    alternative["priority"],
-                    alternative["dependencies"],
-                )
-                return True
-            else:
-                print(f"No alternative found for action {action.name}")
-                return False
-        
-        # Try replanning if we haven't exceeded replan limit
-        if self._replan_count < self._max_replans:
-            return self.replan()
-        else:
-            print(f"Maximum replanning attempts reached")
+        if self._replan_count >= self._max_replans:
+            self.action_queue.clear()
             return False
+        self._replan_count += 1
+        try:
+            alternative = self.find_alternative_action(action)
+            return self._install_replacement(alternative['actions'] if alternative is not None else None)
+        except Exception:
+            self.action_queue.clear()
+            raise
 
     def handle_failure(self, action):
         """
@@ -475,67 +442,12 @@ class Plan:
         print(f"Total replanning attempts: {self._replan_count}")
 
     def find_alternative_action(self, failed_action):
-        """
-        Logic to find an alternative action for the failed action.
-        Enhanced to use graph manager when available and prevent infinite loops.
-        """
-        print(f"Finding alternative action for {failed_action.name}")
-
-        # Prevent infinite alternative creation
-        if failed_action.name.count('alt_') >= 3:
-            print(f"Too many alternative attempts for {failed_action.name}, stopping")
+        """Describe a real complete replacement without installing or executing it."""
+        actions = self._replacement_actions(failed_action)
+        if actions is None:
             return None
-
-        # First try to use graph manager for intelligent alternatives
-        if self.graph_manager and hasattr(self.graph_manager, 'find_alternative_actions'):
-            try:
-                alternatives = self.graph_manager.find_alternative_actions(failed_action)
-                if alternatives:
-                    print(f"Graph manager found {len(alternatives)} alternatives")
-                    return alternatives[0]  # Return the best alternative
-            except Exception as e:
-                print(f"Graph manager alternative search failed: {e}")
-
-        # Fallback: Create a mock alternative that just succeeds
-        # This is a simple fallback for testing - in real implementation,
-        # this would use more sophisticated alternative action generation
-        alternative_name = f"alt_{failed_action.name}"
-
-        try:
-            # Create a simple mock alternative that succeeds
-            class MockAlternativeAction:
-                def __init__(self, name, original_action):
-                    self.name = name
-                    self.target = getattr(original_action, "target", None)
-                    self.initiator = getattr(original_action, "initiator", None)
-                    self.cost = getattr(original_action, "cost", 5) + 2
-                    self.urgency = getattr(original_action, "urgency", 1)
-                    self.effects = getattr(original_action, "effects", {})
-                    self.related_skills = getattr(original_action, "related_skills", [])
-                
-                def preconditions_met(self):
-                    return True
-                
-                def execute(self, target=None, initiator=None):
-                    import random
-                    success_probability = 0.8  # 80% chance of success
-                    if random.random() < success_probability:
-                        print(f"Mock alternative action {self.name} executed successfully")
-                        return True
-                    else:
-                        print(f"Mock alternative action {self.name} failed")
-                        return False
-
-            alternative_action = MockAlternativeAction(alternative_name, failed_action)
-
-            return {
-                "action": alternative_action,
-                "priority": 10,  # Lower priority than original (higher number)
-                "dependencies": [],
-            }
-        except Exception as e:
-            print(f"Could not create alternative action: {e}")
-            return None
+        return {'action': actions[0] if actions else None, 'actions': tuple(actions),
+                'priority': 0, 'dependencies': []}
 
     def __str__(self):
         return f"Plan: {self.name} - Goals: {self.goals} - Actions: {self.action_queue} - Completed Actions: {self.completed_actions} - Current Goal Index: {self.current_goal_index} - Current Action Index: {self.current_action_index} - Completed: {self.evaluate()}"
