@@ -1,6 +1,7 @@
 ## Tasks Index
 
 ## In Progress
+- [TASK032](TASK032-strategy-goap-218.md) Executable StrategyManager plans (#218) — local implementation verified: core186+3/dev20/visual69, real goal-reaching traces and independent review; unmerged handoff, #741 separate (Updated: 2026-11-15 America/New_York).
 - [TASK031](TASK031-utility-goal-774.md) Explicit UtilityGoal and #774 test debt — PR822 GLM fixes: core167+3/dev20/visual69 and independent delta review pass; hosted checks/authorized merge pending.
 - [TASK030](TASK030-production-goal-802.md) Production Goal contract (#802) — PR #820; GLM review fixes, 13 acceptance checks; #821 retains pre-existing findings; local core129+3/dev20/visual69 pass; independent review/hosted verification pending.
 - [TASK029](TASK029-issue-740.md) Runtime units (#740) - #818 merged; closeout investigation repairs atb29552c, core116+3 probes/dev20/visual69 pass; issue remains OPEN pending repair merge and final verification (Updated: 2026-11-14)

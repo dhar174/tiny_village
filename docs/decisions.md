@@ -979,3 +979,21 @@ Project Decision synchronization remains outstanding as described above.
   work and carry this behavior into the #220 rollback design.
 - **Scope:** Local implementation and evidence for #799. D034 and the existing
   #220, #602, #741 and #802 acceptance boundaries remain in force.
+
+
+### D036 — Approve #218 executable planning implementation
+
+- **Date:** 2026-11-15 America/New_York.
+- **Decision-maker:** dhar174.
+- **Confirmation:** "Please implement the plan." after the revised #218 plan.
+- **Scope:** meaningful multi-step StrategyManager/GOAP plans, private validated
+  simulation, native units, real execution acceptance and bounded failure handoff.
+  Start from latest origin/main, preserving intervening changes. Use named
+  repository subagent definitions under the one-writer coordination policy.
+- **Approved boundary:** the user selected "Complete #218 only"; #741 retains
+  autonomous tick cursors, live invalidation and replacement scheduling. Preserve
+  remaining #821 catalog/inventory requirements and optional LLM compatibility.
+- **Plan:** [approved implementation contract](superpowers/plans/2026-11-15-issue-218-goal-reaching-plans.md).
+- **Limits:** implementation authorization does not approve merge, issue closure,
+  later human gates or broader runtime/model/platform readiness. Verification
+  reports record actual evidence and limitations separately.
