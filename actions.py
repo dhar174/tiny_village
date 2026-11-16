@@ -916,8 +916,10 @@ class Action:
         requested_id = getattr(requested, "uuid", requested)
         return candidate_id is not None and candidate_id == requested_id
 
-    def _iter_characters_in_initiator_location(self):
-        initiator_location = getattr(self.initiator, "location", None)
+    def _iter_characters_in_initiator_location(self, actor=None, graph_manager=None):
+        actor = self.initiator if actor is None else actor
+        manager = self.graph_manager if graph_manager is None else graph_manager
+        initiator_location = getattr(actor, "location", None)
         if initiator_location is None:
             return
 
@@ -929,12 +931,12 @@ class Action:
         # no recorded visitors. This keeps per-action overhead bounded when
         # current_visitors is maintained correctly.
         if not visitors:
-            registered_characters = getattr(self.graph_manager, "characters", None)
+            registered_characters = getattr(manager, "characters", None)
             if isinstance(registered_characters, dict):
                 visitors = list(registered_characters.values())
 
         for candidate in visitors:
-            if candidate is None or candidate is self.initiator:
+            if candidate is None or candidate is actor:
                 continue
 
             candidate_key = getattr(candidate, "uuid", None) or id(candidate)
@@ -949,11 +951,11 @@ class Action:
             seen_candidates.add(candidate_key)
             yield candidate
 
-    def _resolve_named_targets(self, effect):
+    def _resolve_named_targets(self, effect, *, actor=None, graph_manager=None):
         if "target_character_in_location" not in effect.get("targets", []):
             return []
         matches = (
-            candidate for candidate in self._iter_characters_in_initiator_location()
+            candidate for candidate in self._iter_characters_in_initiator_location(actor, graph_manager)
             if self._matches_requested_target(candidate)
         )
         target = next(matches, None)
@@ -962,6 +964,39 @@ class Action:
         if self.target is not None and next(matches, None) is not None:
             raise ValueError(f"Ambiguous nearby target: {self.target!r}")
         return [target]
+
+    def _resolve_effect_targets(self, descriptor, actor, actor_node, manager):
+        """Resolve one descriptor without rebinding or writing any entity.
+
+        The explicit context lets planning use exactly execution's target rules,
+        including implicit self-targets and per-descriptor deduplication.
+        """
+        effect = _AttributeEffect(descriptor)
+        targets = []
+        if "initiator" in effect.targets:
+            if actor is None:
+                raise ValueError("Missing required action initiator")
+            targets.append((actor, actor_node))
+        if "target" in effect.targets:
+            target = self.target
+            if self._implicit_target and target is self.initiator:
+                target = actor
+            if target is None and self.default_target_is_initiator:
+                target = actor
+            if target is None:
+                raise ValueError("Missing required action target")
+            targets.append((actor, actor_node) if target is actor else
+                           _resolve_action_entity(manager, target))
+        targets.extend(_resolve_action_entity(manager, target)
+                       for target in self._resolve_named_targets(
+                           descriptor, actor=actor, graph_manager=manager))
+        result, seen = [], set()
+        for target, node in targets:
+            key = (type(target), getattr(target, "uuid", None) or id(target))
+            if key not in seen:
+                seen.add(key)
+                result.append((target, node))
+        return effect, result
 
     def execute(self, character=None, graph_manager=None):
         """Validate then apply declared attribute effects to the object and graph."""
@@ -996,30 +1031,10 @@ class Action:
         prepared = []
         projected = {}
         for descriptor in self.effects:
-            effect = _AttributeEffect(descriptor)
-            targets = []
-            if "initiator" in effect.targets:
-                if actor is None:
-                    raise ValueError("Missing required action initiator")
-                targets.append((actor, actor_node))
-            if "target" in effect.targets:
-                target = self.target
-                if target is None and self.default_target_is_initiator:
-                    target = actor
-                if target is None:
-                    raise ValueError("Missing required action target")
-                targets.append((actor, actor_node) if target is actor else
-                               _resolve_action_entity(self.graph_manager, target))
-            targets.extend(
-                _resolve_action_entity(self.graph_manager, target)
-                for target in self._resolve_named_targets(descriptor)
-            )
-            seen = set()
+            effect, targets = self._resolve_effect_targets(
+                descriptor, actor, actor_node, self.graph_manager)
             for target, node in targets:
                 key = (type(target), getattr(target, "uuid", None) or id(target))
-                if key in seen:
-                    continue
-                seen.add(key)
                 field = (key, effect.attribute)
                 if not effect.is_dynamic(target):
                     current = projected[field] if field in projected else _read_effect_value(

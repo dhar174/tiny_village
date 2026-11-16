@@ -72,7 +72,7 @@ assert planner.evaluate_feasibility_of_goal(goal, State({'energy': 30}), actions
 assert planner.plan_actions(character, goal, state, [cheap]) == [cheap]  # positive control after negatives
 assert state.dict_or_obj == {'energy': 20}
 assert character.energy == graph.G.nodes[character]['energy'] == 20
-half = Action('Half', [], [{'attribute': 'energy', 'change_value': 5}], initiator=character, graph_manager=graph)
+half = Action('Half', [], [{'targets': ['initiator'], 'attribute': 'energy', 'change_value': 5}], initiator=character, graph_manager=graph)
 planner.MAX_PLAN_LENGTH = 1
 assert planner.evaluate_feasibility_of_goal(goal, state, actions=[half]) is False
 planner.MAX_PLAN_LENGTH = 2

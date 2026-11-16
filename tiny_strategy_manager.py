@@ -14,7 +14,7 @@ This function should dynamically weigh these factors according to the current pl
 This module integrates the GOAP system and the graph manager to formulate comprehensive strategies based on events.
 """
 
-from tiny_goap_system import GOAPPlanner, ActionWrapper, action_from_graph_record
+from tiny_goap_system import GOAPPlanner
 from tiny_utility_functions import (
     calculate_action_utility,
     build_utility_action_view,
@@ -23,10 +23,11 @@ from tiny_utility_functions import (
     native_character_state,
     Goal,
 )  # evaluate_utility seems to be for plans
-from actions import Action, State, Condition  # Use the modified Action from actions.py
+from actions import Action, State, Condition, _resolve_action_entity
 import logging
 import time
 import random
+import math
 
 # AI providers are imported only when an enabled decision requests them.
 PromptBuilder = TinyBrainIO = OutputInterpreter = None
@@ -69,10 +70,11 @@ class EatAction(Action):
 
 class SleepAction(Action):
     def __init__(
-        self, name="Sleep", cost=0.0, effects=None, graph_manager=None
+        self, name="Sleep", cost=0.0, effects=None, graph_manager=None, preconditions=None
     ):  # Sleeping might have time cost, but 0 for this model
         super().__init__(
-            name=name, preconditions={}, effects=effects if effects else [], cost=cost, graph_manager=graph_manager
+            name=name, preconditions=preconditions if preconditions is not None else {},
+            effects=effects if effects else [], cost=cost, graph_manager=graph_manager
         )
 
 
@@ -661,7 +663,7 @@ class StrategyManager:
         if not situation_context:
             return default_importance
         raw_importance = situation_context.get(
-            "event_importance", default_importance * 10
+            "event_importance", situation_context.get("importance", default_importance * 10)
         )
         return min(max(raw_importance / 10.0, 0.0), 1.0)
 
@@ -848,8 +850,16 @@ class StrategyManager:
         targets evaluate against the same snapshot.
         """
         state = self._standalone_planning_state(character)
-        state.update(native_character_state(character, self.graph_manager))
-        return state
+        state.update(native_character_state(character))
+        if self.graph_manager is not None:
+            identifier = character.get('name') if isinstance(character, dict) else character
+            try:
+                registered = self.graph_manager.get_character_state(identifier)
+            except (KeyError, ValueError, TypeError, AttributeError):
+                registered = None
+            if isinstance(registered, dict):
+                state.update(native_character_state(registered))
+        return native_character_state(state)
 
     def _standalone_planning_state(self, character) -> dict:
         """Standalone native planning state from Character attributes (graph-free path)."""
@@ -876,17 +886,8 @@ class StrategyManager:
             "money": _to_float(getattr(character, "wealth_money", 0.0), 0.0),
         }
 
-    def get_daily_actions(
-        self, character, current_goal=None
-    ) -> list[Action]:
-        """
-        Generates a list of potential daily actions for a character,
-        calculates their utility, and returns them sorted by utility.
-        
-        Args:
-            character: Character object, dictionary, or string name
-            current_goal: Optional goal object for utility calculation
-        """
+    def _build_daily_action_candidates(self, character) -> list[Action]:
+        """Construct candidates without discarding future-applicable actions."""
         potential_actions = []
 
         # --- Action Generation ---
@@ -897,20 +898,11 @@ class StrategyManager:
         )  # Wandering costs a little energy (native 0-100 scale, #740)
 
         # 2. Contextual Actions
-        # Handle different character input types
-        char_energy = 50  # Default value (native 0-100 scale, #740)
+        # Location and job determine which concrete candidates exist; current
+        # energy is a precondition, not a reason to remove a future action.
         char_location_name = "Unknown"  # Default value
         char_job = "unemployed"  # Default value
 
-        # Gate on the authoritative planning snapshot (#818 review): graph-first
-        # energy with the standalone attribute fallback for graph-free callers.
-        try:
-            char_energy = float(
-                self.get_character_planning_state(character).get("energy", 50.0)
-            )
-        except (TypeError, ValueError):
-            char_energy = 50.0
-            
         if hasattr(character, 'location'):
             char_location_name = getattr(character.location, "name", "Unknown") if character.location else "Unknown"
         elif isinstance(character, dict):
@@ -922,7 +914,6 @@ class StrategyManager:
             char_job = character.get("job", "unemployed")
 
         LOW_ENERGY_THRESHOLD = 30  # Native 0-100 energy (0-1 constants × 100, #740)
-        HIGH_HUNGER_THRESHOLD = 60  # Native 0-100 hunger (0-1 constants × 100, #740)
 
         # Add actions that can improve satisfaction and energy to match common goals (native 0-100, #740)
         rest_action = Action(
@@ -983,12 +974,14 @@ class StrategyManager:
                     )
 
         # Sleep Action
-        if (char_energy < LOW_ENERGY_THRESHOLD and char_location_name == "Home"):
+        if char_location_name == "Home":
             sleep_effects = [
                 {"targets": ["initiator"], "attribute": "energy", "change_value": 70}
             ]  # Restore 70 points of energy (native, #740)
             potential_actions.append(
-                SleepAction(effects=sleep_effects, cost=0, graph_manager=self.graph_manager)
+                SleepAction(effects=sleep_effects, cost=0, graph_manager=self.graph_manager,
+                            preconditions=[Condition("LowEnergyToSleep", "energy", None,
+                                                     LOW_ENERGY_THRESHOLD, '<')])
             )  # Sleep itself has no direct cost other than time
 
         # Work Action
@@ -1014,7 +1007,11 @@ class StrategyManager:
             )  # Requires native energy >= 30 (#740); cost unchanged
 
 
-        # --- Utility Calculation & Sorting ---
+        return potential_actions
+
+    def get_daily_actions(self, character, current_goal=None) -> list[Action]:
+        """Return applicable immediate choices, ranked by utility, not a plan."""
+        potential_actions = self._build_daily_action_candidates(character)
         action_utilities = []
         character_state_dict = self.get_character_state_dict(character)
         if not character_state_dict:  # Basic error handling
@@ -1230,48 +1227,8 @@ class StrategyManager:
                     plans[char_id] = self.decide_action_with_llm(character_obj)
                     continue
 
-                goal = self._select_goal_for_event(character_obj, event_type)
-                current_state = self._get_current_state_for_character(character_obj)
-                available_actions = self._get_actions_for_character(character_obj)
-                available_actions = self._filter_actions_for_event(
-                    event_type, available_actions
-                )
-
-                if use_llm_for_strategy:
-                    llm_actions = self.decide_action_with_llm(
-                        character_obj,
-                        time=situation_context.get("time_of_day", "morning"),
-                        weather=situation_context.get("weather", "clear"),
-                        potential_actions=available_actions,
-                        situation_context=situation_context,
-                    )
-                    if llm_actions:
-                        plans[char_id] = llm_actions
-                        continue
-
-                goal_candidates = self._build_goals_for_event(
-                    event_type, character_obj, current_state
-                )
-                ranked_goals = self._rank_goals(character_obj, goal_candidates)
-                goal = ranked_goals[0] if ranked_goals else self._goal_for_event_type(
-                    event_type, self.get_character_planning_state(character_obj)
-                )
-
-                plan = None
-                if self.goap_planner:
-                    try:
-                        plan = self.goap_planner.plan_actions(
-                            character_obj, goal, current_state, available_actions
-                        )
-                    except Exception as planning_error:
-                        logger.warning(
-                            f"GOAP planning failed for {char_id}: {planning_error}"
-                        )
-
-                if plan:
-                    plans[char_id] = plan
-                else:
-                    plans[char_id] = self.plan_daily_activities(character_obj)
+                goal = self._goal_for_event_type(event_type, situation_context=situation_context)
+                plans[char_id] = self.plan_for_goal(character_obj, goal)
 
         return plans
 
@@ -1405,18 +1362,29 @@ class StrategyManager:
             if isinstance(action, Action):
                 converted.append(action)
             elif isinstance(action, dict):
-                converted.append(action_from_graph_record(action))
+                candidate = action.get('action')
+                if isinstance(candidate, Action):
+                    converted.append(candidate)
+                else:
+                    logger.warning("Skipping graph action without a real executable Action: %s", action.get('name'))
             else:
-                converted.append(
-                    ActionWrapper(
-                        name=getattr(action, "name", str(action)),
-                        cost=getattr(action, "cost", 1.0),
-                        effects=getattr(action, "effects", []),
-                        preconditions=getattr(action, "preconditions", {}),
-                        utility=getattr(action, "utility", 0.0),
-                    )
-                )
+                logger.warning("Skipping unsupported action type: %s", type(action).__name__)
         return converted
+
+    def _get_planning_actions(self, character, extra_actions=()):
+        """Keep enabling daily actions alongside real graph/event actions."""
+        actor, _ = _resolve_action_entity(self.graph_manager, character, 'character')
+        candidates = self._build_daily_action_candidates(actor)
+        if self.graph_manager is not None:
+            candidates.extend(self._convert_actions_to_objects(
+                self.graph_manager.get_possible_actions(actor)))
+        candidates.extend(extra_actions)
+        result, seen = [], set()
+        for action in candidates:
+            if id(action) not in seen:
+                seen.add(id(action))
+                result.append(action)
+        return result
 
     def _get_money_value(self, character_state):
         if isinstance(character_state, State):
@@ -1458,68 +1426,40 @@ class StrategyManager:
 
         return max(actions, key=_score)
 
-    def _goal_for_event_type(self, event_type, character_state=None):
-        character_state = character_state or {}
-        current_money = self._get_money_value(character_state)
-        current_social = character_state.get("social_wellbeing", 50)
-        current_satisfaction = character_state.get("satisfaction", 50)
-        current_energy = character_state.get("energy", 50)
-        current_happiness = character_state.get("happiness", 0.5)
-        current_job = character_state.get("job_performance", 50)
-
-        if event_type in ["social", "celebration", "festival"]:
-            return Goal(
-                name="social_engagement",
-                target_effects={
-                    "social_wellbeing": min(100, current_social + 20),
-                    "happiness": min(1.0, current_happiness + 0.2),
-                },
-                priority=0.8,
-            )
-        if event_type in ["economic", "trade", "market"]:
-            return Goal(
-                name="economic_opportunity",
-                target_effects={
-                    "money": current_money + 20.0,
-                    "satisfaction": min(100, current_satisfaction + 15),
-                },
-                priority=0.9,
-            )
-        if event_type in ["crisis", "disaster", "emergency"]:
-            return Goal(
-                name="crisis_response",
-                target_effects={
-                    "safety": 90,
-                    "energy": max(current_energy, 60),
-                },
-                priority=1.0,
-            )
-        if event_type in ["work", "task", "project"]:
-            return Goal(
-                name="work_productivity",
-                target_effects={
-                    "job_performance": min(100, current_job + 15),
-                    "satisfaction": min(100, current_satisfaction + 10),
-                },
-                priority=0.7,
-            )
-        if event_type in ["weather", "environmental"]:
-            return Goal(
-                name="weather_adaptation",
-                target_effects={
-                    "safety": 80,
-                    "energy": max(current_energy, 70),
-                },
-                priority=0.8,
-            )
-        return Goal(
-            name="balanced_response",
-            target_effects={
-                "satisfaction": max(current_satisfaction, 70),
-                "energy": max(current_energy, 65),
-            },
-            priority=0.6,
-        )
+    def _goal_for_event_type(self, event_type, character_state=None, situation_context=None):
+        """One native-unit goal policy shared by event producers."""
+        context = situation_context or {}
+        impact = context.get('event_impact', context.get('impact', 0))
+        if not isinstance(impact, (int, float)) or not math.isfinite(impact):
+            raise ValueError('Event impact must be a finite number')
+        positive = max(0, impact)
+        if event_type == 'new_day':
+            name, targets, priority = 'daily_wellbeing', {'satisfaction': SATISFACTION_TARGET, 'energy': ENERGY_TARGET}, 0.8
+        elif event_type in ('social', 'celebration', 'festival'):
+            name, targets, priority = 'social_engagement', {
+                'social_wellbeing': min(100, 80 + min(positive, 20)),
+                'happiness': min(1.0, .75 + min(positive, 20) / 100)}, .8
+        elif event_type in ('economic', 'trade', 'market'):
+            name, targets, priority = 'economic_opportunity', {
+                'wealth_money': 100 + min(positive * 2, 50), 'satisfaction': 70}, .9
+        elif event_type in ('crisis', 'disaster', 'emergency'):
+            name, targets, priority = 'crisis_response', {
+                'safety': min(100, 90 + max(0, -impact)), 'energy': 60}, 1.0
+        elif event_type in ('work', 'task', 'project'):
+            name, targets, priority = 'work_productivity', {
+                'job_performance': min(100, 85 + min(positive, 15)), 'satisfaction': 65}, .7
+        elif event_type in ('weather', 'environmental') and impact < 0:
+            name, targets, priority = 'weather_adaptation', {
+                'safety': min(100, 80 + abs(impact)), 'energy': 70}, min(1.0, .8 + abs(impact) * .02)
+        elif event_type in ('weather', 'environmental'):
+            name, targets, priority = 'enjoy_weather', {
+                'happiness': min(1.0, .8 + impact / 100), 'energy': 75}, .6
+        else:
+            name, targets, priority = 'balanced_response', {'satisfaction': 70, 'energy': 65}, .6
+        if event_type not in ('crisis', 'disaster', 'emergency') and not (
+                event_type in ('weather', 'environmental') and impact < 0):
+            priority = self._normalize_event_importance(context, priority)
+        return Goal(name=name, target_effects=targets, priority=priority)
 
     def _build_goals_for_event(self, event_type, character, current_state):
         character_state = {}
@@ -1637,400 +1577,99 @@ class StrategyManager:
             return filtered
         return actions
 
+    def _plan_event(self, event_type, character, situation_context=None, extra_actions=()):
+        goal = self._goal_for_event_type(event_type, situation_context=situation_context)
+        return self._plan_with_goal_and_actions(
+            character, goal, self._get_planning_actions(character, extra_actions))
+
     def _handle_social_event(self, event, character, situation_context=None):
-        """Handle social events by prioritizing social actions."""
-        try:
-            # Use event importance and impact from situation_context if available
-            event_importance = 0.8  # Default priority
-            target_wellbeing = 80
-            target_happiness = 75
-            
-            if situation_context:
-                # Normalize importance to 0-1 range and ensure it's within bounds
-                event_importance = self._normalize_event_importance(
-                    situation_context, event_importance
-                )
-                
-                event_impact = situation_context.get("event_impact", 0)
-                # Adjust targets based on event impact
-                if event_impact > 0:
-                    target_wellbeing += min(event_impact, 20)
-                    target_happiness += min(event_impact, 20)
-            
-            # Create goal focused on social interaction and happiness
-            goal = Goal(
-                name="social_engagement",
-                target_effects={"social_wellbeing": target_wellbeing, "happiness": target_happiness},
-                priority=event_importance
-            )
-            
-            # Get social-focused actions
-            actions = self.get_daily_actions(character)
-            social_actions = [a for a in actions if 'social' in a.name.lower() or 'talk' in a.name.lower() or 'help' in a.name.lower()]
-            
-            if not social_actions:
-                social_actions = actions[:3]  # Take top 3 if no social actions found
-                
-            return self._plan_with_goal_and_actions(character, goal, social_actions)
-            
-        except Exception as e:
-            logger.warning(f"Error handling social event: {e}")
-            return self.plan_daily_activities(character)
+        return self._plan_event('social', character, situation_context)
 
     def _handle_economic_event(self, event, character, situation_context=None):
-        """Handle economic events by prioritizing wealth and trade actions."""
-        try:
-            character_state = (
-                self.get_character_state_dict(character)
-                if not isinstance(character, str)
-                else {}
-            )
-            current_money = self._get_money_value(character_state)
-
-            # Use event importance and impact from situation_context if available
-            event_importance = 0.9  # Default high priority for economic events
-            target_wealth = 100
-            target_satisfaction = 70
-            
-            if situation_context:
-                # Normalize importance to 0-1 range and ensure it's within bounds
-                event_importance = self._normalize_event_importance(
-                    situation_context, event_importance
-                )
-                
-                event_impact = situation_context.get("event_impact", 0)
-                # Economic events with positive impact increase wealth targets
-                if event_impact > 0:
-                    target_wealth += min(event_impact * 2, 50)
-            
-            goal = Goal(
-                name="economic_opportunity",
-                target_effects={"wealth": target_wealth, "satisfaction": target_satisfaction},
-                priority=event_importance
-            )
-            
-            actions = self.get_daily_actions(character)
-            economic_actions = [a for a in actions if 'work' in a.name.lower() or 'trade' in a.name.lower() or 'craft' in a.name.lower()]
-            
-            if not economic_actions:
-                economic_actions = actions[:3]
-                
-            return self._plan_with_goal_and_actions(character, goal, economic_actions)
-            
-        except Exception as e:
-            logger.warning(f"Error handling economic event: {e}")
-            return self.plan_daily_activities(character)
+        return self._plan_event('economic', character, situation_context)
 
     def _handle_crisis_event(self, event, character, situation_context=None):
-        """Handle crisis events by prioritizing safety and recovery actions."""
-        try:
-            # Crisis events always have maximum priority
-            event_importance = 1.0
-            target_safety = 90
-            target_energy = 60
-            
-            if situation_context:
-                event_impact = situation_context.get("event_impact", 0)
-                # Negative impact increases safety requirement
-                if event_impact < 0:
-                    target_safety = min(target_safety + abs(event_impact), 100)
-            
-            goal = Goal(
-                name="crisis_response",
-                target_effects={"safety": target_safety, "energy": target_energy},
-                priority=1.0  # Highest priority; native 0-100 targets (#740)
-            )
-            
-            # In crisis, prioritize safety and basic needs
-            crisis_actions = []
-            
-            # Add safety actions
-            crisis_actions.append(Action(
-                name="Seek Safety",
-                preconditions={},
-                effects=[
-                    {"targets": ["initiator"], "attribute": "safety", "change_value": 20},
-                    {"targets": ["initiator"], "attribute": "energy", "change_value": -10}
-                ],
-                cost=0.2,
-                graph_manager=self.graph_manager,
-            ))
-            
-            # Add help others action
-            crisis_actions.append(Action(
-                name="Help Others",
-                preconditions={},
-                effects=[
-                    {"targets": ["initiator"], "attribute": "social_wellbeing", "change_value": 15},
-                    {"targets": ["initiator"], "attribute": "satisfaction", "change_value": 10}
-                ],
-                cost=0.3,
-                graph_manager=self.graph_manager,
-            ))
-            
-            return self._plan_with_goal_and_actions(character, goal, crisis_actions)
-            
-        except Exception as e:
-            logger.warning(f"Error handling crisis event: {e}")
-            return self.plan_daily_activities(character)
+        safety = Action('Seek Safety', [], [
+            {'targets': ['initiator'], 'attribute': 'safety', 'change_value': 20},
+            {'targets': ['initiator'], 'attribute': 'energy', 'change_value': -10}],
+            cost=.2, graph_manager=self.graph_manager)
+        help_others = Action('Help Others', [], [
+            {'targets': ['initiator'], 'attribute': 'social_wellbeing', 'change_value': 15},
+            {'targets': ['initiator'], 'attribute': 'satisfaction', 'change_value': 10}],
+            cost=.3, graph_manager=self.graph_manager)
+        return self._plan_event('crisis', character, situation_context, [safety, help_others])
 
     def _handle_work_event(self, event, character, situation_context=None):
-        """Handle work events by prioritizing productivity and skill development."""
-        try:
-            # Use event importance from situation_context if available
-            event_importance = 0.7
-            target_performance = 85
-            target_satisfaction = 65
-            
-            if situation_context:
-                # Normalize importance to 0-1 range and ensure it's within bounds
-                event_importance = self._normalize_event_importance(
-                    situation_context, event_importance
-                )
-                
-                event_impact = situation_context.get("event_impact", 0)
-                # High-impact work events increase performance targets
-                if event_impact > 0:
-                    target_performance += min(event_impact, 15)
-            
-            goal = Goal(
-                name="work_productivity",
-                target_effects={"job_performance": target_performance, "satisfaction": target_satisfaction},
-                priority=event_importance
-            )
-            
-            actions = self.get_daily_actions(character)
-            work_actions = [a for a in actions if 'work' in a.name.lower() or 'craft' in a.name.lower() or 'build' in a.name.lower()]
-            
-            if not work_actions:
-                # Create a basic work action if none exist
-                work_actions = [WorkAction(
-                    name="Contribute to Project",
-                    effects=[
-                        {"targets": ["initiator"], "attribute": "job_performance", "change_value": 10},
-                        {"targets": ["initiator"], "attribute": "energy", "change_value": -15}
-                    ],
-                    graph_manager=self.graph_manager,
-                )]
-                
-            return self._plan_with_goal_and_actions(character, goal, work_actions)
-            
-        except Exception as e:
-            logger.warning(f"Error handling work event: {e}")
-            return self.plan_daily_activities(character)
+        contribute = WorkAction(name='Contribute to Project', effects=[
+            {'targets': ['initiator'], 'attribute': 'job_performance', 'change_value': 10},
+            {'targets': ['initiator'], 'attribute': 'energy', 'change_value': -15}],
+            graph_manager=self.graph_manager)
+        return self._plan_event('work', character, situation_context, [contribute])
 
     def _handle_environmental_event(self, event, character, situation_context=None):
-        """Handle environmental/weather events by adapting to conditions."""
-        try:
-            # Determine appropriate response based on event severity
-            # Try to get impact from situation_context first, then from event
-            event_importance = self._normalize_event_importance(situation_context, 0.6)
-            event_impact = 0
-            if situation_context and "event_impact" in situation_context:
-                event_impact = situation_context.get("event_impact", 0)
-            elif event:
-                event_impact = getattr(event, 'impact', 0)
-            
-            if event_impact < 0:  # Negative weather (storm, etc.)
-                # More severe negative impact increases safety priority
-                priority = min(0.8 + abs(event_impact) * 0.02, 1.0)
-                target_safety = min(80 + abs(event_impact), 100)
-                
-                goal = Goal(
-                    name="weather_adaptation",
-                    target_effects={"safety": target_safety, "energy": 70},
-                    priority=priority
-                )
-                
-                # Stay indoors, rest, prepare
-                weather_actions = [
-                    SleepAction(name="Take Shelter", effects=[
-                        {"targets": ["initiator"], "attribute": "safety", "change_value": 15},
-                        {"targets": ["initiator"], "attribute": "energy", "change_value": 10}
-                    ], graph_manager=self.graph_manager),
-                ]
-            else:  # Positive weather
-                # Better weather increases happiness targets
-                target_happiness = min(80 + event_impact, 100)
-                
-                goal = Goal(
-                    name="enjoy_weather",
-                    target_effects={"happiness": target_happiness, "energy": 75},
-                    priority=event_importance
-                )
-                
-                # Outdoor activities, work, socialize
-                weather_actions = [
-                    WanderAction(name="Enjoy Outdoors", effects=[
-                        {"targets": ["initiator"], "attribute": "happiness", "change_value": 10},
-                        {"targets": ["initiator"], "attribute": "energy", "change_value": 5}
-                    ], graph_manager=self.graph_manager)
-                ]
-                
-            return self._plan_with_goal_and_actions(character, goal, weather_actions)
-            
-        except Exception as e:
-            logger.warning(f"Error handling environmental event: {e}")
-            return self.plan_daily_activities(character)
+        context = dict(situation_context or {})
+        if 'event_impact' not in context and 'impact' not in context:
+            context['event_impact'] = event.get('impact', 0) if isinstance(event, dict) else getattr(event, 'impact', 0)
+        goal = self._goal_for_event_type('weather', situation_context=context)
+        if goal.name == 'weather_adaptation':
+            action = SleepAction(name='Take Shelter', effects=[
+                {'targets': ['initiator'], 'attribute': 'safety', 'change_value': 15},
+                {'targets': ['initiator'], 'attribute': 'energy', 'change_value': 10}],
+                graph_manager=self.graph_manager)
+        else:
+            action = WanderAction(name='Enjoy Outdoors', effects=[
+                {'targets': ['initiator'], 'attribute': 'happiness', 'change_value': .10},
+                {'targets': ['initiator'], 'attribute': 'energy', 'change_value': 5}],
+                graph_manager=self.graph_manager)
+        return self._plan_with_goal_and_actions(
+            character, goal, self._get_planning_actions(character, [action]))
 
     def _handle_new_day_strategy(self, character, use_llm=False):
-        """Handle new day events with optional LLM decision-making."""
-        try:
-            if use_llm and self.use_llm and self._ensure_llm():
-                # Use LLM for strategic new day planning
-                logger.info(f"Using LLM strategy for new day planning for {getattr(character, 'name', character)}")
-                
-                # Get environmental context if available
-                time = "morning"  # Default for new day
-                weather = "clear"  # Default weather
-                
-                try:
-                    return self.decide_action_with_llm(character, time=time, weather=weather)
-                except Exception as llm_error:
-                    logger.warning(f"LLM strategy failed for new day: {llm_error}")
-                    # Fall back to standard planning
-                    return self.plan_daily_activities(character)
-            else:
-                # Use standard utility-based planning
-                return self.plan_daily_activities(character)
-                
-        except Exception as e:
-            logger.warning(f"Error handling new day strategy: {e}")
-            return self.plan_daily_activities(character)
+        """Keep optional LLM choices separate from validated GOAP planning."""
+        if use_llm and self.use_llm and self._ensure_llm():
+            try:
+                return self.decide_action_with_llm(character, time='morning', weather='clear')
+            except Exception as error:
+                logger.warning('LLM new-day selection failed: %s', error)
+        return self.plan_daily_activities(character)
 
     def _handle_generic_event(self, event, character):
-        """Handle generic events with balanced response."""
-        try:
-            # Default balanced goal
-            goal = Goal(
-                name="balanced_response",
-                target_effects={"satisfaction": 0.7, "energy": 0.65},
-                priority=0.6
-            )
-            
-            # Use standard daily actions
-            actions = self.get_daily_actions(character)
-            
-            return self._plan_with_goal_and_actions(character, goal, actions[:5])
-            
-        except Exception as e:
-            logger.warning(f"Error handling generic event: {e}")
-            return self.plan_daily_activities(character)
+        return self._plan_event('generic', character)
+
+    def plan_for_goal(self, character, goal, actions=None, current_state=None) -> list[Action] | None:
+        """Return a full validated sequence, [] when satisfied, or None within bounds.
+
+        Required Goal/state errors propagate. Utility-selected immediate actions
+        are not substitutes for a plan reaching the requested goal.
+        """
+        actor, _ = _resolve_action_entity(self.graph_manager, character, 'character')
+        if self.goap_planner is None:
+            logger.warning('GOAP planning unavailable for %s', getattr(actor, 'name', actor))
+            return None
+        actor, _ = self.goap_planner._planning_actor(actor, goal)
+        state = self._get_current_state_for_character(actor) if current_state is None else current_state
+        # Preserve the already-satisfied outcome even if no candidate source is available.
+        if self.goap_planner._goal_satisfied(goal, self.goap_planner._planning_snapshot(state)):
+            return []
+        candidates = self._get_planning_actions(actor) if actions is None else actions
+        return self.goap_planner.plan_actions(actor, goal, state, candidates)
 
     def _plan_with_goal_and_actions(self, character, goal, actions):
+        return self.plan_for_goal(character, goal, actions=actions)
+
+    def plan_daily_activities(self, character) -> list[Action] | None:
+        return self.plan_for_goal(character, self._goal_for_event_type('new_day'))
+
+    def handle_plan_execution_failure(self, character, goal, failed_action, actions=None) -> list[Action] | None:
+        """One fresh bounded search for the original goal after an actual failure.
+
+        A failed action may have partially written state; never reuse the old
+        snapshot. #741 owns invoking/scheduling this handoff across live ticks.
         """
-        Helper method to plan actions with a specific goal.
-        
-        Returns:
-            list or None: A list of Action objects forming a plan (potentially multi-step from GOAP,
-                         or a fallback list of utility-sorted actions), or None if no actions available.
-        """
-        try:
-            # Get character state
-            if isinstance(character, str):
-                current_state = State({"satisfaction": 50, "energy": 50, "happiness": 0.5})
-            else:
-                current_state = self._get_current_state_for_character(character)
-            
-            # Plan using GOAP with the specific goal and actions
-            if self.goap_planner:
-                plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
-                
-                if plan is not None:
-                    if not plan:
-                        return None
-                    # Evaluate the utility of the plan
-                    final_decision = self.goap_planner.evaluate_utility(plan, character)
-                    return final_decision
-                    
-            # Fallback to highest utility action
-            return self._select_best_action(actions, character, goal)
-            if plan:
-                return plan
-                    
-            # Fallback: return utility-sorted actions as a simple sequential plan
-            # This maintains consistent return type (list of actions) with GOAP planning
-            # Limit to 5 actions to match reasonable plan lengths and avoid overwhelming downstream systems
-            if actions:
-                return actions[:5]  # Actions are already sorted by utility
-                
-            return None
-            
-        except Exception as e:
-            logger.warning(f"Error in planning with goal and actions: {e}")
-            return None
-
-    def plan_daily_activities(self, character):
-        """
-        Plans the daily activities for the given character.
-        This method properly interfaces with GOAPPlanner when available,
-        with fallback to utility-based action selection.
-        
-        Returns:
-            list or None: A list of Action objects forming a plan (potentially multi-step from GOAP,
-                         or a fallback list of utility-sorted actions), or None if no actions available.
-        """
-        # Get potential actions from the utility-based action generator
-        actions = self.get_daily_actions(character)
-        
-        # If GOAP planner is not available, return utility-sorted actions
-        if not self.goap_planner:
-            logger.debug("GOAP planner not available, using utility-based action selection")
-            # Actions are already sorted by utility from get_daily_actions()
-            return actions[0] if actions else None
-        
-        # Define a proper Goal object for daily activities
-        goal = Goal(
-            name="daily_wellbeing",
-            target_effects={"satisfaction": SATISFACTION_TARGET, "energy": ENERGY_TARGET},
-            priority=0.8,
-        )
-
-        # Get potential actions from the utility-based action generator
-        actions = self._get_actions_for_character(character)
-
-        # Create current state - handle both Character objects and string names
-        if isinstance(character, str):
-            # If character is a string, create a simple native-scale state (#740)
-            current_state = State({"satisfaction": 50, "energy": 50, "hunger_level": 50})
-        else:
-            # If character is a Character object, get its native planning state (#740)
-            current_state = State(self.get_character_planning_state(character))
-
-        # Plan using GOAP with correct interface
-        try:
-            plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
-
-            # Evaluate the utility of the plan using the planner's evaluate_utility method
-            if plan:
-                final_decision = self.goap_planner.evaluate_utility(plan, character)
-                return final_decision
-            else:
-                # If no plan found, return the highest utility action as fallback
-                if actions:
-                    return max(actions, key=lambda a: self.goap_planner.calculate_utility(a, character))
-                return None
-        except Exception as e:
-            logger.warning(f"GOAP planning failed, falling back to utility-based selection: {e}")
-            # Fallback to utility-sorted actions
-            return actions[0] if actions else None
-        ranked_goals = self._rank_goals(character, [goal])
-        if ranked_goals:
-            goal = ranked_goals[0]
-
-        # Plan using GOAP with correct interface
-        if self.goap_planner:
-            plan = self.goap_planner.plan_actions(character, goal, current_state, actions)
-
-            # Evaluate the utility of the plan using the planner's evaluate_utility method
-            if plan is not None:
-                if not plan:
-                    return None
-                final_decision = self.goap_planner.evaluate_utility(plan, character)
-                return final_decision
-
-        # Fallback when goap_planner is unavailable or no plan found
-        return self._select_best_action(actions, character, goal)
+        actor, _ = _resolve_action_entity(self.graph_manager, character, 'character')
+        candidates = self._get_planning_actions(actor) if actions is None else actions
+        return self.plan_for_goal(actor, goal,
+                                  actions=[action for action in candidates if action is not failed_action])
 
     def get_career_actions(self, character, job_details):
         # This is a placeholder and would need similar utility-based ranking

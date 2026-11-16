@@ -28,7 +28,8 @@ What happens: The GOAP planner uses the graph to analyze relationships and prefe
 """
 
 from tiny_types import Goal, Character, GraphManager
-from actions import Action, State, invoke_action, _ATTRIBUTE_ALIASES, _canonical_attribute
+from actions import (Action, Condition, State, invoke_action, _ATTRIBUTE_ALIASES,
+                     _canonical_attribute, _AttributeEffect, _resolve_action_entity)
 
 # from tiny_graph_manager import GraphManager
 
@@ -39,6 +40,8 @@ import tiny_utility_functions as util_funcs
 import logging
 import importlib
 import inspect
+import math
+from collections.abc import Mapping
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -46,6 +49,38 @@ logging.basicConfig(level=logging.DEBUG)
 UTILITY_SCALING_FACTOR = 0.1
 UTILITY_INFLUENCE_FACTOR = 0.05
 HEURISTIC_SCALING_FACTOR = 0.1
+
+
+class UnsupportedPlanningAction(ValueError):
+    """An executable action has no faithful scalar planning model."""
+
+
+def _copy_planning_value(value):
+    """Copy data only; never traverse, copy, hash, or invoke a domain object."""
+    if value is None or type(value) in (str, bool, int):
+        return value
+    if type(value) is float:
+        if not math.isfinite(value):
+            raise ValueError("Non-finite planning value")
+        return value
+    if type(value) is dict:
+        if any(type(key) is not str for key in value):
+            raise TypeError("Planning mappings require string keys")
+        return {key: _copy_planning_value(item) for key, item in value.items()}
+    if type(value) in (list, tuple, set, frozenset):
+        return type(value)(_copy_planning_value(item) for item in value)
+    raise TypeError(f"Unsupported planning value type: {type(value).__name__}")
+
+
+def _freeze_planning_value(value):
+    if type(value) is dict:
+        return ('dict', tuple((key, _freeze_planning_value(item))
+                              for key, item in sorted(value.items())))
+    if type(value) in (set, frozenset):
+        return (type(value).__name__, frozenset(_freeze_planning_value(item) for item in value))
+    if type(value) in (list, tuple):
+        return (type(value).__name__, tuple(_freeze_planning_value(item) for item in value))
+    return (type(value).__name__, value)
 
 
 def _preconditions_met_accepts_state(func):
@@ -579,6 +614,8 @@ class Plan:
 class GOAPPlanner:
     # Maximum length of plans to prevent overly complex planning
     MAX_PLAN_LENGTH = 10
+    MAX_PLANNING_EXPANSIONS = 1000
+    NON_PROGRESS_COST = 1.0
     
     def __init__(self, graph_manager: "GraphManager"):
         try:
@@ -593,7 +630,7 @@ class GOAPPlanner:
     def get_current_world_state(self, character):
         """Read the configured graph, or the character in graph-free use."""
         if self.graph_manager is not None:
-            state = self.graph_manager.get_character_state(getattr(character, "name", character))
+            state = self.graph_manager.get_character_state(character)
             return state if isinstance(state, State) else State(state)
         try:
             return character.get_state() if hasattr(character, "get_state") else State({})
@@ -603,141 +640,236 @@ class GOAPPlanner:
 
     def get_available_actions(self, character):
         if self.graph_manager is not None:
-            records = self.graph_manager.get_possible_actions(getattr(character, "name", character))
+            records = self.graph_manager.get_possible_actions(character)
             return [action_from_graph_record(record) for record in records]
 
         Action = importlib.import_module("actions").Action
         return [
             Action(name="Rest", preconditions={},
-                   effects=[{"attribute": "energy", "change_value": 10}], cost=0),
+                   effects=[{"targets": ["initiator"], "attribute": "energy", "change_value": 10}], cost=0),
             Action(name="Idle", preconditions={}, effects=[], cost=1),
         ]
 
-    def plan_actions(self, character, goal, current_state=None, actions=None):
+    def plan_actions(self, character, goal, current_state=None, actions=None) -> list[Action] | None:
+        """Return a validated ordered plan, [] if satisfied, or None within bounds.
+
+        Uniform-cost search keeps path cost separate from ordering and includes
+        depth in dominance: a cheaper long route must not erase a short route
+        that alone can finish within MAX_PLAN_LENGTH. No result cache is used.
         """
-
-        Generates a plan of actions to achieve a goal from the current state using GOAP algorithm.
-        Now dynamically retrieves current state and available actions if not provided.
- 
-
-        Args:
-            character: The character for whom the plan is being generated.
-            goal (Goal): The goal object with completion conditions.
-            current_state (State, optional): The current state. If None, will be retrieved dynamically.
-            actions (list, optional): A list of Action objects. If None, will be retrieved dynamically.
-
-        Returns:
-            list: A list of Action objects that form a plan to achieve the goal, or None if no plan found.
-        """
- 
-        import heapq
-        
-        # Dynamically retrieve current world state if not provided
-        if current_state is None:
-            current_state = self.get_current_world_state(character)
-            logging.info(f"Dynamically retrieved world state for {getattr(character, 'name', 'character')}")
-        
-        # Dynamically retrieve available actions if not provided
-        if actions is None:
-            actions = self.get_available_actions(character)
-            logging.info(f"Dynamically retrieved {len(actions)} available actions for {getattr(character, 'name', 'character')}")
-        
-        # Initialize the open list as a priority queue with (cost, counter, state, plan)
-        # Counter ensures unique comparison for items with same cost
-        open_list = [(0.0, 0, current_state, [])]
-        visited_states = set()
-        counter = 1  # Unique counter for each entry
-        max_iterations = 1000  # Prevent infinite loops
-        iteration_count = 0
-
-        while open_list and iteration_count < max_iterations:
-            iteration_count += 1
-            current_cost, _, state, current_plan = heapq.heappop(open_list)
- 
-
-            # Check if the current state satisfies the goal
+        actor, actor_node = self._planning_actor(character, goal)
+        initial = self._planning_snapshot(
+            self.get_current_world_state(character) if current_state is None else current_state)
+        if self._goal_satisfied(goal, initial):
+            return []
+        candidates = self.get_available_actions(actor) if actions is None else actions
+        models = []
+        for action in candidates:
+            try:
+                models.append((action, self._model_action(action, actor, actor_node)))
+            except (UnsupportedPlanningAction, KeyError, TypeError, ValueError) as error:
+                logging.warning("GOAP excludes action %s: %s", getattr(action, 'name', type(action).__name__), error)
+        initial_key = self._hash_state(initial)
+        best_cost = {(initial_key, 0): 0.0}
+        open_list = [(0.0, 0, initial, [])]
+        counter, expanded = 1, 0
+        while open_list and expanded < self.MAX_PLANNING_EXPANSIONS:
+            cost, _, state, plan = heappop(open_list)
+            state_key = self._hash_state(state)
+            if cost != best_cost.get((state_key, len(plan))):
+                continue
+            expanded += 1
             if self._goal_satisfied(goal, state):
-                logging.info(f"Goal achieved with plan of {len(current_plan)} actions")
-                return current_plan
-
-
-        
-            # Convert state to hashable format for visited check
-            state_hash = self._hash_state(state)
-            if state_hash in visited_states:
+                if not self.validate_plan(actor, goal, plan, initial):
+                    raise ValueError("GOAP produced a plan that failed replay validation")
+                return list(plan)
+            if len(plan) >= self.MAX_PLAN_LENGTH:
                 continue
-            visited_states.add(state_hash)
-
-            # Limit plan length to prevent overly complex plans
-            if len(current_plan) >= self.MAX_PLAN_LENGTH:
-                continue
- 
-
-            for action in actions:
-                # Check if action preconditions are met
-                if self._action_applicable(action, state):
-                    # Create new state by applying action effects
-                    new_state = self._apply_action_effects(action, state)
-                    new_plan = current_plan + [action]
-                    
-                    # Calculate cost using utility functions
-                    action_cost = self._calculate_action_cost(action, state, character, goal)
-                    total_cost = current_cost + action_cost
-                    
-                    # Add heuristic cost estimate to goal
-                    heuristic_cost = self._estimate_cost_to_goal(new_state, goal, character)
-                    priority_cost = total_cost + heuristic_cost
-                    
-                    heapq.heappush(open_list, (priority_cost, counter, new_state, new_plan))
+            for action, model in models:
+                conditions, effects = model
+                if not self._model_applicable(conditions, state):
+                    continue
+                try:
+                    successor = self._project_effects(effects, state)
+                except (TypeError, ValueError) as error:
+                    logging.debug("GOAP cannot project action %s in this state: %s", action.name, error)
+                    continue
+                successor_key = self._hash_state(successor)
+                if successor_key == state_key:
+                    continue
+                step_cost = float(self._calculate_action_cost(action, state, actor, goal))
+                if not math.isfinite(step_cost):
+                    raise ValueError(f"Non-finite planning cost for {action.name!r}")
+                step_cost = max(0.1, step_cost)
+                if isinstance(goal, util_funcs.UtilityGoal):
+                    # Immediate utility rewards unrelated food/work too. Without
+                    # an explicit effort cost those branches exhaust the fixed
+                    # budget before even default daily recovery can finish.
+                    # Prerequisites remain eligible; this is cost, not pruning.
+                    before = self._remaining_target_distance(state, goal)
+                    if self._remaining_target_distance(successor, goal) >= before - 1e-12:
+                        step_cost += self.NON_PROGRESS_COST
+                new_cost = cost + step_cost
+                key = (successor_key, len(plan) + 1)
+                if new_cost < best_cost.get(key, math.inf):
+                    best_cost[key] = new_cost
+                    heappush(open_list, (new_cost, counter, successor, plan + [action]))
                     counter += 1
+        logging.info("GOAP found no plan within bounds for %s (%s expansions)",
+                     getattr(actor, 'name', actor), expanded)
+        return None
 
- 
-        logging.warning(f"No plan found to achieve goal for {getattr(character, 'name', 'character')}")
+    @staticmethod
+    def _remaining_target_distance(state, goal):
+        distance = 0.0
+        for attribute, target in goal.target_effects.items():
+            canonical = _canonical_attribute(attribute)
+            current = state.get(canonical, state.get(attribute))
+            # _goal_satisfied validates required targets/state before search;
+            # no missing values are manufactured for the progress calculation.
+            gap = max(0.0, current - abs(target)) if target < 0 else max(0.0, target - current)
+            distance += util_funcs.normalize_effect_delta(canonical, gap)
+        return distance
 
-        # If we exceeded max iterations or couldn't find a plan
-        if iteration_count >= max_iterations:
-            print(f"Warning: GOAP planning exceeded max iterations ({max_iterations})")
-        
- 
-        return None  # If no plan is found
+    @staticmethod
+    def _planning_snapshot(state):
+        data = state.dict_or_obj if isinstance(state, State) else state
+        if isinstance(state, State) and hasattr(data, '__dict__'):
+            data = util_funcs.native_character_state(data)
+        if not isinstance(data, Mapping):
+            raise TypeError("Planning state must be a State containing a mapping, or a mapping")
+        result = {}
+        for key, value in util_funcs.native_character_state(dict(data)).items():
+            if type(key) is not str:
+                raise TypeError("Planning state keys must be strings")
+            try:
+                result[key] = _copy_planning_value(value)
+            except TypeError:
+                # Native snapshots include domain references. They are not a
+                # simulated inventory/location; required reads fail explicitly.
+                continue
+        return State(result)
+
+    def _planning_actor(self, character, goal):
+        actor, node = _resolve_action_entity(self.graph_manager, character, 'character')
+        if callable(getattr(goal, 'iter_completion_conditions', None)):
+            owner, _ = _resolve_action_entity(self.graph_manager, goal.character, 'character')
+            if owner is not actor:
+                raise ValueError('Planning Goal actor does not match requested actor')
+            if self.graph_manager is not None and goal.environment is not self.graph_manager:
+                raise ValueError('Planning Goal environment does not match planner graph')
+        return actor, node
+
+    def _model_action(self, action, actor, actor_node):
+        if not isinstance(action, Action):
+            raise UnsupportedPlanningAction("A real Action is required")
+        for method in ('execute', 'preconditions_met', '_prepare_attribute_effects',
+                       '_resolve_effect_targets', '_resolve_named_targets',
+                       '_iter_characters_in_initiator_location'):
+            if getattr(getattr(action, method), '__func__', None) is not getattr(Action, method):
+                raise UnsupportedPlanningAction(f"Unmodelled {method} override")
+        conditions = action.preconditions
+        if isinstance(conditions, Mapping):
+            conditions = conditions.values()
+        elif not isinstance(conditions, (list, tuple)):
+            raise UnsupportedPlanningAction("Invalid preconditions")
+        model_conditions = []
+        for condition in conditions:
+            if (not isinstance(condition, Condition) or
+                    getattr(condition.check_condition, '__func__', None) is not Condition.check_condition):
+                raise UnsupportedPlanningAction("Unmodelled condition")
+            attribute = _canonical_attribute(condition.attribute)
+            if '(' in attribute or attribute.startswith('_'):
+                raise UnsupportedPlanningAction(f"Unmodelled condition read {attribute!r}")
+            target = condition.target
+            if target is None or (isinstance(target, str) and target == 'initiator'):
+                target = actor
+            elif isinstance(target, str) and target == 'target':
+                target = actor if action._implicit_target and action.target is action.initiator else action.target
+            target, _ = _resolve_action_entity(self.graph_manager, target)
+            if target is not actor:
+                raise UnsupportedPlanningAction("Only actor-local preconditions are modelled")
+            _copy_planning_value(condition.satisfy_value)
+            model_conditions.append((condition, attribute))
+        effects = []
+        for descriptor in action.effects:
+            parsed = _AttributeEffect(descriptor)
+            if 'target_character_in_location' in parsed.targets:
+                raise UnsupportedPlanningAction("Named multi-entity effects are not modelled")
+            effect, targets = action._resolve_effect_targets(
+                descriptor, actor, actor_node, self.graph_manager)
+            if callable(effect.change) or effect.operation == 'legacy-string':
+                raise UnsupportedPlanningAction(f"Unmodelled effect on {effect.attribute!r}")
+            if type(effect.change) not in (int, float) or not math.isfinite(effect.change):
+                raise UnsupportedPlanningAction("Only finite scalar numeric effects are modelled")
+            # Shared validation rejects numeric writes to inventory/location
+            # during admission rather than aborting an unrelated valid search.
+            effect.scalar_result(0)
+            if any(target is not actor for target, _ in targets):
+                raise UnsupportedPlanningAction("Multi-entity effects are not modelled")
+            member = inspect.getattr_static(type(actor), effect.attribute, None)
+            if isinstance(member, property):
+                raise UnsupportedPlanningAction(f"Unmodelled property write {effect.attribute!r}")
+            if targets:
+                effects.append(effect)
+        return model_conditions, effects
+
+    @staticmethod
+    def _model_applicable(conditions, state):
+        return all(condition.check_condition(state, attribute=attribute)
+                   for condition, attribute in conditions)
+
+    def _project_effects(self, effects, state):
+        result = State(_copy_planning_value(state.dict_or_obj))
+        for effect in effects:
+            value = effect.scalar_result(result.get(effect.attribute, 0))
+            if value is not None:
+                result[effect.attribute] = value
+                for alias, canonical in _ATTRIBUTE_ALIASES.items():
+                    if canonical == effect.attribute:
+                        result[alias] = value
+        return result
+
+    def validate_plan(self, character, goal, plan, current_state=None) -> bool:
+        """Replay privately, checking each step and the actual terminal predicate."""
+        if plan is None:
+            return False
+        if not isinstance(plan, (list, tuple)):
+            raise TypeError("A plan must be an ordered action sequence")
+        actor, node = self._planning_actor(character, goal)
+        state = self._planning_snapshot(
+            self.get_current_world_state(character) if current_state is None else current_state)
+        if len(plan) > self.MAX_PLAN_LENGTH:
+            return False
+        for action in plan:
+            try:
+                conditions, effects = self._model_action(action, actor, node)
+            except (UnsupportedPlanningAction, KeyError, TypeError, ValueError):
+                return False
+            if not self._model_applicable(conditions, state):
+                return False
+            try:
+                state = self._project_effects(effects, state)
+            except (TypeError, ValueError):
+                return False
+        return self._goal_satisfied(goal, state)
 
     def _goal_satisfied(self, goal, state):
-        """Check if the goal is satisfied in the given state."""
+        """Evaluate full Goals or finite native numeric target metadata."""
         if callable(getattr(goal, "iter_completion_conditions", None)):
             return goal.check_completion(state)
-        try:
-            if hasattr(goal, 'check_completion'):
-                return goal.check_completion(state)
-            elif hasattr(goal, 'completion_conditions'):
-                # Handle different types of completion conditions
-                conditions = goal.completion_conditions
-                if isinstance(conditions, dict):
-                    return all(state.get(k, 0) >= v for k, v in conditions.items())
-                elif isinstance(conditions, list):
-                    return all(condition(state) if callable(condition) else True for condition in conditions)
-            elif hasattr(goal, 'target_effects'):
- 
-                # Handle target_effects format - goal is satisfied when state reaches target values
-                # #740: targets are absolute native-scale values; sign determines direction.
-                # Positive target = minimum (at least); negative target = maximum (at most).
-                target_effects = goal.target_effects
-                if isinstance(target_effects, dict):
-                    for attribute, target_value in target_effects.items():
-                        current_value = state.get(_canonical_attribute(attribute), state.get(attribute, 0))
-                        if isinstance(target_value, (int, float)) and target_value < 0:
-                            # Maximum: satisfied at or below |target| (with floating-point tolerance)
-                            if current_value > abs(target_value) + 0.1:
-                                return False
-                        else:
-                            # Minimum: satisfied at or above the target (with floating-point tolerance)
-                            if current_value < target_value - 0.1:
-                                return False
-                    return True
-
-            return False
-        except Exception as e:
-            print(f"Warning: Error checking goal completion: {e}")
-            return False
+        targets = getattr(goal, 'target_effects', None)
+        if not isinstance(targets, Mapping):
+            raise TypeError("Planning requires a production Goal or target-effect metadata")
+        satisfied = True
+        for attribute, target in targets.items():
+            current = state.get(_canonical_attribute(attribute), state.get(attribute))
+            if type(target) not in (int, float) or not math.isfinite(target):
+                raise ValueError(f"Goal {goal.name!r}: invalid target for {attribute!r}")
+            if type(current) not in (int, float) or not math.isfinite(current):
+                raise ValueError(f"Goal {goal.name!r}: missing or invalid state attribute {attribute!r}")
+            satisfied &= current <= abs(target) + 1e-9 if target < 0 else current >= target - 1e-9
+        return bool(satisfied)
 
     def _action_applicable(self, action, state):
         """Check if an action's preconditions are met in the given state."""
@@ -770,44 +902,24 @@ class GOAPPlanner:
             print(f"Warning: Error checking action preconditions for {action.name}: {e}")
             return False
 
-    def _apply_action_effects(self, action, state):
-        """Apply action effects to create a new state."""
-        try:
-            # Create a copy of the current state
-            new_state = State(state.dict_or_obj.copy() if hasattr(state, 'dict_or_obj') else state.copy())
-            
-            if hasattr(action, 'effects'):
-                from actions import _AttributeEffect
-                for effect in action.effects:
-                    if isinstance(effect, dict):
-                        # #740 planner parity: project descriptors through the shared
-                        # scalar calculation (actions._AttributeEffect) so simulated
-                        # deltas equal execution deltas, including the 0-100 clamp.
-                        try:
-                            parsed = _AttributeEffect(dict(effect))
-                            canonical = parsed.attribute
-                            current_value = new_state.get(canonical, 0)
-                            projected = parsed.scalar_result(current_value)
-                            new_state[canonical] = projected
-                            # #818 re-review: synchronize every alias of the
-                            # canonical field on every projection, including
-                            # canonically declared effects, so goal lookups on
-                            # any alias see the same projected value and later
-                            # canonical writes cannot leave an alias stale.
-                            # Projection still equals execution; aliases mirror,
-                            # never double-apply.
-                            for alias, alias_target in _ATTRIBUTE_ALIASES.items():
-                                if alias_target == canonical:
-                                    new_state[alias] = projected
-                        except (ValueError, TypeError):
-                            # Descriptor-only compatibility: non-numeric descriptors
-                            # (legacy-string/callable) do not project into simulation.
-                            pass
-            
-            return new_state
-        except Exception as e:
-            print(f"Warning: Error applying action effects for {action.name}: {e}")
-            return state  # Return original state if effects can't be applied
+    def _apply_action_effects(self, action, state, character=None):
+        """Project scalar effects; unbound private callers model initiator only."""
+        actor = action.initiator if character is None else character
+        if actor is not None:
+            actor, node = _resolve_action_entity(self.graph_manager, actor, 'character')
+            _, effects = self._model_action(action, actor, node)
+        else:
+            if getattr(action.execute, '__func__', None) is not Action.execute:
+                raise UnsupportedPlanningAction("Unmodelled execute override")
+            effects = []
+            for descriptor in action.effects:
+                effect = _AttributeEffect(descriptor)
+                if (any(token != 'initiator' for token in effect.targets) or
+                        effect.operation == 'legacy-string' or type(effect.change) not in (int, float)):
+                    raise UnsupportedPlanningAction("Unbound projection requires numeric initiator effects")
+                if effect.targets:
+                    effects.append(effect)
+        return self._project_effects(effects, state)
 
     def _calculate_action_cost(self, action, state, character, goal):
         """
@@ -918,22 +1030,8 @@ class GOAPPlanner:
             return 0.0  # Conservative fallback
 
     def _hash_state(self, state):
-        """Convert state to a hashable format for visited state tracking."""
-        try:
-            if hasattr(state, '__hash__'):
-                return hash(state)
-            elif hasattr(state, 'dict_or_obj'):
-                # For State objects, hash the underlying dict/object
-                state_data = state.dict_or_obj
-                if isinstance(state_data, dict):
-                    return hash(tuple(sorted(state_data.items())))
-                else:
-                    return hash(str(state_data))  # Fallback to string representation
-            else:
-                return hash(str(state))  # Fallback to string representation
-        except Exception as e:
-            print(f"Warning: Error hashing state: {e}")
-            return hash(str(state))  # Ultimate fallback
+        """Structural key: equality compares data rather than hash collisions."""
+        return _freeze_planning_value(self._planning_snapshot(state).dict_or_obj)
 
     def plan_for_character(self, character, goal):
         """

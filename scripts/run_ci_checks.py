@@ -32,6 +32,7 @@ PROFILES = {
               'tests.test_mock_action_enhancement_validation',
               'tests.test_entity_identity_contracts', 'tests.test_action_execution_integration',
               'tests.test_strategy_scale_contracts',
+              'tests.test_strategy_goap_integration', 'tests.test_strategy_manager_event_planning',
               'tests.test_runtime_units.TestRuntimeUnits',
               'tests.test_goap_error_handling', 'tests.test_event_handler_payloads']),
              ('runtime', 'unittest', ['tests.test_memory_runtime', 'tests.test_lightweight_runtime.TestHeadlessRuntime',
