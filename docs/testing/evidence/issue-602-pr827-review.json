@@ -1,0 +1,424 @@
+{
+  "date": "2026-11-25 America/New_York",
+  "pull_request": "https://github.com/dhar174/tiny_village/pull/827",
+  "authorization": "D040 in docs/decisions.md; user authorized specialist review, corrections and merge when ready",
+  "base": "7b2c913dc9bf76f1e7cfd5b7a6f419f67173500c",
+  "reviewed_head": "95f68a97b82f9670b5e0d562f6fe27cb0adc16b9",
+  "source_basis": "Corrected working-tree source hashes below; committing and merging requires identical blobs and successful final-head hosted checks",
+  "source_sha256": {
+    "actions.py": "29734fa78e1863a0af40300d1850a4653248e1d8acb315e3788342327c881bb3",
+    "character_attribute_mapper.py": "72c73cd763c4c2d11cd9aa0390c563853e8765f2cee00100dab3a0230ce7423b",
+    "effect_dispatcher.py": "2acb8dab22923d27c6baac54f40129bf098115475ea65415064e4596cc466bb7",
+    "tiny_building_manager.py": "817764a12f5d2cc1864c377cc843a3d57aa833a998e3a1882827119e38180d95",
+    "tiny_characters.py": "c5576e23e2a1b9c9b9bb7fd2953bb4189e0e8b7d871d5a61556744725219633d",
+    "tiny_event_handler.py": "7a3411d51be610643e4877b6f1a97e4584353b690d45eb76b4485f2f5ef77fb0",
+    "tiny_gameplay_controller.py": "36f58f45df073749f3b3f0e3cd879fb95948aaa438061fe6cf8b25b21f780a2b",
+    "scripts/run_ci_checks.py": "d69a2510f7f88efa02fda54f629eaecd9156716f5a6121f00bf6d7a32801d6b9",
+    "tests/test_action_execution_integration.py": "7d031a1331826cc1e099bb693686a756bd39294a0c830af7b0b7e4de3b5b728d"
+  },
+  "specialists": [
+    {
+      "agent": "architecture_602",
+      "repository_role": "tiny-village-architecture-scout",
+      "conclusion": "No cross-boundary blocker in supplied observations; architecture scope limited"
+    },
+    {
+      "agent": "world_state_816",
+      "repository_role": "tiny-village-world-state",
+      "conclusion": "No authority or rollback blocker; reviewed presence correction and EventHandler fallback context"
+    },
+    {
+      "agent": "planning_602",
+      "repository_role": "tiny-village-planning-actions",
+      "conclusion": "No concrete resolver/preparation/execution defect; resolver unchanged by corrective patch"
+    },
+    {
+      "agent": "test_ci_602",
+      "repository_role": "tiny-village-test-ci",
+      "conclusion": "New regression covers absent text/boolean, existing numeric zero and bounds; no further concrete gap"
+    },
+    {
+      "agent": "final_review_602",
+      "repository_role": "tiny-village-reviewer",
+      "conclusion": "Found Important absent-field compatibility regression; corrected patch re-review found no remaining Critical/Important issue in supplied code, conditional on required checks"
+    }
+  ],
+  "review_method": "Actual Codex subagent participation using repository specialist roles and coordinator-supplied source/test excerpts; read-only, no commands or edits; native Zcode invocation and independent full-checkout review are not claimed",
+  "finding": {
+    "severity": "Important",
+    "problem": "Absent custom text and boolean SET assignments were rejected because the arithmetic zero default was inferred to be an existing numeric field",
+    "baseline_control": {
+      "revision": "7b2c913dc9bf76f1e7cfd5b7a6f419f67173500c",
+      "exit_code": 0,
+      "result": "Real Character mapper text and dispatcher boolean SET both succeed",
+      "log": "/workspace/scratch/issue-602/pr827-missing-field-baseline.log"
+    },
+    "regression": "tests.test_action_execution_integration.TestActionExecutionIntegration.test_missing_custom_fields_do_not_inherit_numeric_default_type",
+    "red": {
+      "revision": "95f68a97b82f9670b5e0d562f6fe27cb0adc16b9",
+      "tests_run": 1,
+      "failures": 1,
+      "exit_code": 1,
+      "log": "/workspace/scratch/issue-602/pr827-missing-field-red.log"
+    },
+    "fix": "Distinguish field absence from arithmetic default zero; use declared bounds for pre-clamp numeric validation, then validate actual existing field type in the synchronized writer",
+    "green": {
+      "tests_run": 4,
+      "failures": 0,
+      "errors": 0,
+      "exit_code": 0,
+      "log": "/workspace/scratch/issue-602/pr827-missing-field-green.log"
+    },
+    "assertions": [
+      "Create missing text and boolean fields through mapper and dispatcher with graph/object agreement",
+      "Update existing text and boolean fields, including False",
+      "Existing numeric zero rejects text through both callers",
+      "Bounded community rejects False, True, NaN and infinity through both callers"
+    ],
+    "resolution": "Corrected and re-reviewed; no remaining blocker identified in supplied code"
+  },
+  "profiles": {
+    "core": {
+      "command": "/workspace/.venvs/issue602-core/bin/python -B scripts/run_ci_checks.py --profile core --artifacts /workspace/scratch/issue-602/pr827-review-core",
+      "terminal_exit_code": 0,
+      "status": "PASS",
+      "counts": {
+        "tests_run": 245,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 3,
+      "locks": {
+        "requirements/locks/core-py312-linux-x86_64.txt": "2a037e6923b1f4e0f19d14109adc4217a5e4b7e0583a780639dd476a1451c908"
+      },
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+      "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+      "batches": {
+        "components": {
+          "status": "PASS",
+          "exit_code": 0,
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 86,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          },
+          "started_utc": "2026-11-25T19:17:40.646944+00:00",
+          "finished_utc": "2026-11-25T19:18:22.373237+00:00",
+          "elapsed_seconds": 41.726
+        },
+        "world-execution": {
+          "status": "PASS",
+          "exit_code": 0,
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 39,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          },
+          "started_utc": "2026-11-25T19:18:22.375168+00:00",
+          "finished_utc": "2026-11-25T19:19:21.950387+00:00",
+          "elapsed_seconds": 59.575
+        },
+        "strategy": {
+          "status": "PASS",
+          "exit_code": 0,
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 54,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          },
+          "started_utc": "2026-11-25T19:19:21.951759+00:00",
+          "finished_utc": "2026-11-25T19:20:24.923838+00:00",
+          "elapsed_seconds": 62.972
+        },
+        "active-plans": {
+          "status": "PASS",
+          "exit_code": 0,
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 39,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          },
+          "started_utc": "2026-11-25T19:20:24.925890+00:00",
+          "finished_utc": "2026-11-25T19:21:39.183378+00:00",
+          "elapsed_seconds": 74.257
+        },
+        "runtime": {
+          "status": "PASS",
+          "exit_code": 0,
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 27,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          },
+          "started_utc": "2026-11-25T19:21:39.185035+00:00",
+          "finished_utc": "2026-11-25T19:22:11.127638+00:00",
+          "elapsed_seconds": 31.943
+        },
+        "canonical-cli": {
+          "status": "PASS",
+          "exit_code": 0,
+          "report": {
+            "kind": "probe",
+            "status": "PASS",
+            "probes_run": 1,
+            "expected_exit_code": 0,
+            "observed_exit_code": 0,
+            "capture_artifacts": "/workspace/scratch/issue-602/pr827-review-core/children/child-vcxfpvpn"
+          },
+          "started_utc": "2026-11-25T19:22:11.129577+00:00",
+          "finished_utc": "2026-11-25T19:22:13.009287+00:00",
+          "elapsed_seconds": 1.88
+        },
+        "default-cli": {
+          "status": "PASS",
+          "exit_code": 0,
+          "report": {
+            "kind": "probe",
+            "status": "PASS",
+            "probes_run": 1,
+            "expected_exit_code": 0,
+            "observed_exit_code": 0,
+            "capture_artifacts": "/workspace/scratch/issue-602/pr827-review-core/children/child-cv9c1hbs"
+          },
+          "started_utc": "2026-11-25T19:22:13.011293+00:00",
+          "finished_utc": "2026-11-25T19:22:14.682478+00:00",
+          "elapsed_seconds": 1.671
+        },
+        "invalid-cli": {
+          "status": "PASS",
+          "exit_code": 0,
+          "report": {
+            "kind": "probe",
+            "status": "PASS",
+            "probes_run": 1,
+            "expected_exit_code": 2,
+            "observed_exit_code": 2,
+            "capture_artifacts": "/workspace/scratch/issue-602/pr827-review-core/children/child-n8l_xgat"
+          },
+          "started_utc": "2026-11-25T19:22:14.684405+00:00",
+          "finished_utc": "2026-11-25T19:22:15.051476+00:00",
+          "elapsed_seconds": 0.367
+        }
+      }
+    },
+    "dev": {
+      "command": "/workspace/.venvs/issue602-dev/bin/python -B scripts/run_ci_checks.py --profile dev --artifacts /workspace/scratch/issue-602/pr827-review-dev",
+      "terminal_exit_code": 0,
+      "status": "PASS",
+      "counts": {
+        "tests_run": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 0,
+      "locks": {
+        "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5"
+      },
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+      "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+      "batches": {
+        "runner": {
+          "status": "PASS",
+          "exit_code": 0,
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 18,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          },
+          "started_utc": "2026-11-25T19:17:40.664061+00:00",
+          "finished_utc": "2026-11-25T19:18:00.367034+00:00",
+          "elapsed_seconds": 19.703
+        },
+        "cli-smoke": {
+          "status": "PASS",
+          "exit_code": 0,
+          "report": {
+            "status": "PASS",
+            "kind": "pytest",
+            "counts": {
+              "tests_run": 2,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            },
+            "pytest_exit_code": 0
+          },
+          "started_utc": "2026-11-25T19:18:00.368345+00:00",
+          "finished_utc": "2026-11-25T19:18:04.701482+00:00",
+          "elapsed_seconds": 4.333
+        }
+      }
+    },
+    "visual": {
+      "command": "/workspace/.venvs/issue602-visual/bin/python -B scripts/run_ci_checks.py --profile visual --artifacts /workspace/scratch/issue-602/pr827-review-visual",
+      "terminal_exit_code": 0,
+      "status": "PASS",
+      "counts": {
+        "tests_run": 70,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 0,
+      "locks": {
+        "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5",
+        "requirements/locks/visual-py312-linux-x86_64.txt": "a6db9f00d612e0b715961e9f1565c90066eb0872f165ad3984d3fcb414eaed73"
+      },
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+      "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+      "batches": {
+        "lifecycle": {
+          "status": "PASS",
+          "exit_code": 0,
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 6,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          },
+          "started_utc": "2026-11-25T19:17:40.648111+00:00",
+          "finished_utc": "2026-11-25T19:17:50.871860+00:00",
+          "elapsed_seconds": 10.224
+        },
+        "graph": {
+          "status": "PASS",
+          "exit_code": 0,
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 24,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          },
+          "started_utc": "2026-11-25T19:17:50.873492+00:00",
+          "finished_utc": "2026-11-25T19:18:35.930597+00:00",
+          "elapsed_seconds": 45.057
+        },
+        "cache": {
+          "status": "PASS",
+          "exit_code": 0,
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 27,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          },
+          "started_utc": "2026-11-25T19:18:35.931590+00:00",
+          "finished_utc": "2026-11-25T19:18:42.870600+00:00",
+          "elapsed_seconds": 6.939
+        },
+        "capture": {
+          "status": "PASS",
+          "exit_code": 0,
+          "report": {
+            "kind": "unittest",
+            "status": "PASS",
+            "counts": {
+              "tests_run": 13,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "expected_failures": 0,
+              "unexpected_successes": 0
+            }
+          },
+          "started_utc": "2026-11-25T19:18:42.871398+00:00",
+          "finished_utc": "2026-11-25T19:18:46.499873+00:00",
+          "elapsed_seconds": 3.628
+        }
+      }
+    }
+  },
+  "additional_suites": {
+    "tests_run": 102,
+    "failures": 3,
+    "exit_code": 1,
+    "same_three_failures_as_exact_base": true,
+    "names": [
+      "tests.test_effect_schema_v2.TestEffectDispatcher.test_apply_attribute_change_to_participants",
+      "tests.test_effect_schema_v2.TestEffectDispatcher.test_apply_attribute_change_with_condition",
+      "tests.test_enhanced_event_handler.TestIntegrationScenarios.test_event_lifecycle"
+    ],
+    "log": "/workspace/scratch/issue-602/pr827-review-additional.log"
+  },
+  "limits": [
+    "Known job-role parser ERROR output persists; passing assertion summaries do not imply clean stderr",
+    "Fault-injection/invalid-input logs are distinct from baseline parser errors",
+    "No live inference, native Windows/GPU, later human gates or broader product readiness claimed"
+  ],
+  "historical_receipts": [
+    "issue-602-local-results.json (95f source; 244 core tests plus 3 probes)",
+    "issue-602-independent-review.json",
+    "issue-602-milestone1.json"
+  ],
+  "integration_gate": "Normal merge of exact corrective commit only after all required hosted checks pass; GitHub PR is authoritative for actual integration outcome"
+}

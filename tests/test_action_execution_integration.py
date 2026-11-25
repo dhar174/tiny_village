@@ -7,6 +7,430 @@ from tests.test_graph_initialization import FreshPythonTestCase
 class TestActionExecutionIntegration(FreshPythonTestCase):
     run_world = test_goap_graph_contracts.TestSupportedPlannerPrimitives.run_world
 
+    def test_sequential_drain_and_recovery_share_authoritative_energy(self):
+        self.run_world("""
+from unittest.mock import patch
+from tiny_utility_functions import native_character_state
+node = graph.G.nodes[character]
+for object_energy in (20, 40):
+    character.energy = object_energy
+    node['energy'] = 20
+    with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+        for name, delta, expected in [('Drain', -5, 15), ('Recovery', 10, 25)]:
+            action = Action(name, [], [{'targets': ['initiator'],
+                'attribute': 'energy', 'change_value': delta}],
+                initiator=character, graph_manager=graph)
+            assert action.execute()
+            assert character.energy == node['energy'] == expected
+            assert native_character_state(character, graph)['energy'] == expected
+        assert [c.args for c in writes.call_args_list] == [
+            (character, 'energy', 15), (character, 'energy', 25)]
+print({'sequential_energy': [20, 15, 25], 'writes': 2})
+""")
+
+    def test_market_reward_is_not_lost_by_following_action(self):
+        self.run_world("""
+from unittest.mock import patch
+from tiny_utility_functions import native_character_state
+node = graph.G.nodes[character]
+node['wealth_money'] = character.wealth_money = 20
+with patch('tiny_gameplay_controller.random.randint', return_value=3) as random_reward, (
+    patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute)
+) as writes:
+    controller._update_economic_state_from_event('market')
+    assert character.wealth_money == node['wealth_money'] == 23
+    assert native_character_state(character, graph)['wealth_money'] == 23
+    action = Action('Earn', [], [{'targets': ['initiator'],
+        'attribute': 'money', 'change_value': 10}], initiator=character, graph_manager=graph)
+    assert action.execute()
+    assert character.wealth_money == node['wealth_money'] == 33
+    assert [c.args for c in writes.call_args_list] == [
+        (character, 'wealth_money', 23), (character, 'wealth_money', 33)]
+    random_reward.assert_called_once_with(1, 5)
+print({'market_and_action': [20, 23, 33]})
+""")
+
+    def test_scalar_setters_zero_and_removed_character_use_graph(self):
+        self.run_world("""
+from unittest.mock import patch
+node = graph.G.nodes[character]
+fields = ['health_status', 'hunger_level', 'wealth_money', 'mental_health',
+          'social_wellbeing', 'job_performance', 'shelter', 'stability',
+          'luxury', 'hope', 'success', 'control']
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    for field in fields:
+        assert getattr(character, 'set_' + field)(15) == 15
+        assert getattr(character, field) == node[field] == 15
+    character.update_character(**dict.fromkeys(fields, 0))
+    for field in fields:
+        assert getattr(character, field) == node[field] == 0, field
+    character.update_character()
+    assert writes.call_count == 2 * len(fields)
+    character.satisfaction = 12
+    assert character.current_satisfaction == node['current_satisfaction'] == node['satisfaction'] == 12
+    assert character.set_happiness(.5) == .5 and node['happiness'] == .5
+graph.world_state.remove_node(character)
+from world_state import UnknownNodeError
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    try:
+        character.set_wealth_money(99)
+    except UnknownNodeError:
+        pass
+    else:
+        raise AssertionError('Removed Character accepted an object-only update')
+    writes.assert_not_called()
+assert character.wealth_money == 0 and character not in graph.G
+character.graph_manager = None
+try:
+    character.set_wealth_money(99)
+except ValueError:
+    pass
+else:
+    raise AssertionError('Initialized native Character lost its state owner')
+assert character.wealth_money == 0
+from character_attribute_mapper import AttributeMapper
+assert AttributeMapper.set_attribute_value(character, 'money', 99) is False
+from tiny_building_manager import BuildingManager, BuildingService
+manager = BuildingManager()
+manager.BUILDING_SERVICES = {'stand': {'reward': BuildingService('Reward', cost=-5)}}
+assert not manager.provide_service('stand-1', 'stand', 'reward', character)[0]
+assert character.wealth_money == 0
+""")
+
+    def test_social_callbacks_stage_declared_field_and_commit_once(self):
+        self.run_world("""
+from types import SimpleNamespace
+from unittest.mock import patch
+node = graph.G.nodes[character]
+character.social_wellbeing = 80
+node['social_wellbeing'] = 20
+character.personality_traits.agreeableness = 70
+partner = SimpleNamespace(name='Partner', personality_traits=SimpleNamespace(agreeableness=70))
+character.friendship_grid = {}
+def respond():
+    character.respond_to_talk(partner)
+character.respond_test = respond
+action = Action('Talk callback', [], [{'targets': ['initiator'],
+    'attribute': 'social_wellbeing', 'change_value': 'respond_test'}],
+    initiator=character, graph_manager=graph)
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    assert action.execute()
+    assert math.isclose(character.social_wellbeing, 20.2)
+    assert math.isclose(node['social_wellbeing'], 20.2)
+    assert writes.call_count == 1
+character.respond_to_greeting(partner)
+assert math.isclose(character.social_wellbeing, 20.25)
+assert math.isclose(node['social_wellbeing'], 20.25)
+character.respond_to_compliment(partner, 'kindness')
+assert math.isclose(character.social_wellbeing, 20.45)
+assert math.isclose(node['social_wellbeing'], 20.45)
+""")
+
+    def test_nested_setters_restore_failed_field_and_preserve_other_commits(self):
+        self.run_world("""
+from unittest.mock import patch
+node = graph.G.nodes[character]
+node['wealth_money'] = 20
+character.wealth_money = 40
+node['money'] = 19
+def earn():
+    character.set_social_wellbeing(31)
+    character.set_wealth_money(character.wealth_money + 3)
+    character.set_wealth_money(character.wealth_money + 2)
+character.earn_test = earn
+action = Action('Nested earn', [], [{'targets': ['initiator'], 'attribute': 'money',
+    'change_value': 'earn_test'}], initiator=character, graph_manager=graph)
+original = graph.update_node_attribute
+def fail_after_write(*args):
+    original(*args)
+    if args[1] == 'wealth_money':
+        raise RuntimeError('Injected wealth commit failure')
+with patch.object(graph, 'update_node_attribute', side_effect=fail_after_write) as writes:
+    assert not action.execute()
+    assert [c.args[1:] for c in writes.call_args_list] == [
+        ('social_wellbeing', 31), ('wealth_money', 25)]
+assert character.wealth_money == 40 and node['wealth_money'] == 20 and node['money'] == 19
+assert character.social_wellbeing == node['social_wellbeing'] == 31
+with patch.object(graph, 'update_node_attribute', wraps=original) as writes:
+    assert action.execute()
+    assert [c.args[1:] for c in writes.call_args_list] == [
+        ('social_wellbeing', 31), ('wealth_money', 25)]
+assert character.wealth_money == node['wealth_money'] == node['money'] == 25
+""")
+
+    def test_constructor_registers_final_values_without_early_scalar_writes(self):
+        self.run_world("""
+from unittest.mock import patch
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    from tiny_characters import PersonalityTraits
+    other = Character('Initialized safely', 30, graph_manager=graph,
+        action_system=character.action_system, gametime_manager=character.gametime_manager,
+        personality_traits=PersonalityTraits(4, 4, 4, 4, 4),
+        memory_mode='basic', energy=17, wealth_money=23)
+    writes.assert_not_called()
+assert other._initialized and graph.resolve_node(other.uuid, 'character') is other
+assert graph.G.nodes[other]['energy'] == other.energy == 17
+assert graph.G.nodes[other]['wealth_money'] == other.wealth_money == 23
+""")
+
+    def test_building_fees_effects_and_failures_use_authoritative_fields(self):
+        self.run_world("""
+from unittest.mock import patch
+from tiny_building_manager import BuildingManager, BuildingService
+manager = BuildingManager()
+service = BuildingService('Recovery', cost=5,
+    effects=[{'attribute': 'energy', 'change_value': 10},
+             {'attribute': 'hunger_level', 'change_value': -5}])
+manager.BUILDING_SERVICES = {'clinic': {'recovery': service}}
+manager.register_building('clinic-1', 'clinic')
+node = graph.G.nodes[character]
+node.update(wealth_money=20, energy=20, hunger_level=60)
+character.wealth_money = 0
+character.energy = 90
+character.hunger_level = 10
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    assert manager.provide_service('clinic-1', 'clinic', 'recovery', character)[0]
+    assert [c.args[1:] for c in writes.call_args_list] == [
+        ('wealth_money', 15), ('energy', 30), ('hunger_level', 55)]
+assert character.wealth_money == node['wealth_money'] == 15
+assert character.energy == node['energy'] == 30
+assert character.hunger_level == node['hunger_level'] == 55
+node['wealth_money'] = 0
+character.wealth_money = 100
+assert not manager.provide_service('clinic-1', 'clinic', 'recovery', character)[0]
+assert len(manager.service_history) == 1
+node['wealth_money'] = character.wealth_money = 20
+original = graph.update_node_attribute
+def fail_after_write(*args):
+    original(*args)
+    if args[1] == 'energy':
+        raise RuntimeError('Injected service effect failure')
+with patch.object(graph, 'update_node_attribute', side_effect=fail_after_write):
+    assert not manager.provide_service('clinic-1', 'clinic', 'recovery', character)[0]
+assert character.wealth_money == node['wealth_money'] == 15
+assert character.energy == node['energy'] == 30
+assert len(manager.service_history) == 1
+assert character.hunger_level == node['hunger_level'] == 55
+""")
+
+    def test_mapper_and_event_updates_preserve_mapping_and_graph_coherence(self):
+        self.run_world("""
+from character_attribute_mapper import AttributeMapper
+from effect_dispatcher import EffectDispatcher
+from effect_schema import OperatorType
+from tiny_event_handler import EventHandler
+node = graph.G.nodes[character]
+dispatcher = EffectDispatcher(graph)
+handler = EventHandler(graph)
+node['wealth_money'] = 20
+character.wealth_money = 40
+assert dispatcher._modify_entity_attribute(character, 'wealth', 3, OperatorType.ADD)
+assert character.wealth_money == node['wealth_money'] == 23
+handler._modify_entity_attribute(character, 'money', 2)
+assert character.wealth_money == node['wealth_money'] == 25
+assert AttributeMapper.set_attribute_value(character, 'money', 12)
+assert character.wealth_money == node['wealth_money'] == 12
+for invalid in (float('nan'), float('inf')):
+    assert AttributeMapper.set_attribute_value(character, 'money', invalid) is False
+    assert character.wealth_money == node['wealth_money'] == 12
+node['social_wellbeing'] = character.social_wellbeing = 20
+character.satisfaction = 7
+assert AttributeMapper.set_attribute_value(character, 'satisfaction', 30)
+assert character.social_wellbeing == node['social_wellbeing'] == 30
+assert character.current_satisfaction == node['current_satisfaction'] == 7
+assert dispatcher._modify_entity_attribute(character, 'happiness', 5, OperatorType.ADD)
+assert character.social_wellbeing == node['social_wellbeing'] == 35
+""")
+
+    def test_scalar_calculation_noop_and_invalid_results_restore_staging(self):
+        self.run_world("""
+from actions import apply_attribute_change
+from unittest.mock import patch
+node = graph.G.nodes[character]
+node['wealth_money'] = 20
+character.wealth_money = 40
+def noop(current):
+    character.set_wealth_money(current + 3)
+    return None
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    assert apply_attribute_change(character, graph, 'money', noop) is None
+    writes.assert_not_called()
+assert character.wealth_money == 40 and node['wealth_money'] == 20
+for invalid in (float('nan'), float('inf'), True, 'bad'):
+    try:
+        apply_attribute_change(character, graph, 'money', lambda current: invalid)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError('Invalid scalar committed')
+    assert character.wealth_money == 40 and node['wealth_money'] == 20
+assert apply_attribute_change(character, graph, 'money', lambda current: current + 5) == 25
+assert character.wealth_money == node['wealth_money'] == 25
+""")
+
+    def test_native_mapper_and_dispatcher_preserve_nonnumeric_set(self):
+        self.run_world("""
+from character_attribute_mapper import AttributeMapper
+from effect_dispatcher import EffectDispatcher
+from effect_schema import OperatorType
+node = graph.G.nodes[character]
+assert AttributeMapper.set_attribute_value(character, 'job', 'Baker') is True
+assert character.job == node['job'] == 'Baker'
+assert EffectDispatcher(graph)._modify_entity_attribute(character, 'job', 'Farmer', OperatorType.SET)
+assert character.job == node['job'] == 'Farmer'
+assert AttributeMapper.set_attribute_value(character, 'recent_event', 'Festival')
+assert character.recent_event == node['recent_event'] == 'Festival'
+node['wealth_money'] = character.wealth_money = 20
+for invalid in ('not money', float('nan'), float('inf'), True):
+    assert not EffectDispatcher(graph)._modify_entity_attribute(character, 'money', invalid, OperatorType.SET)
+    assert not AttributeMapper.set_attribute_value(character, 'money', invalid)
+    assert character.wealth_money == node['wealth_money'] == 20
+""")
+
+    def test_missing_custom_fields_do_not_inherit_numeric_default_type(self):
+        self.run_world("""
+from character_attribute_mapper import AttributeMapper
+from effect_dispatcher import EffectDispatcher
+from effect_schema import OperatorType
+node = graph.G.nodes[character]
+dispatcher = EffectDispatcher(graph)
+for prefix in ('mapped', 'dispatched'):
+    for suffix, value in [('text', 'Festival'), ('flag', True)]:
+        field = prefix + '_review827_' + suffix
+        assert not hasattr(character, field) and field not in node
+        if prefix == 'mapped':
+            assert AttributeMapper.set_attribute_value(character, field, value)
+        else:
+            assert dispatcher._modify_entity_attribute(character, field, value, OperatorType.SET)
+        assert getattr(character, field) == node[field] == value
+assert AttributeMapper.set_attribute_value(character, 'mapped_review827_text', 'Market')
+assert character.mapped_review827_text == node['mapped_review827_text'] == 'Market'
+assert dispatcher._modify_entity_attribute(character, 'dispatched_review827_flag', False, OperatorType.SET)
+assert character.dispatched_review827_flag is node['dispatched_review827_flag'] is False
+character.numeric_review827 = node['numeric_review827'] = 0
+assert not AttributeMapper.set_attribute_value(character, 'numeric_review827', 'text')
+assert not dispatcher._modify_entity_attribute(character, 'numeric_review827', 'text', OperatorType.SET)
+assert character.numeric_review827 == node['numeric_review827'] == 0
+character.community = node['community'] = 20
+for invalid in (False, True, float('nan'), float('inf')):
+    assert not AttributeMapper.set_attribute_value(character, 'community', invalid)
+    assert not dispatcher._modify_entity_attribute(character, 'community', invalid, OperatorType.SET)
+    assert character.community == node['community'] == 20
+""")
+
+    def test_native_service_thirst_retains_bounds_from_graph_value(self):
+        self.run_world("""
+from tiny_building_manager import BuildingManager
+from unittest.mock import patch
+node = graph.G.nodes[character]
+manager = BuildingManager()
+for graph_thirst, object_thirst, delta, expected in [(95, 20, 10, 100), (5, 80, -10, 0)]:
+    node['thirst'] = graph_thirst
+    character.thirst = object_thirst
+    with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+        manager._apply_service_effect({'attribute': 'thirst', 'change_value': delta}, character)
+        writes.assert_called_once_with(character, 'thirst', expected)
+    assert character.thirst == node['thirst'] == expected
+node['thirst'] = 95
+character.thirst = 20
+for invalid in (float('nan'), float('inf')):
+    try:
+        manager._apply_service_effect({'attribute': 'thirst', 'change_value': invalid}, character)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError('Service bounds concealed a non-finite result')
+    assert character.thirst == 20 and node['thirst'] == 95
+""")
+
+    def test_remaining_numeric_and_job_setters_keep_graph_state_current(self):
+        self.run_world("""
+from unittest.mock import patch
+node = graph.G.nodes[character]
+for field in ('age', 'beauty', 'community', 'material_goods'):
+    node[field] = 20
+    setattr(character, field, 40)
+    with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+        assert getattr(character, 'set_' + field)(15) == 15
+        assert getattr(character, field) == node[field] == 15
+        assert Action('Follow setter', [], [{'targets': ['initiator'],
+            'attribute': field, 'change_value': 10}], initiator=character, graph_manager=graph).execute()
+        assert getattr(character, field) == node[field] == 25
+        assert [c.args[1:] for c in writes.call_args_list] == [(field, 15), (field, 25)]
+character.update_character(beauty=0, community=0, material_goods=0)
+for field in ('beauty', 'community', 'material_goods'):
+    assert getattr(character, field) == node[field] == 0
+role = character.job
+node['job'] = 'Baker'
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    assert character.set_job(role) is role
+    assert character.job is node['job'] is role
+    writes.assert_called_once_with(character, 'job', role)
+selected = character.set_job('unemployed')
+assert character.job is node['job'] is selected
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    try:
+        character.set_job('NoSuchJob602')
+    except ValueError:
+        pass
+    else:
+        raise AssertionError('Unsupported job accepted')
+    writes.assert_not_called()
+assert character.job is node['job'] is selected
+""")
+
+    def test_caught_nested_failure_restores_savepoint_before_callback_continues(self):
+        self.run_world("""
+from actions import apply_attribute_change
+from unittest.mock import patch
+node = graph.G.nodes[character]
+node['wealth_money'] = 20
+character.wealth_money = 40
+def earn():
+    character.set_wealth_money(character.wealth_money + 2)
+    def fail(current):
+        character.wealth_money = 99
+        raise ValueError('Aborted inner calculation')
+    try:
+        apply_attribute_change(character, graph, 'money', fail)
+    except ValueError:
+        pass
+    assert character.wealth_money == 22
+    character.set_wealth_money(character.wealth_money + 3)
+character.earn_test = earn
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    assert Action('Nested savepoint', [], [{'targets': ['initiator'],
+        'attribute': 'money', 'change_value': 'earn_test'}],
+        initiator=character, graph_manager=graph).execute()
+    writes.assert_called_once_with(character, 'wealth_money', 25)
+assert character.wealth_money == node['wealth_money'] == 25
+""")
+
+    def test_reentrant_graph_commit_cannot_leave_object_and_graph_divergent(self):
+        self.run_world("""
+from actions import apply_attribute_change
+from unittest.mock import patch
+node = graph.G.nodes[character]
+node['wealth_money'] = 20
+node['money'] = 19
+character.wealth_money = 40
+original = graph.update_node_attribute
+def reentrant_commit(*args):
+    original(*args)
+    character.set_wealth_money(99)
+with patch.object(graph, 'update_node_attribute', side_effect=reentrant_commit) as writes:
+    try:
+        apply_attribute_change(character, graph, 'money', lambda current: current + 5)
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError('Commit accepted a conflicting same-field mutation')
+    writes.assert_called_once_with(character, 'wealth_money', 25)
+assert character.wealth_money == 40 and node['wealth_money'] == 20 and node['money'] == 19
+assert apply_attribute_change(character, graph, 'money', lambda current: current + 5) == 25
+assert character.wealth_money == node['wealth_money'] == node['money'] == 25
+""")
+
     def test_graph_conditions_and_native_scalar_aliases(self):
         self.run_world("""
 from unittest.mock import patch
@@ -421,3 +845,179 @@ with patch.object(graph, "update_node_attribute", side_effect=RuntimeError("writ
 assert node["energy"] == character.energy == 20
 print({"rollback_restored": 20})
 """)
+
+
+class TestNamedTargetWorldIntegration(FreshPythonTestCase):
+    run_world = test_goap_graph_contracts.TestSupportedPlannerPrimitives.run_world
+
+    def run_nearby_world(self, source):
+        self.run_world('''
+from copy import copy
+from types import SimpleNamespace
+from uuid import uuid4
+from unittest.mock import patch
+from tiny_characters import PersonalityTraits
+from tiny_locations import Location
+from tiny_utility_functions import native_character_state
+actor = character
+room = actor.location
+graph.add_location_node(room)
+elsewhere = Location('Elsewhere602', *room.get_coordinates(), 5, 5, actor.action_system)
+graph.add_location_node(elsewhere)
+def new_character(name, location):
+    return Character(name, 30, graph_manager=graph, action_system=actor.action_system,
+        gametime_manager=actor.gametime_manager, memory_mode='basic', location=location,
+        personality_traits=PersonalityTraits(4, 4, 4, 4, 4), energy=20)
+partner = new_character('Nearby602', room)
+other = new_character('Other602', room)
+for entity in (actor, partner, other):
+    entity.energy = graph.G.nodes[entity]['energy'] = 20
+delta = {'targets': ['target_character_in_location'], 'attribute': 'energy', 'change_value': 5}
+''' + source)
+
+    def test_named_discovery_excludes_canonical_actor_alias(self):
+        self.run_nearby_world('''
+old_hash = hash(room)
+room.current_visitors[:] = [copy(actor), partner, copy(partner), partner]
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    assert Action('Discover', [], [delta], initiator=str(actor.uuid), graph_manager=graph).execute()
+    writes.assert_called_once_with(partner, 'energy', 25)
+assert actor.energy == graph.G.nodes[actor]['energy'] == 20
+assert partner.energy == graph.G.nodes[partner]['energy'] == 25
+assert other.energy == graph.G.nodes[other]['energy'] == 20
+assert hash(room) == old_hash
+assert graph.resolve_node(room.uuid, 'location') is room
+print({'canonical_actor': 20, 'nearby_partner': 25, 'writes': 1})
+''')
+
+    def test_registered_visitor_location_and_name_override_stale_handles(self):
+        self.run_nearby_world('''
+for actual_location, handle_location, expected in [(room, elsewhere, 25), (elsewhere, room, 20)]:
+    partner.location = actual_location
+    partner.energy = graph.G.nodes[partner]['energy'] = 20
+    handle = copy(partner)
+    handle.location = handle_location
+    room.current_visitors[:] = [actor, handle]
+    with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+        assert Action('Actual location', [], [delta], initiator=actor,
+            target=partner.uuid, graph_manager=graph).execute()
+        assert writes.call_count == (1 if expected == 25 else 0)
+    assert partner.energy == graph.G.nodes[partner]['energy'] == expected
+partner.location = room
+partner.energy = graph.G.nodes[partner]['energy'] = 20
+handle = copy(partner)
+handle.name = 'Outdated602'
+room.current_visitors[:] = [actor, handle]
+assert Action('Actual name', [], [delta], initiator=actor, target=partner.name,
+    graph_manager=graph).execute()
+assert partner.energy == graph.G.nodes[partner]['energy'] == 25
+assert actor.energy == other.energy == 20
+''')
+
+    def test_requested_identity_dedup_and_named_drain_recovery(self):
+        self.run_nearby_world('''
+room.current_visitors[:] = [copy(actor), other, partner, copy(partner), partner]
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    wrong_type = SimpleNamespace(uuid=partner.uuid)
+    assert Action('Wrong object type', [], [delta], initiator=actor,
+        target=wrong_type, graph_manager=graph).execute()
+    writes.assert_not_called()
+    for requested, expected in [(partner, 22), (partner.uuid, 24),
+                                (str(partner.uuid), 26), (partner.name, 28)]:
+        assert Action('Requested', [], [dict(delta, change_value=2)], initiator=actor,
+            target=requested, graph_manager=graph).execute()
+        assert partner.energy == graph.G.nodes[partner]['energy'] == expected
+    assert Action('Overlap', [], [dict(delta, targets=['target',
+        'target_character_in_location'], change_value=2)], initiator=actor,
+        target=partner.uuid, graph_manager=graph).execute()
+    assert [c.args for c in writes.call_args_list] == [
+        (partner, 'energy', expected) for expected in (22, 24, 26, 28, 30)]
+partner.energy = graph.G.nodes[partner]['energy'] = 20
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    for name, change, expected in [('Drain nearby', -5, 15), ('Recover nearby', 10, 25)]:
+        assert Action(name, [], [dict(delta, targets=['target',
+            'target_character_in_location'], change_value=change)], initiator=actor,
+            target=partner.uuid, graph_manager=graph).execute()
+        assert partner.energy == graph.G.nodes[partner]['energy'] == expected
+        assert native_character_state(partner, graph)['energy'] == expected
+    assert [c.args for c in writes.call_args_list] == [
+        (partner, 'energy', 15), (partner, 'energy', 25)]
+assert actor.energy == graph.G.nodes[actor]['energy'] == 20
+assert other.energy == graph.G.nodes[other]['energy'] == 20
+print({'nearby_energy': [20, 15, 25], 'actor_energy': 20, 'writes': 2})
+''')
+
+    def test_named_absence_fallback_and_required_target_failure(self):
+        self.run_nearby_world('''
+unknown = SimpleNamespace(name='Unregistered602', uuid=uuid4(), location=room)
+room.current_visitors[:] = [actor, unknown, partner]
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    assert Action('Absent', [], [delta], initiator=actor, target='missing', graph_manager=graph).execute()
+    writes.assert_not_called()
+    assert Action('Skip unrelated stale visitor', [], [delta], initiator=actor,
+        target=partner.uuid, graph_manager=graph).execute()
+    writes.assert_called_once_with(partner, 'energy', 25)
+    writes.reset_mock()
+    assert not Action('Invalid matching visitor', [], [delta], initiator=actor,
+        target=unknown.name, graph_manager=graph).execute()
+    writes.assert_not_called()
+    other.location = elsewhere
+    room.current_visitors[:] = []
+    assert Action('Registry fallback', [], [delta], initiator=actor,
+        target=partner.name, graph_manager=graph).execute()
+    writes.assert_called_once_with(partner, 'energy', 30)
+    writes.reset_mock()
+    room.current_visitors[:] = [actor, other]
+    assert Action('Populated visitors', [], [delta], initiator=actor,
+        target=partner.uuid, graph_manager=graph).execute()
+    writes.assert_not_called()
+    room.current_visitors[:] = [actor, partner, other]
+    partner.location = elsewhere
+    assert Action('Elsewhere', [], [delta], initiator=actor,
+        target=partner.uuid, graph_manager=graph).execute()
+    actor.location = None
+    assert Action('No actor location', [], [delta], initiator=actor,
+        target=partner.uuid, graph_manager=graph).execute()
+    writes.assert_not_called()
+    actor.location = room
+    self_effect = dict(delta, targets=['initiator'], change_value=1)
+    required = dict(delta, targets=['target'])
+    assert not Action('Required missing', [], [self_effect, required], initiator=actor,
+        target='missing', graph_manager=graph).execute()
+    assert not Action('Blocked', [Condition('Blocked', 'energy', actor, 100)],
+        [self_effect], initiator=actor, graph_manager=graph).execute()
+    writes.assert_not_called()
+    assert Action('Optional missing', [], [self_effect, delta], initiator=actor,
+        target='missing', graph_manager=graph).execute()
+    writes.assert_called_once_with(actor, 'energy', 21)
+assert actor.energy == graph.G.nodes[actor]['energy'] == 21
+assert partner.energy == graph.G.nodes[partner]['energy'] == 30
+assert other.energy == graph.G.nodes[other]['energy'] == 20
+''')
+
+    def test_named_ambiguity_and_failed_field_preserve_exact_state(self):
+        self.run_nearby_world('''
+collision = new_character(str(partner.uuid), room)
+room.current_visitors[:] = [actor, partner, collision]
+self_effect = dict(delta, targets=['initiator'], change_value=1)
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    assert not Action('Ambiguous', [], [self_effect, delta], initiator=actor,
+        target=str(partner.uuid), graph_manager=graph).execute()
+    writes.assert_not_called()
+assert actor.energy == partner.energy == 20
+room.current_visitors[:] = [copy(actor), partner, copy(partner)]
+original = graph.update_node_attribute
+def fail_after_write(*args):
+    original(*args)
+    if args[1] == 'temporary602':
+        raise RuntimeError('Injected later named field failure')
+with patch.object(graph, 'update_node_attribute', side_effect=fail_after_write) as writes:
+    assert not Action('Partial nearby', [], [delta, dict(delta, attribute='temporary602',
+        change_value=1)], initiator=actor, target=partner.uuid, graph_manager=graph).execute()
+    assert [c.args for c in writes.call_args_list] == [
+        (partner, 'energy', 25), (partner, 'temporary602', 1)]
+assert partner.energy == graph.G.nodes[partner]['energy'] == 25
+assert not hasattr(partner, 'temporary602') and 'temporary602' not in graph.G.nodes[partner]
+assert actor.energy == graph.G.nodes[actor]['energy'] == 20
+assert other.energy == graph.G.nodes[other]['energy'] == 20
+''')

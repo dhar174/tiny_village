@@ -14,6 +14,7 @@ import importlib
 import inspect
 import math
 from collections.abc import Mapping
+from contextvars import ContextVar
 
 import json
 from uuid import UUID
@@ -58,6 +59,7 @@ _NEEDS_SCALAR_CLAMP_ATTRIBUTES = {
 }
 _EFFECT_TARGETS = {"initiator", "target", "target_character_in_location"}
 _MISSING = object()
+_ATTRIBUTE_WRITES = ContextVar('attribute_writes', default=())
 
 
 def _canonical_attribute(attribute):
@@ -105,28 +107,61 @@ def _resolve_action_entity(manager, identifier, node_type=None):
     return entity, node
 
 
-def _read_effect_value(target, node, manager, attribute):
+def _read_effect_value(target, node, manager, attribute, *, default=0):
     if node is not None and attribute in manager.G.nodes[node]:
         return manager.G.nodes[node][attribute]
-    return getattr(target, attribute, 0)
+    return getattr(target, attribute, default)
 
 
 def _write_synchronized_attribute(target, node, manager, attribute, calculate):
     """Commit one attribute, restoring its prior presence and values on failure."""
+    key = (id(manager), type(target), getattr(target, 'uuid', id(target)), attribute)
+    active = next((scope for scope in _ATTRIBUTE_WRITES.get() if scope['key'] == key), None)
+    old_object = getattr(target, attribute, _MISSING)
+
+    def restore_object():
+        if getattr(target, attribute, _MISSING) is not old_object:
+            if old_object is _MISSING:
+                delattr(target, attribute)
+            else:
+                setattr(target, attribute, old_object)
+
+    if active is not None:
+        if active['committing']:
+            raise RuntimeError('Cannot mutate an attribute during its graph commit')
+        # A legacy method can call synchronized setters for its declared field.
+        # It sees staged values, while its enclosing effect owns the graph write.
+        try:
+            value = calculate(getattr(target, attribute, 0))
+            if value is None:
+                restore_object()
+            else:
+                setattr(target, attribute, value)
+            return value
+        except Exception:
+            restore_object()
+            raise
+
     graph_data = manager.G.nodes[node] if node is not None else None
     old_graph = graph_data.get(attribute, _MISSING) if graph_data is not None else _MISSING
     old_aliases = {alias: graph_data[alias] for alias, canonical in _ATTRIBUTE_ALIASES.items()
                    if canonical == attribute and graph_data is not None and alias in graph_data}
-    old_object = getattr(target, attribute, _MISSING)
+    scope = {'key': key, 'committing': False}
+    token = _ATTRIBUTE_WRITES.set((*_ATTRIBUTE_WRITES.get(), scope))
     try:
-        value = calculate(_read_effect_value(target, node, manager, attribute))
+        current = _read_effect_value(target, node, manager, attribute)
+        if graph_data is not None and attribute in graph_data:
+            setattr(target, attribute, current)
+        value = calculate(current)
         if value is None:
+            restore_object()
             return None
         setattr(target, attribute, value)
         identifier = node if node is not None else (
             getattr(target, "uuid", None) or getattr(target, "name", None)
         )
         if manager is not None and identifier is not None:
+            scope['committing'] = True
             manager.update_node_attribute(identifier, attribute, value)
             for alias in old_aliases:
                 graph_data[alias] = value
@@ -137,20 +172,43 @@ def _write_synchronized_attribute(target, node, manager, attribute, calculate):
                 graph_data.pop(attribute, None)
             else:
                 graph_data[attribute] = old_graph
-        current_object = getattr(target, attribute, _MISSING)
-        if current_object is not old_object:
-            if old_object is _MISSING:
-                delattr(target, attribute)
-            else:
-                setattr(target, attribute, old_object)
+        restore_object()
         raise
+    finally:
+        _ATTRIBUTE_WRITES.reset(token)
+    return value
+
+
+def _validate_numeric_change(attribute, current, value):
+    """Preserve nonnumeric state assignments while rejecting invalid numbers."""
+    if value is None:
+        return None
+    numeric_field = (attribute in _NUMERIC_ATTRIBUTES
+                     or isinstance(current, (int, float)) and not isinstance(current, bool)
+                     or isinstance(value, (int, float)) and not isinstance(value, bool))
+    if numeric_field and (not isinstance(value, (int, float))
+                          or isinstance(value, bool) or not math.isfinite(value)):
+        raise ValueError(f'Invalid numeric value for {attribute!r}: {value!r}')
     return value
 
 
 def apply_attribute_change(target, graph_manager, attribute, calculate):
-    """Apply an internal non-action update through the synchronized write."""
+    """Apply a state change, validating numeric fields in native units."""
+    if graph_manager is None and getattr(type(target), '_mutate_scalar', None) is not None:
+        raise ValueError('Native Character updates require a GraphManager')
+    attribute = _canonical_attribute(attribute)
     target, node = _resolve_action_entity(graph_manager, target, "character")
-    return _write_synchronized_attribute(target, node, graph_manager, attribute, calculate)
+    has_current_value = _read_effect_value(
+        target, node, graph_manager, attribute, default=_MISSING) is not _MISSING
+
+    def calculate_scalar(current):
+        # Zero remains the arithmetic default for an absent field, without
+        # imposing a numeric type on its first explicit assignment.
+        value = _validate_numeric_change(
+            attribute, current if has_current_value else _MISSING, calculate(current))
+        return clamp_need_value(attribute, value)
+
+    return _write_synchronized_attribute(target, node, graph_manager, attribute, calculate_scalar)
 
 
 def invoke_action(action, character=None, graph_manager=None, *, legacy_target=None):
@@ -913,6 +971,8 @@ class Action:
             return requested == getattr(candidate, "name", None) or (
                 candidate_id is not None and requested == str(candidate_id)
             )
+        if getattr(requested, 'uuid', None) is not None and type(candidate) is not type(requested):
+            return False
         requested_id = getattr(requested, "uuid", requested)
         return candidate_id is not None and candidate_id == requested_id
 
@@ -935,11 +995,30 @@ class Action:
             if isinstance(registered_characters, dict):
                 visitors = list(registered_characters.values())
 
+        native_resolution = getattr(type(manager), 'resolve_node', None) is not None
+        if native_resolution:
+            from world_state import UnknownNodeError
+
         for candidate in visitors:
-            if candidate is None or candidate is actor:
+            if candidate is None:
+                continue
+            if native_resolution:
+                try:
+                    candidate, _ = _resolve_action_entity(manager, candidate, 'character')
+                except UnknownNodeError:
+                    # Preserve optional discovery for irrelevant stale entries;
+                    # an eligible requested entity must resolve before any write.
+                    if (not self._same_location(getattr(candidate, 'location', None), initiator_location)
+                            or not self._matches_requested_target(candidate)):
+                        continue
+                    raise
+            if candidate is actor or (
+                type(candidate) is type(actor) and getattr(candidate, 'uuid', None) is not None
+                and candidate.uuid == getattr(actor, 'uuid', None)
+            ):
                 continue
 
-            candidate_key = getattr(candidate, "uuid", None) or id(candidate)
+            candidate_key = (type(candidate), getattr(candidate, "uuid", None) or id(candidate))
             if candidate_key in seen_candidates:
                 continue
 
@@ -987,7 +1066,7 @@ class Action:
                 raise ValueError("Missing required action target")
             targets.append((actor, actor_node) if target is actor else
                            _resolve_action_entity(manager, target))
-        targets.extend(_resolve_action_entity(manager, target)
+        targets.extend(_resolve_action_entity(manager, target, 'character')
                        for target in self._resolve_named_targets(
                            descriptor, actor=actor, graph_manager=manager))
         result, seen = [], set()

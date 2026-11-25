@@ -1,0 +1,282 @@
+{
+  "base": "7b2c913dc9bf76f1e7cfd5b7a6f419f67173500c",
+  "first_implementation_commit": "7edccf1a24d6a42ff5195d0541722fcd8a31afdb",
+  "source_basis": "Verified working-tree file hashes; final commit must contain identical source blobs",
+  "source_sha256": {
+    "actions.py": "f448e749f76d3afc1b49c729f52f3631c1d01654bbaecbc6f456ff3cbaed777c",
+    "character_attribute_mapper.py": "eb67d48349203b47c62cf3cc941c511967766628648e7c309109d6f7f41863d7",
+    "effect_dispatcher.py": "035b6a711d4ce178286cfff9369b2b902148b0e12b3afa820e4dbe274c0e3331",
+    "tiny_building_manager.py": "817764a12f5d2cc1864c377cc843a3d57aa833a998e3a1882827119e38180d95",
+    "tiny_characters.py": "c5576e23e2a1b9c9b9bb7fd2953bb4189e0e8b7d871d5a61556744725219633d",
+    "tiny_event_handler.py": "7a3411d51be610643e4877b6f1a97e4584353b690d45eb76b4485f2f5ef77fb0",
+    "tiny_gameplay_controller.py": "36f58f45df073749f3b3f0e3cd879fb95948aaa438061fe6cf8b25b21f780a2b",
+    "scripts/run_ci_checks.py": "d69a2510f7f88efa02fda54f629eaecd9156716f5a6121f00bf6d7a32801d6b9",
+    "tests/test_action_execution_integration.py": "baeab655199750cd7bdf608d50cca04e8b38f70083e42a6fc93ccc0d4fc3d745"
+  },
+  "profiles": {
+    "core": {
+      "command": "/workspace/.venvs/issue602-core/bin/python -B scripts/run_ci_checks.py --profile core --artifacts /workspace/scratch/issue-602/verified-core",
+      "status": "PASS",
+      "counts": {
+        "tests_run": 244,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 3,
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+      "locks": {
+        "requirements/locks/core-py312-linux-x86_64.txt": "2a037e6923b1f4e0f19d14109adc4217a5e4b7e0583a780639dd476a1451c908"
+      },
+      "batches": {
+        "components": {
+          "status": "PASS",
+          "exit_code": 0,
+          "counts": {
+            "tests_run": 86,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "expected_failures": 0,
+            "unexpected_successes": 0
+          },
+          "elapsed_seconds": 49.507
+        },
+        "world-execution": {
+          "status": "PASS",
+          "exit_code": 0,
+          "counts": {
+            "tests_run": 38,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "expected_failures": 0,
+            "unexpected_successes": 0
+          },
+          "elapsed_seconds": 60.898
+        },
+        "strategy": {
+          "status": "PASS",
+          "exit_code": 0,
+          "counts": {
+            "tests_run": 54,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "expected_failures": 0,
+            "unexpected_successes": 0
+          },
+          "elapsed_seconds": 62.448
+        },
+        "active-plans": {
+          "status": "PASS",
+          "exit_code": 0,
+          "counts": {
+            "tests_run": 39,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "expected_failures": 0,
+            "unexpected_successes": 0
+          },
+          "elapsed_seconds": 75.7
+        },
+        "runtime": {
+          "status": "PASS",
+          "exit_code": 0,
+          "counts": {
+            "tests_run": 27,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "expected_failures": 0,
+            "unexpected_successes": 0
+          },
+          "elapsed_seconds": 34.589
+        },
+        "canonical-cli": {
+          "status": "PASS",
+          "exit_code": 0,
+          "counts": {},
+          "elapsed_seconds": 1.772
+        },
+        "default-cli": {
+          "status": "PASS",
+          "exit_code": 0,
+          "counts": {},
+          "elapsed_seconds": 1.824
+        },
+        "invalid-cli": {
+          "status": "PASS",
+          "exit_code": 0,
+          "counts": {},
+          "elapsed_seconds": 0.417
+        }
+      }
+    },
+    "dev": {
+      "command": "/workspace/.venvs/issue602-dev/bin/python -B scripts/run_ci_checks.py --profile dev --artifacts /workspace/scratch/issue-602/verified-dev",
+      "status": "PASS",
+      "counts": {
+        "tests_run": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 0,
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+      "locks": {
+        "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5"
+      },
+      "batches": {
+        "runner": {
+          "status": "PASS",
+          "exit_code": 0,
+          "counts": {
+            "tests_run": 18,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "expected_failures": 0,
+            "unexpected_successes": 0
+          },
+          "elapsed_seconds": 21.337
+        },
+        "cli-smoke": {
+          "status": "PASS",
+          "exit_code": 0,
+          "counts": {
+            "tests_run": 2,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "expected_failures": 0,
+            "unexpected_successes": 0
+          },
+          "elapsed_seconds": 5.824
+        }
+      }
+    },
+    "visual": {
+      "command": "/workspace/.venvs/issue602-visual/bin/python -B scripts/run_ci_checks.py --profile visual --artifacts /workspace/scratch/issue-602/verified-visual",
+      "status": "PASS",
+      "counts": {
+        "tests_run": 70,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "expected_failures": 0,
+        "unexpected_successes": 0
+      },
+      "probes_run": 0,
+      "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+      "locks": {
+        "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5",
+        "requirements/locks/visual-py312-linux-x86_64.txt": "a6db9f00d612e0b715961e9f1565c90066eb0872f165ad3984d3fcb414eaed73"
+      },
+      "batches": {
+        "lifecycle": {
+          "status": "PASS",
+          "exit_code": 0,
+          "counts": {
+            "tests_run": 6,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "expected_failures": 0,
+            "unexpected_successes": 0
+          },
+          "elapsed_seconds": 16.894
+        },
+        "graph": {
+          "status": "PASS",
+          "exit_code": 0,
+          "counts": {
+            "tests_run": 24,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "expected_failures": 0,
+            "unexpected_successes": 0
+          },
+          "elapsed_seconds": 46.841
+        },
+        "cache": {
+          "status": "PASS",
+          "exit_code": 0,
+          "counts": {
+            "tests_run": 27,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "expected_failures": 0,
+            "unexpected_successes": 0
+          },
+          "elapsed_seconds": 5.861
+        },
+        "capture": {
+          "status": "PASS",
+          "exit_code": 0,
+          "counts": {
+            "tests_run": 13,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "expected_failures": 0,
+            "unexpected_successes": 0
+          },
+          "elapsed_seconds": 3.628
+        }
+      }
+    }
+  },
+  "real_execution_traces": [
+    {
+      "test_id": "tests.test_action_execution_integration.TestNamedTargetWorldIntegration.test_requested_identity_dedup_and_named_drain_recovery",
+      "trace": "{'nearby_energy': [20, 15, 25], 'actor_energy': 20, 'writes': 2}"
+    },
+    {
+      "test_id": "tests.test_action_execution_integration.TestNamedTargetWorldIntegration.test_named_discovery_excludes_canonical_actor_alias",
+      "trace": "{'canonical_actor': 20, 'nearby_partner': 25, 'writes': 1}"
+    },
+    {
+      "test_id": "tests.test_action_execution_integration.TestActionExecutionIntegration.test_market_reward_is_not_lost_by_following_action",
+      "trace": "{'market_and_action': [20, 23, 33]}"
+    },
+    {
+      "test_id": "tests.test_action_execution_integration.TestActionExecutionIntegration.test_sequential_drain_and_recovery_share_authoritative_energy",
+      "trace": "{'sequential_energy': [20, 15, 25], 'writes': 2}"
+    }
+  ],
+  "independent_review": "issue-602-independent-review.json",
+  "known_additional_suite_failures": {
+    "command": "python -B -m unittest -v tests.test_building_manager tests.test_building_gameplay_integration tests.test_effect_schema_v2 tests.test_enhanced_event_handler",
+    "tests_run": 102,
+    "failures": 3,
+    "identical_failure_names_on_exact_base_and_final_source": true,
+    "names": [
+      "test_apply_attribute_change_to_participants (tests.test_effect_schema_v2.TestEffectDispatcher.test_apply_attribute_change_to_participants)",
+      "test_apply_attribute_change_with_condition (tests.test_effect_schema_v2.TestEffectDispatcher.test_apply_attribute_change_with_condition)",
+      "test_event_lifecycle (tests.test_enhanced_event_handler.TestIntegrationScenarios.test_event_lifecycle)"
+    ]
+  },
+  "historical_receipts": {
+    "milestone1": "issue-602-milestone1.json",
+    "earlier_candidate_core": {
+      "status": "CANCELLED",
+      "completed_tests": 109,
+      "failures": 0,
+      "reason": "Stopped before final remaining-writer correction; not final-source verification"
+    }
+  },
+  "limits": [
+    "Known job-role parser ERROR output remains; passing assertions do not imply clean stderr",
+    "Fault-injection/invalid-input logs are expected and separate from baseline parser errors",
+    "Read-only reviewers assessed supplied source/test excerpts and ran no commands",
+    "No live inference, native Windows/GPU, later human gates or broader product readiness claimed"
+  ]
+}

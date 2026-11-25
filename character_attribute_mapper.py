@@ -112,6 +112,12 @@ class AttributeMapper:
             The attribute value, or None if not found
         """
         actual_attr, _, _, default = cls.map_attribute(template_attr)
+
+        if getattr(type(entity), '_mutate_scalar', None) is not None and entity._initialized:
+            if entity.graph_manager is None:
+                raise ValueError('An initialized Character requires its GraphManager')
+            state = entity.graph_manager.get_character_state(entity)
+            return state.get(actual_attr, getattr(entity, actual_attr, default))
         
         # Try get_state if it exists and returns a dict
         if hasattr(entity, "get_state") and callable(entity.get_state):
@@ -164,6 +170,29 @@ class AttributeMapper:
             True if successful, False otherwise
         """
         actual_attr, min_val, max_val, default = cls.map_attribute(template_attr)
+
+        if getattr(type(entity), '_mutate_scalar', None) is not None and entity._initialized:
+            try:
+                # Event mapping is resolved once here; native Action aliases have
+                # different meanings for happiness/satisfaction.
+                from actions import _validate_numeric_change
+                def calculate(current):
+                    # Bounds establish numeric type here; the synchronized
+                    # writer checks the actual existing field after calculation.
+                    validation_current = 0 if min_val is not None or max_val is not None else None
+                    result = _validate_numeric_change(actual_attr, validation_current, value)
+                    if result is None:
+                        return None
+                    if apply_bounds:
+                        if min_val is not None:
+                            result = max(min_val, result)
+                        if max_val is not None:
+                            result = min(max_val, result)
+                    return result
+                return entity._mutate_scalar(actual_attr, calculate) is not None
+            except Exception as error:
+                logging.error('Failed to synchronize %s: %s', actual_attr, error)
+                return False
         
         # Determine which attribute we'll actually set
         # For backward compatibility: if entity has the template attribute, use it without bounds

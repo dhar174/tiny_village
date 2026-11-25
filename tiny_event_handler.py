@@ -18,6 +18,7 @@ from tiny_types import GraphManager
 # Import Effect Schema v2 components
 from effect_schema import EffectV2
 from effect_dispatcher import EffectDispatcher
+from character_attribute_mapper import AttributeMapper
 
 
 class Event:
@@ -622,6 +623,11 @@ class EventHandler:
 
     def _modify_entity_attribute(self, entity, attribute: str, change_value):
         """Modify an attribute of an entity."""
+        if getattr(type(entity), '_mutate_scalar', None) is not None:
+            from actions import apply_attribute_change
+            actual_attr, _, _, _ = AttributeMapper.map_attribute(attribute)
+            return apply_attribute_change(entity, self.graph_manager, actual_attr,
+                                          lambda current: current + change_value)
         if hasattr(entity, "get_state"):
             state = entity.get_state()
             current_value = state.get(attribute, 0)
