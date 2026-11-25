@@ -1,6 +1,6 @@
 # TASK034 — #602 named targets with #816 synchronized writers first
 
-Updated: 2026-11-25 UTC. Status: implementation and final local verification complete.
+Updated: 2026-11-25 America/New_York. Status: specialist corrections and local verification complete; final-head hosted checks/integration pending.
 Authorization: "Implement the proposed plan." Plan:
 docs/superpowers/plans/2026-11-25-issue-602-named-targets.md.
 Base: origin/main7b2c913dc9bf76f1e7cfd5b7a6f419f67173500c, isolated worktree
@@ -88,4 +88,30 @@ Base: origin/main7b2c913dc9bf76f1e7cfd5b7a6f419f67173500c, isolated worktree
   See docs/testing/issue-602-named-targets.md for exact cases and boundaries.
 - Delivery branch codex/issue-602-named-targets targets main. Publication/PR identity
   and integration status are tracked by GitHub and the attached chat artifact.
-  No merge, #742/#743 approval or product/model readiness is authorized here.
+  Merge authorization is separately recorded in D040; #742/#743 approval and
+  product/model readiness are not supplied by this task.
+
+## PR #827 specialist review and authorized integration
+
+- User requested specialist review, corrections and merge when ready (D040).
+  Verified starting head95f68a97b82f9670b5e0d562f6fe27cb0adc16b9, clean worktree,
+  unchanged main7b2c913, all8 hosted checks successful; GitHub review had no finding.
+- Repository architecture/world-state/planning-actions/test-CI/reviewer roles
+  reviewed current supplied source and assertions. Their command restrictions
+  remained intact; the coordinator verified source/head/check evidence.
+- The final reviewer found a further compatibility defect: absence defaulted to
+  zero and was incorrectly treated as an existing numeric field, rejecting new
+  custom text/boolean SET values. A real-character pre-PR7b2c913 control succeeds;
+  the new regression fails at95f and passes after the correction.
+- Shared updates now distinguish actual field presence from arithmetic's default
+  zero. Caller bounds still establish numeric type before clamping; existing
+  numeric zero fields reject text, and bounded community rejects bool/NaN/Inf.
+  Four focused cases pass. The transaction and resolver contracts are unchanged.
+- Specialists rechecked the correction and found no remaining blocking concern
+  in supplied source. Corrected-source core245+3/dev20/visual70 all PASS, every
+  batch exit0 with no failures/errors/skips. Additional102 checks still have the
+  same3 baseline failures; known parser ERROR output remains.
+- Final source hashes, reviews and RED/base/GREEN evidence are retained in
+  docs/testing/evidence/issue-602-pr827-review.json. Historical244-test receipts
+  remain labelled with their prior source. Normal exact-head integration is
+  authorized by D040 after final hosted checks; GitHub PR827 records the outcome.

@@ -1,6 +1,6 @@
 # #602 named-target execution and #816 direct writer synchronization
 
-Implementation authorization: D039. Base: main
+Implementation authorization: D039; review/corrections/ready merge: D040. Base: main
 `7b2c913dc9bf76f1e7cfd5b7a6f419f67173500c`.
 Plan: [implementation contract](../superpowers/plans/2026-11-25-issue-602-named-targets.md).
 
@@ -58,14 +58,17 @@ The final corrected source passes these existing canonical profiles:
 
 | Profile | Executed result |
 | --- | --- |
-| Core | 244 tests and 3 CLI probes, all PASS |
+| Core | 245 tests and 3 CLI probes, all PASS |
 | Development | 20 tests, all PASS |
 | Visual | 70 tests, all PASS |
 
 Every batch exits 0; no assertion failures, errors or skips. Nine frozen source
 hashes are retained and must match the committed files. Commands, per-batch counts,
-elapsed times, lock hashes and actual child state traces are in the
-[final receipt](evidence/issue-602-local-results.json).
+elapsed times and lock hashes are in the
+[PR #827 review receipt](evidence/issue-602-pr827-review.json).
+Actual child state traces are retained in the earlier
+[244-test receipt](evidence/issue-602-local-results.json), historical evidence
+for head95f68a9; the unchanged trace tests also pass in the corrected profile.
 
 Observed real traces include ordinary and named energy **20 → 15 → 25**,
 market reward plus Action wealth **20 → 23 → 33**, and copied-actor discovery
@@ -76,6 +79,24 @@ text assignments were rejected and native service thirst bounds were bypassed.
 Both were fixed with RED/GREEN regressions. Final inventory checks also cover the
 remaining numeric and job setters, without changing job selection rules.
 [Review scope and corrections](evidence/issue-602-independent-review.json).
+
+## PR #827 specialist review
+
+Five repository specialist roles (architecture, world state, planning/actions,
+test/CI and independent reviewer) assessed supplied current source and assertions.
+The reviewer found another Important compatibility regression at95f68a9: missing
+custom text/Boolean fields inherited the arithmetic zero default as their type.
+The exact pre-PR base supports those assignments; the new regression fails at95f
+and passes after separating actual presence from arithmetic defaults. Declared
+bounds still reject Boolean/non-finite values before clamping, and existing
+numeric zero fields still reject text. Four focused tests pass.
+
+Specialists rechecked the correction and identified no remaining blocker in the
+supplied code. All corrected-source canonical profiles above pass; the three
+additional-suite baseline failures remain reproduced. This is a source-excerpt
+review, not independent execution or native Zcode invocation. Merge is authorized
+under D040 and remains conditional on exact-head hosted checks; the actual outcome
+is recorded on [PR #827](https://github.com/dhar174/tiny_village/pull/827).
 
 ## Retained verification history
 

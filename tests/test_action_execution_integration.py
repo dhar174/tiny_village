@@ -287,6 +287,37 @@ for invalid in ('not money', float('nan'), float('inf'), True):
     assert character.wealth_money == node['wealth_money'] == 20
 """)
 
+    def test_missing_custom_fields_do_not_inherit_numeric_default_type(self):
+        self.run_world("""
+from character_attribute_mapper import AttributeMapper
+from effect_dispatcher import EffectDispatcher
+from effect_schema import OperatorType
+node = graph.G.nodes[character]
+dispatcher = EffectDispatcher(graph)
+for prefix in ('mapped', 'dispatched'):
+    for suffix, value in [('text', 'Festival'), ('flag', True)]:
+        field = prefix + '_review827_' + suffix
+        assert not hasattr(character, field) and field not in node
+        if prefix == 'mapped':
+            assert AttributeMapper.set_attribute_value(character, field, value)
+        else:
+            assert dispatcher._modify_entity_attribute(character, field, value, OperatorType.SET)
+        assert getattr(character, field) == node[field] == value
+assert AttributeMapper.set_attribute_value(character, 'mapped_review827_text', 'Market')
+assert character.mapped_review827_text == node['mapped_review827_text'] == 'Market'
+assert dispatcher._modify_entity_attribute(character, 'dispatched_review827_flag', False, OperatorType.SET)
+assert character.dispatched_review827_flag is node['dispatched_review827_flag'] is False
+character.numeric_review827 = node['numeric_review827'] = 0
+assert not AttributeMapper.set_attribute_value(character, 'numeric_review827', 'text')
+assert not dispatcher._modify_entity_attribute(character, 'numeric_review827', 'text', OperatorType.SET)
+assert character.numeric_review827 == node['numeric_review827'] == 0
+character.community = node['community'] = 20
+for invalid in (False, True, float('nan'), float('inf')):
+    assert not AttributeMapper.set_attribute_value(character, 'community', invalid)
+    assert not dispatcher._modify_entity_attribute(character, 'community', invalid, OperatorType.SET)
+    assert character.community == node['community'] == 20
+""")
+
     def test_native_service_thirst_retains_bounds_from_graph_value(self):
         self.run_world("""
 from tiny_building_manager import BuildingManager

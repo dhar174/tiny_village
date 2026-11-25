@@ -177,7 +177,10 @@ class AttributeMapper:
                 # different meanings for happiness/satisfaction.
                 from actions import _validate_numeric_change
                 def calculate(current):
-                    result = _validate_numeric_change(actual_attr, current, value)
+                    # Bounds establish numeric type here; the synchronized
+                    # writer checks the actual existing field after calculation.
+                    validation_current = 0 if min_val is not None or max_val is not None else None
+                    result = _validate_numeric_change(actual_attr, validation_current, value)
                     if result is None:
                         return None
                     if apply_bounds:

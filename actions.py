@@ -107,10 +107,10 @@ def _resolve_action_entity(manager, identifier, node_type=None):
     return entity, node
 
 
-def _read_effect_value(target, node, manager, attribute):
+def _read_effect_value(target, node, manager, attribute, *, default=0):
     if node is not None and attribute in manager.G.nodes[node]:
         return manager.G.nodes[node][attribute]
-    return getattr(target, attribute, 0)
+    return getattr(target, attribute, default)
 
 
 def _write_synchronized_attribute(target, node, manager, attribute, calculate):
@@ -198,9 +198,14 @@ def apply_attribute_change(target, graph_manager, attribute, calculate):
         raise ValueError('Native Character updates require a GraphManager')
     attribute = _canonical_attribute(attribute)
     target, node = _resolve_action_entity(graph_manager, target, "character")
+    has_current_value = _read_effect_value(
+        target, node, graph_manager, attribute, default=_MISSING) is not _MISSING
 
     def calculate_scalar(current):
-        value = _validate_numeric_change(attribute, current, calculate(current))
+        # Zero remains the arithmetic default for an absent field, without
+        # imposing a numeric type on its first explicit assignment.
+        value = _validate_numeric_change(
+            attribute, current if has_current_value else _MISSING, calculate(current))
         return clamp_need_value(attribute, value)
 
     return _write_synchronized_attribute(target, node, graph_manager, attribute, calculate_scalar)

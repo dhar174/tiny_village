@@ -1047,3 +1047,18 @@ Project Decision synchronization remains outstanding as described above.
 - **Delivery:** reviewable #816/#602 commits, evidence, Memory Bank and PR against
   main. Merge and later #742/#743 human approvals remain separate. Preserve D035
   field rollback, D013 presentations, D015 AI and #821 follow-up boundaries.
+
+### D040 — Authorize specialist review, corrections and ready #827 integration
+
+- **Date:** 2026-11-25 America/New_York.
+- **Decision-maker:** dhar174.
+- **Confirmation:** "Review with specialist subagents, fix any review concerns,
+  then merge when ready."
+- **Scope:** review PR #827 with repository-defined read-only specialists, fix
+  confirmed concerns, verify the final source and required checks, then merge
+  that exact head into main. The coordinator remains the only writer and command
+  executor; Codex adaptation does not claim native Zcode invocation.
+- **Boundary:** the prior #602/#816 scope, disclosed baseline failures, D035
+  per-field rollback, D013/D015 product requirements and #821 follow-ups remain
+  intact. This conditional merge approval does not approve #742/#743 or establish
+  live-model or broader product readiness. GitHub records the integration outcome.

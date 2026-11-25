@@ -356,7 +356,8 @@ class EffectDispatcher:
                     # non-finite or non-numeric result raises here, so the
                     # synchronized updater rolls back both stores and the
                     # dispatcher reports not-applied (base-path behavior).
-                    result = _validate_numeric_change(actual_attr, current, result)
+                    validation_current = 0 if min_val is not None or max_val is not None else None
+                    result = _validate_numeric_change(actual_attr, validation_current, result)
                     if result is None:
                         return None
                     if min_val is not None:
