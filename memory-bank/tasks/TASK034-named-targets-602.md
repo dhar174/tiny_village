@@ -1,6 +1,6 @@
 # TASK034 — #602 named targets with #816 synchronized writers first
 
-Updated: 2026-11-25 UTC. Status: implementing approved plan.
+Updated: 2026-11-25 UTC. Status: implementation and final local verification complete.
 Authorization: "Implement the proposed plan." Plan:
 docs/superpowers/plans/2026-11-25-issue-602-named-targets.md.
 Base: origin/main7b2c913dc9bf76f1e7cfd5b7a6f419f67173500c, isolated worktree
@@ -55,8 +55,37 @@ Base: origin/main7b2c913dc9bf76f1e7cfd5b7a6f419f67173500c, isolated worktree
   complete counts are retained in the milestone receipt. Five nonnumeric
   compatibility cases observed RED->GREEN5. No worker deadline was increased.
 
-## Remaining
+- Task2 observed RED5 cases/3 failures (copied actor, stale handle location,
+  wrong typed UUID proxy); current resolver fix GREEN16 with six legacy and five
+  identity checks. Registered handles resolve before matching/proximity; optional
+  irrelevant unknown visitors retain compatibility; required targets fail closed.
+- Fresh independent whole-branch reviewer found2 Important compatibility issues:
+  mapper/dispatcher text SET rejected, native service thirst bounds lost. Both
+  observed RED2 then GREEN, plus RED/GREEN for nonfinite thirst concealment.
+  Shared field-aware validation now applies before caller-specific bounds.
+- Final audit also found age/beauty/community/material_goods and job setters that
+  could leave existing graph fields stale. Observed remaining-writer RED, routed
+  them through the same helper; job selection logic computes a local result
+  before committing. Zero updates and constructor controls remain covered.
+- Earlier final dev20 and visual70 PASS; core was deliberately CANCELLED109
+  completed tests/zero assertions before this final writer correction. These
+  receipts are historical and will not be presented as final-source verification.
+- Review boundary ruling: arbitrary callback side effects and concurrent writers
+  retain existing D035 limits; this task provides synchronous per-field updates,
+  not a whole-action transaction or concurrent-world mutation guarantee.
 
-1. Task1 complete: #816 focused review and core236+3 PASS; commit follows this ledger update.
-2. Observe copied-actor regression RED; repair and verify #602; commit.
-3. Final core/dev/visual, independent whole-branch review, evidence/docs and PR.
+## Final verification and handoff
+
+- Final unchanged source hashes:9 files; canonical core244 tests+3CLI probes,
+  dev20,visual70 PASS; all batches exit0, zero failures/errors/skips. Complete
+  source hashes, commands, numeric traces and receipts:
+  docs/testing/evidence/issue-602-local-results.json.
+- Independent review's2 Important findings are fixed with RED/GREEN regressions;
+  the later writer inventory correction also has RED/GREEN plus constructor
+  control. Review scope/limits: issue-602-independent-review.json.
+- Additional102 building/event tests still have exactly3 failures, independently
+  reproduced on unmodified base7b2c913 and final source; parser ERROR remains.
+  See docs/testing/issue-602-named-targets.md for exact cases and boundaries.
+- Delivery branch codex/issue-602-named-targets targets main. Publication/PR identity
+  and integration status are tracked by GitHub and the attached chat artifact.
+  No merge, #742/#743 approval or product/model readiness is authorized here.

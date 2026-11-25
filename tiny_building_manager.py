@@ -560,7 +560,13 @@ class BuildingManager:
                 # Direct attribute
                 if hasattr(character, attribute):
                     if getattr(type(character), '_mutate_scalar', None) is not None:
-                        character._mutate_scalar(attribute, lambda current: current + change_value)
+                        def calculate(current):
+                            from actions import _validate_numeric_change
+                            result = _validate_numeric_change(attribute, current, current + change_value)
+                            if attribute == 'thirst':
+                                result = max(0, min(100, result))
+                            return result
+                        character._mutate_scalar(attribute, calculate)
                         return
                     current_value = getattr(character, attribute, 0)
                     new_value = current_value + change_value

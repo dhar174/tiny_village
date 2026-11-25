@@ -3131,8 +3131,7 @@ class Character:
         return self.age
 
     def set_age(self, age):
-        self.age = age
-        return self.age
+        return self._mutate_scalar("age", lambda current: age)
 
     def get_pronouns(self):
         return self.pronouns
@@ -3148,39 +3147,42 @@ class Character:
         return self.graph_manager.unique_graph_id
 
     def set_job(self, job):
-        job_rules = JobRules()
-        if isinstance(job, JobRoles):
-            self.job = job
-        elif isinstance(job, str):
-            check = job_rules.check_job_name_validity(job)
-            if check not in [None, False]:
-                logging.info("Job valid")
-                for job_role in job_rules.ValidJobRoles:
-                    if (
-                        job_role.get_job_name().lower() == job.lower()
-                        or job_role.get_job_name().lower() in job.lower()
-                    ) or (
-                        job.lower() == job_role.get_job_name().lower()
-                        or job.lower() in job_role.get_job_name().lower()
-                    ):
-                        logging.info("Job role found")
-                        self.job = job_role
-                    elif (
-                        job_role.get_job_name().lower() == job.lower()
-                        or job_role.get_job_name().lower() in job.lower()
-                    ) or (
-                        job.lower() == job_role.get_job_name().lower()
-                        or job.lower() in job_role.get_job_name().lower()
-                    ):
-                        logging.info("Job role found")
-                        self.job = job_role
+        def calculate(current):
+            selected = current
+            job_rules = JobRules()
+            if isinstance(job, JobRoles):
+                selected = job
+            elif isinstance(job, str):
+                check = job_rules.check_job_name_validity(job)
+                if check not in [None, False]:
+                    logging.info("Job valid")
+                    for job_role in job_rules.ValidJobRoles:
+                        if (
+                            job_role.get_job_name().lower() == job.lower()
+                            or job_role.get_job_name().lower() in job.lower()
+                        ) or (
+                            job.lower() == job_role.get_job_name().lower()
+                            or job.lower() in job_role.get_job_name().lower()
+                        ):
+                            logging.info("Job role found")
+                            selected = job_role
+                        elif (
+                            job_role.get_job_name().lower() == job.lower()
+                            or job_role.get_job_name().lower() in job.lower()
+                        ) or (
+                            job.lower() == job_role.get_job_name().lower()
+                            or job.lower() in job_role.get_job_name().lower()
+                        ):
+                            logging.info("Job role found")
+                            selected = job_role
 
+                else:
+                    logging.info(f"Job role not found for job {job}")
+                    raise ValueError(f"Unsupported character job: {job}")
             else:
-                logging.info(f"Job role not found for job {job}")
-                raise ValueError(f"Unsupported character job: {job}")
-        else:
-            self.job = random.choice(job_rules.ValidJobRoles)
-        return self.job
+                selected = random.choice(job_rules.ValidJobRoles)
+            return selected
+        return self._mutate_scalar("job", calculate)
 
     def set_home(self, home=None):
         from tiny_buildings import House, CreateBuilding
@@ -3321,22 +3323,19 @@ class Character:
         return self.beauty
 
     def set_beauty(self, beauty):
-        self.beauty = beauty
-        return self.beauty
+        return self._mutate_scalar("beauty", lambda current: beauty)
 
     def get_community(self):
         return self.community
 
     def set_community(self, community):
-        self.community = community
-        return self.community
+        return self._mutate_scalar("community", lambda current: community)
 
     def get_material_goods(self):
         return self.material_goods
 
     def set_material_goods(self, material_goods):
-        self.material_goods = material_goods
-        return self.material_goods
+        return self._mutate_scalar("material_goods", lambda current: material_goods)
 
     def get_friendship_grid(self):
         return self.friendship_grid
@@ -3841,11 +3840,11 @@ class Character:
             self.control = self.set_control(control)
         if job_performance is not None:
             self.job_performance = self.set_job_performance(job_performance)
-        if beauty:
+        if beauty is not None:
             self.beauty = self.set_beauty(beauty)
-        if community:
+        if community is not None:
             self.community = self.set_community(community)
-        if material_goods:
+        if material_goods is not None:
             self.material_goods = self.set_material_goods(material_goods)
         if friendship_grid:
             self.friendship_grid = self.set_friendship_grid(friendship_grid)

@@ -1,0 +1,47 @@
+{
+  "reviewer": "fresh Codex final_review_602 using repository tiny-village-reviewer restrictions",
+  "base": "7b2c913dc9bf76f1e7cfd5b7a6f419f67173500c",
+  "scope": "Coordinator-supplied mutation, resolver, writer and regression-test excerpts from commit7edccf1 plus the initial #602 working delta",
+  "commands_run_by_reviewer": false,
+  "native_zcode_invocation": false,
+  "initial_verdict": "request changes; no Critical issue identified",
+  "findings": [
+    {
+      "severity": "Important",
+      "issue": "Native mapper and dispatcher rejected nonnumeric SET assignments such as job strings",
+      "status": "fixed by coordinator",
+      "fix": "Share field-aware numeric validation; preserve text assignments and numeric finite checks before bounds",
+      "regression": "TestActionExecutionIntegration.test_native_mapper_and_dispatcher_preserve_nonnumeric_set",
+      "verification": "Observed RED then GREEN"
+    },
+    {
+      "severity": "Important",
+      "issue": "Native direct building effects bypassed existing thirst0..100 bounds",
+      "status": "fixed by coordinator",
+      "fix": "Calculate from graph state, validate before applying the existing thirst bounds",
+      "regression": "TestActionExecutionIntegration.test_native_service_thirst_retains_bounds_from_graph_value",
+      "verification": "Observed RED then GREEN; additional nonfinite concealment case also RED then GREEN"
+    }
+  ],
+  "additional_coordinator_audit": {
+    "issue": "Remaining age/beauty/community/material_goods and job setters could leave existing graph fields stale",
+    "status": "fixed",
+    "regression": "TestActionExecutionIntegration.test_remaining_numeric_and_job_setters_keep_graph_state_current",
+    "verification": "Observed RED then GREEN; constructor control GREEN"
+  },
+  "checked": [
+    "Canonical nearby identity/location/type selection and effect deduplication",
+    "Synchronous per-field rollback, aliases and nested callback staging",
+    "Native Character writer and event/building integration excerpts",
+    "Supplied real-object regression assertions"
+  ],
+  "unverified_by_reviewer": [
+    "Independent repository file reads and command execution",
+    "Final source after coordinator fixes and complete profile outcomes"
+  ],
+  "declined_to_judge": [
+    "Arbitrary callback side effects and concurrent writers: existing D035 contract covers synchronous per-field updates"
+  ],
+  "coordinator_ruling": "Preserve D035 boundaries; no whole-action or concurrent-world transaction guarantee is introduced",
+  "final_verification": "Final corrected-source canonical receipts are recorded separately in issue-602-local-results.json"
+}

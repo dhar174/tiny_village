@@ -11,7 +11,7 @@ import math
 
 from effect_schema import EffectV2, EffectType, OperatorType
 from character_attribute_mapper import AttributeMapper
-from actions import apply_attribute_change, clamp_need_value, _NEEDS_SCALAR_CLAMP_ATTRIBUTES
+from actions import apply_attribute_change, clamp_need_value, _NEEDS_SCALAR_CLAMP_ATTRIBUTES, _validate_numeric_change
 
 
 class EffectDispatcher:
@@ -356,14 +356,9 @@ class EffectDispatcher:
                     # non-finite or non-numeric result raises here, so the
                     # synchronized updater rolls back both stores and the
                     # dispatcher reports not-applied (base-path behavior).
-                    if (
-                        not isinstance(result, (int, float))
-                        or isinstance(result, bool)
-                        or not math.isfinite(result)
-                    ):
-                        raise ValueError(
-                            f"Non-finite numeric result for {actual_attr!r}: {result!r}"
-                        )
+                    result = _validate_numeric_change(actual_attr, current, result)
+                    if result is None:
+                        return None
                     if min_val is not None:
                         result = max(min_val, result)
                     if max_val is not None:

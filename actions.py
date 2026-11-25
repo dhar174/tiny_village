@@ -179,6 +179,19 @@ def _write_synchronized_attribute(target, node, manager, attribute, calculate):
     return value
 
 
+def _validate_numeric_change(attribute, current, value):
+    """Preserve nonnumeric state assignments while rejecting invalid numbers."""
+    if value is None:
+        return None
+    numeric_field = (attribute in _NUMERIC_ATTRIBUTES
+                     or isinstance(current, (int, float)) and not isinstance(current, bool)
+                     or isinstance(value, (int, float)) and not isinstance(value, bool))
+    if numeric_field and (not isinstance(value, (int, float))
+                          or isinstance(value, bool) or not math.isfinite(value)):
+        raise ValueError(f'Invalid numeric value for {attribute!r}: {value!r}')
+    return value
+
+
 def apply_attribute_change(target, graph_manager, attribute, calculate):
     """Apply a state change, validating numeric fields in native units."""
     if graph_manager is None and getattr(type(target), '_mutate_scalar', None) is not None:
@@ -187,15 +200,7 @@ def apply_attribute_change(target, graph_manager, attribute, calculate):
     target, node = _resolve_action_entity(graph_manager, target, "character")
 
     def calculate_scalar(current):
-        value = calculate(current)
-        if value is None:
-            return None
-        numeric_field = (attribute in _NUMERIC_ATTRIBUTES
-                         or isinstance(current, (int, float)) and not isinstance(current, bool)
-                         or isinstance(value, (int, float)) and not isinstance(value, bool))
-        if numeric_field and (not isinstance(value, (int, float))
-                              or isinstance(value, bool) or not math.isfinite(value)):
-            raise ValueError(f'Invalid numeric value for {attribute!r}: {value!r}')
+        value = _validate_numeric_change(attribute, current, calculate(current))
         return clamp_need_value(attribute, value)
 
     return _write_synchronized_attribute(target, node, graph_manager, attribute, calculate_scalar)
@@ -961,6 +966,8 @@ class Action:
             return requested == getattr(candidate, "name", None) or (
                 candidate_id is not None and requested == str(candidate_id)
             )
+        if getattr(requested, 'uuid', None) is not None and type(candidate) is not type(requested):
+            return False
         requested_id = getattr(requested, "uuid", requested)
         return candidate_id is not None and candidate_id == requested_id
 
@@ -983,11 +990,30 @@ class Action:
             if isinstance(registered_characters, dict):
                 visitors = list(registered_characters.values())
 
+        native_resolution = getattr(type(manager), 'resolve_node', None) is not None
+        if native_resolution:
+            from world_state import UnknownNodeError
+
         for candidate in visitors:
-            if candidate is None or candidate is actor:
+            if candidate is None:
+                continue
+            if native_resolution:
+                try:
+                    candidate, _ = _resolve_action_entity(manager, candidate, 'character')
+                except UnknownNodeError:
+                    # Preserve optional discovery for irrelevant stale entries;
+                    # an eligible requested entity must resolve before any write.
+                    if (not self._same_location(getattr(candidate, 'location', None), initiator_location)
+                            or not self._matches_requested_target(candidate)):
+                        continue
+                    raise
+            if candidate is actor or (
+                type(candidate) is type(actor) and getattr(candidate, 'uuid', None) is not None
+                and candidate.uuid == getattr(actor, 'uuid', None)
+            ):
                 continue
 
-            candidate_key = getattr(candidate, "uuid", None) or id(candidate)
+            candidate_key = (type(candidate), getattr(candidate, "uuid", None) or id(candidate))
             if candidate_key in seen_candidates:
                 continue
 
@@ -1035,7 +1061,7 @@ class Action:
                 raise ValueError("Missing required action target")
             targets.append((actor, actor_node) if target is actor else
                            _resolve_action_entity(manager, target))
-        targets.extend(_resolve_action_entity(manager, target)
+        targets.extend(_resolve_action_entity(manager, target, 'character')
                        for target in self._resolve_named_targets(
                            descriptor, actor=actor, graph_manager=manager))
         result, seen = [], set()

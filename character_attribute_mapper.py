@@ -7,7 +7,6 @@ Handles aliases and provides safe attribute access.
 
 from typing import Any, Optional, Dict, Tuple
 import logging
-import math
 
 
 class AttributeMapper:
@@ -176,15 +175,18 @@ class AttributeMapper:
             try:
                 # Event mapping is resolved once here; native Action aliases have
                 # different meanings for happiness/satisfaction.
-                if not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value):
-                    raise ValueError('Expected a finite numeric scalar')
-                if apply_bounds:
-                    if min_val is not None:
-                        value = max(min_val, value)
-                    if max_val is not None:
-                        value = min(max_val, value)
-                entity._mutate_scalar(actual_attr, lambda current: value)
-                return True
+                from actions import _validate_numeric_change
+                def calculate(current):
+                    result = _validate_numeric_change(actual_attr, current, value)
+                    if result is None:
+                        return None
+                    if apply_bounds:
+                        if min_val is not None:
+                            result = max(min_val, result)
+                        if max_val is not None:
+                            result = min(max_val, result)
+                    return result
+                return entity._mutate_scalar(actual_attr, calculate) is not None
             except Exception as error:
                 logging.error('Failed to synchronize %s: %s', actual_attr, error)
                 return False

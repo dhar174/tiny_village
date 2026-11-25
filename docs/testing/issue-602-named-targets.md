@@ -35,7 +35,49 @@ to that old implementation.
   needs keep0..100 units and native happiness0..1; credits are unscaled.
 - Shared helper nonnumeric updates such as job='Baker' remain compatible.
 
-## Verification record — in progress
+## Named-target corrections
+
+Registered visitor handles resolve to canonical Characters before self exclusion,
+requested identity, co-location and deduplication. Copied actor handles cannot
+receive nearby effects. Stale visitor names/locations do not override the current
+registered entity. Object requests retain concrete-type identity; UUID and name
+requests remain supported.
+
+The visitor fast path, empty-list registry fallback, optional missing-target no-op
+and required-target failure remain intact. Irrelevant unknown visitors are skipped;
+eligible unresolved requested targets fail preparation before writes. Named target
+preparation stays ahead of mutation, with the existing per-field rollback policy.
+
+Real target tests cover three Characters, duplicate/copy handles, overlapping
+selectors, all requested-identity forms, stale locations in both directions,
+ambiguity, blocked/required targets, partial failure and named drain/recovery.
+
+## Final verification
+
+The final corrected source passes these existing canonical profiles:
+
+| Profile | Executed result |
+| --- | --- |
+| Core | 244 tests and 3 CLI probes, all PASS |
+| Development | 20 tests, all PASS |
+| Visual | 70 tests, all PASS |
+
+Every batch exits 0; no assertion failures, errors or skips. Nine frozen source
+hashes are retained and must match the committed files. Commands, per-batch counts,
+elapsed times, lock hashes and actual child state traces are in the
+[final receipt](evidence/issue-602-local-results.json).
+
+Observed real traces include ordinary and named energy **20 → 15 → 25**,
+market reward plus Action wealth **20 → 23 → 33**, and copied-actor discovery
+leaving actor energy **20** while the canonical partner receives **25**.
+
+The fresh independent reviewer found two Important compatibility defects: mapped
+text assignments were rejected and native service thirst bounds were bypassed.
+Both were fixed with RED/GREEN regressions. Final inventory checks also cover the
+remaining numeric and job setters, without changing job selection rules.
+[Review scope and corrections](evidence/issue-602-independent-review.json).
+
+## Retained verification history
 
 Focused action/identity/legacy verification reports36 tests OK; an adapter
 follow-up reports3 OK. Initial introduced import/fixture errors and the five
@@ -49,9 +91,13 @@ before the job-update correction. It is not a passing or complete profile.
 Only existing core module selectors were repartitioned into smaller contiguous
 components/world-execution/strategy batches. The flattened selector sequence,
 duplicates and order are identical; all other profiles and20s/25s/110s/120s limits
-remain unchanged. The completed #816 milestone reports236 core tests and3 CLI
-probes PASS, with every batch exit0 and no failures/errors/skips. Final integrated
-#602 receipts remain pending.
+remain unchanged. The completed #816 milestone reports 236 core tests and 3 CLI
+probes PASS, with every batch exit 0 and no failures/errors/skips. Its earlier
+source and receipts remain in [the milestone record](evidence/issue-602-milestone1.json).
+
+An intermediate core run was deliberately cancelled after 109 completed tests
+before the remaining-writer correction; its development/visual runs are historical.
+Only the final corrected-source receipts above establish final verification.
 
 ## Known limitations
 
