@@ -4180,10 +4180,14 @@ class GameplayController:
                 if hasattr(character, 'wealth_money'):
                     if 'market' in event_name.lower():
                         # Market events boost everyone's wealth slightly
-                        character.wealth_money += random.randint(1, 5)
+                        reward = random.randint(1, 5)
+                        apply_attribute_change(character, self.graph_manager, 'wealth_money',
+                                               lambda current: current + reward)
                     elif 'trade' in event_name.lower():
                         # Trade events have bigger economic impact
-                        character.wealth_money += random.randint(5, 15)
+                        reward = random.randint(5, 15)
+                        apply_attribute_change(character, self.graph_manager, 'wealth_money',
+                                               lambda current: current + reward)
                         
         except Exception as e:
             logger.warning(f"Error updating economic state from event: {e}")

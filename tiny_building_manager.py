@@ -84,11 +84,19 @@ class BuildingService:
     
     def can_provide(self, character, building_resources: ResourcePool) -> bool:
         """Check if service can be provided based on character wealth and building resources."""
+        if getattr(type(character), '_mutate_scalar', None) is not None and character.graph_manager is None:
+            return False
         # Check character wealth for positive-cost services
         if self.cost > 0:
             if not hasattr(character, 'wealth_money'):
                 return False
-            if character.wealth_money < self.cost:
+            wealth = character.wealth_money
+            if getattr(type(character), '_mutate_scalar', None) is not None and character.graph_manager is not None:
+                try:
+                    wealth = character.graph_manager.get_character_state(character)['wealth_money']
+                except (KeyError, ValueError):
+                    return False
+            if wealth < self.cost:
                 return False
         
         # Check building has required resources
@@ -485,7 +493,10 @@ class BuildingManager:
                 return False, "Character cannot participate in monetary transactions for this service"
 
             # Deduct or pay cost to character
-            if service.cost > 0:
+            if service.cost and getattr(type(character), '_mutate_scalar', None) is not None:
+                character._mutate_scalar('wealth_money', lambda current: (
+                    max(0, current - service.cost) if service.cost > 0 else current - service.cost))
+            elif service.cost > 0:
                 character.wealth_money = max(0, character.wealth_money - service.cost)
             elif service.cost < 0:
                 # Service pays the character
@@ -548,6 +559,9 @@ class BuildingManager:
             else:
                 # Direct attribute
                 if hasattr(character, attribute):
+                    if getattr(type(character), '_mutate_scalar', None) is not None:
+                        character._mutate_scalar(attribute, lambda current: current + change_value)
+                        return
                     current_value = getattr(character, attribute, 0)
                     new_value = current_value + change_value
                     
@@ -562,6 +576,8 @@ class BuildingManager:
                     setattr(character, attribute, new_value)
                     
         except Exception as e:
+            if getattr(type(character), '_mutate_scalar', None) is not None:
+                raise
             logger.warning(f"Error applying service effect: {e}")
     
     def get_building_resources(self, building_id: str) -> Optional[Dict[str, int]]:

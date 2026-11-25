@@ -1032,3 +1032,18 @@ Project Decision synchronization remains outstanding as described above.
   required checks before a head-SHA-guarded merge. Do not label that review as
   Zcode execution. This does not authorize bypassing checks or later phase gates.
 - **Evidence:** [pre-merge review receipt](testing/evidence/issue-741-pre-merge-review.json).
+
+### D039 — Approve #602 with #816 synchronization repaired first
+
+- **Date:** 2026-11-25 UTC.
+- **Decision-maker:** dhar174.
+- **Confirmation:** "Implement the proposed plan."
+- **Scope:** latest-main isolated implementation; direct scalar writer coherence
+  and sequential drain/recovery regressions first, followed by canonical nearby
+  Character target resolution, real-object acceptance, independent review and
+  core/dev/visual checks. Coordinator alone writes; repository specialist roles
+  are adapted through available Codex agents without a native Zcode claim.
+- **Plan:** [approved implementation contract](superpowers/plans/2026-11-25-issue-602-named-targets.md).
+- **Delivery:** reviewable #816/#602 commits, evidence, Memory Bank and PR against
+  main. Merge and later #742/#743 human approvals remain separate. Preserve D035
+  field rollback, D013 presentations, D015 AI and #821 follow-up boundaries.

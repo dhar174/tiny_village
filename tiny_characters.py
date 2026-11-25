@@ -2881,7 +2881,7 @@ class Character:
         handled by TalkAction.
         """
         # Give a small additional boost to social wellbeing when talked to
-        self.social_wellbeing += 0.1
+        self._mutate_scalar("social_wellbeing", lambda current: current + 0.1)
         
         # Boost based on personality compatibility
         if hasattr(initiator, 'personality_traits') and self.personality_traits:
@@ -2890,7 +2890,7 @@ class Character:
             self_agreeable = getattr(self.personality_traits, 'agreeableness', 50)
             
             if initiator_agreeable > 60 and self_agreeable > 60:
-                self.social_wellbeing += 0.1  # Bonus for agreeable personalities
+                self._mutate_scalar("social_wellbeing", lambda current: current + 0.1)  # Bonus for agreeable personalities
                 
         # Update friendship grid if it exists
         if hasattr(self, 'friendship_grid') and hasattr(initiator, 'name'):
@@ -2918,7 +2918,7 @@ class Character:
         Respond to a greeting from another character.
         """
         # Small boost to social wellbeing from being greeted
-        self.social_wellbeing += 0.05
+        self._mutate_scalar("social_wellbeing", lambda current: current + 0.05)
         
         # Update friendship grid if it exists
         if hasattr(self, 'friendship_grid') and hasattr(initiator, 'name'):
@@ -2945,7 +2945,7 @@ class Character:
         Respond to a compliment from another character.
         """
         # Significant boost to social wellbeing from compliments
-        self.social_wellbeing += 0.2
+        self._mutate_scalar("social_wellbeing", lambda current: current + 0.2)
         
         # Compliments have a stronger effect on friendship
         if hasattr(self, 'friendship_grid') and hasattr(initiator, 'name'):
@@ -3218,40 +3218,47 @@ class Character:
         else:
             raise TypeError(f"Invalid type {type(job)} for job role")
 
+    def _mutate_scalar(self, canonical_field, calculate):
+        """Keep registered scalar mutations coherent without intercepting fields."""
+        if not getattr(self, '_initialized', False):
+            value = calculate(getattr(self, canonical_field, 0))
+            if value is not None:
+                setattr(self, canonical_field, value)
+            return value
+        if self.graph_manager is None:
+            raise ValueError('An initialized Character requires its GraphManager')
+        from actions import apply_attribute_change
+        return apply_attribute_change(self, self.graph_manager, canonical_field, calculate)
+
     def get_health_status(self):
         return self.health_status
 
     def set_health_status(self, health_status):
-        self.health_status = health_status
-        return self.health_status
+        return self._mutate_scalar("health_status", lambda current: health_status)
 
     def get_hunger_level(self):
         return self.hunger_level
 
     def set_hunger_level(self, hunger_level):
-        self.hunger_level = hunger_level
-        return self.hunger_level
+        return self._mutate_scalar("hunger_level", lambda current: hunger_level)
 
     def get_wealth_money(self):
         return self.wealth_money
 
     def set_wealth_money(self, wealth_money):
-        self.wealth_money = wealth_money
-        return self.wealth_money
+        return self._mutate_scalar("wealth_money", lambda current: wealth_money)
 
     def get_mental_health(self):
         return self.mental_health
 
     def set_mental_health(self, mental_health):
-        self.mental_health = mental_health
-        return self.mental_health
+        return self._mutate_scalar("mental_health", lambda current: mental_health)
 
     def get_social_wellbeing(self):
         return self.social_wellbeing
 
     def set_social_wellbeing(self, social_wellbeing):
-        self.social_wellbeing = social_wellbeing
-        return self.social_wellbeing
+        return self._mutate_scalar("social_wellbeing", lambda current: social_wellbeing)
 
     @property
     def satisfaction(self):
@@ -3260,63 +3267,55 @@ class Character:
 
     @satisfaction.setter
     def satisfaction(self, value):
-        self.current_satisfaction = value
+        self._mutate_scalar("current_satisfaction", lambda current: value)
 
     def get_happiness(self):
         return self.happiness
 
     def set_happiness(self, happiness):
-        self.happiness = happiness
-        return self.happiness
+        return self._mutate_scalar("happiness", lambda current: happiness)
 
     def get_shelter(self):
         return self.shelter
 
     def set_shelter(self, shelter):
-        self.shelter = shelter
-        return self.shelter
+        return self._mutate_scalar("shelter", lambda current: shelter)
 
     def get_stability(self):
         return self.stability
 
     def set_stability(self, stability):
-        self.stability = stability
-        return self.stability
+        return self._mutate_scalar("stability", lambda current: stability)
 
     def get_luxury(self):
         return self.luxury
 
     def set_luxury(self, luxury):
-        self.luxury = luxury
-        return self.luxury
+        return self._mutate_scalar("luxury", lambda current: luxury)
 
     def get_hope(self):
         return self.hope
 
     def set_hope(self, hope):
-        self.hope = hope
-        return self.hope
+        return self._mutate_scalar("hope", lambda current: hope)
 
     def get_success(self):
         return self.success
 
     def set_success(self, success):
-        self.success = success
-        return self.success
+        return self._mutate_scalar("success", lambda current: success)
 
     def get_control(self):
         return self.control
 
     def set_control(self, control):
-        self.control = control
-        return self.control
+        return self._mutate_scalar("control", lambda current: control)
 
     def get_job_performance(self):
         return self.job_performance
 
     def set_job_performance(self, job_performance):
-        self.job_performance = job_performance
-        return self.job_performance
+        return self._mutate_scalar("job_performance", lambda current: job_performance)
 
     def get_beauty(self):
         return self.beauty
@@ -3817,30 +3816,30 @@ class Character:
     ):
         if job:
             self.job = self.set_job(job)
-        if health_status:
+        if health_status is not None:
             self.health_status = self.set_health_status(health_status)
-        if hunger_level:
+        if hunger_level is not None:
             self.hunger_level = self.set_hunger_level(hunger_level)
-        if wealth_money:
+        if wealth_money is not None:
             self.wealth_money = self.set_wealth_money(wealth_money)
-        if mental_health:
+        if mental_health is not None:
             self.mental_health = self.set_mental_health(mental_health)
-        if social_wellbeing:
+        if social_wellbeing is not None:
             self.social_wellbeing = self.set_social_wellbeing(social_wellbeing)
 
-        if shelter:
+        if shelter is not None:
             self.shelter = self.set_shelter(shelter)
-        if stability:
+        if stability is not None:
             self.stability = self.set_stability(stability)
-        if luxury:
+        if luxury is not None:
             self.luxury = self.set_luxury(luxury)
-        if hope:
+        if hope is not None:
             self.hope = self.set_hope(hope)
-        if success:
+        if success is not None:
             self.success = self.set_success(success)
-        if control:
+        if control is not None:
             self.control = self.set_control(control)
-        if job_performance:
+        if job_performance is not None:
             self.job_performance = self.set_job_performance(job_performance)
         if beauty:
             self.beauty = self.set_beauty(beauty)

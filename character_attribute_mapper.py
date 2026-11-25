@@ -7,6 +7,7 @@ Handles aliases and provides safe attribute access.
 
 from typing import Any, Optional, Dict, Tuple
 import logging
+import math
 
 
 class AttributeMapper:
@@ -112,6 +113,12 @@ class AttributeMapper:
             The attribute value, or None if not found
         """
         actual_attr, _, _, default = cls.map_attribute(template_attr)
+
+        if getattr(type(entity), '_mutate_scalar', None) is not None and entity._initialized:
+            if entity.graph_manager is None:
+                raise ValueError('An initialized Character requires its GraphManager')
+            state = entity.graph_manager.get_character_state(entity)
+            return state.get(actual_attr, getattr(entity, actual_attr, default))
         
         # Try get_state if it exists and returns a dict
         if hasattr(entity, "get_state") and callable(entity.get_state):
@@ -164,6 +171,23 @@ class AttributeMapper:
             True if successful, False otherwise
         """
         actual_attr, min_val, max_val, default = cls.map_attribute(template_attr)
+
+        if getattr(type(entity), '_mutate_scalar', None) is not None and entity._initialized:
+            try:
+                # Event mapping is resolved once here; native Action aliases have
+                # different meanings for happiness/satisfaction.
+                if not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value):
+                    raise ValueError('Expected a finite numeric scalar')
+                if apply_bounds:
+                    if min_val is not None:
+                        value = max(min_val, value)
+                    if max_val is not None:
+                        value = min(max_val, value)
+                entity._mutate_scalar(actual_attr, lambda current: value)
+                return True
+            except Exception as error:
+                logging.error('Failed to synchronize %s: %s', actual_attr, error)
+                return False
         
         # Determine which attribute we'll actually set
         # For backward compatibility: if entity has the template attribute, use it without bounds

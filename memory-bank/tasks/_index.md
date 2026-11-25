@@ -1,6 +1,7 @@
 ## Tasks Index
 
 ## In Progress
+- [TASK034](TASK034-named-targets-602.md) Named targets #602 with #816 synchronized writers first — approved implementation from main7b2c913; isolated coordinator-only worktree; regressions/review pending (Updated: 2026-11-25 UTC).
 - [TASK033](TASK033-live-plan-ticks-741.md) Live simulation plan execution (#741) — approved D037; prerequisite #823 merged at437c689; PR [#824](https://github.com/dhar174/tiny_village/pull/824): alternate independent review and frozenset fix verified; local core225+3/dev20/visual70; final conditional integration tracked on PR (Updated: 2026-11-16 America/New_York).
 - [TASK032](TASK032-strategy-goap-218.md) Executable StrategyManager plans (#218) — PR [#823](https://github.com/dhar174/tiny_village/pull/823) merged at437c689 under explicit authorization; all eight hosted checks passed; #741 now TASK033 (Updated: 2026-11-16 UTC).
 - [TASK031](TASK031-utility-goal-774.md) Explicit UtilityGoal and #774 test debt — PR822 GLM fixes: core167+3/dev20/visual69 and independent delta review pass; hosted checks/authorized merge pending.

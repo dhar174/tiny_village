@@ -331,7 +331,11 @@ class EffectDispatcher:
             # Note: this gate is graph-manager presence, not entity registration;
             # an unregistered entity raises inside _resolve_action_entity and is
             # reported as not-applied (False) instead of a bounded object write.
-            if actual_attr in _NEEDS_SCALAR_CLAMP_ATTRIBUTES | {"happiness"} and self.graph_manager is not None:
+            native_character = getattr(type(entity), '_mutate_scalar', None) is not None
+            manager = self.graph_manager
+            if manager is None and native_character:
+                manager = entity.graph_manager
+            if manager is not None and (native_character or actual_attr in _NEEDS_SCALAR_CLAMP_ATTRIBUTES | {"happiness"}):
                 def calculate(current):
                     if operator == OperatorType.ADD:
                         result = current + change_value
@@ -360,9 +364,13 @@ class EffectDispatcher:
                         raise ValueError(
                             f"Non-finite numeric result for {actual_attr!r}: {result!r}"
                         )
+                    if min_val is not None:
+                        result = max(min_val, result)
+                    if max_val is not None:
+                        result = min(max_val, result)
                     return clamp_need_value(actual_attr, result)
 
-                success = apply_attribute_change(entity, self.graph_manager, actual_attr, calculate)
+                success = apply_attribute_change(entity, manager, actual_attr, calculate)
                 if success is None:
                     # calculate returned None (e.g., write returned None); treat as not applied
                     return False

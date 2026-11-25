@@ -1,0 +1,191 @@
+{
+  "base": "7b2c913dc9bf76f1e7cfd5b7a6f419f67173500c",
+  "milestone": "816 synchronized direct writers",
+  "source_sha256": {
+    "actions.py": "dff3a3b8596e5dd97ac10e7f7fd85c6240e95c949cb22ecf8a00f01e49f6dd74",
+    "character_attribute_mapper.py": "436d3bddeb62f12c1080d9392c73e29cde9f6a64b79fad515c05c6a6ff4ab6aa",
+    "effect_dispatcher.py": "7babe664c7b9ea851349eb7f3e00c7e4d96746481b45ceeb7bae6e0470c2fc10",
+    "tiny_building_manager.py": "60f4db1ac9ae783bde24506a6b8b810da66aa4349e32870d1ffa61c6ca5bc07c",
+    "tiny_characters.py": "a6fef1b4d71041aa972ef3995fc6e3d846f1ee80dbcd167313ac5f3593311937",
+    "tiny_event_handler.py": "7a3411d51be610643e4877b6f1a97e4584353b690d45eb76b4485f2f5ef77fb0",
+    "tiny_gameplay_controller.py": "36f58f45df073749f3b3f0e3cd879fb95948aaa438061fe6cf8b25b21f780a2b",
+    "scripts/run_ci_checks.py": "d69a2510f7f88efa02fda54f629eaecd9156716f5a6121f00bf6d7a32801d6b9",
+    "tests/test_action_execution_integration.py": "47cc2a36f2950a9f6d708d31d3b96321be7725e92e09561e0faff3eadd3e2a1d"
+  },
+  "core_command": "/workspace/.venvs/issue602-core/bin/python -B scripts/run_ci_checks.py --profile core --artifacts /workspace/scratch/issue-602/milestone1-core-repartitioned",
+  "core": {
+    "profile": "core",
+    "status": "PASS",
+    "counts": {
+      "tests_run": 236,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0
+    },
+    "probes_run": 3,
+    "batches": {
+      "components": {
+        "status": "PASS",
+        "exit_code": 0,
+        "counts": {
+          "tests_run": 86,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "expected_failures": 0,
+          "unexpected_successes": 0
+        }
+      },
+      "world-execution": {
+        "status": "PASS",
+        "exit_code": 0,
+        "counts": {
+          "tests_run": 30,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "expected_failures": 0,
+          "unexpected_successes": 0
+        }
+      },
+      "strategy": {
+        "status": "PASS",
+        "exit_code": 0,
+        "counts": {
+          "tests_run": 54,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "expected_failures": 0,
+          "unexpected_successes": 0
+        }
+      },
+      "active-plans": {
+        "status": "PASS",
+        "exit_code": 0,
+        "counts": {
+          "tests_run": 39,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "expected_failures": 0,
+          "unexpected_successes": 0
+        }
+      },
+      "runtime": {
+        "status": "PASS",
+        "exit_code": 0,
+        "counts": {
+          "tests_run": 27,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "expected_failures": 0,
+          "unexpected_successes": 0
+        }
+      },
+      "canonical-cli": {
+        "status": "PASS",
+        "exit_code": 0,
+        "counts": {}
+      },
+      "default-cli": {
+        "status": "PASS",
+        "exit_code": 0,
+        "counts": {}
+      },
+      "invalid-cli": {
+        "status": "PASS",
+        "exit_code": 0,
+        "counts": {}
+      }
+    }
+  },
+  "earlier_incomplete_core": {
+    "profile": "core",
+    "status": "FAIL",
+    "counts": {
+      "tests_run": 191,
+      "failures": 5,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0
+    },
+    "probes_run": 3,
+    "batches": {
+      "components": {
+        "status": "FAIL",
+        "exit_code": 1,
+        "counts": {
+          "tests_run": 125,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "expected_failures": 0,
+          "unexpected_successes": 0
+        }
+      },
+      "active-plans": {
+        "status": "FAIL",
+        "exit_code": 1,
+        "counts": {
+          "tests_run": 39,
+          "failures": 5,
+          "errors": 0,
+          "skipped": 0,
+          "expected_failures": 0,
+          "unexpected_successes": 0
+        }
+      },
+      "runtime": {
+        "status": "PASS",
+        "exit_code": 0,
+        "counts": {
+          "tests_run": 27,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "expected_failures": 0,
+          "unexpected_successes": 0
+        }
+      },
+      "canonical-cli": {
+        "status": "PASS",
+        "exit_code": 0,
+        "counts": {}
+      },
+      "default-cli": {
+        "status": "PASS",
+        "exit_code": 0,
+        "counts": {}
+      },
+      "invalid-cli": {
+        "status": "PASS",
+        "exit_code": 0,
+        "counts": {}
+      }
+    }
+  },
+  "additional_checks": {
+    "tests_run": 102,
+    "failures": 3,
+    "same_failures_on_exact_base": true,
+    "names": [
+      "tests.test_effect_schema_v2.TestEffectDispatcher.test_apply_attribute_change_to_participants",
+      "tests.test_effect_schema_v2.TestEffectDispatcher.test_apply_attribute_change_with_condition",
+      "tests.test_enhanced_event_handler.TestIntegrationScenarios.test_event_lifecycle"
+    ]
+  },
+  "review": {
+    "world_state": "No blocker in supplied helper/source excerpts; no commands run",
+    "test_ci": "Contiguous existing-selector repartition recommended; no commands run",
+    "native_zcode_invocation": false
+  },
+  "limits": [
+    "Known job-parser ERROR output remains",
+    "Later phase gates and model/product readiness not established"
+  ]
+}

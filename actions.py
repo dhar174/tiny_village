@@ -14,6 +14,7 @@ import importlib
 import inspect
 import math
 from collections.abc import Mapping
+from contextvars import ContextVar
 
 import json
 from uuid import UUID
@@ -58,6 +59,7 @@ _NEEDS_SCALAR_CLAMP_ATTRIBUTES = {
 }
 _EFFECT_TARGETS = {"initiator", "target", "target_character_in_location"}
 _MISSING = object()
+_ATTRIBUTE_WRITES = ContextVar('attribute_writes', default=())
 
 
 def _canonical_attribute(attribute):
@@ -113,20 +115,53 @@ def _read_effect_value(target, node, manager, attribute):
 
 def _write_synchronized_attribute(target, node, manager, attribute, calculate):
     """Commit one attribute, restoring its prior presence and values on failure."""
+    key = (id(manager), type(target), getattr(target, 'uuid', id(target)), attribute)
+    active = next((scope for scope in _ATTRIBUTE_WRITES.get() if scope['key'] == key), None)
+    old_object = getattr(target, attribute, _MISSING)
+
+    def restore_object():
+        if getattr(target, attribute, _MISSING) is not old_object:
+            if old_object is _MISSING:
+                delattr(target, attribute)
+            else:
+                setattr(target, attribute, old_object)
+
+    if active is not None:
+        if active['committing']:
+            raise RuntimeError('Cannot mutate an attribute during its graph commit')
+        # A legacy method can call synchronized setters for its declared field.
+        # It sees staged values, while its enclosing effect owns the graph write.
+        try:
+            value = calculate(getattr(target, attribute, 0))
+            if value is None:
+                restore_object()
+            else:
+                setattr(target, attribute, value)
+            return value
+        except Exception:
+            restore_object()
+            raise
+
     graph_data = manager.G.nodes[node] if node is not None else None
     old_graph = graph_data.get(attribute, _MISSING) if graph_data is not None else _MISSING
     old_aliases = {alias: graph_data[alias] for alias, canonical in _ATTRIBUTE_ALIASES.items()
                    if canonical == attribute and graph_data is not None and alias in graph_data}
-    old_object = getattr(target, attribute, _MISSING)
+    scope = {'key': key, 'committing': False}
+    token = _ATTRIBUTE_WRITES.set((*_ATTRIBUTE_WRITES.get(), scope))
     try:
-        value = calculate(_read_effect_value(target, node, manager, attribute))
+        current = _read_effect_value(target, node, manager, attribute)
+        if graph_data is not None and attribute in graph_data:
+            setattr(target, attribute, current)
+        value = calculate(current)
         if value is None:
+            restore_object()
             return None
         setattr(target, attribute, value)
         identifier = node if node is not None else (
             getattr(target, "uuid", None) or getattr(target, "name", None)
         )
         if manager is not None and identifier is not None:
+            scope['committing'] = True
             manager.update_node_attribute(identifier, attribute, value)
             for alias in old_aliases:
                 graph_data[alias] = value
@@ -137,20 +172,33 @@ def _write_synchronized_attribute(target, node, manager, attribute, calculate):
                 graph_data.pop(attribute, None)
             else:
                 graph_data[attribute] = old_graph
-        current_object = getattr(target, attribute, _MISSING)
-        if current_object is not old_object:
-            if old_object is _MISSING:
-                delattr(target, attribute)
-            else:
-                setattr(target, attribute, old_object)
+        restore_object()
         raise
+    finally:
+        _ATTRIBUTE_WRITES.reset(token)
     return value
 
 
 def apply_attribute_change(target, graph_manager, attribute, calculate):
-    """Apply an internal non-action update through the synchronized write."""
+    """Apply a state change, validating numeric fields in native units."""
+    if graph_manager is None and getattr(type(target), '_mutate_scalar', None) is not None:
+        raise ValueError('Native Character updates require a GraphManager')
+    attribute = _canonical_attribute(attribute)
     target, node = _resolve_action_entity(graph_manager, target, "character")
-    return _write_synchronized_attribute(target, node, graph_manager, attribute, calculate)
+
+    def calculate_scalar(current):
+        value = calculate(current)
+        if value is None:
+            return None
+        numeric_field = (attribute in _NUMERIC_ATTRIBUTES
+                         or isinstance(current, (int, float)) and not isinstance(current, bool)
+                         or isinstance(value, (int, float)) and not isinstance(value, bool))
+        if numeric_field and (not isinstance(value, (int, float))
+                              or isinstance(value, bool) or not math.isfinite(value)):
+            raise ValueError(f'Invalid numeric value for {attribute!r}: {value!r}')
+        return clamp_need_value(attribute, value)
+
+    return _write_synchronized_attribute(target, node, graph_manager, attribute, calculate_scalar)
 
 
 def invoke_action(action, character=None, graph_manager=None, *, legacy_target=None):

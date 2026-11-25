@@ -7,6 +7,319 @@ from tests.test_graph_initialization import FreshPythonTestCase
 class TestActionExecutionIntegration(FreshPythonTestCase):
     run_world = test_goap_graph_contracts.TestSupportedPlannerPrimitives.run_world
 
+    def test_sequential_drain_and_recovery_share_authoritative_energy(self):
+        self.run_world("""
+from unittest.mock import patch
+from tiny_utility_functions import native_character_state
+node = graph.G.nodes[character]
+for object_energy in (20, 40):
+    character.energy = object_energy
+    node['energy'] = 20
+    with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+        for name, delta, expected in [('Drain', -5, 15), ('Recovery', 10, 25)]:
+            action = Action(name, [], [{'targets': ['initiator'],
+                'attribute': 'energy', 'change_value': delta}],
+                initiator=character, graph_manager=graph)
+            assert action.execute()
+            assert character.energy == node['energy'] == expected
+            assert native_character_state(character, graph)['energy'] == expected
+        assert [c.args for c in writes.call_args_list] == [
+            (character, 'energy', 15), (character, 'energy', 25)]
+print({'sequential_energy': [20, 15, 25], 'writes': 2})
+""")
+
+    def test_market_reward_is_not_lost_by_following_action(self):
+        self.run_world("""
+from unittest.mock import patch
+from tiny_utility_functions import native_character_state
+node = graph.G.nodes[character]
+node['wealth_money'] = character.wealth_money = 20
+with patch('tiny_gameplay_controller.random.randint', return_value=3) as random_reward, (
+    patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute)
+) as writes:
+    controller._update_economic_state_from_event('market')
+    assert character.wealth_money == node['wealth_money'] == 23
+    assert native_character_state(character, graph)['wealth_money'] == 23
+    action = Action('Earn', [], [{'targets': ['initiator'],
+        'attribute': 'money', 'change_value': 10}], initiator=character, graph_manager=graph)
+    assert action.execute()
+    assert character.wealth_money == node['wealth_money'] == 33
+    assert [c.args for c in writes.call_args_list] == [
+        (character, 'wealth_money', 23), (character, 'wealth_money', 33)]
+    random_reward.assert_called_once_with(1, 5)
+print({'market_and_action': [20, 23, 33]})
+""")
+
+    def test_scalar_setters_zero_and_removed_character_use_graph(self):
+        self.run_world("""
+from unittest.mock import patch
+node = graph.G.nodes[character]
+fields = ['health_status', 'hunger_level', 'wealth_money', 'mental_health',
+          'social_wellbeing', 'job_performance', 'shelter', 'stability',
+          'luxury', 'hope', 'success', 'control']
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    for field in fields:
+        assert getattr(character, 'set_' + field)(15) == 15
+        assert getattr(character, field) == node[field] == 15
+    character.update_character(**dict.fromkeys(fields, 0))
+    for field in fields:
+        assert getattr(character, field) == node[field] == 0, field
+    character.update_character()
+    assert writes.call_count == 2 * len(fields)
+    character.satisfaction = 12
+    assert character.current_satisfaction == node['current_satisfaction'] == node['satisfaction'] == 12
+    assert character.set_happiness(.5) == .5 and node['happiness'] == .5
+graph.world_state.remove_node(character)
+from world_state import UnknownNodeError
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    try:
+        character.set_wealth_money(99)
+    except UnknownNodeError:
+        pass
+    else:
+        raise AssertionError('Removed Character accepted an object-only update')
+    writes.assert_not_called()
+assert character.wealth_money == 0 and character not in graph.G
+character.graph_manager = None
+try:
+    character.set_wealth_money(99)
+except ValueError:
+    pass
+else:
+    raise AssertionError('Initialized native Character lost its state owner')
+assert character.wealth_money == 0
+from character_attribute_mapper import AttributeMapper
+assert AttributeMapper.set_attribute_value(character, 'money', 99) is False
+from tiny_building_manager import BuildingManager, BuildingService
+manager = BuildingManager()
+manager.BUILDING_SERVICES = {'stand': {'reward': BuildingService('Reward', cost=-5)}}
+assert not manager.provide_service('stand-1', 'stand', 'reward', character)[0]
+assert character.wealth_money == 0
+""")
+
+    def test_social_callbacks_stage_declared_field_and_commit_once(self):
+        self.run_world("""
+from types import SimpleNamespace
+from unittest.mock import patch
+node = graph.G.nodes[character]
+character.social_wellbeing = 80
+node['social_wellbeing'] = 20
+character.personality_traits.agreeableness = 70
+partner = SimpleNamespace(name='Partner', personality_traits=SimpleNamespace(agreeableness=70))
+character.friendship_grid = {}
+def respond():
+    character.respond_to_talk(partner)
+character.respond_test = respond
+action = Action('Talk callback', [], [{'targets': ['initiator'],
+    'attribute': 'social_wellbeing', 'change_value': 'respond_test'}],
+    initiator=character, graph_manager=graph)
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    assert action.execute()
+    assert math.isclose(character.social_wellbeing, 20.2)
+    assert math.isclose(node['social_wellbeing'], 20.2)
+    assert writes.call_count == 1
+character.respond_to_greeting(partner)
+assert math.isclose(character.social_wellbeing, 20.25)
+assert math.isclose(node['social_wellbeing'], 20.25)
+character.respond_to_compliment(partner, 'kindness')
+assert math.isclose(character.social_wellbeing, 20.45)
+assert math.isclose(node['social_wellbeing'], 20.45)
+""")
+
+    def test_nested_setters_restore_failed_field_and_preserve_other_commits(self):
+        self.run_world("""
+from unittest.mock import patch
+node = graph.G.nodes[character]
+node['wealth_money'] = 20
+character.wealth_money = 40
+node['money'] = 19
+def earn():
+    character.set_social_wellbeing(31)
+    character.set_wealth_money(character.wealth_money + 3)
+    character.set_wealth_money(character.wealth_money + 2)
+character.earn_test = earn
+action = Action('Nested earn', [], [{'targets': ['initiator'], 'attribute': 'money',
+    'change_value': 'earn_test'}], initiator=character, graph_manager=graph)
+original = graph.update_node_attribute
+def fail_after_write(*args):
+    original(*args)
+    if args[1] == 'wealth_money':
+        raise RuntimeError('Injected wealth commit failure')
+with patch.object(graph, 'update_node_attribute', side_effect=fail_after_write) as writes:
+    assert not action.execute()
+    assert [c.args[1:] for c in writes.call_args_list] == [
+        ('social_wellbeing', 31), ('wealth_money', 25)]
+assert character.wealth_money == 40 and node['wealth_money'] == 20 and node['money'] == 19
+assert character.social_wellbeing == node['social_wellbeing'] == 31
+with patch.object(graph, 'update_node_attribute', wraps=original) as writes:
+    assert action.execute()
+    assert [c.args[1:] for c in writes.call_args_list] == [
+        ('social_wellbeing', 31), ('wealth_money', 25)]
+assert character.wealth_money == node['wealth_money'] == node['money'] == 25
+""")
+
+    def test_constructor_registers_final_values_without_early_scalar_writes(self):
+        self.run_world("""
+from unittest.mock import patch
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    from tiny_characters import PersonalityTraits
+    other = Character('Initialized safely', 30, graph_manager=graph,
+        action_system=character.action_system, gametime_manager=character.gametime_manager,
+        personality_traits=PersonalityTraits(4, 4, 4, 4, 4),
+        memory_mode='basic', energy=17, wealth_money=23)
+    writes.assert_not_called()
+assert other._initialized and graph.resolve_node(other.uuid, 'character') is other
+assert graph.G.nodes[other]['energy'] == other.energy == 17
+assert graph.G.nodes[other]['wealth_money'] == other.wealth_money == 23
+""")
+
+    def test_building_fees_effects_and_failures_use_authoritative_fields(self):
+        self.run_world("""
+from unittest.mock import patch
+from tiny_building_manager import BuildingManager, BuildingService
+manager = BuildingManager()
+service = BuildingService('Recovery', cost=5,
+    effects=[{'attribute': 'energy', 'change_value': 10},
+             {'attribute': 'hunger_level', 'change_value': -5}])
+manager.BUILDING_SERVICES = {'clinic': {'recovery': service}}
+manager.register_building('clinic-1', 'clinic')
+node = graph.G.nodes[character]
+node.update(wealth_money=20, energy=20, hunger_level=60)
+character.wealth_money = 0
+character.energy = 90
+character.hunger_level = 10
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    assert manager.provide_service('clinic-1', 'clinic', 'recovery', character)[0]
+    assert [c.args[1:] for c in writes.call_args_list] == [
+        ('wealth_money', 15), ('energy', 30), ('hunger_level', 55)]
+assert character.wealth_money == node['wealth_money'] == 15
+assert character.energy == node['energy'] == 30
+assert character.hunger_level == node['hunger_level'] == 55
+node['wealth_money'] = 0
+character.wealth_money = 100
+assert not manager.provide_service('clinic-1', 'clinic', 'recovery', character)[0]
+assert len(manager.service_history) == 1
+node['wealth_money'] = character.wealth_money = 20
+original = graph.update_node_attribute
+def fail_after_write(*args):
+    original(*args)
+    if args[1] == 'energy':
+        raise RuntimeError('Injected service effect failure')
+with patch.object(graph, 'update_node_attribute', side_effect=fail_after_write):
+    assert not manager.provide_service('clinic-1', 'clinic', 'recovery', character)[0]
+assert character.wealth_money == node['wealth_money'] == 15
+assert character.energy == node['energy'] == 30
+assert len(manager.service_history) == 1
+assert character.hunger_level == node['hunger_level'] == 55
+""")
+
+    def test_mapper_and_event_updates_preserve_mapping_and_graph_coherence(self):
+        self.run_world("""
+from character_attribute_mapper import AttributeMapper
+from effect_dispatcher import EffectDispatcher
+from effect_schema import OperatorType
+from tiny_event_handler import EventHandler
+node = graph.G.nodes[character]
+dispatcher = EffectDispatcher(graph)
+handler = EventHandler(graph)
+node['wealth_money'] = 20
+character.wealth_money = 40
+assert dispatcher._modify_entity_attribute(character, 'wealth', 3, OperatorType.ADD)
+assert character.wealth_money == node['wealth_money'] == 23
+handler._modify_entity_attribute(character, 'money', 2)
+assert character.wealth_money == node['wealth_money'] == 25
+assert AttributeMapper.set_attribute_value(character, 'money', 12)
+assert character.wealth_money == node['wealth_money'] == 12
+for invalid in (float('nan'), float('inf')):
+    assert AttributeMapper.set_attribute_value(character, 'money', invalid) is False
+    assert character.wealth_money == node['wealth_money'] == 12
+node['social_wellbeing'] = character.social_wellbeing = 20
+character.satisfaction = 7
+assert AttributeMapper.set_attribute_value(character, 'satisfaction', 30)
+assert character.social_wellbeing == node['social_wellbeing'] == 30
+assert character.current_satisfaction == node['current_satisfaction'] == 7
+assert dispatcher._modify_entity_attribute(character, 'happiness', 5, OperatorType.ADD)
+assert character.social_wellbeing == node['social_wellbeing'] == 35
+""")
+
+    def test_scalar_calculation_noop_and_invalid_results_restore_staging(self):
+        self.run_world("""
+from actions import apply_attribute_change
+from unittest.mock import patch
+node = graph.G.nodes[character]
+node['wealth_money'] = 20
+character.wealth_money = 40
+def noop(current):
+    character.set_wealth_money(current + 3)
+    return None
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    assert apply_attribute_change(character, graph, 'money', noop) is None
+    writes.assert_not_called()
+assert character.wealth_money == 40 and node['wealth_money'] == 20
+for invalid in (float('nan'), float('inf'), True, 'bad'):
+    try:
+        apply_attribute_change(character, graph, 'money', lambda current: invalid)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError('Invalid scalar committed')
+    assert character.wealth_money == 40 and node['wealth_money'] == 20
+assert apply_attribute_change(character, graph, 'money', lambda current: current + 5) == 25
+assert character.wealth_money == node['wealth_money'] == 25
+""")
+
+    def test_caught_nested_failure_restores_savepoint_before_callback_continues(self):
+        self.run_world("""
+from actions import apply_attribute_change
+from unittest.mock import patch
+node = graph.G.nodes[character]
+node['wealth_money'] = 20
+character.wealth_money = 40
+def earn():
+    character.set_wealth_money(character.wealth_money + 2)
+    def fail(current):
+        character.wealth_money = 99
+        raise ValueError('Aborted inner calculation')
+    try:
+        apply_attribute_change(character, graph, 'money', fail)
+    except ValueError:
+        pass
+    assert character.wealth_money == 22
+    character.set_wealth_money(character.wealth_money + 3)
+character.earn_test = earn
+with patch.object(graph, 'update_node_attribute', wraps=graph.update_node_attribute) as writes:
+    assert Action('Nested savepoint', [], [{'targets': ['initiator'],
+        'attribute': 'money', 'change_value': 'earn_test'}],
+        initiator=character, graph_manager=graph).execute()
+    writes.assert_called_once_with(character, 'wealth_money', 25)
+assert character.wealth_money == node['wealth_money'] == 25
+""")
+
+    def test_reentrant_graph_commit_cannot_leave_object_and_graph_divergent(self):
+        self.run_world("""
+from actions import apply_attribute_change
+from unittest.mock import patch
+node = graph.G.nodes[character]
+node['wealth_money'] = 20
+node['money'] = 19
+character.wealth_money = 40
+original = graph.update_node_attribute
+def reentrant_commit(*args):
+    original(*args)
+    character.set_wealth_money(99)
+with patch.object(graph, 'update_node_attribute', side_effect=reentrant_commit) as writes:
+    try:
+        apply_attribute_change(character, graph, 'money', lambda current: current + 5)
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError('Commit accepted a conflicting same-field mutation')
+    writes.assert_called_once_with(character, 'wealth_money', 25)
+assert character.wealth_money == 40 and node['wealth_money'] == 20 and node['money'] == 19
+assert apply_attribute_change(character, graph, 'money', lambda current: current + 5) == 25
+assert character.wealth_money == node['wealth_money'] == node['money'] == 25
+""")
+
     def test_graph_conditions_and_native_scalar_aliases(self):
         self.run_world("""
 from unittest.mock import patch
