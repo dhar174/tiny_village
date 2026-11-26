@@ -1,5 +1,5 @@
 # TASK035 — Complete #821 Goal and inventory contracts
-Updated: 2026-11-25 America/New_York. Status: implementation, requested specialist correction/re-review and local verification complete; PR828 delivery/check state on GitHub.
+Updated: 2026-11-25 America/New_York. Status: final repairs, re-review and local verification complete; D042 authorized PR828 merge gate tracked on GitHub.
 Authorization: user approved the complete proposed plan with “Please implement the plan.”
 Base: freshly fetched main a600aee; isolated /workspace/tiny_village-821.
 
@@ -58,5 +58,10 @@ Base: freshly fetched main a600aee; isolated /workspace/tiny_village-821.
   the real effect. Invalid-schema negative test explicitly asserts its ERROR log.
 - Combined113 tests PASS13.599s, with no uncaptured ERROR records. Previously
   failing additional102-suite tests are all green. Test/CI and world-state excerpt
-  re-review found no blocker; complete final canonical checks are running.
+  re-review found no blocker. Final canonical core256+3/dev20/visual70 all PASS,
+  every batch exit0 and no assertion failures/errors/skips. All12 tested source
+  hashes match committed repair96e9768; all8 hosted checks passed on that commit.
+- Final evidence published in docs/testing/evidence/issue-821-premerge.json;
+  exact final-head hosted checks remain the last merge gate. Actual outcome is
+  authoritative on PR828; no further documentation commit is required for it.
 - D042 now authorizes exact-head ready merge; previous no-merge notes are history.

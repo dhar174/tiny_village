@@ -1,6 +1,9 @@
 # #821 Goal, utility and inventory contracts
 
-Base: main a600aee. Implementation authorized by D041. Execution outline:
+Base: main a600aee. Implementation authorized by D041; final repairs and ready
+merge authorized by D042. Current verification: all known retained failures and
+the parser diagnostic are addressed; see the final merge gate below.
+Execution outline:
 [approved plan](../superpowers/plans/2026-11-25-issue-821-goal-contracts.md).
 
 ## Supported boundaries
@@ -55,7 +58,7 @@ six failing new groups. Discovery was corrected before final verification.
 The first implementation run failed bootstrap by accepting only Job rather than
 its actual JobRoles base; this was corrected before the passing runs.
 
-## Limits
+## Historical limits before the final merge gate
 
 The scalar planner still excludes inventory/location simulation. Catalog Goals
 are not automatically enabled in live selection; missing authoritative sources
@@ -97,5 +100,12 @@ entries instead of an inconsistent strict-name comparison; all117 roles parse
 without the false117/116 ERROR. A positive event fixture now carries concrete
 numeric state and asserts the effect; the invalid-schema negative control
 explicitly checks its expected error log. The combined113-check focused suite
-passes with no uncaptured ERROR records. Final canonical verification is pending;
-earlier baseline-failure limitations above describe historical revisions.
+passes with no uncaptured ERROR records. Final canonical verification passes:
+**256 core tests + 3 CLI probes**, **20 development**, **70 visual**; every batch
+exits0 with zero assertion failures/errors/skips. All12 committed source/test
+hashes match the verified snapshot. All8 hosted checks passed on repair
+commit96e9768. The [final verification receipt](evidence/issue-821-premerge.json)
+retains commands, complete profile summaries, fixes and review evidence. Earlier
+baseline-failure limitations above describe historical revisions and are resolved.
+D042 authorizes normal exact-head merge once the final evidence commit's hosted
+checks pass; GitHub records the actual integration outcome.
