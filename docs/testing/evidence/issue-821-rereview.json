@@ -1,0 +1,48 @@
+{
+  "reviewed_head": "4952ce653169e29fe2d00dd3b736ac7cb4912906",
+  "source_basis": "Corrected working tree frozen hashes below; committed source must match",
+  "source_sha256": {
+    "tiny_utility_functions.py": "c45f021abe37bbbb233277178313e15e619d9f14f01d3814156e5d2ed1aab1e3",
+    "tiny_goap_system.py": "067fe8993b103780f75069fcdfb75e91b08c157ab337c416d563976ed069f9c7",
+    "tiny_graph_manager.py": "37636f458e1ebfd09822283a979652c599accffd1c04b717c82639e134a81663",
+    "tiny_items.py": "7839756d6fe72feec0a2b368338a18b74ea708510a1853f6a5658e4086d7389e",
+    "tiny_characters.py": "3b541d63a0158094faa441fbfe7666e4e5dd876d736c559ba9f14af0fa74c0e4",
+    "tiny_strategy_manager.py": "87f02d2b300affc1495a8ad2f5625b805c8a2c87b4627fe059a49c9f71622f04",
+    "tests/test_goal_catalog_contracts.py": "b16bc3645cbbb738d8ee33853a56fb9ccf12a9297aebce37ef24827c2116b131",
+    "scripts/run_ci_checks.py": "a7daa66e73083fe314bcb5ccea47ef763e584dc42de5ff24800e2fdc6866f722"
+  },
+  "finding": {
+    "severity": "Important",
+    "problem": "Registered graph job deletion revived stale object job in actor planning/achievement snapshots and partner request fingerprints",
+    "fix": "Preserve authoritative job presence in registered actor snapshots and use graph-only job source for partner fingerprints; normalize copies",
+    "red": {
+      "exit_code": 1,
+      "tests_run": 1,
+      "failure": "Actor fingerprint retained stale object job",
+      "log": "/workspace/issue821-review-red.log"
+    },
+    "green": {
+      "exit_code": 0,
+      "tests_run": 1,
+      "seconds": 1.422,
+      "log": "/workspace/issue821-review-green.log"
+    },
+    "full_focused": {
+      "exit_code": 0,
+      "tests_run": 10,
+      "seconds": 16.005,
+      "log": "/workspace/issue821-rereview-focused.log"
+    }
+  },
+  "identity_control": "Normal graph registration rejects duplicate UUIDs across Character/Location; invalid fixture failed before reaching the suspected resolver path. Kept rejection/valid-actor-request control; no production identity change.",
+  "specialists": {
+    "world_state_816": "Confirmed Important presence/invalidation defect, re-reviewed exact corrective delta: PASS within supplied excerpts",
+    "planning_602": "Reviewed completion/scoring contracts and re-reviewed corrective delta: no blocker within supplied excerpts"
+  },
+  "method": "Read-only repository-role specialists assessed coordinator-supplied source excerpts and execution results; no independent checkout/commands/network/nativeZcode claimed",
+  "profiles": "Corrected source canonical core/dev/visual running; historical253+3/20/70 receipt belongs to pre-correction head4952ce6",
+  "limits": [
+    "Three known additional-suite baseline failures and existing parser ERROR output remain",
+    "No merge authorization"
+  ]
+}

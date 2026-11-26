@@ -39,7 +39,7 @@ Goal equality retains its field list with the corrected goal_type operand. Mutab
 Goal/Plan objects are unhashable; Plan inspection/comparison does not call evaluate.
 Typed actor lookup and existing ambiguity errors remain intact.
 
-## Verification
+## Historical implementation verification
 
 Eight new real-object tests and thirteen existing production Goal tests pass.
 All local canonical profiles pass: core **253 tests + 3 CLI probes**, development
@@ -67,3 +67,16 @@ The separately retained102-test building/event suites have three known exact-bas
 failures; existing job-parser ERROR output remains. Passing assertion summaries do
 not mean clean stderr. Reviewer conclusions are based on supplied source and
 execution evidence; no native Zcode or independent command execution is claimed.
+
+## Requested specialist review and re-review
+
+Review of head4952ce6 found an Important authority defect: deleting registered
+graph job data could revive a stale object job in actor snapshots and partner
+fingerprints. The correction preserves authoritative key presence in actor
+snapshots and reads registered partner job dependencies only from graph copies.
+Present None remains different from missing; unrelated fields and bootstrap
+retain their existing behavior. The regression was observed RED then GREEN; all
+10 focused real-world tests pass (16.005s). World-state and planning/actions
+specialists re-reviewed the corrective delta and found no remaining blocker in
+the supplied excerpts. Canonical corrected-source checks are running; the253-test
+receipt above is historical. See the [re-review receipt](evidence/issue-821-rereview.json).

@@ -207,3 +207,61 @@ try: goal.check_completion()
 except ValueError: pass
 else: raise AssertionError('Missing graph job fell back to object')
 ''')
+
+    def test_missing_authoritative_job_never_uses_object_fallback(self):
+        self.world('''
+from tiny_strategy_manager import StrategyManager, PlanRequest
+from tiny_utility_functions import GoalEvaluationError
+strategy = StrategyManager(graph_manager=graph)
+# Both references agree before graph presence changes.
+character.job = graph.G.nodes[character]['job'] = 'Baker'
+goal = make_goal({False: [Condition('employment', 'has_job', character, True, '==')]})
+request = PlanRequest(character.uuid, goal)
+assert graph.is_goal_achieved(character, goal) is True
+before = strategy.request_fingerprint(request)
+del graph.G.nodes[character]['job']
+assert before != strategy.request_fingerprint(request), 'Actor fingerprint retained stale object job'
+for check in (goal.check_completion, lambda: graph.is_goal_achieved(character, goal)):
+    try: check()
+    except GoalEvaluationError: pass
+    else: raise AssertionError('Achievement used stale object job')
+assert strategy.plan_request(request).outcome == 'ERROR'
+missing = strategy.request_fingerprint(request)
+graph.G.nodes[character]['job'] = None
+assert strategy.request_fingerprint(request) != missing
+assert graph.is_goal_achieved(character, goal) is goal.check_completion() is False
+# Other-entity dependencies preserve absent versus present None, too.
+from tiny_characters import PersonalityTraits
+partner = Character('Presence821', 31, graph_manager=graph, action_system=character.action_system,
+    gametime_manager=character.gametime_manager, memory_mode='basic', location=character.location,
+    personality_traits=PersonalityTraits(4, 4, 4, 4, 4), energy=20)
+graph.G.nodes[character]['job'] = 'Baker'
+partner_goal = make_goal({False: [Condition('partner employment', 'has_job', partner, True, '==')]})
+partner_request = PlanRequest(character.uuid, partner_goal)
+for job in ('Baker', None):
+    partner.job = graph.G.nodes[partner]['job'] = job
+    present = strategy.request_fingerprint(partner_request)
+    del graph.G.nodes[partner]['job']
+    assert present != strategy.request_fingerprint(partner_request), 'Partner fingerprint lost job presence'
+    try: partner_goal.check_completion()
+    except GoalEvaluationError: pass
+    else: raise AssertionError('Partner completion used object fallback')
+''')
+
+    def test_duplicate_cross_type_uuid_keeps_actor_requests_valid(self):
+        self.world('''
+from tiny_strategy_manager import StrategyManager, PlanRequest
+from tiny_locations import Location
+from unittest.mock import patch
+# Inject only generated identity; use real entity constructors and registrations.
+with patch('tiny_locations.uuid.uuid4', return_value=character.uuid):
+    room = Location('SharedUuid821', 0, 0, 1, 1, character.action_system)
+try: graph.add_location_node(room)
+except ValueError: pass
+else: raise AssertionError('Duplicate UUID registration accepted')
+strategy = StrategyManager(graph_manager=graph)
+actor_goal = make_goal({False: [Condition('actor energy', 'energy', None, 30)]})
+actor_request = PlanRequest(character.uuid, actor_goal)
+assert strategy.goal_key(actor_request)
+assert strategy.request_fingerprint(actor_request)
+''')

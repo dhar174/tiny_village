@@ -26,3 +26,16 @@ Base: freshly fetched main a600aee; isolated /workspace/tiny_village-821.
 - Additional102-check suites still have the same3 known exact-base failures; parser ERROR stderr persists. Neither is counted as passing.
 - PR828 is attached and targets main; implementation head6744d37 passed all8 hosted checks. Final delivery/hosted state is tracked by GitHub, with no merge authorization.
 - Full receipt: docs/testing/evidence/issue-821-review.json. Boundaries and accepted contracts: docs/testing/issue-821-goal-contracts.md.
+
+## Requested review / fix / re-review (2026-11-25 America/New_York)
+- Paused prior delivery heartbeat to prevent overlapping closeout during review.
+- World-state specialist confirmed Important graph-job-presence fallback defect;
+  coordinator regression REDexit1 then GREENexit0; all10 focused tests PASS16.005s.
+- Corrected registered actor planning/achievement snapshots and graph-only partner
+  dependency reads; missing and None remain distinct. Other fields/bootstrap unchanged.
+- World-state and planning-actions specialists re-reviewed supplied exact delta;
+  no remaining blocker. No independent checkout/command/nativeZcode claim.
+- Ruling: shared-UUID resolver hypothesis is blocked by normal registration's
+  existing duplicate-UUID rejection; preserve that policy and retain a control.
+- Corrected-source core/dev/visual verification underway; historical receipts
+  remain labelled. No merge authorized.

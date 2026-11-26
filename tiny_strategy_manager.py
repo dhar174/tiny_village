@@ -913,6 +913,8 @@ class StrategyManager:
                 registered = None
             if isinstance(registered, dict):
                 state.update(native_character_state(registered))
+                if 'job' not in registered:
+                    state.pop('job', None)
         return native_character_state(state)
 
     def _standalone_planning_state(self, character) -> dict:
@@ -1362,7 +1364,11 @@ class StrategyManager:
                 else:
                     values = native_character_state(target)
                     if node is not None:
-                        values.update(native_character_state(dict(self.graph_manager.G.nodes[node])))
+                        registered = dict(self.graph_manager.G.nodes[node])
+                        if condition.attribute == 'has_job':
+                            values = registered
+                        else:
+                            values.update(native_character_state(registered))
                     attribute = 'job' if condition.attribute == 'has_job' else _canonical_attribute(condition.attribute)
                     if attribute == 'job' and attribute in values:
                         values[attribute] = normalize_job_name(values[attribute])

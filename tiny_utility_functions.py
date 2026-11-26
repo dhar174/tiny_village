@@ -114,6 +114,9 @@ def native_character_state(character, graph_manager=None):
                 registered = None
             if isinstance(registered, dict):
                 state.update(canonicalize(registered))
+                # Employment predicates require authoritative key presence.
+                if 'job' not in registered:
+                    state.pop('job', None)
     for alias, canonical in _ATTRIBUTE_ALIASES.items():
         if canonical in state:
             state[alias] = state[canonical]
