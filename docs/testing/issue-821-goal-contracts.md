@@ -42,7 +42,14 @@ Typed actor lookup and existing ambiguity errors remain intact.
 ## Verification
 
 Eight new real-object tests and thirteen existing production Goal tests pass.
-Canonical profile receipts are pending; this statement does not certify them.
+All local canonical profiles pass: core **253 tests + 3 CLI probes**, development
+**20 tests**, visual **70 tests**. Every batch exits0, with zero assertion failures,
+errors or skips. All eight committed source hashes match the tested snapshot.
+Full commands, profile summaries, locks, source hashes, review scope and retained
+failures are in the [verification receipt](evidence/issue-821-review.json).
+The implementation head6744d37 also passed all eight hosted checks; final-head
+check and PR delivery state remain authoritative on
+[PR #828](https://github.com/dhar174/tiny_village/pull/828).
 The initial32-test regression run included duplicated inherited controls and had
 six failing new groups. Discovery was corrected before final verification.
 The first implementation run failed bootstrap by accepting only Job rather than
