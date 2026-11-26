@@ -1,6 +1,6 @@
 {
   "reviewed_head": "4952ce653169e29fe2d00dd3b736ac7cb4912906",
-  "source_basis": "Corrected working tree frozen hashes below; committed source must match",
+  "source_basis": "Canonical checks ran on corrected working tree before commit; all eight frozen source hashes were verified against8088196 committed blobs. Revision metadata alone is not the source identity.",
   "source_sha256": {
     "tiny_utility_functions.py": "c45f021abe37bbbb233277178313e15e619d9f14f01d3814156e5d2ed1aab1e3",
     "tiny_goap_system.py": "067fe8993b103780f75069fcdfb75e91b08c157ab337c416d563976ed069f9c7",
@@ -40,9 +40,685 @@
     "planning_602": "Reviewed completion/scoring contracts and re-reviewed corrective delta: no blocker within supplied excerpts"
   },
   "method": "Read-only repository-role specialists assessed coordinator-supplied source excerpts and execution results; no independent checkout/commands/network/nativeZcode claimed",
-  "profiles": "Corrected source canonical core/dev/visual running; historical253+3/20/70 receipt belongs to pre-correction head4952ce6",
+  "profiles": {
+    "core": {
+      "command": "/workspace/.venvs/issue602-core/bin/python -B scripts/run_ci_checks.py --profile core --artifacts /workspace/scratch/issue-821/rereview-core",
+      "terminal_exit_code": 0,
+      "summary": {
+        "schema_version": 1,
+        "status": "PASS",
+        "profile": "core",
+        "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+        "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+        "machine": "x86_64",
+        "revision": "4952ce653169e29fe2d00dd3b736ac7cb4912906",
+        "locks": {
+          "requirements/locks/core-py312-linux-x86_64.txt": "2a037e6923b1f4e0f19d14109adc4217a5e4b7e0583a780639dd476a1451c908"
+        },
+        "batches": {
+          "components": {
+            "status": "PASS",
+            "command": [
+              "/workspace/.venvs/issue602-core/bin/python",
+              "-B",
+              "/workspace/tiny_village-821/scripts/run_ci_checks.py",
+              "--worker",
+              "unittest",
+              "--report",
+              "/workspace/scratch/issue-821/rereview-core/batches/components/result.json",
+              "tests.test_tiny_util_funcs",
+              "tests.test_actions",
+              "tests.test_action_named_target_resolution",
+              "tests.test_action_contracts",
+              "tests.test_utility_contracts",
+              "tests.test_goap_graph_contracts",
+              "tests.test_production_goal_contract",
+              "tests.test_goal_catalog_contracts",
+              "tests.test_tiny_utility_functions",
+              "tests.test_utility_goal_contract",
+              "tests.test_mock_action_enhancement_validation"
+            ],
+            "parent_timeout": 120,
+            "started_utc": "2026-11-26T00:26:46.802731+00:00",
+            "exit_code": 0,
+            "launcher": [
+              "/workspace/.venvs/issue602-core/bin/python",
+              "-B",
+              "-c",
+              "import os; from scripts.run_ci_checks import register_group; register_group('/workspace/scratch/issue-821/rereview-core/batches/components/groups',13783); os.execvp('/workspace/.venvs/issue602-core/bin/python',['/workspace/.venvs/issue602-core/bin/python', '-B', '/workspace/tiny_village-821/scripts/run_ci_checks.py', '--worker', 'unittest', '--report', '/workspace/scratch/issue-821/rereview-core/batches/components/result.json', 'tests.test_tiny_util_funcs', 'tests.test_actions', 'tests.test_action_named_target_resolution', 'tests.test_action_contracts', 'tests.test_utility_contracts', 'tests.test_goap_graph_contracts', 'tests.test_production_goal_contract', 'tests.test_goal_catalog_contracts', 'tests.test_tiny_utility_functions', 'tests.test_utility_goal_contract', 'tests.test_mock_action_enhancement_validation'])"
+            ],
+            "pid": 13799,
+            "terminated_groups": [],
+            "report": {
+              "kind": "unittest",
+              "status": "PASS",
+              "counts": {
+                "tests_run": 96,
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0,
+                "expected_failures": 0,
+                "unexpected_successes": 0
+              }
+            },
+            "finished_utc": "2026-11-26T00:28:04.140421+00:00"
+          },
+          "world-execution": {
+            "status": "PASS",
+            "command": [
+              "/workspace/.venvs/issue602-core/bin/python",
+              "-B",
+              "/workspace/tiny_village-821/scripts/run_ci_checks.py",
+              "--worker",
+              "unittest",
+              "--report",
+              "/workspace/scratch/issue-821/rereview-core/batches/world-execution/result.json",
+              "tests.test_entity_identity_contracts",
+              "tests.test_action_execution_integration"
+            ],
+            "parent_timeout": 120,
+            "started_utc": "2026-11-26T00:28:04.143298+00:00",
+            "exit_code": 0,
+            "launcher": [
+              "/workspace/.venvs/issue602-core/bin/python",
+              "-B",
+              "-c",
+              "import os; from scripts.run_ci_checks import register_group; register_group('/workspace/scratch/issue-821/rereview-core/batches/world-execution/groups',13783); os.execvp('/workspace/.venvs/issue602-core/bin/python',['/workspace/.venvs/issue602-core/bin/python', '-B', '/workspace/tiny_village-821/scripts/run_ci_checks.py', '--worker', 'unittest', '--report', '/workspace/scratch/issue-821/rereview-core/batches/world-execution/result.json', 'tests.test_entity_identity_contracts', 'tests.test_action_execution_integration'])"
+            ],
+            "pid": 14321,
+            "terminated_groups": [],
+            "report": {
+              "kind": "unittest",
+              "status": "PASS",
+              "counts": {
+                "tests_run": 39,
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0,
+                "expected_failures": 0,
+                "unexpected_successes": 0
+              }
+            },
+            "finished_utc": "2026-11-26T00:29:04.782185+00:00"
+          },
+          "strategy": {
+            "status": "PASS",
+            "command": [
+              "/workspace/.venvs/issue602-core/bin/python",
+              "-B",
+              "/workspace/tiny_village-821/scripts/run_ci_checks.py",
+              "--worker",
+              "unittest",
+              "--report",
+              "/workspace/scratch/issue-821/rereview-core/batches/strategy/result.json",
+              "tests.test_strategy_scale_contracts",
+              "tests.test_strategy_goap_integration",
+              "tests.test_strategy_manager_event_planning",
+              "tests.test_runtime_units.TestRuntimeUnits",
+              "tests.test_goap_error_handling",
+              "tests.test_event_handler_payloads"
+            ],
+            "parent_timeout": 120,
+            "started_utc": "2026-11-26T00:29:04.783253+00:00",
+            "exit_code": 0,
+            "launcher": [
+              "/workspace/.venvs/issue602-core/bin/python",
+              "-B",
+              "-c",
+              "import os; from scripts.run_ci_checks import register_group; register_group('/workspace/scratch/issue-821/rereview-core/batches/strategy/groups',13783); os.execvp('/workspace/.venvs/issue602-core/bin/python',['/workspace/.venvs/issue602-core/bin/python', '-B', '/workspace/tiny_village-821/scripts/run_ci_checks.py', '--worker', 'unittest', '--report', '/workspace/scratch/issue-821/rereview-core/batches/strategy/result.json', 'tests.test_strategy_scale_contracts', 'tests.test_strategy_goap_integration', 'tests.test_strategy_manager_event_planning', 'tests.test_runtime_units.TestRuntimeUnits', 'tests.test_goap_error_handling', 'tests.test_event_handler_payloads'])"
+            ],
+            "pid": 14490,
+            "terminated_groups": [],
+            "report": {
+              "kind": "unittest",
+              "status": "PASS",
+              "counts": {
+                "tests_run": 54,
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0,
+                "expected_failures": 0,
+                "unexpected_successes": 0
+              }
+            },
+            "finished_utc": "2026-11-26T00:30:03.400551+00:00"
+          },
+          "active-plans": {
+            "status": "PASS",
+            "command": [
+              "/workspace/.venvs/issue602-core/bin/python",
+              "-B",
+              "/workspace/tiny_village-821/scripts/run_ci_checks.py",
+              "--worker",
+              "unittest",
+              "--report",
+              "/workspace/scratch/issue-821/rereview-core/batches/active-plans/result.json",
+              "tests.test_active_plan_execution.TestActivePlanExecution",
+              "tests.test_tiny_gameplay_controller_event_processing"
+            ],
+            "parent_timeout": 120,
+            "started_utc": "2026-11-26T00:30:03.401639+00:00",
+            "exit_code": 0,
+            "launcher": [
+              "/workspace/.venvs/issue602-core/bin/python",
+              "-B",
+              "-c",
+              "import os; from scripts.run_ci_checks import register_group; register_group('/workspace/scratch/issue-821/rereview-core/batches/active-plans/groups',13783); os.execvp('/workspace/.venvs/issue602-core/bin/python',['/workspace/.venvs/issue602-core/bin/python', '-B', '/workspace/tiny_village-821/scripts/run_ci_checks.py', '--worker', 'unittest', '--report', '/workspace/scratch/issue-821/rereview-core/batches/active-plans/result.json', 'tests.test_active_plan_execution.TestActivePlanExecution', 'tests.test_tiny_gameplay_controller_event_processing'])"
+            ],
+            "pid": 14620,
+            "terminated_groups": [],
+            "report": {
+              "kind": "unittest",
+              "status": "PASS",
+              "counts": {
+                "tests_run": 39,
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0,
+                "expected_failures": 0,
+                "unexpected_successes": 0
+              }
+            },
+            "finished_utc": "2026-11-26T00:31:15.059273+00:00"
+          },
+          "runtime": {
+            "status": "PASS",
+            "command": [
+              "/workspace/.venvs/issue602-core/bin/python",
+              "-B",
+              "/workspace/tiny_village-821/scripts/run_ci_checks.py",
+              "--worker",
+              "unittest",
+              "--report",
+              "/workspace/scratch/issue-821/rereview-core/batches/runtime/result.json",
+              "tests.test_memory_runtime",
+              "tests.test_lightweight_runtime.TestHeadlessRuntime",
+              "tests.test_character_happiness_contracts",
+              "tests.test_lightweight_runtime.TestMinimalRunner"
+            ],
+            "parent_timeout": 120,
+            "started_utc": "2026-11-26T00:31:15.061474+00:00",
+            "exit_code": 0,
+            "launcher": [
+              "/workspace/.venvs/issue602-core/bin/python",
+              "-B",
+              "-c",
+              "import os; from scripts.run_ci_checks import register_group; register_group('/workspace/scratch/issue-821/rereview-core/batches/runtime/groups',13783); os.execvp('/workspace/.venvs/issue602-core/bin/python',['/workspace/.venvs/issue602-core/bin/python', '-B', '/workspace/tiny_village-821/scripts/run_ci_checks.py', '--worker', 'unittest', '--report', '/workspace/scratch/issue-821/rereview-core/batches/runtime/result.json', 'tests.test_memory_runtime', 'tests.test_lightweight_runtime.TestHeadlessRuntime', 'tests.test_character_happiness_contracts', 'tests.test_lightweight_runtime.TestMinimalRunner'])"
+            ],
+            "pid": 14729,
+            "terminated_groups": [],
+            "report": {
+              "kind": "unittest",
+              "status": "PASS",
+              "counts": {
+                "tests_run": 27,
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0,
+                "expected_failures": 0,
+                "unexpected_successes": 0
+              }
+            },
+            "finished_utc": "2026-11-26T00:31:47.081745+00:00"
+          },
+          "canonical-cli": {
+            "status": "PASS",
+            "command": [
+              "/workspace/.venvs/issue602-core/bin/python",
+              "-B",
+              "/workspace/tiny_village-821/scripts/run_ci_checks.py",
+              "--worker",
+              "probe",
+              "--report",
+              "/workspace/scratch/issue-821/rereview-core/batches/canonical-cli/result.json",
+              "canonical"
+            ],
+            "parent_timeout": 120,
+            "started_utc": "2026-11-26T00:31:47.082806+00:00",
+            "exit_code": 0,
+            "launcher": [
+              "/workspace/.venvs/issue602-core/bin/python",
+              "-B",
+              "-c",
+              "import os; from scripts.run_ci_checks import register_group; register_group('/workspace/scratch/issue-821/rereview-core/batches/canonical-cli/groups',13783); os.execvp('/workspace/.venvs/issue602-core/bin/python',['/workspace/.venvs/issue602-core/bin/python', '-B', '/workspace/tiny_village-821/scripts/run_ci_checks.py', '--worker', 'probe', '--report', '/workspace/scratch/issue-821/rereview-core/batches/canonical-cli/result.json', 'canonical'])"
+            ],
+            "pid": 14811,
+            "terminated_groups": [],
+            "report": {
+              "kind": "probe",
+              "status": "PASS",
+              "probes_run": 1,
+              "expected_exit_code": 0,
+              "observed_exit_code": 0,
+              "capture_artifacts": "/workspace/scratch/issue-821/rereview-core/children/child-j91zib1a"
+            },
+            "finished_utc": "2026-11-26T00:31:48.754487+00:00"
+          },
+          "default-cli": {
+            "status": "PASS",
+            "command": [
+              "/workspace/.venvs/issue602-core/bin/python",
+              "-B",
+              "/workspace/tiny_village-821/scripts/run_ci_checks.py",
+              "--worker",
+              "probe",
+              "--report",
+              "/workspace/scratch/issue-821/rereview-core/batches/default-cli/result.json",
+              "default"
+            ],
+            "parent_timeout": 120,
+            "started_utc": "2026-11-26T00:31:48.756026+00:00",
+            "exit_code": 0,
+            "launcher": [
+              "/workspace/.venvs/issue602-core/bin/python",
+              "-B",
+              "-c",
+              "import os; from scripts.run_ci_checks import register_group; register_group('/workspace/scratch/issue-821/rereview-core/batches/default-cli/groups',13783); os.execvp('/workspace/.venvs/issue602-core/bin/python',['/workspace/.venvs/issue602-core/bin/python', '-B', '/workspace/tiny_village-821/scripts/run_ci_checks.py', '--worker', 'probe', '--report', '/workspace/scratch/issue-821/rereview-core/batches/default-cli/result.json', 'default'])"
+            ],
+            "pid": 14816,
+            "terminated_groups": [],
+            "report": {
+              "kind": "probe",
+              "status": "PASS",
+              "probes_run": 1,
+              "expected_exit_code": 0,
+              "observed_exit_code": 0,
+              "capture_artifacts": "/workspace/scratch/issue-821/rereview-core/children/child-0bb_87qi"
+            },
+            "finished_utc": "2026-11-26T00:31:50.477886+00:00"
+          },
+          "invalid-cli": {
+            "status": "PASS",
+            "command": [
+              "/workspace/.venvs/issue602-core/bin/python",
+              "-B",
+              "/workspace/tiny_village-821/scripts/run_ci_checks.py",
+              "--worker",
+              "probe",
+              "--report",
+              "/workspace/scratch/issue-821/rereview-core/batches/invalid-cli/result.json",
+              "invalid"
+            ],
+            "parent_timeout": 120,
+            "started_utc": "2026-11-26T00:31:50.479369+00:00",
+            "exit_code": 0,
+            "launcher": [
+              "/workspace/.venvs/issue602-core/bin/python",
+              "-B",
+              "-c",
+              "import os; from scripts.run_ci_checks import register_group; register_group('/workspace/scratch/issue-821/rereview-core/batches/invalid-cli/groups',13783); os.execvp('/workspace/.venvs/issue602-core/bin/python',['/workspace/.venvs/issue602-core/bin/python', '-B', '/workspace/tiny_village-821/scripts/run_ci_checks.py', '--worker', 'probe', '--report', '/workspace/scratch/issue-821/rereview-core/batches/invalid-cli/result.json', 'invalid'])"
+            ],
+            "pid": 14821,
+            "terminated_groups": [],
+            "report": {
+              "kind": "probe",
+              "status": "PASS",
+              "probes_run": 1,
+              "expected_exit_code": 2,
+              "observed_exit_code": 2,
+              "capture_artifacts": "/workspace/scratch/issue-821/rereview-core/children/child-dkkywb24"
+            },
+            "finished_utc": "2026-11-26T00:31:50.846837+00:00"
+          }
+        },
+        "packages": {
+          "typing-inspection": "0.4.4",
+          "attrs": "23.2.0",
+          "networkx": "3.1",
+          "typing-extensions": "4.16.0",
+          "pydantic-core": "2.50.1",
+          "pydantic": "2.14.1",
+          "numpy": "1.26.4",
+          "pyparsing": "3.1.2",
+          "annotated-types": "0.8.0"
+        },
+        "counts": {
+          "tests_run": 255,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "expected_failures": 0,
+          "unexpected_successes": 0
+        },
+        "probes_run": 3
+      }
+    },
+    "dev": {
+      "command": "/workspace/.venvs/issue602-dev/bin/python -B scripts/run_ci_checks.py --profile dev --artifacts /workspace/scratch/issue-821/rereview-dev",
+      "terminal_exit_code": 0,
+      "summary": {
+        "schema_version": 1,
+        "status": "PASS",
+        "profile": "dev",
+        "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+        "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+        "machine": "x86_64",
+        "revision": "4952ce653169e29fe2d00dd3b736ac7cb4912906",
+        "locks": {
+          "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5"
+        },
+        "batches": {
+          "runner": {
+            "status": "PASS",
+            "command": [
+              "/workspace/.venvs/issue602-dev/bin/python",
+              "-B",
+              "/workspace/tiny_village-821/scripts/run_ci_checks.py",
+              "--worker",
+              "unittest",
+              "--report",
+              "/workspace/scratch/issue-821/rereview-dev/batches/runner/result.json",
+              "tests.test_ci_checks"
+            ],
+            "parent_timeout": 120,
+            "started_utc": "2026-11-26T00:26:46.829441+00:00",
+            "exit_code": 0,
+            "launcher": [
+              "/workspace/.venvs/issue602-dev/bin/python",
+              "-B",
+              "-c",
+              "import os; from scripts.run_ci_checks import register_group; register_group('/workspace/scratch/issue-821/rereview-dev/batches/runner/groups',13787); os.execvp('/workspace/.venvs/issue602-dev/bin/python',['/workspace/.venvs/issue602-dev/bin/python', '-B', '/workspace/tiny_village-821/scripts/run_ci_checks.py', '--worker', 'unittest', '--report', '/workspace/scratch/issue-821/rereview-dev/batches/runner/result.json', 'tests.test_ci_checks'])"
+            ],
+            "pid": 13802,
+            "terminated_groups": [
+              13850,
+              13872,
+              13910
+            ],
+            "report": {
+              "kind": "unittest",
+              "status": "PASS",
+              "counts": {
+                "tests_run": 18,
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0,
+                "expected_failures": 0,
+                "unexpected_successes": 0
+              }
+            },
+            "finished_utc": "2026-11-26T00:27:06.584016+00:00"
+          },
+          "cli-smoke": {
+            "status": "PASS",
+            "command": [
+              "/workspace/.venvs/issue602-dev/bin/python",
+              "-B",
+              "/workspace/tiny_village-821/scripts/run_ci_checks.py",
+              "--worker",
+              "pytest",
+              "--report",
+              "/workspace/scratch/issue-821/rereview-dev/batches/cli-smoke/result.json",
+              "tests/test_minimal_demo_smoke.py"
+            ],
+            "parent_timeout": 120,
+            "started_utc": "2026-11-26T00:27:06.585554+00:00",
+            "exit_code": 0,
+            "launcher": [
+              "/workspace/.venvs/issue602-dev/bin/python",
+              "-B",
+              "-c",
+              "import os; from scripts.run_ci_checks import register_group; register_group('/workspace/scratch/issue-821/rereview-dev/batches/cli-smoke/groups',13787); os.execvp('/workspace/.venvs/issue602-dev/bin/python',['/workspace/.venvs/issue602-dev/bin/python', '-B', '/workspace/tiny_village-821/scripts/run_ci_checks.py', '--worker', 'pytest', '--report', '/workspace/scratch/issue-821/rereview-dev/batches/cli-smoke/result.json', 'tests/test_minimal_demo_smoke.py'])"
+            ],
+            "pid": 13934,
+            "terminated_groups": [],
+            "report": {
+              "status": "PASS",
+              "kind": "pytest",
+              "counts": {
+                "tests_run": 2,
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0,
+                "expected_failures": 0,
+                "unexpected_successes": 0
+              },
+              "pytest_exit_code": 0
+            },
+            "finished_utc": "2026-11-26T00:27:10.923606+00:00"
+          }
+        },
+        "packages": {
+          "pygments": "2.21.0",
+          "uv": "0.12.23",
+          "typing-inspection": "0.4.4",
+          "iniconfig": "2.3.1",
+          "attrs": "23.2.0",
+          "networkx": "3.1",
+          "pytest": "9.1.1",
+          "pluggy": "1.7.0",
+          "packaging": "26.3",
+          "typing-extensions": "4.16.0",
+          "pydantic-core": "2.50.1",
+          "pydantic": "2.14.1",
+          "numpy": "1.26.4",
+          "pyparsing": "3.1.2",
+          "annotated-types": "0.8.0"
+        },
+        "counts": {
+          "tests_run": 20,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "expected_failures": 0,
+          "unexpected_successes": 0
+        },
+        "probes_run": 0
+      }
+    },
+    "visual": {
+      "command": "/workspace/.venvs/issue602-visual/bin/python -B scripts/run_ci_checks.py --profile visual --artifacts /workspace/scratch/issue-821/rereview-visual",
+      "terminal_exit_code": 0,
+      "summary": {
+        "schema_version": 1,
+        "status": "PASS",
+        "profile": "visual",
+        "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+        "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+        "machine": "x86_64",
+        "revision": "4952ce653169e29fe2d00dd3b736ac7cb4912906",
+        "locks": {
+          "requirements/locks/dev-py312-linux-x86_64.txt": "7d9f5de68721d84ae0310b730a9d08540926966aac7dde807a7209b672221bb5",
+          "requirements/locks/visual-py312-linux-x86_64.txt": "a6db9f00d612e0b715961e9f1565c90066eb0872f165ad3984d3fcb414eaed73"
+        },
+        "batches": {
+          "lifecycle": {
+            "status": "PASS",
+            "command": [
+              "/workspace/.venvs/issue602-visual/bin/python",
+              "-B",
+              "/workspace/tiny_village-821/scripts/run_ci_checks.py",
+              "--worker",
+              "unittest",
+              "--report",
+              "/workspace/scratch/issue-821/rereview-visual/batches/lifecycle/result.json",
+              "tests.test_lightweight_runtime.TestVisualLifecycle",
+              "tests.test_runtime_units.TestVisualRuntimeUnits",
+              "tests.test_active_plan_execution.TestVisualPlanExecution"
+            ],
+            "parent_timeout": 120,
+            "started_utc": "2026-11-26T00:26:46.738262+00:00",
+            "exit_code": 0,
+            "launcher": [
+              "/workspace/.venvs/issue602-visual/bin/python",
+              "-B",
+              "-c",
+              "import os; from scripts.run_ci_checks import register_group; register_group('/workspace/scratch/issue-821/rereview-visual/batches/lifecycle/groups',13782); os.execvp('/workspace/.venvs/issue602-visual/bin/python',['/workspace/.venvs/issue602-visual/bin/python', '-B', '/workspace/tiny_village-821/scripts/run_ci_checks.py', '--worker', 'unittest', '--report', '/workspace/scratch/issue-821/rereview-visual/batches/lifecycle/result.json', 'tests.test_lightweight_runtime.TestVisualLifecycle', 'tests.test_runtime_units.TestVisualRuntimeUnits', 'tests.test_active_plan_execution.TestVisualPlanExecution'])"
+            ],
+            "pid": 13796,
+            "terminated_groups": [],
+            "report": {
+              "kind": "unittest",
+              "status": "PASS",
+              "counts": {
+                "tests_run": 6,
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0,
+                "expected_failures": 0,
+                "unexpected_successes": 0
+              }
+            },
+            "finished_utc": "2026-11-26T00:26:58.267453+00:00"
+          },
+          "graph": {
+            "status": "PASS",
+            "command": [
+              "/workspace/.venvs/issue602-visual/bin/python",
+              "-B",
+              "/workspace/tiny_village-821/scripts/run_ci_checks.py",
+              "--worker",
+              "unittest",
+              "--report",
+              "/workspace/scratch/issue-821/rereview-visual/batches/graph/result.json",
+              "tests.test_graph_initialization",
+              "tests.test_graph_ownership"
+            ],
+            "parent_timeout": 120,
+            "started_utc": "2026-11-26T00:26:58.269533+00:00",
+            "exit_code": 0,
+            "launcher": [
+              "/workspace/.venvs/issue602-visual/bin/python",
+              "-B",
+              "-c",
+              "import os; from scripts.run_ci_checks import register_group; register_group('/workspace/scratch/issue-821/rereview-visual/batches/graph/groups',13782); os.execvp('/workspace/.venvs/issue602-visual/bin/python',['/workspace/.venvs/issue602-visual/bin/python', '-B', '/workspace/tiny_village-821/scripts/run_ci_checks.py', '--worker', 'unittest', '--report', '/workspace/scratch/issue-821/rereview-visual/batches/graph/result.json', 'tests.test_graph_initialization', 'tests.test_graph_ownership'])"
+            ],
+            "pid": 13884,
+            "terminated_groups": [],
+            "report": {
+              "kind": "unittest",
+              "status": "PASS",
+              "counts": {
+                "tests_run": 24,
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0,
+                "expected_failures": 0,
+                "unexpected_successes": 0
+              }
+            },
+            "finished_utc": "2026-11-26T00:27:56.388900+00:00"
+          },
+          "cache": {
+            "status": "PASS",
+            "command": [
+              "/workspace/.venvs/issue602-visual/bin/python",
+              "-B",
+              "/workspace/tiny_village-821/scripts/run_ci_checks.py",
+              "--worker",
+              "unittest",
+              "--report",
+              "/workspace/scratch/issue-821/rereview-visual/batches/cache/result.json",
+              "tests.test_model_cache"
+            ],
+            "parent_timeout": 120,
+            "started_utc": "2026-11-26T00:27:56.391418+00:00",
+            "exit_code": 0,
+            "launcher": [
+              "/workspace/.venvs/issue602-visual/bin/python",
+              "-B",
+              "-c",
+              "import os; from scripts.run_ci_checks import register_group; register_group('/workspace/scratch/issue-821/rereview-visual/batches/cache/groups',13782); os.execvp('/workspace/.venvs/issue602-visual/bin/python',['/workspace/.venvs/issue602-visual/bin/python', '-B', '/workspace/tiny_village-821/scripts/run_ci_checks.py', '--worker', 'unittest', '--report', '/workspace/scratch/issue-821/rereview-visual/batches/cache/result.json', 'tests.test_model_cache'])"
+            ],
+            "pid": 14270,
+            "terminated_groups": [],
+            "report": {
+              "kind": "unittest",
+              "status": "PASS",
+              "counts": {
+                "tests_run": 27,
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0,
+                "expected_failures": 0,
+                "unexpected_successes": 0
+              }
+            },
+            "finished_utc": "2026-11-26T00:28:02.938994+00:00"
+          },
+          "capture": {
+            "status": "PASS",
+            "command": [
+              "/workspace/.venvs/issue602-visual/bin/python",
+              "-B",
+              "/workspace/tiny_village-821/scripts/run_ci_checks.py",
+              "--worker",
+              "unittest",
+              "--report",
+              "/workspace/scratch/issue-821/rereview-visual/batches/capture/result.json",
+              "tests.test_subprocess_capture"
+            ],
+            "parent_timeout": 120,
+            "started_utc": "2026-11-26T00:28:02.939783+00:00",
+            "exit_code": 0,
+            "launcher": [
+              "/workspace/.venvs/issue602-visual/bin/python",
+              "-B",
+              "-c",
+              "import os; from scripts.run_ci_checks import register_group; register_group('/workspace/scratch/issue-821/rereview-visual/batches/capture/groups',13782); os.execvp('/workspace/.venvs/issue602-visual/bin/python',['/workspace/.venvs/issue602-visual/bin/python', '-B', '/workspace/tiny_village-821/scripts/run_ci_checks.py', '--worker', 'unittest', '--report', '/workspace/scratch/issue-821/rereview-visual/batches/capture/result.json', 'tests.test_subprocess_capture'])"
+            ],
+            "pid": 14309,
+            "terminated_groups": [],
+            "report": {
+              "kind": "unittest",
+              "status": "PASS",
+              "counts": {
+                "tests_run": 13,
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0,
+                "expected_failures": 0,
+                "unexpected_successes": 0
+              }
+            },
+            "finished_utc": "2026-11-26T00:28:06.619529+00:00"
+          }
+        },
+        "packages": {
+          "typing-inspection": "0.4.4",
+          "attrs": "23.2.0",
+          "networkx": "3.1",
+          "pygame": "2.6.1",
+          "typing-extensions": "4.16.0",
+          "pydantic-core": "2.50.1",
+          "pydantic": "2.14.1",
+          "numpy": "1.26.4",
+          "pyparsing": "3.1.2",
+          "annotated-types": "0.8.0"
+        },
+        "counts": {
+          "tests_run": 70,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "expected_failures": 0,
+          "unexpected_successes": 0
+        },
+        "probes_run": 0
+      }
+    }
+  },
   "limits": [
     "Three known additional-suite baseline failures and existing parser ERROR output remain",
     "No merge authorization"
-  ]
+  ],
+  "corrective_commit": "8088196f870e0b207585fcb41f7a491e9c53ca5c",
+  "additional": {
+    "tests_run": 102,
+    "failures": 3,
+    "exit_code": 1,
+    "seconds": 0.155,
+    "log": "/workspace/issue821-rereview-additional.log",
+    "same_known_baseline_failures": [
+      "tests.test_effect_schema_v2.TestEffectDispatcher.test_apply_attribute_change_to_participants",
+      "tests.test_effect_schema_v2.TestEffectDispatcher.test_apply_attribute_change_with_condition",
+      "tests.test_enhanced_event_handler.TestIntegrationScenarios.test_event_lifecycle"
+    ]
+  },
+  "hosted_corrective_head": {
+    "sha": "8088196f870e0b207585fcb41f7a491e9c53ca5c",
+    "checks": 8,
+    "conclusion": "SUCCESS"
+  },
+  "delivery": "PR828 OPEN and ready; final documentation commit hosted state remains on GitHub. No merge authorized."
 }

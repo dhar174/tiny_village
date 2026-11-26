@@ -1,5 +1,5 @@
 # TASK035 — Complete #821 Goal and inventory contracts
-Updated: 2026-11-25 America/New_York. Status: implementation and local verification complete; PR828 final publication/checks pending.
+Updated: 2026-11-25 America/New_York. Status: implementation, requested specialist correction/re-review and local verification complete; PR828 delivery/check state on GitHub.
 Authorization: user approved the complete proposed plan with “Please implement the plan.”
 Base: freshly fetched main a600aee; isolated /workspace/tiny_village-821.
 
@@ -37,5 +37,10 @@ Base: freshly fetched main a600aee; isolated /workspace/tiny_village-821.
   no remaining blocker. No independent checkout/command/nativeZcode claim.
 - Ruling: shared-UUID resolver hypothesis is blocked by normal registration's
   existing duplicate-UUID rejection; preserve that policy and retain a control.
-- Corrected-source core/dev/visual verification underway; historical receipts
-  remain labelled. No merge authorized.
+- Corrected-source canonical core255+3/dev20/visual70 all PASS, every batch exit0,
+  no failures/errors/skips. All8 source blobs equal frozen verification hashes.
+- Corrective commit8088196 passed all8 hosted checks. Additional102 rerun retains
+  same3 known baseline failures (exit1); parser ERROR output remains disclosed.
+- Final report/evidence published on PR828; historical253-test receipt retained.
+  Final documentation-head check/delivery state is authoritative on GitHub.
+  No merge authorized.

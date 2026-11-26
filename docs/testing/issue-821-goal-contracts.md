@@ -78,5 +78,10 @@ Present None remains different from missing; unrelated fields and bootstrap
 retain their existing behavior. The regression was observed RED then GREEN; all
 10 focused real-world tests pass (16.005s). World-state and planning/actions
 specialists re-reviewed the corrective delta and found no remaining blocker in
-the supplied excerpts. Canonical corrected-source checks are running; the253-test
-receipt above is historical. See the [re-review receipt](evidence/issue-821-rereview.json).
+the supplied excerpts. Corrected-source canonical checks pass: **255 core tests + 3 CLI probes**, **20 development**, **70 visual**, every batch exit0 and no
+assertion failures/errors/skips. All eight committed source hashes match the
+verified snapshot. All eight hosted checks passed on corrective head8088196.
+The253-test receipt above remains historical. The additional102-check suite was
+rerun and retains the same3 baseline failures (exit1); parser ERROR output persists.
+See the [re-review receipt](evidence/issue-821-rereview.json). Final documentation
+commit checks and open PR delivery state remain authoritative on GitHub.
