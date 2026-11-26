@@ -1,0 +1,53 @@
+{
+  "authorization": "D042",
+  "previous_head": "0d8077472988c9ff48365d001e00c5931860e29d",
+  "source_sha256": {
+    "tiny_utility_functions.py": "c45f021abe37bbbb233277178313e15e619d9f14f01d3814156e5d2ed1aab1e3",
+    "tiny_goap_system.py": "067fe8993b103780f75069fcdfb75e91b08c157ab337c416d563976ed069f9c7",
+    "tiny_graph_manager.py": "37636f458e1ebfd09822283a979652c599accffd1c04b717c82639e134a81663",
+    "tiny_items.py": "7839756d6fe72feec0a2b368338a18b74ea708510a1853f6a5658e4086d7389e",
+    "tiny_characters.py": "3b541d63a0158094faa441fbfe7666e4e5dd876d736c559ba9f14af0fa74c0e4",
+    "tiny_strategy_manager.py": "87f02d2b300affc1495a8ad2f5625b805c8a2c87b4627fe059a49c9f71622f04",
+    "tests/test_goal_catalog_contracts.py": "d0449aebe7a18f488d934e404517fc28f47ec20daa2b2dbfba325ed3ff6bb9d7",
+    "scripts/run_ci_checks.py": "a7daa66e73083fe314bcb5ccea47ef763e584dc42de5ff24800e2fdc6866f722",
+    "tiny_jobs.py": "4710807665ddff8fe6361a4a44034b364631407a5bd1cea3473f9dfedc158f4a",
+    "effect_dispatcher.py": "fd4ea21294037fa1e98141c958ce5d97f2eff0b3215bd95171f0dde567d3824d",
+    "tests/test_effect_schema_v2.py": "ec3da5a1b1706b3b19be167451e737908f1f53b5fea5c4386984abef2d77ec29",
+    "tests/test_enhanced_event_handler.py": "5d1433299bfb22baee38640471e99496d42786acd5719dc607951d2f0e6a6edc"
+  },
+  "fixes": [
+    "Restrict native Character synchronization gate to native Characters, retain legacy mapper compatibility",
+    "Lifecycle test uses public process_events at occurrence time, verifies last_triggered and actual cleanup",
+    "Job diagnostics share actual parser matching entries;117 real roles and Customer Service Representative verified",
+    "Positive event test asserts concrete numeric effect instead of accepting Mock attribute errors; invalid-schema ERROR explicitly asserted"
+  ],
+  "red": {
+    "exit_code": 1,
+    "tests_run": 4,
+    "failures": 4,
+    "log": "/workspace/issue821-last-red.log"
+  },
+  "green": {
+    "exit_code": 0,
+    "tests_run": 4,
+    "seconds": 1.196,
+    "log": "/workspace/issue821-last-green.log"
+  },
+  "fixture_red": {
+    "exit_code": 1,
+    "tests_run": 1,
+    "log": "/workspace/issue821-fixture-red.log"
+  },
+  "focused": {
+    "exit_code": 0,
+    "tests_run": 113,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 13.599,
+    "uncaptured_ERROR_records": 0,
+    "log": "/workspace/issue821-last-focused.log"
+  },
+  "review": "Test/CI and world-state specialists re-reviewed supplied exact changes, no blocker; no independent checkout/commands/nativeZcode claim",
+  "profiles": "Final source core/dev/visual running; prior receipts historical",
+  "merge_gate": "All required final-head hosted checks and source identity verified before normal SHA-guarded merge. No bypass."
+}

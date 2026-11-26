@@ -11,7 +11,7 @@ import math
 
 from effect_schema import EffectV2, EffectType, OperatorType
 from character_attribute_mapper import AttributeMapper
-from actions import apply_attribute_change, clamp_need_value, _NEEDS_SCALAR_CLAMP_ATTRIBUTES, _validate_numeric_change
+from actions import apply_attribute_change, clamp_need_value, _validate_numeric_change
 
 
 class EffectDispatcher:
@@ -328,14 +328,14 @@ class EffectDispatcher:
             # synchronized updater shared with action execution — graph-first read,
             # synchronized object+graph write, per-attribute rollback, and the
             # shared 0-100 clamp. Mapper bounds stay the safety net for other fields.
-            # Note: this gate is graph-manager presence, not entity registration;
-            # an unregistered entity raises inside _resolve_action_entity and is
-            # reported as not-applied (False) instead of a bounded object write.
+            # Only native Characters have this ownership contract. Legacy
+            # entities retain AttributeMapper's declared-field compatibility path;
+            # a supplied adapter is not evidence of Character registration.
             native_character = getattr(type(entity), '_mutate_scalar', None) is not None
             manager = self.graph_manager
             if manager is None and native_character:
                 manager = entity.graph_manager
-            if manager is not None and (native_character or actual_attr in _NEEDS_SCALAR_CLAMP_ATTRIBUTES | {"happiness"}):
+            if manager is not None and native_character:
                 def calculate(current):
                     if operator == OperatorType.ADD:
                         result = current + change_value

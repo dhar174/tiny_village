@@ -265,3 +265,16 @@ actor_request = PlanRequest(character.uuid, actor_goal)
 assert strategy.goal_key(actor_request)
 assert strategy.request_fingerprint(actor_request)
 ''')
+
+    def test_job_catalog_diagnostics_match_actual_parser(self):
+        self.run_python('''
+import json
+import unittest
+from tiny_jobs import JobRules
+with unittest.TestCase().assertNoLogs(level='ERROR'):
+    rules = JobRules()
+with open('job_roles.json') as source:
+    catalog = json.load(source)['jobs']
+assert len(rules.ValidJobRoles) == len(catalog) == 117
+assert any(role.job_name == 'Customer Service Representative' for role in rules.ValidJobRoles)
+''')

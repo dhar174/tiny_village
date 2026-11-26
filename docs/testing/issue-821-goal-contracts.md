@@ -85,3 +85,17 @@ The253-test receipt above remains historical. The additional102-check suite was
 rerun and retains the same3 baseline failures (exit1); parser ERROR output persists.
 See the [re-review receipt](evidence/issue-821-rereview.json). Final documentation
 commit checks and open PR delivery state remain authoritative on GitHub.
+
+## Final merge gate repairs (D042)
+
+The user required failures/errors to be addressed before merging. The three
+previously retained failures are now repaired: non-native dispatch uses its
+existing mapper compatibility path, and the lifecycle test exercises public
+processing/bookkeeping at the event occurrence time before cleanup. Native
+Character synchronization remains intact. Job diagnostics count actual parsed
+entries instead of an inconsistent strict-name comparison; all117 roles parse
+without the false117/116 ERROR. A positive event fixture now carries concrete
+numeric state and asserts the effect; the invalid-schema negative control
+explicitly checks its expected error log. The combined113-check focused suite
+passes with no uncaptured ERROR records. Final canonical verification is pending;
+earlier baseline-failure limitations above describe historical revisions.

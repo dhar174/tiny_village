@@ -1074,3 +1074,15 @@ Project Decision synchronization remains outstanding as described above.
   scalar-planning boundary. Deliver reviewable evidence and a PR.
 - **Boundary:** preserve D035, #740 units, D013–D015 and later human gates. This
   approval does not authorize a new merge or establish model/product readiness.
+
+### D042 — Authorize final repairs and ready PR #828 merge
+
+- **Date:** 2026-11-25 America/New_York.
+- **Decision-maker:** dhar174.
+- **Confirmation:** “One last check then merge if ready. Ensure any failures or
+  errors have been addressed first.”
+- **Scope:** resolve the retained legacy test failures and parser diagnostic,
+  verify the final PR828 source and required checks, then merge its exact ready
+  head into main. This supersedes the earlier no-merge boundary for PR828 only.
+- **Boundary:** retain native graph ownership, units, supported simulation scope,
+  required AI/product scope and later human gates. Do not bypass protections.

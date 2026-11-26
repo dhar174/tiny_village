@@ -44,3 +44,19 @@ Base: freshly fetched main a600aee; isolated /workspace/tiny_village-821.
 - Final report/evidence published on PR828; historical253-test receipt retained.
   Final documentation-head check/delivery state is authoritative on GitHub.
   No merge authorized.
+
+## Final user gate and authorized integration (D042)
+- User authorized a final check and merge only after failures/errors are addressed.
+- Ruling: resolve the documented3 baseline failures and false parser ERROR rather
+  than waiving them. Native Character dispatch remains synchronized; generic
+  entities use the existing legacy mapper path. Lifecycle test now exercises public
+  bookkeeping at occurrence time and verifies actual cleanup.
+- Job diagnostics now count the parser's actual matched entries:117 roles including
+  Customer Service Representative. No catalog data or match precedence changed.
+- Four regression cases observed RED then GREEN. Strengthened positive event test
+  caught an unconfigured Mock (RED), replaced with concrete numeric state; verifies
+  the real effect. Invalid-schema negative test explicitly asserts its ERROR log.
+- Combined113 tests PASS13.599s, with no uncaptured ERROR records. Previously
+  failing additional102-suite tests are all green. Test/CI and world-state excerpt
+  re-review found no blocker; complete final canonical checks are running.
+- D042 now authorizes exact-head ready merge; previous no-merge notes are history.
