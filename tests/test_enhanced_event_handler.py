@@ -240,9 +240,9 @@ class TestEnhancedEventHandler(unittest.TestCase):
 
     def test_event_processing(self):
         """Test comprehensive event processing."""
-        # Add mock participants to event
-        mock_participant = Mock()
-        mock_participant.name = "TestCharacter"
+        # Supply concrete numeric state rather than fabricated Mock attributes.
+        from types import SimpleNamespace
+        mock_participant = SimpleNamespace(name="TestCharacter", social_wellbeing=50)
         self.test_event.add_participant(mock_participant)
 
         self.event_handler.add_event(self.test_event)
@@ -250,6 +250,7 @@ class TestEnhancedEventHandler(unittest.TestCase):
         # Process events
         results = self.event_handler.process_events()
 
+        self.assertEqual(mock_participant.social_wellbeing, 55)
         self.assertIn("processed_events", results)
         self.assertIn("failed_events", results)
         self.assertIn("cascading_events", results)
@@ -467,26 +468,19 @@ class TestIntegrationScenarios(unittest.TestCase):
         self.assertGreater(len(market_events), 0)
 
     def test_event_lifecycle(self):
-        """Test complete event lifecycle from creation to cleanup."""
-        # Create and add event
-        event = self.event_handler.create_social_event(
-            "Village Gathering", datetime.now() - timedelta(days=35)  # Old event
-        )
-
+        """Process at occurrence time, then expire by the actual last trigger."""
+        old_time = datetime.now() - timedelta(days=35)
+        event = self.event_handler.create_social_event("Village Gathering", old_time)
         self.event_handler.add_event(event)
-
-        # Process the event
-        self.event_handler._process_single_event(event, datetime.now())
+        result = self.event_handler.process_events(old_time)
+        self.assertIn(event.name, result["processed_events"])
         self.assertIn(event, self.event_handler.processed_events)
-
-        # Clean up old events
+        self.assertEqual(event.last_triggered, old_time)
         initial_count = len(self.event_handler.processed_events)
-        removed_count = self.event_handler.cleanup_old_events(
-            30
-        )  # Remove events older than 30 days
-
+        removed_count = self.event_handler.cleanup_old_events(30)
         self.assertGreater(removed_count, 0)
         self.assertLess(len(self.event_handler.processed_events), initial_count)
+        self.assertNotIn(event, self.event_handler.processed_events)
 
 
 def run_tests():

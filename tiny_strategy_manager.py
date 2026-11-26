@@ -22,6 +22,8 @@ from tiny_utility_functions import (
     build_signed_remaining_goal,
     normalize_state_for_utility,
     native_character_state,
+    GoalEvaluationError,
+    normalize_job_name,
     Goal,
 )  # evaluate_utility seems to be for plans
 from actions import Action, State, Condition, _resolve_action_entity
@@ -692,6 +694,8 @@ class StrategyManager:
                         goals.append(entry[1])
                     else:
                         goals.append(entry)
+            except GoalEvaluationError:
+                raise
             except Exception as e:
                 logger.debug(f"Failed to evaluate goals for {getattr(character, 'name', character)}: {e}")
         if hasattr(character, "goals"):
@@ -701,6 +705,8 @@ class StrategyManager:
                         goals.append(entry[1])
                     else:
                         goals.append(entry)
+            except GoalEvaluationError:
+                raise
             except Exception as e:
                 logger.debug(f"Failed to read goals for {getattr(character, 'name', character)}: {e}")
         return goals
@@ -738,10 +744,11 @@ class StrategyManager:
                         scored_goals.append((getattr(goal, "priority", 0.5), goal))
                         continue
                     
-                    score = self.goap_planner.evaluate_goal_importance(
-                        character, goal, self.graph_manager
-                    )
+                    score = (goal.evaluate_utility() if callable(getattr(goal, "iter_completion_conditions", None))
+                             else goal.priority)
                     scored_goals.append((score, goal))
+                except GoalEvaluationError:
+                    raise
                 except Exception as e:
                     logger.warning(f"Goal importance evaluation failed for {goal}: {e}")
                     scored_goals.append((getattr(goal, "priority", 0.5), goal))
@@ -906,6 +913,8 @@ class StrategyManager:
                 registered = None
             if isinstance(registered, dict):
                 state.update(native_character_state(registered))
+                if 'job' not in registered:
+                    state.pop('job', None)
         return native_character_state(state)
 
     def _standalone_planning_state(self, character) -> dict:
@@ -1351,12 +1360,18 @@ class StrategyManager:
                     target = request.goal.target
                 target, node = _resolve_action_entity(self.graph_manager, target)
                 if target is actor:
-                    reads.add(_canonical_attribute(condition.attribute))
+                    reads.add('job' if condition.attribute == 'has_job' else _canonical_attribute(condition.attribute))
                 else:
                     values = native_character_state(target)
                     if node is not None:
-                        values.update(native_character_state(dict(self.graph_manager.G.nodes[node])))
-                    attribute = _canonical_attribute(condition.attribute)
+                        registered = dict(self.graph_manager.G.nodes[node])
+                        if condition.attribute == 'has_job':
+                            values = registered
+                        else:
+                            values.update(native_character_state(registered))
+                    attribute = 'job' if condition.attribute == 'has_job' else _canonical_attribute(condition.attribute)
+                    if attribute == 'job' and attribute in values:
+                        values[attribute] = normalize_job_name(values[attribute])
                     partners.append((str(target.uuid), attribute,
                                      ('value', _freeze_planning_value(values[attribute]))
                                      if attribute in values else ('missing',)))
@@ -1725,9 +1740,10 @@ class StrategyManager:
                 and hasattr(character, "__dict__")
             ):
                 try:
-                    importance = self.goap_planner.evaluate_goal_importance(
-                        character, goal, self.graph_manager
-                    )
+                    importance = (goal.evaluate_utility() if callable(getattr(goal, "iter_completion_conditions", None))
+                                  else goal.priority)
+                except GoalEvaluationError:
+                    raise
                 except Exception as e:
                     logger.debug(f"Goal importance fallback for {goal.name}: {e}")
             try:

@@ -255,7 +255,9 @@ class TestEffectV2Serialization(unittest.TestCase):
             "targets": ["participants"],
             "attribute": "happiness"
         }
-        self.assertFalse(validate_effect_dict(invalid_dict))
+        with self.assertLogs(level="ERROR") as errors:
+            self.assertFalse(validate_effect_dict(invalid_dict))
+        self.assertTrue(any("Invalid effect type" in entry for entry in errors.output))
 
 
 class TestEffectDispatcher(unittest.TestCase):

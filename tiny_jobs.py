@@ -161,64 +161,29 @@ class JobRoles:
 
 class JobRules:
     def __init__(self):
-        job_roles = json.load(open("job_roles.json"))
-        job_count = len([job_roles["jobs"][job_role] for job_role in job_roles["jobs"]])
-        logging.debug(f"Job count: {job_count}")
-        if job_count != len(
-            [
-                job_roles["jobs"][job_role][jobname]
-                for job_role in job_roles["jobs"]
-                for jobname in job_roles["jobs"][job_role]
-                if job_role.lower() == jobname.lower()
-            ]
-        ):
-            logging.error(
-                f"Not all job roles parsed correctly, counted {job_count} but parsed {len([job_roles['jobs'][job_role][jobname] for job_role in job_roles['jobs'] for jobname in job_roles['jobs'][job_role] if job_role.lower() == jobname.lower()])}"
-            )
-            if job_count > len(
-                [
-                    job_roles["jobs"][job_role][jobname]
-                    for job_role in job_roles["jobs"]
-                    for jobname in job_roles["jobs"][job_role]
-                    if job_role.lower() == jobname.lower()
-                ]
-            ):
-                logging.error(
-                    f"Missing job roles: {[job_role for job_role in job_roles['jobs'] if job_role not in [jobname for job_role in job_roles['jobs'] for jobname in job_roles['jobs'][job_role] if job_role.lower() == jobname.lower()]]}"
-                )
-            elif job_count < len(
-                [
-                    job_roles["jobs"][job_role][jobname]
-                    for job_role in job_roles["jobs"]
-                    for jobname in job_roles["jobs"][job_role]
-                    if job_role.lower() == jobname.lower()
-                ]
-            ):
-                logging.error(
-                    f"Extra job roles: {[jobname for job_role in job_roles['jobs'] for jobname in job_roles['jobs'][job_role] if job_role.lower() == jobname.lower() and jobname not in [job_role for job_role in job_roles['jobs']]]}"
-                )
-        logging.debug(
-            f"Job roles: {[job_roles['jobs'][job_role][jobname] for job_role in job_roles['jobs'] for jobname in job_roles['jobs'][job_role] if ((job_role.lower() == jobname.lower() or job_role.lower() in jobname.lower())or (jobname.lower() == job_role.lower() or jobname.lower() in job_role.lower()))]}"
-        )
-        self.ValidJobRoles = [
-            JobRoles(
-                key, title, description, salary, skills, education, experience, motives
-            )
-            for job_role in job_roles["jobs"]
-            for key, job_data in job_roles["jobs"][job_role].items()
-            if isinstance(job_data, dict)
-            and (
-                (job_role.lower() == key.lower() or job_role.lower() in key.lower())
-                or (key.lower() == job_role.lower() or key.lower() in job_role.lower())
-            )
-            for title, description, salary, skills, education, experience, motives in [
-                job_data.values()
-            ]
+        with open("job_roles.json") as source:
+            job_roles = json.load(source)
+        # Use exactly the parser's accepted matches for diagnostics, too.
+        # E.g. Customer Service legitimately contains Customer Service Representative.
+        entries = [
+            (role, key, data)
+            for role, contents in job_roles["jobs"].items()
+            for key, data in contents.items()
+            if isinstance(data, dict)
+            and (role.lower() in key.lower() or key.lower() in role.lower())
         ]
-        logging.debug(f"Valid job roles: {self.ValidJobRoles}")
-        logging.debug(
-            f"Found: {[job_role.get_job_name() for job_role in self.ValidJobRoles]}"
-        )
+        self.ValidJobRoles = [JobRoles(key, *data.values()) for _, key, data in entries]
+        job_count = len(job_roles["jobs"])
+        if job_count != len(entries):
+            logging.error(
+                "Not all job roles parsed correctly, counted %s but parsed %s",
+                job_count, len(entries),
+            )
+            missing = [role for role in job_roles["jobs"]
+                       if not any(candidate == role for candidate, _, _ in entries)]
+            if missing:
+                logging.error("Missing job roles: %s", missing)
+        logging.debug("Valid job roles: %s", self.ValidJobRoles)
 
     def __repr__(self):
         return f"JobRules({self.ValidJobRoles})"

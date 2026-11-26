@@ -4121,64 +4121,15 @@ class GraphManager(metaclass=_GraphManagerSingleton):
         return self.goap_evaluator.evaluate_action_plan(plan, character, goal, world_state)
 
     def is_goal_achieved(self, character, goal: Goal):
-        """
-        Check if a goal is achieved by evaluating its completion conditions.
-
-        Args:
-            character: The character for whom to check goal achievement
-            goal (Goal): The goal to check for completion
-
-        Returns:
-            bool: True if goal is achieved, False otherwise
-        """
-        if callable(getattr(goal, "iter_completion_conditions", None)):
-            from actions import State, _resolve_action_entity
-            from tiny_utility_functions import native_character_state
-            try:
-                actor, _ = _resolve_action_entity(self, goal.character, 'character')
-            except (AttributeError, KeyError, TypeError, ValueError) as error:
-                raise ValueError(f"Goal {goal.name!r}, actor: {error}") from error
-            if actor is not character:
+        """Check explicit requirements against the registered actor's state."""
+        from actions import State, _resolve_action_entity
+        from tiny_utility_functions import native_character_state, is_goal_achieved
+        actor, _ = _resolve_action_entity(self, character, 'character')
+        if callable(getattr(goal, 'iter_completion_conditions', None)):
+            owner, _ = _resolve_action_entity(self, goal.character, 'character')
+            if owner is not actor:
                 raise ValueError(f"Goal {goal.name!r}, actor differs from achievement actor")
-            return goal.check_completion(State(native_character_state(character, self)))
-        try:
-            Character = importlib.import_module("tiny_characters").Character
-            Goal = importlib.import_module("tiny_characters").Goal
-            State = importlib.import_module("actions").State
-
-            # Get character's current state
-            character_state = State(character)
-
-            # Check if all completion conditions are met
-            if hasattr(goal, "completion_conditions") and goal.completion_conditions:
-                for condition in goal.completion_conditions:
-                    if not condition.check_condition(character_state):
-                        return False
-                return True
-
-            # Fallback: check based on goal priority and description
-            if hasattr(goal, "priority") and goal.priority >= 10:
-                # High priority goals might be considered "achieved" if certain thresholds are met
-                if "wealth" in goal.description.lower():
-                    return character.wealth_money >= 500
-                elif "social" in goal.description.lower():
-                    return character.social_wellbeing >= 80
-                elif "health" in goal.description.lower():
-                    return character.health_status >= 90
-                elif "food" in goal.description.lower():
-                    return character.hunger_level <= 20
-                elif (
-                    "job" in goal.description.lower()
-                    or "career" in goal.description.lower()
-                ):
-                    return character.job_performance >= 80
-
-            # Default: goal not achieved
-            return False
-
-        except Exception as e:
-            logging.error(f"Error checking goal achievement for {character.name}: {e}")
-            return False
+        return is_goal_achieved(goal, State(native_character_state(actor, self)))
 
     def calculate_preconditions_difficulty(self, preconditions, initiator: Character):
         """
