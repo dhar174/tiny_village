@@ -1062,3 +1062,15 @@ Project Decision synchronization remains outstanding as described above.
   per-field rollback, D013/D015 product requirements and #821 follow-ups remain
   intact. This conditional merge approval does not approve #742/#743 or establish
   live-model or broader product readiness. GitHub records the integration outcome.
+
+### D041 — Approve complete #821 implementation and explicit contracts
+
+- **Date:** 2026-11-25 America/New_York.
+- **Decision-maker:** dhar174.
+- **Confirmation:** “Please implement the plan.” The user selected complete #821
+  scope, explicit requirements for completion, and unhashable mutable Goal/Plan.
+- **Scope:** implement the approved Goal/utility/inventory repairs and repository
+  specialist review; retain full Goal empty-condition semantics and the supported
+  scalar-planning boundary. Deliver reviewable evidence and a PR.
+- **Boundary:** preserve D035, #740 units, D013–D015 and later human gates. This
+  approval does not authorize a new merge or establish model/product readiness.

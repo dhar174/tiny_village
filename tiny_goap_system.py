@@ -450,10 +450,10 @@ class Plan:
                 'priority': 0, 'dependencies': []}
 
     def __str__(self):
-        return f"Plan: {self.name} - Goals: {self.goals} - Actions: {self.action_queue} - Completed Actions: {self.completed_actions} - Current Goal Index: {self.current_goal_index} - Current Action Index: {self.current_action_index} - Completed: {self.evaluate()}"
+        return f"Plan: {self.name} - Goals: {self.goals} - Actions: {self.action_queue} - Completed Actions: {self.completed_actions} - Current Goal Index: {self.current_goal_index} - Current Action Index: {self.current_action_index}"
 
     def __repr__(self):
-        return f"Plan: {self.name} - Goals: {self.goals} - Actions: {self.action_queue} - Completed Actions: {self.completed_actions} - Current Goal Index: {self.current_goal_index} - Current Action Index: {self.current_action_index} - Completed: {self.evaluate()}"
+        return f"Plan: {self.name} - Goals: {self.goals} - Actions: {self.action_queue} - Completed Actions: {self.completed_actions} - Current Goal Index: {self.current_goal_index} - Current Action Index: {self.current_action_index}"
 
     def __eq__(self, other):
         return (
@@ -463,21 +463,9 @@ class Plan:
             and self.completed_actions == other.completed_actions
             and self.current_goal_index == other.current_goal_index
             and self.current_action_index == other.current_action_index
-            and self.evaluate() == other.evaluate()
         )
 
-    def __hash__(self):
-        return hash(
-            tuple(
-                self.name,
-                self.goals,
-                self.action_queue,
-                self.completed_actions,
-                self.current_goal_index,
-                self.current_action_index,
-                self.evaluate(),
-            )
-        )
+    __hash__ = None
 
 
 # # Example of using the Plan class with Goal and Action classes
@@ -654,6 +642,11 @@ class GOAPPlanner:
         for key, value in util_funcs.native_character_state(dict(data)).items():
             if type(key) is not str:
                 raise TypeError("Planning state keys must be strings")
+            if key == 'job':
+                try:
+                    value = util_funcs.normalize_job_name(value)
+                except TypeError:
+                    pass  # Preserve data-only handling for unrelated goals.
             try:
                 result[key] = _copy_planning_value(value)
             except TypeError:
@@ -767,21 +760,7 @@ class GOAPPlanner:
         return self._goal_satisfied(goal, state)
 
     def _goal_satisfied(self, goal, state):
-        """Evaluate full Goals or finite native numeric target metadata."""
-        if callable(getattr(goal, "iter_completion_conditions", None)):
-            return goal.check_completion(state)
-        targets = getattr(goal, 'target_effects', None)
-        if not isinstance(targets, Mapping):
-            raise TypeError("Planning requires a production Goal or target-effect metadata")
-        satisfied = True
-        for attribute, target in targets.items():
-            current = state.get(_canonical_attribute(attribute), state.get(attribute))
-            if type(target) not in (int, float) or not math.isfinite(target):
-                raise ValueError(f"Goal {goal.name!r}: invalid target for {attribute!r}")
-            if type(current) not in (int, float) or not math.isfinite(current):
-                raise ValueError(f"Goal {goal.name!r}: missing or invalid state attribute {attribute!r}")
-            satisfied &= current <= abs(target) + 1e-9 if target < 0 else current >= target - 1e-9
-        return bool(satisfied)
+        return util_funcs.is_goal_achieved(goal, state)
 
     def _action_applicable(self, action, state):
         """Check if an action's preconditions are met in the given state."""

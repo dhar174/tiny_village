@@ -364,7 +364,7 @@ class Goal:
             and self.criteria == other.criteria
             and self.required_items == other.required_items
             and self.environment == other.environment
-            and self.goal_type == other
+            and self.goal_type == other.goal_type
         )
 
     def hash_nested_list(self, obj):
@@ -404,48 +404,7 @@ class Goal:
             logging.error(f"Error hashing object: {e}")
             return None
 
-    def __hash__(self):
-        def make_hashable(obj):
-            if isinstance(obj, dict):
-                return tuple(sorted((k, make_hashable(v)) for k, v in obj.items()))
-            elif isinstance(obj, list):
-                return tuple(make_hashable(e) for e in obj)
-            elif isinstance(obj, set):
-                return frozenset(make_hashable(e) for e in obj)
-            elif isinstance(obj, tuple):
-                return tuple(make_hashable(e) for e in obj)
-            elif type(obj).__name__ == "Character":
-                Character = importlib.import_module("tiny_characters").Character
-
-                return tuple(
-                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
-                )
-            elif type(obj).__name__ == "Location":
-                Location = importlib.import_module("tiny_locations").Location
-
-                return tuple(
-                    sorted((k, make_hashable(v)) for k, v in obj.to_dict().items())
-                )
-
-            return obj
-
-        return hash(
-            (
-                self.name,
-                self.description,
-                self.score,
-                make_hashable(self.completion_conditions),
-                str(self.evaluate_utility_function),
-                self.difficulty,
-                make_hashable(self.completion_reward),
-                self.failure_penalty,
-                self.completion_message,
-                self.failure_message,
-                make_hashable(self.criteria),
-                make_hashable(self.required_items),
-                self.goal_type,
-            )
-        )
+    __hash__ = None
 
     def get_name(self):
         return self.name
@@ -519,7 +478,7 @@ class Goal:
         """
         from collections.abc import Mapping
         from actions import _canonical_attribute, _resolve_action_entity
-        from tiny_utility_functions import native_character_state
+        from tiny_utility_functions import native_character_state, GoalEvaluationError, job_is_employed
 
         if state is not None:
             if not isinstance(state, (State, Mapping)):
@@ -528,16 +487,15 @@ class Goal:
         results = []
         conditions = self.iter_completion_conditions()
         actor = self.character
-        if state is not None:
-            try:
-                actor, _ = _resolve_action_entity(self.environment, actor, 'character')
-            except (AttributeError, KeyError, TypeError, ValueError) as error:
-                raise ValueError(f"Goal {self.name!r}, actor: {error}") from error
+        try:
+            actor, _ = _resolve_action_entity(self.environment, actor, 'character')
+        except (AttributeError, KeyError, TypeError, ValueError) as error:
+            raise ValueError(f"Goal {self.name!r}, actor: {error}") from error
         for condition in conditions:
             try:
                 target = condition.target
                 if target is None or (isinstance(target, str) and target == 'initiator'):
-                    target = self.character
+                    target = actor
                 elif isinstance(target, str) and target == 'target':
                     target = self.target
                 target, node = _resolve_action_entity(self.environment, target)
@@ -548,21 +506,36 @@ class Goal:
                     if node is not None:
                         snapshot.update(native_character_state(dict(self.environment.G.nodes[node])))
                     current = State(native_character_state(snapshot))
+                if condition.attribute == 'has_job':
+                    values = dict(current.dict_or_obj)
+                    if node is not None and not (state is not None and target is actor):
+                        values = self.environment.G.nodes[node]
+                    if 'job' not in values:
+                        raise ValueError('Missing condition source job')
+                    derived = dict(current.dict_or_obj)
+                    derived['has_job'] = job_is_employed(values['job'])
+                    current = State(derived)
                 results.append(bool(condition.check_condition(
                     current, attribute=_canonical_attribute(condition.attribute))))
-            except (AttributeError, KeyError, TypeError, ValueError, SyntaxError) as error:
-                raise ValueError(
+            except Exception as error:
+                raise GoalEvaluationError(
                     f"Goal {self.name!r}, condition {condition.name!r}: {error}"
                 ) from error
         return all(results)
 
-    def evaluate_utility_function(self):
-        return self.evaluate_utility_function(
-            self.character,
-            self.character.environment,
-            self.difficulty,
-            self.criteria,
-        )
+    def evaluate_utility(self):
+        """Invoke the configured three-argument scorer exactly once."""
+        import math
+        from tiny_utility_functions import GoalEvaluationError
+        try:
+            if not callable(self.evaluate_utility_function):
+                raise TypeError('Goal has no utility evaluator')
+            result = self.evaluate_utility_function(self.character, self, self.environment)
+            if isinstance(result, bool) or not isinstance(result, (int, float)) or not math.isfinite(result):
+                raise ValueError('Utility score must be finite numeric data')
+            return float(result)
+        except Exception as error:
+            raise GoalEvaluationError(f"Goal {self.name!r}, utility evaluation: {error}") from error
 
     def calculate_goal_difficulty(self):
         return self.difficulty(self.character, self.environment)
@@ -1277,12 +1250,10 @@ def motive_to_goals(
                                 satisfy_value=True,
                                 op="==",
                                 weight=1,
-                            )
-                        ],
-                        False: [
+                            ),
                             Condition(
                                 name="has_cooked_food",
-                                attribute="inventory.check_has_item_by_attribute_value(['cooked'], ['True'])",
+                                attribute="inventory.check_has_item_by_attribute_value(['cooked', True, '==', 'food'])",
                                 target=character,
                                 satisfy_value=True,
                                 op="==",
@@ -3459,7 +3430,7 @@ class Character:
             )
             self.goals = goal_generator.generate_goals(self)
         for _, goal in self.goals:
-            utility = goal.evaluate_utility_function(self, goal, self.graph_manager)
+            utility = goal.evaluate_utility()
             goal_queue.append((utility, goal))
         goal_queue.sort(reverse=True, key=lambda x: x[0])
         return goal_queue
@@ -3771,11 +3742,12 @@ class Character:
     #         return f"Character(An error occurred in __repr__: {e})"
 
     def has_job(self):
-        if isinstance(self.job, str):
-            if self.job == "unemployed":
-                return False
-        else:
-            return self.job is not None and self.job.job_name != "unemployed"
+        from tiny_utility_functions import job_is_employed
+        if not getattr(self, '_initialized', False):
+            return job_is_employed(self.job)
+        if self.graph_manager is None:
+            raise ValueError('Registered Character requires a GraphManager')
+        return job_is_employed(self.graph_manager.get_character_state(self)['job'])
 
     def has_investment(self):
         return len(self.investment_portfolio.get_stocks()) > 0

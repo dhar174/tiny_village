@@ -33,6 +33,25 @@ from actions import (
 
 logger = logging.getLogger(__name__)
 
+class GoalEvaluationError(ValueError):
+    """A required Goal computation failed, rather than remaining incomplete."""
+
+
+def normalize_job_name(job):
+    """Project supported employment data without invoking live predicates."""
+    if job is None or isinstance(job, str):
+        return job
+    from tiny_jobs import JobRoles
+    if isinstance(job, JobRoles) and isinstance(job.job_name, str):
+        return job.job_name
+    raise TypeError('Expected a job name, Job, or None')
+
+
+def job_is_employed(job):
+    name = normalize_job_name(job)
+    return bool(name and name.strip() and name.strip().casefold() != 'unemployed')
+
+
 class UtilityGoal:
     """Data-only goal metadata for utility scoring and legacy target specs.
 
@@ -760,19 +779,29 @@ def evaluate_goal_importance(
 
 
 def is_goal_achieved(goal, character_state: State):
-    if hasattr(goal, "target_effects") and isinstance(goal.target_effects, dict):
+    """Full Goals use Conditions; metadata uses explicit native numeric targets.
 
-        for effect, target_value in goal.target_effects.items():
-            # #740: absolute targets; sign determines direction — positive target
-            # = minimum (at least), negative target = maximum (at most).
-            current_value = character_state.get(_canonical_attribute(effect), character_state.get(effect, 0))
-            if isinstance(target_value, (int, float)) and target_value < 0:
-                if current_value > abs(target_value):
-                    return False
-            elif current_value < target_value:
-                return False
-        return True
-    return False  # Default if goal has no target_effects to check
+    Empty metadata is incomplete. An empty full Goal retains its deliberate
+    empty-condition contract. Never infer completion from priority or prose.
+    """
+    import math
+    from collections.abc import Mapping
+    if callable(getattr(goal, 'iter_completion_conditions', None)):
+        return goal.check_completion(character_state)
+    targets = getattr(goal, 'target_effects', None)
+    if not isinstance(targets, Mapping):
+        raise TypeError('Achievement requires a production Goal or target mapping')
+    if not targets:
+        return False
+    satisfied = True
+    for attribute, target in targets.items():
+        current = character_state.get(_canonical_attribute(attribute), character_state.get(attribute))
+        if type(target) not in (int, float) or not math.isfinite(target):
+            raise GoalEvaluationError(f"Goal {goal.name!r}: invalid target for {attribute!r}")
+        if type(current) not in (int, float) or not math.isfinite(current):
+            raise GoalEvaluationError(f"Goal {goal.name!r}: missing or invalid state attribute {attribute!r}")
+        satisfied &= current <= abs(target) + 1e-9 if target < 0 else current >= target - 1e-9
+    return bool(satisfied)
 
 
 # --- New Utility Calculation Functions ---

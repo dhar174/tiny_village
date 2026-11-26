@@ -1102,45 +1102,56 @@ class ItemInventory:
         elif item_type == "clothing":
             return bool(
                 True
-                if self.ops[oper](sum(self.count_clothing_items_total()), amount)
+                if self.ops[oper](self.count_clothing_items_total(), amount)
                 else False
             )
         elif item_type == "tools":
             return bool(
                 True
-                if self.ops[oper](sum(self.count_tools_items_total()), amount)
+                if self.ops[oper](self.count_tools_items_total(), amount)
                 else False
             )
         elif item_type == "weapons":
             return bool(
                 True
-                if self.ops[oper](sum(self.count_weapons_items_total()), amount)
+                if self.ops[oper](self.count_weapons_items_total(), amount)
                 else False
             )
         elif item_type == "medicine":
             return bool(
                 True
-                if self.ops[oper](sum(self.count_medicine_items_total()), amount)
+                if self.ops[oper](self.count_medicine_items_total(), amount)
                 else False
             )
         elif item_type == "misc":
             return bool(
                 True
-                if self.ops[oper](sum(self.count_misc_items_total()), amount)
+                if self.ops[oper](self.count_misc_items_total(), amount)
                 else False
             )
         else:
             return False
 
-    def check_has_item_by_attribute_value(self, attribute, value, oper="ge"):
-        if oper not in self.ops:
-            oper = self.symb_map[oper]
-        for item in self.all_items:
-            return bool(
-                True
-                if self.ops[oper](item.get_attribute_value(attribute), value)
-                else False
-            )
+    def check_has_item_by_attribute_value(self, attribute, value, oper="ge", item_type=None):
+        """Match public item data on any owned, positive-quantity item."""
+        if not isinstance(attribute, str):
+            raise TypeError('Item attribute must be a string')
+        if not attribute or attribute.startswith('_') or '.' in attribute:
+            raise ValueError('Expected a public item data attribute')
+        op = self.ops[self.symb_map.get(oper, oper)]
+        categories = ('food', 'clothing', 'tools', 'weapons', 'medicine', 'misc')
+        if item_type is not None and item_type not in categories:
+            return False
+        items = self.get_all_items() if item_type is None else getattr(self, item_type + '_items')
+        for item in items:
+            data = vars(item)
+            if item.get_quantity() <= 0 or attribute not in data:
+                continue
+            current = data[attribute]
+            if callable(current):
+                raise ValueError('Callable item attributes are not queryable')
+            if op(current, value):
+                return True
         return False
 
     def to_dict(self):

@@ -28,6 +28,7 @@ PROFILES = {
     'core': [('components', 'unittest', ['tests.test_tiny_util_funcs', 'tests.test_actions', 'tests.test_action_named_target_resolution',
               'tests.test_action_contracts', 'tests.test_utility_contracts', 'tests.test_goap_graph_contracts',
               'tests.test_production_goal_contract',
+              'tests.test_goal_catalog_contracts',
               'tests.test_tiny_utility_functions', 'tests.test_utility_goal_contract',
               'tests.test_mock_action_enhancement_validation']),
              ('world-execution', 'unittest', ['tests.test_entity_identity_contracts',
