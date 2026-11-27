@@ -1077,19 +1077,31 @@ class Action:
                 result.append((target, node))
         return effect, result
 
-    def execute(self, character=None, graph_manager=None):
-        """Validate then apply declared attribute effects to the object and graph."""
+    def _bind_live_actor(self, character, graph_manager):
         actor = self.initiator if character is None else character
         if graph_manager is not None:
             self.graph_manager = graph_manager
+        actor_node = None
+        if actor is not None:
+            actor, actor_node = _resolve_action_entity(self.graph_manager, actor, "character")
+        if self._implicit_target and self.target is self.initiator:
+            self.target = actor
+        self.initiator = actor
+        return actor, actor_node
+
+    def _live_preconditions_met(self, character, graph_manager):
+        """Check readiness with execution's bindings without retaining them."""
+        original = self.initiator, self.target, self.graph_manager
         try:
-            if actor is not None:
-                actor, actor_node = _resolve_action_entity(self.graph_manager, actor, "character")
-            else:
-                actor_node = None
-            if self._implicit_target and self.target is self.initiator:
-                self.target = actor
-            self.initiator = actor
+            self._bind_live_actor(character, graph_manager)
+            return self.preconditions_met()
+        finally:
+            self.initiator, self.target, self.graph_manager = original
+
+    def execute(self, character=None, graph_manager=None):
+        """Validate then apply declared attribute effects to the object and graph."""
+        try:
+            actor, actor_node = self._bind_live_actor(character, graph_manager)
             prepared = self._prepare_attribute_effects(actor, actor_node)
         except (AttributeError, KeyError, TypeError, ValueError) as error:
             logger.warning("Cannot prepare action %s: %s", self.name, error)
