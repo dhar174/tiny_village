@@ -328,9 +328,10 @@ class Plan:
                 while self.action_queue:
                     priority, action_id, current_action, dependencies = heappop(self.action_queue)
                     if all(dep in self.completed_actions for dep in dependencies):
-                        if not self._action_ready(current_action):
+                        success = self._attempt_queued_action(current_action, current_goal)
+                        if success is None:
                             continue
-                        if not self._execute_action(current_action, current_goal):
+                        if not success:
                             return False
                         self.completed_actions.add(current_action.name)
                         break
@@ -365,10 +366,10 @@ class Plan:
                     continue
                 
                 # Check preconditions
-                if not self._action_ready(current_action):
+                success = self._attempt_queued_action(current_action, current_goal)
+                if success is None:
                     print(f"Action {current_action.name} preconditions not met")
                     continue
-                success = self._execute_action(current_action, current_goal)
                 
                 if success:
                     self.completed_actions.add(current_action.name)
@@ -392,16 +393,17 @@ class Plan:
         self.handle_success()
         return True
         
-    @staticmethod
-    def _action_ready(action):
-        # A live Action validates against its resolved actor inside execute().
-        return isinstance(action, Action) or action.preconditions_met()
-
-    def _execute_action(self, action, goal):
+    def _attempt_queued_action(self, action, goal):
+        """Return None for a skipped entry, otherwise its execution success."""
+        native_action = isinstance(action, Action)
+        if not native_action and not action.preconditions_met():
+            return None
         actor = getattr(action, "initiator", None)
         if actor is None:
             actor = getattr(goal, "character", None)
         try:
+            if native_action and not action._live_preconditions_met(actor, self.graph_manager):
+                return None
             if invoke_action(action, actor, self.graph_manager,
                              legacy_target=getattr(action, "target", None)):
                 self._failure_count.pop(action.name, None)

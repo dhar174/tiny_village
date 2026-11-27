@@ -649,6 +649,110 @@ assert controller.game_statistics['actions_failed'] == initial_failures + 1
 assert len(history) == 1
 """)
 
+    def test_plan_skips_blocked_native_actions_in_both_queue_loops(self):
+        for warmup in (False, True):
+            with self.subTest(warmup=warmup):
+                self.run_world(f'warmup = {warmup!r}\n' + '''
+from unittest.mock import patch
+node = graph.G.nodes[character]
+# The actor object alone would say the blocked action is ready.
+character.energy = 90
+goal = Goal('Recover to 25', character, character, 1, 'recover',
+            {False: [Condition('energy goal', 'energy', character, 25)]},
+            None, None, None, None, None, None, [], graph, 'basic', {})
+
+def energy_action(name, delta, conditions=(), **kwargs):
+    return Action(name, list(conditions), [{'targets': ['initiator'],
+        'attribute': 'energy', 'change_value': delta}], graph_manager=graph, **kwargs)
+
+blocked = energy_action('Blocked', 50,
+    [Condition('needs 30 energy', 'energy', 'target', 30)],
+    default_target_is_initiator=True)
+# Exercise the plan graph override and the goal actor fallback.
+blocked.graph_manager = None
+dependent = energy_action('Dependent', 20, initiator=character)
+recover = energy_action('Recovery', 5, initiator=character)
+plan = Plan('Skip blocked', [goal], graph_manager=graph)
+if warmup:
+    plan.add_action(energy_action('Warmup', 1, initiator=character), priority=0)
+plan.add_action(blocked, priority=1)
+plan.add_action(dependent, priority=2, dependencies=['Blocked'])
+plan.add_action(recover, priority=3)
+with patch.object(blocked, 'execute', wraps=blocked.execute) as blocked_calls, (
+    patch.object(dependent, 'execute', wraps=dependent.execute)
+) as dependent_calls, patch.object(recover, 'execute', wraps=recover.execute) as recovery_calls:
+    assert plan.execute() is True
+    blocked_calls.assert_not_called()
+    dependent_calls.assert_not_called()
+    recovery_calls.assert_called_once_with(character=character, graph_manager=graph)
+assert node['energy'] == character.energy == (26 if warmup else 25)
+assert blocked.initiator is blocked.target is blocked.graph_manager is None
+assert not plan._failure_count
+assert id(blocked) not in plan._completed_occurrences
+assert plan.completed_actions == ({'Warmup', 'Recovery'} if warmup else {'Recovery'})
+''')
+
+    def test_plan_readiness_checks_explicit_partner_and_action_graph(self):
+        self.run_world('''
+from unittest.mock import patch
+from tiny_characters import PersonalityTraits
+partner = Character('ReadinessPartner', 30, graph_manager=graph,
+    action_system=character.action_system, gametime_manager=character.gametime_manager,
+    memory_mode='basic', location=character.location,
+    personality_traits=PersonalityTraits(4, 4, 4, 4, 4), energy=10)
+partner.energy = 90
+goal = Goal('Recover partner', partner, partner, 1, 'recover',
+            {False: [Condition('energy goal', 'energy', partner, 15)]},
+            None, None, None, None, None, None, [], graph, 'basic', {})
+blocked = Action('Partner is tired', [Condition('partner needs energy', 'energy', 'target', 15)],
+    [], initiator=character, target=partner, graph_manager=graph)
+recovery = Action('Recover partner', [], [{'targets': ['initiator'],
+    'attribute': 'energy', 'change_value': 5}], graph_manager=graph)
+plan = Plan('Check partner', [goal])
+plan.add_action(blocked, priority=1)
+plan.add_action(recovery, priority=2)
+with patch.object(blocked, 'execute', wraps=blocked.execute) as blocked_calls, (
+    patch.object(recovery, 'execute', wraps=recovery.execute)
+) as recovery_calls:
+    assert plan.execute() is True
+    blocked_calls.assert_not_called()
+    recovery_calls.assert_called_once_with(character=partner, graph_manager=None)
+assert blocked.initiator is character and blocked.target is partner and blocked.graph_manager is graph
+assert character.energy == graph.G.nodes[character]['energy'] == 20
+assert partner.energy == graph.G.nodes[partner]['energy'] == 15
+assert plan.completed_actions == {'Recover partner'} and not plan._failure_count
+''')
+
+    def test_plan_reports_readiness_exception_without_leaking_bindings(self):
+        self.run_world('''
+from unittest.mock import patch
+goal = Goal('Recover to 25', character, character, 1, 'recover',
+            {False: [Condition('energy goal', 'energy', character, 25)]},
+            None, None, None, None, None, None, [], graph, 'basic', {})
+broken = Action('Broken readiness', [], [], default_target_is_initiator=True, graph_manager=graph)
+broken.graph_manager = None
+later = Action('Later recovery', [], [{'targets': ['initiator'],
+    'attribute': 'energy', 'change_value': 5}], graph_manager=graph)
+plan = Plan('Readiness exception', [goal], graph_manager=graph)
+plan.add_action(broken, priority=0)
+plan.add_action(later, priority=1)
+
+def fail_precondition():
+    assert broken.initiator is broken.target is character and broken.graph_manager is graph
+    raise RuntimeError('Readiness failed')
+
+with patch.object(broken, 'preconditions_met', side_effect=fail_precondition), (
+    patch.object(broken, 'execute', wraps=broken.execute)
+) as broken_calls, patch.object(later, 'execute', wraps=later.execute) as later_calls:
+    assert plan.execute() is False
+    broken_calls.assert_not_called()
+    later_calls.assert_not_called()
+assert broken.initiator is broken.target is broken.graph_manager is None
+assert plan._failure_count == {'Broken readiness': 1}
+assert not plan.completed_actions and not plan._completed_occurrences
+assert character.energy == graph.G.nodes[character]['energy'] == 20
+''')
+
     def test_plan_neither_replays_partial_writes_nor_retries_type_error(self):
         self.run_world("""
 from types import SimpleNamespace
@@ -666,9 +770,15 @@ def fail_after_second(node, attribute, value):
 goal = SimpleNamespace(name='Recover', check_completion=lambda: node['energy'] >= 99)
 plan = Plan('partial', [goal], graph_manager=graph)
 plan.add_action(partial)
-with patch.object(graph, 'update_node_attribute', side_effect=fail_after_second) as writes:
+later = Action('Later recovery', [], [delta], initiator=character, graph_manager=graph)
+plan.add_action(later, priority=1)
+with patch.object(graph, 'update_node_attribute', side_effect=fail_after_second) as writes, (
+    patch.object(later, 'execute', wraps=later.execute)
+) as later_calls:
     assert plan.execute() is False
     assert writes.call_count == 2
+    later_calls.assert_not_called()
+assert plan._failure_count == {'Partial': 1}
 assert node['energy'] == character.energy == 30
 assert 'temp_220' not in node and not hasattr(character, 'temp_220')
 assert not plan.completed_actions

@@ -8,7 +8,7 @@
 - [TASK031](TASK031-utility-goal-774.md) Explicit UtilityGoal and #774 test debt — PR822 GLM fixes: core167+3/dev20/visual69 and independent delta review pass; hosted checks/authorized merge pending.
 - [TASK030](TASK030-production-goal-802.md) Production Goal contract (#802) — PR #820; GLM review fixes, 13 acceptance checks; #821 retains pre-existing findings; local core129+3/dev20/visual69 pass; independent review/hosted verification pending.
 - [TASK029](TASK029-issue-740.md) Runtime units (#740) - #818 merged; closeout investigation repairs atb29552c, core116+3 probes/dev20/visual69 pass; issue remains OPEN pending repair merge and final verification (Updated: 2026-11-14)
-- [TASK028](TASK028-action-execution-220.md) Graph-backed action execution (#220) - Draft PR #817, Zcode review follow-up (Updated: 2026-11-13)
+- [TASK028](TASK028-action-execution-220.md) Graph-backed action execution (#220) — #817 merged; P2 queue readiness follow-up on `codex/pr-817-action-readiness`, six targeted tests pass (Updated: 2026-11-27 America/New_York).
 - [TASK026](TASK026-phase3-human-gate-738.md) Phase3 human gate (#738) - Approved under D034;738/733 closed in order, retained acceptance open; Project synchronization pending owner-local evidence (Updated: 2026-11-02 America/New_York)
 - [TASK023](TASK023-zcode-specialist-team.md) Zcode specialist team - nine read-only specialist definitions + canonical coordination policy created, entry points wired, installed to ~/.zcode/agents; static checks + independent review pass, fixes applied; runtime invocation re-verification pending fresh session (Updated: 2026-10-22)
 - [TASK001] Initialize Memory Bank - Replacing stale project context and establishing task tracking (Updated: 2026-03-19)
